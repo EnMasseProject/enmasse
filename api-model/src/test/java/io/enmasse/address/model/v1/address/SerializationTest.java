@@ -4,24 +4,50 @@
  */
 package io.enmasse.address.model.v1.address;
 
-import io.enmasse.address.model.*;
-import io.enmasse.address.model.v1.CodecV1;
-import io.enmasse.address.model.v1.DeserializeException;
-import io.enmasse.admin.model.v1.*;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRule;
-import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
+import static io.enmasse.address.model.ExposeType.route;
+import static io.enmasse.address.model.TlsTermination.passthrough;
+import static io.enmasse.model.validation.DefaultValidator.validate;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.UUID;
+
+import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
+
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
-import java.io.IOException;
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static io.enmasse.address.model.ExposeSpec.ExposeType.route;
-import static io.enmasse.address.model.ExposeSpec.TlsTermination.passthrough;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.AddressSpaceSchema;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.Phase;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 
 // TODO: Add more tests of invalid input to deserialization
 public class SerializationTest {
@@ -29,64 +55,86 @@ public class SerializationTest {
     @Test
     public void testSerializeAddress() throws IOException {
         String uuid = UUID.randomUUID().toString();
-        Address address = new Address.Builder()
-                .setName("as1.a1")
-                .setAddress("addr1")
-                .setAddressSpace("as1")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("inmemory")
-                .setUid(uuid)
-                .putAnnotation("my", "annotation")
-                .setResourceVersion("1234")
-                .setSelfLink("/my/link")
-                .setCreationTimestamp("my stamp")
+        Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace("ns")
+                .withName("as1.a1")
+                .withResourceVersion("1234")
+                .withSelfLink("/my/link")
+                .withCreationTimestamp("my stamp")
+                .withUid(uuid)
+                .addToAnnotations("my", "annotation")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("addr1")
+                .withAddressSpace("as1")
+                .withType("queue")
+                .withPlan("inmemory")
+                .endSpec()
+
                 .build();
 
-        byte[] serialized = CodecV1.getMapper().writeValueAsBytes(address);
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] serialized = mapper.writeValueAsBytes(address);
 
-        Address deserialized = CodecV1.getMapper().readValue(serialized, Address.class);
+        Address deserialized = mapper.readValue(serialized, Address.class);
 
         assertThat(deserialized, is(address));
-        assertThat(deserialized.getName(), is(address.getName()));
-        assertThat(deserialized.getAddressSpace(), is(address.getAddressSpace()));
-        assertThat(deserialized.getType(), is(address.getType()));
-        assertThat(deserialized.getUid(), is(address.getUid()));
-        assertThat(deserialized.getResourceVersion(), is(address.getResourceVersion()));
-        assertThat(deserialized.getSelfLink(), is(address.getSelfLink()));
-        assertThat(deserialized.getCreationTimestamp(), is(address.getCreationTimestamp()));
-        assertThat(deserialized.getPlan(), is(address.getPlan()));
-        assertThat(deserialized.getAddress(), is(address.getAddress()));
-        assertThat(deserialized.getAnnotations(), is(address.getAnnotations()));
+        assertThat(deserialized.getSpec().getAddressSpace(), is(address.getSpec().getAddressSpace()));
+        assertThat(deserialized.getSpec().getType(), is(address.getSpec().getType()));
+
+        assertThat(deserialized.getSpec().getPlan(), is(address.getSpec().getPlan()));
+        assertThat(deserialized.getSpec().getAddress(), is(address.getSpec().getAddress()));
+
+        assertThat(deserialized.getMetadata().getName(), is(address.getMetadata().getName()));
+        assertThat(deserialized.getMetadata().getUid(), is(address.getMetadata().getUid()));
+        assertThat(deserialized.getMetadata().getResourceVersion(), is(address.getMetadata().getResourceVersion()));
+        assertThat(deserialized.getMetadata().getSelfLink(), is(address.getMetadata().getSelfLink()));
+        assertThat(deserialized.getMetadata().getCreationTimestamp(), is(address.getMetadata().getCreationTimestamp()));
+        assertThat(deserialized.getMetadata().getAnnotations(), is(address.getMetadata().getAnnotations()));
     }
 
     @Test
     public void testSerializeAddressList() throws IOException {
-        Address addr1 = new Address.Builder()
-                .setName("a1.a1")
-                .setAddress("addr1")
-                .setAddressSpace("a1")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("myplan")
+        Address addr1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace("ns")
+                .withName("a1.a1")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("addr1")
+                .withAddressSpace("a1")
+                .withType("queue")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
 
-        Address addr2 = new Address.Builder()
-                .setName("a1.a2")
-                .setAddressSpace("a1")
-                .setAddress("addr2")
-                .setNamespace("ns")
-                .setType("anycast")
-                .setPlan("myplan")
+        Address addr2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace("ns")
+                .withName("a1.a2")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddressSpace("a1")
+                .withAddress("addr2")
+                .withType("anycast")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
 
 
         AddressList list = new AddressList(Sets.newSet(addr1, addr2));
 
-        String serialized = CodecV1.getMapper().writeValueAsString(list);
-        List<Address> deserialized = CodecV1.getMapper().readValue(serialized, AddressList.class);
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(list);
+        AddressList deserialized = mapper.readValue(serialized, AddressList.class);
 
-        assertThat(deserialized, is(list));
+        assertThat(deserialized.getItems(), is(list.getItems()));
     }
 
 
@@ -95,93 +143,122 @@ public class SerializationTest {
 
         AddressList list = new AddressList(Collections.emptySet());
 
-        String serialized = CodecV1.getMapper().writeValueAsString(list);
+        ObjectMapper mapper = new ObjectMapper();
+
+        String serialized = mapper.writeValueAsString(list);
         assertTrue(serialized.matches(".*\"items\"\\s*:\\s*\\[\\s*\\].*"),
                 "Serialized form '" + serialized + "' does not include empty items list");
-        List<Address> deserialized = CodecV1.getMapper().readValue(serialized, AddressList.class);
+        AddressList deserialized = mapper.readValue(serialized, AddressList.class);
 
-        assertThat(deserialized, is(list));
+        assertThat(deserialized.getItems(), is(list.getItems()));
     }
 
     @Test
     public void testSerializeAddressSpaceWithIllegalName() throws IOException {
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace.bar")
-                .setPlan("myplan")
-                .setType("mytype")
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace.bar")
+                .endMetadata()
+
+                .withNewSpec()
+                .withPlan("myplan")
+                .withType("mytype")
+                .endSpec()
+
                 .build();
 
-        String serialized = CodecV1.getMapper().writeValueAsString(addressSpace);
-        assertThrows(DeserializeException.class, () -> CodecV1.getMapper().readValue(serialized, AddressSpace.class));
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(addressSpace);
+        assertThrows(ValidationException.class, () -> validate(mapper.readValue(serialized, AddressSpace.class)));
     }
 
-    @SuppressWarnings("serial")
     @Test
     public void testSerializeAddressSpace() throws IOException {
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("mynamespace")
-                .setPlan("defaultplan")
-                .setType("standard")
-                .setCreationTimestamp("some date")
-                .setResourceVersion("1234")
-                .setSelfLink("/my/resource")
-                .setStatus(new AddressSpaceStatus(true).appendMessage("hello").appendEndpointStatus(
-                        new EndpointStatus.Builder()
-                                .setName("myendpoint")
-                                .setExternalHost("example.com")
-                                .setExternalPorts(Collections.singletonMap("amqps", 443))
-                                .setServiceHost("messaging.svc")
-                                .setServicePorts(Collections.singletonMap("amqp", 5672))
-                                .build()))
-                .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
-                        .setName("myendpoint")
-                        .setService("messaging")
-                        .setCertSpec(new CertSpec.Builder().setProvider("provider").setSecretName("mysecret").build())
-                        .setExposeSpec(new ExposeSpec.Builder()
-                                .setType(route)
-                                .setRouteHost("example.com")
-                                .setRouteTlsTermination(passthrough)
-                                .setRouteServicePort("amqp")
-                                .build())
-                        .build()))
-                .setAuthenticationService(new AuthenticationService.Builder()
-                        .setType(AuthenticationServiceType.EXTERNAL)
-                        .setDetails(new HashMap<String, Object>() {{
-                            put("host", "my.example.com");
-                            put("port", 5671);
-                            put("caCertSecretName", "authservicesecret");
-                            put("clientCertSecretName", "clientcertsecret");
-                            put("saslInitHost", "my.example.com");
-                        }})
-                        .build())
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .withCreationTimestamp("some date")
+                .withResourceVersion("1234")
+                .withSelfLink("/my/resource")
+                .endMetadata()
+
+                .withNewSpec()
+
+                .withPlan("defaultplan")
+                .withType("standard")
+
+                .addNewEndpoint()
+                    .withName("myendpoint")
+                    .withService("messaging")
+
+                    .withNewCert()
+                        .withProvider("provider")
+                        .withSecretName("mysecret")
+                    .endCert()
+
+                    .withNewExpose()
+                        .withType(route)
+                        .withRouteHost("example.com")
+                        .withRouteTlsTermination(passthrough)
+                        .withRouteServicePort("amqp")
+                    .endExpose()
+
+                .endEndpoint()
+
+                .withNewAuthenticationService()
+                    .withType(AuthenticationServiceType.EXTERNAL)
+                    .addToDetails("host", "my.example.com")
+                    .addToDetails("port", 5671)
+                    .addToDetails("caCertSecretName", "authservicesecret")
+                    .addToDetails("clientCertSecretName", "clientcertsecret")
+                    .addToDetails("saslInitHost", "my.example.com")
+                .endAuthenticationService()
+
+                .endSpec()
+
+                .withNewStatus()
+                    .withReady(true)
+                    .addToMessages("hello")
+
+                    .addNewEndpointStatus()
+                        .withName("myendpoint")
+                        .withExternalHost("example.com")
+                        .withExternalPorts(Collections.singletonMap("amqps", 443))
+                        .withServiceHost("messaging.svc")
+                        .withServicePorts(Collections.singletonMap("amqp", 5672))
+                    .endEndpointStatus()
+
+                .endStatus()
+
                 .build();
 
-        String serialized = CodecV1.getMapper().writeValueAsString(addressSpace);
-        AddressSpace deserialized = CodecV1.getMapper().readValue(serialized, AddressSpace.class);
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(addressSpace);
+        AddressSpace deserialized = mapper.readValue(serialized, AddressSpace.class);
 
-        assertThat(deserialized.getName(), is(addressSpace.getName()));
-        assertThat(deserialized.getNamespace(), is(addressSpace.getNamespace()));
-        assertThat(deserialized.getType(), is(addressSpace.getType()));
-        assertThat(deserialized.getPlan(), is(addressSpace.getPlan()));
-        assertThat(deserialized.getSelfLink(), is(addressSpace.getSelfLink()));
-        assertThat(deserialized.getCreationTimestamp(), is(addressSpace.getCreationTimestamp()));
-        assertThat(deserialized.getResourceVersion(), is(addressSpace.getResourceVersion()));
+        assertThat(deserialized.getMetadata().getName(), is(addressSpace.getMetadata().getName()));
+        assertThat(deserialized.getMetadata().getNamespace(), is(addressSpace.getMetadata().getNamespace()));
+        assertThat(deserialized.getSpec().getType(), is(addressSpace.getSpec().getType()));
+        assertThat(deserialized.getSpec().getPlan(), is(addressSpace.getSpec().getPlan()));
+        assertThat(deserialized.getMetadata().getSelfLink(), is(addressSpace.getMetadata().getSelfLink()));
+        assertThat(deserialized.getMetadata().getCreationTimestamp(), is(addressSpace.getMetadata().getCreationTimestamp()));
+        assertThat(deserialized.getMetadata().getResourceVersion(), is(addressSpace.getMetadata().getResourceVersion()));
         assertThat(deserialized.getStatus().isReady(), is(addressSpace.getStatus().isReady()));
         assertThat(deserialized.getStatus().getMessages(), is(addressSpace.getStatus().getMessages()));
-        assertThat(deserialized.getStatus().getEndpointStatuses().size(), is(addressSpace.getEndpoints().size()));
+        assertThat(deserialized.getStatus().getEndpointStatuses().size(), is(addressSpace.getSpec().getEndpoints().size()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getName(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getName()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getExternalHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getExternalHost()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getExternalPorts().values().iterator().next(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getExternalPorts().values().iterator().next()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServiceHost(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServiceHost()));
         assertThat(deserialized.getStatus().getEndpointStatuses().get(0).getServicePorts(), is(addressSpace.getStatus().getEndpointStatuses().get(0).getServicePorts()));
-        assertThat(deserialized.getEndpoints().size(), is(addressSpace.getEndpoints().size()));
-        assertThat(deserialized.getEndpoints().get(0).getName(), is(addressSpace.getEndpoints().get(0).getName()));
-        assertThat(deserialized.getEndpoints().get(0).getService(), is(addressSpace.getEndpoints().get(0).getService()));
-        assertThat(deserialized.getEndpoints().get(0).getCertSpec().get().getProvider(), is(addressSpace.getEndpoints().get(0).getCertSpec().get().getProvider()));
-        assertThat(deserialized.getEndpoints().get(0).getCertSpec().get().getSecretName(), is(addressSpace.getEndpoints().get(0).getCertSpec().get().getSecretName()));
-        assertThat(deserialized.getAuthenticationService().getType(), is(addressSpace.getAuthenticationService().getType()));
-        assertThat(deserialized.getAuthenticationService().getDetails(), is(addressSpace.getAuthenticationService().getDetails()));
+        assertThat(deserialized.getSpec().getEndpoints().size(), is(addressSpace.getSpec().getEndpoints().size()));
+        assertThat(deserialized.getSpec().getEndpoints().get(0).getName(), is(addressSpace.getSpec().getEndpoints().get(0).getName()));
+        assertThat(deserialized.getSpec().getEndpoints().get(0).getService(), is(addressSpace.getSpec().getEndpoints().get(0).getService()));
+        assertThat(deserialized.getSpec().getEndpoints().get(0).getCert().getProvider(), is(addressSpace.getSpec().getEndpoints().get(0).getCert().getProvider()));
+        assertThat(deserialized.getSpec().getEndpoints().get(0).getCert().getSecretName(), is(addressSpace.getSpec().getEndpoints().get(0).getCert().getSecretName()));
+        assertThat(deserialized.getSpec().getAuthenticationService().getType(), is(addressSpace.getSpec().getAuthenticationService().getType()));
+        assertThat(deserialized.getSpec().getAuthenticationService().getDetails(), is(addressSpace.getSpec().getAuthenticationService().getDetails()));
         assertThat(addressSpace, is(deserialized));
     }
 
@@ -200,24 +277,29 @@ public class SerializationTest {
                 "   {\"name\":\"messaging\",\"service\":\"messaging\",\"servicePort\":\"amqps\"}" +
                 "  ]" +
                 "}}";
-        AddressSpace addressSpace = CodecV1.getMapper().readValue(json, AddressSpace.class);
-        assertThat(addressSpace.getEndpoints().size(), is(1));
-        assertTrue(addressSpace.getEndpoints().get(0).getExposeSpec().isPresent());
-        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getType(), is(route));
-        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getRouteTlsTermination(), is(passthrough));
-        assertThat(addressSpace.getEndpoints().get(0).getExposeSpec().get().getRouteServicePort(), is("amqps"));
+
+        ObjectMapper mapper = new ObjectMapper();
+        AddressSpace addressSpace = mapper.readValue(json, AddressSpace.class);
+        assertThat(addressSpace.getSpec().getEndpoints().size(), is(1));
+        assertNotNull(addressSpace.getSpec().getEndpoints().get(0).getExpose());
+        assertThat(addressSpace.getSpec().getEndpoints().get(0).getName(), is("messaging"));
+        assertThat(addressSpace.getSpec().getEndpoints().get(0).getExpose().getType(), is(route));
+        assertThat(addressSpace.getSpec().getEndpoints().get(0).getExpose().getRouteTlsTermination(), is(passthrough));
+        assertThat(addressSpace.getSpec().getEndpoints().get(0).getExpose().getRouteServicePort(), is("amqps"));
     }
 
     @Test
     public void testDeserializeAddressSpaceMissingDefaults() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
         String serialized = "{\"kind\": \"AddressSpace\", \"apiVersion\": \"v1beta1\"}";
-        assertThrows(DeserializeException.class, () -> CodecV1.getMapper().readValue(serialized, AddressSpace.class));
+        assertThrows(ValidationException.class, () -> validate(mapper.readValue(serialized, AddressSpace.class)));
     }
 
     @Test
     public void testDeserializeAddressMissingDefaults() throws IOException {
+        ObjectMapper mapper = new ObjectMapper();
         String serialized = "{\"kind\": \"Address\", \"apiVersion\": \"v1beta1\"}";
-        assertThrows(DeserializeException.class, () -> CodecV1.getMapper().readValue(serialized, Address.class));
+        assertThrows(ValidationException.class, () -> validate(mapper.readValue(serialized, Address.class)));
     }
 
     @Test
@@ -243,7 +325,8 @@ public class SerializationTest {
                 "]" +
                 "}";
 
-        AddressSpacePlan addressSpacePlan = CodecV1.getMapper().readValue(json, AddressSpacePlan.class);
+        ObjectMapper mapper = new ObjectMapper();
+        AddressSpacePlan addressSpacePlan = mapper.readValue(json, AddressSpacePlan.class);
         assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
         assertThat(addressSpacePlan.getAdditionalProperties().get("displayName"), is("MySpace"));
         assertFalse(addressSpacePlan.getUuid().isEmpty());
@@ -253,7 +336,7 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getResources().get(0).getName(), is("router"));
         assertThat(addressSpacePlan.getResources().get(1).getName(), is("broker"));
         assertThat(addressSpacePlan.getMetadata().getAnnotations().size(), is(1));
-        assertThat(addressSpacePlan.getMetadata().getAnnotations().get("mykey"), is("myvalue"));
+        assertThat(addressSpacePlan.getAnnotation("mykey"), is("myvalue"));
     }
 
     @Test
@@ -272,7 +355,8 @@ public class SerializationTest {
                 "]" +
                 "}";
 
-        AddressSpacePlan addressSpacePlan = CodecV1.getMapper().readValue(json, AddressSpacePlan.class);
+        ObjectMapper mapper = new ObjectMapper();
+        AddressSpacePlan addressSpacePlan = mapper.readValue(json, AddressSpacePlan.class);
         assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
         assertNull(addressSpacePlan.getUuid());
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
@@ -285,10 +369,11 @@ public class SerializationTest {
     @Test
     public void testBuilder() {
         AddressSpacePlan plan = new AddressSpacePlanBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("plan1")
-                        .withNamespace("ns")
-                        .build())
+                .withNewMetadata()
+                .withName("plan1")
+                .withNamespace("ns")
+                .endMetadata()
+
                 .withShortDescription("desc")
                 .withUuid("uuid")
                 .withAddressPlans(Arrays.asList("a", "b"))
@@ -356,7 +441,8 @@ public class SerializationTest {
                 "]" +
                 "}";
 
-        AddressPlan addressPlan = CodecV1.getMapper().readValue(json, AddressPlan.class);
+        ObjectMapper mapper = new ObjectMapper();
+        AddressPlan addressPlan = mapper.readValue(json, AddressPlan.class);
         assertThat(addressPlan.getMetadata().getName(), is("plan1"));
         assertThat(addressPlan.getAdditionalProperties().get("displayName"), is("MyPlan"));
         assertThat(addressPlan.getAddressType(), is("queue"));
@@ -381,13 +467,36 @@ public class SerializationTest {
                 "]" +
                 "}";
 
-        AddressPlan addressPlan = CodecV1.getMapper().readValue(json, AddressPlan.class);
+        ObjectMapper mapper = new ObjectMapper();
+        AddressPlan addressPlan = mapper.readValue(json, AddressPlan.class);
         assertThat(addressPlan.getMetadata().getName(), is("plan1"));
         assertThat(addressPlan.getAddressType(), is("queue"));
         assertNull(addressPlan.getUuid());
         assertThat(addressPlan.getRequiredResources().size(), is(2));
         assertThat(addressPlan.getRequiredResources().get(0).getName(), is("router"));
         assertThat(addressPlan.getRequiredResources().get(1).getName(), is("broker"));
+    }
+
+    @Test
+    public void testDeserializeAddressSpaceWithAuthServiceValues() throws IOException {
+        String json = "{" +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
+                "\"kind\":\"AddressSpace\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"myspace\"" +
+                "}," +
+                "\"spec\": {" +
+                "  \"type\":\"standard\"," +
+                "  \"plan\":\"myplan\"," +
+                "  \"authenticationService\": {" +
+                "     \"type\": \"external\"" +
+                "  }" +
+                "}" +
+                "}";
+
+        ObjectMapper mapper = new ObjectMapper();
+        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
+        assertEquals(3, exception.getConstraintViolations().size());
     }
 
     @Test
@@ -400,13 +509,24 @@ public class SerializationTest {
                 "}," +
                 "\"spec\": {" +
                 "  \"type\":\"standard\"," +
+                "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
-                "     \"type\": \"external\"" +
+                "     \"type\": \"external\"," +
+                "     \"details\": {" +
+                "       \"host\": \"my.example.com\"," +
+                "       \"saslInitHost\": \"localhost\"," +
+                "       \"port\": 1234" +
+                "     }" +
                 "  }" +
                 "}" +
                 "}";
 
-        assertThrows(RuntimeException.class, () -> CodecV1.getMapper().readValue(json, AddressSpace.class));
+        ObjectMapper mapper = new ObjectMapper();
+        AddressSpace addressSpace= mapper.readValue(json, AddressSpace.class);
+        validate(addressSpace);
+        assertEquals("my.example.com", addressSpace.getSpec().getAuthenticationService().getDetails().get("host"));
+        assertEquals("localhost", addressSpace.getSpec().getAuthenticationService().getDetails().get("saslInitHost"));
+        assertEquals(1234, addressSpace.getSpec().getAuthenticationService().getDetails().get("port"));
     }
 
     @Test
@@ -419,6 +539,7 @@ public class SerializationTest {
                 "}," +
                 "\"spec\": {" +
                 "  \"type\":\"standard\"," +
+                "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
                 "     \"type\": \"standard\"," +
                 "     \"details\": {" +
@@ -428,43 +549,74 @@ public class SerializationTest {
                 "}" +
                 "}";
 
-        assertThrows(DeserializeException.class, () -> CodecV1.getMapper().readValue(json, AddressSpace.class));
+        ObjectMapper mapper = new ObjectMapper();
+        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
+        assertEquals(1, exception.getConstraintViolations().size());
     }
 
     @Test
     public void testSerializeAddressSpaceList() throws IOException {
-        AddressSpace a1 = new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("mynamespace")
-                .setPlan("myplan")
-                .setType("standard")
-                .setStatus(new AddressSpaceStatus(true).appendMessage("hello"))
-                .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
-                        .setName("myendpoint")
-                        .setService("messaging")
-                        .build()))
+        AddressSpace a1 = new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .endMetadata()
+
+                .withNewSpec()
+
+                    .withPlan("myplan")
+                    .withType("standard")
+
+                    .addNewEndpoint()
+                        .withName("myendpoint")
+                        .withService("messaging")
+                    .endEndpoint()
+
+                .endSpec()
+
+                .withNewStatus()
+                    .withReady(true)
+                    .addToMessages("hello")
+                .endStatus()
+
                 .build();
 
-        AddressSpace a2 = new AddressSpace.Builder()
-                .setName("mysecondspace")
-                .setNamespace("myothernamespace")
-                .setPlan("myotherplan")
-                .setType("brokered")
-                .setStatus(new AddressSpaceStatus(false))
-                .setEndpointList(Arrays.asList(new EndpointSpec.Builder()
-                        .setName("bestendpoint")
-                        .setService("mqtt")
-                        .setCertSpec(new CertSpec.Builder().setProvider("myprovider").setSecretName("mysecret").build())
-                        .build()))
+        AddressSpace a2 = new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName("mysecondspace")
+                .withNamespace("myothernamespace")
+                .endMetadata()
+
+                .withNewSpec()
+
+                    .withPlan("myotherplan")
+                    .withType("brokered")
+
+                    .addNewEndpoint()
+                    .withName("bestendpoint")
+                    .withService("mqtt")
+                    .withNewCert()
+                        .withProvider("myprovider")
+                        .withSecretName("mysecret")
+                    .endCert()
+                    .endEndpoint()
+
+                .endSpec()
+
+                .withNewStatus(false)
+
                 .build();
 
         AddressSpaceList list = new AddressSpaceList();
-        list.add(a1);
-        list.add(a2);
+        list.getItems().add(a1);
+        list.getItems().add(a2);
 
-        String serialized = CodecV1.getMapper().writeValueAsString(list);
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(list);
 
-        AddressSpaceList deserialized = CodecV1.getMapper().readValue(serialized, AddressSpaceList.class);
+        AddressSpaceList deserialized = mapper.readValue(serialized, AddressSpaceList.class);
 
         assertAddressSpace(deserialized, a1);
         assertAddressSpace(deserialized, a2);
@@ -473,13 +625,17 @@ public class SerializationTest {
     @Test
     public void testSerializeStandardInfraConfig() throws IOException {
         StandardInfraConfig infraConfig = new StandardInfraConfigBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("infra")
-                        .build())
+                .withNewMetadata()
+                .withName("infra")
+                .withAnnotations(new HashMap<>())
+                .withLabels(new HashMap<>())
+                .endMetadata()
+
                 .editOrNewSpec()
                 .withVersion("123")
                 .editOrNewNetworkPolicy()
                 .withIngress(new NetworkPolicyIngressRuleBuilder().build())
+                .withEgress()
                 .endNetworkPolicy()
                 .editOrNewAdmin()
                 .editOrNewResources()
@@ -504,8 +660,9 @@ public class SerializationTest {
                 .endSpec()
                 .build();
 
-        String serialized = CodecV1.getMapper().writeValueAsString(infraConfig);
-        StandardInfraConfig deserialized = CodecV1.getMapper().readValue(serialized, StandardInfraConfig.class);
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(infraConfig);
+        StandardInfraConfig deserialized = mapper.readValue(serialized, StandardInfraConfig.class);
         assertEquals(infraConfig, deserialized);
 
         serialized = "{" +
@@ -545,16 +702,19 @@ public class SerializationTest {
                 "}}";
 
 
-        deserialized = CodecV1.getMapper().readValue(serialized, StandardInfraConfig.class);
+        deserialized = mapper.readValue(serialized, StandardInfraConfig.class);
         assertEquals(infraConfig, deserialized);
     }
 
     @Test
     public void testSerializeBrokeredInfraConfig() throws IOException {
         BrokeredInfraConfig infraConfig = new BrokeredInfraConfigBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("infra")
-                        .build())
+                .withNewMetadata()
+                .withName("infra")
+                .withAnnotations(new HashMap<>())
+                .withLabels(new HashMap<>())
+                .endMetadata()
+
                 .editOrNewSpec()
                 .withVersion("123")
                 .editOrNewNetworkPolicy()
@@ -577,8 +737,9 @@ public class SerializationTest {
                 .endSpec()
                 .build();
 
-        String serialized = CodecV1.getMapper().writeValueAsString(infraConfig);
-        BrokeredInfraConfig deserialized = CodecV1.getMapper().readValue(serialized, BrokeredInfraConfig.class);
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(infraConfig);
+        BrokeredInfraConfig deserialized = mapper.readValue(serialized, BrokeredInfraConfig.class);
         assertEquals(infraConfig, deserialized);
 
         serialized = "{" +
@@ -612,14 +773,14 @@ public class SerializationTest {
                 "}}";
 
 
-        deserialized = CodecV1.getMapper().readValue(serialized, BrokeredInfraConfig.class);
+        deserialized = mapper.readValue(serialized, BrokeredInfraConfig.class);
         assertEquals(infraConfig, deserialized);
     }
 
     private void assertAddressSpace(AddressSpaceList deserialized, AddressSpace expected) {
         AddressSpace found = null;
-        for (AddressSpace addressSpace : deserialized) {
-            if (addressSpace.getName().equals(expected.getName())) {
+        for (AddressSpace addressSpace : deserialized.getItems()) {
+            if (addressSpace.getMetadata().getName().equals(expected.getMetadata().getName())) {
                 found = addressSpace;
                 break;
             }
@@ -627,11 +788,70 @@ public class SerializationTest {
         }
         assertNotNull(found);
 
-        assertThat(found.getName(), is(expected.getName()));
-        assertThat(found.getNamespace(), is(expected.getNamespace()));
-        assertThat(found.getType(), is(expected.getType()));
-        assertThat(found.getPlan(), is(expected.getPlan()));
+        assertThat(found.getMetadata().getName(), is(expected.getMetadata().getName()));
+        assertThat(found.getMetadata().getNamespace(), is(expected.getMetadata().getNamespace()));
+        assertThat(found.getSpec().getType(), is(expected.getSpec().getType()));
+        assertThat(found.getSpec().getPlan(), is(expected.getSpec().getPlan()));
         assertThat(found.getStatus().isReady(), is(expected.getStatus().isReady()));
         assertThat(found.getStatus().getMessages(), is(expected.getStatus().getMessages()));
+    }
+
+    @Test
+    public void testCanParseExistingAddressSpaceSchema() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final URL url = SerializationTest.class.getResource("resources/addressspaceschema-1.json");
+        final AddressSpaceSchema value = mapper.readValue(url, AddressSpaceSchema.class);
+
+        assertNotNull(value);
+        assertNotNull(value.getSpec());
+
+        assertThat(value.getSpec().getDescription(), is("A standard address space consists of an AMQP router network in combination with attachable 'storage units'. The implementation of a storage unit is hidden from the client and the routers with a well defined API."));
+        assertThat(value.getSpec().getPlans().size(), is(4));
+
+        assertThat(value.getSpec().getAddressTypes().size(), is(5));
+    }
+
+    @Test
+    public void testCanParseExistingAddressSpace() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final URL url = SerializationTest.class.getResource("resources/addressspace-1.json");
+        final AddressSpace value = mapper.readValue(url, AddressSpace.class);
+
+        assertNotNull(value);
+
+        assertNotNull(value.getMetadata());
+        assertThat(value.getMetadata().getName(), is("managed"));
+        assertThat(value.getMetadata().getNamespace(), is("my-iot-1"));
+
+        assertNotNull(value.getSpec());
+
+        assertNotNull(value.getStatus());
+
+    }
+
+    @Test
+    public void testCanParseExistingAddress() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final URL url = SerializationTest.class.getResource("resources/address-1.json");
+        final Address value = mapper.readValue(url, Address.class);
+
+        assertNotNull(value);
+
+        assertNotNull(value.getMetadata());
+        assertThat(value.getMetadata().getName(), is("managed.foo.control"));
+        assertThat(value.getMetadata().getNamespace(), is("my-iot-1"));
+
+        assertNotNull(value.getSpec());
+        assertThat(value.getSpec().getAddress(), is("foo/bar"));
+        assertThat(value.getSpec().getPlan(), is("standard-small-anycast"));
+        assertThat(value.getSpec().getType(), is("anycast"));
+
+        assertNotNull(value.getStatus());
+        assertThat(value.getStatus().isReady(), is(false));
+        assertThat(value.getStatus().getPhase(), is(Phase.Configuring));
+
     }
 }

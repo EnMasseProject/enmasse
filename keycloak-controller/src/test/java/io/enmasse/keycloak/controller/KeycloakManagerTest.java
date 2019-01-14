@@ -9,6 +9,8 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -165,23 +167,34 @@ public class KeycloakManagerTest {
     }
 
     private AddressSpace createAddressSpace(String name, AuthenticationServiceType authType) {
-        return new AddressSpace.Builder()
-                .setName(name)
-                .setNamespace("myns")
-                .setPlan("myplan")
-                .setType("standard")
-                .putAnnotation(AnnotationKeys.CREATED_BY, "developer")
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("console")
-                        .setService("console")
+        return new AddressSpaceBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName(name)
+                        .withNamespace("myns")
+                        .addToAnnotations(AnnotationKeys.CREATED_BY, "developer")
                         .build())
-                .setStatus(new AddressSpaceStatus(true)
-                        .appendEndpointStatus(new EndpointStatus.Builder()
-                                .setName("console")
-                                .setServiceHost("console.svc")
-                                .setExternalPorts(Collections.singletonMap("http", 443))
-                                .setExternalHost("console.example.com")
-                                .build()))
-                .setAuthenticationService(new AuthenticationService.Builder().setType(authType).build()).build();
+
+                .withNewSpec()
+                .withPlan("myplan")
+                .withType("standard")
+
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("console")
+                        .withService("console")
+                        .build())
+                .withAuthenticationService(new AuthenticationServiceBuilder().withType(authType).build())
+                .endSpec()
+
+                .withNewStatus()
+                    .withReady(true)
+                    .addToEndpointStatuses(new EndpointStatusBuilder()
+                            .withName("console")
+                            .withServiceHost("console.svc")
+                            .withExternalPorts(Collections.singletonMap("http", 443))
+                            .withExternalHost("console.example.com")
+                            .build())
+                .endStatus()
+
+                .build();
     }
 }

@@ -6,10 +6,10 @@ package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.v1.Either;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -28,7 +28,7 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response getAddressList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @QueryParam("address") String address, @QueryParam("labelSelector") String labelSelector) throws Exception {
-        return super.getAddressList(securityContext, acceptHeader, namespace, addressSpace, address, labelSelector);
+        return internalGetAddressList(securityContext, acceptHeader, namespace, addressSpace, address, labelSelector);
     }
 
     @GET
@@ -36,22 +36,29 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
     public Response getAddress(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String address) throws Exception {
-        return super.getAddress(securityContext, acceptHeader, namespace, addressSpace, address);
+        return internalGetAddress(securityContext, acceptHeader, namespace, addressSpace, address);
     }
 
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response createAddress(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @NotNull Either<Address, AddressList> payload) throws Exception {
-        return super.createAddress(securityContext, uriInfo, namespace, addressSpace, payload);
+    public Response createAddress(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @NotNull Address payload) throws Exception {
+        return internalCreateAddress(securityContext, uriInfo, namespace, addressSpace, payload);
+    }
+
+    @POST
+    @Produces({MediaType.APPLICATION_JSON})
+    @Consumes({MediaType.APPLICATION_JSON})
+    public Response createAddresses(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @NotNull AddressList payload) throws Exception {
+        return internalCreateAddresses(securityContext, uriInfo, namespace, addressSpace, payload);
     }
 
     @PUT
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
-    public Response replaceAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String addressName, @NotNull Address payload) throws Exception {
-        return super.replaceAddress(securityContext, namespace, addressSpace, addressName, payload);
+    public Response replaceAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String addressName, @NotNull @Valid Address payload) throws Exception {
+        return internalReplaceAddress(securityContext, namespace, addressSpace, addressName, payload);
     }
 
     @DELETE
@@ -59,6 +66,6 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
     public Response deleteAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String addressName) throws Exception {
-        return super.deleteAddress(securityContext, namespace, addressSpace, addressName);
+        return internalDeleteAddress(securityContext, namespace, addressSpace, addressName);
     }
 }

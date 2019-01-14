@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
@@ -18,9 +20,10 @@ import io.fabric8.kubernetes.api.model.ListMeta;
 public abstract class AbstractList<T extends HasMetadata> extends AbstractResource<T>
                 implements KubernetesResource<T>, KubernetesResourceList<T> {
 
-    private ListMeta metadata;
+    @Valid
+    private ListMeta metadata = new ListMeta();
 
-    private List<T> items = new ArrayList<>();
+    private List<@Valid T> items = new ArrayList<>();
 
     protected AbstractList(final String kind, final String apiVersion) {
         super(kind, apiVersion);

@@ -6,8 +6,10 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.Status;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
@@ -33,6 +35,7 @@ public class AddressControllerTest {
     private Kubernetes mockHelper;
     private AddressApi mockApi;
     private AddressController controller;
+    @SuppressWarnings("unused")
     private OpenShiftClient mockClient;
     private BrokerSetGenerator mockGenerator;
     private int id = 0;
@@ -60,29 +63,50 @@ public class AddressControllerTest {
 
     @Test
     public void testAddressGarbageCollection() throws Exception {
-        Address alive = new Address.Builder()
-                .setName("q1")
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("small-queue")
-                .putAnnotation(AnnotationKeys.APPLIED_PLAN, "small-queue")
-                .putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-infra-0")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-infra-0-0")
-                .setStatus(new Status(true).setPhase(Status.Phase.Active))
+        Address alive = new AddressBuilder()
+                .withNewMetadata()
+                .withName("q1")
+                .withNamespace("ns")
+                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
+                .addToAnnotations(AnnotationKeys.CLUSTER_ID, "broker-infra-0")
+                .addToAnnotations(AnnotationKeys.BROKER_ID, "broker-infra-0-0")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("q1")
+                .withAddressSpace("myspace")
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+
+                .withNewStatus()
+                .withReady(true)
+                .withPhase(Phase.Active)
+                .endStatus()
+
                 .build();
-        Address terminating = new Address.Builder()
-                .setName("q2")
-                .setAddress("q2")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("small-queue")
-                .putAnnotation(AnnotationKeys.APPLIED_PLAN, "small-queue")
-                .putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-infra-0")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-infra-0-0")
-                .setStatus(new Status(false).setPhase(Status.Phase.Terminating))
+
+        Address terminating = new AddressBuilder()
+                .withNewMetadata()
+                .withName("q2")
+                .withNamespace("ns")
+                .addToAnnotations(AnnotationKeys.APPLIED_PLAN, "small-queue")
+                .addToAnnotations(AnnotationKeys.CLUSTER_ID, "broker-infra-0")
+                .addToAnnotations(AnnotationKeys.BROKER_ID, "broker-infra-0-0")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("q2")
+                .withAddressSpace("myspace")
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+
+                .withNewStatus()
+                .withReady(false)
+                .withPhase(Phase.Terminating)
+                .endStatus()
+
                 .build();
         when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker-infra-0", new KubernetesList())));
         controller.onUpdate(Arrays.asList(alive, terminating));
@@ -92,16 +116,26 @@ public class AddressControllerTest {
 
     @Test
     public void testDeleteUnusedClusters() throws Exception {
-        Address alive = new Address.Builder()
-                .setName("q1")
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("small-queue")
-                .setStatus(new Status(true).setPhase(Status.Phase.Active)
-                        .appendBrokerStatus(new BrokerStatus("broker-infra-0", "broker-infra-0-0", BrokerState.Active))
-                        .appendBrokerStatus(new BrokerStatus("broker-infra-1", "broker-infra-1-0", BrokerState.Draining)))
+        Address alive = new AddressBuilder()
+                .withNewMetadata()
+                .withName("q1")
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("q1")
+                .withAddressSpace("myspace")
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+
+                .withNewStatus()
+                .withReady(true)
+                .withPhase(Phase.Active)
+                .addToBrokerStatuses(new BrokerStatus("broker-infra-0", "broker-infra-0-0", BrokerState.Active))
+                .addToBrokerStatuses(new BrokerStatus("broker-infra-1", "broker-infra-1-0", BrokerState.Draining))
+                .endStatus()
+
                 .build();
 
         KubernetesList oldList = new KubernetesListBuilder()
@@ -140,13 +174,19 @@ public class AddressControllerTest {
 
     @Test
     public void testPendingIsNeverReady() throws Exception {
-        Address pending = new Address.Builder()
-                .setName("q1")
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("mega-xlarge-queue")
+        Address pending = new AddressBuilder()
+                .withNewMetadata()
+                .withName("q1")
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("q1")
+                .withAddressSpace("myspace")
+                .withType("queue")
+                .withPlan("mega-xlarge-queue")
+                .endSpec()
+
                 .build();
 
         controller.onUpdate(Arrays.asList(pending));
@@ -157,16 +197,23 @@ public class AddressControllerTest {
 
     @Test
     public void testMovesBrokersToDrained() throws Exception {
-        Address alive = new Address.Builder()
-                .setName("q1")
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setType("queue")
-                .setPlan("small-queue")
-                .setStatus(new Status(true).setPhase(Status.Phase.Active)
+        Address alive = new AddressBuilder()
+                .withNewMetadata()
+                .withName("q1")
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("q1")
+                .withAddressSpace("myspace")
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+
+                .withStatus(new Status(true).setPhase(Phase.Active)
                         .appendBrokerStatus(new BrokerStatus("broker-infra-0", "broker-infra-0-0", BrokerState.Migrating))
                         .appendBrokerStatus(new BrokerStatus("broker-infra-1", "broker-infra-1-0", BrokerState.Active)))
+
                 .build();
 
         KubernetesList oldList = new KubernetesListBuilder()

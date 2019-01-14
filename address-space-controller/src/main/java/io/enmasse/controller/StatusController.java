@@ -45,7 +45,7 @@ public class StatusController implements Controller {
 
     private InfraConfig getInfraConfig(AddressSpace addressSpace) {
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        return addressSpaceResolver.getInfraConfig(addressSpace.getType(), addressSpace.getPlan());
+        return addressSpaceResolver.getInfraConfig(addressSpace.getSpec().getType(), addressSpace.getSpec().getPlan());
     }
 
     private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
@@ -53,7 +53,7 @@ public class StatusController implements Controller {
             return null;
         }
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getType());
+        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getSpec().getType());
         return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
@@ -113,7 +113,7 @@ public class StatusController implements Controller {
     }
 
     private void checkAuthServiceReady(AddressSpace addressSpace) {
-        if (AuthenticationServiceType.STANDARD.equals(addressSpace.getAuthenticationService().getType())) {
+        if (AuthenticationServiceType.STANDARD.equals(addressSpace.getSpec().getAuthenticationService().getType())) {
             try {
                 boolean isReady = userApi.realmExists(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
                 if (!isReady) {

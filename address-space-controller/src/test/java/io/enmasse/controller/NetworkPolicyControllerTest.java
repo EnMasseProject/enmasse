@@ -4,9 +4,23 @@
  */
 package io.enmasse.controller;
 
+import static junit.framework.TestCase.assertNotNull;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.Collections;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.NetworkPolicy;
@@ -14,22 +28,10 @@ import io.enmasse.admin.model.v1.NetworkPolicyBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRuleBuilder;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.Collections;
-
-import static junit.framework.TestCase.assertNotNull;
-import static org.hamcrest.CoreMatchers.hasItem;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class NetworkPolicyControllerTest {
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -188,9 +190,10 @@ public class NetworkPolicyControllerTest {
 
     private InfraConfig createTestInfra(NetworkPolicy networkPolicy) throws JsonProcessingException {
         return new StandardInfraConfigBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("test")
-                        .build())
+                .withNewMetadata()
+                .withName("test")
+                .endMetadata()
+
                 .withNewSpec()
                 .withNetworkPolicy(networkPolicy)
                 .endSpec()
@@ -198,14 +201,21 @@ public class NetworkPolicyControllerTest {
     }
 
     private AddressSpace createTestSpace(InfraConfig infraConfig, NetworkPolicy networkPolicy) throws JsonProcessingException {
-        return new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("ns")
-                .setType("type1")
-                .setPlan("plan1")
-                .setNetworkPolicy(networkPolicy)
-                .putAnnotation(AnnotationKeys.INFRA_UUID, "1234")
-                .putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(infraConfig))
+        return new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("ns")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .addToAnnotations(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(infraConfig))
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("plan1")
+                .withNetworkPolicy(networkPolicy)
+                .endSpec()
+
                 .build();
     }
 }

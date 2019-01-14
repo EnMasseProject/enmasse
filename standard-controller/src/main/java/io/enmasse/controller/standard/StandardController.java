@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
+import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
@@ -33,6 +34,7 @@ public class StandardController {
 
     static {
         try {
+            CoreCrd.registerCustomCrds();
             AdminCrd.registerCustomCrds();
         } catch (RuntimeException t) {
             t.printStackTrace();

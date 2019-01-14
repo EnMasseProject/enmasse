@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;

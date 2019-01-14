@@ -4,24 +4,30 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceStatus;
-import io.enmasse.controller.common.Kubernetes;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.metrics.api.Metric;
-import io.enmasse.metrics.api.Metrics;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.metrics.api.Metric;
+import io.enmasse.metrics.api.Metrics;
 
 public class ControllerChainTest {
     private TestAddressSpaceApi testApi;
@@ -43,18 +49,30 @@ public class ControllerChainTest {
         Controller mockController = mock(Controller.class);
         controllerChain.addController(mockController);
 
-        AddressSpace a1 = new AddressSpace.Builder()
-                .setName("myspace")
-                .setType("type1")
-                .setPlan("myplan")
-                .setStatus(new AddressSpaceStatus(false))
+        AddressSpace a1 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
+                .withNewStatus(false)
+
                 .build();
 
-        AddressSpace a2 = new AddressSpace.Builder()
-                .setName("myspace2")
-                .setType("type1")
-                .setPlan("myplan")
-                .setStatus(new AddressSpaceStatus(false))
+        AddressSpace a2 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace2")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+                .withNewStatus(false)
                 .build();
 
         when(mockController.handle(eq(a1))).thenReturn(a1);

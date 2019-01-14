@@ -4,21 +4,26 @@
  */
 package io.enmasse.address.model;
 
-import java.util.ArrayList;
 import java.util.Collection;
+
+import io.enmasse.common.model.AbstractList;
+import io.enmasse.common.model.DefaultCustomResource;
 
 /**
  * Type for address space list
  */
-public class AddressSpaceList extends ArrayList<AddressSpace> {
+@DefaultCustomResource
+@SuppressWarnings("serial")
+public class AddressSpaceList extends AbstractList<AddressSpace> {
 
-    private static final long serialVersionUID = 1L;
+    public static final String KIND = "AddressSpaceList";
 
     public AddressSpaceList() {
-        super();
+        super(KIND, CoreCrd.API_VERSION);
     }
 
     public AddressSpaceList(Collection<AddressSpace> addressSpaces) {
-        super(addressSpaces);
+        this();
+        setItems(addressSpaces);
     }
 }

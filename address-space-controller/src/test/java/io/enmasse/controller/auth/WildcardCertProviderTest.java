@@ -5,7 +5,10 @@
 package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.CertSpecBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -42,12 +45,17 @@ public class WildcardCertProviderTest {
     @Test
     public void testUnknownWildcardSecret() {
 
-        AddressSpace space = new AddressSpace.Builder()
-                .setName("myspace")
-                .setType("standard")
-                .setPlan("myplan")
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("standard")
+                .withPlan("myplan")
+                .endSpec()
                 .build();
-        CertSpec spec = new CertSpec.Builder().setProvider("wildcard").setSecretName("mycerts").build();
+        CertSpec spec = new CertSpecBuilder().withProvider("wildcard").withSecretName("mycerts").build();
 
         assertThrows(IllegalStateException.class, () -> certProvider.provideCert(space, new EndpointInfo("messaging", spec)));
     }
@@ -55,10 +63,15 @@ public class WildcardCertProviderTest {
     @Test
     public void testProvideCert() {
 
-        AddressSpace space = new AddressSpace.Builder()
-                .setName("myspace")
-                .setPlan("myplan")
-                .setType("standard")
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withPlan("myplan")
+                .withType("standard")
+                .endSpec()
                 .build();
 
         client.secrets().create(new SecretBuilder()
@@ -69,7 +82,7 @@ public class WildcardCertProviderTest {
                 .addToData("tls.crt", "myvalue")
                 .build());
 
-        CertSpec spec = new CertSpec.Builder().setProvider("wildcard").setSecretName("mycerts").build();
+        CertSpec spec = new CertSpecBuilder().withProvider("wildcard").withSecretName("mycerts").build();
         certProvider.provideCert(space, new EndpointInfo("messaging", spec));
 
         Secret cert = client.secrets().withName("mycerts").get();

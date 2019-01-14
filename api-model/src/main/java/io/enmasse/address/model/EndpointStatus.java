@@ -7,50 +7,105 @@ package io.enmasse.address.model;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
 
 /**
  * An endpoint
  */
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EndpointStatus {
-    private final String name;
-    private final String serviceHost;
-    private final String certificate;
-    private final Map<String, Integer> servicePorts;
-    private final String externalHost;
-    private final Map<String, Integer> externalPorts;
+    private String name;
 
-    public EndpointStatus(String name, String serviceHost, String certificate, Map<String, Integer> servicePorts, String externalHost, Map<String, Integer> externalPorts) {
+    private String cert;
+
+    private String serviceHost;
+    @JsonDeserialize(using=PortMap.Deserializer.class)
+    @JsonSerialize(using=PortMap.Serializer.class)
+    private Map<String, Integer> servicePorts = new HashMap<>();
+
+    private String externalHost;
+    @JsonDeserialize(using=PortMap.Deserializer.class)
+    @JsonSerialize(using=PortMap.Serializer.class)
+    private Map<String, Integer> externalPorts = new HashMap<>();
+
+    public EndpointStatus() {
+    }
+
+    public EndpointStatus(String name, String serviceHost, String cert, Map<String, Integer> servicePorts, String externalHost, Map<String, Integer> externalPorts) {
         this.name = name;
         this.serviceHost = serviceHost;
-        this.certificate = certificate;
+        this.cert = cert;
         this.servicePorts = servicePorts;
         this.externalHost = externalHost;
         this.externalPorts = externalPorts;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setServiceHost(String serviceHost) {
+        this.serviceHost = serviceHost;
+    }
+
     public String getServiceHost() {
         return serviceHost;
+    }
+
+    public void setExternalPorts(Map<String, Integer> externalPorts) {
+        this.externalPorts = externalPorts;
     }
 
     public Map<String, Integer> getExternalPorts() {
         return Collections.unmodifiableMap(externalPorts);
     }
 
+    public void setServicePorts(Map<String, Integer> servicePorts) {
+        this.servicePorts = servicePorts;
+    }
+
     public Map<String, Integer> getServicePorts() {
         return Collections.unmodifiableMap(servicePorts);
+    }
+
+    public void setExternalHost(String externalHost) {
+        this.externalHost = externalHost;
     }
 
     public String getExternalHost() {
         return externalHost;
     }
 
-    public String getCertificate() {
-        return certificate;
+    public void setCert(String cert) {
+        this.cert = cert;
+    }
+
+    public String getCert() {
+        return cert;
     }
 
     @Override
@@ -62,62 +117,5 @@ public class EndpointStatus {
                 .append("serviceHost=").append(serviceHost).append(",")
                 .append("servicePorts=").append(servicePorts).append("}")
                 .toString();
-    }
-
-    public static class Builder {
-        private String name;
-        private String serviceHost;
-        private String certificate;
-        private Map<String, Integer> servicePorts = new HashMap<>();
-        private String externalHost;
-        private Map<String, Integer> externalPorts = new HashMap<>();
-
-        public Builder() {}
-
-        public Builder(EndpointStatus endpoint) {
-            this.name = endpoint.getName();
-            this.serviceHost = endpoint.getServiceHost();
-            this.certificate = endpoint.getCertificate();
-            this.servicePorts = new HashMap<>(endpoint.getServicePorts());
-            this.externalHost = endpoint.getExternalHost();
-            this.externalPorts = new HashMap<>(endpoint.getExternalPorts());
-        }
-
-        public Builder setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder setServiceHost(String serviceHost) {
-            this.serviceHost = serviceHost;
-            return this;
-        }
-
-        public Builder setCertificate(String certificate) {
-            this.certificate = certificate;
-            return this;
-        }
-
-        public Builder setExternalHost(String externalHost) {
-            this.externalHost = externalHost;
-            return this;
-        }
-
-        public Builder setExternalPorts(Map<String, Integer> externalPorts) {
-            this.externalPorts = new HashMap<>(externalPorts);
-            return this;
-        }
-
-
-        public Builder setServicePorts(Map<String, Integer> servicePorts) {
-            this.servicePorts = new HashMap<>(servicePorts);
-            return this;
-        }
-
-        public EndpointStatus build() {
-            Objects.requireNonNull(name, "name not set");
-            Objects.requireNonNull(serviceHost, "service host not set");
-            return new EndpointStatus(name, serviceHost, certificate, servicePorts, externalHost, externalPorts);
-        }
     }
 }

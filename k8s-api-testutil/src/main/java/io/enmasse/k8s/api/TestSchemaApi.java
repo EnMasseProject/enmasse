@@ -17,20 +17,20 @@ import java.util.Collections;
 public class TestSchemaApi implements SchemaApi {
     private static final ObjectMapper mapper = new ObjectMapper();
     public Schema getSchema() {
-        return new Schema.Builder()
-                .setAddressSpaceTypes(Collections.singletonList(
-                        new AddressSpaceType.Builder()
-                                .setName("type1")
-                                .setDescription("Test Type")
-                                .setAvailableEndpoints(Collections.singletonList(new EndpointSpec.Builder()
-                                        .setName("messaging")
-                                        .setService("messaging")
+        return new SchemaBuilder()
+                .withAddressSpaceTypes(Collections.singletonList(
+                        new AddressSpaceTypeBuilder()
+                                .withName("type1")
+                                .withDescription("Test Type")
+                                .withAvailableEndpoints(Collections.singletonList(new EndpointSpecBuilder()
+                                        .withName("messaging")
+                                        .withService("messaging")
                                         .build()))
-                                .setAddressTypes(Arrays.asList(
-                                        new AddressType.Builder()
-                                                .setName("anycast")
-                                                .setDescription("Test direct")
-                                                .setAddressPlans(Arrays.asList(
+                                .withAddressTypes(Arrays.asList(
+                                        new AddressTypeBuilder()
+                                                .withName("anycast")
+                                                .withDescription("Test direct")
+                                                .withPlans(Arrays.asList(
                                                         new AddressPlanBuilder()
                                                                 .withMetadata(new ObjectMetaBuilder()
                                                                         .withName("plan1")
@@ -44,10 +44,10 @@ public class TestSchemaApi implements SchemaApi {
                                                                 .build()
                                                 ))
                                                 .build(),
-                                        new AddressType.Builder()
-                                                .setName("queue")
-                                                .setDescription("Test queue")
-                                                .setAddressPlans(Arrays.asList(
+                                        new AddressTypeBuilder()
+                                                .withName("queue")
+                                                .withDescription("Test queue")
+                                                .withPlans(Arrays.asList(
                                                         new AddressPlanBuilder()
                                                                 .withMetadata(new ObjectMetaBuilder()
                                                                         .withName("pooled-inmemory")
@@ -72,7 +72,7 @@ public class TestSchemaApi implements SchemaApi {
                                                                 .build())
                                                 ).build()
                                 ))
-                                .setInfraConfigs(Arrays.asList(new StandardInfraConfigBuilder()
+                                .withInfraConfigs(Arrays.asList(new StandardInfraConfigBuilder()
                                         .withMetadata(new ObjectMetaBuilder()
                                                 .withName("infra")
                                                 .build())
@@ -80,8 +80,8 @@ public class TestSchemaApi implements SchemaApi {
                                                 .withVersion("1.0")
                                                 .build())
                                         .build()))
-                                .setInfraConfigDeserializer(json -> mapper.readValue(json, StandardInfraConfig.class))
-                                .setAddressSpacePlans(Collections.singletonList(
+                                .withInfraConfigDeserializer(json -> mapper.readValue(json, StandardInfraConfig.class))
+                                .withPlans(Collections.singletonList(
                                         new AddressSpacePlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder()
                                                         .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra")

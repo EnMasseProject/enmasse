@@ -4,26 +4,6 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceList;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.api.common.DefaultExceptionMapper;
-import io.enmasse.api.common.Status;
-import io.enmasse.api.server.TestSchemaProvider;
-import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.k8s.model.v1beta1.Table;
-import io.enmasse.k8s.util.TimeUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.concurrent.Callable;
-
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,6 +11,29 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.concurrent.Callable;
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AddressSpaceList;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.api.common.Status;
+import io.enmasse.api.server.TestSchemaProvider;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.model.v1beta1.Table;
+import io.enmasse.k8s.util.TimeUtil;
 
 public class HttpAddressSpaceServiceTest {
     private HttpAddressSpaceService addressSpaceService;
@@ -46,29 +49,42 @@ public class HttpAddressSpaceServiceTest {
         addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(), Clock.systemUTC());
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
-        a1 = new AddressSpace.Builder()
-                .setName("a1")
-                .setNamespace("myspace")
-                .setType("type1")
-                .setPlan("myplan")
-                .setCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
-                .setEndpointList(Arrays.asList(
-                        new EndpointSpec.Builder()
-                                .setName("messaging")
-                                .setService("messaging")
+        a1 = new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName("a1")
+                .withCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
+                .withNamespace("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .withEndpoints(Arrays.asList(
+                        new EndpointSpecBuilder()
+                                .withName("messaging")
+                                .withService("messaging")
                                 .build(),
-                        new EndpointSpec.Builder()
-                                .setName("mqtt")
-                                .setService("mqtt")
+                        new EndpointSpecBuilder()
+                                .withName("mqtt")
+                                .withService("mqtt")
                                 .build()))
+                .endSpec()
+
                 .build();
 
-        a2 = new AddressSpace.Builder()
-                .setName("a2")
-                .setType("type1")
-                .setPlan("myplan")
-                .setCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(12)))
-                .setNamespace("othernamespace")
+        a2 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("a2")
+                .withCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(12)))
+                .withNamespace("othernamespace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
     }
 
@@ -88,9 +104,9 @@ public class HttpAddressSpaceServiceTest {
         assertThat(response.getStatus(), is(200));
         AddressSpaceList data = (AddressSpaceList) response.getEntity();
 
-        assertThat(data.size(), is(2));
-        assertThat(data, hasItem(a1));
-        assertThat(data, hasItem(a2));
+        assertThat(data.getItems().size(), is(2));
+        assertThat(data.getItems(), hasItem(a1));
+        assertThat(data.getItems(), hasItem(a2));
     }
 
     @Test
@@ -120,7 +136,7 @@ public class HttpAddressSpaceServiceTest {
         AddressSpace data = ((AddressSpace) response.getEntity());
 
         assertThat(data, is(a1));
-        assertThat(data.getEndpoints().size(), is(a1.getEndpoints().size()));
+        assertThat(data.getSpec().getEndpoints().size(), is(a1.getSpec().getEndpoints().size()));
     }
 
     @Test
@@ -131,14 +147,14 @@ public class HttpAddressSpaceServiceTest {
         Table data = ((Table) response.getEntity());
 
         assertThat(data.getColumnDefinitions().size(), is(6));
-        assertThat(data.getRows().get(0).getObject().getMetadata().getName(), is(a1.getName()));
+        assertThat(data.getRows().get(0).getObject().getMetadata().getName(), is(a1.getMetadata().getName()));
     }
 
     @Test
     public void testPut() {
         addressSpaceApi.createAddressSpace(a1);
-        AddressSpace a1Adapted = new AddressSpace.Builder(a1).putAnnotation("foo", "bar").build();
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getName(), a1Adapted));
+        AddressSpace a1Adapted = new AddressSpaceBuilder(a1).editOrNewMetadata().addToAnnotations("foo", "bar").endMetadata().build();
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getMetadata().getName(), a1Adapted));
         assertThat(response.getStatus(), is(200));
 
         assertFalse(addressSpaceApi.listAddressSpaces(null).isEmpty());
@@ -148,16 +164,16 @@ public class HttpAddressSpaceServiceTest {
     @Test
     public void testPutChangeType() {
         addressSpaceApi.createAddressSpace(a1);
-        AddressSpace a1Adapted = new AddressSpace.Builder(a1).setType("type2").build();
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getName(), a1Adapted));
+        AddressSpace a1Adapted = new AddressSpaceBuilder(a1).editOrNewSpec().withType("type2").endSpec().build();
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getMetadata().getName(), a1Adapted));
         assertThat(response.getStatus(), is(400));
     }
 
     @Test
     public void testPutChangePlan() {
         addressSpaceApi.createAddressSpace(a1);
-        AddressSpace a1Adapted = new AddressSpace.Builder(a1).setPlan("otherplan").build();
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getName(), a1Adapted));
+        AddressSpace a1Adapted = new AddressSpaceBuilder(a1).editOrNewSpec().withPlan("otherplan").endSpec().build();
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getMetadata().getName(), a1Adapted));
         assertThat(response.getStatus(), is(400));
     }
 
@@ -169,7 +185,7 @@ public class HttpAddressSpaceServiceTest {
 
     @Test
     public void testPutNonExistingAddressSpace() {
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1.getName(), a1));
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1.getMetadata().getName(), a1));
         assertThat(response.getStatus(), is(404));
     }
 

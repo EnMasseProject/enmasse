@@ -4,25 +4,29 @@
  */
 package io.enmasse.controller;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Arrays;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.ExposeSpec;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.ExposeSpecBuilder;
+import io.enmasse.address.model.ExposeType;
+import io.enmasse.address.model.TlsTermination;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EndpointControllerTest {
 
@@ -42,18 +46,24 @@ public class EndpointControllerTest {
 
     @Test
     public void testRoutesNotCreated() {
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("mynamespace")
-                .putAnnotation(AnnotationKeys.INFRA_UUID, "1234")
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("myendpoint")
-                        .setService("messaging")
-                        .build())
-                .setType("type1")
-                .setPlan("myplan")
-                .build();
+        AddressSpace addressSpace = new AddressSpaceBuilder()
 
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("myendpoint")
+                        .withService("messaging")
+                        .build())
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
+                .build();
 
         Service service = new ServiceBuilder()
                 .editOrNewMetadata()
@@ -87,20 +97,27 @@ public class EndpointControllerTest {
 
     @Test
     public void testExternalLoadBalancerCreated() {
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("mynamespace")
-                .putAnnotation(AnnotationKeys.INFRA_UUID, "1234")
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("myendpoint")
-                        .setService("messaging")
-                        .setExposeSpec(new ExposeSpec.Builder()
-                                .setType(ExposeSpec.ExposeType.loadbalancer)
-                                .setLoadBalancerPorts(Arrays.asList("amqps"))
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .addNewEndpoint()
+                        .withName("myendpoint")
+                        .withService("messaging")
+                        .withExpose(new ExposeSpecBuilder()
+                                .withType(ExposeType.loadbalancer)
+                                .withLoadBalancerPorts(Arrays.asList("amqps"))
                                 .build())
-                        .build())
-                .setType("type1")
-                .setPlan("myplan")
+                .endEndpoint()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
 
 
@@ -135,22 +152,29 @@ public class EndpointControllerTest {
 
     @Test
     public void testExternalRouteCreated() {
-        AddressSpace addressSpace = new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("mynamespace")
-                .putAnnotation(AnnotationKeys.INFRA_UUID, "1234")
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("myendpoint")
-                        .setService("messaging")
-                        .setExposeSpec(new ExposeSpec.Builder()
-                                .setType(ExposeSpec.ExposeType.route)
-                                .setRouteHost("host1.example.com")
-                                .setRouteServicePort("amqps")
-                                .setRouteTlsTermination(ExposeSpec.TlsTermination.passthrough)
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("mynamespace")
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, "1234")
+                .endMetadata()
+
+                .withNewSpec()
+                .addNewEndpoint()
+                        .withName("myendpoint")
+                        .withService("messaging")
+                        .withExpose(new ExposeSpecBuilder()
+                                .withType(ExposeType.route)
+                                .withRouteHost("host1.example.com")
+                                .withRouteServicePort("amqps")
+                                .withRouteTlsTermination(TlsTermination.passthrough)
                                 .build())
-                        .build())
-                .setType("type1")
-                .setPlan("myplan")
+                .endEndpoint()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
 
 

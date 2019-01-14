@@ -1,0 +1,160 @@
+{
+    "apiVersion": "enmasse.io/v1beta1",
+    "kind": "AddressSpace",
+    "metadata": {
+        "annotations": {
+            "enmasse.io/applied-infra-config": "{\"apiVersion\":\"admin.enmasse.io/v1beta1\",\"kind\":\"StandardInfraConfig\",\"metadata\":{\"creationTimestamp\":\"2019-01-10T16:28:36Z\",\"generation\":1,\"labels\":{\"app\":\"enmasse\"},\"name\":\"default\",\"namespace\":\"enmasse-infra\",\"resourceVersion\":\"401732\",\"selfLink\":\"/apis/admin.enmasse.io/v1beta1/namespaces/enmasse-infra/standardinfraconfigs/default\",\"uid\":\"c7ce1650-14f4-11e9-a3b0-96000017f276\"},\"spec\":{\"version\":\"0.26-SNAPSHOT\",\"admin\":{\"resources\":{\"memory\":\"512Mi\"}},\"broker\":{\"resources\":{\"memory\":\"512Mi\",\"storage\":\"2Gi\"},\"addressFullPolicy\":\"FAIL\"},\"router\":{\"minReplicas\":2,\"resources\":{\"memory\":\"512Mi\"},\"linkCapacity\":250}}}",
+            "enmasse.io/applied-plan": "standard-unlimited",
+            "enmasse.io/created-by": "system:serviceaccount:enmasse-infra:default",
+            "enmasse.io/created-by-uid": "",
+            "enmasse.io/infra-uuid": "lqjsrlq7qt",
+            "enmasse.io/realm-name": "my-iot-1-managed"
+        },
+        "creationTimestamp": "2019-01-11T09:15:23Z",
+        "labels": {
+            "addressSpaceType": "standard",
+            "namespace": "my-iot-1",
+            "type": "address-space"
+        },
+        "name": "managed",
+        "namespace": "my-iot-1",
+        "resourceVersion": "492543",
+        "selfLink": "/apis/enmasse.io/v1beta1/namespaces/my-iot-1/addressspaces/managed",
+        "uid": "6d0bd5c7-1581-11e9-8f1b-96000017f276"
+    },
+    "spec": {
+        "authenticationService": {
+            "details": {},
+            "type": "standard"
+        },
+        "endpoints": [
+            {
+                "cert": {
+                    "provider": "selfsigned",
+                    "secretName": "external-certs-messaging-lqjsrlq7qt"
+                },
+                "expose": {
+                    "routeServicePort": "amqps",
+                    "routeTlsTermination": "passthrough",
+                    "type": "route"
+                },
+                "name": "messaging",
+                "service": "messaging"
+            },
+            {
+                "cert": {
+                    "provider": "selfsigned",
+                    "secretName": "external-certs-messaging-lqjsrlq7qt"
+                },
+                "expose": {
+                    "routeServicePort": "https",
+                    "routeTlsTermination": "reencrypt",
+                    "type": "route"
+                },
+                "name": "messaging-wss",
+                "service": "messaging"
+            },
+            {
+                "cert": {
+                    "provider": "selfsigned",
+                    "secretName": "external-certs-mqtt-lqjsrlq7qt"
+                },
+                "expose": {
+                    "routeServicePort": "secure-mqtt",
+                    "routeTlsTermination": "passthrough",
+                    "type": "route"
+                },
+                "name": "mqtt",
+                "service": "mqtt"
+            },
+            {
+                "cert": {
+                    "provider": "selfsigned",
+                    "secretName": "external-certs-console-lqjsrlq7qt"
+                },
+                "expose": {
+                    "routeServicePort": "https",
+                    "routeTlsTermination": "reencrypt",
+                    "type": "route"
+                },
+                "name": "console",
+                "service": "console"
+            }
+        ],
+        "plan": "standard-unlimited",
+        "type": "standard"
+    },
+    "status": {
+        "endpointStatuses": [
+            {
+                "cert": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUR0akNDQXA2Z0F3SUJBZ0lKQVBReUpTOS9NM2I4TUEwR0NTcUdTSWIzRFFFQkN3VUFNRUl4Q3pBSkJnTlYKQkFZVEFsaFlNUlV3RXdZRFZRUUhEQXhFWldaaGRXeDBJRU5wZEhreEhEQWFCZ05WQkFvTUUwUmxabUYxYkhRZwpRMjl0Y0dGdWVTQk1kR1F3SGhjTk1Ua3dNVEV4TURreE5qSTRXaGNOTkRrd01qSXlNRGt4TmpJNFdqQkdNUk13CkVRWURWUVFLREFwcGJ5NWxibTFoYzNObE1TOHdMUVlEVlFRRERDWnRaWE56WVdkcGJtY3RiSEZxYzNKc2NUZHgKZEM1bGJtMWhjM05sTFdsdVpuSmhMbk4yWXpDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQwpnZ0VCQUx2cFhXRWxBSDRyNXNadmM5WmN3MkdqL3BVeVBFZU1EekhmcTJ6cG4vbFJMMUppTW41RzNudTNTZW0zCjN3ODl1VnUwZklyRzhKakU4VTdnN3FxR1VwUkpOMk1MTlc3d01DOHNOTTFjakhiOXRwMnoyYVBxS2RlRDhBdTIKb3R3aWdHdy9pZ1NLLzcrbFhqUXpONlViQW4rbEUwa3ltM0ZMT3RQUWJMZVE1R1pLR1RUbG1INXc0b1dSVGlFZAp6Z2N2U3JxSno5M1dxdU54RWpGcVNYcFBBLzlZc1lac0d2MnByYW5zMFlZTFBOQlVwZkcwd0UrWURZUE4ycUlzCjRTclVUb2duUTAvRUZ3cXA0WDBscis3WkE1ZnozOVZ2a3VsdmFCbVJrN3hFaDdWb0NpVGZ0N0FrTFIrWldTUGkKanJhbkNZbUxqc2FZcDBGcUw2MVIxNnM3aHgwQ0F3RUFBYU9CcWpDQnB6Q0JwQVlEVlIwUkJJR2NNSUdaZ2ladApaWE56WVdkcGJtY3RiSEZxYzNKc2NUZHhkQzVsYm0xaGMzTmxMV2x1Wm5KaExuTjJZNEpIYldWemMyRm5hVzVuCkxXeHhhbk55YkhFM2NYUXRaVzV0WVhOelpTMXBibVp5WVM1amJIVnpkR1Z5TURBdVlXMWhlbWx1Wnk1cGIzUXQKY0d4aGVXZHliM1Z1WkM1dmNtZUNKbTFsYzNOaFoybHVaeTFzY1dwemNteHhOM0YwTG1WdWJXRnpjMlV0YVc1bQpjbUV1YzNaak1BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQlFJWC8yWFRUYXUzNy9NZlB3WmhQbHZSendZUE1uCm8vdXZEaHd4TVZqVGgyNmhDTzQ2QjBpRFRZUFZTUGMyS1hBblJhK3RzUWlhallCdjZNaUp1aTVxbXhaRVIyaHQKUi9mUnFtYlVsbDlLQ1ZCeUo2cVZZT3lxYUxObGJ3TWZMV3VsaTduZlNObjZWNVh5dUNPdTNTRVV6bVVFR2ZDbwo5aHUxbWd1cVNpdGdiSWNWSlk0Q292N2lsWDhHdmw4TXNoL1c1YXpBUDZ1V0NUSXlSMzU2Ym00aFNXbkpSbDliCnF0RjdLMnlVcmVsMXl1REhGaFIwZCtWSjBYcEltRzl6Rjd4NVJCYUxISk9WTEJHcTA4cXc5Snc2S3pJYkw3aW0KY2xVdElFKyt4T1p6YlFrVnRqQ2tSSVUzUnNIS3NuRmZkYXZCUUZMQzlYUlFNRHZJOGt5bm9kZnkKLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
+                "externalHost": "messaging-lqjsrlq7qt-enmasse-infra.cluster00.amazing.iot-playground.org",
+                "externalPorts": [
+                    {
+                        "name": "amqps",
+                        "port": 443
+                    }
+                ],
+                "name": "messaging",
+                "serviceHost": "messaging-lqjsrlq7qt.enmasse-infra.svc",
+                "servicePorts": [
+                    {
+                        "name": "amqp-wss",
+                        "port": 443
+                    },
+                    {
+                        "name": "amqps",
+                        "port": 5671
+                    },
+                    {
+                        "name": "amqp",
+                        "port": 5672
+                    }
+                ]
+            },
+            {
+                "externalHost": "messaging-wss-lqjsrlq7qt-enmasse-infra.cluster00.amazing.iot-playground.org",
+                "externalPorts": [
+                    {
+                        "name": "https",
+                        "port": 443
+                    }
+                ],
+                "name": "messaging-wss",
+                "serviceHost": "messaging-lqjsrlq7qt.enmasse-infra.svc",
+                "servicePorts": [
+                    {
+                        "name": "amqp-wss",
+                        "port": 443
+                    },
+                    {
+                        "name": "amqps",
+                        "port": 5671
+                    },
+                    {
+                        "name": "amqp",
+                        "port": 5672
+                    }
+                ]
+            },
+            {
+                "externalHost": "console-lqjsrlq7qt-enmasse-infra.cluster00.amazing.iot-playground.org",
+                "externalPorts": [
+                    {
+                        "name": "https",
+                        "port": 443
+                    }
+                ],
+                "name": "console",
+                "serviceHost": "console-lqjsrlq7qt.enmasse-infra.svc",
+                "servicePorts": [
+                    {
+                        "name": "https",
+                        "port": 8081
+                    }
+                ]
+            }
+        ],
+        "isReady": true
+    }
+}

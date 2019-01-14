@@ -4,96 +4,105 @@
  */
 package io.enmasse.address.model;
 
-import java.util.Objects;
-import java.util.Optional;
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
 
 /**
  * An endpoint
  */
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EndpointSpec {
-    private final String name;
-    private final String service;
-    private final ExposeSpec exposeSpec;
-    private final CertSpec certSpec;
+    private String name;
+    private String service;
+    @Valid
+    private ExposeSpec expose;
+    @Valid
+    private CertSpec cert;
 
-    public EndpointSpec(String name, String service, ExposeSpec exposeSpec, CertSpec certSpec) {
+    public EndpointSpec() {
+    }
+
+    public EndpointSpec(String name, String service, ExposeSpec expose, CertSpec cert) {
         this.name = name;
         this.service = service;
-        this.exposeSpec = exposeSpec;
-        this.certSpec = certSpec;
+        this.expose = expose;
+        this.cert = cert;
+    }
+
+    @JsonCreator
+    public EndpointSpec(
+                    @JsonProperty("name") final String name,
+                    @JsonProperty("service") final String service,
+                    @JsonProperty("servicePort") final String servicePort) {
+        this.name = name;
+        this.service = service;
+        this.expose = new ExposeSpecBuilder()
+                        .withRouteServicePort(servicePort)
+                        .withType(ExposeType.route)
+                        .withRouteTlsTermination(TlsTermination.passthrough)
+                        .build();
+    }
+
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setService(String service) {
+        this.service = service;
+    }
+
     public String getService() {
         return service;
     }
 
-    public Optional<ExposeSpec> getExposeSpec() {
-        return Optional.ofNullable(exposeSpec);
+    public void setExpose(ExposeSpec expose) {
+        this.expose = expose;
     }
 
-    public Optional<CertSpec> getCertSpec() {
-        return Optional.ofNullable(certSpec);
+    public ExposeSpec getExpose() {
+        return expose;
+    }
+
+    public void setCert(CertSpec cert) {
+        this.cert = cert;
+    }
+
+    public CertSpec getCert() {
+        return cert;
     }
 
     @Override
     public String toString() {
         return new StringBuilder()
                 .append("{name=").append(name).append(",")
-                .append("expose=").append(exposeSpec).append(",")
+                .append("expose=").append(expose).append(",")
                 .append("service=").append(service).append(",")
-                .append("cert=").append(certSpec).append("}")
+                .append("cert=").append(cert).append("}")
                 .toString();
-    }
-
-    public void validate() {
-        if (certSpec != null) {
-            certSpec.validate();
-        }
-    }
-
-    public static class Builder {
-        private String name;
-        private String service;
-        private ExposeSpec exposeSpec;
-        private CertSpec certSpec;
-
-        public Builder() {}
-
-        public Builder(EndpointSpec endpoint) {
-            this.name = endpoint.getName();
-            this.service = endpoint.getService();
-            this.exposeSpec = endpoint.getExposeSpec().orElse(null);
-            this.certSpec = endpoint.getCertSpec().orElse(null);
-        }
-
-        public Builder setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder setService(String service) {
-            this.service = service;
-            return this;
-        }
-
-        public Builder setExposeSpec(ExposeSpec exposeSpec) {
-            this.exposeSpec = exposeSpec;
-            return this;
-        }
-
-        public Builder setCertSpec(CertSpec certSpec) {
-            this.certSpec = certSpec;
-            return this;
-        }
-
-        public EndpointSpec build() {
-            Objects.requireNonNull(name, "name not set");
-            Objects.requireNonNull(service, "service not set");
-            return new EndpointSpec(name, service, exposeSpec, certSpec);
-        }
     }
 }

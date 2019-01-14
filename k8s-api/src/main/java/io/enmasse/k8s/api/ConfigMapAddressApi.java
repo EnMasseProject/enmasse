@@ -5,10 +5,11 @@
 package io.enmasse.k8s.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.v1.CodecV1;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.common.model.AbstractHasMetadataFluent.MetadataNested;
 import io.enmasse.k8s.api.cache.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -36,8 +37,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     private final NamespacedOpenShiftClient client;
     private final String infraUuid;
     private final WorkQueue<ConfigMap> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
-
-    private final ObjectMapper mapper = CodecV1.getMapper();
+    private ObjectMapper mapper = new ObjectMapper();
 
     public ConfigMapAddressApi(NamespacedOpenShiftClient client, String infraUuid) {
         this.client = client;
@@ -54,27 +54,31 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Address getAddressFromConfig(ConfigMap map) {
         Map<String, String> data = map.getData();
 
         try {
             Address address = mapper.readValue(data.get("config.json"), Address.class);
-            Address.Builder builder = new Address.Builder(address);
+            AddressBuilder builder = new AddressBuilder(address);
+            MetadataNested<AddressBuilder> metadataBuilder = builder.editOrNewMetadata();
 
-            if (address.getUid() == null) {
-                builder.setUid(map.getMetadata().getUid());
+            if (address.getMetadata().getUid() == null) {
+                metadataBuilder.withUid(map.getMetadata().getUid());
             }
 
-            builder.setResourceVersion(map.getMetadata().getResourceVersion());
+            metadataBuilder.withResourceVersion(map.getMetadata().getResourceVersion());
 
-            if (address.getCreationTimestamp() == null) {
-                builder.setCreationTimestamp(map.getMetadata().getCreationTimestamp());
+            if (address.getMetadata().getCreationTimestamp() == null) {
+                metadataBuilder.withCreationTimestamp(map.getMetadata().getCreationTimestamp());
             }
 
-            if (address.getSelfLink() == null) {
-                builder.setSelfLink("/apis/enmasse.io/v1beta1/namespaces/" + address.getNamespace() + "/addressspaces/" + address.getAddressSpace());
+            if (address.getMetadata().getSelfLink() == null) {
+                metadataBuilder.withSelfLink("/apis/enmasse.io/v1beta1/namespaces/" + address.getMetadata().getNamespace() + "/addressspaces/" + address.getSpec().getAddressSpace());
             }
+
+            // commit changes to metadata
+            metadataBuilder.endMetadata();
+
             return builder.build();
         } catch (IOException e) {
             log.error("Error decoding address from configmap : {}", map, e);
@@ -97,7 +101,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         ConfigMapList list = client.configMaps().withLabels(labels).list();
         for (ConfigMap config : list.getItems()) {
             Address address = getAddressFromConfig(config);
-            if (namespace.equals(address.getNamespace())) {
+            if (namespace.equals(address.getMetadata().getNamespace())) {
                 addresses.add(address);
             }
         }
@@ -116,7 +120,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public void createAddress(Address address) {
-        String name = getConfigMapName(address.getNamespace(), address.getName());
+        String name = getConfigMapName(address.getMetadata().getNamespace(), address.getMetadata().getName());
         ConfigMap map = create(address);
         client.configMaps().withName(name).create(map);
     }
@@ -125,13 +129,13 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     public boolean replaceAddress(Address address) {
         ConfigMap newMap = null;
         try {
-            String name = getConfigMapName(address.getNamespace(), address.getName());
+            String name = getConfigMapName(address.getMetadata().getNamespace(), address.getMetadata().getName());
             newMap = create(address);
             ConfigMap result;
-            if (address.getResourceVersion() != null) {
+            if (address.getMetadata().getResourceVersion() != null) {
                 result = client.configMaps()
                         .withName(name)
-                        .lockResourceVersion(address.getResourceVersion())
+                        .lockResourceVersion(address.getMetadata().getResourceVersion())
                         .replace(newMap);
 
             } else {
@@ -157,25 +161,26 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     private ConfigMap create(Address address) {
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .editOrNewMetadata()
-                .withName(getConfigMapName(address.getNamespace(), address.getName()))
-                .addToLabels(address.getLabels())
+                .withName(getConfigMapName(address.getMetadata().getNamespace(), address.getMetadata().getName()))
+                .addToLabels(address.getMetadata().getLabels())
                 .addToLabels(LabelKeys.TYPE, "address-config")
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .addToLabels(LabelKeys.INFRA_TYPE, "any")
-                .addToAnnotations(address.getAnnotations())
+                .addToAnnotations(address.getMetadata().getAnnotations())
                 // TODO: Support other ways of doing this
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getAddressSpace())
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getSpec().getAddressSpace())
                 .endMetadata();
 
-        if (address.getResourceVersion() != null) {
+        if (address.getMetadata().getResourceVersion() != null) {
             builder.editOrNewMetadata()
-                    .withResourceVersion(address.getResourceVersion())
+                    .withResourceVersion(address.getMetadata().getResourceVersion())
                     .endMetadata();
         }
 
         try {
             // Reset resource version to avoid unneeded extra writes
-            builder.addToData("config.json", mapper.writeValueAsString(new Address.Builder(address).setResourceVersion(null).build()));
+            final Address newAddress = new AddressBuilder(address).editOrNewMetadata().withResourceVersion(null).endMetadata().build();
+            builder.addToData("config.json", mapper.writeValueAsString(newAddress));
             return builder.build();
         } catch (IOException e) {
             log.info("Error serializing address for {}", address, e);
@@ -185,7 +190,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public boolean deleteAddress(Address address) {
-        Boolean deleted = client.configMaps().withName(getConfigMapName(address.getNamespace(), address.getName())).delete();
+        Boolean deleted = client.configMaps().withName(getConfigMapName(address.getMetadata().getNamespace(), address.getMetadata().getName())).delete();
         return deleted != null && deleted;
     }
 

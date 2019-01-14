@@ -61,11 +61,11 @@ public final class KubeUtil {
     }
 
     public static String getAddressSpaceCaSecretName(AddressSpace addressSpace) {
-        return sanitizeName("ca-" + addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
+        return sanitizeName("ca-" + addressSpace.getMetadata().getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
     public static String getAddressSpaceExternalCaSecretName(AddressSpace addressSpace) {
-        return sanitizeName("route-ca-" + addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
+        return sanitizeName("route-ca-" + addressSpace.getMetadata().getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
     public static String getAddressSpaceServiceName(String serviceName, AddressSpace addressSpace) {
@@ -99,6 +99,16 @@ public final class KubeUtil {
     }
 
     public static String getNetworkPolicyName(AddressSpace addressSpace) {
-        return addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        return addressSpace.getMetadata().getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
+    public static boolean isNameValid(final String name) {
+        // FIXME: invert exception logic, this should be primary and throwing exceptions secondary
+        try {
+            validateName(name);
+            return true;
+        } catch ( Exception e ) {
+            return false;
+        }
     }
 }

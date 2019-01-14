@@ -49,7 +49,7 @@ public class CertBundleCertProvider implements CertProvider {
                 .withName(endpointInfo.getCertSpec().getSecretName())
                 .withNamespace(namespace)
                 .addToLabels(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID))
-                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType())
                 .addToLabels("app", "enmasse")
                 .endMetadata()
                 .withType("kubernetes.io/tls")

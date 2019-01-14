@@ -5,9 +5,9 @@
 
 package io.enmasse.api.server;
 
-import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
@@ -92,16 +92,26 @@ public class HTTPServerTest {
     }
 
     private AddressSpace createAddressSpace(String namespace, String name) {
-        return new AddressSpace.Builder()
-                .setName(name)
-                .setNamespace(namespace)
-                .setType("type1")
-                .setPlan("myplan")
-                .setStatus(new io.enmasse.address.model.AddressSpaceStatus(false))
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("foo")
-                        .setService("messaging")
-                        .build())
+        return new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+
+                .addNewEndpoint()
+                        .withName("foo")
+                        .withService("messaging")
+                        .endEndpoint()
+
+                .endSpec()
+
+                .withNewStatus(false)
+
                 .build();
     }
 
@@ -117,13 +127,19 @@ public class HTTPServerTest {
 
     private void testAddressApi(VertxTestContext context, String apiVersion) throws InterruptedException {
         addressSpaceApi.withAddressSpace(addressSpace).createAddress(
-                new Address.Builder()
-                        .setAddressSpace("myinstance")
-                        .setName("myinstance.addr1")
-                        .setAddress("addR1")
-                        .setNamespace("ns")
-                        .setType("queue")
-                        .setPlan("myplan")
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withName("myinstance.addr1")
+                        .withNamespace("ns")
+                        .endMetadata()
+
+                        .withNewSpec()
+                        .withAddressSpace("myinstance")
+                        .withAddress("addR1")
+                        .withType("queue")
+                        .withPlan("myplan")
+                        .endSpec()
+
                         .build());
 
         HttpClient client = vertx.createHttpClient();

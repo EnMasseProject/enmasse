@@ -37,6 +37,7 @@ public class AddressSpaceController {
 
     static {
         try {
+            CoreCrd.registerCustomCrds();
             AdminCrd.registerCustomCrds();
         } catch (RuntimeException t) {
             t.printStackTrace();

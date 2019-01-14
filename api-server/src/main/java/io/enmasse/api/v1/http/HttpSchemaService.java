@@ -4,7 +4,7 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.AddressSpaceSchema;
+import io.enmasse.address.model.AddressSpaceSchemaBuilder;
 import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
@@ -52,7 +52,14 @@ public class HttpSchemaService {
             if (type == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpaceSchema", addressSpaceType)).build();
             } else {
-                return Response.ok(new AddressSpaceSchema(type, schema.getCreationTimestamp())).build();
+                return Response.ok(
+                        new AddressSpaceSchemaBuilder()
+                            .withNewMetadata()
+                            .withCreationTimestamp(schema.getCreationTimestamp())
+                            .endMetadata()
+
+                            .withSpec(type)
+                        .build()).build();
             }
         } catch (Exception e) {
             log.warn("Exception handling GET schema", e);

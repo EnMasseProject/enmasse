@@ -99,7 +99,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, options.getAuthenticationServiceSaslInitHost());
 
         if (address != null) {
-            paramMap.put(TemplateParameter.ADDRESS, address.getAddress());
+            paramMap.put(TemplateParameter.ADDRESS, address.getSpec().getAddress());
         }
 
         paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
@@ -127,7 +127,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, options.getAddressSpace());
         if (address != null) {
-            Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getAddress());
+            Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getSpec().getAddress());
         }
         return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
     }

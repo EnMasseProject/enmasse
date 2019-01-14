@@ -5,8 +5,9 @@
 package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceList;
-import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointSpecBuilder;
 import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.model.v1beta1.Table;
@@ -25,6 +26,7 @@ import java.util.concurrent.Callable;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -43,29 +45,45 @@ public class HttpClusterAddressSpaceServiceTest {
         addressSpaceService = new HttpClusterAddressSpaceService(addressSpaceApi, Clock.systemUTC());
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
-        a1 = new AddressSpace.Builder()
-                .setName("a1")
-                .setNamespace("myspace")
-                .setType("type1")
-                .setPlan("myplan")
-                .setCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
-                .setEndpointList(Arrays.asList(
-                        new EndpointSpec.Builder()
-                                .setName("messaging")
-                                .setService("messaging")
+
+        a1 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("a1")
+                .withNamespace("myspace")
+                .withCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+
+                .withEndpoints(Arrays.asList(
+                        new EndpointSpecBuilder()
+                                .withName("messaging")
+                                .withService("messaging")
                                 .build(),
-                        new EndpointSpec.Builder()
-                                .setName("mqtt")
-                                .setService("mqtt")
+                        new EndpointSpecBuilder()
+                                .withName("mqtt")
+                                .withService("mqtt")
                                 .build()))
+
+                .endSpec()
+
                 .build();
 
-        a2 = new AddressSpace.Builder()
-                .setName("a2")
-                .setType("type1")
-                .setPlan("myplan")
-                .setCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(12)))
-                .setNamespace("othernamespace")
+        a2 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("a2")
+                .withNamespace("othernamespace")
+                .withCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(12)))
+                .endMetadata()
+
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build();
     }
 
@@ -85,9 +103,10 @@ public class HttpClusterAddressSpaceServiceTest {
         assertThat(response.getStatus(), is(200));
         AddressSpaceList data = (AddressSpaceList) response.getEntity();
 
-        assertThat(data.size(), is(2));
-        assertThat(data, hasItem(a1));
-        assertThat(data, hasItem(a2));
+        assertNotNull(data.getItems());
+        assertThat(data.getItems().size(), is(2));
+        assertThat(data.getItems(), hasItem(a1));
+        assertThat(data.getItems(), hasItem(a2));
     }
 
     @Test

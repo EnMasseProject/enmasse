@@ -6,7 +6,7 @@
 package io.enmasse.osb.api;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.api.common.ConflictException;
 import io.enmasse.api.common.GoneException;
 import io.enmasse.api.common.UnprocessableEntityException;
@@ -14,6 +14,8 @@ import io.enmasse.osb.api.lastoperation.LastOperationResponse;
 import io.enmasse.osb.api.lastoperation.LastOperationState;
 import io.enmasse.osb.api.provision.ProvisionRequest;
 import io.enmasse.osb.api.provision.ProvisionResponse;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
 import org.jboss.resteasy.util.HttpResponseCodes;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -75,13 +77,20 @@ public class ProvisionServiceTest extends OSBTestBase {
 //        assertThat(provisionResponse.getDashboardUrl(), notNullValue());
         assertThat(provisionResponse.getOperation(), notNullValue());
 
-        Address destination = new Address.Builder()
-                .setName(ADDRESS)
-                .setAddress(ADDRESS)
-                .setAddressSpace("unknown")
-                .setStatus(new Status(false))
-                .setType("queue")
-                .setPlan("myplan")
+        Address destination = new AddressBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName(ADDRESS)
+                        .withNamespace(ADDRESS)
+                        .build())
+
+                .withNewSpec()
+                .withAddressSpace("unknown")
+                .withType("queue")
+                .withPlan("myplan")
+                .endSpec()
+
+                .withNewStatus(false)
+
                 .build();
         //assertThat(addressSpaceApi.getAddresses(), is(new HashSet<>(Collections.singletonList(destination))));
 
@@ -98,13 +107,20 @@ public class ProvisionServiceTest extends OSBTestBase {
         lastOperationResponse = getLastOperationResponse(SERVICE_INSTANCE_ID, QUEUE_SERVICE_ID_STRING, QUEUE_PLAN_ID_STRING, provisionResponse.getOperation());
         assertThat(lastOperationResponse.getState(), is(LastOperationState.SUCCEEDED));
 
-        destination = new Address.Builder()
-                .setName(ADDRESS)
-                .setAddress(ADDRESS)
-                .setAddressSpace("unknown")
-                .setStatus(new Status(true))
-                .setType("queue")
-                .setPlan("myplan")
+        destination = new AddressBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName(ADDRESS)
+                        .build())
+
+                .withNewSpec()
+                .withAddress(ADDRESS)
+                .withAddressSpace("unknown")
+                .withType("queue")
+                .withPlan("myplan")
+                .endSpec()
+
+                .withNewStatus(true)
+
                 .build();
 
         //assertThat(addressSpaceApi.getAddresses(), is(new HashSet<>(Collections.singletonList(destination))));

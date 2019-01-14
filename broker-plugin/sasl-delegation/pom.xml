@@ -119,5 +119,10 @@
       <groupId>io.vertx</groupId>
       <artifactId>vertx-proton</artifactId>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>

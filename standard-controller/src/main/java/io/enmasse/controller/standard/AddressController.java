@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.enmasse.address.model.Status.Phase.*;
+import static io.enmasse.address.model.Phase.*;
 import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
 import static io.enmasse.controller.standard.ControllerKind.Broker;
 import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
@@ -59,7 +59,7 @@ public class AddressController implements Watcher<Address> {
     }
 
     public void start() throws Exception {
-        ResourceChecker<Address> checker = new ResourceChecker<Address>(this, options.getRecheckInterval());
+        ResourceChecker<Address> checker = new ResourceChecker<>(this, options.getRecheckInterval());
         checker.start();
         watch = addressApi.watchAddresses(checker, options.getResyncInterval());
     }
@@ -89,7 +89,7 @@ public class AddressController implements Watcher<Address> {
         Set<Address> addressSet = new LinkedHashSet<>(addressList);
 
         final Map<String, ProvisionState> previousStatus = addressSet.stream()
-                .collect(Collectors.toMap(Address::getAddress,
+                .collect(Collectors.toMap(a -> a.getSpec().getAddress(),
                                           a -> new ProvisionState(a.getStatus(),
                                                                   a.getAnnotation(AnnotationKeys.BROKER_ID),
                                                                   a.getAnnotation(AnnotationKeys.CLUSTER_ID))));
@@ -100,7 +100,7 @@ public class AddressController implements Watcher<Address> {
 
         AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
-        List<Status.Phase> readyPhases = Arrays.asList(Configuring, Active);
+        List<Phase> readyPhases = Arrays.asList(Configuring, Active);
         for (Address address : addressList) {
             address.getStatus().clearMessages();
             if (readyPhases.contains(address.getStatus().getPhase())) {
@@ -108,7 +108,7 @@ public class AddressController implements Watcher<Address> {
             }
         }
 
-        Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
+        Map<Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
 
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(filterByNotPhases(addressSet, EnumSet.of(Pending)));
@@ -155,7 +155,7 @@ public class AddressController implements Watcher<Address> {
 
         int staleCount = 0;
         for (Address address : addressSet) {
-            ProvisionState previous = previousStatus.get(address.getAddress());
+            ProvisionState previous = previousStatus.get(address.getSpec().getAddress());
             ProvisionState current = new ProvisionState(address.getStatus(),
                     address.getAnnotation(AnnotationKeys.BROKER_ID),
                     address.getAnnotation(AnnotationKeys.CLUSTER_ID));
@@ -166,7 +166,7 @@ public class AddressController implements Watcher<Address> {
                     if (e.getStatus().getCode() == 409) {
                         // The address record is stale.  The address controller will be notified again by the watcher,
                         // so safe ignore the stale record.
-                        log.debug("Address {} has stale resource version {}", address.getName(), address.getResourceVersion());
+                        log.debug("Address {} has stale resource version {}", address.getMetadata().getName(), address.getMetadata().getResourceVersion());
                         staleCount++;
                     } else {
                         throw e;
@@ -292,15 +292,15 @@ public class AddressController implements Watcher<Address> {
                 .collect(Collectors.toSet());
     }
 
-    private Set<Address> filterByPhases(Set<Address> addressSet, Set<Status.Phase> phases) {
+    private Set<Address> filterByPhases(Set<Address> addressSet, Set<Phase> phases) {
         return addressSet.stream()
                 .filter(address -> phases.contains(address.getStatus().getPhase()))
                 .collect(Collectors.toSet());
     }
 
-    private Map<Status.Phase,Long> countPhases(Set<Address> addressSet) {
-        Map<Status.Phase, Long> countMap = new HashMap<>();
-        for (Status.Phase phase : Status.Phase.values()) {
+    private Map<Phase,Long> countPhases(Set<Address> addressSet) {
+        Map<Phase, Long> countMap = new HashMap<>();
+        for (Phase phase : Phase.values()) {
             countMap.put(phase, 0L);
         }
         for (Address address : addressSet) {
@@ -309,7 +309,7 @@ public class AddressController implements Watcher<Address> {
         return countMap;
     }
 
-    private Set<Address> filterByNotPhases(Set<Address> addressSet, Set<Status.Phase> phases) {
+    private Set<Address> filterByNotPhases(Set<Address> addressSet, Set<Phase> phases) {
         return addressSet.stream()
                 .filter(address -> !phases.contains(address.getStatus().getPhase()))
                 .collect(Collectors.toSet());
@@ -358,7 +358,7 @@ public class AddressController implements Watcher<Address> {
             for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                 if (BrokerState.Draining.equals(brokerStatus.getState())) {
                     try {
-                        long messageCount = brokerStatusCollector.getQueueMessageCount(address.getAddress(), brokerStatus.getClusterId());
+                        long messageCount = brokerStatusCollector.getQueueMessageCount(address.getSpec().getAddress(), brokerStatus.getClusterId());
                         if (messageCount > 0) {
                             brokerStatuses.add(brokerStatus);
                         }

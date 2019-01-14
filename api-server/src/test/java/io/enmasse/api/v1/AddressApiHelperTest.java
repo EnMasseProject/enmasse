@@ -5,26 +5,45 @@
 
 package io.enmasse.api.v1;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.api.server.TestSchemaProvider;
-import io.enmasse.k8s.api.AddressApi;
-import io.enmasse.k8s.api.AddressSpaceApi;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.SecurityContext;
+
 import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.SecurityContext;
-import java.util.*;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceSpec;
+import io.enmasse.api.server.TestSchemaProvider;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 public class AddressApiHelperTest {
 
@@ -35,7 +54,9 @@ public class AddressApiHelperTest {
     @BeforeEach
     public void setup() {
         AddressSpace addressSpace = mock(AddressSpace.class);
-        when(addressSpace.getType()).thenReturn("type1");
+        when(addressSpace.getSpec()).thenReturn(mock(AddressSpaceSpec.class));
+        when(addressSpace.getMetadata()).thenReturn(mock(ObjectMeta.class));
+        when(addressSpace.getSpec().getType()).thenReturn("type1");
         AddressSpaceApi addressSpaceApi = mock(AddressSpaceApi.class);
         addressApi = mock(AddressApi.class);
         securityContext = mock(SecurityContext.class);
@@ -96,6 +117,7 @@ public class AddressApiHelperTest {
 
         Address addr1 = createAddress("dup", "q1");
         Address addr2 = createAddress("dup", "q2");
+        @SuppressWarnings("unused")
         Address addr3 = createAddress("test.q3", "q3");
         try {
             helper.createAddresses("test", new HashSet<>(Arrays.asList(addr1, addr2)));
@@ -138,24 +160,24 @@ public class AddressApiHelperTest {
     @Test
     public void testDeleteAddress() throws Exception {
         Address address = createAddress("testAddress");
-        when(addressApi.getAddressWithName(same("ns"), same(address.getAddress()))).thenReturn(Optional.of(address));
+        when(addressApi.getAddressWithName(same("ns"), same(address.getSpec().getAddress()))).thenReturn(Optional.of(address));
         when(addressApi.deleteAddress(same(address))).thenReturn(true);
-        assertNotNull(helper.deleteAddress("ns", "test", address.getName()));
+        assertNotNull(helper.deleteAddress("ns", "test", address.getMetadata().getName()));
     }
 
     @Test
     public void testDeleteAddressNotFound() throws Exception {
         Address address = createAddress("testAddress");
-        when(addressApi.getAddressWithName(same("ns"), same(address.getAddress()))).thenReturn(Optional.empty());
-        assertNull(helper.deleteAddress("ns", "test", address.getName()));
+        when(addressApi.getAddressWithName(same("ns"), same(address.getSpec().getAddress()))).thenReturn(Optional.empty());
+        assertNull(helper.deleteAddress("ns", "test", address.getMetadata().getName()));
     }
 
     @Test
     public void testDeleteAddressReturningFalse() throws Exception {
         Address address = createAddress("testAddress");
-        when(addressApi.getAddressWithName(same("ns"), same(address.getAddress()))).thenReturn(Optional.of(address));
+        when(addressApi.getAddressWithName(same("ns"), same(address.getSpec().getAddress()))).thenReturn(Optional.of(address));
         when(addressApi.deleteAddress(same(address))).thenReturn(false);
-        assertNull(helper.deleteAddress("ns", "test", address.getName()));
+        assertNull(helper.deleteAddress("ns", "test", address.getMetadata().getName()));
     }
 
     @Test
@@ -184,7 +206,20 @@ public class AddressApiHelperTest {
     }
 
     private Address createAddress(String name, String address) {
-        return new Address.Builder().setName(name).setNamespace("ns").setAddress(address).setAddressSpace("test").setType("queue").setPlan("plan1").build();
+        return new AddressBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(address)
+                .withAddressSpace("test")
+                .withType("queue")
+                .withPlan("plan1")
+                .endSpec()
+
+                .build();
     }
 
     private Address createAddress(String address) {
