@@ -106,6 +106,13 @@ public class EndpointController implements Controller {
 
             if (endpoint.endpointSpec.getExposeSpec().isPresent()) {
                 exposedStatuses.add(exposeEndpoint(addressSpace, endpoint, endpoint.endpointSpec.getExposeSpec().get()));
+            } else {
+                EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder(endpoint.endpointStatus);
+                Secret certSecret = client.secrets().inNamespace(namespace).withName(KubeUtil.getExternalCertSecretName(endpoint.endpointSpec.getService(), addressSpace)).get();
+                if (certSecret != null) {
+                    statusBuilder.setCertificate(certSecret.getData().get("tls.crt"));
+                }
+                exposedStatuses.add(endpoint.endpointStatus);
             }
         }
 
