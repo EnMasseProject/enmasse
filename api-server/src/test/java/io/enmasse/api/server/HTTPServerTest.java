@@ -50,8 +50,7 @@ public class HTTPServerTest {
     public void setup(VertxTestContext context) throws InterruptedException {
         vertx = Vertx.vertx();
         addressSpaceApi = new TestAddressSpaceApi();
-        String addressSpaceName = "myinstance";
-        addressSpace = createAddressSpace(addressSpaceName);
+        addressSpace = createAddressSpace("ns", "myinstance");
         addressSpaceApi.createAddressSpace(addressSpace);
 
         AuthApi authApi = mock(AuthApi.class);
@@ -92,10 +91,10 @@ public class HTTPServerTest {
         vertx.close(context.succeeding(arg -> context.completeNow()));
     }
 
-    private AddressSpace createAddressSpace(String name) {
+    private AddressSpace createAddressSpace(String namespace, String name) {
         return new AddressSpace.Builder()
                 .setName(name)
-                .setNamespace(name)
+                .setNamespace(namespace)
                 .setType("type1")
                 .setPlan("myplan")
                 .setStatus(new io.enmasse.address.model.AddressSpaceStatus(false))
@@ -136,6 +135,7 @@ public class HTTPServerTest {
                         JsonObject data = buffer.toJsonObject();
                         context.verify(() -> {
                             assertTrue(data.containsKey("items"));
+                            assertEquals(1, data.getJsonArray("items").size());
                             assertEquals("myinstance.addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
                         });
                         context.completeNow();

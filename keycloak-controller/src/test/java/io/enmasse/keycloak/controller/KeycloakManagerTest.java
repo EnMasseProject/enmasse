@@ -93,6 +93,16 @@ public class KeycloakManagerTest {
             }
 
             @Override
+            public UserList listAllUsers() {
+                return null;
+            }
+
+            @Override
+            public UserList listAllUsersWithLabels(Map<String, String> labels) {
+                return null;
+            }
+
+            @Override
             public void deleteUsers(String namespace) {
 
             }

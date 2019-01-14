@@ -5,6 +5,8 @@
 package io.enmasse.user.keycloak;
 
 
+import static java.util.Optional.empty;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -13,7 +15,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.WebApplicationException;
@@ -30,25 +41,6 @@ import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
@@ -443,26 +435,103 @@ public class KeycloakUserApi implements UserApi {
         return withKeycloak(kc -> getRealmResource(kc, realmName) != null);
     }
 
-    @Override
-    public UserList listUsers(String namespace) {
+    private UserList queryUsers(final Predicate<RealmRepresentation> realmPredicate, final Predicate<UserRepresentation> userPredicate) {
         return withKeycloak(keycloak -> {
+
             List<RealmRepresentation> realmReps = keycloak.realms().findAll();
             UserList userList = new UserList();
+
             for (RealmRepresentation realmRep : realmReps) {
-                String realmNs = realmRep.getAttributes().get("namespace");
-                if (realmNs != null && realmNs.equals(namespace)) {
+                if (realmPredicate.test(realmRep)) {
                     String realm = realmRep.getRealm();
-                    List<UserRepresentation> userReps = keycloak.realm(realm).users().list();
-                    for (UserRepresentation userRep : userReps) {
-                        List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
-                        userList.getItems().add(buildUser(userRep, groupReps));
-                    }
+
+                    keycloak.realm(realm).users().list()
+                                    .stream()
+                                    .filter(userPredicate)
+                                    .forEachOrdered(userRep -> {
+                                        List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
+                                        userList.getItems().add(buildUser(userRep, groupReps));
+                                    });
                 }
             }
+
             return userList;
         });
     }
 
+    /**
+     * List all users, from all namespaces.
+     */
+    @Override
+    public UserList listAllUsers() {
+        return queryUsers(
+                        realm -> getAttribute(realm, "namespace").isPresent(),
+                        user -> true);
+    }
+
+    /**
+     * List users from a single namespace.
+     */
+    @Override
+    public UserList listUsers(final String namespace) {
+        return queryUsers(
+                        realm -> hasAttribute(realm, "namespace", namespace),
+                        user -> true);
+    }
+
+    static Optional<String> getAttribute(final RealmRepresentation realm, final String attributeName) {
+
+        if (realm == null || attributeName == null) {
+            // if either the realm is null or the attribute name, then we simply return nothing
+            return empty();
+        }
+
+        final Map<String, String> attributes = realm.getAttributes();
+        if (attributes == null) {
+            // there are no attributes, so no chance for "true"
+            return empty();
+        }
+
+        return Optional.ofNullable(attributes.get(attributeName));
+    }
+
+    /**
+     * Test if a realm as has specific attribute.
+     * 
+     * @param realm The realm to test.
+     * @param attributeName The attribute to test.
+     * @param attributeValue The expected value. May be {@code null}, in which case the attribute value
+     *        is to be expected {@code null} or not set.
+     * @return The methods return {@code true} either if the value attributeName parameter is
+     *         {@code null} and the attribute is either missing or {@code null}, or if the attribute
+     *         value is set and equal to the parameter "attributeValue".
+     */
+    static boolean hasAttribute(final RealmRepresentation realm, final String attributeName, final String attributeValue) {
+
+        if (realm == null || attributeName == null) {
+            return false;
+        }
+
+        final Optional<String> value = getAttribute(realm, attributeName);
+
+        final String v = value.orElse(null);
+
+        if (v == attributeValue) {
+            // do a check on the object reference, catches "null == null"
+            return true;
+        }
+
+        if (v == null) {
+            // attribute value is null, but due to the previous check we know
+            // that the required attribute value is non-null, so it doesn't match
+            return false;
+        }
+
+        // do a proper check
+
+        return v.equals(attributeValue);
+
+    }
 
     static User buildUser(UserRepresentation userRep, List<GroupRepresentation> groupReps) {
         log.debug("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
@@ -524,34 +593,27 @@ public class KeycloakUserApi implements UserApi {
                 .build();
     }
 
+    private static boolean matchesLabels (final UserRepresentation userRep, final Map<String,String> labels) {
+        for (final Map.Entry<String, String> label : labels.entrySet()) {
+            if (userRep.getAttributes().get(label.getKey()) == null || !label.getValue().equals(userRep.getAttributes().get(label.getKey()).get(0))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     @Override
     public UserList listUsersWithLabels(String namespace, Map<String, String> labels) {
-        return withKeycloak(keycloak -> {
+        return queryUsers(
+                        realm -> hasAttribute(realm, "namespace", namespace),
+                        user -> matchesLabels(user, labels));
+    }
 
-            List<RealmRepresentation> realmReps = keycloak.realms().findAll();
-            UserList userList = new UserList();
-            for (RealmRepresentation realmRep : realmReps) {
-                String realmNs = realmRep.getAttributes().get("namespace");
-                if (realmNs != null && realmNs.equals(namespace)) {
-                    String realm = realmRep.getRealm();
-                    List<UserRepresentation> userReps = keycloak.realm(realm).users().list().stream()
-                            .filter(userRep -> {
-                                for (Map.Entry<String, String> label : labels.entrySet()) {
-                                    if (userRep.getAttributes().get(label.getKey()) == null || !label.getValue().equals(userRep.getAttributes().get(label.getKey()).get(0))) {
-                                        return false;
-                                    }
-                                }
-                                return true;
-                            }).collect(Collectors.toList());
-
-                    for (UserRepresentation userRep : userReps) {
-                        List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
-                        userList.getItems().add(buildUser(userRep, groupReps));
-                    }
-                }
-            }
-            return userList;
-        });
+    @Override
+    public UserList listAllUsersWithLabels(final Map<String, String> labels) {
+        return queryUsers(
+                        realm -> getAttribute(realm, "namespace").isPresent(),
+                        user -> matchesLabels(user, labels));
     }
 
     @Override

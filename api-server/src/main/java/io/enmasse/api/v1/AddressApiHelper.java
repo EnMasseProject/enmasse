@@ -5,6 +5,7 @@
 package io.enmasse.api.v1;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.BadRequestException;
@@ -31,30 +32,38 @@ public class AddressApiHelper {
         this.schemaProvider = schemaProvider;
     }
 
-    public AddressList getAddresses(String namespace, String addressSpaceId) throws Exception {
-        AddressList list = new AddressList();
-        if (addressSpaceId == null) {
-            for (AddressSpace addressSpace : addressSpaceApi.listAddressSpaces(namespace)) {
-                list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddresses(namespace));
-            }
-        } else {
-            AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
-            list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddresses(namespace));
+    protected AddressList queryAddresses(Collection<AddressSpace> addressSpaces, BiFunction<String, AddressApi, Collection<Address>> lister) throws Exception {
+        final AddressList list = new AddressList();
+
+        for (final AddressSpace addressSpace : addressSpaces) {
+            list.addAll(lister.apply(addressSpace.getNamespace(), addressSpaceApi.withAddressSpace(addressSpace)));
         }
+
         return list;
     }
 
-    public AddressList getAddressesWithLabels(String namespace, String addressSpaceId, Map<String, String> labels) throws Exception {
-        AddressList list = new AddressList();
+    protected Collection<AddressSpace> getAddressSpaces(String namespace, String addressSpaceId) throws Exception {
         if (addressSpaceId == null) {
-            for (AddressSpace addressSpace : addressSpaceApi.listAddressSpaces(namespace)) {
-                list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddressesWithLabels(namespace, labels));
-            }
+            return addressSpaceApi.listAddressSpaces(namespace);
         } else {
-            AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
-            list.addAll(addressSpaceApi.withAddressSpace(addressSpace).listAddressesWithLabels(namespace, labels));
+            return Collections.singleton(getAddressSpace(namespace, addressSpaceId));
         }
-        return list;
+    }
+    
+    public AddressList getAddresses(String namespace, String addressSpaceId) throws Exception {
+        return queryAddresses(getAddressSpaces(namespace, addressSpaceId), (ns, api) -> api.listAddresses(ns));
+    }
+
+    public AddressList getAddressesWithLabels(String namespace, String addressSpaceId, Map<String, String> labels) throws Exception {
+        return queryAddresses(getAddressSpaces(namespace, addressSpaceId), (ns, api) -> api.listAddressesWithLabels(ns, labels));
+    }
+
+    public AddressList getAllAddresses() throws Exception {
+        return queryAddresses(addressSpaceApi.listAllAddressSpaces(), (ns, api) -> api.listAddresses(ns));
+    }
+
+    public AddressList getAllAddressesWithLabels(final Map<String, String> labels) throws Exception {
+        return queryAddresses(addressSpaceApi.listAllAddressSpaces(), (ns, api) -> api.listAddressesWithLabels(ns, labels));
     }
 
     private void validateAddress(AddressSpace addressSpace, Address address) {

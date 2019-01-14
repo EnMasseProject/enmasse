@@ -4,8 +4,6 @@
  */
 package io.enmasse.api.v1.http;
 
-import static io.enmasse.api.v1.http.HttpAddressSpaceService.formatResponse;
-import static io.enmasse.api.v1.http.HttpAddressSpaceService.removeSecrets;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -29,20 +27,24 @@ import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.v1.AddressApiHelper;
-import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserList;
 
-@Path(HttpClusterAddressSpaceService.BASE_URI)
-public class HttpClusterAddressSpaceService {
+@Path(HttpClusterUserService.BASE_URI)
+public class HttpClusterUserService {
 
-    static final String BASE_URI = "/apis/enmasse.io/{version:v1alpha1|v1beta1}/addressspaces";
+    private static final String RESOURCE_NAME = "messagingusers";
 
-    private static final Logger log = LoggerFactory.getLogger(HttpClusterAddressSpaceService.class.getName());
+    static final String BASE_URI = "/apis/" + User.GROUP + "/{version:v1alpha1|v1beta1}/" + RESOURCE_NAME;
 
-    private final AddressSpaceApi addressSpaceApi;
+    private static final Logger log = LoggerFactory.getLogger(HttpClusterUserService.class.getName());
+
+    private final UserApi userApi;
     private final Clock clock;
 
-    public HttpClusterAddressSpaceService(AddressSpaceApi addressSpaceApi, Clock clock) {
-        this.addressSpaceApi = addressSpaceApi;
+    public HttpClusterUserService(UserApi userApi, Clock clock) {
+        this.userApi = userApi;
         this.clock = clock;
     }
 
@@ -56,23 +58,28 @@ public class HttpClusterAddressSpaceService {
     }
 
     private static void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole("", verb, "addressspaces", "enmasse.io"))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole("", verb, RESOURCE_NAME, User.GROUP))) {
             throw Exceptions.notAuthorizedException();
         }
     }
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getAddressSpaceList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @QueryParam("labelSelector") String labelSelector) throws Exception {
-        return doRequest("Error getting address space list", () -> {
+    public Response getUserList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @QueryParam("labelSelector") String labelSelector) throws Exception {
+        return doRequest("Error getting user list", () -> {
             verifyAuthorized(securityContext, ResourceVerb.list);
+
             Instant now = clock.instant();
+            UserList userList = new UserList();
+
             if (labelSelector != null) {
                 Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.listAllAddressSpacesWithLabels(labels)))).build();
+                userList.getItems().addAll(userApi.listAllUsersWithLabels(labels).getItems());
             } else {
-                return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.listAllAddressSpaces()))).build();
+                userList.getItems().addAll(userApi.listAllUsers().getItems());
             }
+
+            return Response.ok(HttpUserService.formatResponse(acceptHeader, now, userList)).build();
         });
     }
 }

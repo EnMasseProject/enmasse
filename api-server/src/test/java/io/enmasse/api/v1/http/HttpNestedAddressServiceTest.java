@@ -51,6 +51,7 @@ public class HttpNestedAddressServiceTest {
 
         AddressSpace addressSpace = new AddressSpace.Builder()
                 .setName("myspace")
+                .setNamespace("ns")
                 .setType("type1")
                 .setPlan("myplan")
                 .build();

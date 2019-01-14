@@ -93,6 +93,26 @@ public class TestUserApi implements UserApi {
     }
 
     @Override
+    public UserList listAllUsers() {
+        if (throwException) {
+            throw new RuntimeException("exception");
+        }
+        UserList list = new UserList();
+        for (Map<String, User> users : userMap.values()) {
+            list.getItems().addAll(users.values());
+        }
+        return list;
+    }
+
+    @Override
+    public UserList listAllUsersWithLabels(Map<String, String> labels) {
+        if (throwException) {
+            throw new RuntimeException("exception");
+        }
+        return listAllUsers();
+    }
+
+    @Override
     public void deleteUsers(String namespace) {
         if (throwException) {
             throw new RuntimeException("exception");
