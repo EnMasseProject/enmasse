@@ -9,6 +9,7 @@ OPENSHIFT_TOKEN               ?= $(shell oc whoami -t)
 OPENSHIFT_MASTER              ?= $(shell oc whoami --show-server=true)
 OPENSHIFT_USE_TLS             ?= true
 OPENSHIFT_REGISTER_API_SERVER ?= false
+VERSION         			  ?= $(shell cat $(TOPDIR)/release.version)
 
 DOCKER_TARGETS = docker_build docker_tag docker_push clean
 BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage
@@ -81,9 +82,9 @@ docu_html: docu_htmlclean docu_swagger docu_check
 	mkdir -p documentation/html/openshift
 	cp -vRL documentation/_images documentation/html/kubernetes/images
 	cp -vRL documentation/_images documentation/html/openshift/images
-	asciidoctor -v --failure-level WARN -t -dbook documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
-	asciidoctor -v --failure-level WARN -t -dbook documentation/master-openshift.adoc -o documentation/html/openshift/index.html
-	asciidoctor -v --failure-level WARN -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
+	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
+	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-openshift.adoc -o documentation/html/openshift/index.html
+	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
 
 docu_htmlclean:
 	rm -rf documentation/html
