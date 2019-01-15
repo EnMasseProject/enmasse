@@ -4,7 +4,6 @@
  */
 package io.enmasse.k8s.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 
 public class KubeSchemaApi implements SchemaApi {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(KubeSchemaApi.class);
     private final AddressSpacePlanApi addressSpacePlanApi;
     private final AddressPlanApi addressPlanApi;
@@ -163,7 +161,6 @@ public class KubeSchemaApi implements SchemaApi {
 
 
         builder.withInfraConfigs(standardInfraConfigs);
-        builder.withInfraConfigDeserializer(json -> mapper.readValue(json, StandardInfraConfig.class));
 
         builder.withAddressTypes(Arrays.asList(
                 createAddressType(
@@ -216,7 +213,6 @@ public class KubeSchemaApi implements SchemaApi {
                 .collect(Collectors.toList());
 
         builder.withInfraConfigs(brokeredInfraConfigs);
-        builder.withInfraConfigDeserializer(json -> mapper.readValue(json, BrokeredInfraConfig.class));
 
         builder.withAddressTypes(Arrays.asList(
                 createAddressType(

@@ -14,7 +14,8 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.networking.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-import java.io.IOException;
+import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,7 +33,7 @@ public class NetworkPolicyController implements Controller {
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
         NetworkPolicy networkPolicy = null;
-        InfraConfig infraConfig = parseCurrentInfraConfig(addressSpace);
+        InfraConfig infraConfig = parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace);
         if (infraConfig != null) {
             networkPolicy = infraConfig.getNetworkPolicy();
         }
@@ -66,15 +67,6 @@ public class NetworkPolicyController implements Controller {
         }
 
         return !Objects.equals(existingPolicy.getSpec().getEgress(), newPolicy.getSpec().getEgress());
-    }
-
-    private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
-        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG) == null) {
-            return null;
-        }
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getSpec().getType());
-        return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
     private io.fabric8.kubernetes.api.model.networking.NetworkPolicy createNetworkPolicy(NetworkPolicy networkPolicy, AddressSpace addressSpace, List<Service> items) {

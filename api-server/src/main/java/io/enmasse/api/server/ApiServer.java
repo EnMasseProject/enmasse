@@ -5,8 +5,6 @@
 
 package io.enmasse.api.server;
 
-import io.enmasse.address.model.CoreCrd;
-import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.CachingSchemaProvider;
@@ -15,6 +13,7 @@ import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.KubeSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.metrics.api.Metrics;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
@@ -54,8 +53,7 @@ public class ApiServer extends AbstractVerticle {
 
     static {
         try {
-            CoreCrd.registerCustomCrds();
-            AdminCrd.registerCustomCrds();
+            CustomResourceDefinitions.registerAll();
         } catch (RuntimeException t) {
             t.printStackTrace();
             throw new ExceptionInInitializerError(t);
