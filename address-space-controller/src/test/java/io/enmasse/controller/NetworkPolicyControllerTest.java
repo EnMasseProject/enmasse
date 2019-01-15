@@ -29,13 +29,14 @@ import io.enmasse.admin.model.v1.NetworkPolicyBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRuleBuilder;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 
-public class NetworkPolicyControllerTest {
+public class NetworkPolicyControllerTest extends JULInitializingTest {
     private static final ObjectMapper mapper = new ObjectMapper();
     private OpenShiftClient client;
 

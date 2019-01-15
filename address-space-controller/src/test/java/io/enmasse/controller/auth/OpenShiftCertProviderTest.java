@@ -10,7 +10,7 @@ import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.CertSpecBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class OpenShiftCertProviderTest {
+public class OpenShiftCertProviderTest extends JULInitializingTest {
     public OpenShiftServer server = new OpenShiftServer(true, true);
 
     private OpenShiftClient client;

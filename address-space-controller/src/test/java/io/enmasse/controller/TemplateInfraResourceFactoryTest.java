@@ -30,12 +30,13 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.KubernetesHelper;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 
-public class TemplateInfraResourceFactoryTest {
+public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
 
     private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
 

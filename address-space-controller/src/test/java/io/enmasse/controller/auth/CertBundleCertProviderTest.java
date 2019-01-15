@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.CertSpecBuilder;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.enmasse.model.validation.DefaultValidator;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import javax.validation.ValidationException;
 
-public class CertBundleCertProviderTest {
+public class CertBundleCertProviderTest extends JULInitializingTest {
 
     public OpenShiftServer server = new OpenShiftServer(true, true);
 

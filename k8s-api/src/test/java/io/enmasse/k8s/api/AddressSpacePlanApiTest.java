@@ -8,13 +8,13 @@ import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AddressSpacePlanList;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -23,8 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-
-class AddressSpacePlanApiTest {
+class AddressSpacePlanApiTest extends JULInitializingTest {
 
     private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
 

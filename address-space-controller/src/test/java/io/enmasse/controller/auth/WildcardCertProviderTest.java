@@ -8,7 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.CertSpecBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -22,7 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
-public class WildcardCertProviderTest {
+public class WildcardCertProviderTest extends JULInitializingTest {
     public KubernetesServer server = new KubernetesServer(true, true);
 
     private KubernetesClient client;
