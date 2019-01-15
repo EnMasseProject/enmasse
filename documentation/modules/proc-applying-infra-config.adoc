@@ -30,9 +30,27 @@ endif::[]
 
 . Create infrastructure configuration:
 +
-[source,yaml,options="nowrap"]
+[source,yaml,options="nowrap",subs="attributes"]
 ----
-include::../common/standard-infra-config-example.yaml[]
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig
+metadata:
+  name: myconfig
+spec:
+  version: {EnMasseVersion}
+  admin:
+    resources:
+      memory: 256Mi
+  broker:
+    resources:
+      memory: 2Gi
+      storage: 100Gi
+    addressFullPolicy: PAGE
+  router:
+    resources:
+      memory: 256Mi
+    linkCapcity: 1000
+    minReplicas: 1
 ----
 
 . Apply the configuration changes:
