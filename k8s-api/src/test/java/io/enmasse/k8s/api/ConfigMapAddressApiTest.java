@@ -6,19 +6,20 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
-class ConfigMapAddressApiTest {
+class ConfigMapAddressApiTest extends JULInitializingTest {
+
     private static final String ADDRESS = "myaddress";
     private static final String ADDRESS_TYPE = "mytype";
     private static final String ADDRESS_PLAN = "myplan";

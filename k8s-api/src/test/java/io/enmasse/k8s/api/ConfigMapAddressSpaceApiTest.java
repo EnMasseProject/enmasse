@@ -6,12 +6,12 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,7 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * The mock server does not emulate behaviour with respect to resourceVersion.
  */
-class ConfigMapAddressSpaceApiTest {
+class ConfigMapAddressSpaceApiTest extends JULInitializingTest {
+
     private static final String ADDRESS_SPACE_NAME = "myspace";
     private static final String ADDRESS_SPACE_TYPE = "mytype";
     private static final String ADDRESS_SPACE_PLAN = "myplan";

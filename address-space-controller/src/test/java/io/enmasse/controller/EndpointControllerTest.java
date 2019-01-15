@@ -23,12 +23,13 @@ import io.enmasse.address.model.ExposeType;
 import io.enmasse.address.model.TlsTermination;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 
-public class EndpointControllerTest {
+public class EndpointControllerTest extends JULInitializingTest {
 
     private OpenShiftClient client;
     private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);

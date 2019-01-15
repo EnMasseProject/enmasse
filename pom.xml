@@ -45,7 +45,6 @@
         <sundrio.version>0.7.1</sundrio.version>
         <vertx.version>3.6.2</vertx.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <log4j.version>1.2.17</log4j.version>
         <logback.version>1.2.3</logback.version>
         <hibernate.validator.version>6.0.14.Final</hibernate.validator.version>
         <jackson-annotations.version>2.9.6</jackson-annotations.version>
@@ -367,19 +366,6 @@
                 <artifactId>jul-to-slf4j</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-            <!-- Used for testing -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-simple</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>log4j</groupId>
-                <artifactId>log4j</artifactId>
-                <version>${log4j.version}</version>
-            </dependency>
-
             <dependency>
               <groupId>ch.qos.logback</groupId>
               <artifactId>logback-classic</artifactId>
