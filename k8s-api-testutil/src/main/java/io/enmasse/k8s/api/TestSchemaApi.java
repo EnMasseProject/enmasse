@@ -4,7 +4,6 @@
  */
 package io.enmasse.k8s.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
@@ -15,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class TestSchemaApi implements SchemaApi {
-    private static final ObjectMapper mapper = new ObjectMapper();
     public Schema getSchema() {
         return new SchemaBuilder()
                 .withAddressSpaceTypes(Collections.singletonList(
@@ -80,7 +78,6 @@ public class TestSchemaApi implements SchemaApi {
                                                 .withVersion("1.0")
                                                 .build())
                                         .build()))
-                                .withInfraConfigDeserializer(json -> mapper.readValue(json, StandardInfraConfig.class))
                                 .withPlans(Collections.singletonList(
                                         new AddressSpacePlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder()

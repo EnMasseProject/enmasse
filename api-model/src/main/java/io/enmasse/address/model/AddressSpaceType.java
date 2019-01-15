@@ -33,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class AddressSpaceType {
     private String name;
     private String description;
-    private InfraConfigDeserializer infraConfigDeserializer;
     private List<@Valid AddressSpacePlan> plans = new ArrayList<>();
     private List<@Valid AddressType> addressTypes = new ArrayList<>();
     private List<@Valid EndpointSpec> availableEndpoints = new ArrayList<>();
@@ -42,10 +41,9 @@ public class AddressSpaceType {
     public AddressSpaceType() {
     }
 
-    public AddressSpaceType(String name, String description, InfraConfigDeserializer infraConfigDeserializer, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints, List<InfraConfig> infraConfigs) {
+    public AddressSpaceType(String name, String description, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints, List<InfraConfig> infraConfigs) {
         this.name = name;
         this.description = description;
-        this.infraConfigDeserializer = infraConfigDeserializer;
         this.plans = plans;
         this.addressTypes = addressTypes;
         this.availableEndpoints = availableEndpoints;
@@ -127,11 +125,4 @@ public class AddressSpaceType {
         return infraConfigs;
     }
 
-    public void setInfraConfigDeserializer(InfraConfigDeserializer infraConfigDeserializer) {
-        this.infraConfigDeserializer = infraConfigDeserializer;
-    }
-
-    public InfraConfigDeserializer getInfraConfigDeserializer() {
-        return infraConfigDeserializer;
-    }
 }

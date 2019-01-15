@@ -22,10 +22,10 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceChanged;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceCreated;
 import static io.enmasse.controller.common.ControllerReason.AddressSpaceUpgraded;
@@ -112,7 +112,7 @@ public class CreateController implements Controller {
         AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getSpec().getPlan());
 
         InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
-        InfraConfig currentInfraConfig = parseCurrentInfraConfig(addressSpace);
+        InfraConfig currentInfraConfig = parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace);
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
             KubernetesList resourceList = new KubernetesListBuilder()
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
@@ -221,15 +221,6 @@ public class CreateController implements Controller {
     private InfraConfig getInfraConfig(AddressSpace addressSpace) {
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
         return addressSpaceResolver.getInfraConfig(addressSpace.getSpec().getType(), addressSpace.getSpec().getPlan());
-    }
-
-    private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
-        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG) == null) {
-            return null;
-        }
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getSpec().getType());
-        return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 
     @Override

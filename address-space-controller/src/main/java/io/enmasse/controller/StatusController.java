@@ -15,7 +15,8 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -48,18 +49,9 @@ public class StatusController implements Controller {
         return addressSpaceResolver.getInfraConfig(addressSpace.getSpec().getType(), addressSpace.getSpec().getPlan());
     }
 
-    private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
-        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG) == null) {
-            return null;
-        }
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getSpec().getType());
-        return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
-    }
-
     private void checkComponentsReady(AddressSpace addressSpace) {
         try {
-            InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
+            InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
             List<HasMetadata> requiredResources = infraResourceFactory.createInfraResources(addressSpace, infraConfig);
 
             checkDeploymentsReady(addressSpace, requiredResources);

@@ -183,7 +183,6 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .endSpec()
                             .build()
                         ))
-                .withInfraConfigDeserializer(json -> null)
                 .build();
 
         schema = new SchemaBuilder()

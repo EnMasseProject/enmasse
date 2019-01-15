@@ -15,6 +15,7 @@ import io.enmasse.admin.model.v1.*;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.metrics.api.Metrics;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.k8s.api.*;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
@@ -37,8 +38,7 @@ public class AddressSpaceController {
 
     static {
         try {
-            CoreCrd.registerCustomCrds();
-            AdminCrd.registerCustomCrds();
+            CustomResourceDefinitions.registerAll();
         } catch (RuntimeException t) {
             t.printStackTrace();
             throw new ExceptionInInitializerError(t);

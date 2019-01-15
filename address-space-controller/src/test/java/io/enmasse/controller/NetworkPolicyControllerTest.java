@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.util.Collections;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,7 @@ import io.enmasse.admin.model.v1.NetworkPolicyBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRuleBuilder;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 import io.fabric8.openshift.client.OpenShiftClient;
@@ -38,6 +40,11 @@ public class NetworkPolicyControllerTest {
     private OpenShiftClient client;
 
     public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+
+    @BeforeAll
+    public static void init() {
+        CustomResourceDefinitions.registerAll();
+    }
 
     @BeforeEach
     public void setup() {
