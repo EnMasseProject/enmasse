@@ -11,7 +11,7 @@ export BROKER_IP=`hostname -f`
 
 mkdir -p $BROKER_CUSTOM/jmx_exporter
 mkdir -p $BROKER_CONF_DIR
-cp -r ${BROKER_PLUGIN_DIR}/jmx_exporter/jmx_prometheus_javaagent-0.1.0.jar $BROKER_CUSTOM/jmx_exporter/jmx-exporter.jar
+cp -r ${BROKER_PLUGIN_DIR}/jmx_exporter/jmx_prometheus_javaagent-*.jar $BROKER_CUSTOM/jmx_exporter/jmx-exporter.jar
 cp -r ${BROKER_PLUGIN_DIR}/lib $BROKER_CUSTOM
 cp -r ${BROKER_PLUGIN_DIR}/bin $BROKER_CUSTOM
 
