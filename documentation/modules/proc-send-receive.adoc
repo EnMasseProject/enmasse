@@ -1,3 +1,7 @@
+// Module included in the following assemblies:
+//
+// assembly-getting-started.adoc
+
 [id='send-receive-{context}']
 = Sending and receiving messages
 
@@ -6,7 +10,7 @@
 * Installed link:https://qpid.apache.org/proton/index.html[Apache Qpid Proton] Python bindings.
 * An address space named `myspace` must be created.
 * An address named `myqueue` must be created.
-* A user named `user1` with password "password" must be created.
+* A user named `user1` with password `password` must be created.
 
 .Procedure
 
