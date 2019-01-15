@@ -11,6 +11,7 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 
+import javax.security.sasl.AuthenticationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -297,7 +298,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 cause = ex.getCause();
             }
 
-            if (cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
+            if (cause instanceof SecurityException || cause instanceof AuthenticationException || cause instanceof UnauthorizedAccessException) {
                 log.info("canAuth {} ({}): {}", destination.getAddress(), destination.getType(), ex.getMessage());
                 return false;
             } else {
