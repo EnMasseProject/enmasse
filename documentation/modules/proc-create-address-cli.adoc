@@ -1,10 +1,12 @@
 // Module included in the following assemblies:
 //
-// assembly-configure-address-spaces-addresses-cli-kube.adoc
-// assembly-configure-address-spaces-addresses-cli-oc.adoc
+// assembly-getting-started.adoc
+// assembly-managing-addresses.adoc
 
 [id='create-address-cli-{context}']
 = Creating addresses using the command line
+
+You can create addresses using the command line.
 
 .Procedure
 

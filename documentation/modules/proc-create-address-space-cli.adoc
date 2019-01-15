@@ -6,6 +6,8 @@
 [id='create-address-space-cli-{context}']
 = Creating address spaces using the command line
 
+In {ProductName}, you create address spaces using standard command-line tools.
+
 .Procedure
 
 ifeval::["{cmdcli}" == "oc"]
@@ -45,5 +47,5 @@ include::../common/standard-address-space.yaml[]
 {cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
 ----
 +
-The address space is ready for use when the above command outputs `true`.
+The address space is ready for use when the previous command outputs `true`.
 
