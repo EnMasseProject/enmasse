@@ -43,6 +43,7 @@ import javax.jms.DeliveryMode;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.security.sasl.AuthenticationException;
 import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -582,7 +583,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 cause = ex.getCause();
             }
 
-            if (cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
+            if (cause instanceof AuthenticationException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
                 log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
                 return false;
             } else {
