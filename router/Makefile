@@ -5,4 +5,4 @@ build:
 
 package:
 	mkdir -p build
-	tar -czf build/router-$(VERSION).tgz run_qdr.sh configure.sh
+	tar -czf build/router-$(MAVEN_VERSION).tgz run_qdr.sh configure.sh

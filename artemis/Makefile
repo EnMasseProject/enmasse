@@ -19,7 +19,7 @@ build_tar:
 
 	cp -r utils/bin $(ARTEMIS_HOME)
 
-	tar -czf build/artemis-image-$(VERSION).tar.gz -C build/artemis-image .
+	tar -czf build/artemis-image-$(MAVEN_VERSION).tar.gz -C build/artemis-image .
 
 package: build_tar build/apache-artemis-bin.tar.gz
 
