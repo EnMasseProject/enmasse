@@ -4,10 +4,11 @@ RUN mkdir -p /opt/app-root/src/
 WORKDIR /opt/app-root/src/
 
 ARG version
+ARG maven_version
 ARG commit
-ENV VERSION=${version} COMMIT=${commit}
+ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD target/agent-${VERSION}-dist.tar.gz /opt/app-root/src/
+ADD target/agent-${MAVEN_VERSION}-dist.tar.gz /opt/app-root/src/
 
 EXPOSE 56720 8080
 

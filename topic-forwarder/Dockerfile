@@ -1,8 +1,9 @@
 FROM enmasseproject/java-base:8-11
 
 ARG version
+ARG maven_version
 ARG commit
-ENV VERSION=${version} COMMIT=${commit}
-ADD target/topic-forwarder-${VERSION}.jar /topic-forwarder.jar
+ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
+ADD target/topic-forwarder-${MAVEN_VERSION}.jar /topic-forwarder.jar
 
 CMD ["/opt/run-java/launch_java.sh", "/topic-forwarder.jar"]

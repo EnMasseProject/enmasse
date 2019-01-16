@@ -7,6 +7,7 @@ PROJECT_NAME    ?= $(shell basename $(CURDIR))
 NAMESPACE       ?= $(shell oc project -q)
 COMMIT 			?= $(shell git rev-parse HEAD)
 VERSION         ?= $(shell cat $(TOPDIR)/release.version)
+MAVEN_VERSION   ?= $(shell cat $(TOPDIR)/maven.version)
 TAG             ?= latest
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
@@ -34,7 +35,7 @@ buildpush:
 	make docker_push
 
 docker_build: package
-	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) --build-arg commit=$(COMMIT) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) . ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg maven_version=$(MAVEN_VERSION) --build-arg version=$(VERSION) --build-arg commit=$(COMMIT) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) . ; fi
 	if [ -f Dockerfile ]; then docker images | grep $(PROJECT_PREFIX); fi
 
 docker_tag:

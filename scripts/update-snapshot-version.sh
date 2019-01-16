@@ -5,6 +5,7 @@ git checkout master
 
 mvn versions:set -DnewVersion=${VERSION}
 echo $VERSION > release.version
+echo $VERSION > maven.version
 git status
 echo "Press ENTER to commit ${VERSION}"
 read

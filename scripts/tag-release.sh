@@ -3,6 +3,7 @@ RELEASE_BRANCH=$1
 VERSION=$2
 git checkout release-${RELEASE_BRANCH}
 mvn versions:set -DnewVersion=${VERSION}
+echo ${VERSION} > maven.version
 git status
 echo "Press ENTER to commit ${VERSION}"
 read

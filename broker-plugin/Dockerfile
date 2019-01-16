@@ -3,10 +3,11 @@ FROM enmasseproject/java-base:8-11
 RUN yum -y install which python gettext hostname iputils openssl && yum clean all -y && mkdir -p /var/run/artemis/
 
 ARG version
+ARG maven_version
 ARG commit
-ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit}
+ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD ./build/broker-plugin-${version}-dist.tar.gz /
+ADD ./build/broker-plugin-${maven_version}-dist.tar.gz /
 
 RUN chgrp -R 0 /opt/broker-plugin && \
     chmod -R g=u /opt/broker-plugin
