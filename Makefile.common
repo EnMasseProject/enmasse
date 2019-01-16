@@ -40,6 +40,7 @@ docker_push:
 	if [ -f Dockerfile ] ; \
 	then \
 		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
+		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(VERSION)" 10 10 ; \
 	fi
 	
 
