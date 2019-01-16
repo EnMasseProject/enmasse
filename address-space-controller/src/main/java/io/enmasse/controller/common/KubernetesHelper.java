@@ -16,7 +16,6 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.ParameterValue;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,9 +91,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
+    public KubernetesList processTemplate(String templateName, Map<String,String> parameters) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return client.templates().load(templateFile).processLocally(parameterValues);
+        return client.templates().load(templateFile).processLocally(parameters);
     }
 
     @Override
