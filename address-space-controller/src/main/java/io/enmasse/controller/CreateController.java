@@ -113,7 +113,6 @@ public class CreateController implements Controller {
         InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
         InfraConfig currentInfraConfig = parseCurrentInfraConfig(addressSpace);
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
-            kubernetes.ensureServiceAccountExists(addressSpace);
             KubernetesList resourceList = new KubernetesListBuilder()
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                     .build();
@@ -131,7 +130,6 @@ public class CreateController implements Controller {
                 if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                     return addressSpace;
                 }
-                kubernetes.ensureServiceAccountExists(addressSpace);
                 KubernetesList resourceList = new KubernetesListBuilder()
                         .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                         .build();
@@ -151,7 +149,6 @@ public class CreateController implements Controller {
                 return addressSpace;
             }
 
-            kubernetes.ensureServiceAccountExists(addressSpace);
             KubernetesList resourceList = new KubernetesListBuilder()
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
                     .build();
