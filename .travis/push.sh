@@ -11,4 +11,5 @@ then
     echo "Skipping docker tag on PR"
 else
     make docker_push
+    make TAG=${VERSION} docker_push
 fi
