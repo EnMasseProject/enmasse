@@ -101,7 +101,6 @@ individual module:
    * `docker_build` - build docker image
    * `docker_tag`   - tag docker image
    * `docker_push`  - push docker image
-   * `deploy`       - deploys the built templates to OpenShift. The images referenced by the template must be available in a docker registry
    * `buildpush`    - build, test, package, docker build, docker_tag and docker_push
    * `systemtests`  - run systemtests
 
