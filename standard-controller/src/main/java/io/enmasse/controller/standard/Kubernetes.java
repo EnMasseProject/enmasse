@@ -7,8 +7,6 @@ package io.enmasse.controller.standard;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.openshift.client.ParameterValue;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -52,7 +50,7 @@ public interface Kubernetes {
 
     void delete(KubernetesList resources);
 
-    KubernetesList processTemplate(String templateName, ParameterValue... parameterValues);
+    KubernetesList processTemplate(String templateName, Map<String,String> parameters);
 
     RouterCluster getRouterCluster() throws IOException;
 

@@ -11,7 +11,6 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.openshift.client.ParameterValue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -40,18 +39,20 @@ public class TemplateBrokerSetGeneratorTest {
     @Test
     public void testDirect() throws Exception {
         Address dest = createAddress("foo_bar_FOO", "anycast");
-        ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String,String>> captor = ArgumentCaptor.forClass(Map.class);
         BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
-        List<ParameterValue> parameters = captor.getAllValues();
+        Map<String,String> parameters = captor.getValue();
         assertThat(parameters.size(), is(13));
     }
 
     @Test
     public void testStoreAndForward() throws Exception {
         Address dest = createAddress("foo.bar", "queue");
-        ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String,String>> captor = ArgumentCaptor.forClass(Map.class);
         BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
@@ -60,7 +61,7 @@ public class TemplateBrokerSetGeneratorTest {
             assertNotNull(annotations.get(AnnotationKeys.CLUSTER_ID));
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getMetadata().getName()));
         }
-        List<ParameterValue> parameters = captor.getAllValues();
+        Map<String,String> parameters = captor.getValue();
         assertThat(parameters.size(), is(13));
     }
 
@@ -80,7 +81,7 @@ public class TemplateBrokerSetGeneratorTest {
                 .build();
     }
 
-    private BrokerCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) throws Exception {
+    private BrokerCluster generateCluster(Address address, ArgumentCaptor<Map<String,String>> captor) throws Exception {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
 
         return generator.generateCluster(address.getMetadata().getName(), 1, address, null,

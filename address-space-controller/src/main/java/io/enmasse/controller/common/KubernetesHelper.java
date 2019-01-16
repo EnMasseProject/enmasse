@@ -9,6 +9,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.util.Templates;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -81,9 +82,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public KubernetesList processTemplate(String templateName, Map<String,String> parameters) {
+    public KubernetesList processTemplate(String templateName, Map<String, String> parameters) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return client.templates().load(templateFile).processLocally(parameters);
+        return Templates.process(client, templateFile, parameters);
     }
 
     @Override
