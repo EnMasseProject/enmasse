@@ -54,7 +54,7 @@ public interface ITestSeparator {
                 log.error("Got OOM, dumping thread info");
                 printThreadDump();
             } else {
-                log.error("Caught exception {}", ex);
+                log.error("Caught exception", ex);
             }
         }
         log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
