@@ -710,7 +710,7 @@ data:
       value: '10000'
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
-      required: true
+      value: address-space-admin
     - description: Memory limits for admin
       name: ADMIN_MEMORY_LIMIT
       value: 512Mi
@@ -1459,7 +1459,7 @@ data:
       value: 'false'
     - description: The service account with address space admin privileges
       name: ADDRESS_SPACE_ADMIN_SA
-      required: true
+      value: address-space-admin
     - description: Memory limits for admin
       name: ADMIN_MEMORY_LIMIT
       value: 512Mi

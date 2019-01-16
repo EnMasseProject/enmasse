@@ -32,8 +32,6 @@ public interface Kubernetes {
 
     Optional<Secret> getSecret(String secretName);
 
-    void ensureServiceAccountExists(AddressSpace addressSpace);
-
     boolean existsAddressSpace(AddressSpace addressSpace);
 
     static void addObjectAnnotation(HasMetadata item, String annotationKey, String annotationValue) {

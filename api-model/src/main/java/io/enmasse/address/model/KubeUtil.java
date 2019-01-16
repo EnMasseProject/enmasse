@@ -68,10 +68,6 @@ public final class KubeUtil {
         return sanitizeName("route-ca-" + addressSpace.getName() + "." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
-    public static String getAddressSpaceSaName(AddressSpace addressSpace) {
-        return "sa-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-    }
-
     public static String getAddressSpaceServiceName(String serviceName, AddressSpace addressSpace) {
         return serviceName + "-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
     }
