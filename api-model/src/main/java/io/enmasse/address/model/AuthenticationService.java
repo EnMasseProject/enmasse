@@ -12,6 +12,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.model.validation.AuthenticationServiceDetails;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
@@ -32,6 +33,7 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@AuthenticationServiceDetails
 public class AuthenticationService {
 
     private static final AuthenticationServiceType DEFAULT_TYPE;

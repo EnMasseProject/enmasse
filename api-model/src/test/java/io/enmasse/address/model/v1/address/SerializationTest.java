@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import javax.validation.ConstraintViolationException;
+import javax.validation.ValidationException;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -168,7 +169,7 @@ public class SerializationTest {
 
         ObjectMapper mapper = new ObjectMapper();
         String serialized = mapper.writeValueAsString(addressSpace);
-        assertThrows(RuntimeException.class, () -> validate(mapper.readValue(serialized, AddressSpace.class)));
+        assertThrows(ValidationException.class, () -> validate(mapper.readValue(serialized, AddressSpace.class)));
     }
 
     @Test
@@ -291,14 +292,14 @@ public class SerializationTest {
     public void testDeserializeAddressSpaceMissingDefaults() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String serialized = "{\"kind\": \"AddressSpace\", \"apiVersion\": \"v1beta1\"}";
-        assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(serialized, AddressSpace.class)));
+        assertThrows(ValidationException.class, () -> validate(mapper.readValue(serialized, AddressSpace.class)));
     }
 
     @Test
     public void testDeserializeAddressMissingDefaults() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String serialized = "{\"kind\": \"Address\", \"apiVersion\": \"v1beta1\"}";
-        assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(serialized, Address.class)));
+        assertThrows(ValidationException.class, () -> validate(mapper.readValue(serialized, Address.class)));
     }
 
     @Test
@@ -477,6 +478,28 @@ public class SerializationTest {
     }
 
     @Test
+    public void testDeserializeAddressSpaceWithAuthServiceValues() throws IOException {
+        String json = "{" +
+                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
+                "\"kind\":\"AddressSpace\"," +
+                "\"metadata\":{" +
+                "  \"name\":\"myspace\"" +
+                "}," +
+                "\"spec\": {" +
+                "  \"type\":\"standard\"," +
+                "  \"plan\":\"myplan\"," +
+                "  \"authenticationService\": {" +
+                "     \"type\": \"external\"" +
+                "  }" +
+                "}" +
+                "}";
+
+        ObjectMapper mapper = new ObjectMapper();
+        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
+        assertEquals(3, exception.getConstraintViolations().size());
+    }
+
+    @Test
     public void testDeserializeAddressSpaceWithMissingAuthServiceValues() throws IOException {
         String json = "{" +
                 "\"apiVersion\":\"enmasse.io/v1beta1\"," +
@@ -486,14 +509,24 @@ public class SerializationTest {
                 "}," +
                 "\"spec\": {" +
                 "  \"type\":\"standard\"," +
+                "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
-                "     \"type\": \"external\"" +
+                "     \"type\": \"external\"," +
+                "     \"details\": {" +
+                "       \"host\": \"my.example.com\"," +
+                "       \"saslInitHost\": \"localhost\"," +
+                "       \"port\": 1234" +
+                "     }" +
                 "  }" +
                 "}" +
                 "}";
 
         ObjectMapper mapper = new ObjectMapper();
-        assertThrows(RuntimeException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
+        AddressSpace addressSpace= mapper.readValue(json, AddressSpace.class);
+        validate(addressSpace);
+        assertEquals("my.example.com", addressSpace.getSpec().getAuthenticationService().getDetails().get("host"));
+        assertEquals("localhost", addressSpace.getSpec().getAuthenticationService().getDetails().get("saslInitHost"));
+        assertEquals(1234, addressSpace.getSpec().getAuthenticationService().getDetails().get("port"));
     }
 
     @Test
@@ -506,6 +539,7 @@ public class SerializationTest {
                 "}," +
                 "\"spec\": {" +
                 "  \"type\":\"standard\"," +
+                "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
                 "     \"type\": \"standard\"," +
                 "     \"details\": {" +
@@ -516,7 +550,8 @@ public class SerializationTest {
                 "}";
 
         ObjectMapper mapper = new ObjectMapper();
-        assertThrows(RuntimeException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
+        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
+        assertEquals(1, exception.getConstraintViolations().size());
     }
 
     @Test

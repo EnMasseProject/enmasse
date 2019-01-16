@@ -65,6 +65,10 @@ public final class PortMap {
 
             p.nextToken();
 
+            if (p.currentToken() == JsonToken.END_ARRAY) {
+                return new HashMap<> ();
+            }
+
             final Map<String, Integer> result = new HashMap<>();
             final Iterator<Mapping> i = p.readValuesAs(Mapping.class);
             i.forEachRemaining(m -> result.put(m.getName(), m.getPort()));

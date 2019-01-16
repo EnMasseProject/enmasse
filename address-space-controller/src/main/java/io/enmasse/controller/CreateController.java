@@ -104,7 +104,7 @@ public class CreateController implements Controller {
         }
         addressSpace = new AddressSpaceBuilder(addressSpace)
                 .editOrNewSpec()
-                .addAllToEndpoints(newEndpoints)
+                .withEndpoints(newEndpoints)
                 .endSpec()
                 .build();
 

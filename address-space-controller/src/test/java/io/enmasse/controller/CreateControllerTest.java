@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -31,11 +32,17 @@ import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 
 public class CreateControllerTest {
     private static final ObjectMapper mapper = new ObjectMapper();
+
+    @BeforeAll
+    public static void init () {
+        CustomResourceDefinitions.registerAll();
+    }
 
     @Test
     public void testAddressSpaceCreate() throws Exception {
