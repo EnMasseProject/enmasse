@@ -10,6 +10,9 @@ BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage
 INSTALLDIR=$(CURDIR)/templates/install
 SKIP_TESTS      ?= false
 
+ASCIIDOCTOR_EXTRA_FLAGS=--failure-level WARN
+ASCIIDOCTOR_FLAGS=-v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTOR_EXTRA_FLAGS)
+
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS="-DskipTests"
 endif
@@ -71,9 +74,9 @@ docu_html: docu_htmlclean docu_swagger docu_check
 	mkdir -p documentation/html/openshift
 	cp -vRL documentation/_images documentation/html/kubernetes/images
 	cp -vRL documentation/_images documentation/html/openshift/images
-	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
-	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-openshift.adoc -o documentation/html/openshift/index.html
-	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
+	asciidoctor $(ASCIIDOCTOR_FLAGS) documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
+	asciidoctor $(ASCIIDOCTOR_FLAGS) documentation/master-openshift.adoc -o documentation/html/openshift/index.html
+	asciidoctor $(ASCIIDOCTOR_FLAGS) documentation/contributing/master.adoc -o documentation/html/contributing.html
 
 docu_htmlclean:
 	rm -rf documentation/html
