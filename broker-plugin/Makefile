@@ -13,14 +13,6 @@ build_tar:
 	mkdir -p $(ARTIFACT_BASE)/opt
 
 	tar xvf plugin/target/plugin-$(VERSION)-dist.tar.gz -C $(ARTIFACT_BASE)
-	
-	# Prometheus support
-	mkdir -p $(ARTEMIS_PLUGIN_HOME)/jmx_exporter
-	cp -f jmx_exporter/target/lib/jmx_prometheus_javaagent-0.1.0.jar $(ARTEMIS_PLUGIN_HOME)/jmx_exporter/
-
-	# Tcnative SSL
-	cp -f tcnative/target/lib/netty-tcnative-boringssl-static-2.0.7.Final.jar $(ARTEMIS_PLUGIN_HOME)/lib
-
 	tar -czf build/broker-plugin-$(VERSION)-dist.tar.gz -C $(ARTIFACT_BASE) .
 
 package: build_tar
