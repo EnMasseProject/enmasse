@@ -1,6 +1,6 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 DOCKER_REGISTRY ?= docker.io
-DOCKER_ORG      ?= enmasseproject
+DOCKER_ORG      ?= $(USER)
 DOCKER          ?= docker
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
@@ -27,6 +27,11 @@ clean_node:
 
 clean: clean_node
 	rm -rf build
+
+buildpush:
+	make
+	make docker_tag
+	make docker_push
 
 docker_build: package
 	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg version=$(VERSION) --build-arg commit=$(COMMIT) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) . ; fi

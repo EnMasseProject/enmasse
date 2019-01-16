@@ -76,6 +76,16 @@ public class KubeCMDClient extends CmdClient {
         return createOrUpdateCR(namespace, definition, true);
     }
 
+    public static void getOCUser() {
+        List<String> command = Arrays.asList(CMD, "whoami");
+        execute(command, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static void getCurrentProject() {
+        List<String> command = Arrays.asList(CMD, "project");
+        execute(command, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
     /**
      * Use CRD for get address by addressName in 'namespace'
      *
@@ -162,6 +172,11 @@ public class KubeCMDClient extends CmdClient {
             cmd.add(s);
         });
         return cmd;
+    }
+
+    public static void loginUser(String apiToken) {
+        List<String> cmd = Arrays.asList(CMD, "login", "--token=" + apiToken);
+        execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static String loginUser(String username, String password) {

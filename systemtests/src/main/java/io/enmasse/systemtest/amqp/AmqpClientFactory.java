@@ -83,30 +83,26 @@ public class AmqpClientFactory {
 
     public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
         assertNotNull(addressSpace, "Address space is null");
-        if (environment.useTLS()) {
-            Endpoint messagingEndpoint = addressSpace.getEndpointByServiceName("messaging");
-            if (messagingEndpoint == null) {
-                String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
-                messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
-            }
-            Endpoint clientEndpoint;
-            ProtonClientOptions clientOptions = new ProtonClientOptions();
-            clientOptions.setSsl(true);
-            clientOptions.setTrustAll(true);
-            clientOptions.setHostnameVerificationAlgorithm("");
-
-            if (TestUtils.resolvable(messagingEndpoint)) {
-                clientEndpoint = messagingEndpoint;
-            } else {
-                clientEndpoint = new Endpoint("localhost", 443);
-                clientOptions.setSniServerName(messagingEndpoint.getHost());
-            }
-            log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
-
-            return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
-        } else {
-            return createClient(terminusFactory, kubernetes.getEndpoint("messaging", "amqps"), qos);
+        Endpoint messagingEndpoint = addressSpace.getEndpointByServiceName("messaging");
+        if (messagingEndpoint == null) {
+            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
+            messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
         }
+        Endpoint clientEndpoint;
+        ProtonClientOptions clientOptions = new ProtonClientOptions();
+        clientOptions.setSsl(true);
+        clientOptions.setTrustAll(true);
+        clientOptions.setHostnameVerificationAlgorithm("");
+
+        if (TestUtils.resolvable(messagingEndpoint)) {
+            clientEndpoint = messagingEndpoint;
+        } else {
+            clientEndpoint = new Endpoint("localhost", 443);
+            clientOptions.setSniServerName(messagingEndpoint.getHost());
+        }
+        log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
+
+        return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonQoS qos) {

@@ -1,6 +1,6 @@
-# Building EnMasse
+# Developing EnMasse
 
-## Prerequisites
+## Build requirements
 
 To build EnMasse, you need
 
@@ -14,60 +14,60 @@ To build EnMasse, you need
 
 The EnMasse java and node modules are built using maven. All docker images are built using make.
 
+## Runtime requirements
+
+To run EnMasse you need a Kubernetes cluster. Most EnMasse developers use [OKD](https://www.okd.io/)
+for running tests on their machine.
+
 ## Building
 
 ### Pre-installation
 
 *Note*: Make sure docker daemon is in running state.
 
-#### Doing a full build, run unit tests and build docker images:
+#### Full build, run unit tests and build docker images:
 
     make
 
 This can be run at the top level or within each module. You can also run the 'build', 'test', and 'package' targets individually.
-This builds all modules including java.
 
-
-#### Tagging and push images to a docker registry
+#### Full build and pushing docker images to a registry
 
     export DOCKER_ORG=myorg
     export DOCKER_REGISTRY=docker.io
-    #optional parameters
-    export COMMIT=v.1.0.3 #for specific version of your image
+    export TAG=v1.0.3 # Optional: 'latest' by default
 
     docker login -u myuser -p mypassword $DOCKER_REGISTRY
 
-    # To generate templates to pull images from your docker hub org
-    make -C templates
+    make buildpush
 
-    make docker_tag
-    make docker_push
-
-*Note*: If you are using OpenShift and 'oc cluster up', you can push images directly to the builtin registry
+*Note*: If you are using OKD and 'oc cluster up', you can push images directly to the builtin registry
 by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
-
-#### Deploying to an OpenShift instance assuming already logged in with cluster-admin permissions
-
-```
-oc new-project myproject || oc project myproject
-oc process -f templates/build/enmasse-latest/install/templates/enmasse-with-standard-authservice.yaml NAMESPACE=myproject | oc create -f -
-```
 
 #### Deploying to a Kubernetes instance assuming already logged in with cluster-admin permissions
 
+*Note*: This assumes you have [OpenSSL](https://www.openssl.org) installed.
+
 ```
-kubectl create namespace myproject
-kubectl config set-context $(kubectl config current-context) --namespace=myproject
+kubectl create namespace enmasse-infra
+kubectl config set-context $(kubectl config current-context) --namespace=enmasse-infra
 
 mkdir -p api-server-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.myproject.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse-infra.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 
 mkdir -p standard-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.myproject.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.enmasse-infra.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
-kubectl create -f templates/build/enmasse-latest/install/bundles/enmasse-with-standard-authservice
+kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse-with-standard-authservice
+```
+
+#### Deploying to an OKD instance assuming already logged in with cluster-admin permissions
+
+```
+oc new-project enmasse-infra || oc project enmasse-infra
+oc apply -f templates/build/enmasse-latest/install/bundles/enmasse-with-standard-authservice
 ```
 
 #### Running smoketests against a deployed instance
@@ -101,7 +101,7 @@ individual module:
    * `docker_build` - build docker image
    * `docker_tag`   - tag docker image
    * `docker_push`  - push docker image
-   * `deploy`       - deploys the built templates to OpenShift. The images referenced by the template must be available in a docker registry
+   * `buildpush`    - build, test, package, docker build, docker_tag and docker_push
    * `systemtests`  - run systemtests
 
 Some of these tasks can be configured using environment variables as listed below.
@@ -141,14 +141,12 @@ connect with development tool to the forwarded port on localhost
 There are several environment variables that control the behavior of the build. Some of them are
 only consumed by some tasks:
 
-   * OPENSHIFT_MASTER  - URL to OpenShift master. Consumed by `deploy` and `systemtests` targets
-   * OPENSHIFT_USER    - OpenShift user. Consumed by `deploy` target
-   * OPENSHIFT_PASSWD  - OpenShift password. Consumed by `deploy` target
-   * OPENSHIFT_TOKEN   - OpenShift token. Consumed by `systemtests` target
-   * OPENSHIFT_PROJECT - OpenShift project for EnMasse. Consumed by `deploy` and `systemtests` targets
-   * DOCKER_ORG        - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
-   * DOCKER_REGISTRY   - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
-   * TAG               - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
+   * KUBERNETES_API_URL   - URL to Kubernetes master. Consumed by `systemtests` target
+   * KUBERNETES_API_TOKEN - Kubernetes API token. Consumed by `systemtests` target
+   * KUBERNETES_NAMESPACE - Kubernetes namespace for EnMasse. Consumed by `systemtests` targets
+   * DOCKER_ORG           - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
+   * DOCKER_REGISTRY      - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
+   * TAG                  - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
 
 ## Debugging
 
