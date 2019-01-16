@@ -1,6 +1,6 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 DOCKER_REGISTRY ?= docker.io
-DOCKER_ORG      ?= $(USER)
+DOCKER_ORG      ?= enmasseproject
 DOCKER          ?= docker
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
