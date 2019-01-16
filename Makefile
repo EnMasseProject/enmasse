@@ -71,9 +71,9 @@ docu_html: docu_htmlclean docu_swagger docu_check
 	mkdir -p documentation/html/openshift
 	cp -vRL documentation/_images documentation/html/kubernetes/images
 	cp -vRL documentation/_images documentation/html/openshift/images
-	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
-	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-openshift.adoc -o documentation/html/openshift/index.html
-	asciidoctor -v --failure-level WARN -a EnMasseVersion=$(VERSION) -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
+	asciidoctor -v -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
+	asciidoctor -v -a EnMasseVersion=$(VERSION) -t -dbook documentation/master-openshift.adoc -o documentation/html/openshift/index.html
+	asciidoctor -v -a EnMasseVersion=$(VERSION) -t -dbook documentation/contributing/master.adoc -o documentation/html/contributing.html
 
 docu_htmlclean:
 	rm -rf documentation/html
