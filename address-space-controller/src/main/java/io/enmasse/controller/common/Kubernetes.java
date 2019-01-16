@@ -10,8 +10,6 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import io.fabric8.openshift.client.ParameterValue;
-
 import java.util.*;
 
 /**
@@ -23,7 +21,7 @@ public interface Kubernetes {
 
     void create(KubernetesList resources);
     void apply(KubernetesList resourceList, boolean patchPersistentVolumeClaims);
-    KubernetesList processTemplate(String templateName, ParameterValue ... parameterValues);
+    KubernetesList processTemplate(String templateName, Map<String, String> parameters);
 
     void deleteResourcesNotIn(String[] addressSpaces);
 

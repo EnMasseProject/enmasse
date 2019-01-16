@@ -16,7 +16,6 @@ import io.enmasse.controller.common.TemplateParameter;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import io.fabric8.openshift.client.ParameterValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,12 +119,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private List<HasMetadata> createStandardInfraMqtt(AddressSpace addressSpace, String templateName) {
         Map<String, String> parameters = new HashMap<>();
         prepareMqttParameters(addressSpace, parameters);
-
-        List<ParameterValue> parameterValues = new ArrayList<>();
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            parameterValues.add(new ParameterValue(entry.getKey(), entry.getValue()));
-        }
-        return new ArrayList<>(kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems());
+        return new ArrayList<>(kubernetes.processTemplate(templateName, parameters).getItems());
     }
 
 
@@ -142,14 +136,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
 
-        List<ParameterValue> parameterValues = new ArrayList<>();
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            parameterValues.add(new ParameterValue(entry.getKey(), entry.getValue()));
-        }
-
         Map<String, String> infraAnnotations = standardInfraConfig.getMetadata().getAnnotations();
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
-        List<HasMetadata> items = new ArrayList<>(kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems());
+        List<HasMetadata> items = new ArrayList<>(kubernetes.processTemplate(templateName, parameters).getItems());
         // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
         for (HasMetadata item : items) {
             if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
@@ -180,13 +169,8 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
         parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
 
-        List<ParameterValue> parameterValues = new ArrayList<>();
-        for (Map.Entry<String, String> entry : parameters.entrySet()) {
-            parameterValues.add(new ParameterValue(entry.getKey(), entry.getValue()));
-        }
-
         String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
-        return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameterValues.toArray(new ParameterValue[0])).getItems());
+        return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameters).getItems());
     }
 
     private List<HasMetadata> applyStorageClassName(String storageClassName, List<HasMetadata> items) {
