@@ -16,6 +16,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressSpace;
@@ -68,6 +69,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
     }
 
     @Test
+    @Disabled("This only works when templates are processed locally. Which is broken due to: fabric8io/kubernetes-client#916")
     public void testGenerateStandard() {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
