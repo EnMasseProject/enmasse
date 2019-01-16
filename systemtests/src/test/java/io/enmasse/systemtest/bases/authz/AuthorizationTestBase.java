@@ -8,6 +8,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 
@@ -298,7 +299,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 cause = ex.getCause();
             }
 
-            if (cause instanceof SecurityException || cause instanceof AuthenticationException || cause instanceof UnauthorizedAccessException) {
+            if (cause instanceof SecurityException || cause instanceof SaslSystemException || cause instanceof AuthenticationException || cause instanceof UnauthorizedAccessException) {
                 log.info("canAuth {} ({}): {}", destination.getAddress(), destination.getType(), ex.getMessage());
                 return false;
             } else {
