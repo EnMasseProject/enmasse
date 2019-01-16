@@ -32,6 +32,7 @@ import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -583,7 +584,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 cause = ex.getCause();
             }
 
-            if (cause instanceof AuthenticationException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
+            if (cause instanceof AuthenticationException || cause instanceof SaslSystemException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
                 log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
                 return false;
             } else {
@@ -609,7 +610,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected String getOCConsoleRoute() {
-        return String.format("%s/console", environment.openShiftUrl());
+        return String.format("%s/console", environment.getApiUrl());
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {

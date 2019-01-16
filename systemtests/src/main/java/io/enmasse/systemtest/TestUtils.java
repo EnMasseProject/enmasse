@@ -172,6 +172,7 @@ public class TestUtils {
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
             pods = listRunningPods(client, addressSpace);
+            log.info("Got {} pods, expected: {}", pods.size(), numExpected);
         }
         if (pods.size() != numExpected) {
             throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
@@ -192,6 +193,7 @@ public class TestUtils {
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
             pods = listRunningPods(client);
+            log.info("Got {} pods, expected: {}", pods.size(), numExpected);
         }
         if (pods.size() != numExpected) {
             throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));

@@ -9,45 +9,43 @@ function download_enmasse() {
     echo $D
 }
 
-function setup_test() {
+function setup_test_openshift() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
-    REG_API_SERVER=${3:-true}
-    SKIP_DEPENDENCIES=${4:-false}
-    UPGRADE=${5:-false}
+    SKIP_DEPENDENCIES=${3:-false}
+    UPGRADE=${4:-false}
 
     export_required_env
-    export REGISTER_API_SERVER=${REG_API_SERVER}
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}"
 
-    rm -rf $OPENSHIFT_TEST_LOGDIR
-    mkdir -p $OPENSHIFT_TEST_LOGDIR
+    rm -rf ${TEST_LOGDIR}
+    mkdir -p ${TEST_LOGDIR}
 
-    oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${OPENSHIFT_URL}
-    oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin $OPENSHIFT_USER
-    export OPENSHIFT_TOKEN=`oc whoami -t`
+    oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${KUBERNETES_API_URL}
+    oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
+    export KUBERNETES_API_TOKEN=`oc whoami -t`
+    oc project ${KUBERNETES_NAMESPACE}
 
     if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
         ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
     fi
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${OPENSHIFT_PROJECT}\", \"admin_user\": \"${OPENSHIFT_USER}\"}"
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\"}"
 
-    wait_until_enmasse_up 'openshift' ${OPENSHIFT_PROJECT} ${UPGRADE}
+    wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE} ${UPGRADE}
 }
 
 function export_required_env {
-    SANITIZED_PROJECT=${OPENSHIFT_PROJECT}
-    SANITIZED_PROJECT=${SANITIZED_PROJECT//_/-}
-    SANITIZED_PROJECT=${SANITIZED_PROJECT//\//-}
-    export OPENSHIFT_PROJECT=$SANITIZED_PROJECT
+    SANITIZED_NAMESPACE=${OPENSHIFT_PROJECT}
+    SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//_/-}
+    SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
+    KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
 
-    export OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
+    export KUBERNETES_API_URL=${KUBERNETES_API_URL:-https://localhost:8443}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
     export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
-    export OPENSHIFT_PROJECT=${OPENSHIFT_PROJECT:-enmasseci}
-    export OPENSHIFT_TEST_LOGDIR=${OPENSHIFT_TEST_LOGDIR:-/tmp/testlogs}
-    export OPENSHIFT_USE_TLS=${OPENSHIFT_USE_TLS:-true}
+    export KUBERNETES_NAMESPACE=${KUBERNETES_NAMESPACE:-enmasseci}
+    export TEST_LOGDIR=${TEST_LOGDIR:-/tmp/testlogs}
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
     export CURDIR=`readlink -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
@@ -55,17 +53,17 @@ function export_required_env {
 
 function wait_until_enmasse_up() {
     CLUSTER_TYPE=${1:-openshift}
-    NAMESPACE=${2:-OPENSHIFT_PROJECT}
+    NAMESPACE=${2:-KUBERNETES_NAMESPACE}
     UPGRADE=${3:-false}
 
     expected_pods=6
-    if [ "$CLUSTER_TYPE" == "kubernetes" ]; then
+    if [[ "$CLUSTER_TYPE" == "kubernetes" ]]; then
         expected_pods=5
     fi
 
     wait_until_up ${expected_pods} ${NAMESPACE} ${UPGRADE}
     wait_code=$?
-    if [ $wait_code -ne 0 ]; then
+    if [[ ${wait_code} -ne 0 ]]; then
         err_and_exit 1
     fi
 
@@ -86,10 +84,10 @@ function wait_until_cluster_up() {
     info "Waiting ${timeout} seconds until: $(date -d@${END} -u +%F:%H:%M:%S)"
 
     oc cluster status
-    while [ $? -gt 0 ]
+    while [[ $? -gt 0 ]]
     do
         NOW=$(date +%s)
-        if [ ${NOW} -gt ${END} ]; then
+        if [[ ${NOW} -gt ${END} ]]; then
             err_and_exit "ERROR: Timed out waiting for openshift cluster to come up!"
         fi
         sleep 5
@@ -101,7 +99,7 @@ function run_test() {
     TESTCASE=$1
     PROFILE=${2:-systemtests}
 
-    if [ -n "${TESTCASE}" ]; then
+    if [[ -n "${TESTCASE}" ]]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
     fi
     mvn -B test -pl systemtests -P${PROFILE} -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false -Djansi.force=true -Dstyle.color=always ${EXTRA_TEST_ARGS}
@@ -109,7 +107,12 @@ function run_test() {
 
 function teardown_test() {
     PROJECT_NAME=$1
-    kubectl delete namespace $PROJECT_NAME
+    CMD=${2:-oc}
+    if [[ ${CMD} == "oc" ]]; then
+        ansible-playbook -i ${CURDIR}/../ansible/inventory/systemtests.inventory ${CURDIR}/../../ansible/playbooks/openshift/uninstall.yml --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\"}"
+    fi
+    ${CMD} delete namespace ${PROJECT_NAME}
+    info "End of teardown"
 }
 
 function create_address_space() {
@@ -117,11 +120,7 @@ function create_address_space() {
     ADDRESS_SPACE_NAME=$2
     ADDRESS_SPACE_DEF=$3
     TOKEN=$(oc whoami -t)
-    if [[ ${REGISTER_API_SERVER} == "true" ]]; then
-        URL="${OPENSHIFT_URL}"
-    else
-        URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
-    fi
+    URL="${KUBERNETES_API_URL}"
     curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1beta1/namespaces/${NAMESPACE}/addressspaces
     wait_until_up 2 ${NAMESPACE}-${ADDRESS_SPACE_NAME} || return 1
 }
@@ -134,12 +133,7 @@ function create_address() {
     TYPE=$5
     PLAN=$6
 
-    if [[ ${REGISTER_API_SERVER} == "true" ]]; then
-        URL="${OPENSHIFT_URL}"
-    else
-        URL="https://$(oc get route -o jsonpath='{.spec.host}' restapi)"
-    fi
-
+    URL="${KUBERNETES_API_URL}"
     PAYLOAD="{\"apiVersion\": \"enmasse.io/v1beta1\", \"kind\": \"AddressList\", \"metadata\": { \"name\": \"${ADDRESS_SPACE}.${NAME}\"}, \"spec\": {\"address\": \"${ADDRESS}\", \"type\": \"${TYPE}\", \"plan\": \"${PLAN}\"}}"
     TOKEN=$(oc whoami -t)
     curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1beta1/namespaces/${NAMESPACE}/addresses

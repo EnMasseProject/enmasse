@@ -13,7 +13,6 @@ source "${CURDIR}/../../scripts/logger.sh"
 
 TEST_PROFILE=${1}
 TESTCASE=${2:-"io.enmasse.**"}
-REG_API_SERVER=${3:-true}
 
 info "Running tests with profile: ${TEST_PROFILE}, tests: ${TESTCASE}"
 
@@ -30,8 +29,10 @@ ${CURDIR}/system-stats.sh > ${ARTIFACTS_DIR}/system-resources.log &
 STATS_PID=$!
 info "process for checking system resources is running with PID: ${STATS_PID}"
 
+export KUBERNETES_API_TOKEN=$(oc whoami -t)
+export KUBERNETES_API_URL=${OPENSHIFT_URL}
+export KUBERNETES_NAMESPACE=${OPENSHIFT_PROJECT}
 export_required_env
-export OPENSHIFT_TOKEN=`oc whoami -t`
 
 #start docker logging
 DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
@@ -62,9 +63,9 @@ info "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill -9 ${LOGS_PID}
 categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 
-if [ $failure -gt 0 ]
-then
+if [[ ${failure} -gt 0 ]]; then
     err_and_exit "Systemtests failed"
 elif [[ "${TEST_PROFILE}" != "systemtests-upgrade" ]]; then
-    teardown_test ${OPENSHIFT_PROJECT}
+    teardown_test ${KUBERNETES_NAMESPACE}
 fi
+info "End of run_test_components.sh"

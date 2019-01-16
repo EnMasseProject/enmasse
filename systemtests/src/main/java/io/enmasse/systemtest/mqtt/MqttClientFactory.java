@@ -94,28 +94,23 @@ public class MqttClientFactory {
 
         Endpoint mqttEndpoint;
 
-        if (environment.useTLS()) {
-            mqttEndpoint = addressSpace.getEndpointByServiceName("mqtt");
-            if (mqttEndpoint == null) {
-                String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "mqtt");
-                mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
-            }
-            SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
-            sslContext.init(null, new X509TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
-
-            SSLSocketFactory sslSocketFactory = new SNISettingSSLSocketFactory(sslContext.getSocketFactory(), mqttEndpoint.getHost());
-
-            options.setSocketFactory(sslSocketFactory);
-
-            if (!TestUtils.resolvable(mqttEndpoint)) {
-                mqttEndpoint = new Endpoint("localhost", 443);
-            }
-
-            log.info("Using mqtt endpoint {}", mqttEndpoint);
-
-        } else {
-            mqttEndpoint = this.kubernetes.getEndpoint("mqtt", "mqtt");
+        mqttEndpoint = addressSpace.getEndpointByServiceName("mqtt");
+        if (mqttEndpoint == null) {
+            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "mqtt");
+            mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
         }
+        SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
+        sslContext.init(null, new X509TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
+
+        SSLSocketFactory sslSocketFactory = new SNISettingSSLSocketFactory(sslContext.getSocketFactory(), mqttEndpoint.getHost());
+
+        options.setSocketFactory(sslSocketFactory);
+
+        if (!TestUtils.resolvable(mqttEndpoint)) {
+            mqttEndpoint = new Endpoint("localhost", 443);
+        }
+
+        log.info("Using mqtt endpoint {}", mqttEndpoint);
 
         if (username != null && password != null) {
             options.setUserName(username);
