@@ -39,11 +39,13 @@ docker_build: package
 
 docker_tag:
 	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
+	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(VERSION) ; fi
 
 docker_push:
 	if [ -f Dockerfile ] ; \
 	then \
 		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
+		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(VERSION)" 10 10 ; \
 	fi
 	
 
