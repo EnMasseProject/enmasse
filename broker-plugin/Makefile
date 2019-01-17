@@ -7,6 +7,7 @@ clean_modules:
 	rm -rf amqp-connector/target
 
 clean: clean_modules
+	rm -rf build
 
 build_tar:
 	mkdir -p $(ARTIFACT_BASE)/usr/local
