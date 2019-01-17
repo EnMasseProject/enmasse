@@ -61,6 +61,7 @@
 // Other links
 
 // Section enablers
+:AuthServices:
 :Kubernetes:
 :InstallationAppendix:
 :MetricsAppendix:
