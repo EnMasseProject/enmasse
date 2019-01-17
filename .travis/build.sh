@@ -1,5 +1,8 @@
 #!/bin/sh
 set -e
+CURDIR=`readlink -f \`dirname $0\``
+source ${CURDIR}/common.sh
+
 PULL_REQUEST=${PULL_REQUEST:-true}
 BRANCH=${BRANCH:-master}
 VERSION=`cat release.version`
@@ -8,11 +11,11 @@ DOCKER_ORG=${DOCKER_ORG:-$USER}
 SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-"io.enmasse.**.SmokeTest"}
 SYSTEMTEST_PROFILE=${SYSTEMTEST_PROFILE:-"smoke"}
 
-if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$VERSION" ] || [ "$PULL_REQUEST" != "false" ]
+if use_external_registry
 then
-    export DOCKER_REGISTRY="localhost:5000"
-else
     export IMAGE_VERSION=${VERSION}
+else
+    export DOCKER_REGISTRY="localhost:5000"
 fi
 
 echo "Building EnMasse with tag $TAG, version $VERSION from $BRANCH. PR: $PULL_REQUEST"
@@ -24,13 +27,13 @@ make docu_html
 
 echo "Tagging Docker Images"
 make docker_tag
-#
-if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$TAG" ] || [ "$PULL_REQUEST" != "false" ]
+
+if use_external_registry
 then
-    echo "Using local registry"
-else
     echo "Logging in to Docker Hub"
     docker login -u $DOCKER_USER -p $DOCKER_PASS
+else
+    echo "Using local registry"
 fi
 
 echo "Pushing images to Docker Registry"

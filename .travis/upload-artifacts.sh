@@ -1,4 +1,6 @@
 #!/bin/bash
+CURDIR=`readlink -f \`dirname $0\``
+source ${CURDIR}/common.sh
 SUCCESS=$1
 COMMIT=${COMMIT:-latest}
 VERSION=`cat release.version`
@@ -38,12 +40,12 @@ function upload_folder() {
 }
 
 if [ "$SUCCESS" == "true" ]; then
-    if [ "$TRAVIS_BRANCH" != "master" ] && [ "$TRAVIS_BRANCH" != "$TRAVIS_TAG" ] || [ "$TRAVIS_PULL_REQUEST" != "false" ]
+    if use_external_registry
     then
-        echo "Skipping upload for successful PR"
-    else
         echo "Uploading snapshot for $TRAVIS_BRANCH build"
         upload_file templates/build/enmasse-${TAG}.tgz enmasse-${TAG}.tgz
+    else
+        echo "Skipping upload for successful PR"
     fi
 else
     echo "Collecting test reports"
