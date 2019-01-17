@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/common.sh
