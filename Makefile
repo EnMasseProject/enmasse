@@ -21,21 +21,21 @@ endif
 all: init build_java docker_build templates
 
 templates: docu_html
-	make -C templates
+	$(MAKE) -C templates
 
 build_java:
 	mvn package -q -B $(MAVEN_ARGS)
 
 buildpush:
-	make 
-	make docker_tag
-	make docker_push
+	$(MAKE)
+	$(MAKE) docker_tag
+	$(MAKE) docker_push
 
 clean_java:
 	mvn -B -q clean
 
 template_clean:
-	make -C templates clean
+	$(MAKE) -C templates clean
 
 clean: clean_java docu_htmlclean template_clean
 

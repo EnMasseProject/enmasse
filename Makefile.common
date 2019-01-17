@@ -30,9 +30,9 @@ clean: clean_node
 	rm -rf build
 
 buildpush:
-	make
-	make docker_tag
-	make docker_push
+	$(MAKE)
+	$(MAKE) docker_tag
+	$(MAKE) docker_push
 
 docker_build: package
 	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg maven_version=$(MAVEN_VERSION) --build-arg version=$(VERSION) --build-arg commit=$(COMMIT) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) . ; fi
