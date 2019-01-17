@@ -6,6 +6,7 @@ package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.AddressOrAddressList;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
@@ -42,15 +43,14 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response createAddress(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @NotNull Address payload) throws Exception {
-        return internalCreateAddress(securityContext, uriInfo, namespace, addressSpace, payload);
-    }
-
-    @POST
-    @Produces({MediaType.APPLICATION_JSON})
-    @Consumes({MediaType.APPLICATION_JSON})
-    public Response createAddresses(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @NotNull AddressList payload) throws Exception {
-        return internalCreateAddresses(securityContext, uriInfo, namespace, addressSpace, payload);
+    public Response createAddress(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @NotNull @Valid AddressOrAddressList payload) throws Exception {
+        if ( payload instanceof Address ) {
+            return internalCreateAddress(securityContext, uriInfo, namespace, addressSpace, (Address) payload);
+        } else if ( payload instanceof AddressList) {
+            return internalCreateAddresses(securityContext, uriInfo, namespace, addressSpace, (AddressList) payload);
+        } else {
+            throw new BadRequestException("Unknown payload type");
+        }
     }
 
     @PUT
