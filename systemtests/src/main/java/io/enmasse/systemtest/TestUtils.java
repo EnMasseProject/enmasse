@@ -182,7 +182,7 @@ public class TestUtils {
      */
     public static void waitForExpectedReadyPods(Kubernetes client, int numExpected, TimeoutBudget budget) throws InterruptedException {
         log.info("Waiting for expected ready pods: {}", numExpected);
-        List<Pod> pods = listRunningPods(client);
+        List<Pod> pods = listReadyPods(client);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
             pods = listReadyPods(client);
