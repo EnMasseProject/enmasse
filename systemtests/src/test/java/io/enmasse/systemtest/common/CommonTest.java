@@ -77,15 +77,15 @@ class CommonTest extends TestBase {
             log.info("Restarting {}", label.labelValue);
             KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
-            TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(60, TimeUnit.SECONDS));
+            TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(3, TimeUnit.MINUTES));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
         log.info("Restarting whole enmasse");
         KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
         Thread.sleep(180_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(120, TimeUnit.SECONDS));
-        TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(180, TimeUnit.SECONDS),
+        TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(5, TimeUnit.MINUTES));
+        TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(3, TimeUnit.MINUTES),
                 standardAddresses.toArray(new Destination[0]));
         assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
 

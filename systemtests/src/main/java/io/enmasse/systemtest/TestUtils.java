@@ -12,10 +12,7 @@ import io.enmasse.systemtest.resources.AddressSpaceTypeData;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.vertx.core.VertxException;
@@ -33,13 +30,9 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTimeout;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -192,7 +185,7 @@ public class TestUtils {
         List<Pod> pods = listRunningPods(client);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
-            pods = listRunningPods(client);
+            pods = listReadyPods(client);
             log.info("Got {} pods, expected: {}", pods.size(), numExpected);
         }
         if (pods.size() != numExpected) {
@@ -238,6 +231,19 @@ public class TestUtils {
     public static List<Pod> listRunningPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running")
+                        && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get list of all ready pods
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @return
+     */
+    public static List<Pod> listReadyPods(Kubernetes kubernetes) {
+        return kubernetes.listPods().stream()
+                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
                         && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
                 .collect(Collectors.toList());
     }
@@ -867,7 +873,7 @@ public class TestUtils {
         }
     }
 
-    private static Map<String, JsonObject> checkAddressesMatching(JsonObject addressList, Predicate<JsonObject> predicate, Destination ... destinations) {
+    private static Map<String, JsonObject> checkAddressesMatching(JsonObject addressList, Predicate<JsonObject> predicate, Destination... destinations) {
         Map<String, JsonObject> notMatchingAddresses = new HashMap<>();
         for (Destination destination : destinations) {
             JsonObject addressObject = lookupAddress(addressList, destination.getAddress());
