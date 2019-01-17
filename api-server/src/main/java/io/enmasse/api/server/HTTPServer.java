@@ -52,19 +52,45 @@ public class HTTPServer extends AbstractVerticle {
     private final boolean isRbacEnabled;
     private final String version;
     private final Clock clock;
+    private final int port;
+    private final int securePort;
 
     private HttpServer httpServer;
     private HttpServer httpsServer;
 
     public HTTPServer(AddressSpaceApi addressSpaceApi,
-                      SchemaProvider schemaProvider,
-                      AuthApi authApi,
-                      UserApi userApi,
-                      Metrics metrics,
-                      ApiServerOptions options,
-                      String clientCa,
-                      String requestHeaderClientCa,
-                      Clock clock) {
+            SchemaProvider schemaProvider,
+            AuthApi authApi,
+            UserApi userApi,
+            Metrics metrics,
+            ApiServerOptions options,
+            String clientCa,
+            String requestHeaderClientCa,
+            Clock clock) {
+        this(addressSpaceApi,
+                schemaProvider,
+                authApi,
+                userApi,
+                metrics,
+                options,
+                clientCa,
+                requestHeaderClientCa,
+                clock,
+                PORT,
+                SECURE_PORT);
+    }
+
+    public HTTPServer(AddressSpaceApi addressSpaceApi,
+            SchemaProvider schemaProvider,
+            AuthApi authApi,
+            UserApi userApi,
+            Metrics metrics,
+            ApiServerOptions options,
+            String clientCa,
+            String requestHeaderClientCa,
+            Clock clock,
+            int port,
+            int securePort) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.metrics = metrics;
@@ -76,6 +102,8 @@ public class HTTPServer extends AbstractVerticle {
         this.isRbacEnabled = options.isEnableRbac();
         this.version = options.getVersion();
         this.clock = clock;
+        this.port = port;
+        this.securePort = securePort;
     }
 
     @Override
@@ -177,9 +205,10 @@ public class HTTPServer extends AbstractVerticle {
 
             httpsServer = vertx.createHttpServer(options)
                     .requestHandler(requestHandler)
-                    .listen(SECURE_PORT, ar -> {
+                    .listen(this.securePort, ar -> {
                         if (ar.succeeded()) {
-                            log.info("Started HTTPS server. Listening on port " + SECURE_PORT);
+                            int actualPort = ar.result().actualPort();
+                            log.info("Started HTTPS server. Listening on port {}", actualPort);
                             startPromise.complete();
                         } else {
                             log.info("Error starting HTTPS server");
@@ -194,14 +223,23 @@ public class HTTPServer extends AbstractVerticle {
     private void createOpenServer(Handler<HttpServerRequest> requestHandler, Future<Void> startPromise) {
         httpServer = vertx.createHttpServer()
                 .requestHandler(requestHandler)
-                .listen(PORT, ar -> {
+                .listen(this.port, ar -> {
                     if (ar.succeeded()) {
-                        log.info("Started HTTP server. Listening on port " + PORT);
+                        int actualPort = ar.result().actualPort();
+                        log.info("Started HTTP server. Listening on port {}", actualPort);
                         startPromise.complete();
                     } else {
                         log.info("Error starting HTTP server");
                         startPromise.fail(ar.cause());
                     }
                 });
+    }
+
+    public int getActualSecurePort() {
+        return httpsServer.actualPort();
+    }
+
+    public int getActualPort() {
+        return httpServer.actualPort();
     }
 }
