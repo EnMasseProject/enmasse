@@ -5,12 +5,15 @@
 [id='deploying-auth-services-{context}']
 = Deploying authentication services
 
-{ProductName} requires at least one authentication service to be deployed. 
+{ProductName} requires at least one authentication service to be deployed:
 ifndef::NoneAuthService[]
-The authentication service can be `standard` ({AuthProductName}) or `external` (not managed by {ProductName}).
+* `standard` ({AuthProductName}) or 
+* `external` (not managed by {ProductName}).
 endif::NoneAuthService[]
 ifdef::NoneAuthService[]
-The authentication service can be `none` (allow all), `standard` ({AuthProductName}), or `external` (not managed by {ProductName}).
+* `none` (allow all), 
+* `standard` ({AuthProductName}), or 
+* `external` (not managed by {ProductName}).
 endif::NoneAuthService[]
 
 ifdef::NoneAuthService[]

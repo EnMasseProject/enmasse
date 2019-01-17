@@ -12,7 +12,7 @@ The service broker provides an implementation of the Open Service Broker API tha
 
 .Procedure
 
-. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}`:
+. (Optional) If you want to deploy to a namespace other than `{ProductNamespace}` you must run the following command:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
