@@ -197,7 +197,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendReceiveInsideCluster() throws Exception {
         Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
-        AddressSpace addressSpace = new AddressSpace("test-messaging-space", AddressSpaceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpace("cluster-messaging-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
