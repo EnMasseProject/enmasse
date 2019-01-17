@@ -3,7 +3,7 @@
 // assembly-deploying-auth-services.adoc
 
 [id='proc-deploying-none-auth-service-{context}']
-== Deploying the `none` authentication service
+= Deploying the `none` authentication service
 
 .Procedure
 

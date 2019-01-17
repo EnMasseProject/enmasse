@@ -3,7 +3,7 @@
 // assembly-deploying-auth-services.adoc
 
 [id='proc-deploying-standard-auth-service-{context}']
-== Deploying the `standard` authentication service
+= Deploying the `standard` authentication service
 
 .Procedure
 
