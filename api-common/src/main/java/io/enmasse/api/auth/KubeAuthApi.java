@@ -66,14 +66,14 @@ public class KubeAuthApi implements AuthApi {
             JsonObject body = new JsonObject();
 
             body.put("kind", "TokenReview");
-            body.put("apiVersion", "authentication.k8s.io/v1beta1");
+            body.put("apiVersion", "authentication.k8s.io/v1");
 
             JsonObject spec = new JsonObject();
             spec.put("token", token);
             body.put("spec", spec);
 
             log.debug("Token review request: {}", body);
-            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1beta1/tokenreviews", "POST", body, false);
+            JsonObject responseBody= doRawHttpRequest("/apis/authentication.k8s.io/v1/tokenreviews", "POST", body, false);
             log.debug("Token review response: {}", responseBody);
             JsonObject status = responseBody.getJsonObject("status");
             boolean authenticated = false;
@@ -100,7 +100,7 @@ public class KubeAuthApi implements AuthApi {
             JsonObject body = new JsonObject();
 
             body.put("kind", "SubjectAccessReview");
-            body.put("apiVersion", "authorization.k8s.io/v1beta1");
+            body.put("apiVersion", "authorization.k8s.io/v1");
 
             JsonObject spec = new JsonObject();
 
@@ -113,7 +113,7 @@ public class KubeAuthApi implements AuthApi {
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);
-            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false);
+            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1/subjectaccessreviews", "POST", body, false);
 
             log.debug("Subject access review response: {}", responseBody);
             JsonObject status = responseBody.getJsonObject("status");
@@ -134,7 +134,7 @@ public class KubeAuthApi implements AuthApi {
             JsonObject body = new JsonObject();
 
             body.put("kind", "SubjectAccessReview");
-            body.put("apiVersion", "authorization.k8s.io/v1beta1");
+            body.put("apiVersion", "authorization.k8s.io/v1");
 
             JsonObject spec = new JsonObject();
 
@@ -149,7 +149,7 @@ public class KubeAuthApi implements AuthApi {
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);
-            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1beta1/subjectaccessreviews", "POST", body, false);
+            JsonObject responseBody = doRawHttpRequest("/apis/authorization.k8s.io/v1/subjectaccessreviews", "POST", body, false);
             log.debug("Subject access review response: {}", responseBody);
 
             JsonObject status = responseBody.getJsonObject("status");
