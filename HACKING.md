@@ -110,8 +110,8 @@ Some of these tasks can be configured using environment variables as listed belo
 
 To enable debug mode for the Java based components, it's necessary to setup following environment variables:
 
-   * JAVA_DEBUG - set to true to enable or false to disable
-   * JAVA_DEBUG_PORT - 8787 by default and can be any value above 1000 if need to change it
+   * `JAVA_DEBUG` - set to true to enable or false to disable
+   * `JAVA_DEBUG_PORT` - 8787 by default and can be any value above 1000 if need to change it
 
 Use this command to change environment variables values for the deployment
 
@@ -141,12 +141,12 @@ connect with development tool to the forwarded port on localhost
 There are several environment variables that control the behavior of the build. Some of them are
 only consumed by some tasks:
 
-   * KUBERNETES_API_URL   - URL to Kubernetes master. Consumed by `systemtests` target
-   * KUBERNETES_API_TOKEN - Kubernetes API token. Consumed by `systemtests` target
-   * KUBERNETES_NAMESPACE - Kubernetes namespace for EnMasse. Consumed by `systemtests` targets
-   * DOCKER_ORG           - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
-   * DOCKER_REGISTRY      - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
-   * TAG                  - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
+   * `KUBERNETES_API_URL`   - URL to Kubernetes master. Consumed by `systemtests` target
+   * `KUBERNETES_API_TOKEN` - Kubernetes API token. Consumed by `systemtests` target
+   * `KUBERNETES_NAMESPACE` - Kubernetes namespace for EnMasse. Consumed by `systemtests` targets
+   * `DOCKER_ORG`           - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
+   * `DOCKER_REGISTRY`      - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
+   * `TAG`                  - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
 
 ## Debugging
 
