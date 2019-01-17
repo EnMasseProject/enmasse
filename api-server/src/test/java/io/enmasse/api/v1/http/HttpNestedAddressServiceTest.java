@@ -224,7 +224,7 @@ public class HttpNestedAddressServiceTest {
         list.getItems().add(a2);
 
         final Response response = invoke(() -> {
-            return this.addressService.createAddresses(securityContext,
+            return this.addressService.createAddress(securityContext,
                     new ResteasyUriInfo("http://localhost:8443/", null, "/"),
                     "ns", "myspace", list);
             });

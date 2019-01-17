@@ -28,11 +28,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
@@ -40,11 +41,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
+@SuppressWarnings("deprecation")
 public class HTTPServerTest {
 
     private Vertx vertx;
     private TestAddressSpaceApi addressSpaceApi;
     private AddressSpace addressSpace;
+
+    public static String[] apiVersions() {
+        return new String[] {"v1alpha1", "v1beta1"};
+    }
 
     @BeforeEach
     public void setup(VertxTestContext context) throws InterruptedException {
@@ -189,6 +195,19 @@ public class HTTPServerTest {
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
             {
+                // a variant of r3, creating a new address with the address object instead of the addresslist object
+                HttpClientRequest r3b = client.post(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                    response.bodyHandler(buffer -> {
+                        context.verify(() -> assertEquals(201, response.statusCode()));
+                        context.completeNow();
+                    });
+                });
+                r3b.putHeader("Content-Type", "application/json");
+                putAuthzToken(r3b);
+                r3b.end("{\"apiVersion\":\"enmasse.io/" + apiVersion + "\",\"kind\":\"Address\",\"metadata\":{\"name\":\"a4b\"},\"spec\":{\"address\":\"a4b\",\"type\":\"queue\",\"plan\":\"plan1\"}}");
+                context.awaitCompletion(60, TimeUnit.SECONDS);
+            }
+            {
                 HttpClientRequest r4 = client.get(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses?address=addR1", response -> {
                     response.bodyHandler(buffer -> {
                         JsonObject data = buffer.toJsonObject();
@@ -204,6 +223,41 @@ public class HTTPServerTest {
                 r4.end();
                 context.awaitCompletion(60, TimeUnit.SECONDS);
             }
+        } finally {
+            client.close();
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressSingle(String apiVersion, VertxTestContext context) {
+
+        final HttpClient client = vertx.createHttpClient();
+
+        try {
+
+            // a variant of r3, creating a new address with the address object instead of the addresslist object
+            HttpClientRequest req = client.post(8080, "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                response.bodyHandler(buffer -> {
+                    context.verify(() -> assertEquals(201, response.statusCode()));
+                    context.completeNow();
+                });
+            });
+            req.putHeader("Content-Type", "application/json");
+            putAuthzToken(req);
+
+            JsonObject payload = new JsonObject()
+                    .put("apiVersion", "enmasse.io/" + apiVersion)
+                    .put("kind", "Address")
+                    .put("metadata", new JsonObject()
+                            .put("name", "single1"))
+                    .put("spec", new JsonObject()
+                            .put("address", "single1")
+                            .put("type", "queue")
+                            .put("plan", "plan1"));
+
+            req.end(payload.toBuffer());
+
         } finally {
             client.close();
         }
@@ -306,6 +360,7 @@ public class HTTPServerTest {
     public void testUserApiV1Beta1(VertxTestContext context) throws Exception {
         testUserApi(context, "v1beta1");
     }
+
 
     private void testUserApi(VertxTestContext context, String apiVersion) throws Exception {
         HttpClient client = vertx.createHttpClient();
