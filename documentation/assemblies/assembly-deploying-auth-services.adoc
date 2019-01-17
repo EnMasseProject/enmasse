@@ -1,0 +1,25 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+[id='deploying-auth-services-{context}']
+= Deploying authentication services
+
+{ProductName} requires at least one authentication service to be deployed:
+ifndef::NoneAuthService[]
+* `standard` ({AuthProductName}) or 
+* `external` (not managed by {ProductName}).
+endif::NoneAuthService[]
+ifdef::NoneAuthService[]
+* `none` (allow all), 
+* `standard` ({AuthProductName}), or 
+* `external` (not managed by {ProductName}).
+endif::NoneAuthService[]
+
+ifdef::NoneAuthService[]
+include::../modules/proc-none-auth-service.adoc[leveloffset=+1]
+endif::NoneAuthService[]
+
+include::../modules/proc-standard-auth-service.adoc[leveloffset=+1]
+
+

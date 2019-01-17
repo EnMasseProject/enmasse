@@ -1,0 +1,35 @@
+// Module included in the following assemblies:
+//
+// assembly-deploying-auth-services.adoc
+
+[id='proc-deploying-none-auth-service-{context}']
+= Deploying the `none` authentication service
+
+.Procedure
+
+ifeval::["{cmdcli}" == "kubectl"]
+. Create a certificate to use with the `none` authentication service. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+mkdir -p none-authservice-cert
+openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice._{ProductNamespace}_.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
+----
+
+. Create a secret with the `none` authentication service certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
+----
+endif::[]
+
+. Create the `none` authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f ./install/components/none-authservice
+----
+
+
+

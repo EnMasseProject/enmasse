@@ -9,7 +9,7 @@ The API server provides a REST API for creating address spaces and addresses. It
 
 .Procedure
 
-. (Optional) Replace namespace if you want to deploy to something other than `{ProductNamespace}` (and substitute `{ProductNamespace}` in subsequent steps):
+. (Optional) If you want to deploy to a namespace other than `{ProductNamespace}` you must run the following command and substitute `{ProductNamespace}` in subsequent steps:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
