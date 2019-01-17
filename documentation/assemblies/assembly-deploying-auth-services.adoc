@@ -6,16 +6,16 @@
 = Deploying authentication services
 
 {ProductName} requires at least one authentication service to be deployed. 
-ifndef::AuthServices[]
+ifndef::NoneAuthService[]
 The authentication service can be `standard` ({AuthProductName}) or `external` (not managed by {ProductName}).
-endif::AuthServices[]
-ifdef::AuthServices[]
+endif::NoneAuthService[]
+ifdef::NoneAuthService[]
 The authentication service can be `none` (allow all), `standard` ({AuthProductName}), or `external` (not managed by {ProductName}).
-endif::AuthServices[]
+endif::NoneAuthService[]
 
-ifdef::AuthServices[]
+ifdef::NoneAuthService[]
 include::../modules/proc-none-auth-service.adoc[leveloffset=+1]
-endif::AuthServices[]
+endif::NoneAuthService[]
 
 include::../modules/proc-standard-auth-service.adoc[leveloffset=+1]
 
