@@ -66,7 +66,7 @@ public class KubeUtilTest {
 
                         );
     }
-    
+
     protected static Stream<Arguments> addressNames() {
         return concat(
                         commonNames(),
@@ -101,4 +101,22 @@ public class KubeUtilTest {
         assertEquals(output, KubeUtil.sanitizeUserName(input));
     }
 
+    protected static Stream<Arguments> uuidNames() {
+        return Stream.of(
+                // standard test
+                of("foo-bar", "0123456789012-3456-7890-123456789012", "foo-bar-0123456789012-3456-7890-123456789012"),
+                // exceeds max length
+                of("01234567890123456789012345678901234567890123456789", "0123456789012-3456-7890-123456789012", "01234567890123456789012-0123456789012-3456-7890-123456789012"),
+                // exceeds max length, corner case, with dash
+                of("0123456789012345678901-345678901234567890123456789", "0123456789012-3456-7890-123456789012", "0123456789012345678901--0123456789012-3456-7890-123456789012"),
+                // exceeds max length, corner case, all dashy
+                of("-----------------------345678901234567890123456789", "0123456789012-3456-7890-123456789012", "1-----------------------0123456789012-3456-7890-123456789012")
+                );
+    }
+
+    @ParameterizedTest
+    @MethodSource("uuidNames")
+    public void testSanitizeUuidName(final String name, final String uuid, final String output) {
+        assertEquals(output, KubeUtil.sanitizeWithUuid(name, uuid));
+    }
 }
