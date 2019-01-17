@@ -6,10 +6,12 @@
 = Deploying authentication services
 
 {ProductName} requires at least one authentication service to be deployed:
+
 ifndef::NoneAuthService[]
 * `standard` ({AuthProductName}) or 
 * `external` (not managed by {ProductName}).
 endif::NoneAuthService[]
+
 ifdef::NoneAuthService[]
 * `none` (allow all), 
 * `standard` ({AuthProductName}), or 
