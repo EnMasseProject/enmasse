@@ -6,7 +6,7 @@ source "${CURDIR}/../../scripts/logger.sh"
 function download_enmasse() {
     curl -0 https://dl.bintray.com/enmasse/snapshots/enmasse-latest.tgz | tar -zx
     D=`readlink -f enmasse-latest`
-    echo $D
+    echo ${D}
 }
 
 function setup_test_openshift() {
@@ -25,7 +25,6 @@ function setup_test_openshift() {
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${KUBERNETES_API_URL}
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
     export KUBERNETES_API_TOKEN=`oc whoami -t`
-    oc project ${KUBERNETES_NAMESPACE}
 
     if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
         ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml

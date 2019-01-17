@@ -60,15 +60,15 @@ info "Waiting until ${END}"
 while true
 do
     NOW=$(date +%s)
-    if [ $NOW -gt $END ]; then
+    if [[ ${NOW} -gt ${END} ]]; then
         err "Timed out waiting for nodes to come up!"
-        pods=`$CMD get pods -n ${NAMESPACE}`
+        pods=`${CMD} get pods -n ${NAMESPACE}`
         err_and_exit "PODS: ${pods}"
     fi
-    num_running=`$CMD get pods -n ${NAMESPACE}| grep -v deploy | grep -c Running`
-    if [ "$num_running" -eq "$EXPECTED_PODS" ]; then
+    num_running=`${CMD} get pods -n ${NAMESPACE}| grep -v deploy | grep -c Running`
+    if [[ "$num_running" -eq "$EXPECTED_PODS" ]]; then
         waitingContainersReady ${NAMESPACE}
-        if [ $? -gt 0 ]
+        if [[ $? -gt 0 ]]
         then
             info "All pods are up but all containers are not ready yet"
         else
