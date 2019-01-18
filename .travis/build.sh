@@ -11,8 +11,6 @@ SYSTEMTEST_PROFILE=${SYSTEMTEST_PROFILE:-"smoke"}
 if [ "$BRANCH" != "master" ] && [ "$BRANCH" != "$VERSION" ] || [ "$PULL_REQUEST" != "false" ]
 then
     export DOCKER_REGISTRY="localhost:5000"
-else
-    export IMAGE_VERSION=${VERSION}
 fi
 
 echo "Building EnMasse with tag $TAG, version $VERSION from $BRANCH. PR: $PULL_REQUEST"
