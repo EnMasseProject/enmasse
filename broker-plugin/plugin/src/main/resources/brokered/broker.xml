@@ -83,6 +83,12 @@ under the License.
             <setting name="useGroupsFromSaslDelegation" value="$KEYCLOAK_GROUP_PERMISSIONS"/>
          </security-setting-plugin>
       </security-settings>
+      <wildcard-addresses>
+        <enabled>true</enabled>
+        <delimiter>/</delimiter>
+        <any-words>#</any-words>
+        <single-word>+</single-word>
+      </wildcard-addresses>
 
       <address-settings>
          <!--default for catch all-->

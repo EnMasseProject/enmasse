@@ -93,6 +93,13 @@ under the License.
          </address-setting>
       </address-settings>
 
+      <wildcard-addresses>
+        <enabled>true</enabled>
+        <delimiter>/</delimiter>
+        <any-words>#</any-words>
+        <single-word>+</single-word>
+      </wildcard-addresses>
+
       <connector-services>
         <connector-service name="amqp-connector">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>

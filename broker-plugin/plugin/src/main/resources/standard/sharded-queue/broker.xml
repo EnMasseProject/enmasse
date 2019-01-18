@@ -101,6 +101,12 @@ under the License.
             </anycast>
          </address>
       </addresses>
+      <wildcard-addresses>
+        <enabled>true</enabled>
+        <delimiter>/</delimiter>
+        <any-words>#</any-words>
+        <single-word>+</single-word>
+      </wildcard-addresses>
 
       <connector-services>
         <connector-service name="amqp-connector-in">
