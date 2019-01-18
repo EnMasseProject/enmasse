@@ -6,9 +6,10 @@
 [id='proc-list-available-plans-{context}']
 = Listing available plans using the command line
 
+You can list the address space plans available for your address space.
+
 .Procedure
 
-ifeval::["{cmdcli}" == "oc"]
 . Log in as a messaging tenant:
 +
 [subs="attributes",options="nowrap"]
@@ -22,3 +23,4 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 {cmdcli} get addressspaceschema standard -o yaml
 ----
+
