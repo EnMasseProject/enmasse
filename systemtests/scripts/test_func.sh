@@ -14,16 +14,18 @@ function setup_test_openshift() {
     KUBEADM=$2
     SKIP_DEPENDENCIES=${3:-false}
     UPGRADE=${4:-false}
+    IMAGE_NAMESPACE=${5:-"enmasseci"}
 
     export_required_env
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}"
 
     rm -rf ${TEST_LOGDIR}
     mkdir -p ${TEST_LOGDIR}
 
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${KUBERNETES_API_URL}
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
+    oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=${IMAGE_NAMESPACE}
     export KUBERNETES_API_TOKEN=`oc whoami -t`
 
     if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
