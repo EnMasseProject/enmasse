@@ -1181,6 +1181,7 @@ data:
               - name: HOME
                 value: /var/run/artemis/split-1/
               image: ${ARTEMIS_PLUGIN_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
               name: broker-plugin
               volumeMounts:
               - mountPath: /var/run/artemis
