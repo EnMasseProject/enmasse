@@ -5,7 +5,7 @@ source ${CURDIR}/common.sh
 
 PULL_REQUEST=${PULL_REQUEST:-true}
 BRANCH=${BRANCH:-master}
-VERSION=`cat release.version`
+VERSION=$(cat release.version)
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
 SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-"io.enmasse.**.SmokeTest"}
@@ -28,7 +28,7 @@ make docu_html
 echo "Tagging Docker Images"
 if use_external_registry
     make docker_tag
-    make TAG=$(VERSION) docker_tag
+    make TAG=${VERSION} docker_tag
 else
     make docker_tag
 fi
@@ -36,7 +36,7 @@ fi
 if use_external_registry
 then
     echo "Logging in to Docker Hub"
-    docker login -u $DOCKER_USER -p $DOCKER_PASS
+    docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
     echo "Pushing images to Docker Hub"
     make docker_push
     make TAG=$(VERSION) docker_push
