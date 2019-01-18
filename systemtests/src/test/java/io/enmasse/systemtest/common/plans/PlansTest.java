@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.TestTag.nonPR;
@@ -697,6 +699,54 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         assertEquals(String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
                 afterQueuePlan.getName(), environment.namespace(), addressSpace.getName()),
                 data.getJsonObject("status").getJsonArray("messages").getString(0));
+    }
+
+    @Test
+    void testSwitchQueuePlan() throws Exception {
+        AddressPlan beforeQueuePlan = new AddressPlan("small-queue", AddressType.QUEUE,
+                Collections.singletonList(new AddressResource("broker", 0.2)));
+
+        AddressPlan afterQueuePlan = new AddressPlan("bigger-queue", AddressType.QUEUE,
+                Collections.singletonList(new AddressResource("broker", 0.8)));
+
+        plansProvider.createAddressPlan(beforeQueuePlan);
+        plansProvider.createAddressPlan(afterQueuePlan);
+
+        AddressSpacePlan addressPlan = new AddressSpacePlan("address-switch-address-plan",
+                "default-minimal", AddressSpaceType.STANDARD,
+                Arrays.asList(
+                        new AddressSpaceResource("broker", 5.0),
+                        new AddressSpaceResource("router", 5.0),
+                        new AddressSpaceResource("aggregate", 10.0)),
+                Arrays.asList(beforeQueuePlan, afterQueuePlan));
+
+        plansProvider.createAddressSpacePlan(addressPlan);
+
+        AddressSpace addressSpace = new AddressSpace("test-pooled-space", AddressSpaceType.STANDARD,
+                addressPlan.getName(), AuthService.STANDARD);
+        createAddressSpace(addressSpace);
+        UserCredentials cred = new UserCredentials("test-user", "test-password");
+        createUser(addressSpace, cred);
+
+        List<Destination> queues = IntStream.range(0, 8).boxed().map(i ->
+                Destination.queue("queue-" + i, beforeQueuePlan.getName()))
+                .collect(Collectors.toList());
+        setAddresses(addressSpace, queues.toArray(new Destination[0]));
+
+        assertThat("Failed there are no 2 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(2));
+
+        for (Destination queue : queues) {
+            sendDurableMessages(addressSpace, queue, cred, 400);
+        }
+
+        Destination queueAfter = Destination.queue("queue-1", afterQueuePlan.getName());
+        replaceAddress(addressSpace, queueAfter);
+
+        assertThat("Failed there are no 3 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(3));
+
+        for (Destination queue : queues) {
+            receiveDurableMessages(addressSpace, queue, cred, 400);
+        }
     }
 
     //------------------------------------------------------------------------------------------------
