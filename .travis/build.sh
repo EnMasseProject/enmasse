@@ -27,6 +27,7 @@ make docu_html
 
 echo "Tagging Docker Images"
 if use_external_registry
+then
     make docker_tag
     make TAG=${VERSION} docker_tag
 else
@@ -39,7 +40,7 @@ then
     docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
     echo "Pushing images to Docker Hub"
     make docker_push
-    make TAG=$(VERSION) docker_push
+    make TAG=${VERSION} docker_push
 else
     echo "Pushing images to Local Docker Registry"
     make docker_push
