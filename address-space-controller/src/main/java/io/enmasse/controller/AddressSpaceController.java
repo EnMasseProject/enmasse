@@ -72,7 +72,9 @@ public class AddressSpaceController {
         KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), isOpenShift);
 
         log.info("AddressSpaceController starting with options: {}", options);
-        configureDefaultResources(controllerClient, options.getResourcesDir());
+        if (options.isInstallDefaultResources()) {
+            configureDefaultResources(controllerClient, options.getResourcesDir());
+        }
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
         Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getTemplateDir(), isOpenShift);
