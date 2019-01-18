@@ -56,9 +56,6 @@ $(DOCKER_TARGETS): $(DOCKER_DIRS)
 $(DOCKER_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
-client_install:
-	./systemtests/scripts/client_install.sh
-
 systemtests:
 	make -C systemtests
 

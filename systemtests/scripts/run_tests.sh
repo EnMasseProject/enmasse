@@ -2,7 +2,7 @@
 TESTCASE=$1
 PROFILE=${2:-"systemtests"}
 
-if [ -n "$TESTCASE" ]; then
+if [[ -n "$TESTCASE" ]]; then
     EXTRA_ARGS="-Dtest=$TESTCASE"
 fi
 
