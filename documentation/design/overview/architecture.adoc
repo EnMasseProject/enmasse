@@ -1,0 +1,28 @@
+= EnMasse architecture
+
+An EnMasse cluster contains an address-space-controller that handles address space configuration and
+deployment and an api-server that serves the REST API and integrates with Kubernetes as an
+aggregated API server.
+
+
+== Standard address space
+
+For the standard address space, routers, admin (agent + standard-controller) and
+brokers components are created. With MQTT enabled plans, the mqtt-gateway, mqtt-lwt and subserv components are
+also deployed.
+
+The admin component handles deployment of brokers as well as router (and broker) address
+configuration.  The router components are the main entry for all clients, and routes traffic to
+brokers. For sharded topics, the brokers are linked together with a component named the
+topic-forwarder, which forwards messages on one broker to subscriptions on all other brokers.
+
+For MQTT, the subscription service is used by the MQTT gateway to create durable MQTT subscriptions.
+The MQTT gateway handles MQTT clients, and acts as a bridge for MQTT<->AMQP in EnMasse.
+
+image:enmasse_architecture.png[Architecture]
+
+For the brokered address space, an agent and a broker is deployed. The agent configures the broker
+with the desired addresses. Clients connect directly to the broker.
+
+image:enmasse_brokered_view.png[Architecture]
+

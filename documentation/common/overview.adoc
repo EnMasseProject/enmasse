@@ -22,11 +22,11 @@ EnMasse currently supports a `standard` and a `brokered` address space type, eac
 
 The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols, with more to come in the future. This address space type is based on other open source projects such as link:https://activemq.apache.org/artemis/[Apache ActiveMQ Artemis] and link:https://qpid.apache.org/components/dispatch-router/index.html[Apache Qpid Dispatch Router] and provides elastic scaling of these components.  This image illustrates the high-level architecture of the standard address space:
 
-image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/overview/enmasse_overall_view.png[Standard Address Space]
+image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design/overview/enmasse_overall_view.png[Standard Address Space]
 
 [id='brokered_address_space_overview']
 === Brokered address space
 
 The brokered address space type is the "classic" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on. These features are useful for building complex messaging patterns. This address space is also more lightweight as it features only a single broker and a management console.  This image illustrates the high-level architecture of the brokered address space: 
 
-image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design_docs/overview/enmasse_brokered_view.png[Brokered Address Space]
+image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design/overview/enmasse_brokered_view.png[Brokered Address Space]
