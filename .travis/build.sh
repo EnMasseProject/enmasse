@@ -26,18 +26,24 @@ make
 make docu_html
 
 echo "Tagging Docker Images"
-make docker_tag
+if use_external_registry
+    make docker_tag
+    make TAG=$(VERSION) docker_tag
+else
+    make docker_tag
+fi
 
 if use_external_registry
 then
     echo "Logging in to Docker Hub"
     docker login -u $DOCKER_USER -p $DOCKER_PASS
+    echo "Pushing images to Docker Hub"
+    make docker_push
+    make TAG=$(VERSION) docker_push
 else
-    echo "Using local registry"
+    echo "Pushing images to Local Docker Registry"
+    make docker_push
 fi
-
-echo "Pushing images to Docker Registry"
-make docker_push
 
 echo "Running systemtests"
 ./systemtests/scripts/run_test_kubernetes.sh templates/build/enmasse-${TAG} ${SYSTEMTEST_PROFILE} ${SYSTEMTEST_ARGS}
