@@ -19,6 +19,7 @@ public final class AddressSpaceControllerOptions {
     private StandardAuthServiceInfo standardAuthService;
     private boolean enableEventLogger;
     private boolean exposeEndpointsByDefault;
+    private boolean installDefaultResources;
 
     private String environment;
 
@@ -97,6 +98,8 @@ public final class AddressSpaceControllerOptions {
         options.setExposeEndpointsByDefault(getEnv(env, "EXPOSE_ENDPOINTS_BY_DEFAULT").map(Boolean::parseBoolean).orElse(true));
 
         options.setEnvironment(getEnv(env, "ENVIRONMENT").orElse("development"));
+
+        options.setInstallDefaultResources(getEnv(env, "INSTALL_DEFAULT_RESOURCES").map(Boolean::parseBoolean).orElse(true));
 
         options.setWildcardCertSecret(getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null));
 
@@ -235,5 +238,13 @@ public final class AddressSpaceControllerOptions {
                 ", standardAuthserviceCredentialsSecretName='" + standardAuthserviceCredentialsSecretName + '\'' +
                 ", standardAuthserviceCertSecretName='" + standardAuthserviceCertSecretName + '\'' +
                 '}';
+    }
+
+    public boolean isInstallDefaultResources() {
+        return installDefaultResources;
+    }
+
+    public void setInstallDefaultResources(boolean installDefaultResources) {
+        this.installDefaultResources = installDefaultResources;
     }
 }
