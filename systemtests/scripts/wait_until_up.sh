@@ -53,7 +53,7 @@ function waitingContainersReady {
     return 0
 }
 
-TIMEOUT=18600
+TIMEOUT=600
 NOW=$(date +%s)
 END=$(($NOW + $TIMEOUT))
 info "Waiting until ${END}"
