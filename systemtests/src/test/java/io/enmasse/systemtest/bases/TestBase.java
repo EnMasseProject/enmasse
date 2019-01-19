@@ -965,14 +965,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 .setPassword("password")
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(operation)
-                        .addAddress("queue.*")));
+                        .addAddress("queue/*")));
 
         users.add(new User()
                 .setUsername("user3")
                 .setPassword("password")
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(operation)
-                        .addAddress("topic.*")));
+                        .addAddress("topic/*")));
 
         users.add(new User()
                 .setUsername("user4")
@@ -995,10 +995,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected List<Destination> getAddressesWildcard() {
-        Destination queue = Destination.queue("queue.1234", getDefaultPlan(AddressType.QUEUE));
-        Destination queue2 = Destination.queue("queue.ABCD", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("topic.2345", getDefaultPlan(AddressType.TOPIC));
-        Destination topic2 = Destination.topic("topic.ABCD", getDefaultPlan(AddressType.TOPIC));
+        Destination queue = Destination.queue("queue/1234", getDefaultPlan(AddressType.QUEUE));
+        Destination queue2 = Destination.queue("queue/ABCD", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("topic/2345", getDefaultPlan(AddressType.TOPIC));
+        Destination topic2 = Destination.topic("topic/ABCD", getDefaultPlan(AddressType.TOPIC));
 
         return Arrays.asList(queue, queue2, topic, topic2);
     }
