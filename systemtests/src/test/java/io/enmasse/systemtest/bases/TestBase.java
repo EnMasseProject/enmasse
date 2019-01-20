@@ -549,7 +549,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getType());
             assertTrue(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), true), message);
         }
@@ -557,7 +557,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, can connect to %s under user %s", destination.getType(), credentials);
+            String message = String.format("Client failed, can connect to %s under user %s", destination.getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getType());
             assertFalse(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), false), message);
         }
