@@ -211,9 +211,9 @@ public class Destination {
             metadata.put("uid", this.getUuid());
         }
         if (this.getAddressSpace() != null) {
-            metadata.put("addressSpace", this.getAddressSpace());
+            TestUtils.putIntoMap(metadata, "annotations", "addressSpace", getAddressSpace());
         } else if (addressSpace != null) {
-            metadata.put("addressSpace", addressSpace);
+            TestUtils.putIntoMap(metadata, "annotations", "addressSpace", addressSpace);
         }
         return metadata;
     }
