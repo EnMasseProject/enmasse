@@ -5,16 +5,15 @@
 
 package io.enmasse.artemis.sasl_delegation;
 
+import org.apache.activemq.artemis.core.config.WildcardConfiguration;
 import org.apache.activemq.artemis.core.security.Role;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
 import org.apache.activemq.artemis.core.settings.HierarchicalRepository;
+import org.apache.activemq.artemis.core.settings.impl.HierarchicalObjectRepository;
 import org.jboss.logging.Logger;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlugin {
@@ -33,6 +32,19 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
     private final Set<String> knownAddresses = new HashSet<>();
     private Set<Role> standardRoles;
     private boolean useGroupsFromSaslDelegation;
+
+
+    private static volatile Field WILDCARD_CONFIGURATION_FIELD;
+
+    static {
+        try {
+            Class<?> jassCallbackHandlerClass = Class.forName("org.apache.activemq.artemis.core.settings.impl.HierarchicalObjectRepository");
+            WILDCARD_CONFIGURATION_FIELD = jassCallbackHandlerClass.getField("wildcardConfiguration");
+            WILDCARD_CONFIGURATION_FIELD.setAccessible(true);
+        } catch (ClassNotFoundException | NoSuchFieldException ignored) {
+
+        }
+    }
 
     @Override
     public SecuritySettingPlugin init(Map<String, String> map) {
@@ -90,11 +102,46 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
         }
     }
 
+    private static final char DEFAULT_SINGLE_WORD = '*';
+
+    private static final char DEFAULT_ANY_WORDS = '#';
+
+    private static final char DEFAULT_DELIMITER = '.';
+
     private void addGroup(String group) {
             String[] parts = group.split("_", 2);
             if (parts.length == 2) {
+                char singleWord = DEFAULT_SINGLE_WORD;
+                char anyWords = DEFAULT_ANY_WORDS;
+                char delimeter = DEFAULT_DELIMITER;
                 try {
                     String address = parts[1];
+                    if(securityRepository instanceof HierarchicalObjectRepository && WILDCARD_CONFIGURATION_FIELD != null) {
+                        try {
+                            WildcardConfiguration wildcardConfig = (WildcardConfiguration) WILDCARD_CONFIGURATION_FIELD.get(securityRepository);
+                            singleWord = wildcardConfig.getSingleWord();
+                            anyWords = wildcardConfig.getAnyWords();
+                            delimeter = wildcardConfig.getDelimiter();
+                            StringBuilder fixedAddress = new StringBuilder(address.length());
+                            for(char c : address.toCharArray()) {
+                                switch (c) {
+                                    case DEFAULT_ANY_WORDS:
+                                        c = anyWords;
+                                        break;
+                                    case DEFAULT_SINGLE_WORD:
+                                        c = singleWord;
+                                        break;
+                                    case DEFAULT_DELIMITER:
+                                        c = delimeter;
+                                        break;
+
+                                }
+                                fixedAddress.append(c);
+                            }
+                            address = fixedAddress.toString();
+                        } catch (IllegalAccessException e) {
+                        }
+                    }
                     if(knownAddresses.add(address)) {
 
                         Set<Role> roles = new HashSet<>();
@@ -110,7 +157,9 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                         allRoles.addAll(roles);
                         securityRepository.addMatch(address, allRoles);
 
-                        if(address.equals("#")) {
+
+                        String singleWordString = String.valueOf(singleWord);
+                        if(address.equals(singleWordString)) {
                             for(String existingAddress : knownAddresses) {
                                 if(!existingAddress.equals(address)) {
                                     Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
@@ -118,34 +167,38 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                                     securityRepository.addMatch(existingAddress, updatedRoles);
                                 }
                             }
-                        } else if(address.equals("*")) {
-                          for(String existingAddress : knownAddresses) {
-                              if(!existingAddress.equals(address) && !existingAddress.contains(".")) {
-                                  Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
-                                  updatedRoles.addAll(roles);
-                                  securityRepository.addMatch(existingAddress, updatedRoles);
+                        } else {
+                            String delimeterString = String.valueOf(delimeter);
+                            String anyWordsString = String.valueOf(anyWords);
+                            if(address.equals(anyWordsString)) {
+                              for(String existingAddress : knownAddresses) {
+                                  if(!existingAddress.equals(address) && !existingAddress.contains(delimeterString)) {
+                                      Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                      updatedRoles.addAll(roles);
+                                      securityRepository.addMatch(existingAddress, updatedRoles);
+                                  }
                               }
-                          }
-                        } else if(address.endsWith(".*")) {
-                            String stem = address.substring(0, address.length()-2);
-                            for(String existingAddress : knownAddresses) {
-                                if(!existingAddress.equals(address)
-                                    && existingAddress.startsWith(stem)
-                                    && !existingAddress.substring(stem.length()+1,existingAddress.length()).contains(".")
-                                    && !existingAddress.substring(stem.length()+1,existingAddress.length()).equals("#")) {
-                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
-                                    updatedRoles.addAll(roles);
-                                    securityRepository.addMatch(existingAddress, updatedRoles);
+                            } else if(address.endsWith(delimeterString+singleWordString)) {
+                                String stem = address.substring(0, address.length()-2);
+                                for(String existingAddress : knownAddresses) {
+                                    if(!existingAddress.equals(address)
+                                        && existingAddress.startsWith(stem)
+                                        && !existingAddress.substring(stem.length()+1,existingAddress.length()).contains(delimeterString)
+                                        && !existingAddress.substring(stem.length()+1,existingAddress.length()).equals(anyWordsString)) {
+                                        Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                        updatedRoles.addAll(roles);
+                                        securityRepository.addMatch(existingAddress, updatedRoles);
+                                    }
                                 }
-                            }
-                        } else if(address.endsWith(".#")) {
-                            String stem = address.substring(0, address.length()-2);
-                            for(String existingAddress : knownAddresses) {
-                                if(!existingAddress.equals(address)
-                                    && existingAddress.startsWith(stem)) {
-                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
-                                    updatedRoles.addAll(roles);
-                                    securityRepository.addMatch(existingAddress, updatedRoles);
+                            } else if(address.endsWith(delimeterString+anyWordsString)) {
+                                String stem = address.substring(0, address.length()-2);
+                                for(String existingAddress : knownAddresses) {
+                                    if(!existingAddress.equals(address)
+                                        && existingAddress.startsWith(stem)) {
+                                        Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                        updatedRoles.addAll(roles);
+                                        securityRepository.addMatch(existingAddress, updatedRoles);
+                                    }
                                 }
                             }
                         }
