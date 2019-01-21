@@ -23,7 +23,7 @@ public class AddressTest {
         AddressBuilder b1 = new AddressBuilder()
 
                 .withNewMetadata()
-                .withName("myname")
+                .withName("myspace.myname")
                 .withUid("myuid")
                 .withResourceVersion("1234")
                 .withSelfLink("/my/link")
@@ -46,7 +46,7 @@ public class AddressTest {
         Address a2 = b2.build();
 
         assertThat(a1.getSpec().getAddress(), is(a2.getSpec().getAddress()));
-        assertThat(a1.getSpec().getAddressSpace(), is(a2.getSpec().getAddressSpace()));
+        assertThat(Address.extractAddressSpace(a1), is(Address.extractAddressSpace(a2)));
         assertThat(a1.getSpec().getPlan(), is(a2.getSpec().getPlan()));
         assertThat(a1.getStatus(), is(a2.getStatus()));
         assertThat(a1.getSpec().getType(), is(a2.getSpec().getType()));

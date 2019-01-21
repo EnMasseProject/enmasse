@@ -101,4 +101,36 @@ public class Address extends AbstractHasMetadata<Address> implements AddressOrAd
         String uuid = UUID.nameUUIDFromBytes(address.getBytes(StandardCharsets.UTF_8)).toString();
         return KubeUtil.sanitizeName(addressSpace) + "." + KubeUtil.sanitizeName(address) + "." + uuid;
     }
+
+    private static String [] extractAddressInformation(final Address address) {
+        Objects.requireNonNull(address);
+        Objects.requireNonNull(address.getMetadata());
+        Objects.requireNonNull(address.getMetadata().getName());
+
+        final String name = address.getMetadata().getName();
+        final String toks [] = name.split("\\.", 2);
+        if ( toks.length != 2 ) {
+            throw new IllegalArgumentException("Address space name in illegal format. Expected: <address-space>.<address>, was: " + name);
+        }
+
+        return toks;
+    }
+
+    public static String extractAddressSpace(final Address address) {
+       return extractAddressInformation(address)[0];
+    }
+
+    public static String extractAddressFromName(final Address address) {
+        return extractAddressInformation(address)[1];
+    }
+
+    public static String extractAddress(final Address address) {
+        Objects.requireNonNull(address);
+        Objects.requireNonNull(address.getSpec());
+        final String addressValue = address.getSpec().getAddress();
+        if ( addressValue != null ) {
+            return addressValue;
+        }
+        return extractAddressFromName(address);
+    }
 }

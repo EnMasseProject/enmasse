@@ -29,7 +29,6 @@ public class AddressSpec {
 
     @NotNull
     private String address;
-    @NotNull
     private String addressSpace;
     @NotNull
     private String type;
@@ -49,6 +48,10 @@ public class AddressSpec {
         this.addressSpace = addressSpace;
     }
 
+    /**
+     * @deprecated Use {@link Address#extractAddressSpace(Address)} instead.
+     */
+    @Deprecated
     public String getAddressSpace() {
         return addressSpace;
     }

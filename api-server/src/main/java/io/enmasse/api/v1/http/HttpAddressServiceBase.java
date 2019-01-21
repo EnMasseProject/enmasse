@@ -21,6 +21,7 @@ import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.k8s.model.v1beta1.TableColumnDefinition;
 import io.enmasse.k8s.model.v1beta1.TableRow;
 import io.enmasse.k8s.util.TimeUtil;
+import io.enmasse.model.validation.DefaultValidator;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.slf4j.Logger;
@@ -104,6 +105,7 @@ public class HttpAddressServiceBase {
 
     Response internalCreateAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, Address address) throws Exception {
         checkRequestBodyNotNull(address);
+        DefaultValidator.validate(address);
         Address finalAddress = setAddressDefaults(namespace, addressSpace, address, null);
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
@@ -116,6 +118,7 @@ public class HttpAddressServiceBase {
 
     Response internalCreateAddresses(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, AddressList addressList) throws Exception {
         checkRequestBodyNotNull(addressList);
+        DefaultValidator.validate(addressList);
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
             Set<Address> finalAddresses = addressList.getItems().stream()
@@ -126,16 +129,12 @@ public class HttpAddressServiceBase {
         });
     }
 
-    private static Address setAddressDefaults(String namespace, String addressSpace, Address address, Address existing) {
+    static Address setAddressDefaults(String namespace, String addressSpace, Address address, Address existing) {
         if (existing == null) {
-            if (address.getMetadata().getNamespace() == null || address.getSpec().getAddressSpace() == null || address.getMetadata().getName() == null) {
+            if (address.getMetadata().getNamespace() == null || address.getMetadata().getName() == null) {
                 AddressBuilder builder = new AddressBuilder(address);
                 if (address.getMetadata().getNamespace() == null) {
                     builder.editOrNewMetadata().withNamespace(namespace).endMetadata();
-                }
-
-                if (address.getSpec().getAddressSpace() == null) {
-                    builder.editOrNewSpec().withAddressSpace(addressSpace).endSpec();
                 }
 
                 if (address.getMetadata().getName() == null) {
@@ -222,7 +221,6 @@ public class HttpAddressServiceBase {
 
     private static void overrideLabel(Address existing, Address address, String labelKey) {
         override(existing.getMetadata().getLabels(), address.getMetadata().getLabels(), labelKey);
-
     }
 
     private void checkRequestBodyNotNull(Object object) {
@@ -235,6 +233,7 @@ public class HttpAddressServiceBase {
         checkRequestBodyNotNull(payload);
         checkAddressObjectNameNotNull(payload, addressNameFromURL);
         checkMatchingAddressName(addressNameFromURL, payload);
+        DefaultValidator.validate(payload);
         return doRequest("Error updating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
             Address existing = apiHelper.getAddress(namespace, addressSpace, addressNameFromURL).orElse(null);
@@ -352,7 +351,7 @@ public class HttpAddressServiceBase {
                         Arrays.asList(
                                 address.getMetadata().getName(),
                                 address.getSpec().getAddress(),
-                                address.getSpec().getAddressSpace(),
+                                Address.extractAddressSpace(address),
                                 address.getSpec().getType(),
                                 address.getSpec().getPlan(),
                                 address.getStatus().isReady(),

@@ -73,7 +73,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
             }
 
             if (address.getMetadata().getSelfLink() == null) {
-                metadataBuilder.withSelfLink("/apis/enmasse.io/v1beta1/namespaces/" + address.getMetadata().getNamespace() + "/addressspaces/" + address.getSpec().getAddressSpace());
+                metadataBuilder.withSelfLink("/apis/enmasse.io/v1beta1/namespaces/" + address.getMetadata().getNamespace() + "/addressspaces/" + Address.extractAddressSpace(address));
             }
 
             // commit changes to metadata
@@ -168,7 +168,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
                 .addToLabels(LabelKeys.INFRA_TYPE, "any")
                 .addToAnnotations(address.getMetadata().getAnnotations())
                 // TODO: Support other ways of doing this
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, address.getSpec().getAddressSpace())
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, Address.extractAddressSpace(address))
                 .endMetadata();
 
         if (address.getMetadata().getResourceVersion() != null) {

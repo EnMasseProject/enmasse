@@ -141,7 +141,6 @@ public class HTTPServerTest {
                         .endMetadata()
 
                         .withNewSpec()
-                        .withAddressSpace("myinstance")
                         .withAddress("addR1")
                         .withType("queue")
                         .withPlan("myplan")
@@ -168,7 +167,9 @@ public class HTTPServerTest {
                         context.verify(() -> {
                             assertTrue(data.containsKey("items"));
                             assertEquals(1, data.getJsonArray("items").size());
-                            assertEquals("myinstance.addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                            JsonObject object = data.getJsonArray("items").getJsonObject(0);
+                            assertEquals("myinstance.addr1", object.getJsonObject("metadata").getString("name"));
+                            assertEquals("addR1", object.getJsonObject("spec").getString("address"));
                         });
                         checkpoint.flag();
                     });
@@ -189,6 +190,7 @@ public class HTTPServerTest {
                         context.verify(() -> {
                             assertTrue(data.containsKey("metadata"));
                             assertEquals("myinstance.addr1", data.getJsonObject("metadata").getString("name"));
+                            assertEquals("addR1", data.getJsonObject("spec").getString("address"));
                         });
                         checkpoint.flag();
                     });
@@ -518,7 +520,7 @@ public class HTTPServerTest {
                     .put("apiVersion", "enmasse.io/" + apiVersion)
                     .put("kind", "Address")
                     .put("metadata", new JsonObject()
-                            .put("name", "single1"))
+                            .put("name", "myinstance.single1"))
                     .put("spec", new JsonObject()
                             .put("address", "single1")
                             .put("type", "queue")
@@ -562,7 +564,7 @@ public class HTTPServerTest {
                                     .put("apiVersion", "enmasse.io/" + apiVersion)
                                     .put("kind", "Address")
                                     .put("metadata", new JsonObject()
-                                            .put("name", "single1"))
+                                            .put("name", "myinstance.single1"))
                                     .put("spec", new JsonObject()
                                             .put("address", "single1")
                                             .put("type", "queue")

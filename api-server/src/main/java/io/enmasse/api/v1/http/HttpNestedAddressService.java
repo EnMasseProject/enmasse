@@ -25,10 +25,24 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
         super(addressSpaceApi, schemaProvider, clock);
     }
 
+    private void validateAddressName(final String addressName) {
+        if ( addressName == null ) {
+            return;
+        }
+
+        if ( addressName.indexOf('.') < 0 ) {
+            throw new BadRequestException("Invalid address name format. Must be: <address-space>.<address>");
+        }
+    }
+
     @GET
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response getAddressList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @QueryParam("address") String address, @QueryParam("labelSelector") String labelSelector) throws Exception {
+        /**
+         * Only in the case of the "get list" operation don't we use the "metadata name", but the actual address name.
+         * So we must not concatenate the addressspace with the name in *this case*.
+         */
         return internalGetAddressList(securityContext, acceptHeader, namespace, addressSpace, address, labelSelector);
     }
 
@@ -37,6 +51,7 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
     public Response getAddress(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String address) throws Exception {
+        validateAddressName(address);
         return internalGetAddress(securityContext, acceptHeader, namespace, addressSpace, address);
     }
 
@@ -58,6 +73,7 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
     public Response replaceAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String addressName, @NotNull @Valid Address payload) throws Exception {
+        validateAddressName(addressName);
         return internalReplaceAddress(securityContext, namespace, addressSpace, addressName, payload);
     }
 
@@ -66,6 +82,7 @@ public class HttpNestedAddressService extends HttpAddressServiceBase {
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
     public Response deleteAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpace, @PathParam("addressName") String addressName) throws Exception {
+        validateAddressName(addressName);
         return internalDeleteAddress(securityContext, namespace, addressSpace, addressName);
     }
 }

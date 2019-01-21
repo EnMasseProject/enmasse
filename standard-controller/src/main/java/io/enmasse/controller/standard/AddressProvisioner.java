@@ -427,7 +427,7 @@ public class AddressProvisioner {
 
         CRC32 crc32 = new CRC32();
         crc32.update(address.getMetadata().getNamespace().getBytes());
-        crc32.update(address.getSpec().getAddressSpace().getBytes());
+        crc32.update(Address.extractAddressSpace(address).getBytes());
         crc32.update(address.getSpec().getAddress().getBytes());
         return "broker-sharded-" + Long.toHexString(crc32.getValue()) + "-" + infraUuid;
     }

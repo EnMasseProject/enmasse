@@ -53,7 +53,7 @@ class ConfigMapAddressApiTest extends JULInitializingTest {
         Address read = readAddress.get();
 
         assertEquals(ADDRESS, read.getSpec().getAddress());
-        assertEquals(ADDRESS_SPACE, read.getSpec().getAddressSpace());
+        assertEquals(ADDRESS_SPACE, Address.extractAddressSpace(read));
         assertEquals(ADDRESS_NAME, read.getMetadata().getName());
         assertEquals(ADDRESS_TYPE, read.getSpec().getType());
         assertEquals(ADDRESS_PLAN, read.getSpec().getPlan());
