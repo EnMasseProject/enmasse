@@ -549,7 +549,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getType());
             assertTrue(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), true), message);
         }
@@ -557,7 +557,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, can connect to %s under user %s", destination.getType(), credentials);
+            String message = String.format("Client failed, can connect to %s under user %s", destination.getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getType());
             assertFalse(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), false), message);
         }
@@ -965,14 +965,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 .setPassword("password")
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(operation)
-                        .addAddress("queue.*")));
+                        .addAddress("queue/*")));
 
         users.add(new User()
                 .setUsername("user3")
                 .setPassword("password")
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(operation)
-                        .addAddress("topic.*")));
+                        .addAddress("topic/*")));
 
         users.add(new User()
                 .setUsername("user4")
@@ -995,10 +995,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected List<Destination> getAddressesWildcard() {
-        Destination queue = Destination.queue("queue.1234", getDefaultPlan(AddressType.QUEUE));
-        Destination queue2 = Destination.queue("queue.ABCD", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("topic.2345", getDefaultPlan(AddressType.TOPIC));
-        Destination topic2 = Destination.topic("topic.ABCD", getDefaultPlan(AddressType.TOPIC));
+        Destination queue = Destination.queue("queue/1234", getDefaultPlan(AddressType.QUEUE));
+        Destination queue2 = Destination.queue("queue/ABCD", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("topic/2345", getDefaultPlan(AddressType.TOPIC));
+        Destination topic2 = Destination.topic("topic/ABCD", getDefaultPlan(AddressType.TOPIC));
 
         return Arrays.asList(queue, queue2, topic, topic2);
     }
