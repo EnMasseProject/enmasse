@@ -78,6 +78,12 @@ class ApiServerTest extends TestBase {
         log.info("Check if schema object is not null");
         assertThat(schemaData.getAddressSpaceTypes().size(), not(0));
 
+        log.info("Check if the 'standard' address space type is found");
+        assertThat(schemaData.getAddressSpaceType("standard"), notNullValue());
+
+        log.info("Check if the 'standard' address space has plans");
+        assertThat(schemaData.getAddressSpaceType("standard").getPlans(), notNullValue());
+
         log.info("Check if schema object contains new address space plan");
         assertTrue(schemaData.getAddressSpaceType("standard").getPlans()
                 .stream()
