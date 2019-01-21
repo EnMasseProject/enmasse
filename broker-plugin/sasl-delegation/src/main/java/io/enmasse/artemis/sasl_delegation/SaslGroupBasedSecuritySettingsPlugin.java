@@ -159,50 +159,50 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
 
 
                         String singleWordString = String.valueOf(singleWord);
-                        if(address.equals(singleWordString)) {
-                            for(String existingAddress : knownAddresses) {
-                                if(!existingAddress.equals(address)) {
+                        String delimeterString = String.valueOf(delimeter);
+                        String anyWordsString = String.valueOf(anyWords);
+
+                        if (address.equals(anyWordsString)) {
+                            for (String existingAddress : knownAddresses) {
+                                if (!existingAddress.equals(address)) {
                                     Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
                                     updatedRoles.addAll(roles);
                                     securityRepository.addMatch(existingAddress, updatedRoles);
                                 }
                             }
-                        } else {
-                            String delimeterString = String.valueOf(delimeter);
-                            String anyWordsString = String.valueOf(anyWords);
-                            if(address.equals(anyWordsString)) {
-                              for(String existingAddress : knownAddresses) {
-                                  if(!existingAddress.equals(address) && !existingAddress.contains(delimeterString)) {
-                                      Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
-                                      updatedRoles.addAll(roles);
-                                      securityRepository.addMatch(existingAddress, updatedRoles);
-                                  }
-                              }
-                            } else if(address.endsWith(delimeterString+singleWordString)) {
-                                String stem = address.substring(0, address.length()-2);
-                                for(String existingAddress : knownAddresses) {
-                                    if(!existingAddress.equals(address)
-                                        && existingAddress.startsWith(stem)
-                                        && !existingAddress.substring(stem.length()+1,existingAddress.length()).contains(delimeterString)
-                                        && !existingAddress.substring(stem.length()+1,existingAddress.length()).equals(anyWordsString)) {
-                                        Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
-                                        updatedRoles.addAll(roles);
-                                        securityRepository.addMatch(existingAddress, updatedRoles);
-                                    }
+                        } else if (address.equals(singleWordString)) {
+                            for (String existingAddress : knownAddresses) {
+                                if (!existingAddress.equals(address) && !existingAddress.contains(delimeterString)) {
+                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                    updatedRoles.addAll(roles);
+                                    securityRepository.addMatch(existingAddress, updatedRoles);
                                 }
-                            } else if(address.endsWith(delimeterString+anyWordsString)) {
-                                String stem = address.substring(0, address.length()-2);
-                                for(String existingAddress : knownAddresses) {
-                                    if(!existingAddress.equals(address)
+                            }
+                        } else if (address.endsWith(delimeterString + singleWordString)) {
+                            String stem = address.substring(0, address.length() - 2);
+                            for (String existingAddress : knownAddresses) {
+                                if (!existingAddress.equals(address)
+                                        && existingAddress.startsWith(stem)
+                                        && !existingAddress.substring(stem.length() + 1, existingAddress.length()).contains(delimeterString)
+                                        && !existingAddress.substring(stem.length() + 1, existingAddress.length()).equals(anyWordsString)) {
+                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                    updatedRoles.addAll(roles);
+                                    securityRepository.addMatch(existingAddress, updatedRoles);
+                                }
+                            }
+                        } else if (address.endsWith(delimeterString + anyWordsString)) {
+                            String stem = address.substring(0, address.length() - 2);
+                            for (String existingAddress : knownAddresses) {
+                                if (!existingAddress.equals(address)
                                         && existingAddress.startsWith(stem)) {
-                                        Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
-                                        updatedRoles.addAll(roles);
-                                        securityRepository.addMatch(existingAddress, updatedRoles);
-                                    }
+                                    Set<Role> updatedRoles = new HashSet<>(securityRepository.getMatch(existingAddress));
+                                    updatedRoles.addAll(roles);
+                                    securityRepository.addMatch(existingAddress, updatedRoles);
                                 }
                             }
                         }
                     }
+
                 } catch (IllegalArgumentException e) {
                     LOG.infov("Unable to parse implied address from group {0}: {1}", group, e.getMessage());
                 }
