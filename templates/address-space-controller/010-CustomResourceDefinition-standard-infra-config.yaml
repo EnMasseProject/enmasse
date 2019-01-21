@@ -61,6 +61,7 @@ spec:
                   - PAGE
                   - BLOCK
                   - FAIL
+                  - DROP
                 storageClassName:
                   type: string
                 updatePersistentVolumeClaim:
