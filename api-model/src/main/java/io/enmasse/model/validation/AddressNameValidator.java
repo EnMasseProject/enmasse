@@ -13,6 +13,7 @@ import io.enmasse.address.model.KubeUtil;
 
 public class AddressNameValidator implements ConstraintValidator<AddressName, Address> {
 
+    @SuppressWarnings("deprecation")
     @Override
     public boolean isValid(Address address, ConstraintValidatorContext context) {
 
@@ -21,10 +22,6 @@ public class AddressNameValidator implements ConstraintValidator<AddressName, Ad
         }
 
         if (address.getMetadata() == null || address.getMetadata().getName() == null) {
-            return false;
-        }
-
-        if (address.getSpec() == null || address.getSpec().getAddressSpace() == null) {
             return false;
         }
 
@@ -38,12 +35,15 @@ public class AddressNameValidator implements ConstraintValidator<AddressName, Ad
                     .addConstraintViolation();
             return false;
         }
-        if (!components[0].equals(address.getSpec().getAddressSpace())) {
-            context.disableDefaultConstraintViolation();
-            context
-                    .buildConstraintViolationWithTemplate("Address space component of address name does not match address space")
-                    .addConstraintViolation();
-            return false;
+        if ( address.getSpec() != null && address.getSpec().getAddressSpace() != null ) {
+            // we only validate the address space name if it is set, as this is an optional legacy value
+            if (!components[0].equals(address.getSpec().getAddressSpace())) {
+                context.disableDefaultConstraintViolation();
+                context
+                        .buildConstraintViolationWithTemplate("Address space component of address name does not match address space")
+                        .addConstraintViolation();
+                return false;
+            }
         }
 
         for (String component : components) {

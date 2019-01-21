@@ -95,11 +95,12 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        if (!addressApiMap.containsKey(addressSpace.getMetadata().getName())) {
-            addressSpaces.put(addressSpace.getMetadata().getName(), addressSpace);
-            addressApiMap.put(addressSpace.getMetadata().getName(), new TestAddressApi());
+        final String addressSpaceName = addressSpace.getMetadata().getName();
+        if (!addressApiMap.containsKey(addressSpaceName)) {
+            addressSpaces.put(addressSpaceName, addressSpace);
+            addressApiMap.put(addressSpaceName, new TestAddressApi());
         }
-        return getAddressApi(addressSpace.getMetadata().getName());
+        return getAddressApi(addressSpaceName);
     }
 
     public TestAddressApi getAddressApi(String id) {

@@ -81,7 +81,7 @@ public class SerializationTest {
         Address deserialized = mapper.readValue(serialized, Address.class);
 
         assertThat(deserialized, is(address));
-        assertThat(deserialized.getSpec().getAddressSpace(), is(address.getSpec().getAddressSpace()));
+        assertThat(Address.extractAddressSpace(deserialized), is(Address.extractAddressSpace(address)));
         assertThat(deserialized.getSpec().getType(), is(address.getSpec().getType()));
 
         assertThat(deserialized.getSpec().getPlan(), is(address.getSpec().getPlan()));

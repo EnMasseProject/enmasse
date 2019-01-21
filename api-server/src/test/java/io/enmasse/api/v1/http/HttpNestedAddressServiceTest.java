@@ -15,21 +15,28 @@ import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.TestAddressApi;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.model.v1beta1.Table;
+
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import static javax.ws.rs.core.Response.Status.Family.SERVER_ERROR;
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -68,7 +75,7 @@ public class HttpNestedAddressServiceTest {
         addressApi = (TestAddressApi) addressSpaceApi.withAddressSpace(addressSpace);
         q1 = new AddressBuilder()
                 .withNewMetadata()
-                .withName("q1")
+                .withName("myspace.q1")
                 .withNamespace("ns")
                 .endMetadata()
 
@@ -81,7 +88,7 @@ public class HttpNestedAddressServiceTest {
                 .build();
         a1 = new AddressBuilder()
                 .withNewMetadata()
-                .withName("a1")
+                .withName("myspace.a1")
                 .withNamespace("ns")
                 .endMetadata()
 
@@ -153,7 +160,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testGet() {
-        Response response = invoke(() -> addressService.internalGetAddress(securityContext, null, "ns", "myspace", "q1"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "myspace.q1"));
         assertThat(response.getStatus(), is(200));
         Address address = (Address) response.getEntity();
 
@@ -162,7 +169,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testGetTableFormat() {
-        Response response = invoke(() -> addressService.getAddress(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "ns", "myspace", "q1"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "ns", "myspace", "myspace.q1"));
         assertThat(response.getStatus(), is(200));
         Table table = (Table) response.getEntity();
 
@@ -173,19 +180,23 @@ public class HttpNestedAddressServiceTest {
     @Test
     public void testGetException() {
         addressApi.throwException = true;
-        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "q1"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "myspace.q1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGetUnknown() {
-        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "doesnotexist"));
+        Response response = invoke(() -> addressService.getAddress(securityContext, null, "ns", "myspace", "myspace.doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
 
     @Test
     public void testCreateSingle() {
         Address a2 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+
                 .withNewSpec()
                 .withAddress("a2")
                 .withType("anycast")
@@ -205,15 +216,23 @@ public class HttpNestedAddressServiceTest {
     @Test
     public void testCreateList() {
         final Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .withNamespace("ns")
+                .endMetadata()
+
                 .withNewSpec()
                 .withAddress("a1")
                 .withType("anycast")
                 .withPlan("plan1")
-                .withAddressSpace("myspace")
                 .endSpec()
                 .build();
 
         final Address a2 = new AddressBuilder(a1)
+                .editOrNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+
                 .editOrNewSpec()
                 .withAddress("a2")
                 .endSpec()
@@ -245,10 +264,14 @@ public class HttpNestedAddressServiceTest {
     public void testCreateException() {
         addressApi.throwException = true;
         Address a2 = new AddressBuilder()
+
+                .withNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+
                 .withNewSpec()
                 .withAddress("a2")
                 .withPlan("plan1")
-                .withAddressSpace("myspace")
                 .withType("anycast")
                 .endSpec()
                 .build();
@@ -274,7 +297,7 @@ public class HttpNestedAddressServiceTest {
     public void testPutNonMatchingAddressName() {
         Address a2 = new AddressBuilder()
                 .withNewMetadata()
-                .withName("a2")
+                .withName("myspace.a2")
                 .endMetadata()
 
                 .withNewSpec()
@@ -285,7 +308,7 @@ public class HttpNestedAddressServiceTest {
                 .endSpec()
 
                 .build();
-        Response response = invoke(() -> addressService.replaceAddress(securityContext, "ns", "myspace", "xxxxxxx", a2));
+        Response response = invoke(() -> addressService.replaceAddress(securityContext, "ns", "myspace", "myspace.xxxxxxx", a2));
         assertThat(response.getStatus(), is(400));
     }
 
@@ -293,14 +316,13 @@ public class HttpNestedAddressServiceTest {
     public void testPutNonExistingAddress() {
         Address a2 = new AddressBuilder()
                 .withNewMetadata()
-                .withName("a2")
+                .withName("myspace.a2")
                 .endMetadata()
 
                 .withNewSpec()
                 .withAddress("a2")
                 .withType("anycast")
                 .withPlan("plan1")
-                .withAddressSpace("myspace")
                 .endSpec()
 
                 .build();
@@ -310,7 +332,7 @@ public class HttpNestedAddressServiceTest {
 
     @Test
     public void testDelete() {
-        Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "a1"));
+        Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "myspace.a1"));
         assertThat(response.getStatus(), is(200));
         assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
 
@@ -321,13 +343,13 @@ public class HttpNestedAddressServiceTest {
     @Test
     public void testDeleteException() {
         addressApi.throwException = true;
-        Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "a1"));
+        Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "myspace.a1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testDeleteNotFound() {
-        Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "notFound"));
+        Response response = invoke(() -> addressService.deleteAddress(securityContext, "ns", "myspace", "myspace.notFound"));
         assertThat(response.getStatus(), is(404));
     }
 
@@ -341,5 +363,126 @@ public class HttpNestedAddressServiceTest {
         assertThat(response.getStatus(), is(200));
         assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
         assertThat(addressApi.listAddresses("ns").size(), is(0));
+    }
+
+    @Test
+    public void testCreateAddress1 () {
+        final Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.address")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("address")
+                .withPlan("plan1")
+                .withType("anycast")
+                .endSpec()
+                .build();
+
+        testCreation(address, true);
+    }
+
+    @Test
+    public void testCreateIllegalAddress1 () {
+        final Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.address")
+                .endMetadata()
+
+                .withNewSpec()
+                // missing: .withAddress("address")
+                .withPlan("plan1")
+                .withType("anycast")
+                .endSpec()
+                .build();
+
+        testCreation(address, false);
+    }
+
+    @Test
+    public void testCreateIllegalAddress2 () {
+        final Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.address")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("address")
+                // missing: .withPlan("plan1")
+                .withType("anycast")
+                .endSpec()
+                .build();
+
+        testCreation(address, false);
+    }
+
+    @Test
+    public void testCreateIllegalAddress3 () {
+        final Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.address")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("address")
+                .withPlan("plan1")
+                // missing: .withType("anycast")
+                .endSpec()
+                .build();
+
+        testCreation(address, false);
+    }
+
+    /**
+     * Try to create and illegal address request, and assert that it fails properly.
+     * @param address The illegal address to create.
+     */
+    private void testCreation(final Address address, boolean successful) {
+        final UriInfo uriInfo = new ResteasyUriInfo("http://localhost:8443/", null, "/");
+        final Response response = invoke(() -> addressService.internalCreateAddress(securityContext, uriInfo, "ns", "myspace", address));
+
+        if ( successful ) {
+            assertThat(response.getStatusInfo().getFamily(), is(SUCCESSFUL) );
+        } else {
+            assertThat(response.getStatusInfo().getFamily(), not(SUCCESSFUL) );
+            assertThat(response.getStatusInfo().getFamily(), not(SERVER_ERROR));
+        }
+    }
+
+    @Test
+    public void testCreateWithDefaults1 () {
+        final String addressName = "addresstestCreateWithDefaults1";
+
+        final Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace("ns")
+                .withName("myspace." + addressName)
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(addressName)
+                .withPlan("plan1")
+                .withType("anycast")
+                .endSpec()
+                .build();
+
+        final UriInfo uriInfo = new ResteasyUriInfo("http://localhost:8443/", null, "/");
+        final Response response1 = invoke(() -> addressService.internalCreateAddress(securityContext, uriInfo, "ns", "myspace", address));
+
+        assertThat(response1.getStatusInfo().getFamily(), is(SUCCESSFUL) );
+
+        Response response2 = invoke(() -> addressService.getAddressList(securityContext, null, "ns", "myspace", addressName, null));
+
+        assertThat(response2.getStatus(), is(200));
+        Address addressFetched = (Address) response2.getEntity();
+
+        assertThat(addressFetched.getMetadata(), notNullValue());
+        assertThat(addressFetched.getMetadata().getName(), is("myspace." + addressName));
+        assertThat(addressFetched.getMetadata().getNamespace(), is("ns"));
+
+        assertThat(addressFetched.getSpec(), notNullValue());
+        assertThat(addressFetched.getSpec().getAddress(), is(addressName));
+        assertThat(Address.extractAddressSpace(addressFetched), is("myspace"));
+
     }
 }
