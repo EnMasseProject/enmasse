@@ -620,11 +620,11 @@ public class TestUtils {
                 case "Address":
                     if (filter.test(htmlResponse)) {
                         if (clazz.equals(String.class)) {
-                            addresses.add((T) htmlResponse.getJsonObject("spec").getString("address"));
+                            addresses.add(clazz.cast(htmlResponse.getJsonObject("spec").getString("address")));
                         } else if (clazz.equals(Address.class)) {
-                            addresses.add((T) getAddressObject(htmlResponse));
+                            addresses.add(clazz.cast(getAddressObject(htmlResponse)));
                         } else if (clazz.equals(Destination.class)) {
-                            addresses.add((T) getDestinationObject(htmlResponse));
+                            addresses.add(clazz.cast(getDestinationObject(htmlResponse)));
                         }
                     }
                     break;
@@ -634,11 +634,11 @@ public class TestUtils {
                         for (int i = 0; i < items.size(); i++) {
                             if (filter.test(items.getJsonObject(i))) {
                                 if (clazz.equals(String.class)) {
-                                    addresses.add((T) items.getJsonObject(i).getJsonObject("spec").getString("address"));
+                                    addresses.add(clazz.cast(items.getJsonObject(i).getJsonObject("spec").getString("address")));
                                 } else if (clazz.equals(Address.class)) {
-                                    addresses.add((T) getAddressObject(items.getJsonObject(i)));
+                                    addresses.add(clazz.cast(getAddressObject(items.getJsonObject(i))));
                                 } else if (clazz.equals(Destination.class)) {
-                                    addresses.add((T) getDestinationObject(items.getJsonObject(i)));
+                                    addresses.add(clazz.cast(getDestinationObject(items.getJsonObject(i))));
                                 }
                             }
                         }
