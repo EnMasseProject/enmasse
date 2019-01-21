@@ -26,6 +26,9 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
@@ -773,12 +776,12 @@ public class TestUtils {
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
         String uid = metadata.getString("uid");
-        String addressSpaceName = metadata.getString("addressSpace");
         JsonObject annotationsJson = metadata.getJsonObject("annotations");
         Map<String, Object> annotations = new HashMap<>();
         if (annotationsJson != null) {
             annotations = annotationsJson.getMap();
         }
+        String addressSpaceName = getFromMap(annotations, "addressSpace").orElse(null);
 
         JsonObject status = addressJsonObject.getJsonObject("status");
         boolean isReady = status.getBoolean("isReady");
@@ -822,7 +825,7 @@ public class TestUtils {
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
         String uid = metadata.getString("uid");
-        String addressSpace = metadata.getString("addressSpace");
+        String addressSpace = getFromMap(metadata.getJsonObject("annotations"), "addressSpace").orElse(null);
         JsonObject spec = addressJsonObject.getJsonObject("spec");
         String address = spec.getString("address");
         String type = spec.getString("type");
@@ -1089,6 +1092,65 @@ public class TestUtils {
 
     public static String sanitizeAddress(String address) {
         return address != null ? address.toLowerCase().replaceAll("[^a-z0-9.\\-]", "") : address;
+    }
+
+    /**
+     * Put an entry into a map, which is stored in a JSON object.
+     * <br>
+     * The value is not directly store in the provided object, but stores as an entry (with key, value) of a map in the provided object.
+     * <br>
+     * The of the parent object currently has no map set to the field provided, then a new map/JSON object is created
+     * and set for this field.
+     * <br>
+     * The idea behind this method is to call it with a "metadata" object, with a field name of e.g. "annotations" and directly
+     * set an annotation key/value pair, adding the map for "annotations" in the process, when necessary.
+     * @param parentObject The object to add the map to.
+     * @param field The name of the field the map will be added in the parent object.
+     * @param key The key used to store the value in the map.
+     * @param value The value to store, may be {@code null}.
+     */
+    public static void putIntoMap(final JsonObject parentObject, final String field, final String key, final Object value) {
+        if ( parentObject == null ) {
+            return;
+        }
+
+        JsonObject object = parentObject.getJsonObject(field);
+        if ( object == null ) {
+            object = new JsonObject();
+            parentObject.put(field, object);
+        }
+
+        object.put(key, value);
+    }
+
+    /**
+     * Get an entry from a JSON object.
+     * <br>
+     * This works like {@link #getFromMap(Map, String)}, but taking the value from a JSON object.
+     * @param object The object to query.
+     * @param key The key (field name) to fetch the value from.
+     * @return The value wrapped into an {@link Optional}.
+     */
+    public static Optional<String> getFromMap(final JsonObject object, final String key) {
+        if ( object == null ) {
+            return empty();
+        }
+        return getFromMap(object.getMap(), key);
+    }
+
+    /**
+     * Get an entry from a map, converted to string by {@link Object#toString()}.
+     * @param map The map to query. The map may be {@code null}, in which case the result will always be {@link Optional#empty()}.
+     * @param key The key to fetch the value from.
+     * @return The value wrapped into an {@link Optional}.
+     */
+    public static Optional<String> getFromMap(final Map<String,?> map, final String key) {
+        if ( map == null ) {
+            return empty();
+        }
+
+        return ofNullable(map.get(key))
+                .map(Object::toString);
     }
 
     public static String getExternalEndpointName(AddressSpace addressSpace, String service) {
