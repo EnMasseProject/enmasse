@@ -6,7 +6,7 @@ function grep_check {
   local pattern=$1
   local description=$2
   local fatalness=${3:-1}
-  x=$(grep -i -E -r -Hn "$pattern" --exclude="*.png" --exclude="*.svg" --exclude-dir="design_docs" --exclude-dir="contributing" --exclude-dir="build" documentation)
+  x=$(grep -i -E -r -Hn "$pattern" --exclude="*.png" --exclude="*.svg" --exclude-dir="design" --exclude-dir="contributing" --exclude-dir="build" documentation)
   if [ -n "$x" ]; then
     echo "$description:"
     echo "$x"

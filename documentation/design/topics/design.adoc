@@ -1,0 +1,31 @@
+= Topics
+
+This document describes the design for topics in EnMasse.
+
+== Overview
+
+In EnMasse, a topic address will create an isolated cluster for a
+topic. Supporting topics in EnMasse is simple with plans that require only 1 broker. Such topics are
+managed separately from topics that require more than 1 broker.
+
+When multiple brokers are needed, a form of sharding is used. The current design rely on two components:
+
+1.  A component forwarding messages between brokers in a cluster to ensure messages arrive at all subscribers
+2.  (MQTT only) A component responsible for tracking durable subscriptions 
+
+The clustering feature of artemis was considered as a way to support
+topics, but it would complicate the broker setup and not handle durable
+subscriptions in a generic way. A long term design for topics should be
+independent of the broker implementation.
+
+=== Message forwarding
+
+The current approach to forwarding messages between brokers is to add a
+'topic-forwarder' container in the same pod as the broker. The forwarder
+is responsible for forwarding messages from the local broker instances
+to all other broker instances. The other broker instances are discovered
+using the openshift API. The forwarder uses durable subscriptions and
+end2end flow control and dispositions to ensure that messages are stored
+on the target broker before acknowledging to the local broker.
+
+=== Subscription management
