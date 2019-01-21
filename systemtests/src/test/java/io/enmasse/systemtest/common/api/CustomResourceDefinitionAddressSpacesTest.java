@@ -9,13 +9,13 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.resources.CliOutputData;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
 class CustomResourceDefinitionAddressSpacesTest extends TestBase {
-    private static Logger log = CustomLogger.getLogger();
 
     @Test
     void testAddressSpaceCreateViaCmdRemoveViaApi() throws Exception {
@@ -85,8 +84,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
-        String namespace = "pepik";
-        UserCredentials user = new UserCredentials("pepik", "pepik");
+        String namespace = Credentials.namespace();
+        UserCredentials user = Credentials.userCredentials();
         try {
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
             AddressSpace brokered = new AddressSpace("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthService.STANDARD);
@@ -246,7 +245,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testCannotCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
-        UserCredentials user = new UserCredentials("pepik", "pepik");
+        UserCredentials user = Credentials.userCredentials();
         try {
             AddressSpace brokered = new AddressSpace("crd-addressspaces-test-barr", AddressSpaceType.BROKERED, AuthService.STANDARD);
             JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
