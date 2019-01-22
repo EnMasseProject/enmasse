@@ -9,7 +9,7 @@ TESTCASE=$3
 failure=0
 
 API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
-API_TOKEN=$(kubectl describe secret $(kubectl get secrets | grep ^default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
+API_TOKEN=$(kubectl describe secret $(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
 
 export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
 export KUBERNETES_API_TOKEN=${KUBERNETES_API_TOKEN:-${API_TOKEN}}
