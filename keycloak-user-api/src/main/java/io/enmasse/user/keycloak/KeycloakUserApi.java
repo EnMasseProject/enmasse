@@ -291,16 +291,20 @@ public class KeycloakUserApi implements UserApi {
                     case manage:
                         desiredGroups.add("manage_#");
                         desiredGroups.add("manage");
+                        break;
                     case view:
                         desiredGroups.add("monitor_#");
                         desiredGroups.add("monitor");
+                        break;
                     default:
-                        for (String address : userAuthorization.getAddresses()) {
-                            String groupName = operation.name() + "_" + encodePart(address);
-                            // normal name
-                            desiredGroups.add(groupName);
-                            // brokered name ( the set will remove duplicates for us)
-                            desiredGroups.add(groupName.replace("*", "#"));
+                        if (userAuthorization.getAddresses() != null && !userAuthorization.getAddresses().isEmpty()) {
+                            for (String address : userAuthorization.getAddresses()) {
+                                String groupName = operation.name() + "_" + encodePart(address);
+                                // normal name
+                                desiredGroups.add(groupName);
+                                // brokered name ( the set will remove duplicates for us)
+                                desiredGroups.add(groupName.replace("*", "#"));
+                            }
                         }
                         break;
                 }
