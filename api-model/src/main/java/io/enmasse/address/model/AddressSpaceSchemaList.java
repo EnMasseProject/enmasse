@@ -4,6 +4,7 @@
  */
 package io.enmasse.address.model;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 import io.enmasse.common.model.AbstractList;
@@ -15,23 +16,22 @@ public class AddressSpaceSchemaList extends AbstractList<AddressSpaceSchema> {
 
     public static final String KIND = "AddressSpaceSchemaList";
 
-    public AddressSpaceSchemaList () {
+    public AddressSpaceSchemaList() {
         super(KIND, CoreCrd.API_VERSION);
     }
 
-    public AddressSpaceSchemaList(Schema schema) {
-        this();
-        setItems(schema.getAddressSpaceTypes().stream()
-                        .map(s -> {
-                            return new AddressSpaceSchemaBuilder()
-                                            .withNewMetadata()
-                                            .withName(s.getName())
-                                            .withCreationTimestamp(schema.getCreationTimestamp())
-                                            .endMetadata()
+    public static AddressSpaceSchemaList fromSchema(final Schema schema) {
+        if (schema == null) {
+            return null;
+        }
 
-                                            .withSpec(s)
-                                            .build();
-                        })
-                        .collect(Collectors.toList()));
+        final AddressSpaceSchemaList list = new AddressSpaceSchemaList();
+        final List<AddressSpaceSchema> items = schema.getAddressSpaceTypes().stream()
+                .map(type -> AddressSpaceSchema.fromAddressSpaceType(schema.getCreationTimestamp(), type))
+                .collect(Collectors.toList());
+
+        list.setItems(items);
+
+        return list;
     }
 }

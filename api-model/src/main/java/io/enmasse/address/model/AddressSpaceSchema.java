@@ -32,17 +32,33 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
     public static final String KIND = "AddressSpaceSchema";
 
     @NotNull @Valid
-    private AddressSpaceType spec;
+    private AddressSpaceSchemaSpec spec;
 
     public AddressSpaceSchema() {
         super(KIND, CoreCrd.API_VERSION);
     }
 
-    public void setSpec(final AddressSpaceType spec) {
+    public void setSpec(final AddressSpaceSchemaSpec spec) {
         this.spec = spec;
     }
 
-    public AddressSpaceType getSpec() {
+    public AddressSpaceSchemaSpec getSpec() {
         return this.spec;
+    }
+
+    public static AddressSpaceSchema fromAddressSpaceType(final String creationTimestamp, final AddressSpaceType addressSpaceType) {
+        if (addressSpaceType == null) {
+            return null;
+        }
+
+        return new AddressSpaceSchemaBuilder()
+                .withNewMetadata()
+                .withName(addressSpaceType.getName())
+                .withCreationTimestamp(creationTimestamp)
+                .endMetadata()
+
+                .withSpec(AddressSpaceSchemaSpec.fromAddressSpaceType(addressSpaceType))
+
+                .build();
     }
 }
