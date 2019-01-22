@@ -4,8 +4,13 @@
  */
 package io.enmasse.api.v1.http;
 
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +60,63 @@ public class DefaultsTest {
 
         assertNotNull(resultAddress.getMetadata());
         assertEquals("ns", resultAddress.getMetadata().getNamespace());
+
+        assertNotNull(resultAddress.getSpec());
+    }
+
+    @Test
+    public void testHandleNullMaps () {
+        final Address existing = new AddressBuilder()
+                .withNewMetadata()
+                .withName("address-space.address")
+                .withNamespace("ns")
+                .endMetadata()
+                .build();
+        final Address inputAddress = new AddressBuilder()
+                .withNewMetadata()
+                .endMetadata()
+                .build();
+
+        inputAddress.getMetadata().setAnnotations(null);
+        inputAddress.getMetadata().setLabels(null);
+
+        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", "address-space", inputAddress, existing);
+
+        assertNotNull(resultAddress.getMetadata());
+        assertEquals("ns", resultAddress.getMetadata().getNamespace());
+
+        assertNotNull(resultAddress.getSpec());
+    }
+
+    @Test
+    public void testMergeMaps () {
+        final Address existing = new AddressBuilder()
+                .withNewMetadata()
+                .withName("address-space.address")
+                .withNamespace("ns")
+                .addToAnnotations("foo1", "bar1")
+                .addToAnnotations("foo2", "bar2")
+                .endMetadata()
+                .build();
+        final Address inputAddress = new AddressBuilder()
+                .withNewMetadata()
+                .addToAnnotations("foo2", "bar2a")
+                .addToAnnotations("foo3", "bar3")
+                .endMetadata()
+                .build();
+
+        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", "address-space", inputAddress, existing);
+
+        assertNotNull(resultAddress.getMetadata());
+        assertEquals("ns", resultAddress.getMetadata().getNamespace());
+
+        assertThat(resultAddress.getMetadata().getAnnotations().size(), is(3));
+
+        final Map<String,String> expectedAnnotations = new HashMap<>();
+        expectedAnnotations.put("foo1", "bar1");
+        expectedAnnotations.put("foo2", "bar2a");
+        expectedAnnotations.put("foo3", "bar3");
+        assertThat(resultAddress.getMetadata().getAnnotations(), is(expectedAnnotations));
 
         assertNotNull(resultAddress.getSpec());
     }

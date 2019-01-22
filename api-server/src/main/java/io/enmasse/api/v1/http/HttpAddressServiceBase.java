@@ -148,23 +148,12 @@ public class HttpAddressServiceBase {
 
         } else {
             validateChanges(existing, address);
-            Map<String, String> annotations = existing.getMetadata().getAnnotations();
-            if (annotations == null) {
-                annotations = new HashMap<>();
-            }
-            annotations.putAll(address.getMetadata().getAnnotations());
-
-            Map<String, String> labels = existing.getMetadata().getLabels();
-            if (labels == null) {
-                labels = new HashMap<>();
-            }
-            labels.putAll(address.getMetadata().getLabels());
 
             address = new AddressBuilder(existing)
 
                     .editOrNewMetadata()
-                    .withAnnotations(annotations)
-                    .withLabels(labels)
+                    .addToAnnotations(address.getMetadata().getAnnotations())
+                    .addToLabels(address.getMetadata().getLabels())
                     .endMetadata()
 
                     .editOrNewSpec()
