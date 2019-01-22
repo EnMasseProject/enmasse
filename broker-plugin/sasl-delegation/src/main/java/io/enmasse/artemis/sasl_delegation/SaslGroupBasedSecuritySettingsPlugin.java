@@ -149,7 +149,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                         String anyWordsString = String.valueOf(anyWords);
 
                         Set<Role> roles = new HashSet<>();
-                        LOG.debugv("Adding permissions for address {0} due to group {1}", address, group);
+                        LOG.infov("Adding permissions for address {0} due to group {1}", address, group);
                         roles.add(new Role("send_" + address, true, false, false, false, true, false, false, false, true, false));
                         roles.add(new Role("recv_" + address, false, true, true, true, true, true, false, true, true, false));
                         roles.add(new Role("browse_" + address, false, false, false, false, false, false, false, true, false, false));
@@ -203,7 +203,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                     }
 
                 } catch (IllegalArgumentException e) {
-                    LOG.infov("Unable to parse implied address from group {0}: {1}", group, e.getMessage());
+                    LOG.infov("Unable to parse implied address from group {0}: {1}", group, e.getMessage(), e);
                 }
             }
 
