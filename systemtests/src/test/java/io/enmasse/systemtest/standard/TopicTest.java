@@ -338,12 +338,10 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    @Disabled("topic wildcards are not supported")
     void testTopicWildcards() throws Exception {
-        Destination t1 = Destination.topic("topic/No1", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination t2 = Destination.topic("topic/No2", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination t1 = Destination.topic("topic", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
 
-        setAddresses(t1, t2);
+        setAddresses(t1);
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
@@ -352,8 +350,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         Future<List<Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 2);
 
         List<Future<Integer>> sendResult = Arrays.asList(
-                amqpClient.sendMessages(t1.getAddress(), msgs),
-                amqpClient.sendMessages(t2.getAddress(), msgs));
+                amqpClient.sendMessages(t1.getAddress() + "/No1", msgs),
+                amqpClient.sendMessages(t1.getAddress() + "/No2", msgs));
 
         assertThat("Wrong count of messages sent: sender0",
                 sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
