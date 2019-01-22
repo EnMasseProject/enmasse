@@ -64,5 +64,5 @@ In the `standard` address space, the `*` wildcard can be used in any part of the
 will match addresses `topic` and `topic/sub`.
 
 In the `brokered` address space, the `*` and `#` wildcards can be used at the end of an address in
-order to match a single or all words after the `/` delimiter. `topic/*` will match `topic/sub` but not `topic/s/sub`.  `topic/#`
-will match match `topic/sub` and `topic/s/sub`.
+order to match a single word (`*`) or all words (`#`) after the `/` delimiter. `topic/*` will match `topic/sub` but not `topic/s/sub`.  `topic/#`
+will match `topic/sub` and `topic/s/sub`.
