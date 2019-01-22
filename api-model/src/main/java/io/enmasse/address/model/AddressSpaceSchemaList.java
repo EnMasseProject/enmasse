@@ -25,6 +25,7 @@ public class AddressSpaceSchemaList extends AbstractList<AddressSpaceSchema> {
                         .map(s -> {
                             return new AddressSpaceSchemaBuilder()
                                             .withNewMetadata()
+                                            .withName(s.getName())
                                             .withCreationTimestamp(schema.getCreationTimestamp())
                                             .endMetadata()
 
