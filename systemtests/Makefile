@@ -13,8 +13,8 @@ KUBERNETES_NAMESPACE  ?= $(shell oc project -q)
 KUBERNETES_API_TOKEN  ?= $(shell oc whoami -t)
 KUBERNETES_API_URL    ?= $(shell oc whoami --show-server=true)
 else
-KUBERNETES_API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " "
-KUBERNETES_API_TOKEN=$(kubectl describe secret $(kubectl get secrets | grep ^default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
+KUBERNETES_API_URL=$(shell kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
+KUBERNETES_API_TOKEN=$(shell kubectl describe secret $(kubectl get secrets | grep ^default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
 
 ifeq (, $(KUBERNETES_NAMESPACE))
 $(error "Environment variable $$KUBERNETES_NAMESPACE not set")
