@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -xe
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
@@ -23,8 +23,6 @@ SANITIZED_NAMESPACE=${KUBERNETES_NAMESPACE}
 SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//_/-}
 SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
 export KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
-
-kubectl exec -ti busybox -- nslookup kubernetes.default
 
 kubectl create namespace ${KUBERNETES_NAMESPACE}
 kubectl config set-context $(kubectl config current-context) --namespace=${KUBERNETES_NAMESPACE}
@@ -72,7 +70,7 @@ kubectl get events --all-namespaces
 
 #stop docker logging
 echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
-kill ${LOGS_PID}
+kill ${LOGS_PID} || true
 categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 
 #environment info
