@@ -56,6 +56,13 @@ identity provider.
 == Authorization
 
 In addition, authorization policies can be defined using operations and addresses. Valid operations
-are `send`, `recv`, `view`, and `manage`. If addresses are not specified, operations will be applied to all
-addresses.
+are `send`, `recv`, `view`, and `manage`. 
 
+The `manage` and `view` operations apply to all addresses in the address space.
+
+In the `standard` address space, the `*` wildcard can be used in any part of the address. The address `top*`
+will match addresses `topic` and `topic/sub`.
+
+In the `brokered` address space, the `*` and `#` wildcards can be used at the end of an address in
+order to match a single or all words after the `/` delimiter. `topic/*` will match `topic/sub` but not `topic/s/sub`.  `topic/#`
+will match match `topic/sub` and `topic/s/sub`.

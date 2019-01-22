@@ -15,7 +15,7 @@ public class AmqpConnectOptions {
     private Endpoint endpoint;
     private TerminusFactory terminusFactory;
     private ProtonQoS qos;
-    private ProtonClientOptions protonClientOptions;
+    private ProtonClientOptions protonClientOptions = new ProtonClientOptions();
     private String username;
     private String password;
     private String saslMechanism;

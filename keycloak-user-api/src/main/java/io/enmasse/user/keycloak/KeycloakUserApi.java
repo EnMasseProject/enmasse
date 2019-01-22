@@ -287,28 +287,22 @@ public class KeycloakUserApi implements UserApi {
 
             for (Operation operation : userAuthorization.getOperations()) {
 
-                if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
-
-                    switch (operation) {
-                        case manage:
-                            desiredGroups.add("manage_#");
-                            desiredGroups.add("manage");
-                            break;
-                        default:
-                            desiredGroups.add(operation.name());
-                            break;
-                    }
-
-                } else {
-
-                    for (String address : userAuthorization.getAddresses()) {
-                        String groupName = operation.name() + "_" + encodePart(address);
-                        // normal name
-                        desiredGroups.add(groupName);
-                        // brokered name ( the set will remove duplicates for us)
-                        desiredGroups.add(groupName.replace("*", "#"));
-                    }
-
+                switch (operation) {
+                    case manage:
+                        desiredGroups.add("manage_#");
+                        desiredGroups.add("manage");
+                    case view:
+                        desiredGroups.add("monitor_#");
+                        desiredGroups.add("monitor");
+                    default:
+                        for (String address : userAuthorization.getAddresses()) {
+                            String groupName = operation.name() + "_" + encodePart(address);
+                            // normal name
+                            desiredGroups.add(groupName);
+                            // brokered name ( the set will remove duplicates for us)
+                            desiredGroups.add(groupName.replace("*", "#"));
+                        }
+                        break;
                 }
             }
         }
