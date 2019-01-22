@@ -301,7 +301,7 @@ public abstract class TestBaseWithShared extends TestBase {
 
         amqpClient.sendMessages(t0.getAddress() + "/foo", msgs);
         amqpClient.sendMessages(t0.getAddress() + "/bar", msgs);
-        amqpClient.sendMessages(t0.getAddress() + "/baz", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/baz/foobar", msgs);
 
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 3));
