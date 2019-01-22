@@ -298,6 +298,19 @@ function is_temp_queue(a) {
     return a.type === 'queue' && a.temporary;
 }
 
+function is_wildcard_sub(a) {
+    return a.type === 'topic' && (a.name.includes("#") || a.name.includes("+"));
+}
+
+function toplevel_address_exists(a, addresses_in) {
+    for (var name in addresses_in) {
+        if (a.name.startsWith(name)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function is_durable_subscription(a) {
     return a.durable && !a.purgeOnNoConsumers;
 }
@@ -314,6 +327,10 @@ function translate(addresses_in, excluded_names, excluded_types) {
         if (excluded_types && excluded_types(a.type)) continue;
         if (is_temp_queue(a)) {
             log.debug('ignoring temp queue %s', a.name);
+            continue;
+        }
+        if (is_wildcard_sub(a) && toplevel_address_exists(a, addresses_in)) {
+            log.debug("Ignoring wildcard sub");
             continue;
         }
         if (a.name) {
