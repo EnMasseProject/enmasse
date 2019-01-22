@@ -21,6 +21,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.shared;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(shared)
@@ -186,6 +188,12 @@ public abstract class TestBaseWithShared extends TestBase {
         waitForDestinationsReady(sharedAddressSpace, destinations);
     }
 
+
+    //================================================================================================
+    //====================================== Test help methods =======================================
+    //================================================================================================
+
+
     /**
      * attach N receivers into one address with default username/password
      */
@@ -262,7 +270,7 @@ public abstract class TestBaseWithShared extends TestBase {
                     Future<Integer> sent = client.sendMessages(dest.get(i).getAddress(), TestUtils.generateMessages(messageCount));
                     //wait for messages sent
                     assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES).intValue(),
-                            String.format("Incorrect count of messages send"));
+                            "Incorrect count of messages send");
                 }
             }
         }
@@ -274,10 +282,37 @@ public abstract class TestBaseWithShared extends TestBase {
                     Future<List<Message>> received = client.recvMessages(dest.get(i).getAddress(), messageCount);
                     //wait for messages received
                     assertEquals(messageCount, received.get(1, TimeUnit.MINUTES).size(),
-                            String.format("Incorrect count of messages received"));
+                            "Incorrect count of messages received");
                 }
             }
             client.close();
         }
+    }
+
+    protected void doTopicWildcardTest(DestinationPlan plan) throws Exception {
+        Destination t0 = Destination.topic("topic", plan.plan());
+        setAddresses(t0);
+
+        AmqpClient amqpClient = amqpClientFactory.createTopicClient();
+
+        List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
+
+        Future<List<Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 3);
+
+        amqpClient.sendMessages(t0.getAddress() + "/foo", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/bar", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/baz", msgs);
+
+        assertThat("Wrong count of messages received",
+                recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 3));
+
+        recvResults = amqpClient.recvMessages("topic/world/+", msgs.size() * 2);
+
+        amqpClient.sendMessages(t0.getAddress() + "/world/africa", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/europe", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/asia/maldives", msgs);
+
+        assertThat("Wrong count of messages received",
+                recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
     }
 }

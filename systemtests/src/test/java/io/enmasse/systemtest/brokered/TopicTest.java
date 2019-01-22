@@ -7,13 +7,9 @@ package io.enmasse.systemtest.brokered;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
-import org.apache.qpid.proton.message.Message;
-import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,7 +20,6 @@ import javax.naming.Context;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -47,47 +42,8 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    @Ignore
     void testTopicPubSubWildcards() throws Exception {
-
-        int msgCount = 1000;
-        int senderCount = 10;
-        int recvCount = 5;
-
-        List<Destination> topicList = new ArrayList<>();
-
-        //create queues
-        topicList.add(Destination.topic("test-topic-pubsub", getDefaultPlan(AddressType.TOPIC)));
-        setAddresses(topicList.toArray(new Destination[0]));
-
-        List<String> msgBatch = TestUtils.generateMessages(msgCount);
-
-        UserCredentials credentials = new UserCredentials("test", "test");
-        createUser(sharedAddressSpace, credentials);
-        AmqpClient client = amqpClientFactory.createTopicClient(sharedAddressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-
-        //attach subscribers
-        List<Future<List<Message>>> recvResults = new ArrayList<>();
-        for (int i = 0; i < recvCount; i++) {
-            recvResults.add(client.recvMessages(String.format("test-topic-pubsub/#", i), msgCount * 2));
-        }
-
-        Thread.sleep(10_000);
-
-        //attach producers
-        for (int i = 0; i < senderCount; i++) {
-            assertThat("Wrong count of messages sent: sender" + i,
-                    client.sendMessages(topicList.get(0).getAddress() + "/" + i, msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
-        }
-
-        //check received messages
-        for (int i = 0; i < recvCount; i++) {
-            assertThat("Wrong count of messages received: receiver" + i,
-                    recvResults.get(i).get().size(), is(msgCount * 2));
-        }
-
-        client.close();
+        doTopicWildcardTest(DestinationPlan.BROKERED_TOPIC);
     }
 
     @Test
