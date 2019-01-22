@@ -537,15 +537,16 @@ public class KeycloakUserApi implements UserApi {
         Set<Operation> globalOperations = new HashSet<>();
         for (GroupRepresentation groupRep : groupReps) {
             log.debug("Checking group id {} name {}", groupRep.getId(), groupRep.getName());
-            if (groupRep.getName().contains("_")) {
+            if (groupRep.getName().startsWith("manage")) {
+                globalOperations.add(Operation.manage);
+            } else if (groupRep.getName().startsWith("monitor")) {
+                globalOperations.add(Operation.view);
+            } else if (groupRep.getName().contains("_")) {
                 String[] parts = groupRep.getName().split("_");
                 Operation operation = Operation.valueOf(parts[0]);
                 String address = decodePart(parts[1]);
                 operationsByAddress.computeIfAbsent(address, k -> new HashSet<>())
                         .add(operation);
-            } else {
-                Operation operation = Operation.valueOf(groupRep.getName());
-                globalOperations.add(operation);
             }
         }
 
@@ -558,7 +559,7 @@ public class KeycloakUserApi implements UserApi {
         }
 
         for (Operation operation : globalOperations) {
-            if (operation == Operation.manage) {
+            if (operation == Operation.manage || operation == Operation.view) {
                 operations.put(Collections.singleton(operation), Collections.emptySet());
             }
         }
