@@ -42,10 +42,8 @@ public class KubeCMDClient extends CmdClient {
      * @return result of execution
      */
     public static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace) throws IOException {
-        File defInFile = null;
-        try {
-            defInFile = new File("crdefinition.file");
-            FileWriter wr = new FileWriter(defInFile.getName());
+        final File defInFile = new File("crdefinition.file");
+        try (FileWriter wr = new FileWriter(defInFile.getName())) {
             wr.write(definition);
             wr.flush();
             log.info("User '{}' created", defInFile.getAbsolutePath());
