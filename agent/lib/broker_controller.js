@@ -299,7 +299,7 @@ function is_temp_queue(a) {
 }
 
 function is_wildcard_sub(a) {
-    return a.type === 'topic' && (a.name.includes("#") || a.name.includes("+"));
+    return a.type === 'topic' && (a.name.includes("#") || a.name.includes("+") || a.name.includes("/"));
 }
 
 function toplevel_address_exists(a, addresses_in) {
