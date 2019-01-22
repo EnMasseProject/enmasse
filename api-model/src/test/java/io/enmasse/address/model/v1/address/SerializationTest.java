@@ -8,6 +8,7 @@ import static io.enmasse.address.model.ExposeType.route;
 import static io.enmasse.address.model.TlsTermination.passthrough;
 import static io.enmasse.model.validation.DefaultValidator.validate;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -803,8 +804,12 @@ public class SerializationTest {
         final URL url = SerializationTest.class.getResource("resources/addressspaceschema-1.json");
         final AddressSpaceSchema value = mapper.readValue(url, AddressSpaceSchema.class);
 
-        assertNotNull(value);
-        assertNotNull(value.getSpec());
+        assertThat(value, notNullValue());
+
+        assertThat(value.getMetadata(), notNullValue());
+        assertThat(value.getMetadata().getName(), is("standard"));
+
+        assertThat(value.getSpec(), notNullValue());
 
         assertThat(value.getSpec().getDescription(), is("A standard address space consists of an AMQP router network in combination with attachable 'storage units'. The implementation of a storage unit is hidden from the client and the routers with a well defined API."));
         assertThat(value.getSpec().getPlans().size(), is(4));
