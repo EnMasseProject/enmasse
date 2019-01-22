@@ -20,6 +20,9 @@ import javax.validation.Payload;
 @Retention(RUNTIME)
 @Constraint(validatedBy = {HasMetadataValidator.class})
 @Documented
+/**
+ * Validate if the object has metadata set.
+*/
 public @interface HasMetadata {
 
     String message() default "Metadata must be present";
@@ -28,7 +31,13 @@ public @interface HasMetadata {
 
     Class<? extends Payload>[] payload() default {};
 
+    /**
+     * Does the metadata need to have a name set.
+     */
     boolean needsName() default true;
+    /**
+     * Does the metadata need to have a namespace set.
+     */
     boolean needsNamespace() default false;
 
 }

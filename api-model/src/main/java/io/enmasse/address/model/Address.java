@@ -13,7 +13,7 @@ import javax.validation.constraints.NotNull;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressName;
-import io.enmasse.model.validation.HasMetadata;
+import io.enmasse.model.validation.KubeMetadataName;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.sundr.builder.annotations.Buildable;
@@ -37,7 +37,7 @@ import io.sundr.builder.annotations.Inline;
 @DefaultCustomResource
 @SuppressWarnings("serial")
 @AddressName
-@HasMetadata
+@KubeMetadataName
 public class Address extends AbstractHasMetadata<Address> implements AddressOrAddressList {
 
     public static final String KIND = "Address";

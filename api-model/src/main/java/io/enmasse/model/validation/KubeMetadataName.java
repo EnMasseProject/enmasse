@@ -20,6 +20,9 @@ import javax.validation.Payload;
 @Retention(RUNTIME)
 @Constraint(validatedBy = {KubeMetadataNameValidator.class})
 @Documented
+/**
+ * Validate if metadata.name is a valid Kubernetes name
+ */
 public @interface KubeMetadataName {
 
     String message() default "Invalid Kubernetes metadata name";

@@ -20,6 +20,9 @@ import javax.validation.Payload;
 @Retention(RUNTIME)
 @Constraint(validatedBy = {ValidBase64Validator.class})
 @Documented
+/**
+ * Validate if the string valid base64 encoded data.
+ */
 public @interface ValidBase64 {
 
     String message() default "Must be valid base64";
