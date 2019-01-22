@@ -20,6 +20,9 @@ import javax.validation.Payload;
 @Retention(RUNTIME)
 @Constraint(validatedBy = {AddressSpaceNameValidator.class})
 @Documented
+/**
+ * Validate the {@code .metadata.name} to conform to address space naming rules.
+ */
 public @interface AddressSpaceName {
 
     String message() default "Invalid address space name";

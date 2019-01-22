@@ -540,6 +540,43 @@ public class HTTPServerTest {
 
     @ParameterizedTest
     @MethodSource("apiVersions")
+    public void testCreateAddressOptionalName(String apiVersion, VertxTestContext context) throws Throwable {
+
+        final HttpClient client = vertx.createHttpClient();
+
+        try {
+
+            HttpClientRequest req = client.post(port(), "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
+                response.bodyHandler(buffer -> {
+                    context.verify(() -> assertEquals(201, response.statusCode()));
+                    context.completeNow();
+                });
+            });
+            req.putHeader("Content-Type", "application/json");
+            putAuthzToken(req);
+
+            JsonObject payload = new JsonObject()
+                    .put("apiVersion", "enmasse.io/" + apiVersion)
+                    .put("kind", "Address")
+                    .put("spec", new JsonObject()
+                            .put("address", "single1")
+                            .put("type", "queue")
+                            .put("plan", "plan1"));
+
+            req.end(payload.toBuffer());
+
+            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
+            if (context.failed()) {
+                throw context.causeOfFailure();
+            }
+
+        } finally {
+            client.close();
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
     public void testCreateAddressList(String apiVersion, VertxTestContext context) throws Throwable {
 
         final HttpClient client = vertx.createHttpClient();

@@ -18,15 +18,19 @@ public class AddressSpaceNameValidator implements ConstraintValidator<AddressSpa
 
     @Override
     public boolean isValid(AddressSpace addressSpace, ConstraintValidatorContext context) {
+
         if ( addressSpace == null ) {
+            // if the object to check is null, we ignore it
             return true;
         }
 
         if ( addressSpace.getMetadata() == null ) {
+            // will be checked by annotation on metadata
             return true;
         }
 
         if ( addressSpace.getMetadata().getName() == null ) {
+            // we do require a name
             return false;
         }
 

@@ -21,11 +21,11 @@ public class KubeMetadataNameValidator implements ConstraintValidator<KubeMetada
         }
 
         if (value.getMetadata() == null) {
-            return false;
+            return true;
         }
 
         if (value.getMetadata().getName() == null) {
-            return false;
+            return true;
         }
 
         return KubeUtil.isNameValid(value.getMetadata().getName());

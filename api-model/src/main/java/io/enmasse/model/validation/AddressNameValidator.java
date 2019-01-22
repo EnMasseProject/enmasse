@@ -18,12 +18,16 @@ public class AddressNameValidator implements ConstraintValidator<AddressName, Ad
     public boolean isValid(Address address, ConstraintValidatorContext context) {
 
         if (address == null) {
+            // if the object to check is null, we ignore it
             return true;
         }
 
         if (address.getMetadata() == null || address.getMetadata().getName() == null) {
-            return false;
+            // we don't have a name set, and that is ok for this check
+            return true;
         }
+
+        // but if we have a name set, then it must validate ...
 
         final String name = address.getMetadata().getName();
 
