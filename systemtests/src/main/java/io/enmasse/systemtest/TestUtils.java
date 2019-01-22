@@ -248,6 +248,17 @@ public class TestUtils {
                 .collect(Collectors.toList());
     }
 
+    public static List<Pod> listBrokerPods(Kubernetes kubernetes) {
+        return kubernetes.listPods(Collections.singletonMap("role", "broker"));
+    }
+
+    public static List<Pod> listBrokerPods(Kubernetes kubernetes, AddressSpace addressSpace) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("role", "broker");
+        labels.put("infraUuid", addressSpace.getInfraUuid());
+        return kubernetes.listPods(labels);
+    }
+
     /**
      * Delete requested destinations(Addresses) from AddressSpace
      *
