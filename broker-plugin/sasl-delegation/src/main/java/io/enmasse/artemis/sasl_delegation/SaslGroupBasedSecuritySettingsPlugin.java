@@ -204,6 +204,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
 
                 } catch (IllegalArgumentException e) {
                     LOG.infov("Unable to parse implied address from group {0}: {1}", group, e.getMessage(), e);
+                    e.printStackTrace();
                 }
             }
 
