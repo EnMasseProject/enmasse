@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -261,24 +262,40 @@ class ApiServerTest extends TestBase {
         deleteAllAddressSpaces();
     }
 
+    private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
+        Objects.requireNonNull(converter);
+
+        if (items == null) {
+            return null;
+        }
+
+        return items.stream().map(converter).collect(Collectors.toSet());
+    }
+
     @Test
     void testCreateAddressResource() throws Exception {
         AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, "standard-unlimited");
         createAddressSpace(addrSpace);
 
+        final Set<String> names = new LinkedHashSet<>();
+
         Destination anycast = new Destination("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_SMALL_ANYCAST.plan());
+        names.add(String.format("%s.%s", addrSpace.getName(), anycast.getName()));
         addressApiClient.createAddress(anycast);
         List<Address> addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(1));
-        assertThat(addresses.get(0).getName(), is(String.format("%s.%s", addrSpace.getName(), anycast.getName())));
+        assertThat(toStrings(addresses, Address::getName), is(names));
 
         Destination multicast = new Destination("addr2", null, addrSpace.getName(), "addr_2", AddressType.MULTICAST.toString(), DestinationPlan.STANDARD_SMALL_MULTICAST.plan());
+        names.add(String.format("%s.%s", addrSpace.getName(), multicast.getName()));
         addressApiClient.createAddress(multicast);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(2));
+        assertThat(toStrings(addresses, Address::getName), is(names));
 
         String uuid = UUID.randomUUID().toString();
         Destination longname = new Destination(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE.plan());
+        names.add(longname.getName());
         addressApiClient.createAddress(longname);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(3));
