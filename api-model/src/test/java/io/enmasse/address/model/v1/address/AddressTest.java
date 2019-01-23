@@ -6,6 +6,7 @@ package io.enmasse.address.model.v1.address;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.Status;
 import org.junit.jupiter.api.Test;
@@ -133,7 +134,7 @@ public class AddressTest {
     public void testCopyIndependence() {
         Address a = new AddressBuilder()
                 .withNewMetadata()
-                .withName("a")
+                .withName("myspace.a")
                 .withNamespace("ns")
                 .endMetadata()
 
@@ -141,7 +142,6 @@ public class AddressTest {
                 .withAddress("a1")
                 .withPlan("p1")
                 .withType("t1")
-                .withAddressSpace("myspace")
                 .endSpec()
 
                 .withStatus(new Status(true).setPhase(Phase.Active).appendMessage("foo"))
@@ -149,13 +149,13 @@ public class AddressTest {
 
         Address b = new AddressBuilder(a).build();
 
-        assertThat(a.getMetadata().getName(), is("a"));
-        assertThat(b.getMetadata().getName(), is("a"));
+        assertThat(a.getMetadata().getName(), is("myspace.a"));
+        assertThat(b.getMetadata().getName(), is("myspace.a"));
 
-        b.getMetadata().setName("b");
+        b.getMetadata().setName("myspace.b");
 
-        assertThat(a.getMetadata().getName(), is("a"));
-        assertThat(b.getMetadata().getName(), is("b"));
+        assertThat(a.getMetadata().getName(), is("myspace.a"));
+        assertThat(b.getMetadata().getName(), is("myspace.b"));
 
     }
 
@@ -205,7 +205,7 @@ public class AddressTest {
      */
     @Test
     public void testLongAddressNameValidation() {
-        assertThat(createAddress(FOURTY + "." + FOURTY),isValid());
+        assertThat(createAddress(FOURTY + "." + FOURTY), isValid());
     }
 
     /**
@@ -219,4 +219,40 @@ public class AddressTest {
         assertThat(createAddress("foo." + EIGHTY), isNotValid());
     }
 
+    /**
+     * When the {@code .spec.addressSpace} field is set, then it must match.
+     */
+    @Test
+    public void testAddressSpaceMismatch () {
+        final Address a = createAddress("foo.addr");
+        a.getSpec().setAddressSpace("bar");
+
+        assertThat(a, isNotValid());
+    }
+
+    /**
+     * When the {@code .spec.addressSpace} field is set, then it must match, even when it is in a list.
+     */
+    @Test
+    public void testAddressSpaceMismatchInList () {
+        final Address a = createAddress("foo.addr");
+        a.getSpec().setAddressSpace("bar");
+
+        final AddressList list = new AddressList();
+        list.getItems().add(a);
+
+        assertThat(list, isNotValid());
+    }
+
+    /**
+     * When the metadata name is missing, the address space name must still validate.
+     */
+    @Test
+    public void testAddressSpaceNoName () {
+        final Address a = createAddress(null);
+        a.getSpec().setAddress("foo");
+        a.getSpec().setAddressSpace("bar");
+
+        assertThat(a, isValid());
+    }
 }
