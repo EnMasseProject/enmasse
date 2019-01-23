@@ -1,30 +1,20 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
 [id='retrieving-address-space-information-{context}']
 = Example commands for retrieving address space information
 
-* Retrieving the {ProductName} Console host name:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'console\')].externalHost}
-----
+The following table shows the commands for retrieving address space information, such as the {ProductName} Console host name.
 
-* Retrieving the status of an address space:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}
-----
+.Retrieving address space information commands table
+[cols="25%a,75%a",options="header",subs="attributes"]
+|===
+|To retrieve the... |Run this command:
+|{ProductName} Console host name |`{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'console\')].externalHost}`
+|status of an address space |`{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}`
+|base64-encoded PEM certificate for the messaging endpoint |`{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].cert}`
+|host name for the messaging endpoint |`{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}`
+|===
 
-* Retrieving the base64-encoded PEM certificate for the messaging endpoint:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].cert}
-----
 
-* Retrieving the host name for the messaging endpoint:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}
-----
