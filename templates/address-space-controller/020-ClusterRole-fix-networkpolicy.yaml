@@ -1,0 +1,11 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: enmasse.io:network-policy-admin
+  labels:
+    app: enmasse
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+rules:
+  - apiGroups: [ "networking.k8s.io" ]
+    resources: [ "networkpolicies" ]
+    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]

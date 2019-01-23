@@ -6,9 +6,11 @@
 # {3} url to minikube
 # {4} url to kubectl
 
+set -e
+
 SYSTEMTESTS_DIR=${1}
 OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz"}
-MINIKUBE_RELEASE_URL=${3:-"https://storage.googleapis.com/minikube/releases/v0.28.2/minikube-linux-amd64"}
+MINIKUBE_RELEASE_URL=${3:-"https://storage.googleapis.com/minikube/releases/v0.33.1/minikube-linux-amd64"}
 KUBECTL_RELEASE_URL=${4:-"https://storage.googleapis.com/kubernetes-release/release/v1.9.4/bin/linux/amd64/kubectl"}
 ansible-playbook ${SYSTEMTESTS_DIR}/ansible/playbooks/environment.yml \
     --extra-vars "{\"openshift_client_url\": \"${OPENSHIFT_CLIENT_URL}\", \"minikube_url\": \"${MINIKUBE_RELEASE_URL}\", \"kubectl_url\": \"${KUBECTL_RELEASE_URL}\"}" \
@@ -21,13 +23,17 @@ export CHANGE_MINIKUBE_NONE_USER=true
 mkdir $HOME/.kube || true
 touch $HOME/.kube/config
 
-sudo sh -c 'sed -e 's/journald/json-file/g' -i /etc/docker/daemon.json'
+sudo find /etc/docker
+
+echo '{"log-driver":"json-file"}' | sudo sh -c 'cat - > /etc/docker/daemon.json'
 sudo service docker restart && sleep 20
 
 docker run -d -p 5000:5000 registry
 
-export KUBECONFIG=$HOME/.kube/config
-sudo -E minikube start --vm-driver=none --bootstrapper=localkube --kubernetes-version v1.9.4 --insecure-registry localhost:5000
-minikube config set WantUpdateNotification false
-minikube update-context
-sudo -E minikube addons enable default-storageclass
+sudo mount --make-rshared / # fix kube-dns issues
+sudo minikube start --vm-driver=none --bootstrapper=kubeadm --kubernetes-version v1.9.4 --extra-config=apiserver.authorization-mode=RBAC --insecure-registry localhost:5000
+sudo minikube config set WantUpdateNotification false
+sudo minikube update-context
+sudo minikube addons enable default-storageclass
+kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=admin --serviceaccount=default:default
+
