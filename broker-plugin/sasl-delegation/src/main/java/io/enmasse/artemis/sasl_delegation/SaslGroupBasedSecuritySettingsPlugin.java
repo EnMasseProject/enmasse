@@ -88,9 +88,9 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
 
     private static final char DEFAULT_SINGLE_WORD = '*';
 
-    private static final char DEFAULT_ANY_WORDS = '#';
+    private static final char DEFAULT_ANY_WORDS = '+';
 
-    private static final char DEFAULT_DELIMITER = '.';
+    private static final char DEFAULT_DELIMITER = '/';
 
     private void addGroup(String group) {
             String[] parts = group.split("_", 2);
