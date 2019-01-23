@@ -61,4 +61,13 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
 
                 .build();
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("metadata=").append(getMetadata());
+        sb.append(",");
+        sb.append("spec=").append(this.spec);
+        return sb.append("}").toString();
+    }
 }
