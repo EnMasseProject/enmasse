@@ -18,9 +18,12 @@ import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Checkpoint;
@@ -36,6 +39,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
@@ -264,9 +269,42 @@ public class HTTPServerTest {
         }
 
     }
+
     private static HttpClientRequest putAuthzToken(HttpClientRequest request) {
         request.putHeader("Authorization", "Bearer mytoken");
         return request;
+    }
+
+    private void runSingleRequest(final VertxTestContext context, final String apiVersion, final HttpMethod method, final String uri, final JsonObject payload, final BiConsumer<HttpClientResponse, Buffer> responseConsumer) throws Throwable {
+        final HttpClient client = vertx.createHttpClient();
+
+        try {
+
+            HttpClientRequest req = client.request(method, port(), "localhost", uri, response -> {
+                response.bodyHandler(buffer -> {
+                    responseConsumer.accept(response, buffer);
+                    if(!context.completed()) {
+                        context.completeNow();
+                    }
+                });
+            });
+            req.putHeader("Content-Type", "application/json");
+            putAuthzToken(req);
+
+            if ( payload != null ) {
+                req.end(payload.toBuffer());
+            } else {
+                req.end();
+            }
+
+            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
+            if (context.failed()) {
+                throw context.causeOfFailure();
+            }
+
+        } finally {
+            client.close();
+        }
     }
 
     @ParameterizedTest
@@ -332,62 +370,33 @@ public class HTTPServerTest {
     @ParameterizedTest
     @MethodSource("apiVersions")
     public void testSchemaApi(String apiVersion, VertxTestContext context) throws Throwable {
-        HttpClient client = vertx.createHttpClient();
-        try {
-            {
-                HttpClientRequest request = client.get(port(), "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/myinstance/addressspaceschemas", response -> {
-                    context.verify(() -> assertEquals(200, response.statusCode()));
-                    response.bodyHandler(buffer -> {
-                        JsonObject data = buffer.toJsonObject();
-                        System.out.println(data.toString());
-                        context.verify(() -> {
-                            assertTrue(data.containsKey("items"));
-                            assertEquals(1, data.getJsonArray("items").size());
-                        });
-                        context.completeNow();
-                    });
-                });
-                putAuthzToken(request);
-                request.end();
-            }
 
-            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
-            if (context.failed()) {
-              throw context.causeOfFailure();
-            }
-        } finally {
-            client.close();
-        }
+        runSingleRequest(context, apiVersion, HttpMethod.GET, "/apis/enmasse.io/" + apiVersion + "/namespaces/myinstance/addressspaceschemas", null, (response, buffer) -> {
+            context.verify(() -> {
+                assertEquals(200, response.statusCode());
+                JsonObject data = buffer.toJsonObject();
+                System.out.println(data.toString());
+                assertTrue(data.containsKey("items"));
+                assertEquals(1, data.getJsonArray("items").size());
+            });
+        });
+
     }
 
     @ParameterizedTest
     @MethodSource("apiVersions")
     public void testUserApi(String apiVersion, VertxTestContext context) throws Throwable {
-        HttpClient client = vertx.createHttpClient();
-        try {
-            {
-                HttpClientRequest r1 = client.get(port(), "localhost", "/apis/user.enmasse.io/" + apiVersion + "/namespaces/ns/messagingusers", response -> {
-                    context.verify(() -> assertEquals(200, response.statusCode()));
-                    response.bodyHandler(buffer -> {
-                        JsonObject data = buffer.toJsonObject();
-                        context.verify(() -> {
-                            assertTrue(data.containsKey("items"));
-                            assertEquals("myinstance.user1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
-                        });
-                        context.completeNow();
-                    });
-                });
-                putAuthzToken(r1);
-                r1.end();
-            }
 
-            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
-            if (context.failed()) {
-              throw context.causeOfFailure();
-            }
-        } finally {
-            client.close();
-        }
+        runSingleRequest(context, apiVersion, HttpMethod.GET,  "/apis/user.enmasse.io/" + apiVersion + "/namespaces/ns/messagingusers", null, (response, buffer) -> {
+            context.verify(() -> {
+                assertEquals(200, response.statusCode());
+                JsonObject data = buffer.toJsonObject();
+                assertTrue(data.containsKey("items"));
+                assertEquals(1, data.getJsonArray("items").size());
+                assertEquals("myinstance.user1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+            });
+        });
+
     }
 
     @ParameterizedTest
@@ -498,125 +507,88 @@ public class HTTPServerTest {
         }
     }
 
-
     @ParameterizedTest
     @MethodSource("apiVersions")
     public void testCreateAddressSingle(String apiVersion, VertxTestContext context) throws Throwable {
 
-        final HttpClient client = vertx.createHttpClient();
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("metadata", new JsonObject()
+                        .put("name", "myinstance.single1"))
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
 
-        try {
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(201, response.statusCode()));
+        });
 
-            HttpClientRequest req = client.post(port(), "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
-                response.bodyHandler(buffer -> {
-                    context.verify(() -> assertEquals(201, response.statusCode()));
-                    context.completeNow();
-                });
-            });
-            req.putHeader("Content-Type", "application/json");
-            putAuthzToken(req);
-
-            JsonObject payload = new JsonObject()
-                    .put("apiVersion", "enmasse.io/" + apiVersion)
-                    .put("kind", "Address")
-                    .put("metadata", new JsonObject()
-                            .put("name", "myinstance.single1"))
-                    .put("spec", new JsonObject()
-                            .put("address", "single1")
-                            .put("type", "queue")
-                            .put("plan", "plan1"));
-
-            req.end(payload.toBuffer());
-
-            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
-            if (context.failed()) {
-                throw context.causeOfFailure();
-            }
-
-        } finally {
-            client.close();
-        }
     }
 
     @ParameterizedTest
     @MethodSource("apiVersions")
     public void testCreateAddressOptionalName(String apiVersion, VertxTestContext context) throws Throwable {
 
-        final HttpClient client = vertx.createHttpClient();
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
 
-        try {
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(201, response.statusCode()));
+        });
 
-            HttpClientRequest req = client.post(port(), "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
-                response.bodyHandler(buffer -> {
-                    context.verify(() -> assertEquals(201, response.statusCode()));
-                    context.completeNow();
-                });
-            });
-            req.putHeader("Content-Type", "application/json");
-            putAuthzToken(req);
+    }
 
-            JsonObject payload = new JsonObject()
-                    .put("apiVersion", "enmasse.io/" + apiVersion)
-                    .put("kind", "Address")
-                    .put("spec", new JsonObject()
-                            .put("address", "single1")
-                            .put("type", "queue")
-                            .put("plan", "plan1"));
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressInvalidRequest1(String apiVersion, VertxTestContext context) throws Throwable {
 
-            req.end(payload.toBuffer());
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("metadata", new JsonObject()
+                        .put("name", "other.single1"))
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("addressSpace", "myinstance")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
 
-            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
-            if (context.failed()) {
-                throw context.causeOfFailure();
-            }
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(400, response.statusCode()));
+        });
 
-        } finally {
-            client.close();
-        }
     }
 
     @ParameterizedTest
     @MethodSource("apiVersions")
     public void testCreateAddressList(String apiVersion, VertxTestContext context) throws Throwable {
 
-        final HttpClient client = vertx.createHttpClient();
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "AddressList")
+                .put("items", new JsonArray()
+                        .add(new JsonObject()
+                                .put("apiVersion", "enmasse.io/" + apiVersion)
+                                .put("kind", "Address")
+                                .put("metadata", new JsonObject()
+                                        .put("name", "myinstance.single1"))
+                                .put("spec", new JsonObject()
+                                        .put("address", "single1")
+                                        .put("type", "queue")
+                                        .put("plan", "plan1"))));
 
-        try {
 
-            // a variant of r3, creating a new address with the address object instead of the addresslist object
-            HttpClientRequest req = client.post(port(), "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", response -> {
-                response.bodyHandler(buffer -> {
-                    context.verify(() -> assertEquals(201, response.statusCode()));
-                    context.completeNow();
-                });
-            });
-            req.putHeader("Content-Type", "application/json");
-            putAuthzToken(req);
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(201, response.statusCode()));
+        });
 
-            JsonObject payload = new JsonObject()
-                    .put("apiVersion", "enmasse.io/" + apiVersion)
-                    .put("kind", "AddressList")
-                    .put("items", new JsonArray()
-                            .add(new JsonObject()
-                                    .put("apiVersion", "enmasse.io/" + apiVersion)
-                                    .put("kind", "Address")
-                                    .put("metadata", new JsonObject()
-                                            .put("name", "myinstance.single1"))
-                                    .put("spec", new JsonObject()
-                                            .put("address", "single1")
-                                            .put("type", "queue")
-                                            .put("plan", "plan1"))));
-
-            req.end(payload.toBuffer());
-
-            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
-            if (context.failed()) {
-                throw context.causeOfFailure();
-            }
-
-        } finally {
-            client.close();
-        }
     }
 
     @Test
