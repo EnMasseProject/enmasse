@@ -8,9 +8,10 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.Status;
-
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.address.model.validation.ValidationMatchers.isValid;
+import static io.enmasse.address.model.validation.ValidationMatchers.isNotValid;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -90,6 +91,7 @@ public class AddressTest {
                 .build();
 
         assertNull(b1.getMetadata().getName());
+        @SuppressWarnings("deprecation")
         String generated = Address.generateName(b1.getSpec().getAddressSpace(), b1.getSpec().getAddress());
         System.out.println(generated);
         assertTrue(generated.startsWith("myspace.myaddr1."));
@@ -156,4 +158,65 @@ public class AddressTest {
         assertThat(b.getMetadata().getName(), is("b"));
 
     }
+
+    /**
+     * Create a simple valid address.
+     * @param name the name for {@code .metadata.name}
+     * @return the newly created address, this address may not be valid
+     */
+    private static Address createAddress(final String name) {
+        return new AddressBuilder(false)
+                .withNewMetadata()
+                .withName(name)
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(name)
+                .withPlan("plan")
+                .withType("type")
+                .endSpec()
+
+                .build();
+    }
+
+    /**
+     * Test if a basic address name validates.
+     */
+    @Test
+    public void testAddressNameValidation1() {
+        assertThat(createAddress("foo.bar"), isValid());
+    }
+
+    /**
+     * Test if a basic address name validates.
+     */
+    @Test
+    public void testAddressNameValidation2() {
+        assertThat(createAddress("bar"), isNotValid());
+    }
+
+    private static final String FOURTY = "01234567890123456789012345678901234567890123456789";
+    private static final String EIGHTY = FOURTY + FOURTY;
+
+    /**
+     * Test if a long name validates.
+     * <br>
+     * The combined must validate as a kubernetes name, although it is longer than 60 characters.
+     */
+    @Test
+    public void testLongAddressNameValidation() {
+        assertThat(createAddress(FOURTY + "." + FOURTY),isValid());
+    }
+
+    /**
+     * Test if a too long name does not validate.
+     * <br>
+     * Name components which are longer than 60 character must not validate.
+     */
+    @Test
+    public void testTooLongAddressNameValidation() {
+        assertThat(createAddress(EIGHTY + ".foo"), isNotValid());
+        assertThat(createAddress("foo." + EIGHTY), isNotValid());
+    }
+
 }

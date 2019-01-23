@@ -23,11 +23,11 @@ public final class DefaultValidator {
 
     private DefaultValidator() {}
 
+    public static Validator validator() {
+        return FACTORY.getValidator();
+    }
 
-    public static void validate(final Object bean) {
-
-        final Validator validator = FACTORY.getValidator();
-
+    public static void validate(final Validator validator, final Object bean) {
         final Set<ConstraintViolation<Object>> result = validator.validate(bean);
 
         if (result.isEmpty()) {
@@ -35,6 +35,10 @@ public final class DefaultValidator {
         }
 
         throw new ConstraintViolationException(result);
+    }
+
+    public static void validate(final Object bean) {
+        validate(validator(), bean);
     }
 
 }
