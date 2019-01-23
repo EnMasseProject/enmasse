@@ -114,12 +114,4 @@ public class AddressSpec {
         return Objects.hash(address, addressSpace);
     }
 
-
-    void validate() {
-        Objects.requireNonNull(address, "address not set");
-        Objects.requireNonNull(addressSpace, "addressSpace not set");
-        Objects.requireNonNull(plan, "plan not set");
-        Objects.requireNonNull(type, "type not set");
-    }
-
 }
