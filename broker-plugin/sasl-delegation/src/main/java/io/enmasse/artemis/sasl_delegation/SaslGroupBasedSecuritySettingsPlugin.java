@@ -5,14 +5,11 @@
 
 package io.enmasse.artemis.sasl_delegation;
 
-import org.apache.activemq.artemis.core.config.WildcardConfiguration;
 import org.apache.activemq.artemis.core.security.Role;
 import org.apache.activemq.artemis.core.server.SecuritySettingPlugin;
 import org.apache.activemq.artemis.core.settings.HierarchicalRepository;
-import org.apache.activemq.artemis.core.settings.impl.HierarchicalObjectRepository;
 import org.jboss.logging.Logger;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -32,19 +29,6 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
     private final Set<String> knownAddresses = new HashSet<>();
     private Set<Role> standardRoles;
     private boolean useGroupsFromSaslDelegation;
-
-
-    private static volatile Field WILDCARD_CONFIGURATION_FIELD;
-
-    static {
-        try {
-            Class<?> jassCallbackHandlerClass = Class.forName("org.apache.activemq.artemis.core.settings.impl.HierarchicalObjectRepository");
-            WILDCARD_CONFIGURATION_FIELD = jassCallbackHandlerClass.getField("wildcardConfiguration");
-            WILDCARD_CONFIGURATION_FIELD.setAccessible(true);
-        } catch (ClassNotFoundException | NoSuchFieldException ignored) {
-
-        }
-    }
 
     @Override
     public SecuritySettingPlugin init(Map<String, String> map) {
@@ -116,32 +100,24 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                 char delimeter = DEFAULT_DELIMITER;
                 try {
                     String address = parts[1];
-                    if(securityRepository instanceof HierarchicalObjectRepository && WILDCARD_CONFIGURATION_FIELD != null) {
-                        try {
-                            WildcardConfiguration wildcardConfig = (WildcardConfiguration) WILDCARD_CONFIGURATION_FIELD.get(securityRepository);
-                            singleWord = wildcardConfig.getSingleWord();
-                            anyWords = wildcardConfig.getAnyWords();
-                            delimeter = wildcardConfig.getDelimiter();
-                            StringBuilder fixedAddress = new StringBuilder(address.length());
-                            for(char c : address.toCharArray()) {
-                                switch (c) {
-                                    case DEFAULT_ANY_WORDS:
-                                        c = anyWords;
-                                        break;
-                                    case DEFAULT_SINGLE_WORD:
-                                        c = singleWord;
-                                        break;
-                                    case DEFAULT_DELIMITER:
-                                        c = delimeter;
-                                        break;
+                    StringBuilder fixedAddress = new StringBuilder(address.length());
+                    for(char c : address.toCharArray()) {
+                        switch (c) {
+                            case DEFAULT_ANY_WORDS:
+                                c = anyWords;
+                                break;
+                            case DEFAULT_SINGLE_WORD:
+                                c = singleWord;
+                                break;
+                            case DEFAULT_DELIMITER:
+                                c = delimeter;
+                                break;
 
-                                }
-                                fixedAddress.append(c);
-                            }
-                            address = fixedAddress.toString();
-                        } catch (IllegalAccessException e) {
                         }
+                        fixedAddress.append(c);
                     }
+                    address = fixedAddress.toString();
+                    LOG.infov("AFTER: Singleword({0}), anyWords({1}), delimited({2})", singleWord, anyWords, delimeter);
                     if(knownAddresses.add(address)) {
 
                         String singleWordString = String.valueOf(singleWord);
