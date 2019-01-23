@@ -99,24 +99,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                 char anyWords = DEFAULT_ANY_WORDS;
                 char delimeter = DEFAULT_DELIMITER;
                 try {
-                    String address = parts[1];
-                    StringBuilder fixedAddress = new StringBuilder(address.length());
-                    for(char c : address.toCharArray()) {
-                        switch (c) {
-                            case DEFAULT_ANY_WORDS:
-                                c = anyWords;
-                                break;
-                            case DEFAULT_SINGLE_WORD:
-                                c = singleWord;
-                                break;
-                            case DEFAULT_DELIMITER:
-                                c = delimeter;
-                                break;
-
-                        }
-                        fixedAddress.append(c);
-                    }
-                    address = fixedAddress.toString();
+                    String address = parts[1].replace('*', '+');
                     if(knownAddresses.add(address)) {
 
                         String singleWordString = String.valueOf(singleWord);
