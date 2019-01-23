@@ -29,3 +29,7 @@ include::assemblies/assembly-tenant-guide.adoc[leveloffset=+1]
 == REST API reference
 
 include::common/restapi-reference.adoc[leveloffset=+2]
+
+// Revision information
+//include::common/revision-info.adoc[]
+
