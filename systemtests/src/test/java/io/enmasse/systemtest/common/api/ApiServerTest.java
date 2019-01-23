@@ -19,7 +19,6 @@ import io.enmasse.systemtest.standard.AnycastTest;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -228,8 +227,8 @@ class ApiServerTest extends TestBase {
         try {
             setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4);
             fail("Request must fail with an exception");
-        } catch (java.util.concurrent.ExecutionException ex) {
-            assertThat("Exception does not contain correct information", ex.getMessage(), CoreMatchers.containsString("does not match address space"));
+        } catch (ExecutionException expectedEx) {
+            assertThat("Exception does not contain correct information", expectedEx.getMessage(), containsString("does not match address space"));
         }
 
         try { //missing address
@@ -238,7 +237,7 @@ class ApiServerTest extends TestBase {
             fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("message"),
+            assertEquals("spec.address: must not be null", serverResponse.getString("message"),
                     "Incorrect response from server on missing address!");
         }
 
@@ -248,7 +247,7 @@ class ApiServerTest extends TestBase {
             fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("message"),
+            assertEquals("spec.type: must not be null", serverResponse.getString("message"),
                     "Incorrect response from server on missing type!");
         }
 
@@ -258,7 +257,7 @@ class ApiServerTest extends TestBase {
             fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("message"),
+            assertEquals("spec.plan: must not be null", serverResponse.getString("message"),
                     "Incorrect response from server on missing plan!");
         }
 
