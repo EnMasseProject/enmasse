@@ -119,16 +119,17 @@ public class HttpAddressServiceBase {
     Response internalCreateAddresses(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, AddressList addressList) throws Exception {
         checkRequestBodyNotNull(addressList);
         DefaultValidator.validate(addressList);
+        Set<Address> finalAddresses = addressList.getItems().stream()
+                .map(a -> setAddressDefaults(namespace, addressSpace, a, null))
+                .collect(Collectors.toSet());
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
-            Set<Address> finalAddresses = addressList.getItems().stream()
-                    .map(a -> setAddressDefaults(namespace, addressSpace, a, null))
-                    .collect(Collectors.toSet());
             apiHelper.createAddresses(addressSpace, finalAddresses);
             return Response.created(uriInfo.getAbsolutePathBuilder().build()).build();
         });
     }
 
+    @SuppressWarnings("deprecation")
     static Address setAddressDefaults(String namespace, String addressSpace, Address address, Address existing) {
         if (existing == null) {
             if (address.getMetadata().getNamespace() == null || address.getMetadata().getName() == null) {
@@ -162,6 +163,15 @@ public class HttpAddressServiceBase {
 
                     .build();
         }
+
+        // validate the addressspace
+
+        if ( address.getSpec().getAddressSpace() != null ) {
+            if ( !addressSpace.equals(address.getSpec().getAddressSpace())) {
+                throw new BadRequestException(String.format("Address space in spec section does not match address space in request URI"));
+            }
+        }
+
         return address;
     }
 

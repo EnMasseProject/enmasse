@@ -549,6 +549,8 @@ public class HTTPServerTest {
     @MethodSource("apiVersions")
     public void testCreateAddressInvalidRequest1(String apiVersion, VertxTestContext context) throws Throwable {
 
+        // create an address which has a different address space in its name than in its spec section
+
         final JsonObject payload = new JsonObject()
                 .put("apiVersion", "enmasse.io/" + apiVersion)
                 .put("kind", "Address")
@@ -557,6 +559,27 @@ public class HTTPServerTest {
                 .put("spec", new JsonObject()
                         .put("address", "single1")
                         .put("addressSpace", "myinstance")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
+
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(400, response.statusCode()));
+        });
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressInvalidRequest2(String apiVersion, VertxTestContext context) throws Throwable {
+
+        // create an address which has a different address space in its URI than in its spec section
+
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("addressSpace", "other")
                         .put("type", "queue")
                         .put("plan", "plan1"));
 
