@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -26,9 +29,29 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddressTypeInformation extends NamedDescription {
+public class AddressTypeInformation {
 
-    private List<NamedDescription> plans = new ArrayList<>();
+    @NotNull
+    private String name;
+    private String description;
+
+    private List<@Valid NamedDescription> plans = new ArrayList<>();
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
     public void setPlans(final List<NamedDescription> plans) {
         this.plans = plans;

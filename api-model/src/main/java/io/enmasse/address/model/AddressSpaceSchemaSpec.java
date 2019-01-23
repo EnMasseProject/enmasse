@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
+
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -25,8 +27,8 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"))
 public class AddressSpaceSchemaSpec {
     private String description;
-    private List<AddressTypeInformation> addressTypes = new ArrayList<>();
-    private List<NamedDescription> plans = new ArrayList<>();
+    private List<@Valid AddressTypeInformation> addressTypes = new ArrayList<>();
+    private List<@Valid NamedDescription> plans = new ArrayList<>();
 
     public String getDescription() {
         return this.description;
@@ -67,5 +69,16 @@ public class AddressSpaceSchemaSpec {
                         .map(plan -> new NamedDescription(plan.getMetadata().getName(), plan.getShortDescription()))
                         .collect(Collectors.toList()))
                 .build();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("description=").append(this.description);
+        sb.append(",");
+        sb.append("plans=").append(this.plans);
+        sb.append(",");
+        sb.append("addressTypes=").append(this.addressTypes);
+        return sb.append("}").toString();
     }
 }
