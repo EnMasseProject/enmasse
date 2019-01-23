@@ -189,8 +189,8 @@ public class Destination {
         JsonObject entry = new JsonObject();
         entry.put("apiVersion", version);
         entry.put("kind", "Address");
-        entry.put("metadata", this.jsonMetadata(addressSpace));
-        entry.put("spec", this.jsonSpec());
+        entry.put("metadata", jsonMetadata(addressSpace));
+        entry.put("spec", jsonSpec(addressSpace));
         return entry;
     }
 
@@ -210,16 +210,10 @@ public class Destination {
         if (this.getUuid() != null) {
             metadata.put("uid", this.getUuid());
         }
-        if (this.getAddressSpace() != null) {
-            TestUtils.putIntoMap(metadata, "annotations", "addressSpace", getAddressSpace());
-        } else if (addressSpace != null) {
-            TestUtils.putIntoMap(metadata, "annotations", "addressSpace", addressSpace);
-        }
         return metadata;
     }
 
-
-    public JsonObject jsonSpec() {
+    public JsonObject jsonSpec(String addressSpace) {
         JsonObject spec = new JsonObject();
         if (this.getAddress() != null) {
             spec.put("address", this.getAddress());
@@ -232,6 +226,11 @@ public class Destination {
         }
         if (this.topic != null) {
             spec.put("topic", this.topic);
+        }
+        if (this.getAddressSpace() != null) {
+            spec.put("addressSpace", getAddressSpace());
+        } else if (addressSpace != null) {
+            spec.put("addressSpace", addressSpace);
         }
         return spec;
     }
