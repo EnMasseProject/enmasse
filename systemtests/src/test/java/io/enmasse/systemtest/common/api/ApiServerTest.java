@@ -19,6 +19,7 @@ import io.enmasse.systemtest.standard.AnycastTest;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -226,14 +227,15 @@ class ApiServerTest extends TestBase {
                 "test-rest-api-queue4", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE.plan());
         try {
             setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4);
+            fail("Request must fail with an exception");
         } catch (java.util.concurrent.ExecutionException ex) {
-            assertTrue(ex.getMessage().contains("does not match address space"),
-                    "Exception does not contain correct information");
+            assertThat("Exception does not contain correct information", ex.getMessage(), CoreMatchers.containsString("does not match address space"));
         }
 
         try { //missing address
             Destination destWithoutAddress = Destination.queue(null, DestinationPlan.BROKERED_QUEUE.plan());
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress);
+            fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("message"),
@@ -243,6 +245,7 @@ class ApiServerTest extends TestBase {
         try { //missing type
             Destination destWithoutType = new Destination("not-created-address", null, DestinationPlan.BROKERED_QUEUE.plan());
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType);
+            fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("message"),
@@ -252,6 +255,7 @@ class ApiServerTest extends TestBase {
         try { //missing plan
             Destination destWithoutPlan = Destination.queue("not-created-queue", null);
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutPlan);
+            fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
             assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("message"),
@@ -299,6 +303,8 @@ class ApiServerTest extends TestBase {
         addressApiClient.createAddress(longname);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(3));
+        assertThat(toStrings(addresses, Address::getName), is(names));
+
         TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
 
