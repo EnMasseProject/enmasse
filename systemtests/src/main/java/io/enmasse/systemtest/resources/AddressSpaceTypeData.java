@@ -9,7 +9,7 @@ import io.vertx.core.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class AddressSpaceTypeData {
     private String name;
@@ -58,6 +58,7 @@ public class AddressSpaceTypeData {
     }
 
     public AddressTypeData getAddressType(String name) {
-        return this.addressTypes.stream().filter(a -> a.getName().equals(name)).collect(Collectors.toList()).get(0);
+        Objects.requireNonNull(name);
+        return this.addressTypes.stream().filter(a -> a.getName().equals(name)).findAny().get();
     }
 }

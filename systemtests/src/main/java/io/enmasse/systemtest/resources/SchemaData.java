@@ -5,12 +5,13 @@
 package io.enmasse.systemtest.resources;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 public class SchemaData {
     private List<AddressSpaceTypeData> addressSpaceTypes;
 
     public SchemaData(List<AddressSpaceTypeData> addressSpaceTypes) {
+        Objects.requireNonNull(addressSpaceTypes);
         this.addressSpaceTypes = addressSpaceTypes;
     }
 
@@ -19,6 +20,7 @@ public class SchemaData {
     }
 
     public AddressSpaceTypeData getAddressSpaceType(String name) {
-        return this.addressSpaceTypes.stream().filter(s -> s.getName().equals(name)).collect(Collectors.toList()).get(0);
+        Objects.requireNonNull(name);
+        return this.addressSpaceTypes.stream().filter(s -> s.getName().equals(name)).findAny().get();
     }
 }
