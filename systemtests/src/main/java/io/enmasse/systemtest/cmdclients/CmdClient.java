@@ -15,7 +15,7 @@ import java.util.List;
 public abstract class CmdClient {
     private static Logger log = CustomLogger.getLogger();
     protected static final Object lock = new Object();
-    protected static final Environment env = new Environment();
+    protected static final Environment env = Environment.getInstance();
 
     protected static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput) {
         try {
