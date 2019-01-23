@@ -99,7 +99,7 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
                 char anyWords = DEFAULT_ANY_WORDS;
                 char delimeter = DEFAULT_DELIMITER;
                 try {
-                    String address = parts[1].replace('*', '+');
+                    String address = parts[1].replace('*', '#');
                     if(knownAddresses.add(address)) {
 
                         String singleWordString = String.valueOf(singleWord);
