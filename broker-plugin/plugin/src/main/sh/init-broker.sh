@@ -27,7 +27,7 @@ function configure_brokered() {
     fi
     cp $CONFIG_TEMPLATES/brokered/broker.xml /tmp/broker.xml
     cp $CONFIG_TEMPLATES/brokered/login.config /tmp/login.config
-    export HAWTIO_ROLE=admin
+    export HAWTIO_ROLE=manage
 }
 
 function configure_standard() {

@@ -338,27 +338,38 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    @Disabled("topic wildcards are not supported")
-    void testTopicWildcards() throws Exception {
-        Destination t1 = Destination.topic("topic/No1", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination t2 = Destination.topic("topic/No2", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+    void testTopicWildcardsSharded() throws Exception {
+        doTopicWildcardTest(DestinationPlan.STANDARD_LARGE_TOPIC);
+    }
 
-        setAddresses(t1, t2);
+    @Test
+    void testTopicWildcardsPooled() throws Exception {
+        doTopicWildcardTest(DestinationPlan.STANDARD_SMALL_TOPIC);
+    }
+
+    private void doTopicWildcardTest(DestinationPlan plan) throws Exception {
+        Destination t0 = Destination.topic("topic", plan.plan());
+        setAddresses(t0);
+
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
-        Thread.sleep(60_000);
 
-        Future<List<Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 2);
+        Future<List<Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 3);
 
-        List<Future<Integer>> sendResult = Arrays.asList(
-                amqpClient.sendMessages(t1.getAddress(), msgs),
-                amqpClient.sendMessages(t2.getAddress(), msgs));
+        amqpClient.sendMessages(t0.getAddress() + "/foo", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/bar", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/baz/foobar", msgs);
 
-        assertThat("Wrong count of messages sent: sender0",
-                sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Wrong count of messages sent: sender1",
-                sendResult.get(1).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received",
+                recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 3));
+
+        recvResults = amqpClient.recvMessages("topic/world/+", msgs.size() * 2);
+
+        amqpClient.sendMessages(t0.getAddress() + "/world/africa", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/europe", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/asia/maldives", msgs);
+
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
     }

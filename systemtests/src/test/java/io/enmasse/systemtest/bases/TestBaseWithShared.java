@@ -21,6 +21,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.shared;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(shared)
@@ -186,6 +188,12 @@ public abstract class TestBaseWithShared extends TestBase {
         waitForDestinationsReady(sharedAddressSpace, destinations);
     }
 
+
+    //================================================================================================
+    //====================================== Test help methods =======================================
+    //================================================================================================
+
+
     /**
      * attach N receivers into one address with default username/password
      */
@@ -262,7 +270,7 @@ public abstract class TestBaseWithShared extends TestBase {
                     Future<Integer> sent = client.sendMessages(dest.get(i).getAddress(), TestUtils.generateMessages(messageCount));
                     //wait for messages sent
                     assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES).intValue(),
-                            String.format("Incorrect count of messages send"));
+                            "Incorrect count of messages send");
                 }
             }
         }
@@ -274,7 +282,7 @@ public abstract class TestBaseWithShared extends TestBase {
                     Future<List<Message>> received = client.recvMessages(dest.get(i).getAddress(), messageCount);
                     //wait for messages received
                     assertEquals(messageCount, received.get(1, TimeUnit.MINUTES).size(),
-                            String.format("Incorrect count of messages received"));
+                            "Incorrect count of messages received");
                 }
             }
             client.close();

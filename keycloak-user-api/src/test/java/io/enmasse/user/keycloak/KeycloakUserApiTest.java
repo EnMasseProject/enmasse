@@ -280,8 +280,7 @@ public class KeycloakUserApiTest {
 
         assertGroups(result,
                 "recv_foo%2Fbar", "send_foo%2Fbar", "recv_bar%2Fbaz%2F%23", "send_bar%2Fbaz%2F%23",
-                "view_fuu%2F*", "view_fuu%2F#",
-                "manage_faa%2F%23");
+                "monitor", "monitor_#", "manage", "manage_#");
     }
 
     @Test
@@ -292,7 +291,7 @@ public class KeycloakUserApiTest {
 
         final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
 
-        assertGroups(result, "recv");
+        assertTrue(result.isEmpty());
     }
 
     @Test
@@ -304,7 +303,7 @@ public class KeycloakUserApiTest {
 
         final Set<String> result = KeycloakUserApi.createDesiredGroupsSet(auth);
 
-        assertGroups(result, "recv", "send", "manage", "manage_#");
+        assertGroups(result, "manage", "manage_#");
     }
 
     /**
