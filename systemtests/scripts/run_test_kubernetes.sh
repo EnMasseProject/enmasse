@@ -50,11 +50,13 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
-#start docker logging
-DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
-${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
-LOGS_PID=$!
-echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
+if [[ -z "$DISABLE_LOG_SYNC" ]]; then
+    #start docker logging
+    DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
+    ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
+    LOGS_PID=$!
+    echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
+fi
 
 wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
@@ -68,10 +70,12 @@ fi
 
 kubectl get events --all-namespaces
 
-#stop docker logging
-echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
-kill ${LOGS_PID} || true
-categorize_docker_logs "${DOCKER_LOG_DIR}" || true
+if [[ -z "$DISABLE_LOG_SYNC" ]]; then
+    #stop docker logging
+    echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
+    kill ${LOGS_PID} || true
+    categorize_docker_logs "${DOCKER_LOG_DIR}" || true
+fi
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${KUBERNETES_NAMESPACE}
