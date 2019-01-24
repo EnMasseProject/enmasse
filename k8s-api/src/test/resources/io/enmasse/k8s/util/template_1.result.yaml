@@ -1,0 +1,536 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: myspace1
+      enmasse.io/service-port.amqp: 5672
+      enmasse.io/service-port.amqp-wss: 443
+      enmasse.io/service-port.amqps: 5671
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: messaging-81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 5672
+    - name: amqps
+      port: 5671
+      protocol: TCP
+      targetPort: 5671
+    - name: amqps-normal
+      port: 55671
+      protocol: TCP
+      targetPort: amqps-normal
+    - name: amqps-broker
+      port: 56671
+      protocol: TCP
+      targetPort: amqps-broker
+    - name: inter-router
+      port: 55672
+      protocol: TCP
+      targetPort: 55672
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    selector:
+      capability: router
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+- apiVersion: v1
+  data:
+    qdrouterd.conf: "router {\n  mode: interior\n  id: ${HOSTNAME}\n  defaultDistribution:
+      unavailable\n  allowResumableLinkRoute: false\n}\n\nsslProfile {\n  name: auth_service_ssl\n
+      \ certDb: /etc/qpid-dispatch/authservice-ca/tls.crt\n}\n\nauthServicePlugin
+      {\n  name: auth_service\n  authService: host1:123\n  saslInitHostname: \n  authSslProfile:
+      auth_service_ssl\n}\n\nlistener {\n  host: 127.0.0.1\n  port: 7777\n  authenticatePeer:
+      no\n}\n\nlistener {\n  host: 0.0.0.0\n  port: 5672\n  saslPlugin: auth_service\n
+      \ authenticatePeer: yes\n  linkCapacity: 250\n}\n\nlistener {\n  host: 0.0.0.0\n
+      \ port: 55672\n  role: inter-router\n  authenticatePeer: yes\n  sslProfile:
+      inter_router_tls\n  saslMechanisms: EXTERNAL\n  linkCapacity: 250\n}\n\nlistener
+      {\n  host: 0.0.0.0\n  port: 8443\n  saslPlugin: auth_service\n  sslProfile:
+      ssl_details\n  http: true\n  authenticatePeer: yes\n  linkCapacity: 250\n}\n\nsslProfile
+      {\n  name: ssl_details\n  certFile: /etc/qpid-dispatch/ssl/tls.crt\n  keyFile:
+      /etc/qpid-dispatch/ssl/tls.key\n}\n\nlistener {\n  host: 0.0.0.0\n  port: 5671\n
+      \ saslPlugin: auth_service\n  sslProfile: ssl_details\n  requireSsl: true\n
+      \ authenticatePeer: yes\n  linkCapacity: 250\n}\n\nsslProfile {\n  name: inter_router_tls\n
+      \ certFile: /etc/enmasse-certs/tls.crt\n  keyFile: /etc/enmasse-certs/tls.key\n
+      \ certDb: /etc/enmasse-certs/ca.crt\n}\n\nlistener {\n  host: 0.0.0.0\n  port:
+      55671\n  sslProfile: inter_router_tls\n  saslMechanisms: EXTERNAL\n  authenticatePeer:
+      yes\n  linkCapacity: 250\n}\n\nlistener {\n  host: 0.0.0.0\n  port: 56671\n
+      \ sslProfile: inter_router_tls\n  saslMechanisms: EXTERNAL\n  role: route-container\n
+      \ authenticatePeer: yes\n  linkCapacity: 250\n}\n\nconnector {\n  host: ragent-81932f70-20a9-11e9-b293-c85b762e5a2c\n
+      \ port: 5671\n  sslProfile: inter_router_tls\n  verifyHostName: no\n}\n\nlinkRoute
+      {\n  name: override.lwt_in\n  prefix: $lwt\n  direction: in\n  containerId:
+      lwt-service\n}\n\nlinkRoute {\n  name: override.lwt_out\n  prefix: $lwt\n  direction:
+      out\n  containerId: lwt-service\n}\n\naddress {\n  name: override.mqtt\n  prefix:
+      $mqtt\n  distribution: balanced\n}\n\naddress {\n  name: override.subctrl\n
+      \ prefix: $subctrl\n  distribution: balanced\n}\n\naddress {\n  name: override.temp\n
+      \ prefix: $temp\n  distribution: balanced\n}"
+  kind: ConfigMap
+  metadata:
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: qdrouterd-config.81932f70-20a9-11e9-b293-c85b762e5a2c
+- apiVersion: apps/v1
+  kind: StatefulSet
+  metadata:
+    annotations:
+      addressSpace: myspace1
+      enmasse.io/cert-cn: router.81932f70-20a9-11e9-b293-c85b762e5a2c
+      enmasse.io/cert-secret: router-internal-cert.81932f70-20a9-11e9-b293-c85b762e5a2c
+      prometheus.io/path: /metrics
+      prometheus.io/port: "8080"
+      prometheus.io/scrape: "true"
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+      name: qdrouterd
+    name: qdrouterd-81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+            - key: node-role.enmasse.io/operator-infra
+              operator: In
+              values:
+              - "true"
+          weight: 1
+    replicas: 1
+    selector:
+      matchLabels:
+        app: enmasse
+        capability: router
+        infraType: standard
+        infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+        name: qdrouterd
+    serviceName: qdrouterd-headless-81932f70-20a9-11e9-b293-c85b762e5a2c
+    template:
+      metadata:
+        annotations:
+          addressSpace: myspace1
+        labels:
+          app: enmasse
+          capability: router
+          infraType: standard
+          infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+          name: qdrouterd
+      spec:
+        containers:
+        - env:
+          - name: QDROUTERD_CONF
+            value: /etc/qpid-dispatch/config/qdrouterd.conf
+          - name: QDROUTERD_AUTO_MESH_DISCOVERY
+            value: INFER
+          - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
+            value: qdrouterd-headless-81932f70-20a9-11e9-b293-c85b762e5a2c
+          image: docker.io/ctronenmassetesting/router:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            initialDelaySeconds: 60
+            tcpSocket:
+              port: amqp
+          name: router
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+          - containerPort: 5671
+            name: amqps
+            protocol: TCP
+          - containerPort: 8443
+            name: https
+            protocol: TCP
+          - containerPort: 55671
+            name: amqps-normal
+            protocol: TCP
+          - containerPort: 56671
+            name: amqps-broker
+            protocol: TCP
+          - containerPort: 56711
+            name: amqps-probe
+            protocol: TCP
+          readinessProbe:
+            initialDelaySeconds: 60
+            tcpSocket:
+              port: amqps-probe
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              memory: 512Mi
+          volumeMounts:
+          - mountPath: /etc/qpid-dispatch/ssl
+            name: ssl-certs
+            readOnly: true
+          - mountPath: /etc/qpid-dispatch/authservice-ca
+            name: authservice-ca
+            readOnly: true
+          - mountPath: /etc/enmasse-certs
+            name: router-internal-cert
+            readOnly: true
+          - mountPath: /etc/qpid-dispatch/config
+            name: qdrouterd-config
+        - env:
+          - name: ROUTER_HOST
+            value: 127.0.0.1
+          - name: ROUTER_PORT
+            value: "55671"
+          - name: CERT_DIR
+            value: /etc/enmasse-certs
+          image: docker.io/ctronenmassetesting/router-metrics:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            initialDelaySeconds: 60
+            tcpSocket:
+              port: routermetrics
+          name: metrics
+          ports:
+          - containerPort: 8080
+            name: routermetrics
+            protocol: TCP
+          resources:
+            limits:
+              memory: 32Mi
+            requests:
+              memory: 32Mi
+          volumeMounts:
+          - mountPath: /etc/enmasse-certs
+            name: router-internal-cert
+            readOnly: true
+        volumes:
+        - name: ssl-certs
+          secret:
+            secretName: secret2
+        - name: authservice-ca
+          secret:
+            secretName: authservice-ca.81932f70-20a9-11e9-b293-c85b762e5a2c
+        - name: router-internal-cert
+          secret:
+            secretName: router-internal-cert.81932f70-20a9-11e9-b293-c85b762e5a2c
+        - configMap:
+            name: qdrouterd-config.81932f70-20a9-11e9-b293-c85b762e5a2c
+          name: qdrouterd-config
+- apiVersion: v1
+  data:
+    tls.crt: abc
+  kind: Secret
+  metadata:
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: authservice-ca.81932f70-20a9-11e9-b293-c85b762e5a2c
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      addressSpace: myspace1
+      enmasse.io/cert-secret: admin-internal-cert.81932f70-20a9-11e9-b293-c85b762e5a2c
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+      name: admin
+    name: admin.81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+        - preference:
+            matchExpressions:
+            - key: node-role.enmasse.io/operator-infra
+              operator: In
+              values:
+              - "true"
+          weight: 1
+    replicas: 1
+    selector:
+      matchLabels:
+        app: enmasse
+        infraType: standard
+        infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+        name: admin
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        annotations:
+          addressSpace: myspace1
+        labels:
+          app: enmasse
+          infraType: standard
+          infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+          name: admin
+      spec:
+        containers:
+        - env:
+          - name: MESSAGING_SERVICE_HOST
+            value: messaging-81932f70-20a9-11e9-b293-c85b762e5a2c
+          - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+            value: 55671
+          - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+            value: 56671
+          - name: CERT_DIR
+            value: /etc/enmasse-certs
+          - name: TEMPLATE_DIR
+            value: /broker-templates
+          - name: STANDARD_INFRA_CONFIG_NAME
+            value: configName1
+          - name: ADDRESS_SPACE
+            value: myspace1
+          - name: ADDRESS_SPACE_NAMESPACE
+            value: ns
+          - name: INFRA_UUID
+            value: 81932f70-20a9-11e9-b293-c85b762e5a2c
+          - name: ADDRESS_SPACE_PLAN
+            value: plan1
+          - name: RESYNC_INTERVAL
+            value: "600"
+          - name: CHECK_INTERVAL
+            value: "30"
+          - name: EVENT_QUEUE_SIZE
+            value: "10000"
+          - name: ENABLE_EVENT_LOGGER
+            value: "false"
+          - name: AUTHENTICATION_SERVICE_HOST
+            value: host1
+          - name: AUTHENTICATION_SERVICE_PORT
+            value: "123"
+          - name: AUTHENTICATION_SERVICE_CA_SECRET
+            value: authservice-ca
+          - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+            value: ""
+          - name: JAVA_OPTS
+            value: -verbose:gc
+          - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+            value: ""
+          - name: MESSAGING_SECRET
+            value: secret2
+          image: docker.io/ctronenmassetesting/standard-controller:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+          name: standard-controller
+          ports:
+          - containerPort: 8889
+            name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+            initialDelaySeconds: 30
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              memory: 512Mi
+          volumeMounts:
+          - mountPath: /etc/enmasse-certs
+            name: admin-internal-cert
+            readOnly: true
+          - mountPath: /broker-templates
+            name: broker-templates
+            readOnly: true
+        - env:
+          - name: MESSAGING_SERVICE_HOST
+            value: messaging-81932f70-20a9-11e9-b293-c85b762e5a2c
+          - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+            value: 55671
+          - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+            value: 56671
+          - name: INFRA_UUID
+            value: 81932f70-20a9-11e9-b293-c85b762e5a2c
+          - name: ADDRESS_SPACE_PLAN
+            value: plan1
+          - name: CERT_DIR
+            value: /etc/enmasse-certs
+          - name: AUTHENTICATION_SERVICE_HOST
+            value: host1
+          - name: AUTHENTICATION_SERVICE_PORT
+            value: "123"
+          - name: AUTHENTICATION_SERVICE_CA_SECRET
+            value: authservice-ca
+          - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+            value: ""
+          - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+            value: ""
+          - name: AUTHENTICATION_SERVICE_OAUTH_URL
+            value: ""
+          - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
+            value: ""
+          - name: ADDRESS_SPACE
+            value: myspace1
+          - name: ADDRESS_SPACE_NAMESPACE
+            value: ns
+          - name: MESSAGING_CERT
+            value: /opt/agent/messaging-cert/tls.crt
+          image: docker.io/ctronenmassetesting/agent:latest
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+            periodSeconds: 30
+            timeoutSeconds: 5
+          name: agent
+          ports:
+          - containerPort: 8888
+            name: http
+          - containerPort: 8080
+            name: https
+          - containerPort: 56720
+            name: amqp-ws
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              memory: 512Mi
+          volumeMounts:
+          - mountPath: /etc/console-certs
+            name: console-secret
+            readOnly: true
+          - mountPath: /opt/agent/authservice-ca
+            name: authservice-ca
+            readOnly: true
+          - mountPath: /etc/enmasse-certs
+            name: admin-internal-cert
+            readOnly: true
+          - mountPath: /opt/agent/messaging-cert
+            name: messaging-cert
+            readOnly: true
+        serviceAccountName: address-space-admin
+        volumes:
+        - name: console-secret
+          secret:
+            secretName: secret1
+        - name: authservice-ca
+          secret:
+            secretName: authservice-ca.81932f70-20a9-11e9-b293-c85b762e5a2c
+        - name: admin-internal-cert
+          secret:
+            secretName: admin-internal-cert.81932f70-20a9-11e9-b293-c85b762e5a2c
+        - name: messaging-cert
+          secret:
+            secretName: secret2
+        - configMap:
+            name: standard-broker-definitions
+          name: broker-templates
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: myspace1
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: qdrouterd-headless-81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    clusterIP: None
+    ports:
+    - name: inter-router
+      port: 55672
+      targetPort: 55672
+    selector:
+      capability: router
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: myspace1
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: ragent-81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    ports:
+    - name: amqp
+      port: 5671
+      targetPort: 55671
+    selector:
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+      name: admin
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: myspace1
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: standard-controller-81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    ports:
+    - name: health
+      port: 8080
+      protocol: TCP
+      targetPort: 8889
+    selector:
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+      name: admin
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: myspace1
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: queue-scheduler-81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      targetPort: 55671
+    selector:
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+      name: admin
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: myspace1
+      enmasse.io/service-port.https: 8081
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+    name: console-81932f70-20a9-11e9-b293-c85b762e5a2c
+  spec:
+    ports:
+    - name: https
+      port: 8081
+      targetPort: 8080
+    selector:
+      infraUuid: 81932f70-20a9-11e9-b293-c85b762e5a2c
+      name: admin
+kind: List
+metadata: {}
