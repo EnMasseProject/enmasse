@@ -14,18 +14,21 @@ import io.enmasse.systemtest.resources.CliOutputData;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.Environment.ocpVersionEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.cmdclients.KubeCMDClient.createCR;
 import static io.enmasse.systemtest.cmdclients.KubeCMDClient.updateCR;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
 class CustomResourceDefinitionAddressSpacesTest extends TestBase {
@@ -108,6 +111,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     }
 
     @Test
+    @DisabledIfEnvironmentVariable(named = ocpVersionEnv, matches = "3.10")
     void testCliOutput() throws Exception {
         String namespace = "cli-output";
         UserCredentials user = new UserCredentials("pepan", "pepan");

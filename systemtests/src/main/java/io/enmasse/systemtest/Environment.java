@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 public class Environment {
     private static Logger log = CustomLogger.getLogger();
     public static final String useMinikubeEnv = "USE_MINIKUBE";
+    public static final String ocpVersionEnv = "OC_VERSION";
     public static final String keycloakAdminPasswordEnv = "KEYCLOAK_ADMIN_PASSWORD";
     public static final String keycloakAdminUserEnv = "KEYCLOAK_ADMIN_USER";
     public static final String testLogDirEnv = "TEST_LOGDIR";
@@ -26,6 +27,7 @@ public class Environment {
     private final String keycloakAdminPassword = System.getenv(keycloakAdminPasswordEnv);
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
     private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
+    private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
 
     public Environment() {
         String debugFormat = "{}:{}";
@@ -96,5 +98,9 @@ public class Environment {
 
     public boolean isUpgraded() {
         return upgrade;
+    }
+
+    public String getGetOcpVersion() {
+        return ocpVersion;
     }
 }
