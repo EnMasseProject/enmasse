@@ -150,6 +150,10 @@ public abstract class TestBaseWithShared extends TestBase {
         }
     }
 
+    protected void setAddresses(int expectedCode, Destination... destinations) throws Exception {
+        super.setAddresses(sharedAddressSpace, expectedCode, destinations);
+    }
+
     /**
      * append new addresses into address-space and sharedAddresses list
      *
