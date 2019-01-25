@@ -139,6 +139,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
                 log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
                 spaces.add(addressSpace);
+                if (!addressSpace.equals(getSharedAddressSpace())) {
+                    addressSpaceList.add(addressSpace);
+                }
             } else {
                 log.warn("Address space '" + addressSpace + "' already exists.");
                 addrSpacesResponse.add(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()));
@@ -149,9 +152,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         for (AddressSpace addressSpace : results) {
             logCollector.startCollecting(addressSpace);
             addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace));
-            if (!addressSpace.equals(getSharedAddressSpace())) {
-                addressSpaceList.add(addressSpace);
-            }
         }
         Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
             originalAddrSpace.setInfraUuid(addrSpacesResponse.stream().filter(
