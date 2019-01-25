@@ -6,7 +6,8 @@ package io.enmasse.systemtest;
 
 public class TestTag {
     public static final String isolated = "isolated";
-    public static final String shared = "shared";
+    public static final String sharedBrokered = "shared-brokered";
+    public static final String sharedStandard = "shared-standard";
     public static final String marathon = "marathon";
     public static final String nonPR = "nonPR";
     public static final String upgrade = "upgrade";

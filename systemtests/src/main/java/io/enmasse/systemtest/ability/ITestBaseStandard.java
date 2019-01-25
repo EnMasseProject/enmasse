@@ -7,7 +7,11 @@ package io.enmasse.systemtest.ability;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.DestinationPlan;
+import org.junit.jupiter.api.Tag;
 
+import static io.enmasse.systemtest.TestTag.sharedStandard;
+
+@Tag(sharedStandard)
 public interface ITestBaseStandard extends ITestBase {
 
     @Override
