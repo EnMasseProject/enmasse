@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
+import static io.enmasse.systemtest.TestTag.smoke;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -40,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * very wrong is minimized. The test should not take to long too execute
  */
 @Tag(nonPR)
+@Tag(smoke)
 class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private Destination queue = Destination.queue("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
