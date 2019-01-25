@@ -161,7 +161,7 @@
             <properties>
                 <skip.tests>false</skip.tests>
                 <tags>shared-brokered</tags>
-                <skip.tags>nonPR,smoke</skip.tags>
+                <skip.tags>nonPR,smoke,marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -169,7 +169,7 @@
             <properties>
                 <skip.tests>false</skip.tests>
                 <tags>shared-standard</tags>
-                <skip.tags>nonPR,smoke</skip.tags>
+                <skip.tags>nonPR,smoke,marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -177,7 +177,7 @@
             <properties>
                 <skip.tests>false</skip.tests>
                 <tags>isolated</tags>
-                <skip.tags>nonPR,smoke</skip.tags>
+                <skip.tags>nonPR,smoke,marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -185,6 +185,7 @@
             <properties>
                 <tags>isolated</tags>
                 <skip.tests>false</skip.tests>
+                <skip.tags>marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -192,6 +193,7 @@
             <properties>
                 <tags>shared-brokered</tags>
                 <skip.tests>false</skip.tests>
+                <skip.tags>marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -199,6 +201,7 @@
             <properties>
                 <tags>shared-standard</tags>
                 <skip.tests>false</skip.tests>
+                <skip.tags>marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -213,6 +216,7 @@
             <properties>
                 <tags>smoke</tags>
                 <skip.tests>false</skip.tests>
+                <skip.tags>marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -220,6 +224,7 @@
             <properties>
                 <tags>upgrade</tags>
                 <skip.tests>false</skip.tests>
+                <skip.tags>marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -227,7 +232,7 @@
             <properties>
                 <tags>shared-standard</tags>
                 <skip.tests>false</skip.tests>
-                <skip.tags>noneAuth,smoke</skip.tags>
+                <skip.tags>noneAuth,smoke,marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -235,7 +240,7 @@
             <properties>
                 <tags>shared-brokered</tags>
                 <skip.tests>false</skip.tests>
-                <skip.tags>noneAuth,smoke</skip.tags>
+                <skip.tags>noneAuth,smoke,marathon</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -243,7 +248,7 @@
             <properties>
                 <tags>isolated</tags>
                 <skip.tests>false</skip.tests>
-                <skip.tags>noneAuth,smoke</skip.tags>
+                <skip.tags>noneAuth,smoke,marathon</skip.tags>
             </properties>
         </profile>
     </profiles>
