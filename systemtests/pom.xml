@@ -153,15 +153,23 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <tags>shared,isolated</tags>
+                <tags>shared-standard,shared-brokered,isolated</tags>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-pr</id>
+            <id>systemtests-shared-brokered-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <tags>shared</tags>
-                <skip.tags>nonPR</skip.tags>
+                <tags>shared-brokered</tags>
+                <skip.tags>nonPR,smoke</skip.tags>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-shared-standard-pr</id>
+            <properties>
+                <skip.tests>false</skip.tests>
+                <tags>shared-standard</tags>
+                <skip.tags>nonPR,smoke</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -169,7 +177,7 @@
             <properties>
                 <skip.tests>false</skip.tests>
                 <tags>isolated</tags>
-                <skip.tags>nonPR</skip.tags>
+                <skip.tags>nonPR,smoke</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -180,9 +188,16 @@
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared</id>
+            <id>systemtests-shared-brokered</id>
             <properties>
-                <tags>shared</tags>
+                <tags>shared-brokered</tags>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-shared-standard</id>
+            <properties>
+                <tags>shared-standard</tags>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -194,6 +209,13 @@
             </properties>
         </profile>
         <profile>
+            <id>systemtests-smoke</id>
+            <properties>
+                <tags>smoke</tags>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
             <id>systemtests-upgrade</id>
             <properties>
                 <tags>upgrade</tags>
@@ -201,11 +223,19 @@
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-release</id>
+            <id>systemtests-shared-standard-release</id>
             <properties>
-                <tags>shared</tags>
+                <tags>shared-standard</tags>
                 <skip.tests>false</skip.tests>
-                <skip.tags>noneAuth</skip.tags>
+                <skip.tags>noneAuth,smoke</skip.tags>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-shared-brokered-release</id>
+            <properties>
+                <tags>shared-brokered</tags>
+                <skip.tests>false</skip.tests>
+                <skip.tags>noneAuth,smoke</skip.tags>
             </properties>
         </profile>
         <profile>
@@ -213,7 +243,7 @@
             <properties>
                 <tags>isolated</tags>
                 <skip.tests>false</skip.tests>
-                <skip.tags>noneAuth</skip.tags>
+                <skip.tags>noneAuth,smoke</skip.tags>
             </properties>
         </profile>
     </profiles>

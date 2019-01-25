@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
+import static io.enmasse.systemtest.TestTag.smoke;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(nonPR)
+@Tag(smoke)
 class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     /**

@@ -20,12 +20,8 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.TestTag.shared;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Tag(shared)
 public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
     private static final Destination dummyAddress = Destination.queue("dummy-address", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
