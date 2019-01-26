@@ -82,7 +82,7 @@ public class KubeSchemaApi implements SchemaApi {
                 .map(ResourceAllowance::getName)
                 .collect(Collectors.toSet());
 
-        List<String> required = "brokered".equals(addressSpacePlan.getAddressSpaceType()) ? Arrays.asList("broker", "aggregate") : Arrays.asList("broker", "router", "aggregate");
+        List<String> required = "brokered".equals(addressSpacePlan.getAddressSpaceType()) ? Arrays.asList("broker") : Arrays.asList("broker", "router", "aggregate");
         if (!resources.containsAll(required)) {
             Set<String> missing = new HashSet<>(required);
             missing.removeAll(resources);
@@ -92,13 +92,13 @@ public class KubeSchemaApi implements SchemaApi {
         }
     }
 
-    private void validateAddressPlan(AddressPlan addressPlan) {
-        Set<String> allowedResources = new HashSet<>(Arrays.asList("broker", "router"));
+    private void validateAddressPlan(String addressSpaceType, AddressPlan addressPlan) {
+        List<String> requiredResources = "brokered".equals(addressSpaceType) ? Arrays.asList("broker") : Arrays.asList("broker", "router");
         Set<String> resourcesUsed = addressPlan.getRequiredResources().stream().map(ResourceRequest::getName).collect(Collectors.toSet());
 
-        if (!allowedResources.containsAll(resourcesUsed)) {
-            Set<String> missing = new HashSet<>(resourcesUsed);
-            missing.removeAll(allowedResources);
+        if (!resourcesUsed.containsAll(requiredResources)) {
+            Set<String> missing = new HashSet<>(requiredResources);
+            missing.removeAll(resourcesUsed);
             String error = "Error validating address plan " + addressPlan.getMetadata().getName() + ": missing resources " + missing;
             log.warn(error);
             throw new SchemaValidationException(error);
@@ -128,7 +128,7 @@ public class KubeSchemaApi implements SchemaApi {
         }
     }
 
-    private AddressSpaceType createStandardType(List<AddressSpacePlan> addressSpacePlans, List<AddressPlan> addressPlans, List<InfraConfig> standardInfraConfigs) {
+    private AddressSpaceType createStandardType(List<AddressSpacePlan> addressSpacePlans, Collection<AddressPlan> addressPlans, List<InfraConfig> standardInfraConfigs) {
         AddressSpaceType.Builder builder = new AddressSpaceType.Builder();
         builder.setName("standard");
         builder.setDescription("A standard address space consists of an AMQP router network in combination with " +
@@ -185,7 +185,7 @@ public class KubeSchemaApi implements SchemaApi {
         return builder.build();
     }
 
-    private AddressSpaceType createBrokeredType(List<AddressSpacePlan> addressSpacePlans, List<AddressPlan> addressPlans, List<InfraConfig> brokeredInfraConfigs) {
+    private AddressSpaceType createBrokeredType(List<AddressSpacePlan> addressSpacePlans, Collection<AddressPlan> addressPlans, List<InfraConfig> brokeredInfraConfigs) {
         AddressSpaceType.Builder builder = new AddressSpaceType.Builder();
         builder.setName("brokered");
         builder.setDescription("A brokered address space consists of a broker combined with a console for managing addresses.");
@@ -283,25 +283,33 @@ public class KubeSchemaApi implements SchemaApi {
             return null;
         }
 
-        List<AddressPlan> validAddressPlans = new ArrayList<>();
+        Set<AddressPlan> validAddressPlans = new HashSet<>();
+        Map<String, AddressPlan> addressPlanByName = new HashMap<>();
         for (AddressPlan addressPlan : addressPlans) {
-            try {
-                validateAddressPlan(addressPlan);
-                validAddressPlans.add(addressPlan);
-            } catch (SchemaValidationException e) {
-                log.error("Error validating address plan {}, skipping", addressPlan.getMetadata().getName(), e);
-            }
+            addressPlanByName.put(addressPlan.getMetadata().getName(), addressPlan);
         }
 
         List<AddressSpacePlan> validAddressSpacePlans = new ArrayList<>();
         for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+            List<AddressPlan> plansForAddressSpacePlan = new ArrayList<>();
+            for (String addressPlanName : addressSpacePlan.getAddressPlans()) {
+                try {
+                    AddressPlan addressPlan = addressPlanByName.get(addressPlanName);
+                    validateAddressPlan(addressSpacePlan.getAddressSpaceType(), addressPlan);
+                    plansForAddressSpacePlan.add(addressPlan);
+                } catch (SchemaValidationException e) {
+                    log.error("Error validating address space plan {}, skipping", addressSpacePlan.getMetadata().getName(), e);
+                }
+            }
+
             try {
                 if (addressSpacePlan.getAddressSpaceType().equals("brokered")) {
-                    validateAddressSpacePlan(addressSpacePlan, validAddressPlans, brokeredInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
+                    validateAddressSpacePlan(addressSpacePlan, plansForAddressSpacePlan, brokeredInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
                 } else {
-                    validateAddressSpacePlan(addressSpacePlan, validAddressPlans, standardInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
+                    validateAddressSpacePlan(addressSpacePlan, plansForAddressSpacePlan, standardInfraConfigs.stream().map(t -> t.getMetadata().getName()).collect(Collectors.toList()));
                 }
                 validAddressSpacePlans.add(addressSpacePlan);
+                validAddressPlans.addAll(plansForAddressSpacePlan);
             } catch (SchemaValidationException e) {
                 log.error("Error validating address space plan {}, skipping", addressSpacePlan.getMetadata().getName(), e);
             }

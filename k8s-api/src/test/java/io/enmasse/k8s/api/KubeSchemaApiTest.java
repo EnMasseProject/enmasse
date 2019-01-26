@@ -53,6 +53,7 @@ public class KubeSchemaApiTest {
                                 .build())
                         .withAddressSpaceType("standard")
                         .withAddressPlans(Arrays.asList("plan1", "plan2"))
+                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1), new ResourceAllowance("router", 1), new ResourceAllowance("aggregate", 1)))
                         .build(),
                 new AddressSpacePlanBuilder()
                         .withMetadata(new ObjectMetaBuilder()
@@ -61,6 +62,7 @@ public class KubeSchemaApiTest {
                                 .build())
                         .withAddressSpaceType("brokered")
                         .withAddressPlans(Arrays.asList( "plan3"))
+                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
                         .build());
 
         List<AddressPlan> addressPlans = Arrays.asList(
@@ -69,18 +71,21 @@ public class KubeSchemaApiTest {
                                 .withName("plan1")
                                 .build())
                         .withAddressType("queue")
+                        .withRequiredResources(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.01))
                         .build(),
                 new AddressPlanBuilder()
                         .withMetadata(new ObjectMetaBuilder()
                                 .withName("plan2")
                                 .build())
                         .withAddressType("topic")
+                        .withRequiredResources(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.01))
                         .build(),
                 new AddressPlanBuilder()
                         .withMetadata(new ObjectMetaBuilder()
                                 .withName("plan3")
                                 .build())
                         .withAddressType("queue")
+                        .withRequiredResources(new ResourceRequest("broker", 0.1))
                         .build());
 
         List<StandardInfraConfig> standardInfraConfigs = Arrays.asList(
@@ -109,6 +114,9 @@ public class KubeSchemaApiTest {
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan1"));
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan2"));
             assertTrue(type.findInfraConfig("infra1").isPresent());
+
+            assertTrue(type.findAddressType("queue").get().findAddressPlan("plan1").isPresent());
+            assertTrue(type.findAddressType("topic").get().findAddressPlan("plan2").isPresent());
         }
         {
             AddressSpaceType type = schema.findAddressSpaceType("brokered").get();
@@ -118,6 +126,8 @@ public class KubeSchemaApiTest {
             assertFalse(type.findAddressSpacePlan("spaceplan2").get().getAddressPlans().contains("plan1"));
             assertFalse(type.findAddressSpacePlan("spaceplan2").get().getAddressPlans().contains("plan2"));
             assertTrue(type.findInfraConfig("infra1").isPresent());
+
+            assertTrue(type.findAddressType("queue").get().findAddressPlan("plan3").isPresent());
         }
     }
 
