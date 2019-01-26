@@ -77,6 +77,19 @@ public class KubeSchemaApi implements SchemaApi {
             log.warn(error);
             throw new SchemaValidationException(error);
         }
+
+        Set<String> resources = addressSpacePlan.getResources().stream()
+                .map(ResourceAllowance::getName)
+                .collect(Collectors.toSet());
+
+        List<String> required = "brokered".equals(addressSpacePlan.getAddressSpaceType()) ? Arrays.asList("broker", "aggregate") : Arrays.asList("broker", "router", "aggregate");
+        if (!resources.containsAll(required)) {
+            Set<String> missing = new HashSet<>(required);
+            missing.removeAll(resources);
+            String error = "Error validating address space plan " + addressSpacePlan.getMetadata().getName() + ": missing resources " + missing;
+            log.warn(error);
+            throw new SchemaValidationException(error);
+        }
     }
 
     private void validateAddressPlan(AddressPlan addressPlan) {
