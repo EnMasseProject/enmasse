@@ -19,4 +19,24 @@
         <cpe>cpe:/a:user_project:user</cpe>
         <cpe>cpe:/a:keycloak:keycloak</cpe>
     </suppress>
+
+    <suppress>
+        <notes>EnMasse's own module amqp-connector is being misidentified as Apache ActiveMQ.</notes>
+        <gav regex="true">^io\.enmasse:amqp-connector:.*$</gav>
+        <cpe>cpe:/a:apache:activemq</cpe>
+        <cpe>cpe:/a:apache:activemq_artemis</cpe>
+    </suppress>
+
+    <suppress>
+        <notes>netty-tcnative-boringssl-static is being identified as core Netty itself and spuriously flagging CVE-2015-2156 and CVE-2014-3488</notes>
+        <gav regex="true">^io\.netty:netty-tcnative-boringssl-static.*:.*$</gav>
+        <cve>CVE-2014-3488</cve>
+        <cve>CVE-2015-2156</cve>
+    </suppress>
+
+    <suppress>
+        <notes>com.github.fge:json-patch is not /a:json-patch_project:json-patch</notes>
+        <gav regex="true">^com\.github\.fge:json-patch:.*$</gav>
+        <cpe>cpe:/a:json-patch_project:json-patch</cpe>
+    </suppress>
 </suppressions>
