@@ -93,7 +93,16 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private void validateAddressPlan(String addressSpaceType, AddressPlan addressPlan) {
-        List<String> requiredResources = "brokered".equals(addressSpaceType) ? Arrays.asList("broker") : Arrays.asList("broker", "router");
+
+        List<String> requiredResources = new ArrayList<>();
+        if ("brokered".equals(addressSpaceType)) {
+            requiredResources.add("broker");
+        } else if ("standard".equals(addressSpaceType)) {
+            requiredResources.add("router");
+            if (!Arrays.asList("anycast", "multicast").contains(addressPlan.getAddressType())) {
+                requiredResources.add("broker");
+            }
+        }
         Set<String> resourcesUsed = addressPlan.getRequiredResources().stream().map(ResourceRequest::getName).collect(Collectors.toSet());
 
         if (!resourcesUsed.containsAll(requiredResources)) {

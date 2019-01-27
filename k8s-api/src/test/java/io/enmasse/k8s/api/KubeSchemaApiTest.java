@@ -52,7 +52,7 @@ public class KubeSchemaApiTest {
                                 .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
                                 .build())
                         .withAddressSpaceType("standard")
-                        .withAddressPlans(Arrays.asList("plan1", "plan2"))
+                        .withAddressPlans(Arrays.asList("plan1", "plan2", "plan4"))
                         .withResources(Arrays.asList(new ResourceAllowance("broker", 1), new ResourceAllowance("router", 1), new ResourceAllowance("aggregate", 1)))
                         .build(),
                 new AddressSpacePlanBuilder()
@@ -79,6 +79,13 @@ public class KubeSchemaApiTest {
                                 .build())
                         .withAddressType("topic")
                         .withRequiredResources(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.01))
+                        .build(),
+                new AddressPlanBuilder()
+                        .withMetadata(new ObjectMetaBuilder()
+                                .withName("plan4")
+                                .build())
+                        .withAddressType("anycast")
+                        .withRequiredResources(new ResourceRequest("router", 0.01))
                         .build(),
                 new AddressPlanBuilder()
                         .withMetadata(new ObjectMetaBuilder()
@@ -113,10 +120,12 @@ public class KubeSchemaApiTest {
             assertFalse(type.findAddressSpacePlan("spaceplan2").isPresent());
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan1"));
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan2"));
+            assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan4"));
             assertTrue(type.findInfraConfig("infra1").isPresent());
 
             assertTrue(type.findAddressType("queue").get().findAddressPlan("plan1").isPresent());
             assertTrue(type.findAddressType("topic").get().findAddressPlan("plan2").isPresent());
+            assertTrue(type.findAddressType("anycast").get().findAddressPlan("plan4").isPresent());
         }
         {
             AddressSpaceType type = schema.findAddressSpaceType("brokered").get();
