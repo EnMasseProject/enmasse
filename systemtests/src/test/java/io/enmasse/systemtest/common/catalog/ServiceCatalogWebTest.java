@@ -234,7 +234,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
             JsonObject response = client.sendAndGetStatus(msgClient);
 
-            assertThat(response.getInteger("ecode"), is(0));
+            assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
+                    response.getInteger("ecode"), is(0));
         } finally {
             TestUtils.deleteMessagingClientApp(namespace, kubernetes);
         }
