@@ -93,6 +93,7 @@ public class HTTPServerTest {
                         .build())
                 .build());
         when(userApi.listUsers(any())).thenReturn(users);
+        when(userApi.listAllUsers()).thenReturn(users);
 
         ApiServerOptions options = new ApiServerOptions();
         options.setVersion("1.0");
@@ -388,6 +389,22 @@ public class HTTPServerTest {
     public void testUserApi(String apiVersion, VertxTestContext context) throws Throwable {
 
         runSingleRequest(context, apiVersion, HttpMethod.GET,  "/apis/user.enmasse.io/" + apiVersion + "/namespaces/ns/messagingusers", null, (response, buffer) -> {
+            context.verify(() -> {
+                assertEquals(200, response.statusCode());
+                JsonObject data = buffer.toJsonObject();
+                assertTrue(data.containsKey("items"));
+                assertEquals(1, data.getJsonArray("items").size());
+                assertEquals("myinstance.user1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+            });
+        });
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testUserApiNonNamespaces(String apiVersion, VertxTestContext context) throws Throwable {
+
+        runSingleRequest(context, apiVersion, HttpMethod.GET,  "/apis/user.enmasse.io/" + apiVersion + "/messagingusers", null, (response, buffer) -> {
             context.verify(() -> {
                 assertEquals(200, response.statusCode());
                 JsonObject data = buffer.toJsonObject();

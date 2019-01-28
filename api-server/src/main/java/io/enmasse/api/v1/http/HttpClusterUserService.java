@@ -28,6 +28,7 @@ import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
 
 @Path(HttpClusterUserService.BASE_URI)
@@ -35,7 +36,7 @@ public class HttpClusterUserService {
 
     private static final String RESOURCE_NAME = "messagingusers";
 
-    static final String BASE_URI = "/apis/" + CoreCrd.GROUP + "/{version:v1alpha1|v1beta1}/" + RESOURCE_NAME;
+    static final String BASE_URI = "/apis/" + UserCrd.GROUP + "/{version:v1alpha1|v1beta1}/" + RESOURCE_NAME;
 
     private static final Logger log = LoggerFactory.getLogger(HttpClusterUserService.class.getName());
 
