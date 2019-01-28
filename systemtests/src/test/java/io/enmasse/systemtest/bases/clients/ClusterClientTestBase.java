@@ -84,10 +84,12 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         receiver.setArguments(arguments);
 
         JsonObject response = cliApiClient.sendAndGetStatus(sender);
-        assertThat(response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
 
         response = cliApiClient.sendAndGetStatus(receiver);
-        assertThat(response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
     }
 
     protected void doMqttMessageTest() throws Exception {
@@ -122,14 +124,16 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
         log.info("Send messages");
         JsonObject response = cliApiClient.sendAndGetStatus(sender);
-        assertThat("Return code of sender is not 0", response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
 
         Thread.sleep(10_000);
 
         log.info("Check if subscriber received messages");
         response = cliApiClient.getClientInfo(receiverId);
         log.info(response.toString());
-        assertThat("Return code of receiver is not 0", response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
         assertFalse(response.getString("stdOut").isEmpty(), "Receiver does not receive message");
     }
 }

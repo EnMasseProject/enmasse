@@ -1205,8 +1205,10 @@ public class TestUtils {
     }
 
     public static void deleteMessagingClientApp(String namespace, Kubernetes kubeClient) {
-        kubeClient.deleteDeployment(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
-        kubeClient.deleteService(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+        if (kubeClient.deploymentExists(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())) {
+            kubeClient.deleteDeployment(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+            kubeClient.deleteService(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+        }
     }
 
     public static String getTopicPrefix(boolean topicSwitch) {

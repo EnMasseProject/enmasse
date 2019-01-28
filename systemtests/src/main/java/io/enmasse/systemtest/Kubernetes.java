@@ -323,6 +323,17 @@ public abstract class Kubernetes {
     }
 
     /***
+     * Check if deployment exists
+     * @param namespace kuberntes namespace name
+     * @param appName name of deployment
+     * @return true if deployment exists
+     */
+    public boolean deploymentExists(String namespace, String appName) {
+        return client.apps().deployments().inNamespace(namespace).list().getItems().stream()
+                .map(deployment -> deployment.getMetadata().getName()).collect(Collectors.toList()).contains(appName);
+    }
+
+    /***
      * Delete service by name
      * @param namespace
      * @param serviceName
