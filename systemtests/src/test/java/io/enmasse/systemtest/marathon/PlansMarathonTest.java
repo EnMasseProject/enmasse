@@ -43,7 +43,7 @@ class PlansMarathonTest extends MarathonTestBase {
     @Test
     void testHighLoadAddresses() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
+        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.001), new AddressResource("router", 0.0));
         AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xxsQueuePlan);
 
@@ -97,7 +97,7 @@ class PlansMarathonTest extends MarathonTestBase {
     @Test
     void testHighLoadAddressesInBatches() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.001));
+        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.001), new AddressResource("router", 0.0));
         AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xxsQueuePlan);
 

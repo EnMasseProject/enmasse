@@ -54,7 +54,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testCreateAddressSpacePlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 1.0));
+        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0.0));
         List<AddressResource> addressResourcesTopic = Arrays.asList(
                 new AddressResource("broker", 1.0),
                 new AddressResource("router", 1.0));
@@ -112,13 +112,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     void testQuotaLimitsPooled() throws Exception {
         //define and create address plans
         AddressPlan queuePlan = new AddressPlan("queue-pooled-test1", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.6)));
+                Arrays.asList(new AddressResource("broker", 0.6), new AddressResource("router", 0.0)));
 
         AddressPlan queuePlan2 = new AddressPlan("queue-pooled-test2", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.1)));
+                Arrays.asList(new AddressResource("broker", 0.1), new AddressResource("router", 0.0)));
 
         AddressPlan queuePlan3 = new AddressPlan("queue-pooled-test3", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.049)));
+                Arrays.asList(new AddressResource("broker", 0.049), new AddressResource("router", 0.0)));
 
         AddressPlan topicPlan = new AddressPlan("topic-pooled-test1", AddressType.TOPIC,
                 Arrays.asList(
@@ -203,7 +203,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     void testQuotaLimitsSharded() throws Exception {
         //define and create address plans
         AddressPlan queuePlan = new AddressPlan("queue-sharded-test1", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 1.0)));
+                Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0.0)));
 
         AddressPlan topicPlan = new AddressPlan("topic-sharded-test2", AddressType.TOPIC,
                 Arrays.asList(
@@ -254,7 +254,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testScalePooledBrokers() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Collections.singletonList(new AddressResource("broker", 0.99));
+        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.99), new AddressResource("router", 0.0));
         AddressPlan xlQueuePlan = new AddressPlan("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xlQueuePlan);
 
@@ -316,7 +316,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         //define address plans
         AddressPlan queuePlan = new AddressPlan("limited-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.1))); //should reserve 100Kb
+                Arrays.asList(new AddressResource("broker", 0.1), new AddressResource("router", 0.0))); //should reserve 100Kb
 
         plansProvider.createAddressPlan(queuePlan);
 
@@ -360,8 +360,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueueAlpha = Collections.singletonList(new AddressResource("broker", 0.3));
-        List<AddressResource> addressResourcesQueueBeta = Collections.singletonList(new AddressResource("broker", 0.6));
+        List<AddressResource> addressResourcesQueueAlpha = Arrays.asList(new AddressResource("broker", 0.3), new AddressResource("router", 0));
+        List<AddressResource> addressResourcesQueueBeta = Arrays.asList(new AddressResource("broker", 0.6), new AddressResource("router", 0));
 
         AddressPlan queuePlanAlpha = new AddressPlan("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
         plansProvider.createAddressPlan(queuePlanAlpha);
@@ -431,8 +431,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     @Disabled("test disabled due to issue: #1136")
     void testMessagePersistenceAfterChangePlan() throws Exception {
-        List<AddressResource> addressResourcesQueueDistributed = Collections.singletonList(new AddressResource("broker", 2.0));
-        List<AddressResource> addressResourcesSharded = Collections.singletonList(new AddressResource("broker", 1.0));
+        List<AddressResource> addressResourcesQueueDistributed = Arrays.asList(new AddressResource("broker", 2.0), new AddressResource("router", 0));
+        List<AddressResource> addressResourcesSharded = Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0));
 
         AddressPlan queuePlanDistributed = new AddressPlan("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
         plansProvider.createAddressPlan(queuePlanDistributed);
@@ -498,7 +498,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     void testReplaceAddressSpacePlanStandard() throws Exception {
         //define and create address plans
         AddressPlan beforeQueuePlan = new AddressPlan("before-small-sharded-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 1.0)));
+                Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0.0)));
 
         AddressPlan beforeTopicPlan = new AddressPlan("before-small-sharded-topic", AddressType.TOPIC,
                 Arrays.asList(
@@ -506,7 +506,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         new AddressResource("router", 0.01)));
 
         AddressPlan afterQueuePlan = new AddressPlan("after-large-sharded-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 1.5)));
+                Arrays.asList(new AddressResource("broker", 1.5), new AddressResource("router", 0.0)));
 
         AddressPlan afterTopicPlan = new AddressPlan("after-large-sharded-topic", AddressType.TOPIC,
                 Arrays.asList(
@@ -514,7 +514,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         new AddressResource("router", 0.01)));
 
         AddressPlan pooledQueuePlan = new AddressPlan("after-pooled-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.44)));
+                Arrays.asList(new AddressResource("broker", 0.44), new AddressResource("router", 0.0)));
 
         plansProvider.createAddressPlan(beforeQueuePlan);
         plansProvider.createAddressPlan(beforeTopicPlan);
@@ -643,10 +643,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     void testCannotReplaceAddressSpacePlanStandard() throws Exception {
         //define and create address plans
         AddressPlan afterQueuePlan = new AddressPlan("after-small-sharded-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 1.0)));
+                Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0)));
 
         AddressPlan beforeQueuePlan = new AddressPlan("before-large-sharded-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 2.0)));
+                Arrays.asList(new AddressResource("broker", 2.0), new AddressResource("router", 0)));
 
         plansProvider.createAddressPlan(beforeQueuePlan);
         plansProvider.createAddressPlan(afterQueuePlan);
@@ -704,10 +704,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testSwitchQueuePlan() throws Exception {
         AddressPlan beforeQueuePlan = new AddressPlan("small-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.2)));
+                Arrays.asList(new AddressResource("broker", 0.2), new AddressResource("router", 0.0)));
 
         AddressPlan afterQueuePlan = new AddressPlan("bigger-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.8)));
+                Arrays.asList(new AddressResource("broker", 0.8), new AddressResource("router", 0.0)));
 
         plansProvider.createAddressPlan(beforeQueuePlan);
         plansProvider.createAddressPlan(afterQueuePlan);
