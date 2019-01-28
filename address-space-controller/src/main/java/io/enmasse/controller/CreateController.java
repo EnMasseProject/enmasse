@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.AddressApi;

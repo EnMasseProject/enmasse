@@ -4,9 +4,6 @@
  */
 package io.enmasse.api.server;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -16,7 +13,6 @@ import java.util.Map;
 import java.util.Optional;
 
 public class ApiServerOptions {
-    private static final Logger log = LoggerFactory.getLogger(ApiServerOptions.class);
     private static final String SERVICEACCOUNT_PATH = "/var/run/secrets/kubernetes.io/serviceaccount";
     private String namespace;
     private String certDir;

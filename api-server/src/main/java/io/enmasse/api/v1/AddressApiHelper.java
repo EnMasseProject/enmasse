@@ -16,14 +16,10 @@ import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * This is a handler for doing operations on the addressing manager that works independent of AMQP and HTTP.
  */
 public class AddressApiHelper {
-    private static final Logger log = LoggerFactory.getLogger(AddressApiHelper.class.getName());
     private final AddressSpaceApi addressSpaceApi;
     private final SchemaProvider schemaProvider;
 
@@ -49,7 +45,7 @@ public class AddressApiHelper {
             return Collections.singleton(getAddressSpace(namespace, addressSpaceId));
         }
     }
-    
+
     public AddressList getAddresses(String namespace, String addressSpaceId) throws Exception {
         return queryAddresses(getAddressSpaces(namespace, addressSpaceId), (ns, api) -> api.listAddresses(ns));
     }
