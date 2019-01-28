@@ -60,7 +60,7 @@ class ApiServerTest extends TestBase {
     @Test
     void testRestApiGetSchema() throws Exception {
         AddressPlan queuePlan = new AddressPlan("test-schema-rest-api-addr-plan", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.6)));
+                Arrays.asList(new AddressResource("broker", 0.6), new AddressResource("router", 0.0)));
         plansProvider.createAddressPlan(queuePlan);
 
         //define and create address space plan

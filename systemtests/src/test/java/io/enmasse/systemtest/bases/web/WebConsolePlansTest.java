@@ -59,11 +59,11 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
      */
     protected void doTestCreateAddressPlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue1 = Collections.singletonList(new AddressResource("broker", 0.15));
+        List<AddressResource> addressResourcesQueue1 = Arrays.asList(new AddressResource("broker", 0.15), new AddressResource("router", 0.0));
         List<AddressResource> addressResourcesTopic2 = Arrays.asList(
                 new AddressResource("broker", 0.3),
                 new AddressResource("router", 0.2));
-        List<AddressResource> addressResourcesQueue3 = Collections.singletonList(new AddressResource("broker", 0.25));
+        List<AddressResource> addressResourcesQueue3 = Arrays.asList(new AddressResource("broker", 0.25), new AddressResource("router", 0.0));
         AddressPlan consoleQueuePlan1 = new AddressPlan("console-queue-1", AddressType.QUEUE, addressResourcesQueue1);
         AddressPlan consoleTopicPlan2 = new AddressPlan("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
         AddressPlan consoleQueuePlan3 = new AddressPlan("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
