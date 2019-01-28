@@ -11,6 +11,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 
 import io.enmasse.admin.model.v1.NetworkPolicy;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -32,6 +34,7 @@ public class AddressSpaceSpec {
 
     @NotEmpty
     private String type;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid EndpointSpec> endpoints = Collections.emptyList();
     @Valid
     private NetworkPolicy networkPolicy;

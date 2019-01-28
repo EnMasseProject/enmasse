@@ -837,6 +837,27 @@ public class SerializationTest {
     }
 
     @Test
+    public void testAddressSpaceNullLists() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final URL url = SerializationTest.class.getResource("resources/addressspace-2.json");
+        final AddressSpace value = mapper.readValue(url, AddressSpace.class);
+
+        assertNotNull(value);
+
+        assertNotNull(value.getMetadata());
+
+        assertNotNull(value.getSpec());
+        assertNotNull(value.getSpec().getEndpoints());
+        assertThat(value.getSpec().getEndpoints().size(), is(0));
+
+        assertNotNull(value.getStatus());
+        assertNotNull(value.getStatus().getEndpointStatuses());
+        assertThat(value.getStatus().getEndpointStatuses().size(), is(0));
+
+    }
+
+    @Test
     public void testCanParseExistingAddress() throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
 
