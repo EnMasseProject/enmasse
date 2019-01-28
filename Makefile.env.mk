@@ -1,7 +1,7 @@
 # Docker env
 DOCKER_REGISTRY ?= docker.io
 DOCKER_ORG      ?= enmasseproject
-DOCKER          ?= docker
+DOCKER          ?= podman
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
 COMMIT 			?= $(shell git rev-parse HEAD)

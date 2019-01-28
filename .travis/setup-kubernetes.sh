@@ -22,9 +22,13 @@ mkdir $HOME/.kube || true
 touch $HOME/.kube/config
 
 sudo sh -c 'sed -e 's/journald/json-file/g' -i /etc/docker/daemon.json'
-sudo service docker restart && sleep 20
+sudo mkdir -p /etc/containers
+cat<<EOF > /etc/containers/registries.conf
+[registries.search]
+registries = ['docker.io']
+EOF
 
-docker run -d -p 5000:5000 registry
+sudo podman run -d -p 5000:5000 registry
 
 export KUBECONFIG=$HOME/.kube/config
 sudo -E minikube start --vm-driver=none --bootstrapper=localkube --kubernetes-version v1.9.4 --insecure-registry localhost:5000
