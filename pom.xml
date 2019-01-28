@@ -91,7 +91,7 @@
         <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
         <netty-tcnative-boringssl-static.version>2.0.7.Final</netty-tcnative-boringssl-static.version>
         <security-versions-plugin.version>1.0.6</security-versions-plugin.version>
-        <dependency-check-maven-plugin.version>3.3.2</dependency-check-maven-plugin.version>
+        <dependency-check-maven-plugin.version>4.0.2</dependency-check-maven-plugin.version>
         <maven-xml-plugin.version>1.0.2</maven-xml-plugin.version>
 
         <license-report-stylesheet>${maven.multiModuleProjectDirectory}/licenses.xsl</license-report-stylesheet>
