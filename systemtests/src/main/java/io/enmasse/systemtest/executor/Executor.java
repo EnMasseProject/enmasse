@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.*;
 
 /**
@@ -200,18 +201,19 @@ public class Executor {
          */
         public Future<String> read() {
             return CompletableFuture.supplyAsync(() -> {
+                Scanner scanner = new Scanner(is);
                 try {
-                    InputStreamReader isr = new InputStreamReader(is);
-                    BufferedReader br = new BufferedReader(isr);
+                    log.info("Reading stream {}", is);
                     String line;
-                    while ((line = br.readLine()) != null) {
-                        data.append(line).append(System.getProperty("line.separator"));
+                    while (scanner.hasNextLine()) {
+                        data.append(scanner.nextLine()).append(System.getProperty("line.separator"));
                     }
-                    isr.close();
-                    br.close();
+                    scanner.close();
                     return data.toString();
                 } catch (Exception e) {
                     throw new CompletionException(e);
+                } finally {
+                    scanner.close();
                 }
             });
         }
