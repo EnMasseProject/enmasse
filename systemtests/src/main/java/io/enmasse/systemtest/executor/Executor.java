@@ -204,8 +204,9 @@ public class Executor {
                     InputStreamReader isr = new InputStreamReader(is);
                     BufferedReader br = new BufferedReader(isr);
                     String line;
-                    while ((line = br.readLine()) != null)
+                    while ((line = br.readLine()) != null) {
                         data.append(line).append(System.getProperty("line.separator"));
+                    }
                     isr.close();
                     br.close();
                     return data.toString();
