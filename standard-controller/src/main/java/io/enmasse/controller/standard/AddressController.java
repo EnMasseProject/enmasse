@@ -101,7 +101,7 @@ public class AddressController implements Watcher<Address> {
         AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
         for (Address address : addressList) {
-            address.getStatus().setReady(true).clearMessages();
+            address.getStatus().setReady(false).clearMessages();
         }
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
