@@ -230,15 +230,13 @@ public abstract class AbstractClient {
      * @return future of exit status of client
      */
     public Future<Boolean> runAsync(boolean logToOutput) {
-        CompletableFuture<Boolean> promise = new CompletableFuture<>();
-        new Thread(() -> {
+        return CompletableFuture.supplyAsync(() -> {
             try {
-                promise.complete(runClient(DEFAULT_ASYNC_TIMEOUT, logToOutput));
+                return runClient(DEFAULT_ASYNC_TIMEOUT, logToOutput);
             } catch (Exception e) {
-                promise.completeExceptionally(e);
+                throw new RuntimeException(e);
             }
-        }).start();
-        return promise;
+        });
     }
 
     /**
