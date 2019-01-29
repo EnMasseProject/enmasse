@@ -100,8 +100,12 @@ public class AddressController implements Watcher<Address> {
 
         AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
+        List<Status.Phase> readyPhases = Arrays.asList(Configuring, Active);
         for (Address address : addressList) {
-            address.getStatus().setReady(false).clearMessages();
+            address.getStatus().clearMessages();
+            if (readyPhases.contains(address.getStatus().getPhase())) {
+                address.getStatus().setReady(true);
+            }
         }
 
         Map<Status.Phase, Long> countByPhase = countPhases(addressSet);
