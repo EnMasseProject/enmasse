@@ -210,7 +210,7 @@ public class Executor {
                     br.close();
                     return data.toString();
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new CompletionException(e);
                 }
             });
         }
