@@ -16,9 +16,6 @@ import io.enmasse.controller.common.TemplateParameter;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -26,7 +23,6 @@ import java.nio.file.Files;
 import java.util.*;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
-    private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class.getName());
     private static final String KC_IDP_HINT_NONE = "none";
     private static final String KC_IDP_HINT_OPENSHIFT = "openshift-v3";
 

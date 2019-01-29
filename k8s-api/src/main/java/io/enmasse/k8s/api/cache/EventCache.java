@@ -61,8 +61,6 @@ public class EventCache<T> implements WorkQueue<T> {
                     key = fieldExtractor.getKey(event.obj);
                 }
 
-                T current = store.get(key);
-
                 switch (event.eventType) {
                     case Deleted:
                         store.remove(key);
