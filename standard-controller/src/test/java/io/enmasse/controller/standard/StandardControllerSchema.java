@@ -108,6 +108,13 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .withRequiredResources(Arrays.asList(
                                                         new ResourceRequest("router", 0.2),
                                                         new ResourceRequest("broker", 2.0)))
+                                                .build(),
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("mega-xlarge-queue").build())
+                                                .withAddressType("queue")
+                                                .withRequiredResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.2),
+                                                        new ResourceRequest("broker", 10.0)))
                                                 .build()))
                                 .build(),
                         new AddressType.Builder()

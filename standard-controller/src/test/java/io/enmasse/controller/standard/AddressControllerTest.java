@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class AddressControllerTest {
@@ -136,6 +136,23 @@ public class AddressControllerTest {
         assertEquals("broker-infra-0", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
         verify(mockHelper).delete(any());
         verify(mockHelper).delete(eq(oldList));
+    }
+
+    @Test
+    public void testPendingIsNeverReady() throws Exception {
+        Address pending = new Address.Builder()
+                .setName("q1")
+                .setAddress("q1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
+                .setType("queue")
+                .setPlan("mega-xlarge-queue")
+                .build();
+
+        controller.onUpdate(Arrays.asList(pending));
+
+        assertFalse(pending.getStatus().isReady());
+        assertFalse(pending.getStatus().getMessages().isEmpty());
     }
 
     @Test
