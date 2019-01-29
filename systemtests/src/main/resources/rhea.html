@@ -20,7 +20,7 @@
                 sender.send({body:msg});
                 append('sent: ' + msg);
             }
-            client.on('connection_open', function (context) {
+            client.on('receiver_open', function (context) {
                 next_request();
             });
             function append(txt) {
