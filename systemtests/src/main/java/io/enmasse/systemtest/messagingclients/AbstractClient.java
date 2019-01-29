@@ -237,7 +237,7 @@ public abstract class AbstractClient {
             } catch (Exception e) {
                 throw new CompletionException(e);
             }
-        });
+        }, runnable -> new Thread(runnable).start());
     }
 
     /**

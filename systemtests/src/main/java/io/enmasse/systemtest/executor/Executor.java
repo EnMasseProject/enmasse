@@ -215,7 +215,7 @@ public class Executor {
                 } finally {
                     scanner.close();
                 }
-            });
+            }, runnable -> new Thread(runnable).start());
         }
     }
 }
