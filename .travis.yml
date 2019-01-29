@@ -23,6 +23,7 @@ python:
 before_install:
 - sudo pip install requests[security] ansible
 - gem install asciidoctor
+install: true # would only call "mvn install", which doesn't help us at this point
 script:
 - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
 - "./.travis/build.sh"
