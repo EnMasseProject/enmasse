@@ -304,6 +304,15 @@ class ApiServerTest extends TestBase {
         assertThat(addresses.size(), is(3));
         assertThat(toStrings(addresses, Address::getName), is(names));
 
+        // ensure that getting all addresses (non-namespaces) returns the same result
+
+        Set<String> allNames = TestUtils.getAllAddressesObjects(addressApiClient).get(30, TimeUnit.SECONDS)
+            .stream().map(Address::getName)
+            .collect(Collectors.toSet());
+
+        assertThat(allNames.size(), is(3));
+        assertThat(allNames, is(names));
+
         TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
 

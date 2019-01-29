@@ -5,15 +5,17 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.k8s.api.cache.CacheWatcher;
+
+import static java.util.Optional.ofNullable;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class TestAddressSpaceApi implements AddressSpaceApi {
-    Map<String, AddressSpace> addressSpaces = new HashMap<>();
-    Map<String, TestAddressApi> addressApiMap = new LinkedHashMap<>();
+    Map<String,Map<String, AddressSpace>> addressSpaces = new HashMap<>();
+    Map<String,Map<String, TestAddressApi>> addressApiMap = new LinkedHashMap<>();
     public boolean throwException = false;
 
     @Override
@@ -21,7 +23,8 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        return Optional.ofNullable(addressSpaces.get(addressSpaceId));
+        return ofNullable(addressSpaces.get(namespace))
+                .map(ns -> ns.get(addressSpaceId));
     }
 
     @Override
@@ -29,11 +32,17 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        addressSpaces.put(addressSpace.getMetadata().getName(), addressSpace);
+        addressSpaces
+            .computeIfAbsent(addressSpace.getMetadata().getNamespace(), ns -> new HashMap<>())
+            .put(addressSpace.getMetadata().getName(), addressSpace);
     }
 
     @Override
     public boolean replaceAddressSpace(AddressSpace addressSpace) {
+        Map<String,AddressSpace> addressSpaces = this.addressSpaces.get(addressSpace.getMetadata().getNamespace());
+        if ( addressSpaces == null ) {
+            return false;
+        }
         if (!addressSpaces.containsKey(addressSpace.getMetadata().getName())) {
             return false;
         }
@@ -46,7 +55,9 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        return addressSpaces.remove(addressSpace.getMetadata().getName()) != null;
+        return ofNullable(addressSpaces.get(addressSpace.getMetadata().getNamespace()))
+                .map(as -> as.remove(addressSpace.getMetadata().getName()).getMetadata() != null )
+                .orElse(false);
     }
 
     @Override
@@ -54,7 +65,9 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        return new LinkedHashSet<>(addressSpaces.values());
+        return ofNullable(addressSpaces.get(namespace))
+                .map(as -> new LinkedHashSet<>(as.values()))
+                .orElseGet(LinkedHashSet::new);
     }
 
     @Override
@@ -67,7 +80,10 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        return new LinkedHashSet<>(addressSpaces.values());
+
+        return addressSpaces.values().stream()
+                .flatMap(as -> as.values().stream())
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -75,11 +91,14 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         if (throwException) {
             throw new RuntimeException("foo");
         }
-        return new LinkedHashSet<>(addressSpaces.values());
+        return listAllAddressSpaces();
     }
 
     @Override
     public void deleteAddressSpaces(String namespace) {
+        Map<String,AddressSpace> addressSpaces = this.addressSpaces.computeIfAbsent(namespace, x -> new HashMap<>());
+        Map<String,TestAddressApi> addressApiMap = this.addressApiMap.computeIfAbsent(namespace,  x -> new HashMap<>());
+
         for (AddressSpace addressSpace : new HashSet<>(addressSpaces.values())) {
             if (namespace.equals(addressSpace.getMetadata().getNamespace())) {
                 addressSpaces.remove(addressSpace.getMetadata().getName());
@@ -95,25 +114,30 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
+        final String addressSpaceNamespace = addressSpace.getMetadata().getNamespace();
         final String addressSpaceName = addressSpace.getMetadata().getName();
+
+        Map<String,TestAddressApi> addressApiMap = this.addressApiMap.computeIfAbsent(addressSpaceNamespace, x -> new HashMap<>() );
+        Map<String,AddressSpace> addressSpaces = this.addressSpaces.computeIfAbsent(addressSpaceNamespace, x -> new HashMap<>() );
+
         if (!addressApiMap.containsKey(addressSpaceName)) {
             addressSpaces.put(addressSpaceName, addressSpace);
             addressApiMap.put(addressSpaceName, new TestAddressApi());
         }
-        return getAddressApi(addressSpaceName);
-    }
 
-    public TestAddressApi getAddressApi(String id) {
-        return addressApiMap.get(id);
+        return addressApiMap.get(addressSpaceName);
     }
 
     public Collection<TestAddressApi> getAddressApis() {
-        return addressApiMap.values();
+        return addressApiMap.values().stream()
+                .flatMap(as -> as.values().stream())
+                .collect(Collectors.toList());
     }
 
     public void setAllInstancesReady(boolean ready) {
-        addressSpaces.entrySet().stream().forEach(entry -> addressSpaces.put(
-                entry.getKey(),
-                new AddressSpaceBuilder(entry.getValue()).withNewStatus(ready).build()));
+        addressSpaces.values().stream()
+                .flatMap(as -> as.values().stream())
+                .forEach(as -> as.getStatus().setReady(ready));
+
     }
 }

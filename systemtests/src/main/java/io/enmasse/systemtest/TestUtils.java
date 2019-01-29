@@ -559,6 +559,16 @@ public class TestUtils {
     }
 
     /**
+     * get list of all Address objects by REST API
+     */
+    public static Future<List<Address>> getAllAddressesObjects(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getAllAddresses();
+        CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToListAddress(response, Address.class, x -> true));
+        return listOfAddresses;
+    }
+
+    /**
      * get list of Address objects
      */
     public static Future<List<Destination>> getDestinationsObjects(AddressApiClient apiClient, AddressSpace addressSpace,

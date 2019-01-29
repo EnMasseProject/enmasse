@@ -52,9 +52,9 @@ public class HttpAddressSpaceServiceTest {
         a1 = new AddressSpaceBuilder()
 
                 .withNewMetadata()
+                .withNamespace("myns")
                 .withName("a1")
                 .withCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
-                .withNamespace("myspace")
                 .endMetadata()
 
                 .withNewSpec()
@@ -75,9 +75,9 @@ public class HttpAddressSpaceServiceTest {
 
         a2 = new AddressSpaceBuilder()
                 .withNewMetadata()
+                .withNamespace("myns")
                 .withName("a2")
                 .withCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(12)))
-                .withNamespace("othernamespace")
                 .endMetadata()
 
                 .withNewSpec()
@@ -86,6 +86,7 @@ public class HttpAddressSpaceServiceTest {
                 .endSpec()
 
                 .build();
+
     }
 
     private Response invoke(Callable<Response> fn) {
@@ -100,7 +101,7 @@ public class HttpAddressSpaceServiceTest {
     public void testList() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null, null));
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, "myns", null));
         assertThat(response.getStatus(), is(200));
         AddressSpaceList data = (AddressSpaceList) response.getEntity();
 
@@ -113,7 +114,7 @@ public class HttpAddressSpaceServiceTest {
     public void testListTableFormat() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", null, null));
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "myns", null));
         assertThat(response.getStatus(), is(200));
         Table data = (Table) response.getEntity();
 
@@ -124,14 +125,14 @@ public class HttpAddressSpaceServiceTest {
     @Test
     public void testListException() {
         addressSpaceApi.throwException = true;
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null, null));
+        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, "myns", null));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testGet() {
         addressSpaceApi.createAddressSpace(a1);
-        Response response = invoke(() -> addressSpaceService.getAddressSpace(securityContext, null, null, "a1"));
+        Response response = invoke(() -> addressSpaceService.getAddressSpace(securityContext, null, "myns", "a1"));
         assertThat(response.getStatus(), is(200));
         AddressSpace data = ((AddressSpace) response.getEntity());
 
@@ -142,7 +143,7 @@ public class HttpAddressSpaceServiceTest {
     @Test
     public void testGetTableFormat() {
         addressSpaceApi.createAddressSpace(a1);
-        Response response = invoke(() -> addressSpaceService.getAddressSpace(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", null, "a1"));
+        Response response = invoke(() -> addressSpaceService.getAddressSpace(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", "myns", "a1"));
         assertThat(response.getStatus(), is(200));
         Table data = ((Table) response.getEntity());
 
@@ -154,18 +155,18 @@ public class HttpAddressSpaceServiceTest {
     public void testPut() {
         addressSpaceApi.createAddressSpace(a1);
         AddressSpace a1Adapted = new AddressSpaceBuilder(a1).editOrNewMetadata().addToAnnotations("foo", "bar").endMetadata().build();
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getMetadata().getName(), a1Adapted));
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, "myns", a1Adapted.getMetadata().getName(), a1Adapted));
         assertThat(response.getStatus(), is(200));
 
-        assertFalse(addressSpaceApi.listAddressSpaces(null).isEmpty());
-        assertThat(addressSpaceApi.listAddressSpaces(null).iterator().next().getAnnotation("foo"), is("bar"));
+        assertFalse(addressSpaceApi.listAddressSpaces("myns").isEmpty());
+        assertThat(addressSpaceApi.listAddressSpaces("myns").iterator().next().getAnnotation("foo"), is("bar"));
     }
 
     @Test
     public void testPutChangeType() {
         addressSpaceApi.createAddressSpace(a1);
         AddressSpace a1Adapted = new AddressSpaceBuilder(a1).editOrNewSpec().withType("type2").endSpec().build();
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getMetadata().getName(), a1Adapted));
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, "myns", a1Adapted.getMetadata().getName(), a1Adapted));
         assertThat(response.getStatus(), is(400));
     }
 
@@ -173,19 +174,19 @@ public class HttpAddressSpaceServiceTest {
     public void testPutChangePlan() {
         addressSpaceApi.createAddressSpace(a1);
         AddressSpace a1Adapted = new AddressSpaceBuilder(a1).editOrNewSpec().withPlan("otherplan").endSpec().build();
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1Adapted.getMetadata().getName(), a1Adapted));
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, "myns", a1Adapted.getMetadata().getName(), a1Adapted));
         assertThat(response.getStatus(), is(400));
     }
 
     @Test
     public void testPutNonMatchingAddressSpaceName() {
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, "xxxxxx", a1));
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, a1.getMetadata().getNamespace(), "xxxxxx", a1));
         assertThat(response.getStatus(), is(400));
     }
 
     @Test
     public void testPutNonExistingAddressSpace() {
-        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, null, a1.getMetadata().getName(), a1));
+        Response response = invoke(() -> addressSpaceService.replaceAddressSpace(securityContext, a1.getMetadata().getNamespace(), a1.getMetadata().getName(), a1));
         assertThat(response.getStatus(), is(404));
     }
 
@@ -194,26 +195,26 @@ public class HttpAddressSpaceServiceTest {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
 
-        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null, "a1"));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, "myns", "a1"));
         assertThat(response.getStatus(), is(200));
         assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
 
-        assertThat(addressSpaceApi.listAddressSpaces(null), hasItem(a2));
-        assertThat(addressSpaceApi.listAddressSpaces(null).size(), is(1));
+        assertThat(addressSpaceApi.listAddressSpaces("myns"), hasItem(a2));
+        assertThat(addressSpaceApi.listAddressSpaces("myns").size(), is(1));
     }
 
     @Test
     public void testDeleteException() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.throwException = true;
-        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null, "a1"));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, "myns", "a1"));
         assertThat(response.getStatus(), is(500));
     }
 
     @Test
     public void testDeleteNotFound() {
         addressSpaceApi.createAddressSpace(a1);
-        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, null, "doesnotexist"));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpace(securityContext, "myns", "doesnotexist"));
         assertThat(response.getStatus(), is(404));
     }
 
@@ -222,7 +223,7 @@ public class HttpAddressSpaceServiceTest {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
 
-        Response response = invoke(() -> addressSpaceService.deleteAddressSpaces(securityContext, "myspace"));
+        Response response = invoke(() -> addressSpaceService.deleteAddressSpaces(securityContext, "myns"));
         assertThat(response.getStatus(), is(200));
         assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
     }

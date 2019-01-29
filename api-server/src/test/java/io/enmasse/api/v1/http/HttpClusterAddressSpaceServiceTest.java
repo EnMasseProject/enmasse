@@ -49,7 +49,7 @@ public class HttpClusterAddressSpaceServiceTest {
         a1 = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("a1")
-                .withNamespace("myspace")
+                .withNamespace("myns")
                 .withCreationTimestamp(TimeUtil.formatRfc3339(Instant.ofEpochSecond(123)))
                 .endMetadata()
 
