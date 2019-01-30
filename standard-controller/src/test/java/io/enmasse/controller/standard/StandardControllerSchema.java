@@ -139,7 +139,15 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .withRequiredResources(Arrays.asList(
                                                         new ResourceRequest("router", 0.05),
                                                         new ResourceRequest("broker", 0.1)))
+                                                .build(),
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("large-subscription").build())
+                                                .withAddressType("subscription")
+                                                .withRequiredResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.1),
+                                                        new ResourceRequest("broker", 1.0)))
                                                 .build()))
+
                                 .build()))
                 .setInfraConfigs(Arrays.asList(
                         new StandardInfraConfigBuilder()

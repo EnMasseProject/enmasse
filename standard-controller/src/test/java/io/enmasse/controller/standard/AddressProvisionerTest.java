@@ -601,6 +601,36 @@ public class AddressProvisionerTest {
     }
 
     @Test
+    public void testLargeSubscription() throws Exception {
+        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+                new ResourceAllowance("broker", 2),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 3)));
+
+        Address t1 = createAddress("t1", "topic", "xlarge-topic");
+        Address s1 = createSubscription("s1", "t1", "large-subscription");
+        Set<Address> addressSet = Sets.newSet(
+                t1,
+                s1);
+
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addressSet, addressSet);
+
+        assertThat(neededMap.keySet().size(), is(3));
+        assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
+
+        List<BrokerCluster> brokerClusters = new ArrayList<BrokerCluster>(Arrays.asList(createCluster("broker", 1)));
+
+        when(generator.generateCluster(eq(provisioner.getShardedClusterId(t1)), anyInt(), eq(t1), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(t1), new KubernetesList()));
+        provisioner.provisionResources(createDeployment(1), brokerClusters, neededMap, addressSet);
+
+        for (Address address : addressSet) {
+            assertThat(address.getStatus().getPhase(), is(Configuring));
+        }
+        verify(generator).generateCluster(eq(provisioner.getShardedClusterId(t1)), eq(1), eq(t1), any(), any());
+    }
+
+    @Test
     public void testDurableSubscriptionsShardedStaysOnTopicBroker() {
         AddressProvisioner provisioner = createProvisioner(Arrays.asList(
                 new ResourceAllowance("broker", 2),

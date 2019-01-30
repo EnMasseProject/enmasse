@@ -258,7 +258,7 @@ public class AddressProvisioner {
             }
             for (BrokerInfo brokerInfo : shardedBrokers) {
                 UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(brokerInfo.getBrokerId(), k -> new UsageInfo());
-                if (brokerInfo.getCredit() + requested.getCredit() < 1) {
+                if (brokerInfo.getCredit() + requested.getCredit() <= 1) {
                     // TODO: Remove after releasing 0.26.0
                     subscription.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
                     BrokerStatus brokerStatus = new BrokerStatus(cluster, brokerInfo.getBrokerId());
