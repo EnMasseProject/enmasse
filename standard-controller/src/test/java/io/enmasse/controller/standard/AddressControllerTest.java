@@ -176,7 +176,7 @@ public class AddressControllerTest {
     public void testPendingIsNeverReady() throws Exception {
         Address pending = new AddressBuilder()
                 .withNewMetadata()
-                .withName("q1")
+                .withName("myspace.q1")
                 .withNamespace("ns")
                 .endMetadata()
 
