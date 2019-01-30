@@ -1,16 +1,19 @@
-== overview
+== Overview
 
-What is the feature/change being proposed and a rationale
+Write a short description of the component or feature.
 
-== design
+== Design
 
 What are the components involved in this change and how will they change?
-Describe any new components introduced by this change
 
-== testing
+Describe any new components introduced by this change.
 
-What is the test plan for the feature/change?
+Consider providing diagrams to help understanding the design.
 
-== documentation
+== Testing
 
-What documentation will be created for this feature?
+What is the test plan/what test cases are important to cover this component/feature?
+
+== Documentation
+
+What documentation will be created?
