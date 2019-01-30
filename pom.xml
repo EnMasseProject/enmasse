@@ -45,14 +45,16 @@
         <sundrio.version>0.7.1</sundrio.version>
         <vertx.version>3.6.2</vertx.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <logback.version>1.2.3</logback.version>
-        <hibernate.validator.version>6.0.14.Final</hibernate.validator.version>
+        <logback.version>1.0.13</logback.version>
+        <hibernate.validator.version>6.0.10.Final</hibernate.validator.version>
         <jackson-annotations.version>2.9.6</jackson-annotations.version>
         <jackson-core.version>2.9.6</jackson-core.version>
         <jackson-databind.version>2.9.6</jackson-databind.version>
         <jackson-module-jsonSchema.version>2.9.6</jackson-module-jsonSchema.version>
         <jackson-module-jaxb-annotations.version>2.9.6</jackson-module-jaxb-annotations.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
+        <jboss.el.api.version>1.0.13.Final</jboss.el.api.version>
+        <glassfish.el.version>3.0.1-b08</glassfish.el.version>
         <resteasy.version>3.6.1.SP2</resteasy.version>
         <mockito.version>2.21.0</mockito.version>
         <commons-collections.version>3.2.2</commons-collections.version>
@@ -292,12 +294,12 @@
             <dependency>
                 <groupId>org.jboss.spec.javax.el</groupId>
                 <artifactId>jboss-el-api_3.0_spec</artifactId>
-                <version>1.0.13.Final</version>
+                <version>${jboss.el.api.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish</groupId>
                 <artifactId>javax.el</artifactId>
-                <version>3.0.1-b11</version>
+                <version>${glassfish.el.version}</version>
             </dependency>
 
             <dependency>
