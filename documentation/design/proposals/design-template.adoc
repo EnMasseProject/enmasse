@@ -1,8 +1,8 @@
-== why
+== overview
 
-What is the feature/change being proposed, why is it needed?
+What is the feature/change being proposed and a rationale
 
-== what/how
+== design
 
 What are the components involved in this change and how will they change?
 Describe any new components introduced by this change
