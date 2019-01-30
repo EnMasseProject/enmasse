@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
@@ -210,7 +212,7 @@ public abstract class AbstractClient {
      * @return future of exit status of client
      */
     public Future<Boolean> runAsync() {
-        return Executors.newSingleThreadExecutor().submit(() -> runClient(DEFAULT_ASYNC_TIMEOUT, true));
+        return runAsync(true);
     }
 
     /**
@@ -229,7 +231,13 @@ public abstract class AbstractClient {
      * @return future of exit status of client
      */
     public Future<Boolean> runAsync(boolean logToOutput) {
-        return Executors.newSingleThreadExecutor().submit(() -> runClient(DEFAULT_ASYNC_TIMEOUT, logToOutput));
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return runClient(DEFAULT_ASYNC_TIMEOUT, logToOutput);
+            } catch (Exception e) {
+                throw new CompletionException(e);
+            }
+        }, runnable -> new Thread(runnable).start());
     }
 
     /**

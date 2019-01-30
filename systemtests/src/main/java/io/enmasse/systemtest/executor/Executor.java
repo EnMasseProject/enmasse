@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.*;
 
 /**
@@ -107,16 +108,17 @@ public class Executor {
             retCode = process.waitFor();
         }
 
-        shutDownReaders();
         try {
             stdOut = output.get(500, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
+            output.cancel(true);
             stdOut = stdOutReader.getData();
         }
 
         try {
             stdErr = error.get(500, TimeUnit.MILLISECONDS);
         } catch (TimeoutException ex) {
+            error.cancel(true);
             stdErr = stdErrReader.getData();
         }
         storeOutputsToFile();
@@ -127,7 +129,6 @@ public class Executor {
      * Method kills process
      */
     public void stop() {
-        shutDownReaders();
         process.destroyForcibly();
         stdOut = stdOutReader.getData();
         stdErr = stdErrReader.getData();
@@ -154,14 +155,6 @@ public class Executor {
     }
 
     /**
-     * Shutdown process output readers
-     */
-    private void shutDownReaders() {
-        stdOutReader.shutDownReader();
-        stdErrReader.shutDownReader();
-    }
-
-    /**
      * Get stdOut and stdErr and store it into files
      */
     private void storeOutputsToFile() {
@@ -180,7 +173,6 @@ public class Executor {
      * Class represent async reader
      */
     class StreamGobbler {
-        private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private InputStream is;
         private StringBuilder data = new StringBuilder();
 
@@ -191,13 +183,6 @@ public class Executor {
          */
         StreamGobbler(InputStream is) {
             this.is = is;
-        }
-
-        /**
-         * Shutdown executor service with reader
-         */
-        public void shutDownReader() {
-            executorService.shutdownNow();
         }
 
         /**
@@ -215,18 +200,22 @@ public class Executor {
          * @return return future string of output
          */
         public Future<String> read() {
-            Future<String> future = executorService.submit(() -> {
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader br = new BufferedReader(isr);
-                String line;
-                while ((line = br.readLine()) != null)
-                    data.append(line).append(System.getProperty("line.separator"));
-                isr.close();
-                br.close();
-                return data.toString();
-            });
-
-            return future;
+            return CompletableFuture.supplyAsync(() -> {
+                Scanner scanner = new Scanner(is);
+                try {
+                    log.info("Reading stream {}", is);
+                    String line;
+                    while (scanner.hasNextLine()) {
+                        data.append(scanner.nextLine()).append(System.getProperty("line.separator"));
+                    }
+                    scanner.close();
+                    return data.toString();
+                } catch (Exception e) {
+                    throw new CompletionException(e);
+                } finally {
+                    scanner.close();
+                }
+            }, runnable -> new Thread(runnable).start());
         }
     }
 }
