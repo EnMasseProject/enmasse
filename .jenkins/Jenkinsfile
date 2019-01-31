@@ -42,8 +42,10 @@ pipeline {
                 expression { params.CLEAN_REGISTRY == 'true' }
             }
             steps {
-                lib.installOCclient()
-                sh "./systemtests/scripts/reg_cleaner.sh ${params.REGISTRY_AGE} ${env.DOCKER_PASS} ${env.REGISTRY_URL}"
+                script {
+                    lib.installOCclient()
+                    sh "./systemtests/scripts/reg_cleaner.sh ${params.REGISTRY_AGE} ${env.DOCKER_PASS} ${env.REGISTRY_URL}"
+                }
             }
         }
         stage('clean') {
