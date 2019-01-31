@@ -72,8 +72,7 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
     @Override
     public boolean isKeycloakAvailable() {
-        return openShiftClient.configMaps().withName(keycloakConfigName).get() != null &&
-                openShiftClient.secrets().withName(keycloakCredentialsSecretName).get() != null;
+        return openShiftClient.services().withName("standard-authservice").get() != null;
     }
 
     private static KeyStore createKeyStore(byte [] ca) {
