@@ -3,7 +3,7 @@ BUILD_DIRS       = none-authservice
 DOCKER_DIRS	     = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
 FULL_BUILD 	     = true
 DOCKER_REGISTRY ?= docker.io
-VERSION         ?= $(shell cat $(TOPDIR)/release.version)
+VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 
 DOCKER_TARGETS = docker_build docker_tag docker_push clean
 BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage

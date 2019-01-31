@@ -3,7 +3,7 @@ CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/common.sh
 SUCCESS=$1
 COMMIT=${COMMIT:-latest}
-VERSION=`cat release.version`
+VERSION=`grep "release.version" pom.properties| cut -d'=' -f2`
 TAG=${TAG:-latest}
 
 if [ "$TAG" != "latest" ]; then
