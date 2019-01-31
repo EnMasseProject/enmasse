@@ -1,0 +1,291 @@
+apiVersion: v1
+kind: Template
+metadata:
+  labels:
+    app: enmasse
+  name: standard-space-infra-mqtt
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+    name: subscription-${INFRA_UUID}
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 5672
+    selector:
+      name: subserv
+      infraUuid: ${INFRA_UUID}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+      enmasse.io/cert-secret: subserv-internal-cert.${INFRA_UUID}
+    labels:
+      app: enmasse
+      name: subserv
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+    name: subserv.${INFRA_UUID}
+  spec:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: node-role.enmasse.io/messaging-infra
+                  operator: In
+                  values:
+                    - "true"
+    replicas: 1
+    selector:
+      matchLabels:
+        app: enmasse
+        name: subserv
+        infraType: standard
+        infraUuid: ${INFRA_UUID}
+    template:
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+        labels:
+          app: enmasse
+          name: subserv
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+      spec:
+        containers:
+        - env:
+          - name: MESSAGING_SERVICE_HOST
+            value: messaging-${INFRA_UUID}
+          - name: MESSAGING_SERVICE_PORT_AMQPS_NORMAL
+            value: 55671
+          - name: MESSAGING_SERVICE_PORT_AMQPS_BROKER
+            value: 56671
+          command:
+          - /opt/app-root/src/bin/launch_node.sh
+          - /opt/app-root/src/bin/subserv.js
+          image: ${AGENT_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          livenessProbe:
+            initialDelaySeconds: 60
+            tcpSocket:
+              port: amqp
+          name: subserv
+          ports:
+          - containerPort: 5672
+            name: amqp
+            protocol: TCP
+          resources:
+            limits:
+              memory: 128Mi
+            requests:
+              memory: 128Mi
+          volumeMounts:
+          - mountPath: /etc/enmasse-certs
+            name: subserv-internal-cert
+            readOnly: true
+        volumes:
+        - name: subserv-internal-cert
+          secret:
+            secretName: subserv-internal-cert.${INFRA_UUID}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+      enmasse.io/service-port.mqtt: 1883
+      enmasse.io/service-port.mqtts: 8883
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+    name: mqtt-${INFRA_UUID}
+  spec:
+    ports:
+    - name: mqtt
+      port: 1883
+      protocol: TCP
+      targetPort: 1883
+    - name: secure-mqtt
+      port: 8883
+      protocol: TCP
+      targetPort: 8883
+    selector:
+      name: mqtt-gateway
+      infraUuid: ${INFRA_UUID}
+    type: ClusterIP
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+    labels:
+      app: enmasse
+      name: mqtt-gateway
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+    name: mqtt-gateway.${INFRA_UUID}
+  spec:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: node-role.enmasse.io/messaging-infra
+                  operator: In
+                  values:
+                    - "true"
+    replicas: 1
+    selector:
+      matchLabels:
+        app: enmasse
+        name: mqtt-gateway
+        infraType: standard
+        infraUuid: ${INFRA_UUID}
+    template:
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+        labels:
+          app: enmasse
+          name: mqtt-gateway
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+      spec:
+        containers:
+        - env:
+          - name: MESSAGING_SERVICE_HOST
+            value: messaging-${INFRA_UUID}
+          - name: MESSAGING_SERVICE_PORT
+            value: 5672
+          - name: ENMASSE_MQTT_SSL
+            value: 'true'
+          - name: ENMASSE_MQTT_KEYFILE
+            value: /etc/mqtt-gateway/ssl/tls.key
+          - name: ENMASSE_MQTT_CERTFILE
+            value: /etc/mqtt-gateway/ssl/tls.crt
+          - name: ENMASSE_MQTT_LISTENPORT
+            value: '8883'
+          - name: ENMASSE_MQTT_MAXMESSAGESIZE
+            value: ${MQTT_MAXMESSAGESIZE}
+          image: ${MQTT_GATEWAY_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          livenessProbe:
+            initialDelaySeconds: 60
+            tcpSocket:
+              port: secure-mqtt
+          name: mqtt-gateway-tls
+          ports:
+          - containerPort: 8883
+            name: secure-mqtt
+            protocol: TCP
+          volumeMounts:
+          - mountPath: /etc/mqtt-gateway/ssl
+            name: ssl-certs
+            readOnly: true
+        - image: ${MQTT_GATEWAY_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          env:
+          - name: MESSAGING_SERVICE_HOST
+            value: messaging-${INFRA_UUID}
+          - name: MESSAGING_SERVICE_PORT
+            value: 5672
+          livenessProbe:
+            initialDelaySeconds: 60
+            tcpSocket:
+              port: mqtt
+          name: mqtt-gateway
+          ports:
+          - containerPort: 1883
+            name: mqtt
+            protocol: TCP
+        volumes:
+        - name: ssl-certs
+          secret:
+            secretName: ${MQTT_SECRET}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+      enmasse.io/cert-secret: mqtt-lwt-internal-cert.${INFRA_UUID}
+    labels:
+      app: enmasse
+      name: mqtt-lwt
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+    name: mqtt-lwt.${INFRA_UUID}
+  spec:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: node-role.enmasse.io/messaging-infra
+                  operator: In
+                  values:
+                    - "true"
+    replicas: 1
+    selector:
+      matchLabels:
+        app: enmasse
+        name: mqtt-lwt
+        infraType: standard
+        infraUuid: ${INFRA_UUID}
+    template:
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+        labels:
+          app: enmasse
+          name: mqtt-lwt
+          infraType: standard
+          infraUuid: ${INFRA_UUID}
+      spec:
+        containers:
+        - env:
+          - name: CERT_DIR
+            value: /etc/enmasse-certs
+          - name: MESSAGING_SERVICE_HOST
+            value: messaging-${INFRA_UUID}
+          - name: MESSAGING_SERVICE_NORMAL_PORT
+            value: 55671
+          - name: MESSAGING_SERVICE_ROUTE_CONTAINER_PORT
+            value: 56671
+          image: ${MQTT_LWT_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          name: mqtt-lwt
+          volumeMounts:
+          - mountPath: /etc/enmasse-certs
+            name: mqtt-lwt-internal-cert
+            readOnly: true
+        volumes:
+        - name: mqtt-lwt-internal-cert
+          secret:
+            secretName: mqtt-lwt-internal-cert.${INFRA_UUID}
+parameters:
+- name: INFRA_UUID
+  description: UUID to use for infrastructure
+  required: true
+- description: The name of our address space
+  name: ADDRESS_SPACE
+  required: true
+- description: Maximum message size allowed by the MQTT Gateway
+  name: MQTT_MAXMESSAGESIZE
+  value: '131072'
+- description: The secret with cert for the mqtt service
+  name: MQTT_SECRET
+  required: true

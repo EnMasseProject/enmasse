@@ -153,6 +153,11 @@ public class AddressSpaceController {
                 StandardInfraConfig.class,
                 Comparator.comparing(StandardInfraConfig::getVersion));
 
+        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "configmaps"),
+                client.configMaps().inNamespace(namespace),
+                ConfigMap.class,
+                (c1, c2) -> c1.getData().equals(c2.getData()) ? 0 : -1);
+
         KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressplans"),
                 client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace),
                 AddressPlan.class);
