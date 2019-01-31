@@ -10,6 +10,11 @@ def tearDownOpenshift() {
     sh 'sudo ./systemtests/scripts/teardown-openshift.sh'
 }
 
+def installOCclient() {
+    echo "install oc client"
+    sh './systemtests/scripts/install-oc-client.sh'
+}
+
 def makeLinePlot() {
     plot csvFileName: 'duration_sum_report.csv',
             csvSeries: [[
