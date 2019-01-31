@@ -5,7 +5,7 @@ metadata:
   labels:
     app: enmasse
 spec:
-  version: ${version}
+  version: 0.26
   admin:
     resources:
       memory: 512Mi
