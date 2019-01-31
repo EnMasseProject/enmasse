@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
+import io.enmasse.model.validation.ValidBase64;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -41,6 +42,8 @@ public class AddressSpaceStatus {
     private List<@Valid EndpointStatus> endpointStatuses = new ArrayList<>();
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> messages = new ArrayList<>();
+    @ValidBase64
+    private String caCert;
 
     public AddressSpaceStatus() {
     }
@@ -62,6 +65,14 @@ public class AddressSpaceStatus {
     public AddressSpaceStatus setReady(boolean ready) {
         this.ready = ready;
         return this;
+    }
+
+    public void setCaCert(String caCert) {
+        this.caCert = caCert;
+    }
+
+    public String getCaCert() {
+        return caCert;
     }
 
     public List<String> getMessages() {
