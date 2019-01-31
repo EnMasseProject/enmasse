@@ -4,14 +4,37 @@
  */
 package io.enmasse.address.model;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.model.validation.ValidBase64;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CertSpec {
-    private final String provider;
-    private final String secretName;
-    private final String tlsKey;
-    private final String tlsCert;
+    private String provider;
+    private String secretName;
+    @ValidBase64
+    private String tlsKey;
+    @ValidBase64
+    private String tlsCert;
+
+    public CertSpec() {
+    }
 
     public CertSpec(String provider, String secretName, String tlsKey, String tlsCert) {
         this.provider = provider;
@@ -20,89 +43,35 @@ public class CertSpec {
         this.tlsCert = tlsCert;
     }
 
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
     public String getProvider() {
         return provider;
+    }
+
+    public void setSecretName(String secretName) {
+        this.secretName = secretName;
     }
 
     public String getSecretName() {
         return secretName;
     }
 
+    public void setTlsKey(String tlsKey) {
+        this.tlsKey = tlsKey;
+    }
+
     public String getTlsKey() {
         return tlsKey;
     }
 
-    public void validate() {
-        if (tlsKey != null) {
-            requireBase64(tlsKey);
-        }
-        if (tlsCert != null) {
-            requireBase64(tlsCert);
-        }
+    public void setTlsCert(String tlsCert) {
+        this.tlsCert = tlsCert;
     }
 
     public String getTlsCert() {
         return tlsCert;
-    }
-
-    private static void requireBase64(String value) {
-        Base64.getDecoder().decode(value.getBytes(StandardCharsets.UTF_8));
-    }
-
-    public static class Builder {
-        private String provider;
-        private String secretName;
-        private String tlsKey;
-        private String tlsCert;
-
-        public Builder() {
-        }
-
-        public Builder(CertSpec certSpec) {
-            this.provider = certSpec.provider;
-            this.secretName = certSpec.secretName;
-            this.tlsKey = certSpec.tlsKey;
-            this.tlsCert = certSpec.tlsCert;
-        }
-
-        public String getProvider() {
-            return provider;
-        }
-
-        public String getSecretName() {
-            return secretName;
-        }
-
-        public Builder setProvider(String provider) {
-            this.provider = provider;
-            return this;
-        }
-
-        public Builder setSecretName(String secretName) {
-            this.secretName = secretName;
-            return this;
-        }
-
-        public Builder setTlsKey(String tlsKey) {
-            this.tlsKey = tlsKey;
-            return this;
-        }
-
-        public Builder setTlsCert(String tlsCert) {
-            this.tlsCert = tlsCert;
-            return this;
-        }
-
-        public CertSpec build() {
-            return new CertSpec(provider, secretName, tlsKey, tlsCert);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return new StringBuilder()
-                .append("{provider=").append(provider).append(",")
-                .append("secretName").append(secretName).append("}")
-                .toString();
     }
 }

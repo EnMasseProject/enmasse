@@ -4,7 +4,6 @@
  */
 package io.enmasse.k8s.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
@@ -21,7 +20,6 @@ import java.util.stream.Collectors;
 
 public class KubeSchemaApi implements SchemaApi {
 
-    private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger log = LoggerFactory.getLogger(KubeSchemaApi.class);
     private final AddressSpacePlanApi addressSpacePlanApi;
     private final AddressPlanApi addressPlanApi;
@@ -62,7 +60,7 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
-        String definedBy = addressSpacePlan.getMetadata().getAnnotations().get(AnnotationKeys.DEFINED_BY);
+        String definedBy = addressSpacePlan.getAnnotation(AnnotationKeys.DEFINED_BY);
         if (!infraTemplateNames.contains(definedBy)) {
             String error = "Error validating address space plan " + addressSpacePlan.getMetadata().getName() + ": missing infra config definition " + definedBy + ", found: " + infraTemplateNames;
             log.warn(error);
@@ -114,46 +112,46 @@ public class KubeSchemaApi implements SchemaApi {
         }
     }
 
-    private EndpointSpec createEndpointSpec(String name, String service, String port, ExposeSpec.TlsTermination tlsTermination) {
+    private EndpointSpec createEndpointSpec(String name, String service, String port, TlsTermination tlsTermination) {
         if (isOpenShift) {
-            return new EndpointSpec.Builder()
-                    .setName(name)
-                    .setService(service)
-                    .setExposeSpec(new ExposeSpec.Builder()
-                            .setType(ExposeSpec.ExposeType.route)
-                            .setRouteTlsTermination(tlsTermination)
-                            .setRouteServicePort(port)
+            return new EndpointSpecBuilder()
+                    .withName(name)
+                    .withService(service)
+                    .withExpose(new ExposeSpecBuilder()
+                            .withType(ExposeType.route)
+                            .withRouteTlsTermination(tlsTermination)
+                            .withRouteServicePort(port)
                             .build())
                     .build();
         } else {
-            return new EndpointSpec.Builder()
-                    .setName(name)
-                    .setService(service)
-                    .setExposeSpec(new ExposeSpec.Builder()
-                            .setType(ExposeSpec.ExposeType.loadbalancer)
-                            .setLoadBalancerPorts(Collections.singletonList(port))
+            return new EndpointSpecBuilder()
+                    .withName(name)
+                    .withService(service)
+                    .withExpose(new ExposeSpecBuilder()
+                            .withType(ExposeType.loadbalancer)
+                            .withLoadBalancerPorts(Collections.singletonList(port))
                             .build())
                     .build();
         }
     }
 
     private AddressSpaceType createStandardType(List<AddressSpacePlan> addressSpacePlans, Collection<AddressPlan> addressPlans, List<InfraConfig> standardInfraConfigs) {
-        AddressSpaceType.Builder builder = new AddressSpaceType.Builder();
-        builder.setName("standard");
-        builder.setDescription("A standard address space consists of an AMQP router network in combination with " +
+        AddressSpaceTypeBuilder builder = new AddressSpaceTypeBuilder();
+        builder.withName("standard");
+        builder.withDescription("A standard address space consists of an AMQP router network in combination with " +
                 "attachable 'storage units'. The implementation of a storage unit is hidden from the client " +
                         "and the routers with a well defined API.");
 
-        builder.setAvailableEndpoints(Arrays.asList(
-                createEndpointSpec("messaging", "messaging", "amqps", ExposeSpec.TlsTermination.passthrough),
-                createEndpointSpec("messaging-wss", "messaging", "https", ExposeSpec.TlsTermination.reencrypt),
-                createEndpointSpec("mqtt", "mqtt", "secure-mqtt", ExposeSpec.TlsTermination.passthrough),
-                createEndpointSpec("console", "console", "https", ExposeSpec.TlsTermination.reencrypt)));
+        builder.withAvailableEndpoints(Arrays.asList(
+                createEndpointSpec("messaging", "messaging", "amqps", TlsTermination.passthrough),
+                createEndpointSpec("messaging-wss", "messaging", "https", TlsTermination.reencrypt),
+                createEndpointSpec("mqtt", "mqtt", "secure-mqtt", TlsTermination.passthrough),
+                createEndpointSpec("console", "console", "https", TlsTermination.reencrypt)));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "standard".equals(plan.getAddressSpaceType()))
                 .collect(Collectors.toList());
-        builder.setAddressSpacePlans(filteredAddressSpaceplans);
+        builder.withPlans(filteredAddressSpaceplans);
 
         List<AddressPlan> filteredAddressPlans = addressPlans.stream()
                 .filter(plan -> filteredAddressSpaceplans.stream()
@@ -162,10 +160,9 @@ public class KubeSchemaApi implements SchemaApi {
                 .collect(Collectors.toList());
 
 
-        builder.setInfraConfigs(standardInfraConfigs);
-        builder.setInfraConfigDeserializer(json -> mapper.readValue(json, StandardInfraConfig.class));
+        builder.withInfraConfigs(standardInfraConfigs);
 
-        builder.setAddressTypes(Arrays.asList(
+        builder.withAddressTypes(Arrays.asList(
                 createAddressType(
                         "anycast",
                         "A direct messaging address type. Messages sent to an anycast address are not " +
@@ -195,19 +192,19 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private AddressSpaceType createBrokeredType(List<AddressSpacePlan> addressSpacePlans, Collection<AddressPlan> addressPlans, List<InfraConfig> brokeredInfraConfigs) {
-        AddressSpaceType.Builder builder = new AddressSpaceType.Builder();
-        builder.setName("brokered");
-        builder.setDescription("A brokered address space consists of a broker combined with a console for managing addresses.");
+        AddressSpaceTypeBuilder builder = new AddressSpaceTypeBuilder();
+        builder.withName("brokered");
+        builder.withDescription("A brokered address space consists of a broker combined with a console for managing addresses.");
 
-        builder.setAvailableEndpoints(Arrays.asList(
-                createEndpointSpec("messaging", "messaging", "amqps", ExposeSpec.TlsTermination.passthrough),
-                createEndpointSpec("messaging-wss", "messaging", "amqps", ExposeSpec.TlsTermination.reencrypt),
-                createEndpointSpec("console", "console", "https", ExposeSpec.TlsTermination.reencrypt)));
+        builder.withAvailableEndpoints(Arrays.asList(
+                createEndpointSpec("messaging", "messaging", "amqps", TlsTermination.passthrough),
+                createEndpointSpec("messaging-wss", "messaging", "amqps", TlsTermination.reencrypt),
+                createEndpointSpec("console", "console", "https", TlsTermination.reencrypt)));
 
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "brokered".equals(plan.getAddressSpaceType()))
                 .collect(Collectors.toList());
-        builder.setAddressSpacePlans(filteredAddressSpaceplans);
+        builder.withPlans(filteredAddressSpaceplans);
 
         List<AddressPlan> filteredAddressPlans = addressPlans.stream()
                 .filter(plan -> filteredAddressSpaceplans.stream()
@@ -215,10 +212,9 @@ public class KubeSchemaApi implements SchemaApi {
                         .count() > 0)
                 .collect(Collectors.toList());
 
-        builder.setInfraConfigs(brokeredInfraConfigs);
-        builder.setInfraConfigDeserializer(json -> mapper.readValue(json, BrokeredInfraConfig.class));
+        builder.withInfraConfigs(brokeredInfraConfigs);
 
-        builder.setAddressTypes(Arrays.asList(
+        builder.withAddressTypes(Arrays.asList(
                 createAddressType(
                         "queue",
                         "A queue that supports selectors, message grouping and transactions",
@@ -232,12 +228,12 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private AddressType createAddressType(String name, String description, List<AddressPlan> addressPlans) {
-        AddressType.Builder builder = new AddressType.Builder();
-        builder.setAddressPlans(addressPlans.stream()
+        AddressTypeBuilder builder = new AddressTypeBuilder();
+        builder.withPlans(addressPlans.stream()
                 .filter(plan -> plan.getAddressType().equals(name))
                 .collect(Collectors.toList()));
-        builder.setName(name);
-        builder.setDescription(description);
+        builder.withName(name);
+        builder.withDescription(description);
         return builder.build();
     }
 
@@ -327,9 +323,9 @@ public class KubeSchemaApi implements SchemaApi {
         List<AddressSpaceType> types = new ArrayList<>();
         types.add(createBrokeredType(validAddressSpacePlans, validAddressPlans, new ArrayList<>(brokeredInfraConfigs)));
         types.add(createStandardType(validAddressSpacePlans, validAddressPlans, new ArrayList<>(standardInfraConfigs)));
-        return new Schema.Builder()
-                .setAddressSpaceTypes(types)
-                .setCreationTimestamp(formatter.format(clock.instant()))
+        return new SchemaBuilder()
+                .withAddressSpaceTypes(types)
+                .withCreationTimestamp(formatter.format(clock.instant()))
                 .build();
     }
 }

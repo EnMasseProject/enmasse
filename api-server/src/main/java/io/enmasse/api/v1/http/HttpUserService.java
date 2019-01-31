@@ -52,6 +52,7 @@ import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserBuilder;
+import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -59,7 +60,8 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 @Path(HttpUserService.BASE_URI)
 public class HttpUserService {
 
-    static final String BASE_URI = "/apis/user.enmasse.io/{version:v1alpha1|v1beta1}/namespaces/{namespace}/messagingusers";
+    private static final String RESOURCE_NAME = "messagingusers";
+    static final String BASE_URI = "/apis/" +  UserCrd.GROUP + "/{version:v1alpha1|v1beta1}/namespaces/{namespace}/" + RESOURCE_NAME;
 
     private static final Logger log = LoggerFactory.getLogger(HttpUserService.class.getName());
 
@@ -83,7 +85,7 @@ public class HttpUserService {
     }
 
     private static void verifyAuthorized(SecurityContext securityContext, String namespace, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, "messagingusers", "user.enmasse.io"))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole(namespace, verb, RESOURCE_NAME, UserCrd.GROUP))) {
             throw Exceptions.notAuthorizedException();
         }
     }

@@ -27,8 +27,7 @@ public class APIGroupList {
     private String kind = "APIGroupList";
 
     @JsonProperty("groups")
-    @Valid
-    private List<APIGroup> groups;
+    private List<@Valid APIGroup> groups;
 
     public APIGroupList(List<APIGroup> groups) {
         this.groups = groups;

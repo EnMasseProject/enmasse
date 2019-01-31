@@ -47,7 +47,7 @@ public class OSBTestBase {
         provisioningService = new OSBProvisioningService(addressSpaceApi, null, null, new ConsoleProxy() {
             @Override
             public String getConsoleUrl(AddressSpace addressSpace) {
-                return "http://localhost/console/" + addressSpace.getName();
+                return "http://localhost/console/" + addressSpace.getMetadata().getName();
             }
         });
         bindingService = new OSBBindingService(addressSpaceApi, null, null, null);

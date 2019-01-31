@@ -4,25 +4,6 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.api.common.DefaultExceptionMapper;
-import io.enmasse.api.common.Status;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.k8s.model.v1beta1.Table;
-import io.enmasse.user.model.v1.*;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-
-import org.jboss.resteasy.spi.ResteasyUriInfo;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import java.time.Clock;
-import java.util.Arrays;
-import java.util.concurrent.Callable;
-
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,6 +12,32 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.time.Clock;
+import java.util.Arrays;
+import java.util.concurrent.Callable;
+
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
+import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.api.common.Status;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.model.v1beta1.Table;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthenticationBuilder;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
+import io.enmasse.user.model.v1.UserList;
+import io.enmasse.user.model.v1.UserSpecBuilder;
 
 public class HttpUserServiceTest {
     private HttpUserService userService;
@@ -49,27 +56,39 @@ public class HttpUserServiceTest {
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
 
+        addressSpaceApi.createAddressSpace(new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .withNamespace("ns1")
+                .addToAnnotations(AnnotationKeys.REALM_NAME, "r1")
+                .endMetadata()
 
-        addressSpaceApi.createAddressSpace(new AddressSpace.Builder()
-                .setName("myspace")
-                .setNamespace("ns1")
-                .putAnnotation(AnnotationKeys.REALM_NAME, "r1")
-                .setType("type1")
-                .setPlan("myplan")
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
                 .build());
 
-        addressSpaceApi.createAddressSpace(new AddressSpace.Builder()
-                .setName("otherspace")
-                .setNamespace("ns2")
-                .putAnnotation(AnnotationKeys.REALM_NAME, "r2")
-                .setType("type1")
-                .setPlan("myplan")
+        addressSpaceApi.createAddressSpace(new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("otherspace")
+                .withNamespace("ns2")
+                .addToAnnotations(AnnotationKeys.REALM_NAME, "r2")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
                 .build());
+
         u1 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("myspace.user1")
-                        .withNamespace("ns1")
-                        .build())
+                .withNewMetadata()
+                .withName("myspace.user1")
+                .withNamespace("ns1")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user1")
                         .withAuthentication(new UserAuthenticationBuilder()
@@ -89,10 +108,11 @@ public class HttpUserServiceTest {
                 .build();
 
         u2 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("otherspace.user2")
-                        .withNamespace("ns2")
-                        .build())
+                .withNewMetadata()
+                .withName("otherspace.user2")
+                .withNamespace("ns2")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user2")
                         .withAuthentication(new UserAuthenticationBuilder()
@@ -185,10 +205,11 @@ public class HttpUserServiceTest {
     @Test
     public void testCreate() {
         User u3 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("myspace.user3")
-                        .withNamespace("ns1")
-                        .build())
+                .withNewMetadata()
+                .withName("myspace.user3")
+                .withNamespace("ns1")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user3")
                         .withAuthentication(new UserAuthenticationBuilder()
@@ -212,10 +233,11 @@ public class HttpUserServiceTest {
     public void testCreateException() {
         userApi.throwException = true;
         User u3 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("myspace.user3")
-                        .withNamespace("ns1")
-                        .build())
+                .withNewMetadata()
+                .withName("myspace.user3")
+                .withNamespace("ns1")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user3")
                         .withAuthentication(new UserAuthenticationBuilder()
@@ -237,10 +259,11 @@ public class HttpUserServiceTest {
     public void testPutException() {
         userApi.throwException = true;
         User u3 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("myspace.user1")
-                        .withNamespace("ns1")
-                        .build())
+                .withNewMetadata()
+                .withName("myspace.user1")
+                .withNamespace("ns1")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user1")
                         .withAuthentication(new UserAuthenticationBuilder()
@@ -261,10 +284,11 @@ public class HttpUserServiceTest {
     @Test
     public void testPutNotMatchingName() {
         User u3 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("myspace.user3")
-                        .withNamespace("ns1")
-                        .build())
+                .withNewMetadata()
+                .withName("myspace.user3")
+                .withNamespace("ns1")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user3")
                         .withAuthentication(new UserAuthenticationBuilder()
@@ -285,10 +309,11 @@ public class HttpUserServiceTest {
     @Test
     public void testPutNotExists() {
         User u3 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("myspace.user3")
-                        .withNamespace("ns1")
-                        .build())
+                .withNewMetadata()
+                .withName("myspace.user3")
+                .withNamespace("ns1")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user3")
                         .withAuthentication(new UserAuthenticationBuilder()
@@ -309,10 +334,11 @@ public class HttpUserServiceTest {
     @Test
     public void testPut() {
         User u3 = new UserBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("myspace.user1")
-                        .withNamespace("ns1")
-                        .build())
+                .withNewMetadata()
+                .withName("myspace.user1")
+                .withNamespace("ns1")
+                .endMetadata()
+
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user1")
                         .withAuthentication(new UserAuthenticationBuilder()

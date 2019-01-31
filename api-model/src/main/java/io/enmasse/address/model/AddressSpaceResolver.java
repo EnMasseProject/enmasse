@@ -30,7 +30,7 @@ public class AddressSpaceResolver {
     }
 
     public void validate(AddressSpace addressSpace) {
-        getPlan(getType(addressSpace.getType()), addressSpace.getPlan());
+        getPlan(getType(addressSpace.getSpec().getType()), addressSpace.getSpec().getPlan());
     }
 
     public InfraConfig getInfraConfig(String typeName, String planName) {

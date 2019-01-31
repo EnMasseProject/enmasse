@@ -4,20 +4,6 @@
  */
 package io.enmasse.controller.standard;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.config.AnnotationKeys;
-import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.internal.readiness.Readiness;
-import io.fabric8.openshift.client.OpenShiftClient;
-import io.fabric8.openshift.client.ParameterValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +11,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.util.Templates;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.internal.readiness.Readiness;
+import io.fabric8.openshift.client.OpenShiftClient;
 
 public class KubernetesHelper implements Kubernetes {
     private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class);
@@ -161,8 +170,8 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public KubernetesList processTemplate(String templateName, ParameterValue... parameterValues) {
+    public KubernetesList processTemplate(String templateName, Map<String,String> parameters) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return client.templates().load(templateFile).processLocally(parameterValues);
+        return Templates.process(client, templateFile, parameters);
     }
 }

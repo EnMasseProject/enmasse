@@ -8,6 +8,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.MsgCliApiClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
@@ -42,7 +43,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     private static Logger log = CustomLogger.getLogger();
     private Map<String, AddressSpace> provisionedServices = new HashMap<>();
-    private UserCredentials ocTestUser = new UserCredentials("pepik", "pepik");
+    private UserCredentials ocTestUser = Credentials.userCredentials();
 
     private String getUserProjectName(AddressSpace addressSpace) {
         return String.format("%s-%s", "service", addressSpace.getNamespace());

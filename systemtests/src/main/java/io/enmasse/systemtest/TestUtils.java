@@ -559,6 +559,16 @@ public class TestUtils {
     }
 
     /**
+     * get list of all Address objects by REST API
+     */
+    public static Future<List<Address>> getAllAddressesObjects(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getAllAddresses();
+        CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToListAddress(response, Address.class, x -> true));
+        return listOfAddresses;
+    }
+
+    /**
      * get list of Address objects
      */
     public static Future<List<Destination>> getDestinationsObjects(AddressApiClient apiClient, AddressSpace addressSpace,
@@ -773,12 +783,12 @@ public class TestUtils {
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
         String uid = metadata.getString("uid");
-        String addressSpaceName = metadata.getString("addressSpace");
         JsonObject annotationsJson = metadata.getJsonObject("annotations");
         Map<String, Object> annotations = new HashMap<>();
         if (annotationsJson != null) {
             annotations = annotationsJson.getMap();
         }
+        String addressSpaceName = name.split("\\.")[0];
 
         JsonObject status = addressJsonObject.getJsonObject("status");
         boolean isReady = status.getBoolean("isReady");
@@ -821,8 +831,8 @@ public class TestUtils {
         log.info("Got address object: {}", addressJsonObject.toString());
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
+        String addressSpace = name.split("\\.")[0];
         String uid = metadata.getString("uid");
-        String addressSpace = metadata.getString("addressSpace");
         JsonObject spec = addressJsonObject.getJsonObject("spec");
         String address = spec.getString("address");
         String type = spec.getString("type");

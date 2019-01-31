@@ -17,8 +17,6 @@ import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import io.fabric8.openshift.client.ParameterValue;
-
 import java.util.*;
 
 /**
@@ -99,18 +97,14 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, options.getAuthenticationServiceSaslInitHost());
 
         if (address != null) {
-            paramMap.put(TemplateParameter.ADDRESS, address.getAddress());
+            paramMap.put(TemplateParameter.ADDRESS, address.getSpec().getAddress());
         }
 
         paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
         paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
         paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
 
-        ParameterValue parameters[] = paramMap.entrySet().stream()
-                .map(entry -> new ParameterValue(entry.getKey(), entry.getValue())).toArray(ParameterValue[]::new);
-
-
-        KubernetesList items = kubernetes.processTemplate(templateName, parameters);
+        KubernetesList items = kubernetes.processTemplate(templateName, paramMap);
 
         for (HasMetadata item : items.getItems()) {
             if (item instanceof StatefulSet) {
@@ -127,7 +121,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.CLUSTER_ID, clusterId);
         Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS_SPACE, options.getAddressSpace());
         if (address != null) {
-            Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getAddress());
+            Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getSpec().getAddress());
         }
         return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
     }

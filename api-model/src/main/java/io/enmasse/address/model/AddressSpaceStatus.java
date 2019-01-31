@@ -6,39 +6,65 @@ package io.enmasse.address.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.Inline;
 
 /**
  * Represents the status of an address
  */
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressSpaceStatus {
-    private boolean isReady = false;
-    private List<EndpointStatus> endpointStatuses = new ArrayList<>();
-    private Set<String> messages = new HashSet<>();
+    @JsonProperty("isReady")
+    private boolean ready = false;
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<@Valid EndpointStatus> endpointStatuses = new ArrayList<>();
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<String> messages = new ArrayList<>();
 
-    public AddressSpaceStatus(boolean isReady) {
-        this.isReady = isReady;
+    public AddressSpaceStatus() {
+    }
+
+    public AddressSpaceStatus(boolean ready) {
+        this.ready = ready;
     }
 
     public AddressSpaceStatus(AddressSpaceStatus other) {
-        this.isReady = other.isReady();
+        this.ready = other.isReady();
         this.endpointStatuses = new ArrayList<>(other.getEndpointStatuses());
         this.messages.addAll(other.getMessages());
     }
 
     public boolean isReady() {
-        return isReady;
+        return ready;
     }
 
-    public AddressSpaceStatus setReady(boolean isReady) {
-        this.isReady = isReady;
+    public AddressSpaceStatus setReady(boolean ready) {
+        this.ready = ready;
         return this;
     }
 
-    public Set<String> getMessages() {
+    public List<String> getMessages() {
         return messages;
     }
 
@@ -52,7 +78,7 @@ public class AddressSpaceStatus {
         return this;
     }
 
-    public AddressSpaceStatus setMessages(Set<String> messages) {
+    public AddressSpaceStatus setMessages(List<String> messages) {
         this.messages = messages;
         return this;
     }
@@ -66,21 +92,21 @@ public class AddressSpaceStatus {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AddressSpaceStatus status = (AddressSpaceStatus) o;
-        return isReady == status.isReady &&
+        return ready == status.ready &&
                 Objects.equals(endpointStatuses, status.endpointStatuses) &&
                 Objects.equals(messages, status.messages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(isReady, endpointStatuses, messages);
+        return Objects.hash(ready, endpointStatuses, messages);
     }
 
 
     @Override
     public String toString() {
         return new StringBuilder()
-                .append("{isReady=").append(isReady)
+                .append("{ready=").append(ready)
                 .append(",").append("endpointStatuses=").append(endpointStatuses)
                 .append(",").append("messages=").append(messages)
                 .append("}")

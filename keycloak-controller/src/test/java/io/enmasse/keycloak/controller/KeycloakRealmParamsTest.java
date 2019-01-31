@@ -4,6 +4,7 @@
  */
 package io.enmasse.keycloak.controller;
 
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import org.junit.jupiter.api.AfterEach;
@@ -12,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class KeycloakRealmParamsTest {
+class KeycloakRealmParamsTest extends JULInitializingTest {
 
     private KubernetesServer server = new KubernetesServer(true, true);
 

@@ -5,19 +5,21 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
-class ConfigMapAddressApiTest {
+class ConfigMapAddressApiTest extends JULInitializingTest {
+
     private static final String ADDRESS = "myaddress";
     private static final String ADDRESS_TYPE = "mytype";
     private static final String ADDRESS_PLAN = "myplan";
@@ -50,21 +52,21 @@ class ConfigMapAddressApiTest {
         assertTrue(readAddress.isPresent());
         Address read = readAddress.get();
 
-        assertEquals(ADDRESS, read.getAddress());
-        assertEquals(ADDRESS_SPACE, read.getAddressSpace());
-        assertEquals(ADDRESS_NAME, read.getName());
-        assertEquals(ADDRESS_TYPE, read.getType());
-        assertEquals(ADDRESS_PLAN, read.getPlan());
+        assertEquals(ADDRESS, read.getSpec().getAddress());
+        assertEquals(ADDRESS_SPACE, Address.extractAddressSpace(read));
+        assertEquals(ADDRESS_NAME, read.getMetadata().getName());
+        assertEquals(ADDRESS_TYPE, read.getSpec().getType());
+        assertEquals(ADDRESS_PLAN, read.getSpec().getPlan());
     }
 
     @Test
     void replace() {
-        Address adddress = createAddress(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME);
+        Address address = createAddress(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME);
         final String annotationKey = "myannotation";
         String annotationValue = "value";
-        Address update = new Address.Builder(adddress).putAnnotation(annotationKey, annotationValue).build();
+        Address update = new AddressBuilder(address).editOrNewMetadata().addToAnnotations(annotationKey, annotationValue).endMetadata().build();
 
-        api.createAddress(adddress);
+        api.createAddress(address);
         assertTrue(api.getAddressWithName(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME).isPresent());
 
         boolean replaced = api.replaceAddress(update);
@@ -72,7 +74,7 @@ class ConfigMapAddressApiTest {
 
         Address read = api.getAddressWithName(ADDRESS_SPACE_NAMESPACE, ADDRESS_NAME).get();
 
-        assertEquals(ADDRESS_NAME, read.getName());
+        assertEquals(ADDRESS_NAME, read.getMetadata().getName());
         assertEquals(annotationValue, read.getAnnotation(annotationKey));
     }
 
@@ -100,13 +102,19 @@ class ConfigMapAddressApiTest {
     }
 
     private Address createAddress(String namespace, String name) {
-        return new Address.Builder()
-                .setName(name)
-                .setNamespace(namespace)
-                .setAddress(ADDRESS)
-                .setAddressSpace(ADDRESS_SPACE)
-                .setType(ADDRESS_TYPE)
-                .setPlan(ADDRESS_PLAN)
+        return new AddressBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(ADDRESS)
+                .withAddressSpace(ADDRESS_SPACE)
+                .withType(ADDRESS_TYPE)
+                .withPlan(ADDRESS_PLAN)
+                .endSpec()
+
                 .build();
     }
 }

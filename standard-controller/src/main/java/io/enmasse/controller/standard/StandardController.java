@@ -4,9 +4,9 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.Vertx;
@@ -33,7 +33,7 @@ public class StandardController {
 
     static {
         try {
-            AdminCrd.registerCustomCrds();
+            CustomResourceDefinitions.registerAll();
         } catch (RuntimeException t) {
             t.printStackTrace();
             throw new ExceptionInInitializerError(t);

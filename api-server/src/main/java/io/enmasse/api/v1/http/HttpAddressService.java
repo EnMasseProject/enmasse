@@ -5,11 +5,11 @@
 package io.enmasse.api.v1.http;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.v1.Either;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.UnprocessableEntityException;
 import io.enmasse.k8s.api.AddressSpaceApi;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -36,7 +36,7 @@ public class HttpAddressService extends HttpAddressServiceBase {
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     public Response getAddressList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @QueryParam("address") String address, @QueryParam("labelSelector") String labelSelector) throws Exception {
-        return super.getAddressList(securityContext, acceptHeader, namespace, null, address, labelSelector);
+        return internalGetAddressList(securityContext, acceptHeader, namespace, null, address, labelSelector);
     }
 
     @GET
@@ -45,28 +45,28 @@ public class HttpAddressService extends HttpAddressServiceBase {
     @Path("{addressName}")
     public Response getAddress(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName) throws Exception {
         String addressSpace = parseAddressSpace(addressName);
-        return super.getAddress(securityContext, acceptHeader, namespace, addressSpace, addressName);
+        return internalGetAddress(securityContext, acceptHeader, namespace, addressSpace, addressName);
     }
 
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
-    public Response createAddress(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull Address payload) throws Exception {
-        if (payload.getName() == null) {
+    public Response createAddress(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull @Valid Address payload) throws Exception {
+        if (payload.getMetadata().getName() == null) {
             throw new UnprocessableEntityException("Required value: name is required");
         }
-        String addressSpace = parseAddressSpace(payload.getName());
-        return super.createAddress(securityContext, uriInfo, namespace, addressSpace, Either.createLeft(payload));
+        String addressSpace = parseAddressSpace(payload.getMetadata().getName());
+        return internalCreateAddress(securityContext, uriInfo, namespace, addressSpace, payload);
     }
 
     @PUT
     @Produces({MediaType.APPLICATION_JSON})
     @Consumes({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
-    public Response replaceAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName, @NotNull Address payload) throws Exception {
+    public Response replaceAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName, @NotNull @Valid Address payload) throws Exception {
         checkAddressObjectNameNotNull(payload, addressName);
-        String addressSpace = parseAddressSpace(payload.getName());
-        return super.replaceAddress(securityContext, namespace, addressSpace, addressName, payload);
+        String addressSpace = parseAddressSpace(payload.getMetadata().getName());
+        return internalReplaceAddress(securityContext, namespace, addressSpace, addressName, payload);
     }
 
     @DELETE
@@ -75,12 +75,12 @@ public class HttpAddressService extends HttpAddressServiceBase {
     @Path("{addressName}")
     public Response deleteAddress(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressName") String addressName) throws Exception {
         String addressSpace = parseAddressSpace(addressName);
-        return super.deleteAddress(securityContext, namespace, addressSpace, addressName);
+        return internalDeleteAddress(securityContext, namespace, addressSpace, addressName);
     }
 
     @DELETE
     @Produces({MediaType.APPLICATION_JSON})
     public Response deleteAddresses(@Context SecurityContext securityContext, @PathParam("namespace") String namespace) throws Exception {
-        return super.deleteAddresses(securityContext, namespace);
+        return internalDeleteAddresses(securityContext, namespace);
     }
 }

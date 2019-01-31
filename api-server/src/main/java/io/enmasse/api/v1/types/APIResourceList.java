@@ -30,8 +30,7 @@ public class APIResourceList {
     private String groupVersion;
 
     @JsonProperty("resources")
-    @Valid
-    private List<APIResource> resources;
+    private List<@Valid APIResource> resources;
 
     public APIResourceList(String groupVersion, List<APIResource> resources) {
         this.groupVersion = groupVersion;

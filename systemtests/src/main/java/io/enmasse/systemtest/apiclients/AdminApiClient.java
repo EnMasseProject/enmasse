@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 
 public class AdminApiClient extends ApiClient {
     protected static Logger log = CustomLogger.getLogger();
-    private final int initRetry = 10;
     private final String addressSpacePlansPath;
     private final String addressPlansPath;
 

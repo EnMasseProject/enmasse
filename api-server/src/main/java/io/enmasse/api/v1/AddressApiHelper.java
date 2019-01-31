@@ -29,18 +29,22 @@ public class AddressApiHelper {
     }
 
     protected AddressList queryAddresses(Collection<AddressSpace> addressSpaces, BiFunction<String, AddressApi, Collection<Address>> lister) throws Exception {
-        final AddressList list = new AddressList();
+        final List<Address> list = new ArrayList<>();
 
         for (final AddressSpace addressSpace : addressSpaces) {
-            list.addAll(lister.apply(addressSpace.getNamespace(), addressSpaceApi.withAddressSpace(addressSpace)));
+            list.addAll(lister.apply(addressSpace.getMetadata().getNamespace(), addressSpaceApi.withAddressSpace(addressSpace)));
         }
 
-        return list;
+        return new AddressList(list);
     }
 
     protected Collection<AddressSpace> getAddressSpaces(String namespace, String addressSpaceId) throws Exception {
         if (addressSpaceId == null) {
-            return addressSpaceApi.listAddressSpaces(namespace);
+            if ( namespace == null || namespace.isEmpty() ) {
+                return addressSpaceApi.listAllAddressSpaces();
+            } else {
+                return addressSpaceApi.listAddressSpaces(namespace);
+            }
         } else {
             return Collections.singleton(getAddressSpace(namespace, addressSpaceId));
         }
@@ -64,18 +68,18 @@ public class AddressApiHelper {
 
     private void validateAddress(AddressSpace addressSpace, Address address) {
         AddressResolver addressResolver = getAddressResolver(addressSpace);
-        Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getNamespace());
+        Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getMetadata().getNamespace());
         addressResolver.validate(address);
         for (Address existing : existingAddresses) {
-            if (address.getAddress().equals(existing.getAddress()) && !address.getName().equals(existing.getName())) {
-                throw new BadRequestException("Address '" + address.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
+            if (address.getSpec().getAddress().equals(existing.getSpec().getAddress()) && !address.getMetadata().getName().equals(existing.getMetadata().getName())) {
+                throw new BadRequestException("Address '" + address.getSpec().getAddress() + "' already exists with resource name '" + existing.getMetadata().getName() + "'");
             }
         }
     }
 
     private AddressResolver getAddressResolver(AddressSpace addressSpace) {
         Schema schema = schemaProvider.getSchema();
-        AddressSpaceType type = schema.findAddressSpaceType(addressSpace.getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unable to resolve address space type " + addressSpace.getType()));
+        AddressSpaceType type = schema.findAddressSpaceType(addressSpace.getSpec().getType()).orElseThrow(() -> new UnresolvedAddressSpaceException("Unable to resolve address space type " + addressSpace.getSpec().getType()));
 
         return new AddressResolver(type);
     }
@@ -99,7 +103,7 @@ public class AddressApiHelper {
     }
 
     public Address createAddress(String addressSpaceId, Address address) throws Exception {
-        AddressSpace addressSpace = getAddressSpace(address.getNamespace(), addressSpaceId);
+        AddressSpace addressSpace = getAddressSpace(address.getMetadata().getNamespace(), addressSpaceId);
         validateAddress(addressSpace, address);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         addressApi.createAddress(address);
@@ -108,7 +112,9 @@ public class AddressApiHelper {
 
     public void createAddresses(String addressSpaceId, Set<Address> address) throws Exception {
 
-        List<String> allResourceNames = address.stream().map(Address::getName).collect(Collectors.toList());
+        List<String> allResourceNames = address.stream()
+                        .map(a -> a.getMetadata().getName())
+                        .collect(Collectors.toList());
         Set<String> resourceNameSet = new HashSet<>(allResourceNames);
         if (resourceNameSet.size() != allResourceNames.size()) {
             List<String> duplicates = new ArrayList<>(allResourceNames);
@@ -117,7 +123,7 @@ public class AddressApiHelper {
         }
 
         List<Address> sorted = address.stream()
-                .sorted(Comparator.comparing(Address::getNamespace))
+                .sorted(Comparator.comparing(a -> a.getMetadata().getNamespace()))
                 .collect(Collectors.toList());
 
         Map<Address, AddressApi> apiMap = new HashMap<>();
@@ -126,17 +132,17 @@ public class AddressApiHelper {
         AddressResolver addressResolver = null;
         Set<Address> existingAddresses = null;
         for(Address a : sorted) {
-            if (addressSpace == null || !Objects.equals(addressSpace.getNamespace(), a.getNamespace())) {
-                addressSpace = getAddressSpace(a.getNamespace(), addressSpaceId);
+            if (addressSpace == null || !Objects.equals(addressSpace.getMetadata().getNamespace(), a.getMetadata().getNamespace())) {
+                addressSpace = getAddressSpace(a.getMetadata().getNamespace(), addressSpaceId);
                 addressApi = addressSpaceApi.withAddressSpace(addressSpace);
                 addressResolver = getAddressResolver(addressSpace);
-                existingAddresses = addressApi.listAddresses(a.getNamespace());
+                existingAddresses = addressApi.listAddresses(a.getMetadata().getNamespace());
             }
 
             addressResolver.validate(a);
             for (Address existing : existingAddresses) {
-                if (a.getAddress().equals(existing.getAddress()) && !a.getName().equals(existing.getName())) {
-                    throw new BadRequestException("Address '" + a.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
+                if (a.getSpec().getAddress().equals(existing.getSpec().getAddress()) && !a.getMetadata().getName().equals(existing.getMetadata().getName())) {
+                    throw new BadRequestException("Address '" + a.getSpec().getAddress() + "' already exists with resource name '" + existing.getMetadata().getName() + "'");
                 }
             }
             apiMap.put(a, addressApi);
@@ -146,11 +152,11 @@ public class AddressApiHelper {
     }
 
     public Address replaceAddress(String addressSpaceId, Address address) throws Exception {
-        AddressSpace addressSpace = getAddressSpace(address.getNamespace(), addressSpaceId);
+        AddressSpace addressSpace = getAddressSpace(address.getMetadata().getNamespace(), addressSpaceId);
         validateAddress(addressSpace, address);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         if (!addressApi.replaceAddress(address)) {
-            throw new NotFoundException("Address " + address.getName() + " not found");
+            throw new NotFoundException("Address " + address.getMetadata().getName() + " not found");
         }
         return address;
     }

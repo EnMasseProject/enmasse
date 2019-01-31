@@ -5,6 +5,9 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.jupiter.api.AfterEach;
@@ -19,11 +22,13 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * The mock server does not emulate behaviour with respect to resourceVersion.
  */
-class ConfigMapAddressSpaceApiTest {
+class ConfigMapAddressSpaceApiTest extends JULInitializingTest {
+
     private static final String ADDRESS_SPACE_NAME = "myspace";
     private static final String ADDRESS_SPACE_TYPE = "mytype";
     private static final String ADDRESS_SPACE_PLAN = "myplan";
     private static final String ADDRESS_SPACE_NAMESPACE = "myproject";
+    private static final String TEST_UUID = "fd93dc62-197b-11e9-9e48-c85b762e5a2c";
 
     private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
     private AddressSpaceApi api;
@@ -50,9 +55,10 @@ class ConfigMapAddressSpaceApiTest {
         assertTrue(readAddressSpace.isPresent());
         AddressSpace read = readAddressSpace.get();
 
-        assertEquals(ADDRESS_SPACE_NAME, read.getName());
-        assertEquals(ADDRESS_SPACE_TYPE, read.getType());
-        assertEquals(ADDRESS_SPACE_PLAN, read.getPlan());
+        assertEquals(ADDRESS_SPACE_NAME, read.getMetadata().getName());
+        assertEquals(ADDRESS_SPACE_TYPE, read.getSpec().getType());
+        assertEquals(ADDRESS_SPACE_PLAN, read.getSpec().getPlan());
+        assertEquals(TEST_UUID, read.getAnnotation(AnnotationKeys.INFRA_UUID));
     }
 
     @Test
@@ -60,7 +66,7 @@ class ConfigMapAddressSpaceApiTest {
         AddressSpace space = createAddressSpace(ADDRESS_SPACE_NAMESPACE, ADDRESS_SPACE_NAME);
         final String annotationKey = "myannotation";
         String annotationValue = "value";
-        AddressSpace update = new AddressSpace.Builder(space).putAnnotation(annotationKey, annotationValue).build();
+        AddressSpace update = new AddressSpaceBuilder(space).editOrNewMetadata().addToAnnotations(annotationKey, annotationValue).endMetadata().build();
 
         api.createAddressSpace(space);
         assertTrue(api.getAddressSpaceWithName(ADDRESS_SPACE_NAMESPACE, ADDRESS_SPACE_NAME).isPresent());
@@ -70,7 +76,7 @@ class ConfigMapAddressSpaceApiTest {
 
         AddressSpace read = api.getAddressSpaceWithName(ADDRESS_SPACE_NAMESPACE, ADDRESS_SPACE_NAME).get();
 
-        assertEquals(ADDRESS_SPACE_NAME, read.getName());
+        assertEquals(ADDRESS_SPACE_NAME, read.getMetadata().getName());
         assertEquals(annotationValue, read.getAnnotation(annotationKey));
     }
 
@@ -98,11 +104,18 @@ class ConfigMapAddressSpaceApiTest {
     }
 
     private AddressSpace createAddressSpace(String namespace, String name) {
-        return new AddressSpace.Builder()
-                .setName(name)
-                .setNamespace(namespace)
-                .setType(ADDRESS_SPACE_TYPE)
-                .setPlan(ADDRESS_SPACE_PLAN)
+        return new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .addToAnnotations(AnnotationKeys.INFRA_UUID, TEST_UUID)
+                .endMetadata()
+
+                .withNewSpec()
+                .withType(ADDRESS_SPACE_TYPE)
+                .withPlan(ADDRESS_SPACE_PLAN)
+                .endSpec()
+
                 .build();
     }
 }

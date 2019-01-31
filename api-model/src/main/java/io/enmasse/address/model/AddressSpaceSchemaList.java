@@ -4,45 +4,34 @@
  */
 package io.enmasse.address.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import io.fabric8.kubernetes.api.model.ListMeta;
-
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
-@JsonDeserialize(
-        using = JsonDeserializer.None.class
-)
-@JsonPropertyOrder({"apiVersion", "kind", "metadata", "items"})
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddressSpaceSchemaList {
-    private final String apiVersion = "admin.enmasse.io/v1beta1";
-    private final String kind = "AddressSpaceSchemaList";
-    private final ListMeta metadata = new ListMeta();
-    private final List<AddressSpaceSchema> items;
+import io.enmasse.common.model.AbstractList;
+import io.enmasse.common.model.DefaultCustomResource;
 
-    public AddressSpaceSchemaList(Schema schema) {
-        this.items = schema.getAddressSpaceTypes().stream()
-                .map(s -> new AddressSpaceSchema(s, schema.getCreationTimestamp()))
+@DefaultCustomResource
+@SuppressWarnings("serial")
+public class AddressSpaceSchemaList extends AbstractList<AddressSpaceSchema> {
+
+    public static final String KIND = "AddressSpaceSchemaList";
+
+    public AddressSpaceSchemaList() {
+        super(KIND, CoreCrd.API_VERSION);
+    }
+
+    public static AddressSpaceSchemaList fromSchema(final Schema schema) {
+        if (schema == null) {
+            return null;
+        }
+
+        final AddressSpaceSchemaList list = new AddressSpaceSchemaList();
+        final List<AddressSpaceSchema> items = schema.getAddressSpaceTypes().stream()
+                .map(type -> AddressSpaceSchema.fromAddressSpaceType(schema.getCreationTimestamp(), type))
                 .collect(Collectors.toList());
-    }
 
-    public ListMeta getMetadata() {
-        return metadata;
-    }
+        list.setItems(items);
 
-    public List<AddressSpaceSchema> getItems() {
-        return items;
-    }
-
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    public String getKind() {
-        return kind;
+        return list;
     }
 }

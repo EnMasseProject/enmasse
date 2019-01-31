@@ -15,7 +15,8 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -45,21 +46,12 @@ public class StatusController implements Controller {
 
     private InfraConfig getInfraConfig(AddressSpace addressSpace) {
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        return addressSpaceResolver.getInfraConfig(addressSpace.getType(), addressSpace.getPlan());
-    }
-
-    private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
-        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG) == null) {
-            return null;
-        }
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getType());
-        return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
+        return addressSpaceResolver.getInfraConfig(addressSpace.getSpec().getType(), addressSpace.getSpec().getPlan());
     }
 
     private void checkComponentsReady(AddressSpace addressSpace) {
         try {
-            InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
+            InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
             List<HasMetadata> requiredResources = infraResourceFactory.createInfraResources(addressSpace, infraConfig);
 
             checkDeploymentsReady(addressSpace, requiredResources);
@@ -113,7 +105,7 @@ public class StatusController implements Controller {
     }
 
     private void checkAuthServiceReady(AddressSpace addressSpace) {
-        if (AuthenticationServiceType.STANDARD.equals(addressSpace.getAuthenticationService().getType())) {
+        if (AuthenticationServiceType.STANDARD.equals(addressSpace.getSpec().getAuthenticationService().getType())) {
             try {
                 boolean isReady = userApi.realmExists(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
                 if (!isReady) {

@@ -6,10 +6,33 @@ package io.enmasse.address.model;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokerStatus {
-    private final String clusterId;
-    private final String containerId;
+    private String clusterId;
+    private String containerId;
     private BrokerState state;
+
+    public BrokerStatus() {
+    }
 
     public BrokerStatus(String clusterId, String containerId) {
         this.clusterId = clusterId;
@@ -20,6 +43,10 @@ public class BrokerStatus {
         this.clusterId = clusterId;
         this.containerId = containerId;
         this.state = brokerState;
+    }
+
+    public void setContainerId(String containerId) {
+        this.containerId = containerId;
     }
 
     public String getContainerId() {
@@ -54,6 +81,9 @@ public class BrokerStatus {
         return "{clusterId=" + clusterId + ",containerId=" + containerId + ",state=" + (state == null ? "null" : state.name()) + "}";
     }
 
+    public void setClusterId(String clusterId) {
+        this.clusterId = clusterId;
+    }
 
     public String getClusterId() {
         return clusterId;

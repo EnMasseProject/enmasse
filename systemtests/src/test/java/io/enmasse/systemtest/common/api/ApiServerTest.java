@@ -32,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -77,6 +78,12 @@ class ApiServerTest extends TestBase {
         SchemaData schemaData = data.get(20, TimeUnit.SECONDS);
         log.info("Check if schema object is not null");
         assertThat(schemaData.getAddressSpaceTypes().size(), not(0));
+
+        log.info("Check if the 'standard' address space type is found");
+        assertThat(schemaData.getAddressSpaceType("standard"), notNullValue());
+
+        log.info("Check if the 'standard' address space has plans");
+        assertThat(schemaData.getAddressSpaceType("standard").getPlans(), notNullValue());
 
         log.info("Check if schema object contains new address space plan");
         assertTrue(schemaData.getAddressSpaceType("standard").getPlans()
@@ -219,35 +226,38 @@ class ApiServerTest extends TestBase {
                 "test-rest-api-queue4", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE.plan());
         try {
             setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4);
-        } catch (java.util.concurrent.ExecutionException ex) {
-            assertTrue(ex.getMessage().contains("does not match address space"),
-                    "Exception does not contain correct information");
+            fail("Request must fail with an exception");
+        } catch (ExecutionException expectedEx) {
+            assertThat("Exception does not contain correct information", expectedEx.getMessage(), containsString("does not match address space"));
         }
 
         try { //missing address
             Destination destWithoutAddress = Destination.queue(null, DestinationPlan.BROKERED_QUEUE.plan());
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress);
+            fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'address' string field in 'spec'", serverResponse.getString("message"),
+            assertEquals("spec.address: must not be null", serverResponse.getString("message"),
                     "Incorrect response from server on missing address!");
         }
 
         try { //missing type
             Destination destWithoutType = new Destination("not-created-address", null, DestinationPlan.BROKERED_QUEUE.plan());
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType);
+            fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'type' string field in 'spec'", serverResponse.getString("message"),
+            assertEquals("spec.type: must not be null", serverResponse.getString("message"),
                     "Incorrect response from server on missing type!");
         }
 
         try { //missing plan
             Destination destWithoutPlan = Destination.queue("not-created-queue", null);
             setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutPlan);
+            fail("Request must fail with an exception");
         } catch (ExecutionException expectedEx) {
             JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("Missing 'plan' string field in 'spec'", serverResponse.getString("message"),
+            assertEquals("spec.plan: must not be null", serverResponse.getString("message"),
                     "Incorrect response from server on missing plan!");
         }
 
@@ -255,27 +265,54 @@ class ApiServerTest extends TestBase {
         deleteAllAddressSpaces();
     }
 
+    private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
+        Objects.requireNonNull(converter);
+
+        if (items == null) {
+            return null;
+        }
+
+        return items.stream().map(converter).collect(Collectors.toSet());
+    }
+
     @Test
     void testCreateAddressResource() throws Exception {
         AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, "standard-unlimited");
         createAddressSpace(addrSpace);
 
+        final Set<String> names = new LinkedHashSet<>();
+
         Destination anycast = new Destination("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_SMALL_ANYCAST.plan());
+        names.add(String.format("%s.%s", addrSpace.getName(), anycast.getName()));
         addressApiClient.createAddress(anycast);
         List<Address> addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(1));
-        assertThat(addresses.get(0).getName(), is(String.format("%s.%s", addrSpace.getName(), anycast.getName())));
+        assertThat(toStrings(addresses, Address::getName), is(names));
 
         Destination multicast = new Destination("addr2", null, addrSpace.getName(), "addr_2", AddressType.MULTICAST.toString(), DestinationPlan.STANDARD_SMALL_MULTICAST.plan());
+        names.add(String.format("%s.%s", addrSpace.getName(), multicast.getName()));
         addressApiClient.createAddress(multicast);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(2));
+        assertThat(toStrings(addresses, Address::getName), is(names));
 
         String uuid = UUID.randomUUID().toString();
         Destination longname = new Destination(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE.plan());
+        names.add(longname.getName());
         addressApiClient.createAddress(longname);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(3));
+        assertThat(toStrings(addresses, Address::getName), is(names));
+
+        // ensure that getting all addresses (non-namespaces) returns the same result
+
+        Set<String> allNames = TestUtils.getAllAddressesObjects(addressApiClient).get(30, TimeUnit.SECONDS)
+            .stream().map(Address::getName)
+            .collect(Collectors.toSet());
+
+        assertThat(allNames.size(), is(3));
+        assertThat(allNames, is(names));
+
         TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
 

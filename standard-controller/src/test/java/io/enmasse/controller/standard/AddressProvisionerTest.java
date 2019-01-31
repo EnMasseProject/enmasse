@@ -10,6 +10,7 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,9 +19,9 @@ import org.mockito.internal.util.collections.Sets;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static io.enmasse.address.model.Status.Phase.Active;
-import static io.enmasse.address.model.Status.Phase.Configuring;
-import static io.enmasse.address.model.Status.Phase.Pending;
+import static io.enmasse.address.model.Phase.Active;
+import static io.enmasse.address.model.Phase.Configuring;
+import static io.enmasse.address.model.Phase.Pending;
 import static java.util.Collections.singleton;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -64,12 +65,18 @@ public class AddressProvisionerTest {
     @Test
     public void testUsageCheck() {
         Set<Address> addresses = new HashSet<>();
-        addresses.add(new Address.Builder()
-                .setAddress("a1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-anycast")
-                .setType("anycast")
+        addresses.add(new AddressBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withNamespace("ns")
+                        .build())
+
+                .withNewSpec()
+                .withAddress("a1")
+                .withAddressSpace("myspace")
+                .withPlan("small-anycast")
+                .withType("anycast")
+                .endSpec()
+
                 .build());
         AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
@@ -78,14 +85,23 @@ public class AddressProvisionerTest {
         assertThat(usageMap.get("router").size(), is(1));
         assertEquals(0.2, usageMap.get("router").get("all").getUsed(), 0.01);
 
-        addresses.add(new Address.Builder()
-                .setAddress("q1")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .setStatus(new Status(true)
-                        .appendBrokerStatus(new BrokerStatus("broker-0", "broker-0-0").setState(BrokerState.Active)))
+        addresses.add(new AddressBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withNamespace("ns")
+                        .build())
+
+                .withNewSpec()
+                .withAddress("q1")
+                .withAddressSpace("myspace")
+                .withPlan("small-queue")
+                .withType("queue")
+                .endSpec()
+
+                .withStatus(new StatusBuilder()
+                        .withReady(true)
+                        .addToBrokerStatuses(new BrokerStatus("broker-0", "broker-0-0").setState(BrokerState.Active))
+                        .build())
+
                 .build());
 
         usageMap = provisioner.checkUsage(addresses);
@@ -96,14 +112,20 @@ public class AddressProvisionerTest {
         assertEquals(0.4, usageMap.get("router").get("all").getUsed(), 0.01);
         assertEquals(0.4, usageMap.get("broker").get("broker-0").getUsed(), 0.01);
 
-        addresses.add(new Address.Builder()
-                .setAddress("q2")
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan("small-queue")
-                .setType("queue")
-                .putAnnotation(AnnotationKeys.BROKER_ID, "broker-0-0")
-                .putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-0")
+        addresses.add(new AddressBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withNamespace("ns")
+                        .addToAnnotations(AnnotationKeys.BROKER_ID, "broker-0-0")
+                        .addToAnnotations(AnnotationKeys.CLUSTER_ID, "broker-0")
+                        .build())
+
+                .withNewSpec()
+                .withAddress("q2")
+                .withAddressSpace("myspace")
+                .withPlan("small-queue")
+                .withType("queue")
+                .endSpec()
+
                 .build());
 
         usageMap = provisioner.checkUsage(addresses);
@@ -118,9 +140,18 @@ public class AddressProvisionerTest {
     @Test
     public void testQuotaCheck() {
         Set<Address> addresses = new HashSet<>();
-        addresses.add(createQueue("q1", "small-queue").putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-1234-0").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0-0"));
-        addresses.add(createQueue("q2", "small-queue").putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-1234-0").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0-0"));
-        addresses.add(createQueue("q3", "small-queue").putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-1234-1").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-1-0"));
+        addresses.add(createQueue("q1", "small-queue", annotations -> {
+            annotations.put(AnnotationKeys.CLUSTER_ID, "broker-1234-0");
+            annotations.put(AnnotationKeys.BROKER_ID, "broker-1234-0-0");
+        }));
+        addresses.add(createQueue("q2", "small-queue", annotations -> {
+            annotations.put(AnnotationKeys.CLUSTER_ID, "broker-1234-0");
+            annotations.put(AnnotationKeys.BROKER_ID, "broker-1234-0-0");
+        }));
+        addresses.add(createQueue("q3", "small-queue", annotations -> {
+            annotations.put(AnnotationKeys.CLUSTER_ID, "broker-1234-1");
+            annotations.put(AnnotationKeys.BROKER_ID, "broker-1234-1-0");
+        }));
 
         AddressProvisioner provisioner = createProvisioner();
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
@@ -154,7 +185,7 @@ public class AddressProvisionerTest {
         assertThat(provisionMap.get("router").get("all").getNeeded(), is(1));
         int numConfiguring = 0;
         for (Address address : addresses.values()) {
-            if (address.getStatus().getPhase().equals(Configuring)) {
+            if (address.getStatus().getPhase().equals(Phase.Configuring)) {
                 numConfiguring++;
             }
         }
@@ -165,7 +196,7 @@ public class AddressProvisionerTest {
     public void testProvisioningColocated() {
         Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
-        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.BROKER_ID, "broker-1234-0"));
+        addresses.add(createAddress("q1", "queue", "small-queue", annotations -> {annotations.put(AnnotationKeys.BROKER_ID, "broker-1234-0");}));
 
 
         AddressProvisioner provisioner = createProvisioner();
@@ -179,8 +210,8 @@ public class AddressProvisionerTest {
 
         assertThat(clusterList.get(0).getResources().getItems().size(), is(0));
         assertTrue(queue.getStatus().getMessages().isEmpty(), queue.getStatus().getMessages().toString());
-        assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-0-0"));
+        assertThat(queue.getStatus().getPhase(), is(Phase.Configuring));
+        assertThat(queue.getAnnotation(AnnotationKeys.BROKER_ID), is("broker-1234-0-0"));
         assertThat(queue.getStatus().getBrokerStatuses().get(0).getContainerId(), is("broker-1234-0-0"));
         assertThat(queue.getStatus().getBrokerStatuses().get(0).getClusterId(), is("broker-1234-0"));
     }
@@ -193,8 +224,8 @@ public class AddressProvisionerTest {
     public void testScalingColocated() throws Exception {
         Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
-        addresses.add(createAddress("q1", "queue", "small-queue").putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-1234-0"));
-        addresses.add(createAddress("q2", "queue", "small-queue").putAnnotation(AnnotationKeys.CLUSTER_ID, "broker-1234-0"));
+        addresses.add(createAddress("q1", "queue", "small-queue", annotations -> annotations.put(AnnotationKeys.CLUSTER_ID, "broker-1234-0")));
+        addresses.add(createAddress("q2", "queue", "small-queue", annotations -> annotations.put(AnnotationKeys.CLUSTER_ID, "broker-1234-0")));
         id = 1;
 
         AddressProvisioner provisioner = createProvisioner();
@@ -209,8 +240,8 @@ public class AddressProvisionerTest {
         provisioner.provisionResources(createDeployment(1), clusterList, provisionMap, Sets.newSet(queue));
 
         assertTrue(queue.getStatus().getMessages().isEmpty(), queue.getStatus().getMessages().toString());
-        assertThat(queue.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertThat(queue.getAnnotations().get(AnnotationKeys.BROKER_ID), is("broker-1234-1-0"));
+        assertThat(queue.getStatus().getPhase(), is(Phase.Configuring));
+        assertThat(queue.getAnnotation(AnnotationKeys.BROKER_ID), is("broker-1234-1-0"));
         assertThat(queue.getStatus().getBrokerStatuses().get(0).getClusterId(), is("broker-1234-1"));
         assertThat(queue.getStatus().getBrokerStatuses().get(0).getContainerId(), is("broker-1234-1-0"));
     }
@@ -249,7 +280,7 @@ public class AddressProvisionerTest {
         provisioner.provisionResources(new RouterCluster("router", 1, null), brokerClusters, neededMap, addressSet);
 
         for (Address address : addressSet) {
-            assertThat(address.getStatus().getPhase(), is(Configuring));
+            assertThat(address.getStatus().getPhase(), is(Phase.Configuring));
         }
     }
 
@@ -279,31 +310,43 @@ public class AddressProvisionerTest {
     }
 
     private static Address createAddress(String address, String type, String plan, Consumer<Map<String, String>> customizeAnnotations) {
-        final Address.Builder addressBuilder = new Address.Builder()
-                .setName(address)
-                .setAddress(address)
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan(plan)
-                .setType(type);
 
+        final Map<String, String> annotations = new HashMap<>();
         if (customizeAnnotations != null) {
-            final Map<String, String> annotations = new HashMap<>();
             customizeAnnotations.accept(annotations);
-            addressBuilder.setAnnotations(annotations);
         }
+
+        final AddressBuilder addressBuilder = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace." + address)
+                .withNamespace("ns")
+                .withAnnotations(annotations)
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(address)
+                .withAddressSpace("myspace")
+                .withPlan(plan)
+                .withType(type)
+                .endSpec();
 
         return addressBuilder.build();
     }
 
     private Address createSubscription(String address, String topic, String plan) {
-        return new Address.Builder()
-                .setAddress(address)
-                .setAddressSpace("myspace")
-                .setNamespace("ns")
-                .setPlan(plan)
-                .setType("subscription")
-                .setTopic(topic)
+        return new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(address)
+                .withAddressSpace("myspace")
+                .withPlan(plan)
+                .withType("subscription")
+                .withTopic(topic)
+                .endSpec()
+
                 .build();
     }
 
@@ -328,13 +371,13 @@ public class AddressProvisionerTest {
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, Sets.newSet(q1, q2));
 
         assertTrue(q1.getStatus().getMessages().isEmpty(), q1.getStatus().getMessages().toString());
-        assertThat(q1.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertNull(q1.getAnnotations().get(AnnotationKeys.BROKER_ID));
+        assertThat(q1.getStatus().getPhase(), is(Phase.Configuring));
+        assertNull(q1.getAnnotation(AnnotationKeys.BROKER_ID));
         verify(generator).generateCluster(eq(provisioner.getShardedClusterId(q1)), eq(2), eq(q1), any(), any());
 
         assertTrue(q2.getStatus().getMessages().isEmpty(), q2.getStatus().getMessages().toString());
-        assertThat(q2.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertNull(q2.getAnnotations().get(AnnotationKeys.BROKER_ID));
+        assertThat(q2.getStatus().getPhase(), is(Phase.Configuring));
+        assertNull(q2.getAnnotation(AnnotationKeys.BROKER_ID));
         verify(generator).generateCluster(eq(provisioner.getShardedClusterId(q2)), eq(1), eq(q2), any(), any());
     }
 
@@ -351,10 +394,11 @@ public class AddressProvisionerTest {
         addresses.add(q1);
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
-        assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertNotEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        @SuppressWarnings("unused")
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
 
-        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     @Test
@@ -369,17 +413,20 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
 
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
 
-        q1 = new Address.Builder(q1)
-                .setPlan("xlarge-queue")
+        q1 = new AddressBuilder(q1)
+                .editOrNewSpec()
+                .withPlan("xlarge-queue")
+                .endSpec()
                 .build();
 
         q1.getStatus().setPhase(Active);
 
         usageMap = provisioner.checkUsage(Sets.newSet(q1));
+        @SuppressWarnings("unused")
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     @Test
@@ -394,11 +441,13 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
 
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
 
         q1.getStatus().setPhase(Active);
-        q1 = new Address.Builder(q1)
-                .setPlan("large-queue")
+        q1 = new AddressBuilder(q1)
+                .editOrNewSpec()
+                .withPlan("large-queue")
+                .endSpec()
                 .build();
 
 
@@ -406,7 +455,7 @@ public class AddressProvisionerTest {
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
         assertTrue(q1.getStatus().getMessages().contains("Quota exceeded"));
         assertThat(q1.getStatus().getPhase(), is(Active));
-        assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertNotEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     @Test
@@ -421,11 +470,13 @@ public class AddressProvisionerTest {
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
 
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
 
         q1.getStatus().setPhase(Active);
-        q1 = new Address.Builder(q1)
-                .setPlan("xlarge-queue")
+        q1 = new AddressBuilder(q1)
+                .editOrNewSpec()
+                .withPlan("xlarge-queue")
+                .endSpec()
                 .build();
 
 
@@ -433,7 +484,7 @@ public class AddressProvisionerTest {
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
         assertTrue(q1.getStatus().getMessages().isEmpty());
         assertThat(q1.getStatus().getPhase(), is(Configuring));
-        assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     @Test
@@ -462,8 +513,8 @@ public class AddressProvisionerTest {
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, singleton(q));
 
         assertTrue(q.getStatus().getMessages().isEmpty(), q.getStatus().getMessages().toString());
-        assertThat(q.getStatus().getPhase(), is(Status.Phase.Configuring));
-        assertNull(q.getAnnotations().get(AnnotationKeys.BROKER_ID));
+        assertThat(q.getStatus().getPhase(), is(Phase.Configuring));
+        assertNull(q.getAnnotation(AnnotationKeys.BROKER_ID));
 
         verify(generator)
                 .generateCluster(eq(manualClusterId), eq(2), eq(q), any(), any());
@@ -514,7 +565,7 @@ public class AddressProvisionerTest {
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("subscription")), is(1));
 
         for (Address address : addressSet) {
-            assertThat(address.getStatus().getPhase(), is(Configuring));
+            assertThat(address.getStatus().getPhase(), is(Phase.Configuring));
         }
     }
 
@@ -548,14 +599,14 @@ public class AddressProvisionerTest {
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("broker")), is(1));
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("subscription")), is(1));
 
-        Set<Address> configured = new HashSet<Address>();
-        Set<Address> unConfigured = new HashSet<Address>();
+        Set<Address> configured = new HashSet<>();
+        Set<Address> unConfigured = new HashSet<>();
 
 
         for (Address address : addressSet) {
-            if (address.getStatus().getPhase().equals(Pending)) {
+            if (address.getStatus().getPhase().equals(Phase.Pending)) {
                 unConfigured.add(address);
-            } else if (address.getStatus().getPhase().equals(Configuring)) {
+            } else if (address.getStatus().getPhase().equals(Phase.Configuring)) {
                 configured.add(address);
             }
         }
@@ -587,14 +638,14 @@ public class AddressProvisionerTest {
         assertThat(neededMap.keySet().size(), is(3));
         assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(3));
 
-        List<BrokerCluster> brokerClusters = new ArrayList<BrokerCluster>(Arrays.asList(createCluster("broker", 1)));
+        List<BrokerCluster> brokerClusters = new ArrayList<>(Arrays.asList(createCluster("broker", 1)));
 
         when(generator.generateCluster(eq(provisioner.getShardedClusterId(t1)), anyInt(), eq(t1), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(t1), new KubernetesList()));
         when(generator.generateCluster(eq(provisioner.getShardedClusterId(t2)), anyInt(), eq(t2), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(t2), new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), brokerClusters, neededMap, addressSet);
 
         for (Address address : addressSet) {
-            assertThat(address.getStatus().getPhase(), is(Configuring));
+            assertThat(address.getStatus().getPhase(), is(Phase.Configuring));
         }
         verify(generator).generateCluster(eq(provisioner.getShardedClusterId(t2)), eq(1), eq(t2), any(), any());
         verify(generator).generateCluster(eq(provisioner.getShardedClusterId(t1)), eq(1), eq(t1), any(), any());
@@ -665,13 +716,13 @@ public class AddressProvisionerTest {
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("broker")), is(1));
         assertThat(AddressProvisioner.sumNeeded(neededMap.get("subscription")), is(1));
 
-        Set<Address> configured = new HashSet<Address>();
-        Set<Address> unConfigured = new HashSet<Address>();
+        Set<Address> configured = new HashSet<>();
+        Set<Address> unConfigured = new HashSet<>();
 
         for (Address address : addressSet) {
-            if (address.getStatus().getPhase().equals(Pending)) {
+            if (address.getStatus().getPhase().equals(Phase.Pending)) {
                 unConfigured.add(address);
-            } else if (address.getStatus().getPhase().equals(Configuring)) {
+            } else if (address.getStatus().getPhase().equals(Phase.Configuring)) {
                 configured.add(address);
             }
         }

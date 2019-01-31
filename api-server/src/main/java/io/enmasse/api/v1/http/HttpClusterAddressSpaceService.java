@@ -22,14 +22,15 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.k8s.api.AddressSpaceApi;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 @Path(HttpClusterAddressSpaceService.BASE_URI)
 public class HttpClusterAddressSpaceService {
