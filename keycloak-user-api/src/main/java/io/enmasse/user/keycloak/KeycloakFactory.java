@@ -8,4 +8,5 @@ import org.keycloak.admin.client.Keycloak;
 
 public interface KeycloakFactory {
     Keycloak createInstance();
+    boolean isKeycloakAvailable();
 }
