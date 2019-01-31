@@ -16,6 +16,7 @@ import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.k8s.api.*;
+import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
@@ -95,7 +96,14 @@ public class AddressSpaceController {
                 options.getStandardAuthserviceCredentialsSecretName(),
                 options.getStandardAuthserviceCertSecretName());
         Clock clock = Clock.systemUTC();
-        UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
+        UserApi userApi = null;
+        if (keycloakFactory.isKeycloakAvailable()) {
+            log.info("Using Keycloak for User API");
+            userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
+        } else {
+            log.info("Using Null for User API");
+            userApi = new NullUserApi();
+        }
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());

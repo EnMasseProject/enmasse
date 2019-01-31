@@ -70,6 +70,12 @@ public class KubeKeycloakFactory implements KeycloakFactory {
                 .build();
     }
 
+    @Override
+    public boolean isKeycloakAvailable() {
+        return openShiftClient.configMaps().withName(keycloakConfigName).get() != null &&
+                openShiftClient.secrets().withName(keycloakCredentialsSecretName).get() != null;
+    }
+
     private static KeyStore createKeyStore(byte [] ca) {
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");

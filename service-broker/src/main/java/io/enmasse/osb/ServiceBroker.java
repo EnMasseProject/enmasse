@@ -13,6 +13,7 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.KubeSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.osb.api.provision.ConsoleProxy;
@@ -105,7 +106,13 @@ public class ServiceBroker extends AbstractVerticle {
             options.getStandardAuthserviceConfigName(),
             options.getStandardAuthserviceCredentialsSecretName(),
             options.getStandardAuthserviceCertSecretName());
-        return new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
+        if (keycloakFactory.isKeycloakAvailable()) {
+            log.info("Using Keycloak for User API");
+            return new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
+        } else {
+            log.info("Using Null for User API");
+            return new NullUserApi();
+        }
     }
 
     private static void ensureRouteExists(NamespacedOpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {

@@ -14,6 +14,7 @@ import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.KubeSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.metrics.api.Metrics;
+import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
@@ -85,7 +86,14 @@ public class ApiServer extends AbstractVerticle {
                 options.getStandardAuthserviceCredentialsSecretName(),
                 options.getStandardAuthserviceCertSecretName());
         Clock clock = Clock.systemUTC();
-        UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
+        UserApi userApi = null;
+        if (keycloakFactory.isKeycloakAvailable()) {
+            log.info("Using Keycloak for User API");
+            userApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
+        } else {
+            log.info("Using Null for User API");
+            userApi = new NullUserApi();
+        }
 
         String clientCa;
         String requestHeaderClientCa;
