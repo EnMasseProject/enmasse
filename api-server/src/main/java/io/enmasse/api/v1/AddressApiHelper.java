@@ -40,7 +40,11 @@ public class AddressApiHelper {
 
     protected Collection<AddressSpace> getAddressSpaces(String namespace, String addressSpaceId) throws Exception {
         if (addressSpaceId == null) {
-            return addressSpaceApi.listAddressSpaces(namespace);
+            if (namespace == null || namespace.isEmpty()) {
+                return addressSpaceApi.listAllAddressSpaces();
+            } else {
+                return addressSpaceApi.listAddressSpaces(namespace);
+            }
         } else {
             return Collections.singleton(getAddressSpace(namespace, addressSpaceId));
         }
