@@ -1,0 +1,44 @@
+== Overview
+
+This document describes a controller for managing the provisioning and installation of the standard
+authentication service to simplify the work of an EnMasse service admin.
+
+This document also defines a custom resource for defining the configuration of a standard authentication service. 
+
+== Design
+
+A standard authentication service are defined like this:
+
+```
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardAuthenticationService
+metadata:
+  name: standard
+spec:
+  adminCredentialsSecret:
+    name: keycloak-credentials
+    namespace: enmasse-infra
+  resources:
+    storage: 5Gi
+```
+
+The controller deploys Keycloak and configures it with the above settings.
+
+The `keycloak-controller` component watches `StandardAuthenticationService`
+resources, and creates the standard authentication service as specified by the resource. It will:
+
+* Setup admin credentials for keycloak
+* Create keycloak deployment
+* Create the route for external access
+* Create the persistent volume claims needed
+* Setup to OAUTH client
+
+== Testing
+
+The systemtests need to deploy the `StandardAuthenticationService` resource explicitly in order to
+run tests that use the standard authentication service.
+
+== Documentation
+
+The installation instructions for EnMasse and standard authentication service in particular needs to
+be updated.
