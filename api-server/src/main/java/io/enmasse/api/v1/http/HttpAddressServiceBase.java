@@ -205,8 +205,8 @@ public class HttpAddressServiceBase {
         overrideLabel(existing, address, LabelKeys.NAMESPACE);
     }
 
-    private static void override(Map<String,String> map1, Map<String,String> map2, String key ) {
-        if (map1.get(key) == null) {
+    static void override(Map<String,String> map1, Map<String,String> map2, String key ) {
+        if (map1 == null || map1.get(key) == null) {
             return;
         }
         if (!map1.get(key).equals(map2.get(key))) {
@@ -214,11 +214,17 @@ public class HttpAddressServiceBase {
         }
     }
 
-    private static void overrideAnnotation(Address existing, Address address, String annotationKey) {
+    static void overrideAnnotation(Address existing, Address address, String annotationKey) {
+        if ( address.getMetadata().getAnnotations() == null ) {
+            address.getMetadata().setAnnotations(new HashMap<>());
+        }
         override(existing.getMetadata().getAnnotations(), address.getMetadata().getAnnotations(), annotationKey);
     }
 
-    private static void overrideLabel(Address existing, Address address, String labelKey) {
+    static void overrideLabel(Address existing, Address address, String labelKey) {
+        if ( address.getMetadata().getLabels() == null ) {
+            address.getMetadata().setLabels(new HashMap<>());
+        }
         override(existing.getMetadata().getLabels(), address.getMetadata().getLabels(), labelKey);
     }
 
