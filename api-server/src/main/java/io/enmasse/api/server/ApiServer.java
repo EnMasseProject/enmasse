@@ -88,8 +88,10 @@ public class ApiServer extends AbstractVerticle {
         Clock clock = Clock.systemUTC();
         UserApi userApi = null;
         if (keycloakFactory.isKeycloakAvailable()) {
+            log.info("Using Keycloak for User API");
             userApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
         } else {
+            log.info("Using Null for User API");
             userApi = new NullUserApi();
         }
 

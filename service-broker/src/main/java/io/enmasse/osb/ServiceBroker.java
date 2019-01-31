@@ -109,8 +109,10 @@ public class ServiceBroker extends AbstractVerticle {
             options.getStandardAuthserviceCredentialsSecretName(),
             options.getStandardAuthserviceCertSecretName());
         if (keycloakFactory.isKeycloakAvailable()) {
+            log.info("Using Keycloak for User API");
             return new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
         } else {
+            log.info("Using Null for User API");
             return new NullUserApi();
         }
     }
