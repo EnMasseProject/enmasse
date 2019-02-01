@@ -6,8 +6,8 @@ PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
 NAMESPACE       ?= $(shell oc project -q)
 COMMIT 			?= $(shell git rev-parse HEAD)
-VERSION         ?= $(shell cat $(TOPDIR)/release.version)
-MAVEN_VERSION   ?= $(shell cat $(TOPDIR)/maven.version)
+VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
+MAVEN_VERSION   ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 TAG             ?= latest
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false

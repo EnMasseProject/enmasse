@@ -5,7 +5,7 @@ source ${CURDIR}/common.sh
 
 PULL_REQUEST=${PULL_REQUEST:-true}
 BRANCH=${BRANCH:-master}
-VERSION=$(cat release.version)
+VERSION=$(grep "release.version" pom.properties| cut -d'=' -f2)
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
 SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-"io.enmasse.**.SmokeTest"}

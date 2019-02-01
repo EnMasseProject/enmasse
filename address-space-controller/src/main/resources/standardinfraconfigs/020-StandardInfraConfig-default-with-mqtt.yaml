@@ -7,7 +7,8 @@ metadata:
   annotations:
     enmasse.io/with-mqtt: true
 spec:
-  version: ${version}
+  version: ${release.version}
+
   admin:
     resources:
       memory: 512Mi
