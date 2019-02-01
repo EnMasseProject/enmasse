@@ -19,7 +19,7 @@ else
 endif
 
 package_java:
-	mvn package -DskipTests $(MAVEN_ARGS)
+	IMAGE_PULL_POLICY=Foo mvn package -DskipTests $(MAVEN_ARGS)
 
 package: package_java
 endif

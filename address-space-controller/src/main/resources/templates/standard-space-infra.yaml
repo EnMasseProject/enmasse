@@ -246,7 +246,7 @@ objects:
           - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
             value: "qdrouterd-headless-${INFRA_UUID}"
           image: ${ROUTER_IMAGE}
-          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          imagePullPolicy: ${image.pull.policy}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -300,7 +300,7 @@ objects:
           - name: CERT_DIR
             value: /etc/enmasse-certs
           image: ${ROUTER_METRICS_IMAGE}
-          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          imagePullPolicy: ${image.pull.policy}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -429,7 +429,7 @@ objects:
           - name: MESSAGING_SECRET
             value: ${MESSAGING_SECRET}
           image: ${STANDARD_CONTROLLER_IMAGE}
-          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          imagePullPolicy: ${image.pull.policy}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -489,7 +489,7 @@ objects:
           - name: MESSAGING_CERT
             value: /opt/agent/messaging-cert/tls.crt
           image: ${AGENT_IMAGE}
-          imagePullPolicy: ${IMAGE_PULL_POLICY}
+          imagePullPolicy: ${image.pull.policy}
           livenessProbe:
             httpGet:
               path: /healthz
