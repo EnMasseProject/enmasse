@@ -1,9 +1,10 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -33,5 +34,14 @@ public class TimeoutBudget {
 
     public boolean timeoutExpired() {
         return timeLeft() < 0;
+    }
+
+    public static TimeoutBudget ofDuration(final Duration duration) {
+        final long ms = duration.toMillis();
+        if (ms < 0) {
+            return new TimeoutBudget(duration.toNanos(), TimeUnit.NANOSECONDS);
+        } else {
+            return new TimeoutBudget(ms, TimeUnit.MILLISECONDS);
+        }
     }
 }

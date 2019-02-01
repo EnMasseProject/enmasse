@@ -12,7 +12,6 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 

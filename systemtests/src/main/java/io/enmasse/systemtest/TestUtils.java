@@ -20,6 +20,7 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -1207,6 +1209,42 @@ public class TestUtils {
         Assertions.fail(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
+    public static void waitUntilCondition(final String forWhat, final BooleanSupplier condition, final TimeoutBudget budget) throws Exception {
+        Objects.requireNonNull(condition);
+        Objects.requireNonNull(budget);
+
+        log.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
+
+        while (!budget.timeoutExpired()) {
+            if(condition.getAsBoolean()) {
+                return;
+            }
+            log.debug("next iteration, remaining time: {}", budget.timeLeft());
+            Thread.sleep(1_000);
+        }
+        Assertions.fail("Failed to wait for: " + forWhat);
+    }
+
+    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final AddressApiClient client, final String name, final String currentResourceVersion) throws Exception {
+        waitForChangedResourceVersion(budget, currentResourceVersion, () -> client.getAddressSpace(name).getJsonObject("metadata").getString("resourceVersion"));
+    }
+
+    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
+            throws Exception {
+        Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
+
+        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, () -> {
+            try {
+                final String newVersion = provideNewResourceVersion.get();
+                return !currentResourceVersion.equals(newVersion);
+            } catch (RuntimeException e) {
+                throw e; // don't pollute the cause chain
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }, budget);
+    }
+
     public static Endpoint deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
         Endpoint endpoint = kubeClient.createServiceFromResource(namespace, getMessagingClientServiceResource());
         kubeClient.createDeploymentFromResource(namespace, getMessagingClientDeploymentResource());
@@ -1276,4 +1314,5 @@ public class TestUtils {
                 .endSpec()
                 .build();
     }
+
 }
