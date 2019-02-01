@@ -7,6 +7,7 @@ package io.enmasse.controller;
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.auth.OpenSSLCertManager;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -37,6 +38,7 @@ public class EndpointController implements Controller {
     @Override
     public AddressSpace handle(AddressSpace addressSpace) {
         updateEndpoints(addressSpace);
+        updateCaCert(addressSpace);
         return addressSpace;
     }
 
@@ -60,6 +62,13 @@ public class EndpointController implements Controller {
 
         log.debug("Updating endpoints for " + addressSpace.getMetadata().getName() + " to " + statuses);
         addressSpace.getStatus().setEndpointStatuses(statuses);
+    }
+
+    private void updateCaCert(final AddressSpace addressSpace) {
+        final Secret caCert = OpenSSLCertManager.create(client).getCertSecret(KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace));
+        if ( caCert != null ) {
+            addressSpace.getStatus().setCaCert(caCert.getData().get("tls.crt"));
+        }
     }
 
     private static class EndpointInfo {
