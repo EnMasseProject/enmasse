@@ -1,45 +1,10 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
-DOCKER_REGISTRY ?= docker.io
-DOCKER_ORG      ?= enmasseproject
-DOCKER          ?= docker
-PROJECT_PREFIX  ?= enmasse
-PROJECT_NAME    ?= $(shell basename $(CURDIR))
+include $(TOPDIR)/Makefile.include.mk
 NAMESPACE       ?= $(shell oc project -q)
-COMMIT 			?= $(shell git rev-parse HEAD)
-VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-MAVEN_VERSION   ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
-TAG             ?= latest
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
 UNAME_S := $(shell uname -s)
 LN=ln
-
-# Image settings
-DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
-IMAGE_VERSION 		   ?= $(TAG)
-ADDRESS_SPACE_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/address-space-controller:$(IMAGE_VERSION)"
-API_SERVER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/api-server:$(IMAGE_VERSION)"
-STANDARD_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/standard-controller:$(IMAGE_VERSION)"
-ROUTER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/router:$(IMAGE_VERSION)"
-ARTEMIS_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/artemis:$(IMAGE_VERSION)"
-ARTEMIS_PLUGIN_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/broker-plugin:$(IMAGE_VERSION)"
-TOPIC_FORWARDER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/topic-forwarder:$(IMAGE_VERSION)"
-ROUTER_METRICS_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/router-metrics:$(IMAGE_VERSION)"
-AGENT_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/agent:$(IMAGE_VERSION)"
-MQTT_GATEWAY_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/mqtt-gateway:$(IMAGE_VERSION)"
-MQTT_LWT_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/mqtt-lwt:$(IMAGE_VERSION)"
-NONE_AUTHSERVICE_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/none-authservice:$(IMAGE_VERSION)"
-KEYCLOAK_IMAGE ?= "jboss/keycloak-openshift:3.4.3.Final"
-KEYCLOAK_PLUGIN_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-plugin:$(IMAGE_VERSION)"
-KEYCLOAK_CONTROLLER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/keycloak-controller:$(IMAGE_VERSION)"
-SERVICE_BROKER_IMAGE ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/service-broker:$(IMAGE_VERSION)"
-PROMETHEUS_IMAGE ?= "prom/prometheus:v2.4.3"
-ALERTMANAGER_IMAGE ?= "prom/alertmanager:v0.15.2"
-GRAFANA_IMAGE ?= "grafana/grafana:5.3.1"
-KUBE_STATE_METRICS_IMAGE ?= "quay.io/coreos/kube-state-metrics:v1.4.0"
-OAUTH_PROXY_IMAGE ?= "openshift/oauth-proxy:latest"
-DEFAULT_PROJECT ?= "enmasse-infra"
-IMAGE_PULL_POLICY ?= "Always"
 
 ifeq ($(UNAME_S),Darwin)
 	LN = gln
