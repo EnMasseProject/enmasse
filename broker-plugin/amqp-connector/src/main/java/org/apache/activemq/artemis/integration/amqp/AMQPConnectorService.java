@@ -174,7 +174,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
 
    @Override
    public void connectionReadyForWrites(Object connectionID, boolean ready) {
-      ActiveMQAMQPLogger.LOGGER.infov("connectionReadyForWrites for connector {0}", name);
+      ActiveMQAMQPLogger.LOGGER.debugv("connectionReadyForWrites for connector {0}", name);
       lifecycleHandler.connectionReadyForWrites(connectionID, ready);
    }
 }
