@@ -7,7 +7,7 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.OSBApiClient;
-import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceTypeData;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.timemeasuring.Operation;
@@ -1084,7 +1084,7 @@ public class TestUtils {
      * @param dest       destination which will be modified
      * @param plan       definition of AddressPlan
      */
-    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Destination dest, AddressPlan plan) {
+    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Destination dest, AddressPlanDefinition plan) {
         String mapKey = "config.json";
         ConfigMap destConfigMap = kubernetes.getConfigMap(addrSpace.getNamespace(), dest.getAddress());
 

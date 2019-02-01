@@ -60,7 +60,7 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testRestApiGetSchema() throws Exception {
-        AddressPlan queuePlan = new AddressPlan("test-schema-rest-api-addr-plan", AddressType.QUEUE,
+        AddressPlanDefinition queuePlan = new AddressPlanDefinition("test-schema-rest-api-addr-plan", AddressType.QUEUE,
                 Arrays.asList(new AddressResource("broker", 0.6), new AddressResource("router", 0.0)));
         plansProvider.createAddressPlan(queuePlan);
 
@@ -69,8 +69,8 @@ class ApiServerTest extends TestBase {
                 new AddressSpaceResource("broker", 2.0),
                 new AddressSpaceResource("router", 1.0),
                 new AddressSpaceResource("aggregate", 2.0));
-        List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
-        AddressSpacePlan addressSpacePlan = new AddressSpacePlan("schema-rest-api-plan",
+        List<AddressPlanDefinition> addressPlans = Collections.singletonList(queuePlan);
+        AddressSpacePlanDefinition addressSpacePlan = new AddressSpacePlanDefinition("schema-rest-api-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
@@ -224,45 +224,33 @@ class ApiServerTest extends TestBase {
         logWithSeparator(log, "Check behavior when addressSpace is set to another existing address space");
         Destination dest4 = new Destination(null, null, addressSpace2.getName(),
                 "test-rest-api-queue4", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE.plan());
-        try {
-            setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4);
-            fail("Request must fail with an exception");
-        } catch (ExecutionException expectedEx) {
-            assertThat("Exception does not contain correct information", expectedEx.getMessage(), containsString("does not match address space"));
-        }
 
-        try { //missing address
-            Destination destWithoutAddress = Destination.queue(null, DestinationPlan.BROKERED_QUEUE.plan());
-            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress);
-            fail("Request must fail with an exception");
-        } catch (ExecutionException expectedEx) {
-            JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("spec.address: must not be null", serverResponse.getString("message"),
-                    "Incorrect response from server on missing address!");
-        }
+        Throwable exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4));
+        assertThat("Exception does not contain correct information", exception.getMessage(), containsString("does not match address space"));
 
-        try { //missing type
-            Destination destWithoutType = new Destination("not-created-address", null, DestinationPlan.BROKERED_QUEUE.plan());
-            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType);
-            fail("Request must fail with an exception");
-        } catch (ExecutionException expectedEx) {
-            JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("spec.type: must not be null", serverResponse.getString("message"),
-                    "Incorrect response from server on missing type!");
-        }
+        Destination destWithoutAddress = Destination.queue(null, DestinationPlan.BROKERED_QUEUE.plan());
+        exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress));
+        JsonObject serverResponse = new JsonObject(exception.getCause().getMessage());
+        assertEquals("spec.address: must not be null", serverResponse.getString("message"),
+                "Incorrect response from server on missing address!");
 
-        try { //missing plan
-            Destination destWithoutPlan = Destination.queue("not-created-queue", null);
-            setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutPlan);
-            fail("Request must fail with an exception");
-        } catch (ExecutionException expectedEx) {
-            JsonObject serverResponse = new JsonObject(expectedEx.getCause().getMessage());
-            assertEquals("spec.plan: must not be null", serverResponse.getString("message"),
-                    "Incorrect response from server on missing plan!");
-        }
+        Destination destWithoutType = new Destination("not-created-address", null, DestinationPlan.BROKERED_QUEUE.plan());
+        exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType));
+        serverResponse = new JsonObject(exception.getCause().getMessage());
+        assertEquals("spec.type: must not be null", serverResponse.getString("message"),
+                "Incorrect response from server on missing type!");
+
+        Destination destWithoutPlan = Destination.queue("not-created-queue", null);
+        exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutPlan));
+
+        serverResponse = new JsonObject(exception.getCause().getMessage());
+        assertEquals("spec.plan: must not be null", serverResponse.getString("message"),
+                "Incorrect response from server on missing plan!");
 
         logWithSeparator(log, "Removing all address spaces");
+
         deleteAllAddressSpaces();
+
     }
 
     private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
@@ -277,7 +265,7 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testCreateAddressResource() throws Exception {
-        AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, "standard-unlimited");
+        AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_UNLIMITED.plan());
         createAddressSpace(addrSpace);
 
         final Set<String> names = new LinkedHashSet<>();
@@ -307,8 +295,8 @@ class ApiServerTest extends TestBase {
         // ensure that getting all addresses (non-namespaces) returns the same result
 
         Set<String> allNames = TestUtils.getAllAddressesObjects(addressApiClient).get(30, TimeUnit.SECONDS)
-            .stream().map(Address::getName)
-            .collect(Collectors.toSet());
+                .stream().map(Address::getName)
+                .collect(Collectors.toSet());
 
         assertThat(allNames.size(), is(3));
         assertThat(allNames, is(names));

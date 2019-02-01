@@ -11,13 +11,13 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddressPlan {
+public class AddressPlanDefinition {
 
     List<AddressResource> addressResources;
     private String name;
     private AddressType type;
 
-    public AddressPlan(String name, AddressType type, List<AddressResource> addressResources) {
+    public AddressPlanDefinition(String name, AddressType type, List<AddressResource> addressResources) {
         this.name = name;
         this.type = type;
         this.addressResources = addressResources;
@@ -73,7 +73,7 @@ public class AddressPlan {
     }
 
 
-    public static AddressPlan fromJson(JsonObject planDefinition) {
+    public static AddressPlanDefinition fromJson(JsonObject planDefinition) {
         JsonObject metadataDef = planDefinition.getJsonObject("metadata");
 
         JsonArray requiredResourcesDef = planDefinition.getJsonArray("requiredResources");
@@ -87,7 +87,7 @@ public class AddressPlan {
             requiredResources.add(requiredResource);
         }
 
-        return new AddressPlan(
+        return new AddressPlanDefinition(
                 metadataDef.getString("name"),
                 AddressType.valueOf(planDefinition.getString("addressType").toUpperCase()),
                 requiredResources);

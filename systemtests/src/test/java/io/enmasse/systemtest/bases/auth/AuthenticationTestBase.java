@@ -51,7 +51,7 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
-        String plan = type.equals(AddressSpaceType.STANDARD) ? "standard-small" : "brokered-single-broker";
+        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlan.STANDARD_SMALL.plan() : AddressSpacePlan.BROKERED.plan();
         AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type, plan, AuthService.NONE);
         AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type, plan, AuthService.STANDARD);
         createAddressSpaceList(s3standard, s4standard);
@@ -66,7 +66,7 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
-        String plan = type.equals(AddressSpaceType.STANDARD) ? "standard-small" : "brokered-single-broker";
+        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlan.STANDARD_SMALL.plan() : AddressSpacePlan.BROKERED.plan();
         AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type, plan, AuthService.STANDARD);
         AddressSpace s2brokered = new AddressSpace(type.toString().toLowerCase() + "-s2", type, plan, AuthService.STANDARD);
         createAddressSpaceList(s1brokered, s2brokered);

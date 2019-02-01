@@ -12,15 +12,15 @@ import io.vertx.core.json.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AddressSpacePlan {
+public class AddressSpacePlanDefinition {
 
     private String name;
     private String infraConfigName;
     private AddressSpaceType type;
     private List<AddressSpaceResource> resources;
-    private List<AddressPlan> addressPlans = new ArrayList<>();
+    private List<AddressPlanDefinition> addressPlans = new ArrayList<>();
 
-    public AddressSpacePlan(String name, String infraConfigName, AddressSpaceType type, List<AddressSpaceResource> resources, List<AddressPlan> addressPlans) {
+    public AddressSpacePlanDefinition(String name, String infraConfigName, AddressSpaceType type, List<AddressSpaceResource> resources, List<AddressPlanDefinition> addressPlans) {
         this.name = name;
         this.infraConfigName = infraConfigName;
         this.type = type;
@@ -28,7 +28,7 @@ public class AddressSpacePlan {
         this.addressPlans = addressPlans;
     }
 
-    public AddressSpacePlan(String name, String configName, String infraConfigName, AddressSpaceType type, List<AddressSpaceResource> resources) {
+    public AddressSpacePlanDefinition(String name, String configName, String infraConfigName, AddressSpaceType type, List<AddressSpaceResource> resources) {
         this.name = name;
         this.infraConfigName = infraConfigName;
         this.type = type;
@@ -52,7 +52,7 @@ public class AddressSpacePlan {
         return resources;
     }
 
-    public List<AddressPlan> getAddressPlans() {
+    public List<AddressPlanDefinition> getAddressPlans() {
         return addressPlans;
     }
 
@@ -89,7 +89,7 @@ public class AddressSpacePlan {
         config.put("resources", defResources); // </resources>
 
         JsonArray defAddressPlan = new JsonArray(); // <addressPlans>
-        for (AddressPlan plan : this.getAddressPlans()) {
+        for (AddressPlanDefinition plan : this.getAddressPlans()) {
             defAddressPlan.add(plan.getName());
         }
         config.put("addressPlans", defAddressPlan); // </addressPlans>
@@ -97,7 +97,7 @@ public class AddressSpacePlan {
         return config;
     }
 
-    public static AddressSpacePlan fromJson(JsonObject planDefinition, AdminApiClient adminApiClient) throws Exception {
+    public static AddressSpacePlanDefinition fromJson(JsonObject planDefinition, AdminApiClient adminApiClient) throws Exception {
         JsonObject metadataDef = planDefinition.getJsonObject("metadata");
 
         String name = metadataDef.getString("name");
@@ -116,11 +116,11 @@ public class AddressSpacePlan {
         }
 
         JsonArray addressPlansDef = planDefinition.getJsonArray("addressPlans");
-        List<AddressPlan> addressPlans = new ArrayList<>();
+        List<AddressPlanDefinition> addressPlans = new ArrayList<>();
         for (int i = 0; i < addressPlansDef.size(); i++) {
             addressPlans.add(adminApiClient.getAddressPlan(addressPlansDef.getString(i)));
         }
-        return new AddressSpacePlan(name, resourceDefName, type, resources, addressPlans);
+        return new AddressSpacePlanDefinition(name, resourceDefName, type, resources, addressPlans);
     }
 
 }

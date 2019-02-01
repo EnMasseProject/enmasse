@@ -6,9 +6,9 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
 import io.enmasse.systemtest.standard.QueueTest;
 import org.junit.jupiter.api.AfterEach;
@@ -44,7 +44,7 @@ class PlansMarathonTest extends MarathonTestBase {
     void testHighLoadAddresses() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.001), new AddressResource("router", 0.0));
-        AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
+        AddressPlanDefinition xxsQueuePlan = new AddressPlanDefinition("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
@@ -52,8 +52,8 @@ class PlansMarathonTest extends MarathonTestBase {
                 new AddressSpaceResource("broker", 10.0),
                 new AddressSpaceResource("router", 2.0),
                 new AddressSpaceResource("aggregate", 12.0));
-        List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
-        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
+        List<AddressPlanDefinition> addressPlans = Collections.singletonList(xxsQueuePlan);
+        AddressSpacePlanDefinition manyAddressesPlan = new AddressSpacePlanDefinition("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
@@ -98,7 +98,7 @@ class PlansMarathonTest extends MarathonTestBase {
     void testHighLoadAddressesInBatches() throws Exception {
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.001), new AddressResource("router", 0.0));
-        AddressPlan xxsQueuePlan = new AddressPlan("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
+        AddressPlanDefinition xxsQueuePlan = new AddressPlanDefinition("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
@@ -106,8 +106,8 @@ class PlansMarathonTest extends MarathonTestBase {
                 new AddressSpaceResource("broker", 10.0),
                 new AddressSpaceResource("router", 2.0),
                 new AddressSpaceResource("aggregate", 12.0));
-        List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
-        AddressSpacePlan manyAddressesPlan = new AddressSpacePlan("many-brokers-plan",
+        List<AddressPlanDefinition> addressPlans = Collections.singletonList(xxsQueuePlan);
+        AddressSpacePlanDefinition manyAddressesPlan = new AddressSpacePlanDefinition("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 

@@ -24,11 +24,6 @@ public enum DestinationPlan {
         this.plan = plan;
     }
 
-    /**
-     * Gets command for external client
-     *
-     * @return string command
-     */
     public String plan() {
         return plan;
     }

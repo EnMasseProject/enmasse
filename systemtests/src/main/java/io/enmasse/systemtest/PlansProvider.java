@@ -5,8 +5,8 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.apiclients.AdminApiClient;
-import io.enmasse.systemtest.resources.AddressPlan;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressPlanDefinition;
+import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -14,8 +14,8 @@ import java.util.ArrayList;
 public class PlansProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private ArrayList<AddressPlan> addressPlans;
-    private ArrayList<AddressSpacePlan> addressSpacePlans;
+    private ArrayList<AddressPlanDefinition> addressPlans;
+    private ArrayList<AddressSpacePlanDefinition> addressSpacePlans;
     private final AdminApiClient adminApiClient;
 
     public PlansProvider(Kubernetes kubernetes) {
@@ -28,11 +28,11 @@ public class PlansProvider {
     }
 
     public void tearDown() throws Exception {
-        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+        for (AddressSpacePlanDefinition addressSpacePlan : addressSpacePlans) {
             adminApiClient.deleteAddressSpacePlan(addressSpacePlan);
         }
 
-        for (AddressPlan addressPlan : addressPlans) {
+        for (AddressPlanDefinition addressPlan : addressPlans) {
             adminApiClient.deleteAddressPlan(addressPlan);
         }
 
@@ -44,11 +44,11 @@ public class PlansProvider {
     // Address plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressPlan(AddressPlan addressPlan) throws Exception {
+    public void createAddressPlan(AddressPlanDefinition addressPlan) throws Exception {
         createAddressPlan(addressPlan, false);
     }
 
-    public void createAddressPlan(AddressPlan addressPlan, boolean replaceExisting) throws Exception {
+    public void createAddressPlan(AddressPlanDefinition addressPlan, boolean replaceExisting) throws Exception {
         if (replaceExisting) {
             adminApiClient.replaceAddressPlan(addressPlan);
         } else {
@@ -57,12 +57,12 @@ public class PlansProvider {
         addressPlans.add(addressPlan);
     }
 
-    public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
+    public void removeAddressPlan(AddressPlanDefinition addressPlan) throws Exception {
         adminApiClient.deleteAddressPlan(addressPlan);
         addressPlans.removeIf(addressPlanIter -> addressPlanIter.getName().equals(addressPlan.getName()));
     }
 
-    public void replaceAddressPlan(AddressPlan plan) throws Exception {
+    public void replaceAddressPlan(AddressPlanDefinition plan) throws Exception {
         adminApiClient.replaceAddressPlan(plan);
     }
 
@@ -70,11 +70,11 @@ public class PlansProvider {
     // Address space plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+    public void createAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan) throws Exception {
         createAddressSpacePlan(addressSpacePlan, false);
     }
 
-    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean replaceExisting) throws Exception {
+    public void createAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan, boolean replaceExisting) throws Exception {
         if (replaceExisting) {
             adminApiClient.replaceAddressSpacePlan(addressSpacePlan);
         } else {
@@ -83,12 +83,12 @@ public class PlansProvider {
         addressSpacePlans.add(addressSpacePlan);
     }
 
-    public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) {
+    public void removeAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan) {
         removeAddressSpacePlan(addressSpacePlan);
         addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getName().equals(addressSpacePlan.getName()));
     }
 
-    public AddressSpacePlan getAddressSpacePlan(String config) throws Exception {
+    public AddressSpacePlanDefinition getAddressSpacePlan(String config) throws Exception {
         return adminApiClient.getAddressSpacePlan(config);
     }
 }
