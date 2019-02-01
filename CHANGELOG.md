@@ -1,6 +1,10 @@
 ## 0.27.0
 * Upgrade to Artemis 2.6.4
 
+## 0.26.2
+* Fix issue in infra config versions
+* Prevent use of user API to throw errors when using none authservice
+
 ## 0.26.0
 * Support for switching address space plans
 * Support for switching address plans for `anycast`, `multicast`, and `queue` address types in standard address space
