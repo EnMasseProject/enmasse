@@ -235,10 +235,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '{}' exists and will be updated.", addressSpace);
             addressApiClient.replaceAddressSpace(addressSpace);
-            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
             if (waitForPlanApplied) {
                 TestUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
             }
+            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
