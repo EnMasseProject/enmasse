@@ -7,6 +7,7 @@ package io.enmasse.controller;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -154,5 +155,24 @@ public class CreateControllerTest {
 
         assertThat(addressSpace.getStatus().getMessages().size(), is(1));
         assertTrue(addressSpace.getStatus().getMessages().iterator().next().contains("quota exceeded for resource broker"));
+    }
+
+    @Test
+    public void testDoMajorMinorVersionsMatch() {
+        CreateController controller = new CreateController(null, null, null, null, null, "0.26", null);
+
+        assertTrue(controller.doMajorMinorVersionsMatch("0.26.0"));
+        assertTrue(controller.doMajorMinorVersionsMatch("0.26"));
+        assertTrue(controller.doMajorMinorVersionsMatch("0.26.1"));
+        assertFalse(controller.doMajorMinorVersionsMatch("0.26-SNAPSHOT"));
+        assertFalse(controller.doMajorMinorVersionsMatch("0.27"));
+        assertFalse(controller.doMajorMinorVersionsMatch("0.27.0"));
+
+        controller = new CreateController(null, null, null, null, null, "0.27-SNAPSHOT", null);
+
+        assertTrue(controller.doMajorMinorVersionsMatch("0.27-SNAPSHOT"));
+        assertFalse(controller.doMajorMinorVersionsMatch("0.26-SNAPSHOT"));
+        assertFalse(controller.doMajorMinorVersionsMatch("0.27"));
+        assertFalse(controller.doMajorMinorVersionsMatch("0.27.0"));
     }
 }

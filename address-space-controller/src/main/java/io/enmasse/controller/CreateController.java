@@ -127,7 +127,7 @@ public class CreateController implements Controller {
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
         } else if (currentInfraConfig == null || !currentInfraConfig.equals(desiredInfraConfig)) {
 
-            if (version.equals(desiredInfraConfig.getVersion())) {
+            if (version.equals(desiredInfraConfig.getVersion()) || doMajorMinorVersionsMatch(desiredInfraConfig.getVersion())) {
                 if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                     return addressSpace;
                 }
@@ -165,6 +165,15 @@ public class CreateController implements Controller {
 
         return addressSpace;
     }
+
+    //Can be removed after release 0.27
+    //In release 0.26, version of desired config = 0.26.0 controller version = 0.26
+    boolean doMajorMinorVersionsMatch(String desiredInfraConfigVersion) {
+		return desiredInfraConfigVersion != null
+				&& (desiredInfraConfigVersion.equals(version)
+				|| desiredInfraConfigVersion.startsWith(version+".")
+				&& desiredInfraConfigVersion.length() == version.length()+2);
+	}
 
     private boolean checkExceedsQuota(AddressSpaceType addressSpaceType, AddressSpacePlan plan, AddressSpace addressSpace) {
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
