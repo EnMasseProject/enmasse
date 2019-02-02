@@ -26,7 +26,7 @@ public class AddressSpace {
     private boolean useEndpointsInJson;
 
     public AddressSpace(String name) {
-        this(name, name, AddressSpaceType.STANDARD, AuthService.NONE);
+        this(name, null, AddressSpaceType.STANDARD, AuthService.NONE);
     }
 
     public AddressSpace(String name, AuthService authService) {
@@ -72,7 +72,6 @@ public class AddressSpace {
 
     public AddressSpace(String name, AddressSpaceType type, AuthService authService) {
         setName(name);
-        setNamespace(name);
         setType(type);
         setAuthService(authService);
         addDefaultAnnotations();
@@ -95,7 +94,7 @@ public class AddressSpace {
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan, AuthService authService) {
-        this(name, name, type, plan, authService);
+        this(name, null, type, plan, authService);
     }
 
     public Endpoint getEndpointByName(String endpoint) {
