@@ -168,6 +168,11 @@ public class User {
             return this;
         }
 
+        public AuthorizationRule addOperations(List<String> operations) {
+            this.operations.addAll(operations);
+            return this;
+        }
+
         public AuthorizationRule addAuthorizationRule(String address, String operation) {
             addAddress(address);
             addOperation(operation);

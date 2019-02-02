@@ -7,6 +7,7 @@ package io.enmasse.systemtest.common.api;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -302,6 +303,63 @@ class ApiServerTest extends TestBase {
         assertThat(allNames, is(names));
 
         TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
+    }
+
+    @Test
+    void testNonNamespacedOperations() throws Exception {
+        String namespace1 = "test-namespace-1";
+        String namespace2 = "test-namespace-2";
+
+        try {
+            kubernetes.createNamespace(namespace1);
+            kubernetes.createNamespace(namespace2);
+
+            log.info("--------------- Address space part -------------------");
+
+            AddressApiClient nameSpaceClient1 = new AddressApiClient(kubernetes, namespace1);
+            AddressApiClient nameSpaceClient2 = new AddressApiClient(kubernetes, namespace2);
+
+            AddressSpace brokered = new AddressSpace("brokered", namespace1, AddressSpaceType.BROKERED, AuthService.STANDARD);
+            AddressSpace standard = new AddressSpace("standard", namespace2, AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_SMALL.plan(), AuthService.STANDARD);
+
+            createAddressSpace(brokered, nameSpaceClient1);
+            createAddressSpace(standard, nameSpaceClient2);
+
+            assertThat("Get all address spaces does not contain 2 address spaces",
+                    TestUtils.getAllAddressSpacesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(2));
+
+            log.info("------------------ Address part ----------------------");
+
+            Destination brokeredQueue = Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan());
+            Destination brokeredTopic = Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan());
+
+            Destination standardQueue = Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+            Destination standardTopic = Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
+
+            setAddresses(brokered, nameSpaceClient1, brokeredQueue, brokeredTopic);
+            setAddresses(standard, nameSpaceClient2, standardQueue, standardTopic);
+
+            assertThat("Get all addresses does not contain 4 addresses",
+                    TestUtils.getAllAddressesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(4));
+
+            log.info("-------------------- User part -----------------------");
+
+            UserApiClient userApiClient1 = new UserApiClient(kubernetes, namespace1);
+            UserApiClient userApiClient2 = new UserApiClient(kubernetes, namespace2);
+
+            UserCredentials cred = new UserCredentials("pepa", "novak");
+
+            userApiClient1.createUser(brokered.getName(), cred);
+            userApiClient2.createUser(standard.getName(), cred);
+
+            assertThat("Get all users does not contain 2 password users",
+                    TestUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
+                            .stream().filter(user -> user.getType().equals(User.Type.PASSWORD)).collect(Collectors.toList()).size(),
+                    is(2));
+        } finally {
+            kubernetes.deleteNamespace(namespace1);
+            kubernetes.deleteNamespace(namespace2);
+        }
     }
 
     @Test

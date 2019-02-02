@@ -7,6 +7,7 @@ package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.OSBApiClient;
+import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceTypeData;
 import io.enmasse.systemtest.resources.SchemaData;
@@ -571,6 +572,26 @@ public class TestUtils {
     }
 
     /**
+     * get list of all AddressSpaces objects by REST API
+     */
+    public static Future<List<AddressSpace>> getAllAddressSpacesObjects(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getAllAddresseSpaces();
+        CompletableFuture<List<AddressSpace>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToAddressSpaceObject(response));
+        return listOfAddresses;
+    }
+
+    /**
+     * get list of all Users objects by REST API
+     */
+    public static Future<List<User>> getAllUsersObjects(UserApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getAllUsers();
+        CompletableFuture<List<User>> listOfUsers = new CompletableFuture<>();
+        listOfUsers.complete(convertToUserObject(response));
+        return listOfUsers;
+    }
+
+    /**
      * get list of Address objects
      */
     public static Future<List<Destination>> getDestinationsObjects(AddressApiClient apiClient, AddressSpace addressSpace,
@@ -702,6 +723,80 @@ public class TestUtils {
                 throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
         }
         return resultAddrSpace;
+    }
+
+    /**
+     * Convert restapi json response(kind: MessagingUSer or MessagingUserList) from api server to User object
+     *
+     * @param userJson
+     * @return
+     */
+    private static List<User> convertToUserObject(JsonObject userJson) {
+        if (userJson == null) {
+            throw new IllegalArgumentException("null response can't be converted to User");
+        }
+        String kind = userJson.getString("kind");
+        List<User> resultUser = new ArrayList<>();
+        switch (kind) {
+            case "MessagingUser":
+                resultUser.add(convertJsonToUser(userJson));
+                break;
+            case "MessagingUserList":
+                JsonArray items = userJson.getJsonArray("items");
+                for (int i = 0; i < items.size(); i++) {
+                    resultUser.add(convertJsonToUser(items.getJsonObject(i)));
+                }
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
+        }
+        return resultUser;
+    }
+
+    /**
+     * Convert single JsonObject (kind: AddressSpace) to AddressSpace
+     *
+     * @param userJson
+     * @return
+     */
+    private static User convertJsonToUser(JsonObject userJson) {
+        log.info("Got User object: {}", userJson.toString());
+        String name = userJson.getJsonObject("metadata").getString("name");
+        String namespace = userJson.getJsonObject("metadata").getString("namespace");
+        JsonObject spec = userJson.getJsonObject("spec");
+
+        String username = spec.getString("username");
+        String type = spec.getJsonObject("authentication").getString("type");
+
+        JsonArray authorization = spec.getJsonArray("authorization");
+
+        User user = new User();
+        user.setUsername(username).setType(User.Type.valueOf(type.toUpperCase()));
+
+        if (authorization != null) {
+            for (int i = 0; i < authorization.size(); i++) {
+                JsonObject authz = authorization.getJsonObject(i);
+                User.AuthorizationRule rule = new User.AuthorizationRule();
+
+                JsonArray addresses = authz.getJsonArray("addresses");
+                JsonArray operations = authz.getJsonArray("operations");
+
+                if (addresses != null) {
+                    for (int j = 0; j < addresses.size(); j++) {
+                        rule.addAddress(addresses.getString(j));
+                    }
+                }
+
+                if (operations != null) {
+                    for (int k = 0; k < operations.size(); k++) {
+                        rule.addOperation(operations.getString(k));
+                    }
+                }
+                user.addAuthorization(rule);
+            }
+        }
+
+        return user;
     }
 
     /**

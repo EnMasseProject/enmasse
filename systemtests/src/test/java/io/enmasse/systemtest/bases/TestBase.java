@@ -60,6 +60,7 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.time.Duration.ofMinutes;
 import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
+import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -297,7 +298,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         appendAddresses(addressSpace, budget, destinations);
     }
 
@@ -306,7 +307,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         appendAddresses(addressSpace, wait, budget, destinations);
     }
 
@@ -316,13 +317,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
-        TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget timeout = new TimeoutBudget(10, TimeUnit.MINUTES);
         TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
         logCollector.collectConfigMaps();
     }
 
     protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         logCollector.collectRouterState("setAddresses");
 
         if (expectedCode == HTTP_CONFLICT) {
@@ -348,6 +349,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {
         TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, destinations);
+        logCollector.collectConfigMaps();
+    }
+
+    protected void setAddresses(AddressSpace addressSpace, AddressApiClient apiClient, Destination... destinations) throws Exception {
+        TestUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(10, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, destinations);
         logCollector.collectConfigMaps();
     }
 
@@ -539,7 +545,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     private void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
         if (numReplicas >= 0) {
-            TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+            TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
             TestUtils.setReplicas(kubernetes, null, deployment, numReplicas, budget);
         } else {
             throw new IllegalArgumentException("'numReplicas' must be greater than 0");
@@ -719,7 +725,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws
             Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
     }
 
@@ -733,10 +739,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     /**
-     * Wait for destinations are in isReady=true state within default timeout (5 MINUTE)
+     * Wait for destinations are in isReady=true state within default timeout (10 MINUTE)
      */
     protected void waitForDestinationsReady(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         TestUtils.waitForDestinationsReady(addressApiClient, addressSpace, budget, destinations);
     }
 

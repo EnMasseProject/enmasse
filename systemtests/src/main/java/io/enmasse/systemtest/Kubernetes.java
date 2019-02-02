@@ -240,6 +240,12 @@ public abstract class Kubernetes {
         client.configMaps().inNamespace(namespace).createOrReplace(newConfigMap);
     }
 
+    public void createNamespace(String namespace) {
+        log.info("Following namespace will be created = {}", namespace);
+        Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
+        client.namespaces().create(ns);
+    }
+
     public void deleteNamespace(String namespace) {
         log.info("Following namespace will be removed - {}", namespace);
         client.namespaces().withName(namespace).delete();

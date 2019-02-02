@@ -30,11 +30,11 @@ public class AddressSpace {
     }
 
     public AddressSpace(String name, AuthService authService) {
-        this(name, name, AddressSpaceType.STANDARD, authService);
+        this(name, null, AddressSpaceType.STANDARD, authService);
     }
 
     public AddressSpace(String name, AddressSpaceType type) {
-        this(name, name, type, AuthService.NONE);
+        this(name, null, type, AuthService.NONE);
     }
 
     public AddressSpace(String name, String namespace) {
@@ -54,7 +54,7 @@ public class AddressSpace {
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan) {
-        this(name, name, type, plan);
+        this(name, null, type, plan);
     }
 
     public AddressSpace(String name, String namespace, AddressSpaceType type, String plan) {
@@ -239,6 +239,9 @@ public class AddressSpace {
         JsonObject metadata = new JsonObject();
         metadata.put("name", this.getName());
         metadata.put("annotations", createAnnotations());
+        if (namespace != null) {
+            metadata.put("namespace", namespace);
+        }
         return metadata;
     }
 

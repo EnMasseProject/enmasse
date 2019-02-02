@@ -12,6 +12,7 @@ import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
@@ -28,6 +29,8 @@ public class UserApiClient extends ApiClient {
     private static Logger log = CustomLogger.getLogger();
     private final int initRetry = 10;
     private final String userPath;
+
+    private static final String USERS_PATH = "/apis/user.enmasse.io/v1beta1/messagingusers";
 
     public UserApiClient(Kubernetes kubernetes) throws MalformedURLException {
         super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/v1beta1");
@@ -186,6 +189,36 @@ public class UserApiClient extends ApiClient {
         } finally {
             TimeMeasuringSystem.stopOperation(operationID);
         }
+    }
+
+    /**
+     * Get all users (non-namespaced)
+     *
+     * @param expectedCode the expected return code
+     * @return the result
+     * @throws Exception if anything goes wrong
+     */
+    public JsonObject getAllUsers(final int expectedCode) throws Exception {
+        log.info("GET-all-users: path {}; ", USERS_PATH);
+        return doRequestNTimes(initRetry, () -> {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            HttpRequest<JsonObject> request = client.get(endpoint.getPort(), endpoint.getHost(), USERS_PATH)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject())
+                    .timeout(20_000);
+            request.send(ar -> responseHandler(ar, responsePromise, expectedCode, "Error: get users"));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        }, Optional.of(() -> kubernetes.getRestEndpoint()), Optional.empty());
+    }
+
+    /**
+     * Get all users (non-namespaced)
+     *
+     * @return the result
+     * @throws Exception if anything goes wrong
+     */
+    public JsonObject getAllUsers() throws Exception {
+        return getAllUsers(HTTP_OK);
     }
 
     @Override
