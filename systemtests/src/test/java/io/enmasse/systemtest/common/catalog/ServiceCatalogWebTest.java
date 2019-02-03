@@ -46,7 +46,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     private UserCredentials ocTestUser = Credentials.userCredentials();
 
     private String getUserProjectName(AddressSpace addressSpace) {
-        return String.format("%s-%s", "service", addressSpace.getNamespace());
+        return String.format("%s-%s", "service", addressSpace.getName());
     }
 
     @BeforeEach
