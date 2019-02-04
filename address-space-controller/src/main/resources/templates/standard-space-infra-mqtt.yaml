@@ -75,8 +75,8 @@ objects:
           command:
           - /opt/app-root/src/bin/launch_node.sh
           - /opt/app-root/src/bin/subserv.js
-          image: ${container.image.agent}
-          imagePullPolicy: ${container.image-pull-policy}
+          image: ${.image.agent}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -180,8 +180,8 @@ objects:
             value: '8883'
           - name: ENMASSE_MQTT_MAXMESSAGESIZE
             value: ${MQTT_MAXMESSAGESIZE}
-          image: ${container.image.mqtt-gateway}
-          imagePullPolicy: ${container.image-pull-policy}
+          image: ${env.MQTT_GATEWAY_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -195,8 +195,8 @@ objects:
           - mountPath: /etc/mqtt-gateway/ssl
             name: ssl-certs
             readOnly: true
-        - image: ${container.image.mqtt-gateway}
-          imagePullPolicy: ${container.image-pull-policy}
+        - image: ${env.MQTT_GATEWAY_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           env:
           - name: MESSAGING_SERVICE_HOST
             value: messaging-${INFRA_UUID}
@@ -265,8 +265,8 @@ objects:
             value: 55671
           - name: MESSAGING_SERVICE_ROUTE_CONTAINER_PORT
             value: 56671
-          image: ${container.image.mqtt-lwt}
-          imagePullPolicy: ${container.image-pull-policy}
+          image: ${env.MQTT_LWT_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           name: mqtt-lwt
           volumeMounts:
           - mountPath: /etc/enmasse-certs

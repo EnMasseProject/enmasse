@@ -245,8 +245,8 @@ objects:
             value: "INFER"
           - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
             value: "qdrouterd-headless-${INFRA_UUID}"
-          image: ${container.image.router}
-          imagePullPolicy: ${container.image-pull-policy}
+          image: ${env.ROUTER_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -299,8 +299,8 @@ objects:
             value: '55671'
           - name: CERT_DIR
             value: /etc/enmasse-certs
-          image: ${container.image.router-metrics}
-          imagePullPolicy: ${container.image-pull-policy}
+          image: ${env.ROUTER_METRICS_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -428,8 +428,8 @@ objects:
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
           - name: MESSAGING_SECRET
             value: ${MESSAGING_SECRET}
-          image: ${container.image.standard-controller}
-          imagePullPolicy: ${container.image-pull-policy}
+          image: ${env.STANDARD_CONTROLLER_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -488,8 +488,8 @@ objects:
             value: ${ADDRESS_SPACE_NAMESPACE}
           - name: MESSAGING_CERT
             value: /opt/agent/messaging-cert/tls.crt
-          image: ${container.image.agent}
-          imagePullPolicy: ${container.image-pull-policy}
+          image: ${env.AGENT_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             httpGet:
               path: /healthz
