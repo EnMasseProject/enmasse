@@ -1087,18 +1087,18 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected List<Destination> getAllStandardAddresses() {
         return Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
-                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC.plan()),
-                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE.plan()),
-                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC.plan()),
+                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE),
+                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC),
+                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE),
+                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC),
                 Destination.anycast("test-anycast"),
                 Destination.multicast("test-multicast"));
     }
 
     protected List<Destination> getAllBrokeredAddresses() {
         return Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan()),
-                Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan()));
+                Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE),
+                Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC));
     }
 
     protected void sendDurableMessages(AddressSpace addressSpace, Destination destination,

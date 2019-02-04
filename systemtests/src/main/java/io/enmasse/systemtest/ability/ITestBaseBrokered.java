@@ -23,9 +23,9 @@ public interface ITestBaseBrokered extends ITestBase {
     default String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return DestinationPlan.BROKERED_QUEUE.plan();
+                return DestinationPlan.BROKERED_QUEUE;
             case TOPIC:
-                return DestinationPlan.BROKERED_TOPIC.plan();
+                return DestinationPlan.BROKERED_TOPIC;
         }
         return null;
     }

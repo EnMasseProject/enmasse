@@ -85,11 +85,11 @@ public class Destination {
     }
 
     public static Destination anycast(String address) {
-        return new Destination(address, ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST.plan());
+        return new Destination(address, ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST);
     }
 
     public static Destination multicast(String address) {
-        return new Destination(address, MULTICAST, DestinationPlan.STANDARD_SMALL_MULTICAST.plan());
+        return new Destination(address, MULTICAST, DestinationPlan.STANDARD_SMALL_MULTICAST);
     }
 
     public static Destination anycast(String address, String plan) {
@@ -168,7 +168,7 @@ public class Destination {
      * plan.
      */
     public String getDeployment() {
-        if (plan.startsWith("pooled-") || plan.startsWith(AddressSpacePlan.STANDARD_SMALL.plan()) || plan.startsWith(AddressSpacePlan.STANDARD_MEDIUM.plan())) {
+        if (plan.startsWith("pooled-") || plan.startsWith(AddressSpacePlan.STANDARD_SMALL) || plan.startsWith(AddressSpacePlan.STANDARD_MEDIUM)) {
             return "broker";
         } else {
             return address;

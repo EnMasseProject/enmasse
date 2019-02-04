@@ -62,8 +62,8 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @Test
     void testAddressCreateViaAgentApiRemoveViaCmd() throws Exception {
-        Destination dest1 = Destination.topic("mytopic-agent", DestinationPlan.BROKERED_TOPIC.plan());
-        Destination dest2 = Destination.topic("mytopic-api", DestinationPlan.BROKERED_TOPIC.plan());
+        Destination dest1 = Destination.topic("mytopic-agent", DestinationPlan.BROKERED_TOPIC);
+        Destination dest2 = Destination.topic("mytopic-api", DestinationPlan.BROKERED_TOPIC);
 
         ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, userCredentials);
         consoleWeb.openWebConsolePage();
@@ -107,9 +107,9 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
     @Test
     void testAddressCreateViaCmdRemoveViaAgentApi() throws Exception {
         Destination dest1 = new Destination("myqueue1", null, brokered.getName(), "myqueue1",
-                Destination.QUEUE, DestinationPlan.BROKERED_QUEUE.plan());
+                Destination.QUEUE, DestinationPlan.BROKERED_QUEUE);
         Destination dest2 = new Destination("myqueue2", null, brokered.getName(), "myqueue2",
-                Destination.QUEUE, DestinationPlan.BROKERED_QUEUE.plan());
+                Destination.QUEUE, DestinationPlan.BROKERED_QUEUE);
 
         JsonObject address1 = dest1.toJson(addressApiClient.getApiVersion());
         String address2 = dest2.toYaml(addressApiClient.getApiVersion());

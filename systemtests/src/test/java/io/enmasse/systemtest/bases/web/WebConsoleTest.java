@@ -87,7 +87,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.createAddressWebConsole(dest);
 
             //create subscription
-            Destination subscription = Destination.subscription(dest.getAddress() + "-subscriber", dest.getAddress(), DestinationPlan.STANDARD_LARGE_SUBSCRIPTION.plan());
+            Destination subscription = Destination.subscription(dest.getAddress() + "-subscriber", dest.getAddress(), DestinationPlan.STANDARD_LARGE_SUBSCRIPTION);
             consoleWebPage.createAddressWebConsole(subscription);
             assertWaitForValue(2, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(120, TimeUnit.SECONDS));
 

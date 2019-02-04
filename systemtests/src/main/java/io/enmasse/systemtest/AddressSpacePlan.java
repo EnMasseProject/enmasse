@@ -4,20 +4,10 @@
  */
 package io.enmasse.systemtest;
 
-public enum AddressSpacePlan {
-    BROKERED("brokered-single-broker"),
-    STANDARD_SMALL("standard-small"),
-    STANDARD_MEDIUM("standard-medium"),
-    STANDARD_UNLIMITED("standard-unlimited"),
-    STANDARD_UNLIMITED_WITH_MQTT("standard-unlimited-with-mqtt");
-
-    private String plan;
-
-    AddressSpacePlan(String plan) {
-        this.plan = plan;
-    }
-
-    public String plan() {
-        return plan;
-    }
+public interface AddressSpacePlan {
+    String BROKERED = "brokered-single-broker";
+    String STANDARD_SMALL = "standard-small";
+    String STANDARD_MEDIUM = "standard-medium";
+    String STANDARD_UNLIMITED = "standard-unlimited";
+    String STANDARD_UNLIMITED_WITH_MQTT = "standard-unlimited-with-mqtt";
 }

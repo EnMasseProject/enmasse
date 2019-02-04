@@ -47,7 +47,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendMqttReceiveAmqp() throws Exception {
-        Destination mqttTopic = Destination.topic(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination mqttTopic = Destination.topic(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp";
@@ -77,7 +77,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendAmqpReceiveMqtt() throws Exception {
-        Destination mqttTopic = Destination.topic(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination mqttTopic = Destination.topic(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send amqp, receive mqtt :)";

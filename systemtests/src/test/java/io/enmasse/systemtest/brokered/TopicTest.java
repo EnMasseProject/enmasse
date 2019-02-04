@@ -49,8 +49,8 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         doTopicWildcardTest(DestinationPlan.BROKERED_TOPIC);
     }
 
-    private void doTopicWildcardTest(DestinationPlan plan) throws Exception {
-        Destination t0 = Destination.topic("topic", plan.plan());
+    private void doTopicWildcardTest(String plan) throws Exception {
+        Destination t0 = Destination.topic("topic", plan);
         setAddresses(t0);
 
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();

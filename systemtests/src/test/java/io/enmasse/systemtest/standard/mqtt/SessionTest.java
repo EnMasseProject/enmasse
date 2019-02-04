@@ -40,7 +40,7 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
      */
     @Test
     public void previousPersistentSessionDiscarded() throws Exception {
-        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(dest);
 
         IMqttClient publisher = mqttClientFactory.build().clientId(PUBLISHER_ID).create();

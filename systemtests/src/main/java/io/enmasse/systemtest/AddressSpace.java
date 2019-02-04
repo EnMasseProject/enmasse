@@ -177,9 +177,9 @@ public class AddressSpace {
         this.type = type;
         if (plan == null) {
             if (type.equals(AddressSpaceType.BROKERED)) {
-                plan = AddressSpacePlan.BROKERED.plan();
+                plan = AddressSpacePlan.BROKERED;
             } else {
-                plan = AddressSpacePlan.STANDARD_UNLIMITED_WITH_MQTT.plan();
+                plan = AddressSpacePlan.STANDARD_UNLIMITED_WITH_MQTT;
             }
         }
         return this;
