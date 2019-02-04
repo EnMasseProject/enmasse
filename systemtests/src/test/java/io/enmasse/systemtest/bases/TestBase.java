@@ -57,6 +57,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.time.Duration.ofMinutes;
+import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -234,7 +236,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         AddressSpace addrSpaceResponse;
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '{}' exists and will be updated.", addressSpace);
+            final String currentResourceVersion = addressApiClient.getAddressSpace(addressSpace.getName()).getJsonObject("metadata").getString("resourceVersion");
             addressApiClient.replaceAddressSpace(addressSpace);
+            TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressApiClient, addressSpace.getName(), currentResourceVersion);
             if (waitForPlanApplied) {
                 TestUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
             }
@@ -1119,15 +1123,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
     //==================================== Asserts methods ===========================================
     //================================================================================================
-    protected void assertSorted(String message, Iterable list) throws Exception {
+    protected <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list) throws Exception {
         assertSorted(message, list, false);
     }
 
-    protected void assertSorted(String message, Iterable list, Comparator comparator) throws Exception {
+    protected <T> void assertSorted(String message, Iterable<T> list, Comparator<T> comparator) throws Exception {
         assertSorted(message, list, false, comparator);
     }
 
-    protected void assertSorted(String message, Iterable list, boolean reverse) {
+    protected <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list, boolean reverse) {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.natural().isOrdered(list), message);
@@ -1135,7 +1139,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             assertTrue(Ordering.natural().reverse().isOrdered(list), message);
     }
 
-    protected void assertSorted(String message, Iterable list, boolean reverse, Comparator comparator) {
+    protected <T> void assertSorted(String message, Iterable<T> list, boolean reverse, Comparator<T> comparator) {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.from(comparator).isOrdered(list), message);
