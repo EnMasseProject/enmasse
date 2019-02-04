@@ -10,14 +10,14 @@
 
 . List all broker pods and choose the pod for the relevant address space:
 +
-[options="nowrap",subs="attributes"]
+[source,options="nowrap",subs="attributes"]
 ----
 {cmdcli} get pods -l role=broker -o go-template --template '{{range .items}}{{.metadata.name}}{{"\t"}}{{.metadata.annotations.addressSpace}}{{"\n"}}{{end}}'
 ----
 
 . Display the logs for the pod:
 +
-[options="nowrap",subs="+quotes,attributes"]
+[source,options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} logs _pod_
 ----
