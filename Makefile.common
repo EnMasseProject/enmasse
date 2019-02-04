@@ -1,5 +1,5 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
-include $(TOPDIR)/Makefile.include.mk
+include $(TOPDIR)/Makefile.env.mk
 NAMESPACE       ?= $(shell oc project -q)
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
