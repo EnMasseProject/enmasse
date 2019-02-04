@@ -168,7 +168,7 @@ public class Destination {
      * plan.
      */
     public String getDeployment() {
-        if (plan.startsWith("pooled-") || plan.startsWith("standard-small") || plan.startsWith("standard-medium")) {
+        if (plan.startsWith("pooled-") || plan.startsWith(AddressSpacePlan.STANDARD_SMALL.plan()) || plan.startsWith(AddressSpacePlan.STANDARD_MEDIUM.plan())) {
             return "broker";
         } else {
             return address;
