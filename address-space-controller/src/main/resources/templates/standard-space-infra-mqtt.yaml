@@ -75,7 +75,7 @@ objects:
           command:
           - /opt/app-root/src/bin/launch_node.sh
           - /opt/app-root/src/bin/subserv.js
-          image: ${.image.agent}
+          image: ${env.AGENT_IMAGE}
           imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 60
