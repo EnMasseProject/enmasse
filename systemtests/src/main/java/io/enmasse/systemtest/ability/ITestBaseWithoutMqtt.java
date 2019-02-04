@@ -12,10 +12,10 @@ public interface ITestBaseWithoutMqtt extends ITestBase {
 
     @Override
     default String getDefaultPlan(AddressType addressType) {
-        return DestinationPlan.STANDARD_SMALL_ANYCAST.plan();
+        return DestinationPlan.STANDARD_SMALL_ANYCAST;
     }
 
     default String getAddressSpacePlan() {
-        return AddressSpacePlan.STANDARD_SMALL.plan();
+        return AddressSpacePlan.STANDARD_SMALL;
     }
 }

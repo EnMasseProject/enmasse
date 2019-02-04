@@ -23,22 +23,22 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(Destination.queue("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
-                Destination.queue("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE.plan()));
+        doTestCreateDeleteAddress(Destination.queue("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE),
+                Destination.queue("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(Destination.topic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC.plan()),
-                Destination.topic("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC.plan()));
+        doTestCreateDeleteAddress(Destination.topic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
+                Destination.topic("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteDurableSubscription() throws Exception {
-        doTestCreateDeleteDurableSubscription(Destination.topic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC.plan()),
-                Destination.topic("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC.plan()));
+        doTestCreateDeleteDurableSubscription(Destination.topic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
+                Destination.topic("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
     }
 
     @Test

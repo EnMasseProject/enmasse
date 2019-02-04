@@ -51,17 +51,17 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     @Test
     void testReplaceAddressSpace() throws Exception {
         AddressSpace standard = new AddressSpace("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AuthService.STANDARD);
-        standard.setPlan(AddressSpacePlan.STANDARD_SMALL.plan());
+        standard.setPlan(AddressSpacePlan.STANDARD_SMALL);
         createCR(standard.toJson(addressApiClient.getApiVersion()).toString());
         addToAddressSpacess(standard);
         waitForAddressSpaceReady(standard);
         waitForAddressSpacePlanApplied(standard);
 
-        standard.setPlan(AddressSpacePlan.STANDARD_UNLIMITED.plan());
+        standard.setPlan(AddressSpacePlan.STANDARD_UNLIMITED);
         updateCR(standard.toJson(addressApiClient.getApiVersion()).toString());
         waitForAddressSpaceReady(standard);
 
-        assertThat(getAddressSpace(standard.getName()).getPlan(), is(AddressSpacePlan.STANDARD_UNLIMITED.plan()));
+        assertThat(getAddressSpace(standard.getName()).getPlan(), is(AddressSpacePlan.STANDARD_UNLIMITED));
     }
 
     @Test
@@ -183,13 +183,13 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             //===========================
 
             Destination queue = new Destination("queue", null, brokered.getName(), "queue",
-                    Destination.QUEUE, DestinationPlan.BROKERED_QUEUE.plan());
+                    Destination.QUEUE, DestinationPlan.BROKERED_QUEUE);
             Destination topicBrokered = new Destination("topic", null, brokered.getName(), "topic",
-                    Destination.TOPIC, DestinationPlan.BROKERED_TOPIC.plan());
+                    Destination.TOPIC, DestinationPlan.BROKERED_TOPIC);
             Destination topicStandard = new Destination("topic", null, standard.getName(), "topic",
-                    Destination.TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+                    Destination.TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
             Destination anycast = new Destination("anycast", null, standard.getName(), "anycast",
-                    Destination.ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST.plan());
+                    Destination.ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST);
 
             assertTrue(KubeCMDClient.createCR(namespace, queue.toYaml(addressApiClient.getApiVersion())).getRetCode());
             assertTrue(KubeCMDClient.createCR(namespace, topicBrokered.toYaml(addressApiClient.getApiVersion())).getRetCode());
@@ -200,7 +200,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                     CliOutputData.CliOutputDataType.ADDRESS);
 
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
-                    DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+                    DestinationPlan.STANDARD_LARGE_TOPIC);
 
             TestUtils.waitForDestinationsReady(apiClient, brokered, new TimeoutBudget(5, TimeUnit.MINUTES), queue, topicBrokered);
 
@@ -209,7 +209,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
             assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
-                    DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+                    DestinationPlan.STANDARD_LARGE_TOPIC);
 
             TestUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
 
@@ -218,7 +218,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
             assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
-                    DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+                    DestinationPlan.STANDARD_LARGE_TOPIC);
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
                     "Active");
             assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus().isEmpty());

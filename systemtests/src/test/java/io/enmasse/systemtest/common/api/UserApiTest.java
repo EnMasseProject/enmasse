@@ -170,7 +170,7 @@ class UserApiTest extends TestBase {
 
     @Test
     void testUpdateUserPermissionsUserAPI() throws Exception {
-        Destination queue = Destination.queue("myqueue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+        Destination queue = Destination.queue("myqueue", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(standard, queue);
 
         UserCredentials cred = new UserCredentials("pepa", "pepapw");
@@ -344,7 +344,7 @@ class UserApiTest extends TestBase {
 
     @Test
     void testServiceaccountUser() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(standard, queue);
         UserCredentials serviceAccount = new UserCredentials("test-service-account", "");
         createUserServiceAccount(standard, serviceAccount, environment.namespace());

@@ -74,7 +74,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
         }
         setAddresses(dest.toArray(new Destination[0]));
 //        TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getAddressPlanConfig(DestinationPlan.STANDARD_SMALL_ANYCAST.plan()).getRequiredCreditFromResource("router");
+//        double requiredCredit = getAddressPlanConfig(DestinationPlan.STANDARD_SMALL_ANYCAST()).getRequiredCreditFromResource("router");
 //        int replicasCount = (int) (destCount * requiredCredit);
 //        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
