@@ -1,12 +1,13 @@
 apiVersion: admin.enmasse.io/v1beta1
 kind: StandardInfraConfig
 metadata:
-  name: default
+  name: default-with-mqtt
   labels:
     app: enmasse
+  annotations:
+    enmasse.io/with-mqtt: true
 spec:
-  version: ${release.version}
-
+  version: ${ENMASSE_VERSION}
   admin:
     resources:
       memory: 512Mi
