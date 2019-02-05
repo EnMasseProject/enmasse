@@ -6,7 +6,7 @@ BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
-MODULES=crds address-space-controller example-roles example-plans extra api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics
+MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
@@ -36,7 +36,7 @@ ansible_install: component_install
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
-	for i in crds address-space-controller extra api-server api-service; do \
+	for i in crds address-space-controller api-server api-service; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 	for i in `find $(ENMASSE_BUNDLE) -name "*.yaml"`; do \
