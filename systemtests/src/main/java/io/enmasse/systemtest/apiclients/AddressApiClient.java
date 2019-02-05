@@ -30,7 +30,7 @@ public class AddressApiClient extends ApiClient {
     private final int initRetry = 10;
 
     private final static String ADDRESS_PATH = "/apis/enmasse.io/v1beta1/addresses";
-    private final static String ADDRESS_SPACE_PATH = "/apis/enmasse.io/v1alpha1/addressspaces";
+    private final static String ADDRESS_SPACE_PATH = "/apis/enmasse.io/v1beta1/addressspaces";
 
     private final String schemaPath;
     private final String addressSpacesPath;
