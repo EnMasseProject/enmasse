@@ -34,11 +34,7 @@ spec:
         - name: JAVA_OPTS
           value: -verbose:gc
         - name: ENABLE_EVENT_LOGGER
-          valueFrom:
-            configMapKeyRef:
-              key: enableEventLogger
-              name: address-space-controller-config
-              optional: true
+          value: "true"
         - name: EXPOSE_ENDPOINTS_BY_DEFAULT
           valueFrom:
             configMapKeyRef:
