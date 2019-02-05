@@ -46,3 +46,6 @@
 - import_role:
     name: example_plans
   when: install_example_plans
+- import_role:
+    name: example_roles
+  when: install_example_roles
