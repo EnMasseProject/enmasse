@@ -684,7 +684,7 @@ parameters:
   required: true
 - description: Enable logging of kubernetes events
   name: ENABLE_EVENT_LOGGER
-  value: 'false'
+  value: 'true'
 - description: Interval (in seconds) to use between controller resync
   name: CONTROLLER_RESYNC_INTERVAL
   value: '600'
