@@ -1,0 +1,15 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+
+[id='deploying-example-plans-{context}']
+= Deploying the example plans and infrastructure configuration
+
+.Procedure
+
+. Install the example plans:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/example-plans
+----
