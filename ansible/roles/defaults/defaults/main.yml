@@ -10,5 +10,6 @@ secure_api_server: false
 enable_address_space_management: false
 api_server: true
 install_tenant_clusterroles: true
+install_example_plans: true
 authentication_services:
   - none

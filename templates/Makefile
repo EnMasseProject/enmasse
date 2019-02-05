@@ -44,6 +44,17 @@ $(ENMASSE_BUNDLE): replace_images
 		mv $$i.tmp $$i; \
 	done
 
+EXAMPLE_PLANS_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
+$(EXAMPLE_PLANS_BUNDLE): replace_images
+	mkdir -p $(EXAMPLE_PLANS_BUNDLE)
+	for i in example-plans; do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(EXAMPLE_PLANS_BUNDLE)/; \
+	done
+	for i in `find $(EXAMPLE_PLANS_BUNDLE) -name "*.yaml"`; do \
+		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
+		mv $$i.tmp $$i; \
+	done
+
 MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/monitoring
 $(MONITORING_BUNDLE): replace_images
 	mkdir -p $(MONITORING_BUNDLE)
@@ -55,7 +66,7 @@ $(MONITORING_BUNDLE): replace_images
 		mv $$i.tmp $$i; \
 	done
 
-install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE)
+install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(EXAMPLE_PLANS_BUNDLE)
 	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
@@ -63,4 +74,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(EXAMPLE_PLANS_BUNDLE)

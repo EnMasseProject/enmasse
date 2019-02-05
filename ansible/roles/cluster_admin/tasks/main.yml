@@ -43,3 +43,6 @@
 - import_role:
     name: monitoring
   when: enable_monitoring
+- import_role:
+    name: example_plans
+  when: install_example_plans
