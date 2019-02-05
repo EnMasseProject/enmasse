@@ -5,12 +5,13 @@ metadata:
     app: enmasse
   name: enmasse.io:api-server
 rules:
-  - apiGroups: [ "enmasse.io" ]
-    resources: [ "addresses", "addressspaces" ]
-    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
-  - apiGroups: [ "user.enmasse.io" ]
-    resources: [ "messagingusers" ]
-    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
-  - apiGroups: [ "admin.enmasse.io" ]
-    resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs" ]
-    verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
+  - apiGroups: [ "authentication.k8s.io" ]
+    resources: [ "tokenreviews" ]
+    verbs: [ "create "]
+  - apiGroups: [ "authorization.k8s.io" ]
+    resources: [ "subjectaccessreviews" ]
+    verbs: [ "create "]
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    resourceNames: [ "extension-apiserver-authentication" ]
+    verbs: [ "get" ]
