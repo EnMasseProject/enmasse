@@ -79,3 +79,17 @@ endif::[]
 ----
 {cmdcli} apply -f install/bundles/{ProductBundleName}
 ----
+
+. Deploy the standard authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/standard-authservice
+----
+
+. (Optional) Install example plans and infrastructure configuration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/example-plans
+----

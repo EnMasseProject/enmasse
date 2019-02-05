@@ -20,8 +20,7 @@
 :ProductNamespace: enmasse-infra
 :ProductVersion: 
 :ProductMajorVersion: 
-:ProductBundleName: enmasse-with-standard-authservice
-:ProductTemplateName: enmasse-with-standard-authservice.yaml
+:ProductBundleName: enmasse
 :AuthProductName: Keycloak
 :AuthProductNameConsole: Keycloak Administration Console
 :QpidJmsVersion: 0.20.0
