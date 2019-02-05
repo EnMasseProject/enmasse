@@ -325,7 +325,7 @@ public class KeycloakUserApi implements UserApi {
     /**
      * Create the set of desired groups.
      *
-     * @param user The user to create the groups for.
+     * @param authorization The authorization rule list to create the groups for.
      * @return A set of groups.
      */
     static Set<String> createDesiredGroupsSet(final List<UserAuthorization> authorization) {
@@ -338,11 +338,9 @@ public class KeycloakUserApi implements UserApi {
 
                 switch (operation) {
                     case manage:
-                        desiredGroups.add("manage_#");
                         desiredGroups.add("manage");
                         break;
                     case view:
-                        desiredGroups.add("monitor_#");
                         desiredGroups.add("monitor");
                         break;
                     default:
@@ -351,8 +349,6 @@ public class KeycloakUserApi implements UserApi {
                                 String groupName = operation.name() + "_" + encodePart(address);
                                 // normal name
                                 desiredGroups.add(groupName);
-                                // brokered name ( the set will remove duplicates for us)
-                                desiredGroups.add(groupName.replace("*", "#"));
                             }
                         }
                         break;
