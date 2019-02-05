@@ -40,9 +40,12 @@ mkdir -p standard-authservice-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
-cp -r ${ENMASSE_DIR}/install/components/none-authservice/*.yaml ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice
-sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice/*.yaml
-kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice
+sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
+kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse
+kubectl create -f ${ENMASSE_DIR}/install/components/none-authservice
+kubectl create -f ${ENMASSE_DIR}/install/components/standard-authservice
+kubectl create -f ${ENMASSE_DIR}/install/components/example-plans
+kubectl create -f ${ENMASSE_DIR}/install/components/example-roles
 
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
