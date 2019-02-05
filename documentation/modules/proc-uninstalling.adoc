@@ -17,13 +17,6 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. Delete the rolebinding in the `kube-system` namespace:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} delete rolebindings -l app=enmasse -n kube-system
-----
-
 ifeval::["{cmdcli}" == "oc"]
 . Delete "cluster level" resources:
 +

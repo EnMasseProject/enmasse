@@ -6,6 +6,9 @@ metadata:
   name: enmasse.io:api-server
 rules:
   - apiGroups: [ "" ]
+    resources: [ "services" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
     resources: [ "configmaps" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "admin.enmasse.io" ]
