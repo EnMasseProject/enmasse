@@ -203,6 +203,7 @@ Watcher.prototype.watch = function () {
             }
         });
     });
+    request.on('error', function(e) { log.error('error on watch: %s', e); });
 };
 
 function matcher(object) {
