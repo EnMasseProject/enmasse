@@ -42,7 +42,8 @@ function export_required_env {
     SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
     KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
 
-    export KUBERNETES_API_URL=${KUBERNETES_API_URL:-https://localhost:8443}
+    API_URL=$(oc config view -o jsonpath='{.clusters[0].cluster.server}')
+    export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
     export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
     export KUBERNETES_NAMESPACE=${KUBERNETES_NAMESPACE:-enmasseci}
@@ -326,6 +327,10 @@ function clean_docker_images() {
     fi
 }
 
+function print_images() {
+    DOCKER=${DOCKER:-docker}
+    ${DOCKER} ps -a
+}
 function clean_oc_location() {
     info "Removing previous openshift data"
     if [[ $(get_openshift_version) == '3.9'* ]]; then
@@ -365,8 +370,8 @@ function get_kubeconfig_path() {
 }
 
 function get_oc_args() {
-    OC_39='--service-catalog'
-    OC_310='--enable=*,service-catalog,web-console --insecure-skip-tls-verify=true'
+    OC_39="--public-hostname=$(hostname -I | awk '{print $1}') --service-catalog"
+    OC_310="--public-hostname=$(hostname -I | awk '{print $1}') --enable=*,service-catalog,web-console --insecure-skip-tls-verify=true"
 
     if [[ $(get_openshift_version) == '3.9'* ]]; then
         echo $OC_39

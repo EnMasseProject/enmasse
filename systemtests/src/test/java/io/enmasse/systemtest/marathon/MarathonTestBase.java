@@ -7,7 +7,7 @@ package io.enmasse.systemtest.marathon;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
@@ -294,7 +294,7 @@ abstract class MarathonTestBase extends TestBase {
         log.info("testCreateDeleteAddressesViaAgentLong start");
         createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
-        SeleniumContainers.deployFirefoxContainer();
+        SeleniumManagement.deployFirefoxApp();
 
         UserCredentials user = new UserCredentials("test", "test");
         createUser(addressSpace, user);

@@ -38,7 +38,6 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
-        Thread.sleep(30000); //sleep before run test (until geckodriver will be fixed)
         selenium.setupDriver(environment, kubernetes, buildDriver());
         plansProvider.setUp();
     }

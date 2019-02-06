@@ -30,7 +30,6 @@ STATS_PID=$!
 info "process for checking system resources is running with PID: ${STATS_PID}"
 
 export KUBERNETES_API_TOKEN=$(oc whoami -t)
-export KUBERNETES_API_URL=${OPENSHIFT_URL}
 export KUBERNETES_NAMESPACE=${OPENSHIFT_PROJECT}
 export_required_env
 
@@ -65,6 +64,7 @@ kill -9 ${STATS_PID}
 info "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill -9 ${LOGS_PID}
 categorize_docker_logs "${DOCKER_LOG_DIR}" || true
+print_images
 
 if [[ ${failure} -gt 0 ]]; then
     err_and_exit "Systemtests failed"

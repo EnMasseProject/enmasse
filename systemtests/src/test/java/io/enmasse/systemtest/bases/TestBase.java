@@ -24,7 +24,7 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
-import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.timemeasuring.Operation;
@@ -60,7 +60,6 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.time.Duration.ofMinutes;
 import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
-import static java.net.HttpURLConnection.HTTP_CREATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -643,7 +642,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return seleniumProvider;
     }
 
-    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount) {
+    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount) throws Exception {
         int budget = 60; //seconds
         waitForSubscribersConsole(addressSpace, destination, expectedCount, budget);
     }
@@ -653,10 +652,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      *
      * @param budget timeout budget in seconds
      */
-    private void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) {
+    private void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) throws Exception {
         SeleniumProvider selenium = null;
         try {
-            SeleniumContainers.deployFirefoxContainer();
+            SeleniumManagement.deployFirefoxApp();
             selenium = getFirefoxSeleniumProvider();
             ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials);
             console.openWebConsolePage();
@@ -669,7 +668,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             if (selenium != null) {
                 selenium.tearDownDrivers();
             }
-            SeleniumContainers.stopAndRemoveFirefoxContainer();
+            SeleniumManagement.removeFirefoxApp();
         }
     }
 
