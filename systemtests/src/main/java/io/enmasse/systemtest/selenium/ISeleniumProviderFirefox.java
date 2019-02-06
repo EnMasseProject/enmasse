@@ -15,19 +15,14 @@ public interface ISeleniumProviderFirefox extends ISeleniumProvider {
         return TestUtils.getFirefoxDriver();
     }
 
-    @Override
-    default void restartSeleniumContainer() throws Exception {
-        SeleniumContainers.restartFirefoxContainer();
-    }
-
     @BeforeAll
     default void deployContainer() throws Exception {
-        SeleniumContainers.deployFirefoxContainer();
+        SeleniumManagement.deployFirefoxApp();
     }
 
     @AfterAll
-    default void removeContainers() {
+    default void removeContainers() throws Exception {
         selenium.tearDownDrivers();
-        SeleniumContainers.stopAndRemoveFirefoxContainer();
+        SeleniumManagement.removeFirefoxApp();
     }
 }

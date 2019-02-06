@@ -24,7 +24,7 @@ public class RheaWebPage implements IWebPage {
 
     public void openRheaWebPage() {
         log.info("Opening rhea web page");
-        selenium.getDriver().get("file:///opt/rhea.html");
+        selenium.getDriver().get("file:///opt/rhea/rhea.html");
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
         checkReachableWebPage();

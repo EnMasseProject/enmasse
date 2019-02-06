@@ -13,7 +13,7 @@ import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.resources.*;
-import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.AnycastTest;
@@ -145,7 +145,7 @@ class ApiServerTest extends TestBase {
         //console
         SeleniumProvider selenium = null;
         try {
-            SeleniumContainers.deployFirefoxContainer();
+            SeleniumManagement.deployFirefoxApp();
             selenium = getFirefoxSeleniumProvider();
             ConsoleWebPage console = new ConsoleWebPage(
                     selenium,
@@ -161,7 +161,7 @@ class ApiServerTest extends TestBase {
             if (selenium != null) {
                 selenium.tearDownDrivers();
             }
-            SeleniumContainers.stopAndRemoveFirefoxContainer();
+            SeleniumManagement.removeFirefoxApp();
         }
     }
 

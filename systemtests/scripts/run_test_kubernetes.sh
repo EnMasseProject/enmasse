@@ -83,6 +83,7 @@ get_kubernetes_info ${LOG_DIR} pods ${KUBERNETES_NAMESPACE}
 get_kubernetes_info ${LOG_DIR} services default "-after"
 get_kubernetes_info ${LOG_DIR} pods default "-after"
 get_kubernetes_info ${LOG_DIR} events ${KUBERNETES_NAMESPACE}
+print_images
 
 #store artifacts
 ${CURDIR}/collect_logs.sh ${TEST_LOGDIR} ${ARTIFACTS_DIR}

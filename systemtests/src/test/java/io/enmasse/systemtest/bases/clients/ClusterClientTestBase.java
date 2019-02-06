@@ -30,7 +30,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
     @BeforeEach
     public void setUpClientBase() throws Exception {
         if (cliApiClient == null) {
-            Endpoint cliEndpoint = TestUtils.deployMessagingClientApp(environment.namespace(), kubernetes);
+            Endpoint cliEndpoint = SystemtestsKubernetesApps.deployMessagingClientApp(environment.namespace(), kubernetes);
             cliApiClient = new MsgCliApiClient(kubernetes, cliEndpoint);
         }
 
@@ -42,7 +42,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
     @AfterAll
     public void tearDownAll() {
-        TestUtils.deleteMessagingClientApp(environment.namespace(), kubernetes);
+        SystemtestsKubernetesApps.deleteMessagingClientApp(environment.namespace(), kubernetes);
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) {

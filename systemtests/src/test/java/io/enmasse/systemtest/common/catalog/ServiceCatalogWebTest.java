@@ -215,7 +215,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         consolePage.createAddressWebConsole(queue, false, true);
 
         try {
-            Endpoint endpoint = TestUtils.deployMessagingClientApp(namespace, kubernetes);
+            Endpoint endpoint = SystemtestsKubernetesApps.deployMessagingClientApp(namespace, kubernetes);
             MsgCliApiClient client = new MsgCliApiClient(kubernetes, endpoint);
 
             ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
@@ -238,7 +238,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
             assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
                     response.getInteger("ecode"), is(0));
         } finally {
-            TestUtils.deleteMessagingClientApp(namespace, kubernetes);
+            SystemtestsKubernetesApps.deleteMessagingClientApp(namespace, kubernetes);
         }
     }
 

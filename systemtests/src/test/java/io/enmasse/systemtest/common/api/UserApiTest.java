@@ -10,7 +10,7 @@ import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.vertx.core.json.JsonObject;
@@ -368,14 +368,14 @@ class UserApiTest extends TestBase {
     private void assertCanOpenWebconsole(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
         SeleniumProvider selenium = new SeleniumProvider();
         try {
-            SeleniumContainers.deployFirefoxContainer();
+            SeleniumManagement.deployFirefoxApp();
             selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
             ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
             page.openWebConsolePage(credentials, true, true);
         } finally {
             selenium.saveScreenShots("UserApiTests", "testFederatedUsers");
             selenium.tearDownDrivers();
-            SeleniumContainers.stopAndRemoveFirefoxContainer();
+            SeleniumManagement.removeFirefoxApp();
         }
     }
 }

@@ -17,14 +17,11 @@ public interface ISeleniumProvider {
 
     WebDriver buildDriver() throws Exception;
 
-    void restartSeleniumContainer() throws Exception;
-
     @AfterEach
     default void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent() || Environment.getInstance().storeScreenshots()) {
             selenium.onFailed(context);
         }
         selenium.tearDownDrivers();
-        restartSeleniumContainer();
     }
 }
