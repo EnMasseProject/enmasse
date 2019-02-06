@@ -1,0 +1,28 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
+[id='deploy-prometheus-rules-{context}']
+= Deploying Prometheus Rules for alerting
+
+You must deploy Prometheus rules to enable alerting for {ProductName}.
+
+.Prerequisites
+* Monitoring infrastructure must be present, whether pre-existing or link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#deploy-monitoring-infrastructure-messaging[installed following this procedure], and the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#deploy-service-monitors-messaging[service monitors for {ProductName} must be deployed].
+
+.Procedure
+
+. Select the {ProductName} namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+
+. Deploy the `prometheus-rules`:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f /install/components/prometheus
+----

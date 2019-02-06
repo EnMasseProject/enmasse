@@ -40,8 +40,14 @@
     name: api_service
   when: register_api_server
 - import_role:
-    name: monitoring
-  when: enable_monitoring
+    name: monitoring-infrastructure
+  when: monitoring_infrastructure
+- import_role:
+    name: service-monitors
+  when: service_monitors
+- import_role:
+    name: alerting
+  when: alerting
 - import_role:
     name: example_plans
   when: install_example_plans

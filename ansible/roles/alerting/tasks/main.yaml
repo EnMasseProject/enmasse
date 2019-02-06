@@ -1,0 +1,3 @@
+---
+- name: Apply Prometheus Rules
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/prometheus-rules

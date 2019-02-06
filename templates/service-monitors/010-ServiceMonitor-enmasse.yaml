@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: enmasse
+  labels:
+    app: enmasse
+spec:
+  selector:
+    matchLabels:
+      app: enmasse
+  endpoints:
+  - port: health
+  namespaceSelector:
+    matchNames:
+    - ${NAMESPACE}
