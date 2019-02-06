@@ -1024,7 +1024,7 @@ describe('changing router configuration', function() {
 });
 
 describe('broker configuration', function() {
-    this.timeout(5000);
+    this.timeout(6000);
     var ragent;
     var address_source;
     var routers;
@@ -1046,23 +1046,38 @@ describe('broker configuration', function() {
         });
     });
 
+    function close(connection) {
+        if (connection.is_open()) {
+            return new Promise(function (resolve) {
+                try {
+                    connection.close();
+                } catch (error) {
+                    console.error(error);
+                    resolve();
+                }
+                connection.on('connection_close', resolve);
+                connection.on('connection_error', resolve);
+            });
+        } else {
+            return Promise.resolve();
+        }
+    }
+
     afterEach(function(done) {
-        watcher.close();
-        connections.forEach(function (c) {
-            try {
-                c.close();
-            } catch (error) {
-                console.error(error);
-            }
-        });
-        routers.close().then(function () {
-            try {
-                ragent.server.close();
-                address_source.close();
-            } catch (error) {
-                console.error(error);
-            }
-            done();
+        watcher.close().then(function () {
+            setTimeout(function () {
+                Promise.all(connections.map(close)).then(function () {
+                    routers.close().then(function () {
+                        try {
+                            ragent.server.close();
+                            address_source.close();
+                        } catch (error) {
+                            console.error(error);
+                        }
+                        done();
+                    }).catch(done);
+                }).catch(done);
+            }, 500);
         }).catch(done);
     });
 
