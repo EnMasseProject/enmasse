@@ -3,7 +3,7 @@ kind: Route
 metadata:
   labels:
     app: enmasse
-  name: prometheus
+  name: prometheus-k8s
 spec:
   port:
     targetPort: proxy
@@ -11,4 +11,4 @@ spec:
     termination: reencrypt
   to:
     kind: Service
-    name: prometheus
+    name: prometheus-k8s

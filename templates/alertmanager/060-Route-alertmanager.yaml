@@ -3,7 +3,7 @@ kind: Route
 metadata:
   labels:
     app: enmasse
-  name: alertmanager
+  name: alertmanager-main
 spec:
   port:
     targetPort: proxy
@@ -11,4 +11,4 @@ spec:
     termination: reencrypt
   to:
     kind: Service
-    name: alertmanager
+    name: alertmanager-main

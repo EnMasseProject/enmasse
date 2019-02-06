@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: enmasse
+  name: kube-state-metrics
+spec:
+  selector:
+    matchLabels:
+      app: enmasse
+  endpoints:
+  - port: kube-metrics
+  namespaceSelector:
+    matchNames:
+    - ${NAMESPACE}

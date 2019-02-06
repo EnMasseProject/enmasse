@@ -1,0 +1,29 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
+[id='deploy-service-monitors-{context}']
+= Deploying service monitors
+
+You must deploy the service monitors to enable Prometheus to monitor {ProductName}.
+
+.Prerequisites
+
+* Monitoring infrastructure must be present, whether pre-existing or link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#deploy-monitoring-infrastructure-messaging[installed following this procedure].
+
+.Procedure
+
+. Select the {ProductName} namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+
+. Deploy the `service-monitors`:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f /install/components/service-monitors
+----

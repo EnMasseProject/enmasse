@@ -7,11 +7,13 @@
 
 = Monitoring {ProductName}
 
-You can monitor {ProductName} by deploying built-in monitoring tools or using your pre-existing monitoring infrastructure.
+You can monitor {ProductName} by deploying built-in monitoring tools or using your pre-existing monitoring infrastructure by deploying the required service monitors and Prometheus rules.
 
-include::assembly-deploy-monitoring.adoc[leveloffset=+1]
+include::../modules/proc-deploy-monitoring-infrastructure.adoc[leveloffset=+1]
 
-include::assembly-configure-inbuilt-monitoring.adoc[leveloffset=+1]
+include::../modules/proc-deploy-service-monitors.adoc[leveloffset=+1]
+
+include::../modules/proc-deploy-prometheus-rules.adoc[leveloffset=+1]
 
 include::../modules/proc-restart-component.adoc[leveloffset=+1]
 

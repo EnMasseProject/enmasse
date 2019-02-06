@@ -1,0 +1,78 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
+[id='deploy-monitoring-infrastructure-{context}']
+= Installing monitoring infrastructure
+
+If you do not have a pre-existing infrastructure for monitoring, you must install one, which includes Prometheus, Alertmanager, Grafana, and `kube-state-metrics`.
+
+.Prerequisites
+
+ifeval::["{cmdcli}" == "oc"]
+* If using a version of OpenShift earlier than OpenShift 4 the link:https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus[Prometheus Operator^] and Custom Resource Definitions must be installed.
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+* The link:https://github.com/coreos/prometheus-operator/tree/master/contrib/kube-prometheus[Prometheus Operator^] and Custom Resource Definitions must be installed.
+endif::[]
+
+.Procedure
+
+. (Optional) To change the default settings for Alertmanager and configure notifications:
+
+..   Create an Alertmanager configuration file. A sample file showing how email notifications are configured follows:
++
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: enmasse
+  name: alertmanager-config
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      smtp_smarthost: localhost
+      smtp_from: alerts@localhost
+      smtp_auth_username: admin
+      smtp_auth_password: password
+    route:
+      group_by: ['alertname']
+      group_wait: 60s
+      group_interval: 60s
+      repeat_interval: 1h
+      receiver: 'sysadmins'
+    receivers:
+    - name: 'sysadmins'
+      email_configs:
+      - to: sysadmin@localhost
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname']
+----
+
+..   Update the Alertmanager secret with the `base64` encoded file:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+sed -i s/alertmanager.yaml:*/$(<CONFIG_FILE> | base64 -w0)/g install/alertmanager/020-Secret-alertmanager.yaml
+----
+
+. Select the {ProductName} namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+
+. Install using the `monitoring-infrastructure` bundle:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/bundles/monitoring
+----

@@ -18,7 +18,7 @@ IOT_MODULES=\
 	iot/tenant \
 	iot/tenant-service-s2i \
 
-MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics $(IOT_MODULES)
+MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics service-monitors prometheus-rules $(IOT_MODULES)
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
@@ -62,7 +62,7 @@ $(ENMASSE_BUNDLE): replace_images
 MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/monitoring
 $(MONITORING_BUNDLE): replace_images
 	mkdir -p $(MONITORING_BUNDLE)
-	for i in alertmanager grafana kube-state-metrics prometheus; do \
+	for i in alertmanager grafana kube-state-metrics prometheus service-monitor prometheus-rules; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(MONITORING_BUNDLE)/; \
 	done
 	for i in `find $(MONITORING_BUNDLE) -name "*.yaml"`; do \
