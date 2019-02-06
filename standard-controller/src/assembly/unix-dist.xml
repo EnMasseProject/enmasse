@@ -30,20 +30,15 @@
           <directory>${project.basedir}/target/classes</directory>
           <outputDirectory>/</outputDirectory>
           <includes>
-            <include>brokeredinfraconfigs/*</include>
-            <include>standardinfraconfigs/*</include>
-            <include>addressspaceplans/*</include>
-            <include>addressplans/*</include>
             <include>templates/*</include>
-            <include>configmaps/*</include>
           </includes>
         </fileSet>
     </fileSets>
     <files>
         <file>
-          <source>${project.basedir}/target/address-space-controller-${project.version}.jar</source>
+          <source>${project.basedir}/target/standard-controller-${project.version}.jar</source>
           <outputDirectory>/</outputDirectory>
-          <destName>address-space-controller.jar</destName>
+          <destName>standard-controller.jar</destName>
            <fileMode>0644</fileMode>
         </file>
     </files>
