@@ -36,10 +36,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <minimum-maven-version>3.3.1</minimum-maven-version>
-        <minimum-java-version>1.8.0</minimum-java-version>
+        <minimum-java-version>11</minimum-java-version>
 
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
         <fabric8.kubernetes-client.version>4.1.1</fabric8.kubernetes-client.version>
         <sundrio.version>0.16.4</sundrio.version>
         <vertx.version>3.6.2</vertx.version>
