@@ -274,13 +274,13 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             {
                 try {
                     int messageCount = 43;
-                    appendAddresses(false, -1, destinations); //without wait
+                    appendAddresses(false, -1, destinations);
                     doMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fail(e.getMessage());
                 }
-            }), users);
+            }, runnable -> new Thread(runnable).start()), users);
         }
 
         //once one of the doMessaging method is finished  then remove appropriate users
