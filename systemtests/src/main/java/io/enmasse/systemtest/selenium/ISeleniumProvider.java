@@ -23,5 +23,6 @@ public interface ISeleniumProvider {
             selenium.onFailed(context);
         }
         selenium.tearDownDrivers();
+        SeleniumManagement.restartSeleniumApp();
     }
 }

@@ -329,7 +329,7 @@ function clean_docker_images() {
 
 function print_images() {
     DOCKER=${DOCKER:-docker}
-    ${DOCKER} ps -a
+    ${DOCKER} images
 }
 function clean_oc_location() {
     info "Removing previous openshift data"
