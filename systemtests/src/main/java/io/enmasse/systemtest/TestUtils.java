@@ -251,6 +251,19 @@ public class TestUtils {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Get list of all ready pods
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @return
+     */
+    public static List<Pod> listReadyPods(Kubernetes kubernetes, String namespace) {
+        return kubernetes.listPods(namespace).stream()
+                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
+                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .collect(Collectors.toList());
+    }
+
     public static List<Pod> listBrokerPods(Kubernetes kubernetes) {
         return kubernetes.listPods(Collections.singletonMap("role", "broker"));
     }
@@ -1256,7 +1269,7 @@ public class TestUtils {
     }
 
     private static RemoteWebDriver getRemoteDriver(String host, int port, Capabilities options) throws Exception {
-        int attempts = 30;
+        int attempts = 60;
         URL hubUrl = new URL(String.format("http://%s:%s/wd/hub", host, port));
         for (int i = 0; i < attempts; i++) {
             if (isReachable(hubUrl)) {
@@ -1265,17 +1278,6 @@ public class TestUtils {
             Thread.sleep(1000);
         }
         throw new IllegalStateException("Selenium webdriver cannot connect to selenium container");
-    }
-
-    public static boolean pingHost(String host, int port, int timeout) {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(host, port), timeout);
-            log.info("Client is able to ping selenium container");
-            return true;
-        } catch (IOException e) {
-            log.warn("Client is unable to ping selenium container");
-            return false;
-        }
     }
 
     public static boolean isReachable(URL url) {
