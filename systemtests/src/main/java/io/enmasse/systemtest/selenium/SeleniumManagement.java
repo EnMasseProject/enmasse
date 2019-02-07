@@ -20,7 +20,7 @@ public class SeleniumManagement {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy firefox deployment");
         try {
-            SystemtestsKubernetesApps.deployFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.create(Environment.getInstance()));
+            SystemtestsKubernetesApps.deployFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
         } catch (Exception e) {
             log.error("Deployment of firefox app failed", e);
             throw e;
@@ -33,7 +33,7 @@ public class SeleniumManagement {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy chrome deployment");
         try {
-            SystemtestsKubernetesApps.deployChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.create(Environment.getInstance()));
+            SystemtestsKubernetesApps.deployChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
         } catch (Exception e) {
             log.error("Deployment of chrome app failed", e);
             throw e;
@@ -44,17 +44,17 @@ public class SeleniumManagement {
 
     public static void removeFirefoxApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_SELENIUM_CONTAINER);
-        SystemtestsKubernetesApps.deleteFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.create(Environment.getInstance()));
+        SystemtestsKubernetesApps.deleteFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void removeChromeApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_SELENIUM_CONTAINER);
-        SystemtestsKubernetesApps.deleteChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.create(Environment.getInstance()));
+        SystemtestsKubernetesApps.deleteChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void copyRheaWebPage(String containerName) {
-
+    public static void restartSeleniumApp() throws Exception {
+        SystemtestsKubernetesApps.deleteSeleniumPod(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
     }
 }

@@ -22,7 +22,7 @@ public class ExecutionListener implements TestExecutionListener {
     public void testPlanExecutionFinished(TestPlan testPlan) {
         Environment env = Environment.getInstance();
         if (!env.skipCleanup()) {
-            Kubernetes kube = Kubernetes.create(env);
+            Kubernetes kube = Kubernetes.getInstance();
             try {
                 AddressApiClient apiClient = new AddressApiClient(kube);
                 GlobalLogCollector logCollector = new GlobalLogCollector(kube, new File(env.testLogDir()));

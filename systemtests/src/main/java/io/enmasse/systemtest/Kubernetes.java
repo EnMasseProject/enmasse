@@ -31,9 +31,10 @@ public abstract class Kubernetes {
     protected final Environment environment;
     protected final KubernetesClient client;
     protected final String globalNamespace;
+    private static Kubernetes instance;
 
-    protected Kubernetes(Environment environment, KubernetesClient client, String globalNamespace) {
-        this.environment = environment;
+    protected Kubernetes(KubernetesClient client, String globalNamespace) {
+        this.environment = Environment.getInstance();
         this.client = client;
         this.globalNamespace = globalNamespace;
     }
@@ -53,12 +54,16 @@ public abstract class Kubernetes {
                 "Unable to find port " + portName + " for service " + service.getMetadata().getName());
     }
 
-    public static Kubernetes create(Environment environment) {
-        if (environment.useMinikube()) {
-            return new Minikube(environment, environment.namespace());
-        } else {
-            return new OpenShift(environment, environment.namespace());
+    public static Kubernetes getInstance() {
+        if (instance == null) {
+            Environment env = Environment.getInstance();
+            if (env.useMinikube()) {
+                instance = new Minikube(env.namespace());
+            } else {
+                instance = new OpenShift(env, env.namespace());
+            }
         }
+        return instance;
     }
 
     public String getApiToken() {
@@ -130,8 +135,12 @@ public abstract class Kubernetes {
         client.apps().statefulSets().inNamespace(globalNamespace).withName(name).scale(numReplicas, true);
     }
 
-    public List<Pod> listPods(String uuid) {
-        return new ArrayList<>(client.pods().inNamespace(globalNamespace).withLabel("enmasse.io/uuid", uuid).list().getItems());
+    public List<Pod> listPods(String namespace, String uuid) {
+        return new ArrayList<>(client.pods().inNamespace(namespace).withLabel("enmasse.io/uuid", uuid).list().getItems());
+    }
+
+    public List<Pod> listPods(String namespace) {
+        return new ArrayList<>(client.pods().inNamespace(namespace).list().getItems());
     }
 
     public List<Pod> listPods() {
@@ -317,6 +326,7 @@ public abstract class Kubernetes {
 
     /**
      * Create service from resource
+     *
      * @param namespace namespace
      * @param resources service resource
      * @return endpoint of new service
@@ -333,6 +343,7 @@ public abstract class Kubernetes {
 
     /**
      * Creates ingress from resource
+     *
      * @param namespace namespace
      * @param resources resources
      */
@@ -347,7 +358,8 @@ public abstract class Kubernetes {
 
     /**
      * Deletes ingress
-     * @param namespace namespace
+     *
+     * @param namespace   namespace
      * @param ingressName ingress name
      */
     public void deleteIngress(String namespace, String ingressName) {
@@ -357,7 +369,8 @@ public abstract class Kubernetes {
 
     /**
      * Test if ingress already exists
-     * @param namespace namespace
+     *
+     * @param namespace   namespace
      * @param ingressName name of ingress
      * @return boolean
      */
@@ -368,6 +381,7 @@ public abstract class Kubernetes {
 
     /**
      * Create configmap from resource
+     *
      * @param namespace kubernetes namespace
      * @param resources configmap resources
      */
@@ -382,7 +396,8 @@ public abstract class Kubernetes {
 
     /**
      * Delete configmap from resource
-     * @param namespace kubernetes namespace
+     *
+     * @param namespace     kubernetes namespace
      * @param configmapName configmap
      */
     public void deleteConfigmap(String namespace, String configmapName) {
@@ -392,7 +407,8 @@ public abstract class Kubernetes {
 
     /**
      * Test if configmap plready exists
-     * @param namespace kubernetes namespace
+     *
+     * @param namespace     kubernetes namespace
      * @param configmapName configmap
      * @return boolean
      */
@@ -434,7 +450,8 @@ public abstract class Kubernetes {
 
     /**
      * Test if service already exists
-     * @param namespace namespace
+     *
+     * @param namespace   namespace
      * @param serviceName service name
      * @return boolean
      */
@@ -483,9 +500,10 @@ public abstract class Kubernetes {
 
     /**
      * Run command on kubernetes pod
-     * @param pod pod instance
+     *
+     * @param pod       pod instance
      * @param container name of container
-     * @param command command to run
+     * @param command   command to run
      * @return stdout
      */
     public String runOnPod(Pod pod, String container, String... command) {
@@ -522,7 +540,8 @@ public abstract class Kubernetes {
 
     /**
      * Creates service account
-     * @param name name of servcie account
+     *
+     * @param name      name of servcie account
      * @param namespace namespace
      * @return full name
      */
@@ -535,7 +554,8 @@ public abstract class Kubernetes {
 
     /**
      * Deletes service account
-     * @param name name
+     *
+     * @param name      name
      * @param namespace namesapce
      * @return full name
      */
@@ -547,7 +567,8 @@ public abstract class Kubernetes {
 
     /**
      * Returns service account token
-     * @param name name
+     *
+     * @param name      name
      * @param namespace namespace
      * @return token
      */

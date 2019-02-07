@@ -74,6 +74,10 @@ public class SystemtestsKubernetesApps {
         kubeClient.deleteConfigmap(namespace, SELENIUM_CONFIG_MAP);
     }
 
+    public static void deleteSeleniumPod(String namespace, Kubernetes kubeClient) {
+        kubeClient.listPods(namespace).forEach(pod -> kubeClient.deletePod(namespace, pod.getMetadata().getName()));
+    }
+
     private static Deployment getSeleniumNodeDeploymentResource(String appName, String imageName) {
         return new DeploymentBuilder()
                 .withNewMetadata()
@@ -103,15 +107,15 @@ public class SystemtestsKubernetesApps {
                 .withNewTcpSocket()
                 .withNewPort(4444)
                 .endTcpSocket()
-                .withInitialDelaySeconds(10)
-                .withPeriodSeconds(5)
+                .withInitialDelaySeconds(5)
+                .withPeriodSeconds(2)
                 .endLivenessProbe()
                 .withNewReadinessProbe()
                 .withNewHttpGet()
                 .withPath("/wd/hub")
                 .withNewPort(4444)
                 .endHttpGet()
-                .withInitialDelaySeconds(10)
+                .withInitialDelaySeconds(5)
                 .withPeriodSeconds(5)
                 .endReadinessProbe()
                 .endContainer()
