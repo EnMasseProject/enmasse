@@ -5,13 +5,15 @@
 package io.enmasse.systemtest.selenium;
 
 
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class SeleniumManagement {
     private static Logger log = CustomLogger.getLogger();
@@ -55,6 +57,14 @@ public class SeleniumManagement {
     }
 
     public static void restartSeleniumApp() throws Exception {
+        List<String> beforeRestart = Kubernetes.getInstance().listPods(SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
         SystemtestsKubernetesApps.deleteSeleniumPod(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
+        TestUtils.waitUntilCondition("Selenium pods ready", () -> {
+                    List<String> current = TestUtils.listReadyPods(Kubernetes.getInstance(), SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
+                    current.removeAll(beforeRestart);
+                    log.info("Following pods are in ready state {}", current);
+                    return  current.size() == beforeRestart.size();
+                },
+                new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 }
