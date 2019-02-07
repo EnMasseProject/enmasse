@@ -73,18 +73,18 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ----
 endif::[]
 
-. Deploy using the `{ProductBundleName}` bundle:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} apply -f install/bundles/{ProductBundleName}
-----
-
 . Deploy the standard authentication service:
 +
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} apply -f install/components/standard-authservice
+----
+
+. Deploy using the `{ProductBundleName}` bundle:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/bundles/{ProductBundleName}
 ----
 
 . (Optional) Install example plans and infrastructure configuration:
