@@ -26,7 +26,7 @@ include::../common/client-example1.py[]
 +
 [source,options="nowrap",subs=attributes+]
 ----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}
+{cmdcli} get addressspace myspace -o 'jsonpath={.status.endpointStatuses[?(@.name=="messaging")].externalHost}'
 ----
 +
 Use the output as the host name in the following step.
