@@ -204,7 +204,6 @@ public class Executor {
                 Scanner scanner = new Scanner(is);
                 try {
                     log.info("Reading stream {}", is);
-                    String line;
                     while (scanner.hasNextLine()) {
                         data.append(scanner.nextLine()).append(System.getProperty("line.separator"));
                     }

@@ -4,12 +4,10 @@
  */
 package io.enmasse.systemtest;
 
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import java.util.Arrays;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.concurrent.TimeUnit;
+import io.enmasse.systemtest.executor.Executor;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
 public class Minikube extends Kubernetes {
     protected Minikube(String globalNamespace) {
@@ -17,23 +15,14 @@ public class Minikube extends Kubernetes {
     }
 
     private static String runCommand(String... cmd) {
-        ProcessBuilder processBuilder = new ProcessBuilder(cmd).redirectErrorStream(true);
-
-        Process proc = null;
         try {
-            proc = processBuilder.start();
-            InputStream stdout = proc.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
+            Executor executor = new Executor();
+            int returnCode = executor.execute(Arrays.asList(cmd), 10000);
+            if(returnCode == 0) {
+                return executor.getStdOut();
+            }else {
+                throw new RuntimeException(executor.getStdErr());
             }
-            reader.close();
-            if (!proc.waitFor(1, TimeUnit.MINUTES)) {
-                throw new RuntimeException("Command timed out");
-            }
-            return output.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
