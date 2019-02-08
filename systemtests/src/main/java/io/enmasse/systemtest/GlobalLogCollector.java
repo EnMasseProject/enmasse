@@ -4,17 +4,26 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.fabric8.kubernetes.api.model.Pod;
-import org.slf4j.Logger;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.fabric8.kubernetes.api.model.Pod;
 
 public class GlobalLogCollector {
     private final static Logger log = CustomLogger.getLogger();
@@ -85,26 +94,11 @@ public class GlobalLogCollector {
 
     public void collectEvents() throws IOException {
         long timestamp = System.currentTimeMillis();
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command("kubectl", "get", "events", "-n", namespace);
-        processBuilder.redirectErrorStream(true);
-        Process process;
         log.info("Collecting events in {}", namespace);
-
+        ExecutionResultData result = KubeCMDClient.getEvents(namespace);
         Path eventLog = resolveLogFile(namespace + ".events." + timestamp);
         try (BufferedWriter writer = Files.newBufferedWriter(eventLog)) {
-            process = processBuilder.start();
-            InputStream stdout = process.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                writer.write(line);
-                writer.write(System.lineSeparator());
-            }
-            reader.close();
-            if (!process.waitFor(1, TimeUnit.MINUTES)) {
-                throw new RuntimeException("Command timed out");
-            }
+            writer.write(result.getStdOut());
         } catch (Exception e) {
             log.error("Error collecting events for {}", namespace, e);
         }
