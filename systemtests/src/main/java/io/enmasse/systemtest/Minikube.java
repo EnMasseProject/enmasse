@@ -6,10 +6,14 @@ package io.enmasse.systemtest;
 
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.executor.Executor;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
 public class Minikube extends Kubernetes {
+    private static Logger log = CustomLogger.getLogger();
+
     protected Minikube(String globalNamespace) {
         super(new DefaultKubernetesClient(), globalNamespace);
     }
@@ -28,12 +32,23 @@ public class Minikube extends Kubernetes {
         }
     }
 
+    private static String removeQuotes(String value) {
+        String cleaned = value;
+        if(value.startsWith("\"")) {
+            cleaned = cleaned.substring(1);
+        }
+        if(value.endsWith("\"")) {
+            cleaned = cleaned.substring(0, cleaned.length()-1);
+        }
+        return cleaned;
+    }
+
     private String getIp(String namespace, String serviceName) {
-        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName);
+        return removeQuotes(runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName));
     }
 
     private String getPort(String namespace, String serviceName) {
-        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName);
+        return removeQuotes(runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName));
     }
 
     @Override
@@ -57,6 +72,8 @@ public class Minikube extends Kubernetes {
         if (!name.endsWith("-external")) {
             externalName += "-external";
         }
-        return new Endpoint(getIp(globalNamespace, externalName), Integer.parseInt(getPort(globalNamespace, externalName)));
+        Endpoint endpoint = new Endpoint(getIp(globalNamespace, externalName), Integer.parseInt(getPort(globalNamespace, externalName)));
+        log.info("Minikube external endpoint - " + endpoint.toString());
+        return endpoint;
     }
 }
