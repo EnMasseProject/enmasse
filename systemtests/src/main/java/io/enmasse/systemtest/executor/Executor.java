@@ -29,11 +29,11 @@ public class Executor {
     private boolean appendLineSeparator;
 
     public Executor() {
-        appendLineSeparator = true;
+        this.appendLineSeparator = true;
     }
 
     public Executor(Path logPath) {
-        appendLineSeparator = true;
+        this.appendLineSeparator = true;
         this.logPath = logPath;
     }
 
