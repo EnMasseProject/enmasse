@@ -26,12 +26,19 @@ public class Executor {
     private StreamGobbler stdOutReader;
     private StreamGobbler stdErrReader;
     private Path logPath;
+    private boolean appendLineSeparator;
 
     public Executor() {
+        this(true);
     }
 
     public Executor(Path logPath) {
+        this();
         this.logPath = logPath;
+    }
+
+    public Executor(boolean appendLineSeparator) {
+        this.appendLineSeparator = appendLineSeparator;
     }
 
     /**
@@ -205,7 +212,10 @@ public class Executor {
                 try {
                     log.info("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
-                        data.append(scanner.nextLine()).append(System.getProperty("line.separator"));
+                        data.append(scanner.nextLine());
+                        if(appendLineSeparator) {
+                            data.append(System.getProperty("line.separator"));
+                        }
                     }
                     scanner.close();
                     return data.toString();

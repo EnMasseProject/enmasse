@@ -20,7 +20,7 @@ public class Minikube extends Kubernetes {
 
     private static String runCommand(String... cmd) {
         try {
-            Executor executor = new Executor();
+            Executor executor = new Executor(false);
             int returnCode = executor.execute(Arrays.asList(cmd), 10000);
             if(returnCode == 0) {
                 return executor.getStdOut();
@@ -32,23 +32,12 @@ public class Minikube extends Kubernetes {
         }
     }
 
-    private static String removeQuotes(String value) {
-        String cleaned = value;
-        if(value.startsWith("\"")) {
-            cleaned = cleaned.substring(1);
-        }
-        if(value.endsWith("\"")) {
-            cleaned = cleaned.substring(0, cleaned.length()-1);
-        }
-        return cleaned;
-    }
-
     private String getIp(String namespace, String serviceName) {
-        return removeQuotes(runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName));
+        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName);
     }
 
     private String getPort(String namespace, String serviceName) {
-        return removeQuotes(runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName));
+        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName);
     }
 
     @Override
