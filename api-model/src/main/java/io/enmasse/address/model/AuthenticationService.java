@@ -36,21 +36,7 @@ import io.sundr.builder.annotations.Inline;
 @AuthenticationServiceDetails
 public class AuthenticationService {
 
-    private static final AuthenticationServiceType DEFAULT_TYPE;
-
-    public static AuthenticationServiceType resolveAuthServiceType(Map<String, String> env) {
-        if (env.containsKey("STANDARD_AUTHSERVICE_SERVICE_HOST")) {
-            return AuthenticationServiceType.STANDARD;
-        } else {
-            return AuthenticationServiceType.NONE;
-        }
-    }
-
-    static {
-        DEFAULT_TYPE = resolveAuthServiceType(System.getenv());
-    }
-
-    private AuthenticationServiceType type = DEFAULT_TYPE;
+    private AuthenticationServiceType type;
     private Map<String, Object> details = new HashMap<> ();
 
     public AuthenticationService() {

@@ -27,9 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
+import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -135,6 +138,11 @@ public class HttpAddressSpaceService {
                 addressSpace.putAnnotation(AnnotationKeys.CREATED_BY, createdBy);
                 addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
             }
+
+            if (addressSpace.getSpec().getAuthenticationService() == null) {
+                addressSpace.getSpec().setAuthenticationService(resolveDefaultAuthService());
+
+            }
         } else {
             validateChanges(existing, addressSpace);
             Map<String, String> annotations = existing.getMetadata().getAnnotations();
@@ -166,6 +174,26 @@ public class HttpAddressSpaceService {
         }
 
         return addressSpace;
+    }
+    private AuthenticationService resolveDefaultAuthService() {
+        AuthenticationService authenticationService = new AuthenticationService();
+        if (isHostResolveable("standard-authservice")) {
+            authenticationService.setType(AuthenticationServiceType.STANDARD);
+        } else if (isHostResolveable("none-authservice")) {
+            authenticationService.setType(AuthenticationServiceType.NONE);
+        } else {
+            throw new ValidationException("Unable to resolve default authentication service of address space: no authentication services installed");
+        }
+        return authenticationService;
+    }
+
+    private static boolean isHostResolveable(String hostname) {
+        try {
+            InetAddress.getByName(hostname);
+        } catch (UnknownHostException e) {
+            return false;
+        }
+        return true;
     }
 
     private void validateChanges(AddressSpace existing, AddressSpace addressSpace) {

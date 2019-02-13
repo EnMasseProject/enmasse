@@ -209,7 +209,7 @@ public class AddressSpaceController {
         AuthenticationServiceResolver resolver = null;
         switch (type) {
             case NONE:
-                resolver = options.getNoneAuthService().map(authService -> new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort())).orElse(null);
+                resolver = new NoneAuthenticationServiceResolver("none-authservice", 5671);
                 break;
             case STANDARD:
                 resolver = options.getStandardAuthService().map(authService -> {
