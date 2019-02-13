@@ -11,6 +11,8 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -61,6 +63,9 @@ public class TemplateBrokerSetGeneratorTest {
             assertNotNull(annotations.get(AnnotationKeys.CLUSTER_ID));
             assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getMetadata().getName()));
         }
+        StatefulSet set = (StatefulSet) resources.get(0);
+        assertThat(set.getSpec().getVolumeClaimTemplates().get(0).getSpec().getStorageClassName(), is("mysc"));
+        assertThat(set.getSpec().getReplicas(), is(1));
         Map<String,String> parameters = captor.getValue();
         assertThat(parameters.size(), is(13));
     }
@@ -82,7 +87,15 @@ public class TemplateBrokerSetGeneratorTest {
     }
 
     private BrokerCluster generateCluster(Address address, ArgumentCaptor<Map<String,String>> captor) throws Exception {
-        when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
+        when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewStatefulSetItem().withNewMetadata().withName("testset").endMetadata().
+                withNewSpec()
+                .withReplicas(0)
+                .withVolumeClaimTemplates(new PersistentVolumeClaimBuilder()
+                        .withNewSpec()
+                        .endSpec()
+                        .build())
+                .endSpec()
+                .endStatefulSetItem().build());
 
         return generator.generateCluster(address.getMetadata().getName(), 1, address, null,
                 standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null));
