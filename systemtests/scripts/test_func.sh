@@ -383,12 +383,18 @@ function get_oc_args() {
 function is_upgraded() {
     IMAGE=$1
     TAG=${TAG:-"latest"}
+
+    IMAGE_TAG=$(echo $IMAGE | cut -f 2 -d ':')
     TEMPLATES=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/templates/* | grep "image")
     DEPLOYMENTS=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/components/*/*-Deployment* | grep "image")
     if [[ "${TEMPLATES}" == *"${IMAGE}"* ]] || [[ "${DEPLOYMENTS}" == *"${IMAGE}"* ]] ; then
         echo "true"
     else
-        echo "false"
+        if [[ "${IMAGE_TAG}" == "${TAG}" ]]; then
+            echo "true"
+        else
+            echo "false"
+        fi
     fi
 }
 
