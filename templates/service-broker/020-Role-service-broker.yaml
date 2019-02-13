@@ -14,3 +14,6 @@ rules:
   - apiGroups: [ "admin.enmasse.io" ]
     resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs" ]
     verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "", "route.openshift.io" ]
+    resources: [ "routes", "routes/custom-host", "routes/status"]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
