@@ -10,7 +10,6 @@ MODULES=crds address-space-controller example-roles example-plans api-server api
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
-	mkdir -p $(PACKAGE_INSTALL_DIR)/templates
 	mkdir -p $(PACKAGE_INSTALL_DIR)/bundles
 	mkdir -p $(PACKAGE_INSTALL_DIR)/components
 
