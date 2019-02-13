@@ -8,6 +8,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -20,6 +21,7 @@ import java.util.concurrent.Callable;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
+import javax.ws.rs.core.UriInfo;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,11 +44,14 @@ public class HttpAddressSpaceServiceTest {
     private AddressSpace a2;
     private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
+    private HostResolver hostResolver;
 
     @BeforeEach
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(), Clock.systemUTC());
+        hostResolver = mock(HostResolver.class);
+        when(hostResolver.isHostResolveable(any())).thenReturn(true);
+        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(), Clock.systemUTC(), hostResolver);
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
         a1 = new AddressSpaceBuilder()
@@ -201,6 +206,16 @@ public class HttpAddressSpaceServiceTest {
 
         assertThat(addressSpaceApi.listAddressSpaces("myns"), hasItem(a2));
         assertThat(addressSpaceApi.listAddressSpaces("myns").size(), is(1));
+    }
+
+    @Test
+    public void testCreateUnresolvableAuthService() {
+        when(hostResolver.isHostResolveable(any())).thenReturn(false);
+        UriInfo mockUriInfo = mock(UriInfo.class);
+        Response response = invoke(() -> addressSpaceService.createAddressSpace(securityContext, mockUriInfo, a1.getMetadata().getNamespace(), a1));
+        assertThat(response.getStatus(), is(500));
+        Status body = (Status) response.getEntity();
+        assertTrue(body.getMessage().contains("no authentication services found"));
     }
 
     @Test

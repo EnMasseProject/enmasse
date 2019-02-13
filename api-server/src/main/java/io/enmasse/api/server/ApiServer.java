@@ -7,6 +7,7 @@ package io.enmasse.api.server;
 
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
+import io.enmasse.api.v1.http.HostResolver;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
@@ -33,6 +34,8 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -95,7 +98,19 @@ public class ApiServer extends AbstractVerticle {
         }
 
         Metrics metrics = new Metrics();
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock);
+        HostResolver hostResolver = new HostResolver() {
+            @Override
+            public boolean isHostResolveable(String hostname) {
+                try {
+                    InetAddress.getByName(hostname);
+                } catch (UnknownHostException e) {
+                    return false;
+                }
+                return true;
+            }
+        };
+
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock, hostResolver);
 
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {

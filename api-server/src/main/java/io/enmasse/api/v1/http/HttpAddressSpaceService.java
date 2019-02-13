@@ -49,13 +49,15 @@ public class HttpAddressSpaceService {
     private final SchemaProvider schemaProvider;
 
     private final AddressSpaceApi addressSpaceApi;
+    private final HostResolver hostResolver;
     private final UuidGenerator uuidGenerator = new UuidGenerator();
     private final Clock clock;
 
-    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock) {
+    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock, HostResolver hostResolver) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.clock = clock;
+        this.hostResolver = hostResolver;
     }
 
     private Response doRequest(String errorMessage, Callable<Response> request) throws Exception {
@@ -141,7 +143,6 @@ public class HttpAddressSpaceService {
 
             if (addressSpace.getSpec().getAuthenticationService() == null) {
                 addressSpace.getSpec().setAuthenticationService(resolveDefaultAuthService());
-
             }
         } else {
             validateChanges(existing, addressSpace);
@@ -177,23 +178,14 @@ public class HttpAddressSpaceService {
     }
     private AuthenticationService resolveDefaultAuthService() {
         AuthenticationService authenticationService = new AuthenticationService();
-        if (isHostResolveable("standard-authservice")) {
+        if (hostResolver.isHostResolveable("standard-authservice")) {
             authenticationService.setType(AuthenticationServiceType.STANDARD);
-        } else if (isHostResolveable("none-authservice")) {
+        } else if (hostResolver.isHostResolveable("none-authservice")) {
             authenticationService.setType(AuthenticationServiceType.NONE);
         } else {
-            throw new ValidationException("Unable to resolve default authentication service of address space: no authentication services installed");
+            throw new InternalServerErrorException("No authentication service specified, and unable to resolve default: no authentication services found");
         }
         return authenticationService;
-    }
-
-    private static boolean isHostResolveable(String hostname) {
-        try {
-            InetAddress.getByName(hostname);
-        } catch (UnknownHostException e) {
-            return false;
-        }
-        return true;
     }
 
     private void validateChanges(AddressSpace existing, AddressSpace addressSpace) {
@@ -201,7 +193,7 @@ public class HttpAddressSpaceService {
             throw new BadRequestException("Cannot change type of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getType() + " to " + addressSpace.getSpec().getType());
         }
 
-        if (!existing.getSpec().getAuthenticationService().equals(addressSpace.getSpec().getAuthenticationService())) {
+        if (addressSpace.getSpec().getAuthenticationService() != null && !existing.getSpec().getAuthenticationService().equals(addressSpace.getSpec().getAuthenticationService())) {
             throw new BadRequestException("Cannot change authentication service of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getAuthenticationService() + " to " + addressSpace.getSpec().getAuthenticationService());
         }
 
