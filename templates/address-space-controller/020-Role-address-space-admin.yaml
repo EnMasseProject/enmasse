@@ -9,7 +9,7 @@ rules:
     resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs" ]
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "" ]
-    resources: [ "pods", "secrets" ]
+    resources: [ "pods", "secrets", "services" ]
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "" ]
     resources: [ "configmaps" ]
