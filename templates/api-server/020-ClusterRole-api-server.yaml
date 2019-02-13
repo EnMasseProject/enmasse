@@ -7,10 +7,10 @@ metadata:
 rules:
   - apiGroups: [ "authentication.k8s.io" ]
     resources: [ "tokenreviews" ]
-    verbs: [ "create "]
+    verbs: [ "create" ]
   - apiGroups: [ "authorization.k8s.io" ]
     resources: [ "subjectaccessreviews" ]
-    verbs: [ "create "]
+    verbs: [ "create" ]
   - apiGroups: [ "" ]
     resources: [ "configmaps" ]
     resourceNames: [ "extension-apiserver-authentication" ]
