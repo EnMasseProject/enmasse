@@ -6,7 +6,7 @@ metadata:
   name: enmasse.io:keycloak-controller
 rules:
   - apiGroups: [ "" ]
-    resources: [ "configmaps", "secrets" ]
+    resources: [ "configmaps", "secrets", "persistentvolumeclaims" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "", "route.openshift.io" ]
     resources: [ "routes", "routes/custom-host", "routes/status"]
