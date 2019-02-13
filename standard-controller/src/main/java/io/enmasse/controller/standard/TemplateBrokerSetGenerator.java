@@ -110,6 +110,11 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             if (item instanceof StatefulSet) {
                 StatefulSet set = (StatefulSet) item;
                 set.getSpec().setReplicas(numReplicas);
+                if (standardInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
+                    for (PersistentVolumeClaim persistentVolumeClaim : set.getSpec().getVolumeClaimTemplates()) {
+                        persistentVolumeClaim.getSpec().setStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName());
+                    }
+                }
                 Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(standardInfraConfig));
             } else if (item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;
@@ -123,18 +128,6 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         if (address != null) {
             Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getSpec().getAddress());
         }
-        return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
-    }
-
-    private KubernetesList applyStorageClassName(String storageClassName, KubernetesList items) {
-        if (storageClassName != null) {
-            for (HasMetadata item : items.getItems()) {
-                if (item instanceof PersistentVolumeClaim) {
-                    ((PersistentVolumeClaim) item).getSpec().setStorageClassName(storageClassName);
-                }
-            }
-        }
         return items;
     }
-
 }
