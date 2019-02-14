@@ -5,12 +5,12 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.controller.common.AuthenticationServiceResolverFactory;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -27,34 +27,36 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final String KC_IDP_HINT_OPENSHIFT = "openshift-v3";
 
     private final Kubernetes kubernetes;
-    private final AuthenticationServiceResolverFactory authResolverFactory;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final boolean openShift;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceResolverFactory authResolverFactory, boolean openShift) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceRegistry authenticationServiceRegistry, boolean openShift) {
         this.kubernetes = kubernetes;
-        this.authResolverFactory = authResolverFactory;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.openShift = openShift;
     }
 
     private void prepareParameters(InfraConfig infraConfig,
                                    AddressSpace addressSpace,
                                    Map<String, String> parameters) {
-        AuthenticationService authService = addressSpace.getSpec().getAuthenticationService();
-        AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
-        Optional<String> kcIdpHint = getKcIdpHint(infraConfig, addressSpace, authService.getType());
+        AuthenticationService authService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService())
+                .orElseThrow(() -> new IllegalArgumentException("Unable to find authentication service " + addressSpace.getSpec().getAuthenticationService()));
+
+
+        Optional<String> kcIdpHint = getKcIdpHint(infraConfig, addressSpace, authService);
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         parameters.put(TemplateParameter.INFRA_NAMESPACE, kubernetes.getNamespace());
         parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
         parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
         parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getMetadata().getNamespace());
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authService.getSpec().getHost());
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authService.getSpec().getPort()));
         parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_KC_IDP_HINT, kcIdpHint.orElse(""));
 
-        String encodedCaCert = authResolver.getCaSecretName(authService)
+        String encodedCaCert = Optional.ofNullable(authService.getSpec().getCaCertSecretName())
                 .map(secretName ->
                     kubernetes.getSecret(secretName).map(secret ->
                             secret.getData().get("tls.crt"))
@@ -67,9 +69,20 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                     }
                 });
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, encodedCaCert);
-        authResolver.getClientSecretName(authService).ifPresent(secret -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, secret));
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authResolver.getSaslInitHost(addressSpace, authService));
-        authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
+        if (authService.getSpec().getClientCertSecretName() != null) {
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, authService.getSpec().getClientCertSecretName());
+        }
+
+        if (authService.getSpec().getRealm() != null) {
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authService.getSpec().getRealm());
+        } else {
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
+        }
+
+        if (authService.getMetadata().getAnnotations() != null &&
+                authService.getMetadata().getAnnotations().get(AnnotationKeys.OAUTH_URL) != null) {
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, authService.getMetadata().getAnnotations().get(AnnotationKeys.OAUTH_URL));
+        }
 
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
         for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
@@ -83,10 +96,11 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
     private Optional<String> getKcIdpHint(final InfraConfig infraConfig,
                                 final AddressSpace addressSpace,
-                                final AuthenticationServiceType authenticationServiceType) {
+                                final AuthenticationService authenticationService) {
 
         String kcIdpHint = null;
-        if (this.openShift && authenticationServiceType == AuthenticationServiceType.STANDARD) {
+        if (this.openShift && authenticationService.getMetadata().getAnnotations() != null &&
+                "standard".equals(authenticationService.getMetadata().getName())) {
             kcIdpHint = KC_IDP_HINT_OPENSHIFT;
         }
 

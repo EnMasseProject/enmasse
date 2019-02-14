@@ -188,7 +188,7 @@ public class HttpAddressSpaceService {
                 addressSpace.getMetadata().setNamespace(namespace);
             }
 
-            addressSpace.putAnnotationIfAbsent(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getMetadata().getNamespace() + "-" + addressSpace.getMetadata().getName()));
+            addressSpace.putAnnotationIfAbsent(AnnotationKeys.REALM_NAME, KubeUtil.getAddressSpaceRealmName(addressSpace));
             addressSpace.putLabelIfAbsent(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getSpec().getType());
             addressSpace.putLabelIfAbsent(LabelKeys.NAMESPACE, addressSpace.getMetadata().getNamespace());
             addressSpace.putAnnotationIfAbsent(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());

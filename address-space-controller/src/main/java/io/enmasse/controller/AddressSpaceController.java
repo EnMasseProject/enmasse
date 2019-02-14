@@ -12,6 +12,7 @@ import java.util.*;
 
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.metrics.api.Metrics;
@@ -86,11 +87,17 @@ public class AddressSpaceController {
                 : new LogEventLogger();
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
-        AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
+        AuthenticationServiceRegistry authenticationServiceRegistry = authenticationService -> {
+            if (authenticationService.getName() == null) {
+                return schemaProvider.getSchema().findAuthenticationService(authenticationService.getType().getName());
+            } else {
+                return schemaProvider.getSchema().findAuthenticationService(authenticationService.getName());
+            }
+        };
 
-        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, resolverFactory, isOpenShift);
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, isOpenShift);
 
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient,
                 options.getStandardAuthserviceConfigName(),
@@ -175,46 +182,6 @@ public class AddressSpaceController {
                 }
             }
         };
-    }
-
-    private AuthenticationServiceResolverFactory createResolverFactory(AddressSpaceControllerOptions options) {
-
-        return type -> {
-            AuthenticationServiceResolver resolver = createAuthServiceResolver(type, options);
-            if (resolver == null) {
-                throw new IllegalArgumentException("Unsupported resolver of type " + type);
-            }
-            return resolver;
-        };
-    }
-
-    private AuthenticationServiceResolver createAuthServiceResolver(AuthenticationServiceType type, AddressSpaceControllerOptions options) {
-        AuthenticationServiceResolver resolver = null;
-        switch (type) {
-            case NONE:
-                resolver = new NoneAuthenticationServiceResolver("none-authservice", 5671);
-                break;
-            case STANDARD:
-                resolver = options.getStandardAuthService().map(authService -> {
-                    ConfigMap config = controllerClient.configMaps().withName(authService.getConfigMap()).get();
-                    if (config != null) {
-                        return new StandardAuthenticationServiceResolver(
-                                config.getData().get("hostname"),
-                                Integer.parseInt(config.getData().get("port")),
-                                config.getData().get("oauthUrl"),
-                                config.getData().get("caSecretName"));
-                    } else {
-                        log.warn("Skipping standard authentication service: configmap {} not found", authService.getConfigMap());
-                        return null;
-                    }
-                }).orElse(null);
-                break;
-            case EXTERNAL:
-                resolver = new ExternalAuthenticationServiceResolver();
-                break;
-        }
-
-        return resolver;
     }
 
     public static void main(String args[]) {

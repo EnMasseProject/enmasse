@@ -14,6 +14,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
+import io.enmasse.admin.model.v1.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -21,14 +22,9 @@ import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AuthenticationServiceResolver;
+import io.enmasse.address.model.AuthenticationServiceRegistry;
 import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.EndpointSpecBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.k8s.util.JULInitializingTest;
@@ -54,17 +50,25 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
         openShiftServer.before();
         client = openShiftServer.getOpenshiftClient();
         client.secrets().createNew().editOrNewMetadata().withName("certs").endMetadata().addToData("tls.crt", "cert").done();
-        AuthenticationServiceResolver authServiceResolver = mock(AuthenticationServiceResolver.class);
-        when(authServiceResolver.getHost(any())).thenReturn("example.com");
-        when(authServiceResolver.getPort(any())).thenReturn(5671);
-        when(authServiceResolver.getCaSecretName(any())).thenReturn(Optional.of("certs"));
+        AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        AuthenticationService authenticationService = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .endMetadata()
+                .withNewSpec()
+                .withHost("example")
+                .withPort(5671)
+                .endSpec()
+                .build();
+        when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
+
         resourceFactory = new TemplateInfraResourceFactory(
                 new KubernetesHelper("test",
                         client,
                         client.getConfiguration().getOauthToken(),
                         new File("src/test/resources/templates"),
                         true),
-                a -> authServiceResolver,
+                authenticationServiceRegistry,
                 true);
     }
 
