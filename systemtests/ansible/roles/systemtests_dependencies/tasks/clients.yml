@@ -35,13 +35,13 @@
       PATH: "{{ ansible_env.PATH }}:{{ maven_path }}"
 
 - name: CLIENTS | Move cli-qpid-jms
-  shell: 'cp {{ cli_java_git_path }}/cli-qpid-jms/target/cli-qpid-jms-*-SNAPSHOT.jar {{ client_executable_folder }}/cli-qpid-jms.jar'
+  shell: 'cp {{ cli_java_git_path }}/cli-qpid-jms/target/cli-qpid-jms-*-SNAPSHOT-LATEST.jar {{ client_executable_folder }}/cli-qpid-jms.jar'
 
 - name: CLIENTS | Move cli-artemis-jms
-  shell: 'cp {{ cli_java_git_path }}/cli-artemis-jms/target/cli-artemis-jms-*-SNAPSHOT.jar {{ client_executable_folder }}/cli-artemis-jms.jar'
+  shell: 'cp {{ cli_java_git_path }}/cli-artemis-jms/target/cli-artemis-jms-*-SNAPSHOT-LATEST.jar {{ client_executable_folder }}/cli-artemis-jms.jar'
 
 - name: CLIENTS | Move cli-activemq
-  shell: 'cp {{ cli_java_git_path }}/cli-activemq/target/cli-activemq-*-SNAPSHOT.jar {{ client_executable_folder }}/cli-activemq.jar'
+  shell: 'cp {{ cli_java_git_path }}/cli-activemq/target/cli-activemq-*-SNAPSHOT-LATEST.jar {{ client_executable_folder }}/cli-activemq.jar'
 
 - name: CLIENTS | Clone rhea repo
   git:
