@@ -29,9 +29,9 @@ resources, and creates the standard authentication service as specified by the r
 
 * Setup admin credentials for keycloak
 * Create keycloak deployment
-* Create the route for external access
+* Create the route for external access (not needed once console work to auth against openshift is completed)
 * Create the persistent volume claims needed
-* Setup to OAUTH client
+* Setup to OAUTH client (not needed once console work to auth against openshift is completed)
 
 == Testing
 
