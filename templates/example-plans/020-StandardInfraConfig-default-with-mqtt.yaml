@@ -5,7 +5,7 @@ metadata:
   labels:
     app: enmasse
   annotations:
-    enmasse.io/with-mqtt: true
+    enmasse.io/with-mqtt: "true"
 spec:
   version: ${ENMASSE_VERSION}
   admin:
