@@ -385,6 +385,7 @@ class ScramSaslAuthenticator implements SaslServerMechanism.Instance
                     challenge = new byte[0];
                     break;
                 }
+              //$FALL-THROUGH$
             default:
                 throw new IllegalArgumentException("No response expected in state " + state);
 

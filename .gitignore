@@ -13,6 +13,7 @@
 **/.project
 **/.classpath
 .factorypath
+**/.checkstyle
 
 # VS Code
 .vscode
