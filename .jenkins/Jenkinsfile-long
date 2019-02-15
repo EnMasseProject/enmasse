@@ -17,8 +17,7 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
 
         TAG = 'latest'
-        JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
-        OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+        OPENSHIFT_PROJECT = "enmasse-infra"
     }
     stages {
         stage('wait for agent ready') {
