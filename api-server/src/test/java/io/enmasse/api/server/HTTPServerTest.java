@@ -99,7 +99,7 @@ public class HTTPServerTest {
         options.setVersion("1.0");
         options.setCertDir("/doesnotexist");
 
-        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC(), 0, 0);
+        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC(), host -> true,0, 0);
         vertx.deployVerticle(this.server, context.succeeding(arg -> context.completeNow()));
     }
 

@@ -41,7 +41,7 @@ public class AddressSpaceSpec {
     @NotEmpty
     private String plan;
     @Valid
-    private AuthenticationService authenticationService = new AuthenticationService();
+    private AuthenticationService authenticationService;
 
     public AddressSpaceSpec() {
     }

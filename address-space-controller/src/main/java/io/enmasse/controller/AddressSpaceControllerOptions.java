@@ -39,10 +39,6 @@ public final class AddressSpaceControllerOptions {
         return templateDir;
     }
 
-    public Optional<NoneAuthServiceInfo> getNoneAuthService() {
-        return Optional.ofNullable(noneAuthService);
-    }
-
     public Optional<StandardAuthServiceInfo> getStandardAuthService() {
         return Optional.ofNullable(standardAuthService);
     }
@@ -87,7 +83,6 @@ public final class AddressSpaceControllerOptions {
         }
         options.setResourcesDir(resourcesDir);
 
-        options.setNoneAuthService(getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null));
         options.setStandardAuthService(getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
         options.setStandardAuthserviceConfigName(getEnv(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
         options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
@@ -113,13 +108,6 @@ public final class AddressSpaceControllerOptions {
 
         options.setVersion(getEnvOrThrow(env, "VERSION"));
         return options;
-    }
-
-
-    private static Optional<NoneAuthServiceInfo> getNoneAuthService(Map<String, String> env, String hostEnv, String portEnv) {
-
-        return getEnv(env, hostEnv)
-                .map(host -> new NoneAuthServiceInfo(host, Integer.parseInt(getEnvOrThrow(env, portEnv))));
     }
 
     private static Optional<StandardAuthServiceInfo> getStandardAuthService(Map<String, String> env, String configMapEnv) {

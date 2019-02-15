@@ -7,11 +7,8 @@ package io.enmasse.api.server;
 
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
-import io.enmasse.k8s.api.CachingSchemaProvider;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
-import io.enmasse.k8s.api.KubeSchemaApi;
-import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.api.v1.http.HostResolver;
+import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.user.api.NullUserApi;
@@ -20,10 +17,7 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.AbstractVerticle;
@@ -38,11 +32,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.time.Clock;
@@ -72,10 +66,6 @@ public class ApiServer extends AbstractVerticle {
         SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), isOpenShift);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
-
-        if (options.getRestapiRouteName() != null) {
-            ensureRouteExists(client, options, isOpenShift);
-        }
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
 
@@ -108,7 +98,19 @@ public class ApiServer extends AbstractVerticle {
         }
 
         Metrics metrics = new Metrics();
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock);
+        HostResolver hostResolver = new HostResolver() {
+            @Override
+            public boolean isHostResolveable(String hostname) {
+                try {
+                    InetAddress.getByName(hostname);
+                } catch (UnknownHostException e) {
+                    return false;
+                }
+                return true;
+            }
+        };
+
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock, hostResolver);
 
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {
@@ -130,55 +132,6 @@ public class ApiServer extends AbstractVerticle {
         } catch (CertificateException e) {
             log.info("Error validating certificate {}. Skipping", id);
             return null;
-        }
-    }
-
-    private void ensureRouteExists(NamespacedOpenShiftClient client, ApiServerOptions options, boolean isOpenShift) throws IOException {
-        if (isOpenShift) {
-            Route restapiRoute= client.routes().withName(options.getRestapiRouteName()).get();
-            if (restapiRoute == null) {
-                log.info("Creating REST API external route {}", options.getRestapiRouteName());
-                String caCertificate = new String(Files.readAllBytes(new File(options.getCertDir(), "tls.crt").toPath()), StandardCharsets.UTF_8);
-                client.routes().createNew()
-                        .editOrNewMetadata()
-                        .withName(options.getRestapiRouteName())
-                        .addToLabels("app", "enmasse")
-                        .endMetadata()
-                        .editOrNewSpec()
-                        .editOrNewPort()
-                        .withNewTargetPort("https")
-                        .endPort()
-                        .editOrNewTo()
-                        .withKind("Service")
-                        .withName("api-server")
-                        .endTo()
-                        .editOrNewTls()
-                        .withTermination("reencrypt")
-                        .withCaCertificate(caCertificate)
-                        .endTls()
-                        .endSpec()
-                        .done();
-            }
-        } else {
-            Service restapiService = client.services().withName(options.getRestapiRouteName()).get();
-            if (restapiService == null) {
-                log.info("Creating REST API external service {}", options.getRestapiRouteName());
-                client.services().createNew()
-                        .editOrNewMetadata()
-                        .withName(options.getRestapiRouteName())
-                        .addToLabels("app", "enmasse")
-                        .endMetadata()
-                        .editOrNewSpec()
-                        .addNewPort()
-                        .withName("https")
-                        .withPort(443)
-                        .withTargetPort(new IntOrString("https"))
-                        .endPort()
-                        .addToSelector("component", "api-server")
-                        .withType("LoadBalancer")
-                        .endSpec()
-                        .done();
-            }
         }
     }
 

@@ -27,9 +27,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
+import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -46,13 +49,15 @@ public class HttpAddressSpaceService {
     private final SchemaProvider schemaProvider;
 
     private final AddressSpaceApi addressSpaceApi;
+    private final HostResolver hostResolver;
     private final UuidGenerator uuidGenerator = new UuidGenerator();
     private final Clock clock;
 
-    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock) {
+    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock, HostResolver hostResolver) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.clock = clock;
+        this.hostResolver = hostResolver;
     }
 
     private Response doRequest(String errorMessage, Callable<Response> request) throws Exception {
@@ -135,6 +140,10 @@ public class HttpAddressSpaceService {
                 addressSpace.putAnnotation(AnnotationKeys.CREATED_BY, createdBy);
                 addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
             }
+
+            if (addressSpace.getSpec().getAuthenticationService() == null) {
+                addressSpace.getSpec().setAuthenticationService(resolveDefaultAuthService());
+            }
         } else {
             validateChanges(existing, addressSpace);
             Map<String, String> annotations = existing.getMetadata().getAnnotations();
@@ -167,13 +176,24 @@ public class HttpAddressSpaceService {
 
         return addressSpace;
     }
+    private AuthenticationService resolveDefaultAuthService() {
+        AuthenticationService authenticationService = new AuthenticationService();
+        if (hostResolver.isHostResolveable("standard-authservice")) {
+            authenticationService.setType(AuthenticationServiceType.STANDARD);
+        } else if (hostResolver.isHostResolveable("none-authservice")) {
+            authenticationService.setType(AuthenticationServiceType.NONE);
+        } else {
+            throw new InternalServerErrorException("No authentication service specified, and unable to resolve default: no authentication services found");
+        }
+        return authenticationService;
+    }
 
     private void validateChanges(AddressSpace existing, AddressSpace addressSpace) {
         if (!existing.getSpec().getType().equals(addressSpace.getSpec().getType())) {
             throw new BadRequestException("Cannot change type of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getType() + " to " + addressSpace.getSpec().getType());
         }
 
-        if (!existing.getSpec().getAuthenticationService().equals(addressSpace.getSpec().getAuthenticationService())) {
+        if (addressSpace.getSpec().getAuthenticationService() != null && !existing.getSpec().getAuthenticationService().equals(addressSpace.getSpec().getAuthenticationService())) {
             throw new BadRequestException("Cannot change authentication service of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getAuthenticationService() + " to " + addressSpace.getSpec().getAuthenticationService());
         }
 

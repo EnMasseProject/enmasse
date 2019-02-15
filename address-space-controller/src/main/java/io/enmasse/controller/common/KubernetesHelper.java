@@ -58,8 +58,6 @@ public class KubernetesHelper implements Kubernetes {
                     client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
                 } else if (resource instanceof Service) {
                     client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
-                } else if (resource instanceof ServiceAccount) {
-                    client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
                 } else if (resource instanceof NetworkPolicy) {
                     client.network().networkPolicies().withName(resource.getMetadata().getName()).patch((NetworkPolicy) resource);
                 } else if (resource instanceof PersistentVolumeClaim && patchPersistentVolumeClaims) {
@@ -117,12 +115,9 @@ public class KubernetesHelper implements Kubernetes {
         client.secrets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.configMaps().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.serviceAccounts().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         if (isOpenShift) {
-            client.roleBindings().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-            client.deploymentConfigs().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
             client.routes().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         }
     }

@@ -1,3 +1,0 @@
----
-- name: Create Tenant Clusterroles
-  shell: oc apply -f "{{ playbook_dir }}/install/tenant"

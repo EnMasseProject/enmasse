@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 
+import io.enmasse.address.model.AuthenticationService;
+import io.enmasse.address.model.AuthenticationServiceType;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressSpace;
@@ -55,6 +57,8 @@ public class StatusControllerTest {
 
         StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, null);
 
+        AuthenticationService authenticationService = new AuthenticationService();
+        authenticationService.setType(AuthenticationServiceType.NONE);
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("myspace")
@@ -63,6 +67,7 @@ public class StatusControllerTest {
                 .withNewSpec()
                 .withType("type1")
                 .withPlan("myplan")
+                .withAuthenticationService(authenticationService)
                 .endSpec()
                 .build();
 

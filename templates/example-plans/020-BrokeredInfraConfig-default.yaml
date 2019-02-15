@@ -1,22 +1,16 @@
 apiVersion: admin.enmasse.io/v1beta1
-kind: StandardInfraConfig
+kind: BrokeredInfraConfig
 metadata:
   name: default
   labels:
     app: enmasse
 spec:
-  version: ${release.version}
-
+  version: ${ENMASSE_VERSION}
   admin:
     resources:
       memory: 512Mi
   broker:
     resources:
       memory: 512Mi
-      storage: 2Gi
+      storage: 5Gi
     addressFullPolicy: FAIL
-  router:
-    minReplicas: 2
-    resources:
-      memory: 512Mi
-    linkCapacity: 250

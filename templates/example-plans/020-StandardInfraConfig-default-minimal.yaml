@@ -1,14 +1,11 @@
 apiVersion: admin.enmasse.io/v1beta1
 kind: StandardInfraConfig
 metadata:
-  name: default-with-mqtt
+  name: default-minimal
   labels:
     app: enmasse
-  annotations:
-    enmasse.io/with-mqtt: true
 spec:
-  version: ${release.version}
-
+  version: ${ENMASSE_VERSION}
   admin:
     resources:
       memory: 512Mi
@@ -18,7 +15,7 @@ spec:
       storage: 2Gi
     addressFullPolicy: FAIL
   router:
-    minReplicas: 2
+    minReplicas: 1
     resources:
-      memory: 512Mi
+      memory: 256Mi
     linkCapacity: 250

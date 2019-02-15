@@ -1,14 +1,14 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: default-view
+  name: "service-broker"
   labels:
     app: enmasse
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: view
+  kind: Role
+  name: enmasse.io:service-broker
 subjects:
 - kind: ServiceAccount
-  name: default
+  name: service-broker
   namespace: ${NAMESPACE}

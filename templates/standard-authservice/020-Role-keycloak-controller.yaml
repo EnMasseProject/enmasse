@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:keycloak-controller
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "configmaps", "secrets", "persistentvolumeclaims" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "", "route.openshift.io" ]
+    resources: [ "routes", "routes/custom-host", "routes/status"]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]

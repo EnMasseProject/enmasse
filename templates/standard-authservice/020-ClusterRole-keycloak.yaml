@@ -1,9 +1,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  name: enmasse.io:keycloak
   labels:
     app: enmasse
-  name: enmasse.io:api-server
 rules:
   - apiGroups: [ "authentication.k8s.io" ]
     resources: [ "tokenreviews" ]
@@ -11,7 +11,3 @@ rules:
   - apiGroups: [ "authorization.k8s.io" ]
     resources: [ "subjectaccessreviews" ]
     verbs: [ "create" ]
-  - apiGroups: [ "" ]
-    resources: [ "configmaps" ]
-    resourceNames: [ "extension-apiserver-authentication" ]
-    verbs: [ "get" ]

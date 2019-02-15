@@ -6,10 +6,7 @@ package io.enmasse.address.model;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import javax.validation.ValidationException;
 
@@ -40,7 +37,7 @@ public class AddressSpaceTest {
         assertThat(space.getStatus(), is(new AddressSpaceStatus(false)));
         assertNotNull(space.getSpec().getEndpoints());
         assertThat(space.getSpec().getEndpoints().size(), is(0));
-        assertNotNull(space.getSpec().getAuthenticationService());
+        assertNull(space.getSpec().getAuthenticationService());
 
         assertNotNull(space.getMetadata().getAnnotations());
         assertThat(space.getMetadata().getAnnotations().size(), is(0));

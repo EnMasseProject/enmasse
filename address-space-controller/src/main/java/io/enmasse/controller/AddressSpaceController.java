@@ -82,7 +82,7 @@ public class AddressSpaceController {
         Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getTemplateDir(), isOpenShift);
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
-        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
+        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "address-space-controller")
                 : new LogEventLogger();
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
@@ -209,7 +209,7 @@ public class AddressSpaceController {
         AuthenticationServiceResolver resolver = null;
         switch (type) {
             case NONE:
-                resolver = options.getNoneAuthService().map(authService -> new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort())).orElse(null);
+                resolver = new NoneAuthenticationServiceResolver("none-authservice", 5671);
                 break;
             case STANDARD:
                 resolver = options.getStandardAuthService().map(authService -> {

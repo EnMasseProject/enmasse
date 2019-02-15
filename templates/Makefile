@@ -6,11 +6,10 @@ BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
-MODULES=address-space-controller extra api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice tenant alertmanager kube-state-metrics
+MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
-	mkdir -p $(PACKAGE_INSTALL_DIR)/templates
 	mkdir -p $(PACKAGE_INSTALL_DIR)/bundles
 	mkdir -p $(PACKAGE_INSTALL_DIR)/components
 
@@ -33,93 +32,29 @@ ansible_install: component_install
 	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
 	$(LN) -srf $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
 
-ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE=$(PACKAGE_INSTALL_DIR)/templates/enmasse-with-standard-authservice.yaml
-$(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE): replace_images
-	echo 'apiVersion: v1' > $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo 'kind: Template' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo 'metadata:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo '  name: enmasse-with-standard-authservice' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo 'parameters:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo '- name: NAMESPACE' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo '  description: Namespace where EnMasse should be deployed' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo '  required: true' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	echo 'objects:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE)
-	for mod in address-space-controller api-server api-service standard-authservice tenant; do \
-		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml" | sort`; do \
-			echo "Mod $${mod} file $${i}"; \
-			cat $$i | sed 's/^/  /' | sed '1s/^  /- /' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE); \
-		done; \
+ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
+$(ENMASSE_BUNDLE): replace_images
+	mkdir -p $(ENMASSE_BUNDLE)
+	for i in crds address-space-controller api-server api-service; do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
-
-ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE=$(PACKAGE_INSTALL_DIR)/templates/enmasse-with-none-authservice.yaml
-$(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE): replace_images
-	echo 'apiVersion: v1' > $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo 'kind: Template' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo 'metadata:' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo '  name: enmasse-with-none-authservice' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo 'parameters:' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo '- name: NAMESPACE' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo '  description: Namespace where EnMasse should be deployed' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo '  required: true' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	echo 'objects:' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE)
-	for mod in address-space-controller api-server api-service none-authservice tenant; do \
-		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml" | sort`; do \
-			cat $$i | sed 's/^/  /' | sed '1s/^  /- /' >> $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE); \
-		done; \
-	done
-
-ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE=$(PACKAGE_INSTALL_DIR)/templates/enmasse-with-standard-authservice-monitoring.yaml
-$(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE): replace_images
-	echo 'apiVersion: v1' > $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo 'kind: Template' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo 'metadata:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo '  name: enmasse-with-standard-authservice' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo 'parameters:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo '- name: NAMESPACE' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo '  description: Namespace where EnMasse should be deployed' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo '  required: true' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	echo 'objects:' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
-	for mod in address-space-controller api-server api-service standard-authservice tenant alertmanager grafana kube-state-metrics prometheus; do \
-		for i in `find $(BUILDDIR)/replaced/$${mod} -name "*.yaml" | sort`; do \
-			echo "Mod $${mod} file $${i}"; \
-			cat $$i | sed 's/^/  /' | sed '1s/^  /- /' >> $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE); \
-		done; \
-	done
-
-ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse-with-none-authservice
-$(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE): replace_images
-	mkdir -p $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE)
-	for i in address-space-controller extra api-server api-service none-authservice tenant; do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE)/; \
-	done
-	for i in `find $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) -name "*.yaml"`; do \
+	for i in `find $(ENMASSE_BUNDLE) -name "*.yaml"`; do \
 		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
-ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse-with-standard-authservice
-$(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE): replace_images
-	mkdir -p $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE)
-	for i in address-space-controller extra api-server api-service standard-authservice tenant; do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE)/; \
+MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/monitoring
+$(MONITORING_BUNDLE): replace_images
+	mkdir -p $(MONITORING_BUNDLE)
+	for i in alertmanager grafana kube-state-metrics prometheus; do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(MONITORING_BUNDLE)/; \
 	done
-	for i in `find $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) -name "*.yaml"`; do \
+	for i in `find $(MONITORING_BUNDLE) -name "*.yaml"`; do \
 		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
-ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse-with-standard-authservice-monitoring
-$(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE): replace_images
-	mkdir -p $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE)
-	for i in address-space-controller extra api-server api-service standard-authservice tenant alertmanager grafana kube-state-metrics prometheus; do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE)/; \
-	done
-	for i in `find $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
-		mv $$i.tmp $$i; \
-	done
-
-install: ansible_install component_install $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE) $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_TEMPLATE)
+install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) 
 	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
@@ -127,4 +62,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_WITH_STANDARD_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_NONE_AUTHSERVICE_BUNDLE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_TEMPLATE) $(ENMASSE_WITH_NONE_AUTHSERVICE_TEMPLATE) $(ENMASSE_WITH_STANDARD_AUTHSERVICE_MONITORING_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE)

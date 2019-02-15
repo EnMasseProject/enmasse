@@ -445,7 +445,7 @@ parameters:
   name: AUTHENTICATION_SERVICE_KC_IDP_HINT
 - description: Enable logging of kubernetes events
   name: ENABLE_EVENT_LOGGER
-  value: 'false'
+  value: 'true'
 - description: The service account with address space admin privileges
   name: ADDRESS_SPACE_ADMIN_SA
   value: address-space-admin
