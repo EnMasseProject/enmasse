@@ -23,8 +23,7 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
 
-        JOB_NAME_SUB = "${String.format("%.15s", JOB_NAME)}"
-        OPENSHIFT_PROJECT = "${JOB_NAME_SUB}${BUILD_NUMBER}"
+        OPENSHIFT_PROJECT = "enmasse-infra"
         DOCKER_REGISTRY = credentials('docker-registry-host')
         DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
         DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
