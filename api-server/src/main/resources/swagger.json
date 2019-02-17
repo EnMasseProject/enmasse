@@ -234,6 +234,48 @@
                     }
                 }
             },
+            "patch": {
+                "tags": [
+                    "enmasse_v1beta1",
+                    "addressspaces"
+                ],
+                "description": "patches (RFC6902) the specified AddressSpace",
+                "operationId": "patchesEnmasseV1alpha1NamespacedAddressSpace",
+                "consumes": [
+                    "application/json-patch+json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of AddressSpace to replace",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/JsonPatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpace"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "enmasse_v1beta1",
@@ -2301,6 +2343,41 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "JsonPatchRequest": {
+            "required": ["document", "patch"],
+            "properties": {
+                "document": {
+                    "type": "object"
+                },
+                "patch": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Patch"
+                    }
+                }
+            }
+        },
+        "Patch": {
+            "required": ["op", "path"],
+            "properties": {
+                "op": {
+                    "type": "string",
+                    "enum": ["add", "remove", "replace", "move", "copy", "test"]
+                },
+                "path": {
+                    "type": "string",
+                    "description": "Slash separated format"
+                },
+                "from": {
+                    "type": "string",
+                    "description": "Required for operations copy, replace"
+                },
+                "value": {
+                    "type": "string",
+                    "description": "Required for operations add, replace, test"
                 }
             }
         }
