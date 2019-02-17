@@ -4,6 +4,11 @@
  */
 package io.enmasse.api.v1.http;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
 import io.enmasse.address.model.*;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
@@ -118,6 +123,65 @@ public class HttpAddressSpaceService {
             return Response.created(builder.build()).entity(removeSecrets(created)).build();
         });
     }
+
+    @PATCH
+    @Consumes({MediaType.APPLICATION_JSON_PATCH_JSON})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{addressSpace}")
+    public Response patchAddressSpace(@Context SecurityContext securityContext,
+                                      @PathParam("namespace") String namespace,
+                                      @PathParam("addressSpace") String addressSpaceName,
+                                      @NotNull JsonPatch patch) throws Exception {
+
+        return doPatch(securityContext, namespace, addressSpaceName,
+                jsonNode -> patch.apply(jsonNode));
+    }
+
+    @PATCH
+    @Consumes({"application/merge-patch+json"})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{addressSpace}")
+    public Response patchAddressSpace(@Context SecurityContext securityContext,
+                                      @PathParam("namespace") String namespace,
+                                      @PathParam("addressSpace") String addressSpaceName,
+                                      @NotNull JsonMergePatch patch) throws Exception {
+
+
+        return doPatch(securityContext, namespace, addressSpaceName,
+                jsonNode -> patch.apply(jsonNode));
+    }
+
+    private Response doPatch(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName,
+                             CheckedFunction<JsonNode, JsonNode, JsonPatchException> patcher) throws Exception {
+        return doRequest("Error patching address space " + addressSpaceName, () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.update);
+
+            Optional<AddressSpace> existing = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName);
+
+            if (!existing.isPresent()) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode source = mapper.valueToTree(existing.get());
+
+            JsonNode patched = patcher.apply(source);
+
+            AddressSpace replacement = mapper.treeToValue(patched, AddressSpace.class);
+
+            replacement = setAddressSpaceDefaults(securityContext, namespace, replacement, existing.get());
+            DefaultValidator.validate(replacement);
+
+            AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
+            addressSpaceResolver.validate(replacement);
+            if (!addressSpaceApi.replaceAddressSpace(replacement)) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
+            AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, replacement.getMetadata().getName()).orElse(replacement);
+            return Response.ok().entity(removeSecrets(replaced)).build();
+        });
+    }
+
 
     private AddressSpace setAddressSpaceDefaults(SecurityContext securityContext, String namespace, AddressSpace addressSpace, AddressSpace existing) {
         if (existing == null) {
@@ -399,4 +463,10 @@ public class HttpAddressSpaceService {
                                 .build())))
                 .collect(Collectors.toList());
     }
+
+    @FunctionalInterface
+    public interface CheckedFunction<T, R, E extends Throwable> {
+        R apply(T t) throws E;
+    }
+
 }
