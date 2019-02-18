@@ -1,7 +1,4 @@
 #!/usr/bin/env groovy
-
-def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
-
 pipeline {
     agent {
         node {
@@ -28,13 +25,6 @@ pipeline {
         USE_DUMMY_ADDRESS = true
     }
     stages {
-        stage('wait for agent ready') {
-            steps {
-                script {
-                    lib.waitUntilAgentReady()
-                }
-            }
-        }
         stage('clean') {
             steps {
                 cleanWs()
@@ -46,10 +36,19 @@ pipeline {
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
+        stage('wait for agent ready') {
+            steps {
+                script {
+                    def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
+                    lib.waitUntilAgentReady()
+                }
+            }
+        }
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     script {
+                        def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                         lib.startOpenshift()
                     }
                 }
@@ -58,6 +57,7 @@ pipeline {
         stage('build') {
             steps {
                 script {
+                    def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                     lib.buildEnmasse()
                 }
             }
@@ -74,6 +74,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
+                        def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                         lib.installEnmasse(env.TAG, false, false, true)
                     }
                 }
@@ -83,6 +84,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
+                        def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-pr', params.TEST_CASE)
                     }
                 }
@@ -92,6 +94,7 @@ pipeline {
     post {
         always {
             script {
+                def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                 lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR)
             }
         }
