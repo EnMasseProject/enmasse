@@ -41,7 +41,7 @@ pipeline {
         }
         stage('checkout') {
             steps {
-                // checkout(scm).GIT_COMMIT
+                checkout scm
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
