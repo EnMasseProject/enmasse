@@ -23,17 +23,18 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_PROJECT = "selenium";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
 
-    public static Endpoint deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
-        Endpoint endpoint = kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(MESSAGING_CLIENTS, 4242));
+    public static void deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
+        kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(MESSAGING_CLIENTS, 4242));
         kubeClient.createDeploymentFromResource(namespace, getMessagingAppDeploymentResource());
+        kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(MESSAGING_CLIENTS, 4242));
         Thread.sleep(5000);
-        return endpoint;
     }
 
     public static void deleteMessagingClientApp(String namespace, Kubernetes kubeClient) {
-        if (kubeClient.deploymentExists(namespace, SystemtestsKubernetesApps.MESSAGING_CLIENTS)) {
-            kubeClient.deleteDeployment(namespace, SystemtestsKubernetesApps.MESSAGING_CLIENTS);
-            kubeClient.deleteService(namespace, SystemtestsKubernetesApps.MESSAGING_CLIENTS);
+        if (kubeClient.deploymentExists(namespace, MESSAGING_CLIENTS)) {
+            kubeClient.deleteDeployment(namespace, MESSAGING_CLIENTS);
+            kubeClient.deleteService(namespace, MESSAGING_CLIENTS);
+            kubeClient.deleteIngress(namespace, MESSAGING_CLIENTS);
         }
     }
 
@@ -76,6 +77,18 @@ public class SystemtestsKubernetesApps {
 
     public static void deleteSeleniumPod(String namespace, Kubernetes kubeClient) {
         kubeClient.listPods(namespace).forEach(pod -> kubeClient.deletePod(namespace, pod.getMetadata().getName()));
+    }
+
+    public static Endpoint getMessagingClientEndpoint(String namespace, Kubernetes kubeClient) {
+        return new Endpoint(kubeClient.getIngressHost(namespace, MESSAGING_CLIENTS), 80);
+    }
+
+    public static Endpoint getFirefoxSeleniumAppEndpoint(String namespace, Kubernetes kubeClient) {
+        return new Endpoint(kubeClient.getIngressHost(namespace, SELENIUM_FIREFOX), 80);
+    }
+
+    public static Endpoint getChromeSeleniumAppEndpoint(String namespace, Kubernetes kubeClient) {
+        return new Endpoint(kubeClient.getIngressHost(namespace, SELENIUM_CHROME), 80);
     }
 
     private static Deployment getSeleniumNodeDeploymentResource(String appName, String imageName) {
