@@ -9,6 +9,7 @@ BUILD_TARGETS  = init build test package $(DOCKER_TARGETS) coverage
 INSTALLDIR=$(CURDIR)/templates/install
 SKIP_TESTS      ?= false
 
+
 ASCIIDOCTOR_EXTRA_FLAGS=--failure-level WARN
 ASCIIDOCTOR_FLAGS=-v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTOR_EXTRA_FLAGS)
 
