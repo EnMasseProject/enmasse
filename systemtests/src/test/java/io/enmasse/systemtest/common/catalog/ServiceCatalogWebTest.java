@@ -215,8 +215,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         consolePage.createAddressWebConsole(queue, false, true);
 
         try {
-            Endpoint endpoint = SystemtestsKubernetesApps.deployMessagingClientApp(namespace, kubernetes);
-            MsgCliApiClient client = new MsgCliApiClient(kubernetes, endpoint);
+            SystemtestsKubernetesApps.deployMessagingClientApp(namespace, kubernetes);
+            MsgCliApiClient client = new MsgCliApiClient(kubernetes, SystemtestsKubernetesApps.getMessagingClientEndpoint(namespace, kubernetes));
 
             ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
 

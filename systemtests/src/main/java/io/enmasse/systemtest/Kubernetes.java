@@ -380,6 +380,17 @@ public abstract class Kubernetes {
     }
 
     /**
+     * Return host of ingress
+     *
+     * @param namespace   namespace
+     * @param ingressName name of ingress
+     * @return string host
+     */
+    public String getIngressHost(String namespace, String ingressName) {
+        return client.extensions().ingresses().inNamespace(namespace).withName(ingressName).get().getSpec().getRules().get(0).getHost();
+    }
+
+    /**
      * Create configmap from resource
      *
      * @param namespace kubernetes namespace
