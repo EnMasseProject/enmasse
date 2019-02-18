@@ -35,7 +35,7 @@ export_required_env
 
 #start docker logging
 DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
-${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
+${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} ${KUBERNETES_NAMESPACE} > /dev/null 2> /dev/null &
 LOGS_PID=$!
 info "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
