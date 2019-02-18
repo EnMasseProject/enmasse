@@ -1,0 +1,355 @@
+#! validate-crd: deploy/chart/templates/0000_30_02-clusterserviceversion.crd.yaml
+#! parse-kind: ClusterServiceVersion
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  name: enmasse.v${MAVEN_VERSION}
+  namespace: placeholder
+  annotations:
+    categories: "messaging,amqp"
+    certified: "false"
+    description: |-
+      EnMasse is an open source project for managed, self-service messaging on Kubernetes and OpenShift. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization. 
+    containerImage: docker.io/enmasseproject/address-space-controller:${MAVEN_VERSION}
+spec:
+  displayName: EnMasse
+  description: |
+    EnMasse
+    =======
+    EnMasse is an open source project for managed, self-service messaging on Kubernetes and OpenShift. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization. The service admin can deploy and manage plans and infrastructure configuration, while messaging tenants can request messaging resources by creating address spaces and addresses.
+
+    EnMasse currently supports a standard and a brokered address space type, each with different semantics.
+
+    ## Installation
+
+    To start using EnMasse, install the operator and create the desired plans. Example plans can be found [here](https://github.com/EnMasseProject/enmasse/tree/master/templates/example-plans).
+
+    Once plans are installed, messaging tenants can provision messaging by creating an address space:
+    ```
+    apiVersion: enmasse.io/v1beta1
+    kind: AddressSpace
+    metadata:
+      name: myspace
+    spec:
+      type: standard
+      plan: standard-small
+    ```
+  version: ${MAVEN_VERSION}
+  keywords: ['messaging', 'amq', 'amqp']
+  maintainers:
+  - name: EnMasse
+    email: enmasse@redhat.com
+  provider:
+    name: EnMasse
+  links:
+  - name: Documentation
+    url: http://enmasse.io/documentation
+  - name: GitHub
+    url: https://github.com/EnMasseProject/enmasse
+
+  installModes:
+  - type: OwnNamespace
+    supported: true
+  - type: SingleNamespace
+    supported: true
+  - type: MultiNamespace
+    supported: false
+  - type: AllNamespaces
+    supported: true
+
+  install:
+    strategy: deployment
+    spec:
+      permissions:
+      - serviceAccountName: address-space-controller
+        rules:
+        - apiGroups: [ "admin.enmasse.io" ]
+          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ]
+          resources: [ "pods" ]
+          verbs: [ "get", "list" ]
+        - apiGroups: [ "" ]
+          resources: [ "configmaps" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "" ]
+          resources: [ "events" ]
+          verbs: [ "create", "update", "patch", "get", "list" ]
+        - apiGroups: [ "" ]
+          resources: [ "services", "secrets", "persistentvolumeclaims" ]
+          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+        - apiGroups: [ "networking.k8s.io", "extensions" ]
+          resources: [ "networkpolicies" ]
+          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+        - apiGroups: [ "route.openshift.io", "" ]
+          resources: [ "routes", "routes/custom-host", "routes/status" ]
+          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+        - apiGroups: [ "apps" ]
+          resources: [ "statefulsets", "deployments", "replicasets" ]
+          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+      - serviceAccountName: address-space-admin
+        rules:
+        - apiGroups: [ "admin.enmasse.io" ]
+          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ]
+          resources: [ "pods", "secrets" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ]
+          resources: [ "configmaps" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "" ]
+          resources: [ "events" ]
+          verbs: [ "create", "update", "patch", "get", "list" ]
+        - apiGroups: [ "" ]
+          resources: [ "persistentvolumeclaims", "services" ]
+          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+        - apiGroups: [ "apps" ]
+          resources: [ "statefulsets", "deployments" ]
+          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+      - serviceAccountName: api-server
+        rules:
+        - apiGroups: [ "" ]
+          resources: [ "services", "secrets" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ]
+          resources: [ "configmaps" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "admin.enmasse.io" ]
+          resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs" ]
+          verbs: [ "get", "list", "watch" ]
+      clusterPermissions:
+      - serviceAccountName: api-server
+        rules:
+        - apiGroups: [ "authentication.k8s.io" ]
+          resources: [ "tokenreviews" ]
+          verbs: [ "create" ]
+        - apiGroups: [ "authorization.k8s.io" ]
+          resources: [ "subjectaccessreviews" ]
+          verbs: [ "create" ]
+        - apiGroups: [ "" ]
+          resources: [ "configmaps" ]
+          resourceNames: [ "extension-apiserver-authentication" ]
+          verbs: [ "get" ]
+      deployments:
+      - name: api-server
+        replicas: 1
+        selector:
+          matchLabels:
+            app: enmasse
+            component: api-server
+        template:
+          metadata:
+            labels:
+              app: enmasse
+              component: api-server
+          spec:
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                  - weight: 1
+                    preference:
+                      matchExpressions:
+                        - key: node-role.enmasse.io/operator-infra
+                          operator: In
+                          values:
+                            - "true"
+            containers:
+            - env:
+              - name: JAVA_OPTS
+                value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+              - name: CERT_DIR
+                value: /api-server-cert
+              - name: ENABLE_RBAC
+                value: "true"
+              - name: APISERVER_CLIENT_CA_CONFIG_NAME
+                value: extension-apiserver-authentication
+              - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
+                value: kube-system
+              - name: APISERVER_ROUTE_NAME
+                value: restapi
+              - name: STANDARD_AUTHSERVICE_CONFIG_NAME
+                value: keycloak-config
+              - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
+                value: keycloak-credentials
+              - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
+                value: standard-authservice-cert
+              image: ${API_SERVER_IMAGE}
+              imagePullPolicy: ${IMAGE_PULL_POLICY}
+              livenessProbe:
+                httpGet:
+                  path: /healthz
+                  port: http
+                  scheme: HTTP
+                initialDelaySeconds: 30
+              name: api-server
+              ports:
+              - containerPort: 8080
+                name: http
+              - containerPort: 8443
+                name: https
+              readinessProbe:
+                httpGet:
+                  path: /healthz
+                  port: http
+                  scheme: HTTP
+              resources:
+                limits:
+                  memory: 512Mi
+                requests:
+                  memory: 512Mi
+              volumeMounts:
+              - mountPath: /api-server-cert
+                name: api-server-cert
+                readOnly: true
+            serviceAccountName: api-server
+            volumes:
+            - name: api-server-cert
+              secret:
+                secretName: apiserver-cert
+      - name: address-space-controller
+        spec:
+          replicas: 1
+          strategy:
+            type: Recreate
+          selector:
+            matchLabels:
+              app: enmasse
+              name: address-space-controller
+          template:
+            metadata:
+              labels:
+                app: enmasse
+                name: address-space-controller
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                    - weight: 1
+                      preference:
+                        matchExpressions:
+                          - key: node-role.enmasse.io/operator-infra
+                            operator: In
+                            values:
+                              - "true"
+              containers:
+              - env:
+                - name: JAVA_OPTS
+                  value: -verbose:gc
+                - name: ENABLE_EVENT_LOGGER
+                  value: "true"
+                - name: EXPOSE_ENDPOINTS_BY_DEFAULT
+                  valueFrom:
+                    configMapKeyRef:
+                      key: exposeEndpointsByDefault
+                      name: address-space-controller-config
+                      optional: true
+                - name: ENVIRONMENT
+                  valueFrom:
+                    configMapKeyRef:
+                      key: environment
+                      name: address-space-controller-config
+                      optional: true
+                - name: TEMPLATE_DIR
+                  value: /templates
+                - name: RESOURCES_DIR
+                  value: /
+                - name: STANDARD_AUTHSERVICE_CONFIG_NAME
+                  value: keycloak-config
+                - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
+                  value: keycloak-credentials
+                - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
+                  value: standard-authservice-cert
+                - name: WILDCARD_ENDPOINT_CERT_SECRET
+                  valueFrom:
+                    configMapKeyRef:
+                      key: wildcardEndpointCertSecret
+                      name: address-space-controller-config
+                      optional: true
+                - name: RESYNC_INTERVAL
+                  valueFrom:
+                    configMapKeyRef:
+                      key: resyncInterval
+                      name: address-space-controller-config
+                      optional: true
+                - name: RECHECK_INTERVAL
+                  valueFrom:
+                    configMapKeyRef:
+                      key: recheckInterval
+                      name: address-space-controller-config
+                      optional: true
+                image: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
+                imagePullPolicy: ${IMAGE_PULL_POLICY}
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: http
+                    scheme: HTTP
+                name: address-space-controller
+                ports:
+                - containerPort: 8080
+                  name: http
+                readinessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: http
+                    scheme: HTTP
+                resources:
+                  limits:
+                    memory: 512Mi
+                  requests:
+                    memory: 256Mi
+              serviceAccountName: address-space-controller
+  apiservicedefinitions:
+    owned:
+    - group: enmasse.io
+      version: v1beta1
+      kind: AddressSpace 
+      name: addressspaces
+      displayName: Address Space
+      description: A group of messaging addresses that can be accessed via the same endpoint
+      deploymentName: api-server
+      containerPort: 8443
+    - group: enmasse.io
+      version: v1beta1
+      kind: Address
+      name: addresses
+      displayName: Address
+      description: A messaging address that can be used to send/receive messages to/from
+      deploymentName: api-server
+      containerPort: 8443
+    - group: enmasse.io
+      version: v1beta1
+      kind: MessagingUser
+      name: messagingusers
+      displayName: Messaging User
+      description: A messaging user that can connect to an Address Space
+      deploymentName: api-server
+      containerPort: 8443
+  customresourcedefinitions:
+    owned:
+      - group: admin.enmasse.io
+        version: v1beta1
+        kind: StandardInfraConfig
+        name: standardinfraconfigs
+        displayName: Standard Infra Config
+        description: Infrastructure configuration template for the standard address space type
+      - group: admin.enmasse.io
+        version: v1beta1
+        kind: BrokeredInfraConfig
+        name: brokeredinfraconfigs
+        displayName: Brokered Infra Config
+        description: Infrastructure configuration template for the brokered address space type
+      - group: admin.enmasse.io
+        version: v1beta1
+        kind: AddressSpacePlan
+        name: addressspaceplans
+        displayName: Address Space Plan
+        description: Plan describing the capabilities and resource limits of a given address space type
+      - group: admin.enmasse.io
+        version: v1beta1
+        kind: AddressPlan
+        name: addressplans
+        displayName: Address Plan
+        description: Plan describing the resource usage of a given address type
+
