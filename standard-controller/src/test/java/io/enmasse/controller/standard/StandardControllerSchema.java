@@ -171,7 +171,7 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .withNewBroker()
                                     .withNewResources("512Mi", "2Gi")
                                     .withAddressFullPolicy("FAIL")
-                                    .withStorageClassName("default")
+                                    .withStorageClassName("mysc")
                                     .withUpdatePersistentVolumeClaim(false)
                                     .endBroker()
                                 .withNewRouter()

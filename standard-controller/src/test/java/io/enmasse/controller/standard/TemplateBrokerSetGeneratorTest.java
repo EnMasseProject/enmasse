@@ -75,7 +75,6 @@ public class TemplateBrokerSetGeneratorTest {
 
     private BrokerCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) throws Exception {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
-
         return generator.generateCluster(address.getName(), 1, address, null,
                 standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null));
     }
