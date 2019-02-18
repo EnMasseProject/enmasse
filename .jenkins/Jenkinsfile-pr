@@ -1,11 +1,11 @@
 #!/usr/bin/env groovy
+def lib
 pipeline {
     agent {
         node {
             label 'enmasse'
         }
     }
-    def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
     parameters {
         //execute all tests as default for each new Pull request
         string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
@@ -39,6 +39,7 @@ pipeline {
         stage('wait for agent ready') {
             steps {
                 script {
+                    lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                     lib.waitUntilAgentReady()
                 }
             }
@@ -47,7 +48,6 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     script {
-                        def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                         lib.startOpenshift()
                     }
                 }
@@ -56,7 +56,6 @@ pipeline {
         stage('build') {
             steps {
                 script {
-                    def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                     lib.buildEnmasse()
                 }
             }
@@ -73,7 +72,6 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                         lib.installEnmasse(env.TAG, false, false, true)
                     }
                 }
@@ -83,7 +81,6 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-pr', params.TEST_CASE)
                     }
                 }
@@ -93,7 +90,6 @@ pipeline {
     post {
         always {
             script {
-                def lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
                 lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR)
             }
         }
