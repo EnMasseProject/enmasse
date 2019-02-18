@@ -125,28 +125,46 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         prepareParameters(standardInfraConfig, addressSpace, parameters);
 
-        parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-        parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
-        parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
-        parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
-        parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
+        if (standardInfraConfig.getSpec().getBroker() != null) {
+            parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
+            parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+        }
+
+        if (standardInfraConfig.getSpec().getRouter() != null) {
+            parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
+            parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
+        }
+
+        if (standardInfraConfig.getSpec().getAdmin() != null) {
+            parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        }
+
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
 
         Map<String, String> infraAnnotations = standardInfraConfig.getMetadata().getAnnotations();
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
         List<HasMetadata> items = new ArrayList<>(kubernetes.processTemplate(templateName, parameters).getItems());
-        // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
-        for (HasMetadata item : items) {
-            if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
-                StatefulSet router = (StatefulSet) item;
-                router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());
+
+        if (standardInfraConfig.getSpec().getRouter() != null) {
+            // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
+            for (HasMetadata item : items) {
+                if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
+                    StatefulSet router = (StatefulSet) item;
+                    router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());
+                }
             }
         }
+
         if (Boolean.parseBoolean(getAnnotation(infraAnnotations, AnnotationKeys.WITH_MQTT, "false"))) {
             String mqttTemplateName = getAnnotation(infraAnnotations, AnnotationKeys.MQTT_TEMPLATE_NAME, "standard-space-infra-mqtt");
             items.addAll(createStandardInfraMqtt(addressSpace, mqttTemplateName));
         }
-        return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
+
+        if (standardInfraConfig.getSpec().getBroker() != null) {
+            return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
+        } else {
+            return items;
+        }
     }
 
 
@@ -161,12 +179,21 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         prepareParameters(brokeredInfraConfig, addressSpace, parameters);
 
-        parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
-        parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
-        parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        if (brokeredInfraConfig.getSpec().getBroker() != null) {
+            parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
+            parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+        }
+
+        if (brokeredInfraConfig.getSpec().getAdmin() != null) {
+            parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        }
 
         String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
-        return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameters).getItems());
+        if (brokeredInfraConfig.getSpec().getBroker() != null) {
+            return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameters).getItems());
+        } else {
+            return kubernetes.processTemplate(templateName, parameters).getItems();
+        }
     }
 
     private List<HasMetadata> applyStorageClassName(String storageClassName, List<HasMetadata> items) {

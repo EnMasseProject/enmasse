@@ -100,9 +100,11 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             paramMap.put(TemplateParameter.ADDRESS, address.getSpec().getAddress());
         }
 
-        paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-        paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
-        paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
+        if (standardInfraConfig.getSpec().getBroker() != null) {
+            paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
+            paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+            paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
+        }
 
         KubernetesList items = kubernetes.processTemplate(templateName, paramMap);
 
@@ -110,7 +112,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             if (item instanceof StatefulSet) {
                 StatefulSet set = (StatefulSet) item;
                 set.getSpec().setReplicas(numReplicas);
-                if (standardInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
+                if (standardInfraConfig.getSpec().getBroker() != null && standardInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
                     for (PersistentVolumeClaim persistentVolumeClaim : set.getSpec().getVolumeClaimTemplates()) {
                         persistentVolumeClaim.getSpec().setStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName());
                     }
