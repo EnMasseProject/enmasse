@@ -82,7 +82,7 @@
         <asciidoctor-maven-plugin.version>1.5.6</asciidoctor-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <mycila-license-maven-plugin.version>2.11</mycila-license-maven-plugin.version>
-        <codehaus-license-maven-plugin.version>1.16</codehaus-license-maven-plugin.version>
+        <codehaus-license-maven-plugin.version>1.17</codehaus-license-maven-plugin.version>
         <frontend-maven-plugin.version>1.6</frontend-maven-plugin.version>
         <jmx_prometheus_javaagent.version>0.3.1</jmx_prometheus_javaagent.version>
         <properties-maven-plugin.version>1.0.0</properties-maven-plugin.version>
@@ -927,11 +927,9 @@
                                 <id>download-thirdparty-licenses</id>
                                 <phase>prepare-package</phase>
                                 <configuration>
+                                    <licensesConfigFile>${maven.multiModuleProjectDirectory}/licenses-override.xml</licensesConfigFile>
                                     <licensesOutputFile>${project.build.outputDirectory}/licenses/licenses.xml</licensesOutputFile>
                                     <licensesOutputDirectory>${project.build.outputDirectory}/licenses</licensesOutputDirectory>
-                                    <!-- org.reactivestreams:reactive-streams is http://creativecommons.org/publicdomain/zero/1.0/,
-                                         but the programmatic download of the license seems to be disallowed by the server. -->
-                                    <excludedGroups>org.reactivestreams</excludedGroups>
                                     <organizeLicensesByDependencies>true</organizeLicensesByDependencies>
                                 </configuration>
                                 <goals>
