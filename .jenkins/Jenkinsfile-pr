@@ -11,6 +11,7 @@ pipeline {
     parameters {
         //execute all tests as default for each new Pull request
         string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
+        string(name: 'sha1', defaultValue: '', description: 'commit hash to test')
     }
     options {
         timeout(time: 8, unit: 'HOURS')
