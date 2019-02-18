@@ -6,7 +6,6 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.apiclients.OSBApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceTypeData;
@@ -28,7 +27,6 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -491,29 +489,6 @@ public class TestUtils {
             throw new IllegalStateException("Address Space " + addressSpace + " contains wrong plan: " + jsonStatus);
         }
         log.info("Address plan {} successfully applied", addressSpace.getPlan());
-    }
-
-    /**
-     * Waiting until service instance will be in ready state
-     *
-     * @param apiClient  open service broker api client for sending requests
-     * @param instanceId id of service instance
-     * @throws Exception
-     */
-    public static void waitForServiceInstanceReady(OSBApiClient apiClient, String username, String instanceId) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        boolean isReady = false;
-        while (budget.timeLeft() >= 0 && !isReady) {
-            isReady = isServiceInstanceReady(apiClient.getLastOperation(username, instanceId));
-            if (!isReady) {
-                Thread.sleep(10000);
-            }
-            log.info("Waiting until service instance '{}' will be in ready state", instanceId);
-        }
-        if (!isReady) {
-            throw new IllegalStateException(String.format("Service instance '%s' is not in Ready state within timeout.", instanceId));
-        }
-        log.info("Service instance '{}' is in ready state", instanceId);
     }
 
     private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {
