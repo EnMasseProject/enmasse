@@ -100,9 +100,11 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             paramMap.put(TemplateParameter.ADDRESS, address.getSpec().getAddress());
         }
 
-        paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-        paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
-        paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
+        if (standardInfraConfig.getSpec().getBroker() != null) {
+            paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
+            paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+            paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
+        }
 
         KubernetesList items = kubernetes.processTemplate(templateName, paramMap);
 
@@ -110,6 +112,11 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             if (item instanceof StatefulSet) {
                 StatefulSet set = (StatefulSet) item;
                 set.getSpec().setReplicas(numReplicas);
+                if (standardInfraConfig.getSpec().getBroker() != null && standardInfraConfig.getSpec().getBroker().getStorageClassName() != null) {
+                    for (PersistentVolumeClaim persistentVolumeClaim : set.getSpec().getVolumeClaimTemplates()) {
+                        persistentVolumeClaim.getSpec().setStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName());
+                    }
+                }
                 Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(standardInfraConfig));
             } else if (item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;
@@ -123,18 +130,6 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         if (address != null) {
             Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getSpec().getAddress());
         }
-        return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
-    }
-
-    private KubernetesList applyStorageClassName(String storageClassName, KubernetesList items) {
-        if (storageClassName != null) {
-            for (HasMetadata item : items.getItems()) {
-                if (item instanceof PersistentVolumeClaim) {
-                    ((PersistentVolumeClaim) item).getSpec().setStorageClassName(storageClassName);
-                }
-            }
-        }
         return items;
     }
-
 }
