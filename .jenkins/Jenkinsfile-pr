@@ -81,7 +81,10 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-pr', params.TEST_CASE)
+                        if (env.ghprbCommentBody.contains('@')) {
+                            env.TEST_CASE = env.ghprbCommentBody.split('@')[1]
+                        }
+                        lib.runSystemtests(env.CORES_DIR, 'systemtests-pr', env.TEST_CASE)
                     }
                 }
             }
