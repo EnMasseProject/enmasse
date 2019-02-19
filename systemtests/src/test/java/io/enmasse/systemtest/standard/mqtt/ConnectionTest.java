@@ -32,7 +32,7 @@ public class ConnectionTest extends TestBaseWithShared implements ITestBaseStand
      */
     @Test
     public void newSessionDisconnectsExisting() throws Exception {
-        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();

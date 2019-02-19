@@ -15,7 +15,9 @@ import io.enmasse.admin.model.v1.*;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
 import io.enmasse.metrics.api.Metrics;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.k8s.api.*;
+import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
@@ -37,7 +39,7 @@ public class AddressSpaceController {
 
     static {
         try {
-            AdminCrd.registerCustomCrds();
+            CustomResourceDefinitions.registerAll();
         } catch (RuntimeException t) {
             t.printStackTrace();
             throw new ExceptionInInitializerError(t);
@@ -72,13 +74,15 @@ public class AddressSpaceController {
         KubeSchemaApi schemaApi = KubeSchemaApi.create(controllerClient, controllerClient.getNamespace(), isOpenShift);
 
         log.info("AddressSpaceController starting with options: {}", options);
-        configureDefaultResources(controllerClient, options.getResourcesDir());
+        if (options.isInstallDefaultResources()) {
+            configureDefaultResources(controllerClient, options.getResourcesDir());
+        }
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
         Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getTemplateDir(), isOpenShift);
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
-        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "enmasse-controller")
+        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "address-space-controller")
                 : new LogEventLogger();
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
@@ -93,7 +97,14 @@ public class AddressSpaceController {
                 options.getStandardAuthserviceCredentialsSecretName(),
                 options.getStandardAuthserviceCertSecretName());
         Clock clock = Clock.systemUTC();
-        UserApi userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
+        UserApi userApi = null;
+        if (keycloakFactory.isKeycloakAvailable()) {
+            log.info("Using Keycloak for User API");
+            userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
+        } else {
+            log.info("Using Null for User API");
+            userApi = new NullUserApi();
+        }
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
@@ -141,6 +152,11 @@ public class AddressSpaceController {
                 client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
                 StandardInfraConfig.class,
                 Comparator.comparing(StandardInfraConfig::getVersion));
+
+        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "configmaps"),
+                client.configMaps().inNamespace(namespace),
+                ConfigMap.class,
+                (c1, c2) -> c1.getData().equals(c2.getData()) ? 0 : -1);
 
         KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressplans"),
                 client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace),
@@ -193,7 +209,7 @@ public class AddressSpaceController {
         AuthenticationServiceResolver resolver = null;
         switch (type) {
             case NONE:
-                resolver = options.getNoneAuthService().map(authService -> new NoneAuthenticationServiceResolver(authService.getHost(), authService.getAmqpPort())).orElse(null);
+                resolver = new NoneAuthenticationServiceResolver("none-authservice", 5671);
                 break;
             case STANDARD:
                 resolver = options.getStandardAuthService().map(authService -> {

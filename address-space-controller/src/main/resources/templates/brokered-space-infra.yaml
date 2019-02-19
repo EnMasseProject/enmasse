@@ -1,0 +1,464 @@
+apiVersion: v1
+kind: Template
+metadata:
+  labels:
+    app: enmasse
+  name: brokered-space-infra
+objects:
+- apiVersion: v1
+  data:
+    tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
+  kind: Secret
+  metadata:
+    name: authservice-ca.${INFRA_UUID}
+    labels:
+      app: enmasse
+      infraUuid: ${INFRA_UUID}
+      infraType: brokered
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+    labels:
+      app: enmasse
+      infraType: brokered
+      infraUuid: ${INFRA_UUID}
+    name: broker-data.${INFRA_UUID}
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: ${BROKER_STORAGE_CAPACITY}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+      enmasse.io/cert-secret: broker-internal-cert.${INFRA_UUID}
+    labels:
+      app: enmasse
+      role: broker
+      infraType: brokered
+      infraUuid: ${INFRA_UUID}
+    name: broker.${INFRA_UUID}
+  spec:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: node-role.enmasse.io/messaging-infra
+                  operator: In
+                  values:
+                    - "true"
+    replicas: 1
+    strategy:
+      type: Recreate
+    selector:
+      matchLabels:
+        app: enmasse
+        name: broker
+        role: broker
+        infraUuid: ${INFRA_UUID}
+    template:
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+          prometheus.io/path: /metrics
+          prometheus.io/port: '8080'
+          prometheus.io/scrape: 'true'
+        labels:
+          app: enmasse
+          name: broker
+          role: broker
+          infraUuid: ${INFRA_UUID}
+      spec:
+        containers:
+        - env:
+          - name: INFRA_UUID
+            value: ${INFRA_UUID}
+          - name: ADDRESS_SPACE_TYPE
+            value: brokered
+          - name: ADDRESS_FULL_POLICY
+            value: ${BROKER_ADDRESS_FULL_POLICY}
+          - name: CERT_DIR
+            value: /etc/enmasse-certs
+          - name: AUTHENTICATION_SERVICE_HOST
+            value: ${AUTHENTICATION_SERVICE_HOST}
+          - name: AUTHENTICATION_SERVICE_PORT
+            value: ${AUTHENTICATION_SERVICE_PORT}
+          - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+            value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+          - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+            value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+          - name: AUTHENTICATION_SERVICE_OAUTH_URL
+            value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+          - name: AMQ_NAME
+            value: serverData
+          - name: HOME
+            value: /var/run/artemis/split-1/
+          image: ${env.ARTEMIS_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          command:
+          - /opt/apache-artemis/custom/bin/launch-broker.sh
+          livenessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - $ARTEMIS_HOME/custom/bin/probe.sh
+            initialDelaySeconds: 120
+          name: broker
+          ports:
+          - containerPort: 5672
+            name: amqp
+          - containerPort: 5671
+            name: amqps
+          - containerPort: 55671
+            name: amqps-normal
+          - containerPort: 8161
+            name: jolokia
+          - containerPort: 8080
+            name: artemismetrics
+          readinessProbe:
+            exec:
+              command:
+              - sh
+              - -c
+              - $ARTEMIS_HOME/custom/bin/probe.sh
+            initialDelaySeconds: 10
+          resources:
+            limits:
+              memory: ${BROKER_MEMORY_LIMIT}
+            requests:
+              memory: ${BROKER_MEMORY_LIMIT}
+          volumeMounts:
+          - mountPath: /var/run/artemis
+            name: data
+          - mountPath: /etc/prometheus-config
+            name: broker-prometheus-config
+            readOnly: true
+          - mountPath: /opt/apache-artemis/custom
+            name: broker-custom
+            readOnly: false
+        initContainers:
+        - env:
+          - name: INFRA_UUID
+            value: ${INFRA_UUID}
+          - name: ADDRESS_SPACE_TYPE
+            value: brokered
+          - name: ADDRESS_FULL_POLICY
+            value: ${BROKER_ADDRESS_FULL_POLICY}
+          - name: GLOBAL_MAX_SIZE
+            value: ${GLOBAL_MAX_SIZE}
+          - name: AUTHENTICATION_SERVICE_HOST
+            value: ${AUTHENTICATION_SERVICE_HOST}
+          - name: AUTHENTICATION_SERVICE_PORT
+            value: ${AUTHENTICATION_SERVICE_PORT}
+          - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+            value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+          - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+            value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+          - name: AUTHENTICATION_SERVICE_OAUTH_URL
+            value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+          - name: AMQ_NAME
+            value: serverData
+          - name: HOME
+            value: /var/run/artemis/split-1/
+          image: ${env.ARTEMIS_PLUGIN_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          name: broker-plugin
+          volumeMounts:
+          - mountPath: /var/run/artemis
+            name: data
+          - mountPath: /etc/enmasse-certs
+            name: broker-internal-cert
+            readOnly: true
+          - mountPath: /etc/external-certs
+            name: external-cert
+            readOnly: true
+          - mountPath: /etc/authservice-ca
+            name: authservice-ca
+            readOnly: true
+          - mountPath: /etc/prometheus-config
+            name: broker-prometheus-config
+            readOnly: true
+          - mountPath: /opt/apache-artemis/custom
+            name: broker-custom
+            readOnly: false
+        volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: broker-data.${INFRA_UUID}
+        - emptyDir: {}
+          name: broker-custom
+        - name: broker-prometheus-config
+          configMap:
+            name: broker-prometheus-config
+        - name: broker-internal-cert
+          secret:
+            secretName: broker-internal-cert.${INFRA_UUID}
+        - name: authservice-ca
+          secret:
+            secretName: authservice-ca.${INFRA_UUID}
+        - name: external-cert
+          secret:
+            secretName: ${MESSAGING_SECRET}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: enmasse
+      infraType: brokered
+      infraUuid: ${INFRA_UUID}
+    name: broker-${INFRA_UUID}
+  spec:
+    ports:
+    - name: amqps-normal
+      port: 55671
+      targetPort: amqps-normal
+    selector:
+      role: broker
+      infraUuid: ${INFRA_UUID}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+      enmasse.io/service-port.amqp: 5672
+      enmasse.io/service-port.amqps: 5671
+    labels:
+      app: enmasse
+      infraType: brokered
+      infraUuid: ${INFRA_UUID}
+    name: messaging-${INFRA_UUID}
+  spec:
+    ports:
+    - name: amqp
+      port: 5672
+      targetPort: amqp
+    - name: amqps
+      port: 5671
+      targetPort: amqps
+    selector:
+      role: broker
+      infraUuid: ${INFRA_UUID}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+      enmasse.io/cert-secret: agent-internal-cert.${INFRA_UUID}
+    labels:
+      app: enmasse
+      role: agent
+      infraType: brokered
+      infraUuid: ${INFRA_UUID}
+    name: agent.${INFRA_UUID}
+  spec:
+    affinity:
+      nodeAffinity:
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+                - key: node-role.enmasse.io/operator-infra
+                  operator: In
+                  values:
+                    - "true"
+    replicas: 1
+    strategy:
+      type: Recreate
+    selector:
+      matchLabels:
+        app: enmasse
+        name: agent
+        role: agent
+        infraUuid: ${INFRA_UUID}
+    template:
+      metadata:
+        annotations:
+          addressSpace: ${ADDRESS_SPACE}
+          namespace: ${ADDRESS_SPACE_NAMESPACE}
+        labels:
+          app: enmasse
+          name: agent
+          role: agent
+          infraUuid: ${INFRA_UUID}
+      spec:
+        containers:
+        - env:
+          - name: BROKER_SERVICE_HOST
+            value: broker-${INFRA_UUID}
+          - name: BROKER_SERVICE_PORT
+            value: 55671
+          - name: ADDRESS_SPACE_PLAN
+            value: ${ADDRESS_SPACE_PLAN}
+          - name: ADDRESS_SPACE
+            value: ${ADDRESS_SPACE}
+          - name: ADDRESS_SPACE_NAMESPACE
+            value: ${ADDRESS_SPACE_NAMESPACE}
+          - name: INFRA_UUID
+            value: ${INFRA_UUID}
+          - name: ENABLE_EVENT_LOGGER
+            value: ${ENABLE_EVENT_LOGGER}
+          - name: ADDRESS_SPACE_TYPE
+            value: brokered
+          - name: CERT_DIR
+            value: /etc/enmasse-certs
+          - name: CONSOLE_CERT_DIR
+            value: /etc/console-certs
+          - name: MESSAGING_CERT
+            value: /opt/agent/messaging-cert/tls.crt
+          - name: HEALTH_PORT
+            value: '8088'
+          - name: AUTHENTICATION_SERVICE_HOST
+            value: ${AUTHENTICATION_SERVICE_HOST}
+          - name: AUTHENTICATION_SERVICE_PORT
+            value: ${AUTHENTICATION_SERVICE_PORT}
+          - name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+            value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
+          - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+            value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+          - name: AUTHENTICATION_SERVICE_OAUTH_URL
+            value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
+          - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
+            value: ${AUTHENTICATION_SERVICE_KC_IDP_HINT}
+          image: ${env.AGENT_IMAGE}
+          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+          name: agent
+          resources:
+            limits:
+              memory: ${ADMIN_MEMORY_LIMIT}
+            requests:
+              memory: ${ADMIN_MEMORY_LIMIT}
+          ports:
+          - containerPort: 8080
+            name: https
+          - containerPort: 8088
+            name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
+          volumeMounts:
+          - mountPath: /opt/agent/authservice-ca
+            name: authservice-ca
+            readOnly: true
+          - mountPath: /etc/console-certs
+            name: console-external-cert
+            readOnly: true
+          - mountPath: /etc/enmasse-certs
+            name: agent-internal-cert
+            readOnly: true
+          - mountPath: /opt/agent/messaging-cert
+            name: messaging-cert
+            readOnly: true
+        serviceAccountName: ${ADDRESS_SPACE_ADMIN_SA}
+        volumes:
+        - name: authservice-ca
+          secret:
+            secretName: authservice-ca.${INFRA_UUID}
+        - name: console-external-cert
+          secret:
+            secretName: ${CONSOLE_SECRET}
+        - name: agent-internal-cert
+          secret:
+            secretName: agent-internal-cert.${INFRA_UUID}
+        - name: messaging-cert
+          secret:
+            secretName: ${MESSAGING_SECRET}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+      namespace: ${ADDRESS_SPACE_NAMESPACE}
+      enmasse.io/service-port.https: 8081
+    labels:
+      app: enmasse
+      infraType: brokered
+      infraUuid: ${INFRA_UUID}
+    name: console-${INFRA_UUID}
+  spec:
+    ports:
+    - name: https
+      port: 8081
+      targetPort: 8080
+    - name: health
+      port: 8088
+      targetPort: 8088
+    selector:
+      role: agent
+      infraUuid: ${INFRA_UUID}
+
+parameters:
+- name: INFRA_UUID
+  description: UUID to use for infrastructure
+  required: true
+- name: INFRA_NAMESPACE
+  description: Namespace where infrastructure is created
+  required: true
+- description: Storage capacity required for volume claims
+  name: BROKER_STORAGE_CAPACITY
+  value: 2Gi
+- description: The name of our address space
+  name: ADDRESS_SPACE
+  required: true
+- description: The namespace of our address space
+  name: ADDRESS_SPACE_NAMESPACE
+  required: true
+- name: ADDRESS_SPACE_PLAN
+  description: Name of address space plan followed
+  required: true
+- description: Certificate to be used for public messaging service
+  name: MESSAGING_SECRET
+  required: true
+- description: Certificate to be used for public console service
+  name: CONSOLE_SECRET
+  required: true
+- description: The hostname of the authentication service used by this address space
+  name: AUTHENTICATION_SERVICE_HOST
+  required: true
+- description: The port of the authentication service used by this address space
+  name: AUTHENTICATION_SERVICE_PORT
+  required: true
+- description: The CA cert to use for validating authentication service cert
+  name: AUTHENTICATION_SERVICE_CA_CERT
+  required: true
+- description: The client cert to use as identity against authentication service
+  name: AUTHENTICATION_SERVICE_CLIENT_SECRET
+- description: The hostname to use in sasl init
+  name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
+- description: The URL to use for OAUTH (if not set, OAUTH is not used)
+  name: AUTHENTICATION_SERVICE_OAUTH_URL
+- description: Name of Keycloak Identification Provider Hint
+  name: AUTHENTICATION_SERVICE_KC_IDP_HINT
+- description: Enable logging of kubernetes events
+  name: ENABLE_EVENT_LOGGER
+  value: 'true'
+- description: The service account with address space admin privileges
+  name: ADDRESS_SPACE_ADMIN_SA
+  value: address-space-admin
+- description: Memory limits for admin
+  name: ADMIN_MEMORY_LIMIT
+  value: 512Mi
+- description: Memory limits for container
+  name: BROKER_MEMORY_LIMIT
+  value: 512Mi
+- description: Global max size for all addresses in broker. Cannot be larger than
+    a quarter of BROKER_MEMORY_LIMIT
+  name: GLOBAL_MAX_SIZE
+  value: "-1"
+- description: Broker address full policy
+  name: BROKER_ADDRESS_FULL_POLICY
+  value: FAIL

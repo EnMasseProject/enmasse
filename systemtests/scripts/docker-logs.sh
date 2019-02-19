@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 LOG_DIR=$1
+NAMESPACE=$2
 
 mkdir -p ${LOG_DIR}
 
+if which oc &> /dev/null; then
+    CMD=oc
+elif which kubectl &> /dev/null; then
+    CMD=kubectl
+else
+    err_and_exit "Cannot find oc or kubectl command, please check path to ensure it is installed"
+fi
+
 while [[ true ]]; do
-    sudo rsync -avL /var/log/containers/* ${LOG_DIR}/
-    sudo chmod -R 777 ${LOG_DIR}
-    sleep 5
+    PODS=$(${CMD} get pods -n ${NAMESPACE} -o go-template --template '{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}')
+    for POD in ${PODS}; do
+        CONTAINERS=$(${CMD} get pods ${POD} -o=jsonpath='{.spec.containers[*].name}')
+        for CONTAINER in ${CONTAINERS}; do
+            ${CMD} logs ${POD} --container=${CONTAINER} > ${LOG_DIR}/${POD}.${CONTAINER}.log
+        done
+    done
+    sleep 2
 done

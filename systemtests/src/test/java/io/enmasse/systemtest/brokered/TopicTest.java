@@ -10,9 +10,7 @@ import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
-import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +19,7 @@ import org.slf4j.Logger;
 import javax.jms.*;
 import javax.naming.Context;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -46,47 +45,35 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     @Test
-    @Disabled("disable due to authorization exception with create queue on topic address with wildcards")
     void testTopicPubSubWildcards() throws Exception {
+        doTopicWildcardTest(DestinationPlan.BROKERED_TOPIC);
+    }
 
-        int msgCount = 1000;
-        int topicCount = 10;
-        int senderCount = 10;
-        int recvCount = topicCount / 2;
+    private void doTopicWildcardTest(String plan) throws Exception {
+        Destination t0 = Destination.topic("topic", plan);
+        setAddresses(t0);
 
-        List<Destination> topicList = new ArrayList<>();
+        AmqpClient amqpClient = amqpClientFactory.createTopicClient();
 
-        //create queues
-        for (int i = 0; i < recvCount; i++) {
-            topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 1), getDefaultPlan(AddressType.TOPIC)));
-            topicList.add(Destination.topic(String.format("test-topic-pubsub%d.%d", i, i + 2), getDefaultPlan(AddressType.TOPIC)));
-        }
-        setAddresses(topicList.toArray(new Destination[0]));
+        List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
 
-        List<String> msgBatch = TestUtils.generateMessages(msgCount);
+        Future<List<org.apache.qpid.proton.message.Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 3);
 
-        AmqpClient client = amqpClientFactory.createTopicClient(sharedAddressSpace);
-        client.getConnectOptions().setCredentials(defaultCredentials);
+        amqpClient.sendMessages(t0.getAddress() + "/foo", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/bar", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/baz/foobar", msgs);
 
-        //attach subscribers
-        List<Future<List<Message>>> recvResults = new ArrayList<>();
-        for (int i = 0; i < recvCount; i++) {
-            recvResults.add(client.recvMessages(String.format("test-topic-pubsub%d.*", i), msgCount * 2));
-        }
+        assertThat("Wrong count of messages received",
+                recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 3));
 
-        //attach producers
-        for (int i = 0; i < senderCount; i++) {
-            assertThat("Wrong count of messages sent: sender" + i,
-                    client.sendMessages(topicList.get(i).getAddress(), msgBatch).get(2, TimeUnit.MINUTES), is(msgBatch.size()));
-        }
+        recvResults = amqpClient.recvMessages("topic/world/+", msgs.size() * 2);
 
-        //check received messages
-        for (int i = 0; i < recvCount; i++) {
-            assertThat("Wrong count of messages received: receiver" + i,
-                    recvResults.get(i).get().size(), is(msgCount * 2));
-        }
+        amqpClient.sendMessages(t0.getAddress() + "/world/africa", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/europe", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/asia/maldives", msgs);
 
-        client.close();
+        assertThat("Wrong count of messages received",
+                recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
     }
 
     @Test

@@ -618,7 +618,14 @@ Artemis.prototype.findConnectorService = function (name) {
 
 Artemis.prototype.close = function () {
     if (this.connection) {
-        this.connection.close();
+        var connection = this.connection;
+        return new Promise(function (resolve) {
+            connection.on('connection_close', resolve);
+            connection.on('connection_error', resolve);
+            connection.close();
+        });
+    } else {
+        return Promise.resolve();
     }
 }
 

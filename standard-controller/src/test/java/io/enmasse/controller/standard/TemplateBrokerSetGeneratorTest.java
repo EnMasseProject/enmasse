@@ -6,11 +6,13 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.openshift.client.ParameterValue;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -39,44 +41,63 @@ public class TemplateBrokerSetGeneratorTest {
     @Test
     public void testDirect() throws Exception {
         Address dest = createAddress("foo_bar_FOO", "anycast");
-        ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String,String>> captor = ArgumentCaptor.forClass(Map.class);
         BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
-        List<ParameterValue> parameters = captor.getAllValues();
+        Map<String,String> parameters = captor.getValue();
         assertThat(parameters.size(), is(13));
     }
 
     @Test
     public void testStoreAndForward() throws Exception {
         Address dest = createAddress("foo.bar", "queue");
-        ArgumentCaptor<ParameterValue> captor = ArgumentCaptor.forClass(ParameterValue.class);
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String,String>> captor = ArgumentCaptor.forClass(Map.class);
         BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
         for (HasMetadata resource : resources) {
             Map<String, String> annotations = resource.getMetadata().getAnnotations();
             assertNotNull(annotations.get(AnnotationKeys.CLUSTER_ID));
-            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getName()));
+            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getMetadata().getName()));
         }
-        List<ParameterValue> parameters = captor.getAllValues();
+        StatefulSet set = (StatefulSet) resources.get(0);
+        assertThat(set.getSpec().getVolumeClaimTemplates().get(0).getSpec().getStorageClassName(), is("mysc"));
+        assertThat(set.getSpec().getReplicas(), is(1));
+        Map<String,String> parameters = captor.getValue();
         assertThat(parameters.size(), is(13));
     }
 
     private Address createAddress(String address, String type) {
-        return new Address.Builder()
-                .setName(address)
-                .setAddress(address)
-                .setAddressSpace("myinstance")
-                .setType(type)
-                .setPlan("plan1")
+        return new AddressBuilder()
+                .withNewMetadata()
+                .withName(address)
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress(address)
+                .withAddressSpace("myinstance")
+                .withType(type)
+                .withPlan("plan1")
+                .endSpec()
+
                 .build();
     }
 
-    private BrokerCluster generateCluster(Address address, ArgumentCaptor<ParameterValue> captor) throws Exception {
-        when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewConfigMapItem().withNewMetadata().withName("testmap").endMetadata().endConfigMapItem().build());
+    private BrokerCluster generateCluster(Address address, ArgumentCaptor<Map<String,String>> captor) throws Exception {
+        when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewStatefulSetItem().withNewMetadata().withName("testset").endMetadata().
+                withNewSpec()
+                .withReplicas(0)
+                .withVolumeClaimTemplates(new PersistentVolumeClaimBuilder()
+                        .withNewSpec()
+                        .endSpec()
+                        .build())
+                .endSpec()
+                .endStatefulSetItem().build());
 
-        return generator.generateCluster(address.getName(), 1, address, null,
+        return generator.generateCluster(address.getMetadata().getName(), 1, address, null,
                 standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null));
     }
 

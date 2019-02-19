@@ -20,11 +20,13 @@ import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.k8s.model.v1beta1.TableColumnDefinition;
 import io.enmasse.k8s.model.v1beta1.TableRow;
 import io.enmasse.k8s.util.TimeUtil;
+import io.enmasse.model.validation.DefaultValidator;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
@@ -44,13 +46,15 @@ public class HttpAddressSpaceService {
     private final SchemaProvider schemaProvider;
 
     private final AddressSpaceApi addressSpaceApi;
+    private final HostResolver hostResolver;
     private final UuidGenerator uuidGenerator = new UuidGenerator();
     private final Clock clock;
 
-    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock) {
+    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock, HostResolver hostResolver) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.clock = clock;
+        this.hostResolver = hostResolver;
     }
 
     private Response doRequest(String errorMessage, Callable<Response> request) throws Exception {
@@ -99,45 +103,32 @@ public class HttpAddressSpaceService {
     @POST
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
-    public Response createAddressSpace(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull AddressSpace input) throws Exception {
-        return doRequest("Error creating address space " + input.getName(), () -> {
+    public Response createAddressSpace(@Context SecurityContext securityContext, @Context UriInfo uriInfo, @PathParam("namespace") String namespace, @NotNull @Valid AddressSpace input) throws Exception {
+        return doRequest("Error creating address space " + input.getMetadata().getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
             AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, namespace, input, null);
-            addressSpace.validate();
+            DefaultValidator.validate(addressSpace);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
             addressSpaceApi.createAddressSpace(addressSpace);
-            AddressSpace created = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getName()).orElse(addressSpace);
+            AddressSpace created = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getMetadata().getName()).orElse(addressSpace);
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
-            builder.path(created.getName());
+            builder.path(created.getMetadata().getName());
             return Response.created(builder.build()).entity(removeSecrets(created)).build();
         });
     }
 
     private AddressSpace setAddressSpaceDefaults(SecurityContext securityContext, String namespace, AddressSpace addressSpace, AddressSpace existing) {
         if (existing == null) {
-            if (addressSpace.getNamespace() == null) {
-                addressSpace = new AddressSpace.Builder(addressSpace)
-                        .setNamespace(namespace)
-                        .build();
+            if (addressSpace.getMetadata().getNamespace() == null) {
+                addressSpace.getMetadata().setNamespace(namespace);
             }
 
-            if (addressSpace.getAnnotation(AnnotationKeys.REALM_NAME) == null) {
-                addressSpace.putAnnotation(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getNamespace() + "-" + addressSpace.getName()));
-            }
-
-            if (addressSpace.getLabel(LabelKeys.ADDRESS_SPACE_TYPE) == null) {
-                addressSpace.putLabel(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getType());
-            }
-
-            if (addressSpace.getLabel(LabelKeys.NAMESPACE) == null) {
-                addressSpace.putLabel(LabelKeys.NAMESPACE, addressSpace.getNamespace());
-            }
-
-            if (addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) == null) {
-                addressSpace.putAnnotation(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
-            }
+            addressSpace.putAnnotationIfAbsent(AnnotationKeys.REALM_NAME, KubeUtil.sanitizeName(addressSpace.getMetadata().getNamespace() + "-" + addressSpace.getMetadata().getName()));
+            addressSpace.putLabelIfAbsent(LabelKeys.ADDRESS_SPACE_TYPE, addressSpace.getSpec().getType());
+            addressSpace.putLabelIfAbsent(LabelKeys.NAMESPACE, addressSpace.getMetadata().getNamespace());
+            addressSpace.putAnnotationIfAbsent(AnnotationKeys.INFRA_UUID, uuidGenerator.generateInfraUuid());
 
             if (securityContext.isSecure() && securityContext.getUserPrincipal() != null) {
                 String createdBy = RbacSecurityContext.getUserName(securityContext.getUserPrincipal());
@@ -146,39 +137,61 @@ public class HttpAddressSpaceService {
                 addressSpace.putAnnotation(AnnotationKeys.CREATED_BY, createdBy);
                 addressSpace.putAnnotation(AnnotationKeys.CREATED_BY_UID, createdByUid);
             }
+
+            if (addressSpace.getSpec().getAuthenticationService() == null) {
+                addressSpace.getSpec().setAuthenticationService(resolveDefaultAuthService());
+            }
         } else {
             validateChanges(existing, addressSpace);
-            Map<String, String> annotations = existing.getAnnotations();
+            Map<String, String> annotations = existing.getMetadata().getAnnotations();
             if (annotations == null) {
                 annotations = new HashMap<>();
             }
-            annotations.putAll(addressSpace.getAnnotations());
+            annotations.putAll(addressSpace.getMetadata().getAnnotations());
 
-            Map<String, String> labels = existing.getLabels();
+            Map<String, String> labels = existing.getMetadata().getLabels();
             if (labels == null) {
                 labels = new HashMap<>();
             }
-            labels.putAll(addressSpace.getLabels());
+            labels.putAll(addressSpace.getMetadata().getLabels());
 
-            addressSpace = new AddressSpace.Builder(existing)
-                    .setEndpointList(addressSpace.getEndpoints())
-                    .setNetworkPolicy(addressSpace.getNetworkPolicy())
-                    .setAnnotations(annotations)
-                    .setPlan(addressSpace.getPlan())
-                    .setLabels(labels)
+            addressSpace = new AddressSpaceBuilder(existing)
+
+                    .editOrNewMetadata()
+                    .withAnnotations(annotations)
+                    .withLabels(labels)
+                    .endMetadata()
+
+                    .editOrNewSpec()
+                    .withEndpoints(addressSpace.getSpec().getEndpoints())
+                    .withNetworkPolicy(addressSpace.getSpec().getNetworkPolicy())
+                    .withPlan(addressSpace.getSpec().getPlan())
+                    .endSpec()
+
                     .build();
         }
 
         return addressSpace;
     }
+    private AuthenticationService resolveDefaultAuthService() {
+        AuthenticationService authenticationService = new AuthenticationService();
+        if (hostResolver.isHostResolveable("standard-authservice")) {
+            authenticationService.setType(AuthenticationServiceType.STANDARD);
+        } else if (hostResolver.isHostResolveable("none-authservice")) {
+            authenticationService.setType(AuthenticationServiceType.NONE);
+        } else {
+            throw new InternalServerErrorException("No authentication service specified, and unable to resolve default: no authentication services found");
+        }
+        return authenticationService;
+    }
 
     private void validateChanges(AddressSpace existing, AddressSpace addressSpace) {
-        if (!existing.getType().equals(addressSpace.getType())) {
-            throw new BadRequestException("Cannot change type of address space " + addressSpace.getName() + " from " + existing.getType() + " to " + addressSpace.getType());
+        if (!existing.getSpec().getType().equals(addressSpace.getSpec().getType())) {
+            throw new BadRequestException("Cannot change type of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getType() + " to " + addressSpace.getSpec().getType());
         }
 
-        if (!existing.getAuthenticationService().equals(addressSpace.getAuthenticationService())) {
-            throw new BadRequestException("Cannot change authentication service of address space " + addressSpace.getName() + " from " + existing.getAuthenticationService() + " to " + addressSpace.getAuthenticationService());
+        if (addressSpace.getSpec().getAuthenticationService() != null && !existing.getSpec().getAuthenticationService().equals(addressSpace.getSpec().getAuthenticationService())) {
+            throw new BadRequestException("Cannot change authentication service of address space " + addressSpace.getMetadata().getName() + " from " + existing.getSpec().getAuthenticationService() + " to " + addressSpace.getSpec().getAuthenticationService());
         }
 
         overrideAnnotation(existing, addressSpace, AnnotationKeys.REALM_NAME);
@@ -210,48 +223,59 @@ public class HttpAddressSpaceService {
     }
 
     static AddressSpaceList removeSecrets(Collection<AddressSpace> addressSpaceList) {
-        return addressSpaceList.stream()
+
+        final AddressSpaceList result = new AddressSpaceList();
+
+        addressSpaceList.stream()
                 .map(HttpAddressSpaceService::removeSecrets)
-                .collect(Collectors.toCollection(AddressSpaceList::new));
+                .forEachOrdered(result.getItems()::add);
+
+        return result;
     }
 
     static AddressSpace removeSecrets(AddressSpace addressSpace) {
-        return new AddressSpace.Builder(addressSpace)
-                .setEndpointList(addressSpace.getEndpoints().stream()
-                        .map(e -> {
-                            if (e.getCertSpec().isPresent()) {
-                                return new EndpointSpec.Builder(e)
-                                        .setCertSpec(new CertSpec.Builder(e.getCertSpec().get())
-                                                .setTlsKey(null)
-                                                .build())
-                                        .build();
-                            } else {
-                                return e;
-                            }
-                        }).collect(Collectors.toList()))
+        return new AddressSpaceBuilder(addressSpace)
+                .editOrNewSpec()
+                .withEndpoints(
+                        addressSpace.getSpec().getEndpoints().stream()
+                                .map(HttpAddressSpaceService::removeSecret)
+                                .collect(Collectors.toList()))
+                .endSpec()
                 .build();
+    }
+
+    private static EndpointSpec removeSecret (final EndpointSpec e) {
+        if (e.getCert() != null ) {
+            return new EndpointSpecBuilder(e)
+                    .withCert(new CertSpecBuilder(e.getCert())
+                            .withTlsKey(null)
+                            .build())
+                    .build();
+        } else {
+            return e;
+        }
     }
 
     @PUT
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{addressSpace}")
-    public Response replaceAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName, @NotNull AddressSpace payload) throws Exception {
+    public Response replaceAddressSpace(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName, @NotNull @Valid AddressSpace payload) throws Exception {
         checkRequestBodyNotNull(payload);
         checkAddressSpaceObjectNameNotNull(payload, addressSpaceName);
         checkMatchingAddressSpaceName(addressSpaceName, payload);
-        return doRequest("Error replacing address space " + payload.getName(), () -> {
+        return doRequest("Error replacing address space " + payload.getMetadata().getName(), () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
             AddressSpace existing = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
             AddressSpace addressSpace = setAddressSpaceDefaults(securityContext, namespace, payload, existing);
-            addressSpace.validate();
+            DefaultValidator.validate(addressSpace);
 
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(addressSpace);
             if (!addressSpaceApi.replaceAddressSpace(addressSpace)) {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
-            AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getName()).orElse(addressSpace);
+            AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getMetadata().getName()).orElse(addressSpace);
             return Response.ok().entity(removeSecrets(replaced)).build();
         });
     }
@@ -263,14 +287,14 @@ public class HttpAddressSpaceService {
     }
 
     private void checkAddressSpaceObjectNameNotNull(AddressSpace addressSpace, String addressSpaceNameFromURL) {
-        if (addressSpace.getName() == null) {
+        if (addressSpace.getMetadata().getName() == null) {
             throw new BadRequestException("the name of the object (" + addressSpaceNameFromURL + " based on URL) was undeterminable: name must be provided");
         }
     }
 
     private void checkMatchingAddressSpaceName(String addressSpaceNameFromURL, AddressSpace addressSpaceFromPayload) {
-        if (addressSpaceFromPayload.getName() != null && !addressSpaceFromPayload.getName().equals(addressSpaceNameFromURL)) {
-            throw new BadRequestException("the name of the object (" + addressSpaceFromPayload.getName() + ") does not match the name on the URL (" + addressSpaceNameFromURL + ")");
+        if (addressSpaceFromPayload.getMetadata().getName() != null && !addressSpaceFromPayload.getMetadata().getName().equals(addressSpaceNameFromURL)) {
+            throw new BadRequestException("the name of the object (" + addressSpaceFromPayload.getMetadata().getName() + ") does not match the name on the URL (" + addressSpaceNameFromURL + ")");
         }
     }
 
@@ -285,7 +309,7 @@ public class HttpAddressSpaceService {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
             addressSpaceApi.deleteAddressSpace(addressSpace);
-            return Response.ok(Status.successStatus(200, "AddressSpace", addressSpaceName, addressSpace.getUid())).build();
+            return Response.ok(Status.successStatus(200, "AddressSpace", addressSpaceName, addressSpace.getMetadata().getUid())).build();
         });
     }
 
@@ -333,7 +357,7 @@ public class HttpAddressSpaceService {
 
     static Object formatResponse(String headerParam, Instant now, AddressSpaceList addressSpaceList) {
         if (isTableFormat(headerParam)) {
-            return new Table(new ListMeta(), tableColumnDefinitions, createRows(now, addressSpaceList));
+            return new Table(new ListMeta(), tableColumnDefinitions, createRows(now, addressSpaceList.getItems()));
         } else {
             return addressSpaceList;
         }
@@ -355,23 +379,23 @@ public class HttpAddressSpaceService {
         return addressSpaceList.stream()
                 .map(addressSpace -> new TableRow(
                         Arrays.asList(
-                                addressSpace.getName(),
-                                addressSpace.getType(),
-                                addressSpace.getPlan(),
+                                addressSpace.getMetadata().getName(),
+                                addressSpace.getSpec().getType(),
+                                addressSpace.getSpec().getPlan(),
                                 addressSpace.getStatus().isReady(),
-                                Optional.ofNullable(addressSpace.getCreationTimestamp())
+                                Optional.ofNullable(addressSpace.getMetadata().getCreationTimestamp())
                                         .map(s -> TimeUtil.formatHumanReadable(Duration.between(TimeUtil.parseRfc3339(s), now)))
                                         .orElse(""),
                                 String.join(". ", addressSpace.getStatus().getMessages())),
                         new PartialObjectMetadata(new ObjectMetaBuilder()
-                                .withNamespace(addressSpace.getNamespace())
-                                .withName(addressSpace.getName())
-                                .withLabels(addressSpace.getLabels())
-                                .withAnnotations(addressSpace.getAnnotations())
-                                .withCreationTimestamp(addressSpace.getCreationTimestamp())
-                                .withSelfLink(addressSpace.getSelfLink())
-                                .withUid(addressSpace.getUid())
-                                .withResourceVersion(addressSpace.getResourceVersion())
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(addressSpace.getMetadata().getName())
+                                .withLabels(addressSpace.getMetadata().getLabels())
+                                .withAnnotations(addressSpace.getMetadata().getAnnotations())
+                                .withCreationTimestamp(addressSpace.getMetadata().getCreationTimestamp())
+                                .withSelfLink(addressSpace.getMetadata().getSelfLink())
+                                .withUid(addressSpace.getMetadata().getUid())
+                                .withResourceVersion(addressSpace.getMetadata().getResourceVersion())
                                 .build())))
                 .collect(Collectors.toList());
     }

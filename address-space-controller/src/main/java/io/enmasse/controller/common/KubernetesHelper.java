@@ -5,24 +5,19 @@
 
 package io.enmasse.controller.common;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.util.Templates;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import okhttp3.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,20 +25,16 @@ import java.util.stream.Collectors;
  * Wraps the Kubernetes client and adds some helper methods.
  */
 public class KubernetesHelper implements Kubernetes {
-    private static final ObjectMapper mapper = new ObjectMapper();
-    private static final Logger log = LoggerFactory.getLogger(KubernetesHelper.class.getName());
     private static final String TEMPLATE_SUFFIX = ".yaml";
 
     private final NamespacedOpenShiftClient client;
     private final String namespace;
-    private final String controllerToken;
     private final File templateDir;
     private final boolean isOpenShift;
 
     public KubernetesHelper(String namespace, NamespacedOpenShiftClient client, String token, File templateDir, boolean isOpenShift) {
         this.client = client;
         this.namespace = namespace;
-        this.controllerToken = token;
         this.templateDir = templateDir;
         this.isOpenShift = isOpenShift;
     }
@@ -67,8 +58,6 @@ public class KubernetesHelper implements Kubernetes {
                     client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
                 } else if (resource instanceof Service) {
                     client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
-                } else if (resource instanceof ServiceAccount) {
-                    client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
                 } else if (resource instanceof NetworkPolicy) {
                     client.network().networkPolicies().withName(resource.getMetadata().getName()).patch((NetworkPolicy) resource);
                 } else if (resource instanceof PersistentVolumeClaim && patchPersistentVolumeClaims) {
@@ -91,9 +80,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public KubernetesList processTemplate(String templateName, Map<String,String> parameters) {
+    public KubernetesList processTemplate(String templateName, Map<String, String> parameters) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return client.templates().load(templateFile).processLocally(parameters);
+        return Templates.process(client, templateFile, parameters);
     }
 
     @Override
@@ -126,12 +115,9 @@ public class KubernetesHelper implements Kubernetes {
         client.secrets().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.configMaps().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.apps().deployments().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-        client.serviceAccounts().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         if (isOpenShift) {
-            client.roleBindings().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
-            client.deploymentConfigs().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
             client.routes().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         }
     }

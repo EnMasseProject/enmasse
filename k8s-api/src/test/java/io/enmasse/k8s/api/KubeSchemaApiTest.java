@@ -9,6 +9,7 @@ import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,54 +48,66 @@ public class KubeSchemaApiTest {
 
         List<AddressSpacePlan> addressSpacePlans = Arrays.asList(
                 new AddressSpacePlanBuilder()
-                        .withMetadata(new ObjectMetaBuilder()
-                                .withName("spaceplan1")
-                                .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
-                                .build())
+                        .withNewMetadata()
+                        .withName("spaceplan1")
+                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
+                        .endMetadata()
                         .withAddressSpaceType("standard")
-                        .withAddressPlans(Arrays.asList("plan1", "plan2"))
+                        .withAddressPlans(Arrays.asList("plan1", "plan2", "plan4"))
+                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1), new ResourceAllowance("router", 1), new ResourceAllowance("aggregate", 1)))
                         .build(),
                 new AddressSpacePlanBuilder()
-                        .withMetadata(new ObjectMetaBuilder()
-                                .withName("spaceplan2")
-                                .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
-                                .build())
+                        .withNewMetadata()
+                        .withName("spaceplan2")
+                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
+                        .endMetadata()
                         .withAddressSpaceType("brokered")
                         .withAddressPlans(Arrays.asList( "plan3"))
+                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
                         .build());
 
         List<AddressPlan> addressPlans = Arrays.asList(
                 new AddressPlanBuilder()
-                        .withMetadata(new ObjectMetaBuilder()
-                                .withName("plan1")
-                                .build())
+                        .withNewMetadata()
+                        .withName("plan1")
+                        .endMetadata()
                         .withAddressType("queue")
+                        .withRequiredResources(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.01))
                         .build(),
                 new AddressPlanBuilder()
-                        .withMetadata(new ObjectMetaBuilder()
-                                .withName("plan2")
-                                .build())
+                        .withNewMetadata()
+                        .withName("plan2")
+                        .endMetadata()
                         .withAddressType("topic")
+                        .withRequiredResources(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.01))
                         .build(),
                 new AddressPlanBuilder()
                         .withMetadata(new ObjectMetaBuilder()
-                                .withName("plan3")
+                                .withName("plan4")
                                 .build())
+                        .withAddressType("anycast")
+                        .withRequiredResources(new ResourceRequest("router", 0.01))
+                        .build(),
+                new AddressPlanBuilder()
+                        .withNewMetadata()
+                        .withName("plan3")
+                        .endMetadata()
                         .withAddressType("queue")
+                        .withRequiredResources(new ResourceRequest("broker", 0.1))
                         .build());
 
         List<StandardInfraConfig> standardInfraConfigs = Arrays.asList(
                 new StandardInfraConfigBuilder()
-                        .withMetadata(new ObjectMetaBuilder()
-                                .withName("infra1")
-                                .build())
+                        .withNewMetadata()
+                        .withName("infra1")
+                        .endMetadata()
                         .build());
 
         List<BrokeredInfraConfig> brokeredInfraConfigs = Arrays.asList(
                 new BrokeredInfraConfigBuilder()
-                        .withMetadata(new ObjectMetaBuilder()
-                                .withName("infra1")
-                                .build())
+                        .withNewMetadata()
+                        .withName("infra1")
+                        .endMetadata()
                         .build());
 
         Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs);
@@ -108,7 +121,12 @@ public class KubeSchemaApiTest {
             assertFalse(type.findAddressSpacePlan("spaceplan2").isPresent());
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan1"));
             assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan2"));
+            assertTrue(type.findAddressSpacePlan("spaceplan1").get().getAddressPlans().contains("plan4"));
             assertTrue(type.findInfraConfig("infra1").isPresent());
+
+            assertTrue(type.findAddressType("queue").get().findAddressPlan("plan1").isPresent());
+            assertTrue(type.findAddressType("topic").get().findAddressPlan("plan2").isPresent());
+            assertTrue(type.findAddressType("anycast").get().findAddressPlan("plan4").isPresent());
         }
         {
             AddressSpaceType type = schema.findAddressSpaceType("brokered").get();
@@ -118,6 +136,8 @@ public class KubeSchemaApiTest {
             assertFalse(type.findAddressSpacePlan("spaceplan2").get().getAddressPlans().contains("plan1"));
             assertFalse(type.findAddressSpacePlan("spaceplan2").get().getAddressPlans().contains("plan2"));
             assertTrue(type.findInfraConfig("infra1").isPresent());
+
+            assertTrue(type.findAddressType("queue").get().findAddressPlan("plan3").isPresent());
         }
     }
 

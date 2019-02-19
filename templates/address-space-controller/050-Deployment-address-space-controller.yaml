@@ -34,11 +34,7 @@ spec:
         - name: JAVA_OPTS
           value: -verbose:gc
         - name: ENABLE_EVENT_LOGGER
-          valueFrom:
-            configMapKeyRef:
-              key: enableEventLogger
-              name: address-space-controller-config
-              optional: true
+          value: "true"
         - name: EXPOSE_ENDPOINTS_BY_DEFAULT
           valueFrom:
             configMapKeyRef:
@@ -52,7 +48,7 @@ spec:
               name: address-space-controller-config
               optional: true
         - name: TEMPLATE_DIR
-          value: /address-space-definitions
+          value: /templates
         - name: RESOURCES_DIR
           value: /
         - name: STANDARD_AUTHSERVICE_CONFIG_NAME
@@ -100,12 +96,4 @@ spec:
             memory: 512Mi
           requests:
             memory: 256Mi
-        volumeMounts:
-        - mountPath: /address-space-definitions
-          name: address-space-definitions
-          readOnly: true
       serviceAccountName: address-space-controller
-      volumes:
-      - configMap:
-          name: address-space-definitions
-        name: address-space-definitions

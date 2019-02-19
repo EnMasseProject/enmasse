@@ -12,12 +12,9 @@ import io.enmasse.common.model.DefaultCustomResource;
 public class StandardInfraConfigList extends AbstractList<StandardInfraConfig>{
 
     public static final String KIND = "StandardInfraConfigList";
-    public static final String VERSION = "v1beta1";
-    public static final String GROUP = "admin.enmasse.io";
-    public static final String API_VERSION = GROUP + "/" + VERSION;
 
     public StandardInfraConfigList() {
-        super(KIND, API_VERSION);
+        super(KIND, AdminCrd.API_VERSION);
     }
 
 }

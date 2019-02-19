@@ -5,33 +5,63 @@
 package io.enmasse.address.model;
 
 import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
 
 import java.util.*;
+
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Model type of address type.
  */
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressType {
-    private final String name;
-    private final String description;
-    private final List<AddressPlan> addressPlans;
+    private String name;
+    private String description;
+    private List<@Valid AddressPlan> plans = new ArrayList<>();
 
-    private AddressType(String name, String description, List<AddressPlan> addressPlans) {
+    public AddressType() {
+    }
+
+    public void setName(String name) {
         this.name = name;
-        this.description = description;
-        this.addressPlans = addressPlans;
     }
 
     public String getName() {
         return name;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public String getDescription() {
         return description;
     }
 
-    public List<AddressPlan> getAddressPlans() {
-        return Collections.unmodifiableList(addressPlans);
+    public void setPlans(List<AddressPlan> addressPlans) {
+        this.plans = addressPlans;
+    }
+
+    public List<AddressPlan> getPlans() {
+        return Collections.unmodifiableList(plans);
     }
 
     @Override
@@ -50,41 +80,12 @@ public class AddressType {
     }
 
     public Optional<AddressPlan> findAddressPlan(String planName) {
-        for (AddressPlan plan : addressPlans) {
+        for (AddressPlan plan : plans) {
             if (plan.getMetadata().getName().equals(planName)) {
                 return Optional.of(plan);
             }
         }
 
         return Optional.empty();
-    }
-
-    public static class Builder {
-        private String name;
-        private String description;
-        private List<AddressPlan> addressPlans;
-
-        public Builder setName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder setDescription(String description) {
-            this.description = description;
-            return this;
-        }
-
-        public Builder setAddressPlans(List<AddressPlan> addressPlans) {
-            this.addressPlans = new ArrayList<>(addressPlans);
-            return this;
-        }
-
-        public AddressType build() {
-            Objects.requireNonNull(name);
-            Objects.requireNonNull(description);
-            Objects.requireNonNull(addressPlans);
-
-            return new AddressType(name, description, addressPlans);
-        }
     }
 }

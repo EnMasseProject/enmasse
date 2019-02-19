@@ -12,7 +12,6 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -20,13 +19,11 @@ import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.TestTag.shared;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Tag(shared)
 public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
-    private static final Destination dummyAddress = Destination.queue("dummy-address", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
+    private static final Destination dummyAddress = Destination.queue("dummy-address", DestinationPlan.STANDARD_SMALL_QUEUE);
     protected static AddressSpace sharedAddressSpace;
     private static Logger log = CustomLogger.getLogger();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
@@ -148,6 +145,10 @@ public abstract class TestBaseWithShared extends TestBase {
         }
     }
 
+    protected void setAddresses(int expectedCode, Destination... destinations) throws Exception {
+        super.setAddresses(sharedAddressSpace, expectedCode, destinations);
+    }
+
     /**
      * append new addresses into address-space and sharedAddresses list
      *
@@ -185,6 +186,12 @@ public abstract class TestBaseWithShared extends TestBase {
     protected void waitForDestinationsReady(Destination... destinations) throws Exception {
         waitForDestinationsReady(sharedAddressSpace, destinations);
     }
+
+
+    //================================================================================================
+    //====================================== Test help methods =======================================
+    //================================================================================================
+
 
     /**
      * attach N receivers into one address with default username/password
@@ -262,7 +269,7 @@ public abstract class TestBaseWithShared extends TestBase {
                     Future<Integer> sent = client.sendMessages(dest.get(i).getAddress(), TestUtils.generateMessages(messageCount));
                     //wait for messages sent
                     assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES).intValue(),
-                            String.format("Incorrect count of messages send"));
+                            "Incorrect count of messages send");
                 }
             }
         }
@@ -274,7 +281,7 @@ public abstract class TestBaseWithShared extends TestBase {
                     Future<List<Message>> received = client.recvMessages(dest.get(i).getAddress(), messageCount);
                     //wait for messages received
                     assertEquals(messageCount, received.get(1, TimeUnit.MINUTES).size(),
-                            String.format("Incorrect count of messages received"));
+                            "Incorrect count of messages received");
                 }
             }
             client.close();

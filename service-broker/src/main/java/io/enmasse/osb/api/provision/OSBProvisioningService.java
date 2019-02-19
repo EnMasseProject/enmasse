@@ -75,10 +75,10 @@ public class OSBProvisioningService extends OSBServiceBase {
         Optional<AddressSpace> existingAddressSpace = findAddressSpaceByInstanceId(instanceId);
 
         if (existingAddressSpace.isPresent()) {
-            Optional<Service> desiredService = serviceMapping.getServiceForAddressSpaceType(existingAddressSpace.get().getType());
+            Optional<Service> desiredService = serviceMapping.getServiceForAddressSpaceType(existingAddressSpace.get().getSpec().getType());
             if (desiredService.isPresent() && desiredService.get().equals(service)) {
                 Optional<Plan> plan = service.getPlan(request.getPlanId());
-                if (plan.isPresent() && plan.get().getName().equals(existingAddressSpace.get().getPlan())) {
+                if (plan.isPresent() && plan.get().getName().equals(existingAddressSpace.get().getSpec().getPlan())) {
                     String dashboardUrl = consoleProxy.getConsoleUrl(existingAddressSpace.get());
                     return Response.ok(new ProvisionResponse(dashboardUrl, "provision")).build();
                 }

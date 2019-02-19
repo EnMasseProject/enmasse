@@ -14,8 +14,6 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,7 +24,6 @@ import java.util.Optional;
  */
 public class BrokerCluster {
     private static final ObjectMapper mapper = new ObjectMapper();
-    private static final Logger log = LoggerFactory.getLogger(BrokerCluster.class.getName());
 
     @Override
     public boolean equals(Object o) {

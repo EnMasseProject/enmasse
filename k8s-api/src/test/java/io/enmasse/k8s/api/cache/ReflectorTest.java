@@ -70,7 +70,7 @@ public class ReflectorTest {
         assertConfigMap("a1", "a3");
         assertConfigMap("b1", "b2");
 
-        io.fabric8.kubernetes.client.Watcher watcher = captor.getValue();
+        io.fabric8.kubernetes.client.Watcher<ConfigMap> watcher = captor.getValue();
         watcher.eventReceived(io.fabric8.kubernetes.client.Watcher.Action.MODIFIED, configMap("a1", "a4", "5"));
         reflector.run();
         assertStoreSize(2);

@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:address-space-controller
+rules:
+  - apiGroups: [ "admin.enmasse.io" ]
+    resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs" ]
+    verbs: [ "get", "list", "watch" ]
+  - apiGroups: [ "" ]
+    resources: [ "pods" ]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "events" ]
+    verbs: [ "create", "update", "patch", "get", "list" ]
+  - apiGroups: [ "" ]
+    resources: [ "services", "secrets", "persistentvolumeclaims" ]
+    verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+  - apiGroups: [ "networking.k8s.io", "extensions" ]
+    resources: [ "networkpolicies" ]
+    verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+  - apiGroups: [ "route.openshift.io", "" ]
+    resources: [ "routes", "routes/custom-host", "routes/status" ]
+    verbs: [ "create", "update", "patch", "get", "list", "delete" ]
+  - apiGroups: [ "apps" ]
+    resources: [ "statefulsets", "deployments", "replicasets" ]
+    verbs: [ "create", "update", "patch", "get", "list", "delete" ]

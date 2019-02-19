@@ -49,7 +49,7 @@ public class StandardAuthenticationServiceResolver implements AuthenticationServ
 
     @Override
     public String getSaslInitHost(AddressSpace addressSpace, AuthenticationService authService) {
-        return Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).orElse(addressSpace.getName());
+        return Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME)).orElse(addressSpace.getMetadata().getName());
     }
 
     @Override

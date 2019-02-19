@@ -4,36 +4,29 @@
  */
 package io.enmasse.systemtest;
 
+import java.util.Arrays;
+
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.executor.Executor;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.concurrent.TimeUnit;
-
 public class Minikube extends Kubernetes {
-    protected Minikube(Environment environment, String globalNamespace) {
-        super(environment, new DefaultKubernetesClient(), globalNamespace);
+    private static Logger log = CustomLogger.getLogger();
+
+    protected Minikube(String globalNamespace) {
+        super(new DefaultKubernetesClient(), globalNamespace);
     }
 
     private static String runCommand(String... cmd) {
-        ProcessBuilder processBuilder = new ProcessBuilder(cmd).redirectErrorStream(true);
-
-        Process proc = null;
         try {
-            proc = processBuilder.start();
-            InputStream stdout = proc.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line);
+            Executor executor = new Executor(false);
+            int returnCode = executor.execute(Arrays.asList(cmd), 10000);
+            if(returnCode == 0) {
+                return executor.getStdOut();
+            }else {
+                throw new RuntimeException(executor.getStdErr());
             }
-            reader.close();
-            if (!proc.waitFor(1, TimeUnit.MINUTES)) {
-                throw new RuntimeException("Command timed out");
-            }
-            return output.toString();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -68,6 +61,8 @@ public class Minikube extends Kubernetes {
         if (!name.endsWith("-external")) {
             externalName += "-external";
         }
-        return new Endpoint(getIp(globalNamespace, externalName), Integer.parseInt(getPort(globalNamespace, externalName)));
+        Endpoint endpoint = new Endpoint(getIp(globalNamespace, externalName), Integer.parseInt(getPort(globalNamespace, externalName)));
+        log.info("Minikube external endpoint - " + endpoint.toString());
+        return endpoint;
     }
 }

@@ -12,11 +12,8 @@ import io.enmasse.common.model.DefaultCustomResource;
 public class UserList extends AbstractList<User> {
 
     public static final String KIND = "MessagingUserList";
-    public static final String VERSION = "v1beta1";
-    public static final String GROUP = "user.enmasse.io";
-    public static final String API_VERSION = GROUP + "/" + VERSION;
 
     public UserList() {
-        super(KIND, API_VERSION);
+        super(KIND, UserCrd.API_VERSION);
     }
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -xe
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
@@ -9,7 +9,7 @@ TESTCASE=$3
 failure=0
 
 API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
-API_TOKEN=$(kubectl describe secret $(kubectl get secrets | grep ^default | cut -f1 -d ' ') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
+API_TOKEN=$(kubectl describe secret $(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
 
 export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
 export KUBERNETES_API_TOKEN=${KUBERNETES_API_TOKEN:-${API_TOKEN}}
@@ -23,8 +23,6 @@ SANITIZED_NAMESPACE=${KUBERNETES_NAMESPACE}
 SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//_/-}
 SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
 export KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
-
-kubectl exec -ti busybox -- nslookup kubernetes.default
 
 kubectl create namespace ${KUBERNETES_NAMESPACE}
 kubectl config set-context $(kubectl config current-context) --namespace=${KUBERNETES_NAMESPACE}
@@ -42,9 +40,12 @@ mkdir -p standard-authservice-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
-cp -r ${ENMASSE_DIR}/install/components/none-authservice/*.yaml ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice
-sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice/*.yaml
-kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse-with-standard-authservice
+sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
+kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse
+kubectl create -f ${ENMASSE_DIR}/install/components/none-authservice
+kubectl create -f ${ENMASSE_DIR}/install/components/standard-authservice
+kubectl create -f ${ENMASSE_DIR}/install/components/example-plans
+kubectl create -f ${ENMASSE_DIR}/install/components/example-roles
 
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
@@ -52,28 +53,32 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
-#start docker logging
-DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
-${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} > /dev/null 2> /dev/null &
-LOGS_PID=$!
-echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
+if [[ -z "$DISABLE_LOG_SYNC" ]]; then
+    #start docker logging
+    DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
+    ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} ${KUBERNETES_NAMESPACE} > /dev/null 2> /dev/null &
+    LOGS_PID=$!
+    echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
+fi
 
 wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
 #execute test
 if [[ "${TEST_PROFILE}" = "smoke" ]]; then
-    run_test "brokered.**.SmokeTest" systemtests-shared || failure=$(($failure + 1))
-    run_test "standard.**.SmokeTest" systemtests-shared || failure=$(($failure + 1))
+    run_test "**.SmokeTest" systemtests-shared-brokered || failure=$(($failure + 1))
+    run_test "**.SmokeTest" systemtests-shared-standard || failure=$(($failure + 1))
 else
     run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
 fi
 
 kubectl get events --all-namespaces
 
-#stop docker logging
-echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
-kill ${LOGS_PID}
-categorize_docker_logs "${DOCKER_LOG_DIR}" || true
+if [[ -z "$DISABLE_LOG_SYNC" ]]; then
+    #stop docker logging
+    echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
+    kill ${LOGS_PID} || true
+    categorize_docker_logs "${DOCKER_LOG_DIR}" || true
+fi
 
 #environment info
 get_kubernetes_info ${LOG_DIR} pv ${KUBERNETES_NAMESPACE}
@@ -81,6 +86,7 @@ get_kubernetes_info ${LOG_DIR} pods ${KUBERNETES_NAMESPACE}
 get_kubernetes_info ${LOG_DIR} services default "-after"
 get_kubernetes_info ${LOG_DIR} pods default "-after"
 get_kubernetes_info ${LOG_DIR} events ${KUBERNETES_NAMESPACE}
+print_images
 
 #store artifacts
 ${CURDIR}/collect_logs.sh ${TEST_LOGDIR} ${ARTIFACTS_DIR}

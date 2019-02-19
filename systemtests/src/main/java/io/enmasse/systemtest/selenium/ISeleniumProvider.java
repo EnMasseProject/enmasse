@@ -5,26 +5,24 @@
 package io.enmasse.systemtest.selenium;
 
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.resolvers.EnvironmentParameterResolver;
+import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.WebDriver;
 
-@ExtendWith(EnvironmentParameterResolver.class)
+@ExtendWith(ExtensionContextParameterResolver.class)
 public interface ISeleniumProvider {
     SeleniumProvider selenium = new SeleniumProvider();
 
     WebDriver buildDriver() throws Exception;
 
-    void restartSeleniumContainer() throws Exception;
-
     @AfterEach
-    default void tearDownWebConsoleTests(ExtensionContext context, Environment env) throws Exception {
-        if (context.getExecutionException().isPresent() || env.storeScreenshots()) {
+    default void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent() || Environment.getInstance().storeScreenshots()) {
             selenium.onFailed(context);
         }
         selenium.tearDownDrivers();
-        restartSeleniumContainer();
+        SeleniumManagement.restartSeleniumApp();
     }
 }

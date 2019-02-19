@@ -57,9 +57,9 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testColocatedTopics() throws Exception {
-        Destination t1 = Destination.topic("col-topic1", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
-        Destination t2 = Destination.topic("col-topic2", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
-        Destination t3 = Destination.topic("col-topic3", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
+        Destination t1 = Destination.topic("col-topic1", DestinationPlan.STANDARD_SMALL_TOPIC);
+        Destination t2 = Destination.topic("col-topic2", DestinationPlan.STANDARD_SMALL_TOPIC);
+        Destination t3 = Destination.topic("col-topic3", DestinationPlan.STANDARD_SMALL_TOPIC);
         setAddresses(t1, t2, t3);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -70,8 +70,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedTopic() throws Exception {
-        Destination t1 = Destination.topic("shardedTopic1", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination t2 = new Destination("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination t1 = Destination.topic("shardedTopic1", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Destination t2 = new Destination("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), DestinationPlan.STANDARD_LARGE_TOPIC);
         addressApiClient.createAddress(t2);
 
         appendAddresses(t1);
@@ -94,7 +94,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testMessageSelectorsAppProperty() throws Exception {
-        Destination selTopic = Destination.topic("selectorTopicAppProp", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination selTopic = Destination.topic("selectorTopicAppProp", DestinationPlan.STANDARD_LARGE_TOPIC);
         String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
 
@@ -197,7 +197,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testMessageSelectorsProperty() throws Exception {
-        Destination selTopic = Destination.topic("selectorTopicProp", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination selTopic = Destination.topic("selectorTopicProp", DestinationPlan.STANDARD_LARGE_TOPIC);
         String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
 
@@ -241,8 +241,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnPooledTopic() throws Exception {
-        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
-        Destination subscription = Destination.subscription("mysub", "mytopic", "standard-small-subscription");
+        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_SMALL_TOPIC);
+        Destination subscription = Destination.subscription("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         setAddresses(topic, subscription);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -268,9 +268,9 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnShardedTopic() throws Exception {
-        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-small-subscription");
-        Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-small-subscription");
+        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Destination subscription1 = Destination.subscription("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
+        Destination subscription2 = Destination.subscription("anothersub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         setAddresses(topic, subscription1, subscription2);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -303,8 +303,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnShardedTopic2() throws Exception {
-        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination subscription1 = Destination.subscription("mysub", "mytopic", "standard-small-subscription");
+        Destination topic = Destination.topic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Destination subscription1 = Destination.subscription("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         setAddresses(topic, subscription1);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -319,7 +319,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
 
         log.info("Creating second subscription");
-        Destination subscription2 = Destination.subscription("anothersub", "mytopic", "standard-small-subscription");
+        Destination subscription2 = Destination.subscription("anothersub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         appendAddresses(subscription2);
 
         log.info("Sending second batch");
@@ -338,27 +338,38 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     @Test
-    @Disabled("topic wildcards are not supported")
-    void testTopicWildcards() throws Exception {
-        Destination t1 = Destination.topic("topic/No1", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
-        Destination t2 = Destination.topic("topic/No2", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+    void testTopicWildcardsSharded() throws Exception {
+        doTopicWildcardTest(DestinationPlan.STANDARD_LARGE_TOPIC);
+    }
 
-        setAddresses(t1, t2);
+    @Test
+    void testTopicWildcardsPooled() throws Exception {
+        doTopicWildcardTest(DestinationPlan.STANDARD_SMALL_TOPIC);
+    }
+
+    private void doTopicWildcardTest(String plan) throws Exception {
+        Destination t0 = Destination.topic("topic", plan);
+        setAddresses(t0);
+
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
-        Thread.sleep(60_000);
 
-        Future<List<Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 2);
+        Future<List<Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 3);
 
-        List<Future<Integer>> sendResult = Arrays.asList(
-                amqpClient.sendMessages(t1.getAddress(), msgs),
-                amqpClient.sendMessages(t2.getAddress(), msgs));
+        amqpClient.sendMessages(t0.getAddress() + "/foo", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/bar", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/baz/foobar", msgs);
 
-        assertThat("Wrong count of messages sent: sender0",
-                sendResult.get(0).get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Wrong count of messages sent: sender1",
-                sendResult.get(1).get(1, TimeUnit.MINUTES), is(msgs.size()));
+        assertThat("Wrong count of messages received",
+                recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 3));
+
+        recvResults = amqpClient.recvMessages("topic/world/+", msgs.size() * 2);
+
+        amqpClient.sendMessages(t0.getAddress() + "/world/africa", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/europe", msgs);
+        amqpClient.sendMessages(t0.getAddress() + "/world/asia/maldives", msgs);
+
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
     }
@@ -366,7 +377,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("durable subscriptions are not supported")
     void testDurableLinkRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("lrtopic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination dest = Destination.topic("lrtopic", DestinationPlan.STANDARD_LARGE_TOPIC);
         String linkName = "systest-durable";
         setAddresses(dest);
         // scale(dest, 4);
@@ -415,7 +426,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("durable subscriptions are not supported")
     void testDurableMessageRoutedSubscription() throws Exception {
-        Destination dest = Destination.topic("mrtopic", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+        Destination dest = Destination.topic("mrtopic", DestinationPlan.STANDARD_LARGE_TOPIC);
         String address = "myaddress";
         log.info("Deploying");
         setAddresses(dest);

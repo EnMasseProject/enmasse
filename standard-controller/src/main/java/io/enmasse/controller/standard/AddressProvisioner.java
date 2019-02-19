@@ -65,9 +65,9 @@ public class AddressProvisioner {
         AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
 
         for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
-            if ("subscription".equals(address.getType())) {
+            if ("subscription".equals(address.getSpec().getType())) {
                 if (address.getStatus().getBrokerStatuses().isEmpty() && address.getAnnotation(AnnotationKeys.BROKER_ID) == null) {
-                    log.warn("Unexpected pooled address without cluster id: " + address.getAddress());
+                    log.warn("Unexpected pooled address without cluster id: " + address.getSpec().getAddress());
                     return;
                 }
                 String instanceId = address.getAnnotation(AnnotationKeys.BROKER_ID);
@@ -85,7 +85,7 @@ public class AddressProvisioner {
 
             } else if (resourceRequest.getName().equals("broker") && resourceRequest.getCredit() < 1) {
                 if (address.getStatus().getBrokerStatuses().isEmpty() && address.getAnnotation(AnnotationKeys.CLUSTER_ID) == null) {
-                    log.warn("Unexpected pooled address without cluster id: " + address.getAddress());
+                    log.warn("Unexpected pooled address without cluster id: " + address.getSpec().getAddress());
                     return;
                 }
                 if (!address.getStatus().getBrokerStatuses().isEmpty()) {
@@ -131,8 +131,8 @@ public class AddressProvisioner {
 
         while(!pendingSubscriptionsWithPendingTopics.isEmpty()) {
             Address address = pendingSubscriptionsWithPendingTopics.iterator().next();
-            Address topic = findAddress(address.getTopic().get(), all);
-            newUsageMap = addQuotaForAddress(new HashSet<Address>(Arrays.asList(topic)), all, newUsageMap, limits);
+            Address topic = findAddress(address.getSpec().getTopic(), all);
+            newUsageMap = addQuotaForAddress(new HashSet<>(Arrays.asList(topic)), all, newUsageMap, limits);
             pendingNonSubscriptions.remove(topic);
 
             Set<Address> subscriptionsWithNewlyConfiguredTopics = filterSubscriptionsWithConfiguredTopics(pendingSubscriptionsWithPendingTopics, all);
@@ -147,7 +147,7 @@ public class AddressProvisioner {
     private Map<String, Map<String, UsageInfo>> addQuotaForAddress(Set<Address> pending, Set<Address> all,
             Map<String, Map<String, UsageInfo>> newUsageMap, Map<String, Double> limits) {
         for (Address address : pending) {
-            if (!Status.Phase.Configuring.equals(address.getStatus().getPhase())) {
+            if (!Phase.Configuring.equals(address.getStatus().getPhase())) {
                 Status previousStatus = new Status(address.getStatus());
                 String previousBrokerId = address.getAnnotation(AnnotationKeys.BROKER_ID);
                 String previousClusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
@@ -155,8 +155,8 @@ public class AddressProvisioner {
                 Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address, all);
                 if (neededMap != null) {
                     newUsageMap = neededMap;
-                    address.getStatus().setPhase(Status.Phase.Configuring);
-                    address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getPlan());
+                    address.getStatus().setPhase(Phase.Configuring);
+                    address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getSpec().getPlan());
                 } else {
                     if (previousBrokerId != null) {
                         address.putAnnotation(AnnotationKeys.BROKER_ID, previousBrokerId);
@@ -173,17 +173,17 @@ public class AddressProvisioner {
 
     private Set<Address> filterSubscriptionsWithConfiguredTopics(Set<Address> addressSet, Set<Address> all) {
         return addressSet.stream()
-                .filter(address -> "subscription".equals(address.getType()) && Arrays.asList(Status.Phase.Configuring, Status.Phase.Active).contains(findAddress(address.getTopic().get(), all).getStatus().getPhase()))
+                .filter(address -> "subscription".equals(address.getSpec().getType()) && Arrays.asList(Phase.Configuring, Phase.Active).contains(findAddress(address.getSpec().getTopic(), all).getStatus().getPhase()))
                 .collect(Collectors.toSet());
     }
     private Set<Address> filterSubscriptionsWithPendingTopics(Set<Address> addressSet, Set<Address> all) {
         return addressSet.stream()
-                .filter(address -> "subscription".equals(address.getType()) && Arrays.asList(Status.Phase.Pending).contains(findAddress(address.getTopic().get(), all).getStatus().getPhase()))
+                .filter(address -> "subscription".equals(address.getSpec().getType()) && Arrays.asList(Phase.Pending).contains(findAddress(address.getSpec().getTopic(), all).getStatus().getPhase()))
                 .collect(Collectors.toSet());
     }
     private Set<Address> filterByNotType(Set<Address> addressSet, String type) {
         return addressSet.stream()
-                .filter(address -> !type.equals(address.getType()))
+                .filter(address -> !type.equals(address.getSpec().getType()))
                 .collect(Collectors.toSet());
     }
 
@@ -200,7 +200,7 @@ public class AddressProvisioner {
 
     private Address findAddress(String name, Set<Address> addressSet) {
         for (Address address : addressSet) {
-            if (name.equals(address.getAddress())) {
+            if (name.equals(address.getSpec().getAddress())) {
                 return address;
             }
         }
@@ -239,7 +239,7 @@ public class AddressProvisioner {
                 brokerStatus.setState(BrokerState.Active);
                 subscription.getStatus().setBrokerStatuses(Collections.singletonList(brokerStatus));
             } else {
-                log.info("no quota available on broker {} for {} on topic {}", cluster, subscription.getAddress(), topic.getAddress());
+                log.info("no quota available on broker {} for {} on topic {}", cluster, subscription.getSpec().getAddress(), topic.getSpec().getAddress());
             }
         } else {
             List<BrokerInfo> shardedBrokers = new ArrayList<>();
@@ -258,7 +258,7 @@ public class AddressProvisioner {
             }
             for (BrokerInfo brokerInfo : shardedBrokers) {
                 UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(brokerInfo.getBrokerId(), k -> new UsageInfo());
-                if (brokerInfo.getCredit() + requested.getCredit() < 1) {
+                if (brokerInfo.getCredit() + requested.getCredit() <= 1) {
                     // TODO: Remove after releasing 0.26.0
                     subscription.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
                     BrokerStatus brokerStatus = new BrokerStatus(cluster, brokerInfo.getBrokerId());
@@ -274,7 +274,7 @@ public class AddressProvisioner {
 
     private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address, Set<Address> addressSet) {
         AddressType addressType = addressResolver.getType(address);
-        AddressPlan addressPlan = addressResolver.getPlan(addressType, address.getPlan());
+        AddressPlan addressPlan = addressResolver.getPlan(addressType, address.getSpec().getPlan());
 
         Map<String, Map<String, UsageInfo>> needed = copyUsageMap(usage);
 
@@ -285,16 +285,16 @@ public class AddressProvisioner {
                 UsageInfo info = resourceUsage.computeIfAbsent("all", k -> new UsageInfo());
                 info.addUsed(resourceRequest.getCredit());
             } else if ("broker".equals(resourceName)) {
-                if ("subscription".equals(address.getType())) {
+                if ("subscription".equals(address.getSpec().getType())) {
                     Map<String, UsageInfo> subscriptionUsage = needed.computeIfAbsent("subscription", k -> new HashMap<>());
-                    if (address.getTopic().isPresent()) {
-                        Address topic = findAddress(address.getTopic().get(), addressSet);
+                    if (address.getSpec().getTopic() != null ) {
+                        Address topic = findAddress(address.getSpec().getTopic(), addressSet);
                         if (!scheduleSubscription(address, topic, resourceUsage, subscriptionUsage, resourceRequest)) {
                             log.warn("Unable to find broker for scheduling subscription: {}", address);
                             return null;
                         }
                     } else {
-                        log.warn("No topic specified for subscription {}", address.getAddress());
+                        log.warn("No topic specified for subscription {}", address.getSpec().getAddress());
                     }
                 } else if (resourceRequest.getCredit() < 1) {
                     boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getCredit());
@@ -318,12 +318,12 @@ public class AddressProvisioner {
                     address.putAnnotation(AnnotationKeys.CLUSTER_ID, clusterId);
 	                List<BrokerInfo> brokers = new ArrayList<>();
                     for (String host : resourceUsage.keySet()) {
-                        if (host.startsWith(address.getAddress())) {
+                        if (host.startsWith(address.getSpec().getAddress())) {
                             brokers.add(new BrokerInfo(host, resourceUsage.get(host).getUsed()));
                         }
                     }
 
-                    BrokerStatus brokerStatus = new BrokerStatus(clusterId, address.getAddress());
+                    BrokerStatus brokerStatus = new BrokerStatus(clusterId, address.getSpec().getAddress());
                     brokerStatus.setState(BrokerState.Active);
 
                     updateBrokerStatus(address, Collections.singletonList(brokerStatus));
@@ -336,7 +336,7 @@ public class AddressProvisioner {
                             used.addUsed(resourceRequest.getCredit());
                             break;
                         } else {
-                            log.warn("not enough credit on {} for {} ",brokerInfo.getBrokerId(), address.getAddress() );
+                            log.warn("not enough credit on {} for {} ",brokerInfo.getBrokerId(), address.getSpec().getAddress() );
                         }
                     }
                 }
@@ -346,17 +346,17 @@ public class AddressProvisioner {
 
             double resourceNeeded = sumNeeded(resourceUsage);
             if (resourceNeeded > limits.get(resourceName)) {
-                log.info("address {} for {} needed {} > limit {}", address.getAddress(), resourceName, resourceNeeded, limits.get(resourceRequest.getName()));
+                log.info("address {} for {} needed {} > limit {}", address.getSpec().getAddress(), resourceName, resourceNeeded, limits.get(resourceRequest.getName()));
                 address.getStatus().appendMessage("Quota exceeded");
                 return null;
             }
         }
 
-        log.debug("address: {}, usage {}, needed: {}, aggregate: {}", address.getAddress(), usage, needed, limits);
+        log.debug("address: {}, usage {}, needed: {}, aggregate: {}", address.getSpec().getAddress(), usage, needed, limits);
 
         double totalNeeded = sumTotalNeeded(needed);
         if (totalNeeded > limits.get("aggregate")) {
-            log.info("address {} usage {}, total needed {} > limit {}", address.getAddress(), usage, totalNeeded, limits.get("aggregate"));
+            log.info("address {} usage {}, total needed {} > limit {}", address.getSpec().getAddress(), usage, totalNeeded, limits.get("aggregate"));
             address.getStatus().appendMessage("Quota exceeded");
             return null;
         }
@@ -364,7 +364,7 @@ public class AddressProvisioner {
     }
 
     static boolean hasPlansChanged(Address address) {
-        return !address.getPlan().equals(address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        return !address.getSpec().getPlan().equals(address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     static int sumTotalNeeded(Map<String, Map<String, UsageInfo>> usageMap) {
@@ -426,9 +426,9 @@ public class AddressProvisioner {
         }
 
         CRC32 crc32 = new CRC32();
-        crc32.update(address.getNamespace().getBytes());
-        crc32.update(address.getAddressSpace().getBytes());
-        crc32.update(address.getAddress().getBytes());
+        crc32.update(address.getMetadata().getNamespace().getBytes());
+        crc32.update(Address.extractAddressSpace(address).getBytes());
+        crc32.update(address.getSpec().getAddress().getBytes());
         return "broker-sharded-" + Long.toHexString(crc32.getValue()) + "-" + infraUuid;
     }
 
@@ -444,7 +444,7 @@ public class AddressProvisioner {
 
         Map<String, Address> addressByClusterId = new HashMap<>();
         for (Address address : addressSet) {
-            if (!"subscription".equals(address.getType())) {
+            if (!"subscription".equals(address.getSpec().getType())) {
                 addressByClusterId.putIfAbsent(address.getAnnotation(AnnotationKeys.CLUSTER_ID), address);
             }
         }
@@ -475,7 +475,7 @@ public class AddressProvisioner {
 
                 for (Map.Entry<String, Integer> brokerIdEntry : shardedBrokers.entrySet()) {
                     Address address = addressByClusterId.get(brokerIdEntry.getKey());
-                    if ("subscription".equals(address.getType())) {
+                    if ("subscription".equals(address.getSpec().getType())) {
                         break;
                     }
                     AddressType addressType = addressResolver.getType(address);
@@ -556,7 +556,7 @@ public class AddressProvisioner {
         } catch (Exception e) {
             log.warn("Error creating broker", e);
             eventLogger.log(BrokerCreateFailed, "Error creating broker: " + e.getMessage(), Warning, Broker, clusterId);
-            address.getStatus().setPhase(Status.Phase.Failed);
+            address.getStatus().setPhase(Phase.Failed);
             address.getStatus().appendMessage("Error creating broker: " + e.getMessage());
         }
     }

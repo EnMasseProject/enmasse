@@ -5,9 +5,9 @@
 
 package io.enmasse.api.server;
 
-import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
@@ -18,9 +18,12 @@ import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpClientResponse;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.Checkpoint;
@@ -36,6 +39,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.time.Clock;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -89,12 +93,13 @@ public class HTTPServerTest {
                         .build())
                 .build());
         when(userApi.listUsers(any())).thenReturn(users);
+        when(userApi.listAllUsers()).thenReturn(users);
 
         ApiServerOptions options = new ApiServerOptions();
         options.setVersion("1.0");
         options.setCertDir("/doesnotexist");
 
-        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC(), 0, 0);
+        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC(), host -> true,0, 0);
         vertx.deployVerticle(this.server, context.succeeding(arg -> context.completeNow()));
     }
 
@@ -108,16 +113,26 @@ public class HTTPServerTest {
     }
 
     private AddressSpace createAddressSpace(String namespace, String name) {
-        return new AddressSpace.Builder()
-                .setName(name)
-                .setNamespace(namespace)
-                .setType("type1")
-                .setPlan("myplan")
-                .setStatus(new io.enmasse.address.model.AddressSpaceStatus(false))
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("foo")
-                        .setService("messaging")
-                        .build())
+        return new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+
+                .addNewEndpoint()
+                        .withName("foo")
+                        .withService("messaging")
+                        .endEndpoint()
+
+                .endSpec()
+
+                .withNewStatus(false)
+
                 .build();
     }
 
@@ -125,13 +140,18 @@ public class HTTPServerTest {
     @MethodSource("apiVersions")
     public void testAddressApi(String apiVersion, VertxTestContext context) throws Throwable {
         addressSpaceApi.withAddressSpace(addressSpace).createAddress(
-                new Address.Builder()
-                        .setAddressSpace("myinstance")
-                        .setName("myinstance.addr1")
-                        .setAddress("addR1")
-                        .setNamespace("ns")
-                        .setType("queue")
-                        .setPlan("myplan")
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withName("myinstance.addr1")
+                        .withNamespace("ns")
+                        .endMetadata()
+
+                        .withNewSpec()
+                        .withAddress("addR1")
+                        .withType("queue")
+                        .withPlan("myplan")
+                        .endSpec()
+
                         .build());
 
         final Checkpoint checkpoint = context.checkpoint(4);
@@ -153,7 +173,9 @@ public class HTTPServerTest {
                         context.verify(() -> {
                             assertTrue(data.containsKey("items"));
                             assertEquals(1, data.getJsonArray("items").size());
-                            assertEquals("myinstance.addr1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+                            JsonObject object = data.getJsonArray("items").getJsonObject(0);
+                            assertEquals("myinstance.addr1", object.getJsonObject("metadata").getString("name"));
+                            assertEquals("addR1", object.getJsonObject("spec").getString("address"));
                         });
                         checkpoint.flag();
                     });
@@ -174,6 +196,7 @@ public class HTTPServerTest {
                         context.verify(() -> {
                             assertTrue(data.containsKey("metadata"));
                             assertEquals("myinstance.addr1", data.getJsonObject("metadata").getString("name"));
+                            assertEquals("addR1", data.getJsonObject("spec").getString("address"));
                         });
                         checkpoint.flag();
                     });
@@ -245,8 +268,8 @@ public class HTTPServerTest {
         } finally {
             client.close();
         }
-
     }
+
     private static HttpClientRequest putAuthzToken(HttpClientRequest request) {
         request.putHeader("Authorization", "Bearer mytoken");
         return request;
@@ -256,6 +279,41 @@ public class HTTPServerTest {
     @MethodSource("apiVersions")
     public void testApiResources(String apiVersion, VertxTestContext context) throws Throwable {
 
+    private void runSingleRequest(final VertxTestContext context, final String apiVersion, final HttpMethod method, final String uri, final JsonObject payload, final BiConsumer<HttpClientResponse, Buffer> responseConsumer) throws Throwable {
+        final HttpClient client = vertx.createHttpClient();
+
+        try {
+
+            HttpClientRequest req = client.request(method, port(), "localhost", uri, response -> {
+                response.bodyHandler(buffer -> {
+                    responseConsumer.accept(response, buffer);
+                    if(!context.completed()) {
+                        context.completeNow();
+                    }
+                });
+            });
+            req.putHeader("Content-Type", "application/json");
+            putAuthzToken(req);
+
+            if ( payload != null ) {
+                req.end(payload.toBuffer());
+            } else {
+                req.end();
+            }
+
+            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
+            if (context.failed()) {
+                throw context.causeOfFailure();
+            }
+
+        } finally {
+            client.close();
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testApiResources(String apiVersion, VertxTestContext context) throws Throwable {
         final Checkpoint checkpoint = context.checkpoint(2);
         HttpClient client = vertx.createHttpClient();
 
@@ -315,62 +373,45 @@ public class HTTPServerTest {
     @ParameterizedTest
     @MethodSource("apiVersions")
     public void testSchemaApi(String apiVersion, VertxTestContext context) throws Throwable {
-        HttpClient client = vertx.createHttpClient();
-        try {
-            {
-                HttpClientRequest request = client.get(port(), "localhost", "/apis/enmasse.io/" + apiVersion + "/namespaces/myinstance/addressspaceschemas", response -> {
-                    context.verify(() -> assertEquals(200, response.statusCode()));
-                    response.bodyHandler(buffer -> {
-                        JsonObject data = buffer.toJsonObject();
-                        System.out.println(data.toString());
-                        context.verify(() -> {
-                            assertTrue(data.containsKey("items"));
-                            assertEquals(1, data.getJsonArray("items").size());
-                        });
-                        context.completeNow();
-                    });
-                });
-                putAuthzToken(request);
-                request.end();
-            }
-
-            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
-            if (context.failed()) {
-              throw context.causeOfFailure();
-            }
-        } finally {
-            client.close();
-        }
+        runSingleRequest(context, apiVersion, HttpMethod.GET, "/apis/enmasse.io/" + apiVersion + "/namespaces/myinstance/addressspaceschemas", null, (response, buffer) -> {
+            context.verify(() -> {
+                assertEquals(200, response.statusCode());
+                JsonObject data = buffer.toJsonObject();
+                System.out.println(data.toString());
+                assertTrue(data.containsKey("items"));
+                assertEquals(1, data.getJsonArray("items").size());
+            });
+        });
     }
 
     @ParameterizedTest
     @MethodSource("apiVersions")
     public void testUserApi(String apiVersion, VertxTestContext context) throws Throwable {
-        HttpClient client = vertx.createHttpClient();
-        try {
-            {
-                HttpClientRequest r1 = client.get(port(), "localhost", "/apis/user.enmasse.io/" + apiVersion + "/namespaces/ns/messagingusers", response -> {
-                    context.verify(() -> assertEquals(200, response.statusCode()));
-                    response.bodyHandler(buffer -> {
-                        JsonObject data = buffer.toJsonObject();
-                        context.verify(() -> {
-                            assertTrue(data.containsKey("items"));
-                            assertEquals("myinstance.user1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
-                        });
-                        context.completeNow();
-                    });
-                });
-                putAuthzToken(r1);
-                r1.end();
-            }
+        runSingleRequest(context, apiVersion, HttpMethod.GET,  "/apis/user.enmasse.io/" + apiVersion + "/namespaces/ns/messagingusers", null, (response, buffer) -> {
+            context.verify(() -> {
+                assertEquals(200, response.statusCode());
+                JsonObject data = buffer.toJsonObject();
+                assertTrue(data.containsKey("items"));
+                assertEquals(1, data.getJsonArray("items").size());
+                assertEquals("myinstance.user1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+            });
+        });
+    }
 
-            assertTrue(context.awaitCompletion(60, TimeUnit.SECONDS));
-            if (context.failed()) {
-              throw context.causeOfFailure();
-            }
-        } finally {
-            client.close();
-        }
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testUserApiNonNamespaces(String apiVersion, VertxTestContext context) throws Throwable {
+
+        runSingleRequest(context, apiVersion, HttpMethod.GET,  "/apis/user.enmasse.io/" + apiVersion + "/messagingusers", null, (response, buffer) -> {
+            context.verify(() -> {
+                assertEquals(200, response.statusCode());
+                JsonObject data = buffer.toJsonObject();
+                assertTrue(data.containsKey("items"));
+                assertEquals(1, data.getJsonArray("items").size());
+                assertEquals("myinstance.user1", data.getJsonArray("items").getJsonObject(0).getJsonObject("metadata").getString("name"));
+            });
+        });
+
     }
 
     @ParameterizedTest
@@ -479,6 +520,113 @@ public class HTTPServerTest {
         } finally {
             client.close();
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressSingle(String apiVersion, VertxTestContext context) throws Throwable {
+
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("metadata", new JsonObject()
+                        .put("name", "myinstance.single1"))
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
+
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(201, response.statusCode()));
+        });
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressOptionalName(String apiVersion, VertxTestContext context) throws Throwable {
+
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
+
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(201, response.statusCode()));
+        });
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressInvalidRequest1(String apiVersion, VertxTestContext context) throws Throwable {
+
+        // create an address which has a different address space in its name than in its spec section
+
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("metadata", new JsonObject()
+                        .put("name", "other.single1"))
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("addressSpace", "myinstance")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
+
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(400, response.statusCode()));
+        });
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressInvalidRequest2(String apiVersion, VertxTestContext context) throws Throwable {
+
+        // create an address which has a different address space in its URI than in its spec section
+
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "Address")
+                .put("spec", new JsonObject()
+                        .put("address", "single1")
+                        .put("addressSpace", "other")
+                        .put("type", "queue")
+                        .put("plan", "plan1"));
+
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(400, response.statusCode()));
+        });
+
+    }
+
+    @ParameterizedTest
+    @MethodSource("apiVersions")
+    public void testCreateAddressList(String apiVersion, VertxTestContext context) throws Throwable {
+
+        final JsonObject payload = new JsonObject()
+                .put("apiVersion", "enmasse.io/" + apiVersion)
+                .put("kind", "AddressList")
+                .put("items", new JsonArray()
+                        .add(new JsonObject()
+                                .put("apiVersion", "enmasse.io/" + apiVersion)
+                                .put("kind", "Address")
+                                .put("metadata", new JsonObject()
+                                        .put("name", "myinstance.single1"))
+                                .put("spec", new JsonObject()
+                                        .put("address", "single1")
+                                        .put("type", "queue")
+                                        .put("plan", "plan1"))));
+
+
+        runSingleRequest(context, apiVersion, HttpMethod.POST, "/apis/enmasse.io/" + apiVersion + "/namespaces/ns/addressspaces/myinstance/addresses", payload, (response, buffer) -> {
+            context.verify(() -> assertEquals(201, response.statusCode()));
+        });
+
     }
 
     @Test

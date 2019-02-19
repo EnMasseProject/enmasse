@@ -5,7 +5,7 @@ source ${CURDIR}/common.sh
 
 PULL_REQUEST=${PULL_REQUEST:-true}
 BRANCH=${BRANCH:-master}
-VERSION=`cat release.version`
+VERSION=$(grep "release.version" pom.properties| cut -d'=' -f2)
 TAG=${TAG:-latest}
 DOCKER_ORG=${DOCKER_ORG:-$USER}
 SYSTEMTEST_ARGS=${SYSTEMTEST_ARGS:-"io.enmasse.**.SmokeTest"}
@@ -26,18 +26,25 @@ make
 make docu_html
 
 echo "Tagging Docker Images"
-make docker_tag
+if use_external_registry
+then
+    make docker_tag
+    make TAG=${VERSION} docker_tag
+else
+    make docker_tag
+fi
 
 if use_external_registry
 then
     echo "Logging in to Docker Hub"
-    docker login -u $DOCKER_USER -p $DOCKER_PASS
+    docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+    echo "Pushing images to Docker Hub"
+    make docker_push
+    make TAG=${VERSION} docker_push
 else
-    echo "Using local registry"
+    echo "Pushing images to Local Docker Registry"
+    make docker_push
 fi
-
-echo "Pushing images to Docker Registry"
-make docker_push
 
 echo "Running systemtests"
 ./systemtests/scripts/run_test_kubernetes.sh templates/build/enmasse-${TAG} ${SYSTEMTEST_PROFILE} ${SYSTEMTEST_ARGS}

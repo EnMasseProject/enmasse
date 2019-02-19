@@ -87,7 +87,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.createAddressWebConsole(dest);
 
             //create subscription
-            Destination subscription = Destination.subscription(dest.getAddress() + "-subscriber", dest.getAddress(), "standard-small-subscription");
+            Destination subscription = Destination.subscription(dest.getAddress() + "-subscriber", dest.getAddress(), DestinationPlan.STANDARD_LARGE_SUBSCRIPTION);
             consoleWebPage.createAddressWebConsole(subscription);
             assertWaitForValue(2, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(120, TimeUnit.SECONDS));
 
@@ -647,11 +647,18 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestViewAddresses() throws Exception {
-        Destination allowedDestination = Destination.queue("test-view-queue", getDefaultPlan(AddressType.QUEUE));
-        Destination notAllowedDestination = Destination.queue("test-not-view-queue", getDefaultPlan(AddressType.QUEUE));
+        Destination dest = Destination.queue("test-view-queue", getDefaultPlan(AddressType.QUEUE));
         UserCredentials viewUser = new UserCredentials("view-user-addresses", "viewPa55");
 
-        prepareViewItemTest(viewUser, allowedDestination, notAllowedDestination);
+        createUser(sharedAddressSpace, new User().setUserCredentials(viewUser)
+                .addAuthorization(new User.AuthorizationRule().addOperation(User.Operation.VIEW))
+                .addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.SEND)));
+
+        setAddresses(dest);
+
+        consoleWebPage = new ConsoleWebPage(selenium,
+                getConsoleRoute(sharedAddressSpace),
+                addressApiClient, sharedAddressSpace, viewUser);
 
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
@@ -662,7 +669,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
         assertThat(String.format("Console failed, does not contain %d addresses", 1),
                 consoleWebPage.getAddressItems().size(), is(1));
-        assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", viewUser),
+        assertViewOnlyUsersAddresses(String.format("Console failed, user %s does not see addresses", viewUser),
                 "view_test-view-queue", consoleWebPage.getAddressItems());
     }
 
@@ -901,22 +908,5 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         for (ConnectionWebItem conn : connections) {
             assertEquals(conn.getUser(), username, message);
         }
-    }
-
-    private void prepareViewItemTest(UserCredentials monitorUser, Destination allowedAddress,
-                                     Destination noAllowedAddress) throws Exception {
-        prepareAddress(allowedAddress, noAllowedAddress);
-
-        createUser(sharedAddressSpace, new User().setUserCredentials(monitorUser)
-                .addAuthorization(new User.AuthorizationRule().addAddress(allowedAddress.getAddress()).addOperation(User.Operation.VIEW))
-                .addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.SEND)));
-
-        consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(sharedAddressSpace),
-                addressApiClient, sharedAddressSpace, monitorUser);
-    }
-
-    private void prepareAddress(Destination... dest) throws Exception {
-        setAddresses(Arrays.stream(dest).filter(Objects::nonNull).toArray(Destination[]::new));
     }
 }

@@ -1,0 +1,22 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: iot-http-adapter
+  labels:
+    app: iot-http-adapter
+    deploymentconfig: iot-http-adapter
+    enmasse-component: iot
+  annotations:
+    service.alpha.openshift.io/serving-cert-secret-name: iot-http-adapter-tls
+spec:
+  ports:
+    - name: https
+      port: 8443
+      targetPort: 8443
+      protocol: TCP
+    - name: actuator
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: iot-http-adapter
+    deploymentconfig: iot-http-adapter

@@ -4,20 +4,70 @@
  */
 package io.enmasse.address.model;
 
-public class AddressSpaceSchema {
-    private final AddressSpaceType addressSpaceType;
-    private final String creationTimestamp;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
-    public AddressSpaceSchema(AddressSpaceType addressSpaceType, String creationTimestamp) {
-        this.addressSpaceType = addressSpaceType;
-        this.creationTimestamp = creationTimestamp;
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.common.model.DefaultCustomResource;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@DefaultCustomResource
+@SuppressWarnings("serial")
+public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> {
+
+    public static final String KIND = "AddressSpaceSchema";
+
+    @NotNull @Valid
+    private AddressSpaceSchemaSpec spec;
+
+    public AddressSpaceSchema() {
+        super(KIND, CoreCrd.API_VERSION);
     }
 
-    public AddressSpaceType getAddressSpaceType() {
-        return addressSpaceType;
+    public void setSpec(final AddressSpaceSchemaSpec spec) {
+        this.spec = spec;
     }
 
-    public String getCreationTimestamp() {
-        return creationTimestamp;
+    public AddressSpaceSchemaSpec getSpec() {
+        return this.spec;
+    }
+
+    public static AddressSpaceSchema fromAddressSpaceType(final String creationTimestamp, final AddressSpaceType addressSpaceType) {
+        if (addressSpaceType == null) {
+            return null;
+        }
+
+        return new AddressSpaceSchemaBuilder()
+                .withNewMetadata()
+                .withName(addressSpaceType.getName())
+                .withCreationTimestamp(creationTimestamp)
+                .endMetadata()
+
+                .withSpec(AddressSpaceSchemaSpec.fromAddressSpaceType(addressSpaceType))
+
+                .build();
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("{");
+        sb.append("metadata=").append(getMetadata());
+        sb.append(",");
+        sb.append("spec=").append(this.spec);
+        return sb.append("}").toString();
     }
 }

@@ -9,9 +9,9 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -39,7 +38,6 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
-        Thread.sleep(30000); //sleep before run test (until geckodriver will be fixed)
         selenium.setupDriver(environment, kubernetes, buildDriver());
         plansProvider.setUp();
     }
@@ -59,14 +57,14 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
      */
     protected void doTestCreateAddressPlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue1 = Collections.singletonList(new AddressResource("broker", 0.15));
+        List<AddressResource> addressResourcesQueue1 = Arrays.asList(new AddressResource("broker", 0.15), new AddressResource("router", 0.0));
         List<AddressResource> addressResourcesTopic2 = Arrays.asList(
                 new AddressResource("broker", 0.3),
                 new AddressResource("router", 0.2));
-        List<AddressResource> addressResourcesQueue3 = Collections.singletonList(new AddressResource("broker", 0.25));
-        AddressPlan consoleQueuePlan1 = new AddressPlan("console-queue-1", AddressType.QUEUE, addressResourcesQueue1);
-        AddressPlan consoleTopicPlan2 = new AddressPlan("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
-        AddressPlan consoleQueuePlan3 = new AddressPlan("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
+        List<AddressResource> addressResourcesQueue3 = Arrays.asList(new AddressResource("broker", 0.25), new AddressResource("router", 0.0));
+        AddressPlanDefinition consoleQueuePlan1 = new AddressPlanDefinition("console-queue-1", AddressType.QUEUE, addressResourcesQueue1);
+        AddressPlanDefinition consoleTopicPlan2 = new AddressPlanDefinition("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
+        AddressPlanDefinition consoleQueuePlan3 = new AddressPlanDefinition("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
 
         plansProvider.createAddressPlan(consoleQueuePlan1);
         plansProvider.createAddressPlan(consoleTopicPlan2);
@@ -77,8 +75,8 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
                 new AddressSpaceResource("broker", 3.0),
                 new AddressSpaceResource("router", 5.0),
                 new AddressSpaceResource("aggregate", 8.0));
-        List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
-        AddressSpacePlan consolePlan = new AddressSpacePlan("console-plan",
+        List<AddressPlanDefinition> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
+        AddressSpacePlanDefinition consolePlan = new AddressSpacePlanDefinition("console-plan",
                 "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(consolePlan);
 

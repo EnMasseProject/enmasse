@@ -1,0 +1,7 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: iot-tenant-service
+  labels:
+    app: iot-registry
+    enmasse-component: iot

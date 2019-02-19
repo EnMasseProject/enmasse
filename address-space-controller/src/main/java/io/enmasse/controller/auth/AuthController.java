@@ -42,17 +42,17 @@ public class AuthController implements Controller {
     }
 
     public void issueExternalCertificates(AddressSpace addressSpace) {
-        List<EndpointSpec> endpoints = addressSpace.getEndpoints();
+        List<EndpointSpec> endpoints = addressSpace.getSpec().getEndpoints();
         if (endpoints != null) {
             Map<String, EndpointSpec> endpointSpecMap = new HashMap<>();
             Map<String, EndpointInfo> endpointInfoMap = new HashMap<>();
 
             for (EndpointSpec endpoint : endpoints) {
                 endpointSpecMap.put(endpoint.getName(), endpoint);
-                if (endpoint.getCertSpec().isPresent()) {
+                if (endpoint.getCert() != null) {
                     EndpointInfo info = endpointInfoMap.get(endpoint.getService());
                     if (info == null) {
-                        info = new EndpointInfo(endpoint.getService(), endpoint.getCertSpec().get());
+                        info = new EndpointInfo(endpoint.getService(), endpoint.getCert());
                         endpointInfoMap.put(endpoint.getService(), info);
                     }
                 }
@@ -89,15 +89,15 @@ public class AuthController implements Controller {
                 String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
                 Map<String, String> labels = new HashMap<>();
                 labels.put(LabelKeys.INFRA_UUID, infraUuid);
-                labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+                labels.put(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType());
                 secret = certManager.createSelfSignedCertSecret(addressSpaceCaSecretName, labels);
                 //put crt into address space
-                eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getName());
+                eventLogger.log(CertCreated, "Created address space CA", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             }
             return secret;
         } catch (Exception e) {
             log.warn("Error issuing addressspace ca certificate", e);
-            eventLogger.log(CertCreateFailed, "Error creating certificate: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getName());
+            eventLogger.log(CertCreateFailed, "Error creating certificate: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             return null;
         }
     }
@@ -107,7 +107,7 @@ public class AuthController implements Controller {
             Map<String, String> labels = new HashMap<>();
             String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
             labels.put(LabelKeys.INFRA_UUID, infraUuid);
-            labels.put(LabelKeys.INFRA_TYPE, addressSpace.getType());
+            labels.put(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType());
             List<Cert> certs = certManager.listComponents(infraUuid).stream()
                     .filter(component -> !certManager.certExists(component))
                     .map(certManager::createCsr)
@@ -118,11 +118,11 @@ public class AuthController implements Controller {
                     .collect(Collectors.toList());
 
             if (!certs.isEmpty()) {
-                eventLogger.log(CertCreated, "Created component certificates", Normal, ControllerKind.AddressSpace, addressSpace.getName());
+                eventLogger.log(CertCreated, "Created component certificates", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             }
         } catch (Exception e) {
             log.warn("Error issuing component certificates", e);
-            eventLogger.log(CertCreateFailed, "Error creating component certificates: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getName());
+            eventLogger.log(CertCreateFailed, "Error creating component certificates: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
         }
     }
 

@@ -30,9 +30,9 @@ class RouterStatus {
 
     public int checkAddress(Address address) {
         int ok = 0;
-        boolean found = addresses.contains(address.getAddress());
+        boolean found = addresses.contains(address.getSpec().getAddress());
         if (!found) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " not found on " + routerId);
+            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " not found on " + routerId);
         } else {
             ok++;
         }
@@ -45,13 +45,13 @@ class RouterStatus {
         for (List<String> autoLink : autoLinks) {
             String addr = autoLink.get(0);
 
-            if (addr.equals(address.getAddress())) {
+            if (addr.equals(address.getSpec().getAddress())) {
                 ok++;
             }
         }
 
         if (ok < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing autoLinks on " + routerId);
+            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing autoLinks on " + routerId);
         }
 
         return ok;
@@ -64,13 +64,13 @@ class RouterStatus {
             String prefix = linkRoute.get(0);
 
             // Pooled topics have active link routes
-            if (prefix.equals(address.getAddress())) {
+            if (prefix.equals(address.getSpec().getAddress())) {
                 ok++;
             }
         }
 
         if (ok < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing linkRoutes on " + routerId);
+            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing linkRoutes on " + routerId);
         }
 
         return ok;
@@ -87,14 +87,14 @@ class RouterStatus {
                 String dir = autoLink.get(2);
                 String operStatus = autoLink.get(3);
 
-                if (addr.equals(address.getAddress()) && operStatus.equals("active")) {
+                if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
                     active.add(dir);
                 }
             }
         }
 
         if (active.size() < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing active autoLink (active in dirs: " + active + ")");
+            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing active autoLink (active in dirs: " + active + ")");
         } else {
             ok++;
         }
@@ -109,18 +109,19 @@ class RouterStatus {
 
             for (List<String> linkRoute : routerStatus.linkRoutes) {
                 String addr = linkRoute.get(0);
+                @SuppressWarnings("unused")
                 String containerId = linkRoute.get(1);
                 String dir = linkRoute.get(2);
                 String operStatus = linkRoute.get(3);
 
-                if (addr.equals(address.getAddress()) && operStatus.equals("active")) {
+                if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
                     active.add(dir);
                 }
             }
         }
 
         if (active.size() < 2) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing active linkRoute (active in dirs: " + active + ")");
+            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing active linkRoute (active in dirs: " + active + ")");
         } else {
             ok++;
         }
@@ -139,7 +140,7 @@ class RouterStatus {
         }
 
         if (ok == 0) {
-            address.getStatus().setReady(false).appendMessage("Address " + address.getAddress() + " is missing connection from broker");
+            address.getStatus().setReady(false).appendMessage("Address " + address.getSpec().getAddress() + " is missing connection from broker");
         }
         return ok;
     }

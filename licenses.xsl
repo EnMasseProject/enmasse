@@ -88,16 +88,8 @@
             </td>
             <td>
                 <xsl:for-each select="licenses/license">
-                    <xsl:variable name="filename">
-                        <xsl:call-template name="remap-local-filename">
-                            <xsl:with-param name="groupId" select="../../groupId"/>
-                            <xsl:with-param name="artifactId" select="../../artifactId"/>
-                            <xsl:with-param name="name" select="name"/>
-                            <xsl:with-param name="url" select="url"/>
-                        </xsl:call-template>
-                    </xsl:variable>
-                    <a href="{$filename}">
-                        <xsl:value-of select="$filename"/>
+                    <a href="{file}">
+                        <xsl:value-of select="file"/>
                     </a>
                     <br/>
                 </xsl:for-each>

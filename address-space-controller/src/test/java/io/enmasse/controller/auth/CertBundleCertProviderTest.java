@@ -5,7 +5,11 @@
 package io.enmasse.controller.auth;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.CertSpecBuilder;
+import io.enmasse.k8s.util.JULInitializingTest;
+import io.enmasse.model.validation.DefaultValidator;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
@@ -17,7 +21,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class CertBundleCertProviderTest {
+import javax.validation.ValidationException;
+
+public class CertBundleCertProviderTest extends JULInitializingTest {
 
     public OpenShiftServer server = new OpenShiftServer(true, true);
 
@@ -40,15 +46,20 @@ public class CertBundleCertProviderTest {
     @Test
     public void testProvideCertNoService() {
 
-        AddressSpace space = new AddressSpace.Builder()
-                .setName("myspace")
-                .setPlan("myplan")
-                .setType("standard")
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withPlan("myplan")
+                .withType("standard")
+                .endSpec()
                 .build();
 
-        CertSpec spec = new CertSpec.Builder()
-                .setProvider("certBundle")
-                .setSecretName("mycerts")
+        CertSpec spec = new CertSpecBuilder()
+                .withProvider("certBundle")
+                .withSecretName("mycerts")
                 .build();
 
         certProvider.provideCert(space, new EndpointInfo("messaging", spec));
@@ -59,20 +70,25 @@ public class CertBundleCertProviderTest {
 
     @Test
     public void testProvideCert() {
-        AddressSpace space = new AddressSpace.Builder()
-                .setName("myspace")
-                .setPlan("myplan")
-                .setType("standard")
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withPlan("myplan")
+                .withType("standard")
+                .endSpec()
                 .build();
 
-        CertSpec spec = new CertSpec.Builder()
-                .setProvider("certBundle")
-                .setSecretName("mycerts")
-                .setTlsKey("aGVsbG8=")
-                .setTlsCert("d29ybGQ=")
+        CertSpec spec = new CertSpecBuilder()
+                .withProvider("certBundle")
+                .withSecretName("mycerts")
+                .withTlsKey("aGVsbG8=")
+                .withTlsCert("d29ybGQ=")
                 .build();
 
-        space.validate();
+        DefaultValidator.validate(space);
 
         certProvider.provideCert(space, new EndpointInfo("messaging", spec));
 
@@ -84,23 +100,23 @@ public class CertBundleCertProviderTest {
 
     @Test
     public void testValidateBadKey() {
-        assertThrows(IllegalArgumentException.class, () -> new CertSpec.Builder()
-                .setProvider("certBundle")
-                .setSecretName("mycerts")
-                .setTlsKey("/%^$lkg")
-                .setTlsCert("d29ybGQ=")
-                .build()
-                .validate());
+        assertThrows(ValidationException.class, () -> DefaultValidator.validate(
+                new CertSpecBuilder()
+                        .withProvider("certBundle")
+                        .withSecretName("mycerts")
+                        .withTlsKey("/%^$lkg")
+                        .withTlsCert("d29ybGQ=")
+                        .build()));
     }
 
     @Test
     public void testValidateBadCert() {
-        assertThrows(IllegalArgumentException.class, () -> new CertSpec.Builder()
-                .setProvider("certBundle")
-                .setSecretName("mycerts")
-                .setTlsKey("d29ybGQ=")
-                .setTlsCert("/%^$lkg")
-                .build()
-                .validate());
+        assertThrows(ValidationException.class, () -> DefaultValidator.validate(
+                new CertSpecBuilder()
+                        .withProvider("certBundle")
+                        .withSecretName("mycerts")
+                        .withTlsKey("d29ybGQ=")
+                        .withTlsCert("/%^$lkg")
+                        .build()));
     }
 }

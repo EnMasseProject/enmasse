@@ -26,15 +26,15 @@ public class AddressSpace {
     private boolean useEndpointsInJson;
 
     public AddressSpace(String name) {
-        this(name, name, AddressSpaceType.STANDARD, AuthService.NONE);
+        this(name, null, AddressSpaceType.STANDARD, AuthService.NONE);
     }
 
     public AddressSpace(String name, AuthService authService) {
-        this(name, name, AddressSpaceType.STANDARD, authService);
+        this(name, null, AddressSpaceType.STANDARD, authService);
     }
 
     public AddressSpace(String name, AddressSpaceType type) {
-        this(name, name, type, AuthService.NONE);
+        this(name, null, type, AuthService.NONE);
     }
 
     public AddressSpace(String name, String namespace) {
@@ -54,7 +54,7 @@ public class AddressSpace {
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan) {
-        this(name, name, type, plan);
+        this(name, null, type, plan);
     }
 
     public AddressSpace(String name, String namespace, AddressSpaceType type, String plan) {
@@ -72,7 +72,6 @@ public class AddressSpace {
 
     public AddressSpace(String name, AddressSpaceType type, AuthService authService) {
         setName(name);
-        setNamespace(name);
         setType(type);
         setAuthService(authService);
         addDefaultAnnotations();
@@ -95,7 +94,7 @@ public class AddressSpace {
     }
 
     public AddressSpace(String name, AddressSpaceType type, String plan, AuthService authService) {
-        this(name, name, type, plan, authService);
+        this(name, null, type, plan, authService);
     }
 
     public Endpoint getEndpointByName(String endpoint) {
@@ -178,9 +177,9 @@ public class AddressSpace {
         this.type = type;
         if (plan == null) {
             if (type.equals(AddressSpaceType.BROKERED)) {
-                plan = "brokered-single-broker";
+                plan = AddressSpacePlan.BROKERED;
             } else {
-                plan = "standard-unlimited-with-mqtt";
+                plan = AddressSpacePlan.STANDARD_UNLIMITED_WITH_MQTT;
             }
         }
         return this;
@@ -239,6 +238,9 @@ public class AddressSpace {
         JsonObject metadata = new JsonObject();
         metadata.put("name", this.getName());
         metadata.put("annotations", createAnnotations());
+        if (namespace != null) {
+            metadata.put("namespace", namespace);
+        }
         return metadata;
     }
 

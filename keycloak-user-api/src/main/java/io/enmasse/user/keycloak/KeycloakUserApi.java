@@ -7,6 +7,7 @@ package io.enmasse.user.keycloak;
 
 import static java.util.Optional.empty;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -42,6 +43,8 @@ import org.keycloak.representations.idm.UserRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.Operation;
@@ -55,6 +58,7 @@ import io.enmasse.user.model.v1.UserBuilder;
 import io.enmasse.user.model.v1.UserList;
 import io.enmasse.user.model.v1.UserSpecBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.OwnerReference;
 
 
 public class KeycloakUserApi implements UserApi {
@@ -159,6 +163,9 @@ public class KeycloakUserApi implements UserApi {
         attributes.put("resourceNamespace", Collections.singletonList(user.getMetadata().getNamespace()));
         attributes.put("authenticationType", Collections.singletonList(user.getSpec().getAuthentication().getType().name()));
 
+        final List<String> ownerReferences = ownerReferencesToString(user.getMetadata().getOwnerReferences());
+        attributes.put("ownerReferences", ownerReferences);
+
         Instant now = clock.instant();
         attributes.put("creationTimestamp", Collections.singletonList(TimeUtil.formatRfc3339(now)));
 
@@ -166,6 +173,48 @@ public class KeycloakUserApi implements UserApi {
 
         return userRep;
     }
+
+    private static List<String> ownerReferencesToString(final List<OwnerReference> references) {
+
+        if (references == null) {
+            return null;
+        }
+
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final List<String> ownerReferences = references
+                .stream()
+                .map(ownerReference -> {
+                    try {
+                        return mapper.writeValueAsString(ownerReference);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return ownerReferences;
+    }
+
+    private static List<OwnerReference> ownerReferencesFromString(final List<String> attributeValues) {
+
+        if (attributeValues == null) {
+            return null;
+        }
+
+        final ObjectMapper mapper = new ObjectMapper();
+
+        return attributeValues.stream()
+                .map(ref -> {
+                    try {
+                        return mapper.readValue(ref, OwnerReference.class);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+    }
+
 
     private boolean userExists(String username, List<UserRepresentation> userRepresentations) {
         for (UserRepresentation userRepresentation : userRepresentations) {
@@ -275,7 +324,7 @@ public class KeycloakUserApi implements UserApi {
 
     /**
      * Create the set of desired groups.
-     * 
+     *
      * @param user The user to create the groups for.
      * @return A set of groups.
      */
@@ -287,28 +336,26 @@ public class KeycloakUserApi implements UserApi {
 
             for (Operation operation : userAuthorization.getOperations()) {
 
-                if (userAuthorization.getAddresses() == null || userAuthorization.getAddresses().isEmpty()) {
-
-                    switch (operation) {
-                        case manage:
-                            desiredGroups.add("manage_#");
-                            desiredGroups.add("manage");
-                            break;
-                        default:
-                            desiredGroups.add(operation.name());
-                            break;
-                    }
-
-                } else {
-
-                    for (String address : userAuthorization.getAddresses()) {
-                        String groupName = operation.name() + "_" + encodePart(address);
-                        // normal name
-                        desiredGroups.add(groupName);
-                        // brokered name ( the set will remove duplicates for us)
-                        desiredGroups.add(groupName.replace("*", "#"));
-                    }
-
+                switch (operation) {
+                    case manage:
+                        desiredGroups.add("manage_#");
+                        desiredGroups.add("manage");
+                        break;
+                    case view:
+                        desiredGroups.add("monitor_#");
+                        desiredGroups.add("monitor");
+                        break;
+                    default:
+                        if (userAuthorization.getAddresses() != null && !userAuthorization.getAddresses().isEmpty()) {
+                            for (String address : userAuthorization.getAddresses()) {
+                                String groupName = operation.name() + "_" + encodePart(address);
+                                // normal name
+                                desiredGroups.add(groupName);
+                                // brokered name ( the set will remove duplicates for us)
+                                desiredGroups.add(groupName.replace("*", "#"));
+                            }
+                        }
+                        break;
                 }
             }
         }
@@ -497,7 +544,7 @@ public class KeycloakUserApi implements UserApi {
 
     /**
      * Test if a realm as has specific attribute.
-     * 
+     *
      * @param realm The realm to test.
      * @param attributeName The attribute to test.
      * @param attributeValue The expected value. May be {@code null}, in which case the attribute value
@@ -539,15 +586,16 @@ public class KeycloakUserApi implements UserApi {
         Set<Operation> globalOperations = new HashSet<>();
         for (GroupRepresentation groupRep : groupReps) {
             log.debug("Checking group id {} name {}", groupRep.getId(), groupRep.getName());
-            if (groupRep.getName().contains("_")) {
+            if (groupRep.getName().startsWith("manage")) {
+                globalOperations.add(Operation.manage);
+            } else if (groupRep.getName().startsWith("monitor")) {
+                globalOperations.add(Operation.view);
+            } else if (groupRep.getName().contains("_")) {
                 String[] parts = groupRep.getName().split("_");
                 Operation operation = Operation.valueOf(parts[0]);
                 String address = decodePart(parts[1]);
                 operationsByAddress.computeIfAbsent(address, k -> new HashSet<>())
                         .add(operation);
-            } else {
-                Operation operation = Operation.valueOf(groupRep.getName());
-                globalOperations.add(operation);
             }
         }
 
@@ -560,7 +608,7 @@ public class KeycloakUserApi implements UserApi {
         }
 
         for (Operation operation : globalOperations) {
-            if (operation == Operation.manage) {
+            if (operation == Operation.manage || operation == Operation.view) {
                 operations.put(Collections.singleton(operation), Collections.emptySet());
             }
         }
@@ -582,6 +630,7 @@ public class KeycloakUserApi implements UserApi {
                         .withNamespace(namespace)
                         .withSelfLink("/apis/user.enmasse.io/v1beta1/namespaces/" + namespace + "/messagingusers/" + name)
                         .withCreationTimestamp(userRep.getAttributes().get("creationTimestamp").get(0))
+                        .withOwnerReferences(ownerReferencesFromString(userRep.getAttributes().get("ownerReferences")))
                         .build())
                 .withSpec(new UserSpecBuilder()
                         .withUsername(userRep.getUsername())
@@ -637,7 +686,7 @@ public class KeycloakUserApi implements UserApi {
         });
 
     }
-    
+
 
     public static String decodePart(final String part) {
         try {

@@ -7,17 +7,12 @@ package io.enmasse.api.v1.types;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.validation.Valid;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class APIGroupVersion {
     @JsonProperty("groupVersion")
-    @Valid
     private String groupVersion;
 
-
     @JsonProperty("version")
-    @Valid
     private String version;
 
     public APIGroupVersion(String groupVersion, String version) {

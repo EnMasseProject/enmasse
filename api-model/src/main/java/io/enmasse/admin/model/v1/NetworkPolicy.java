@@ -4,6 +4,7 @@
  */
 package io.enmasse.admin.model.v1;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +43,8 @@ public class NetworkPolicy {
 
     public NetworkPolicy(@JsonProperty("ingress") List<NetworkPolicyIngressRule> ingress,
                          @JsonProperty("egress") List<NetworkPolicyEgressRule> egress) {
-        this.ingress = ingress;
-        this.egress = egress;
+        this.ingress = ingress != null ? ingress : new ArrayList<>();
+        this.egress = egress != null ? egress : new ArrayList<>();
     }
 
     @Override

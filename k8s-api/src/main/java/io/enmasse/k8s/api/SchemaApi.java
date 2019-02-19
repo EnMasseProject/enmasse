@@ -4,7 +4,6 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.Schema;
 
 import java.time.Duration;

@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.enmasse</groupId>
     <artifactId>enmasse</artifactId>
-    <version>0.26-SNAPSHOT</version>
+    <version>0.27-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>amqp-utils</artifactId>
@@ -45,8 +45,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-simple</artifactId>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

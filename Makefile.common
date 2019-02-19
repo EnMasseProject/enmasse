@@ -1,14 +1,6 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
-DOCKER_REGISTRY ?= docker.io
-DOCKER_ORG      ?= enmasseproject
-DOCKER          ?= docker
-PROJECT_PREFIX  ?= enmasse
-PROJECT_NAME    ?= $(shell basename $(CURDIR))
+include $(TOPDIR)/Makefile.env.mk
 NAMESPACE       ?= $(shell oc project -q)
-COMMIT 			?= $(shell git rev-parse HEAD)
-VERSION         ?= $(shell cat $(TOPDIR)/release.version)
-MAVEN_VERSION   ?= $(shell cat $(TOPDIR)/maven.version)
-TAG             ?= latest
 MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
 UNAME_S := $(shell uname -s)
@@ -30,9 +22,9 @@ clean: clean_node
 	rm -rf build
 
 buildpush:
-	make
-	make docker_tag
-	make docker_push
+	$(MAKE)
+	$(MAKE) docker_tag
+	$(MAKE) docker_push
 
 docker_build: package
 	if [ -f Dockerfile ]; then $(DOCKER) build $(DOCKER_BUILD_ARGS) --build-arg maven_version=$(MAVEN_VERSION) --build-arg version=$(VERSION) --build-arg commit=$(COMMIT) -t $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) . ; fi
@@ -40,13 +32,12 @@ docker_build: package
 
 docker_tag:
 	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; fi
-	if [ -f Dockerfile ]; then $(DOCKER) tag $(PROJECT_PREFIX)-$(PROJECT_NAME):$(VERSION) $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(VERSION) ; fi
+	if [ -f Dockerfile ]; then docker images | grep $(PROJECT_PREFIX); fi
 
 docker_push:
 	if [ -f Dockerfile ] ; \
 	then \
 		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
-		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(VERSION)" 10 10 ; \
 	fi
 	
 

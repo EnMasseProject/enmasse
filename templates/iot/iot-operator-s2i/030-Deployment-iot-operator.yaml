@@ -1,0 +1,48 @@
+kind: DeploymentConfig
+apiVersion: v1
+metadata:
+  name: iot-operator
+  labels:
+    app: iot-core
+    deploymentconfig: iot-operator
+    enmasse-component: iot
+spec:
+  replicas: 1
+  selector:
+    app: iot-core
+    deploymentconfig: iot-operator
+  strategy:
+    type: Rolling
+  triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - operator
+        from:
+          kind: ImageStreamTag
+          name: iot-operator:latest
+  template:
+    metadata:
+      labels:
+        app: iot-core
+        deploymentconfig: iot-operator
+    spec:
+      containers:
+      - name: operator
+        image: iot-operator
+        imagePullPolicy: Always
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: "iot-operator"
+        resources:
+          limits:
+            memory: 128Mi
+        ports:
+        volumeMounts:
+      volumes:

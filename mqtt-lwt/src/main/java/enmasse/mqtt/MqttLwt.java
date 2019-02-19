@@ -40,9 +40,6 @@ public class MqttLwt extends AbstractVerticle {
     private AmqpLwtEndpoint lwtEndpoint;
     private AmqpPublishEndpoint publishEndpoint;
 
-    // counter for the message identifier
-    private int messageIdCounter;
-
     public MqttLwt(MqttLwtOptions options) {
 
         this.options = options;

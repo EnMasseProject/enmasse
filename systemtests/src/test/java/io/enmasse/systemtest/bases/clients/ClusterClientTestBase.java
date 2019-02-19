@@ -30,8 +30,8 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
     @BeforeEach
     public void setUpClientBase() throws Exception {
         if (cliApiClient == null) {
-            Endpoint cliEndpoint = TestUtils.deployMessagingClientApp(environment.namespace(), kubernetes);
-            cliApiClient = new MsgCliApiClient(kubernetes, cliEndpoint);
+            SystemtestsKubernetesApps.deployMessagingClientApp(environment.namespace(), kubernetes);
+            cliApiClient = new MsgCliApiClient(kubernetes, SystemtestsKubernetesApps.getMessagingClientEndpoint(environment.namespace(), kubernetes));
         }
 
         arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
@@ -42,7 +42,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
     @AfterAll
     public void tearDownAll() {
-        TestUtils.deleteMessagingClientApp(environment.namespace(), kubernetes);
+        SystemtestsKubernetesApps.deleteMessagingClientApp(environment.namespace(), kubernetes);
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) {
@@ -84,10 +84,12 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         receiver.setArguments(arguments);
 
         JsonObject response = cliApiClient.sendAndGetStatus(sender);
-        assertThat(response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
 
         response = cliApiClient.sendAndGetStatus(receiver);
-        assertThat(response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
     }
 
     protected void doMqttMessageTest() throws Exception {
@@ -96,7 +98,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         AbstractClient receiver = new PahoMQTTClientReceiver();
 
         Destination dest = Destination.topic("message-basic-mqtt",
-                sharedAddressSpace.getType().equals(AddressSpaceType.STANDARD) ? DestinationPlan.STANDARD_LARGE_TOPIC.plan() : getDefaultPlan(AddressType.TOPIC));
+                sharedAddressSpace.getType().equals(AddressSpaceType.STANDARD) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, false, false, true).toString());
@@ -122,14 +124,16 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
         log.info("Send messages");
         JsonObject response = cliApiClient.sendAndGetStatus(sender);
-        assertThat("Return code of sender is not 0", response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
 
         Thread.sleep(10_000);
 
         log.info("Check if subscriber received messages");
         response = cliApiClient.getClientInfo(receiverId);
         log.info(response.toString());
-        assertThat("Return code of receiver is not 0", response.getInteger("ecode"), is(0));
+        assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
+                response.getInteger("ecode"), is(0));
         assertFalse(response.getString("stdOut").isEmpty(), "Receiver does not receive message");
     }
 }

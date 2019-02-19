@@ -5,10 +5,6 @@
 
 package io.enmasse.controller.common;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-
 public class KubernetesHelperTest {
 
     /*

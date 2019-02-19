@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
+import static io.enmasse.systemtest.TestTag.smoke;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -40,11 +41,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * very wrong is minimized. The test should not take to long too execute
  */
 @Tag(nonPR)
+@Tag(smoke)
 class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private Destination queue = Destination.queue("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE.plan());
-    private Destination topic = Destination.topic("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC.plan());
-    private Destination mqttTopic = Destination.topic("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC.plan());
+    private Destination queue = Destination.queue("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE);
+    private Destination topic = Destination.topic("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC);
+    private Destination mqttTopic = Destination.topic("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC);
     private Destination anycast = Destination.anycast("smokeanycast");
     private Destination multicast = Destination.multicast("smokemulticast");
 

@@ -24,16 +24,16 @@ include::../common/client-example1.py[]
 
 . Retrieve the address space messaging endpoint host name:
 +
-[options="nowrap",subs=attributes+]
+[source,options="nowrap",subs=attributes+]
 ----
-{cmdcli} get addressspace myspace -o jsonpath={.status.endpointStatuses[?(@.name==\'messaging\')].externalHost}
+{cmdcli} get addressspace myspace -o 'jsonpath={.status.endpointStatuses[?(@.name=="messaging")].externalHost}'
 ----
 +
 Use the output as the host name in the following step.
 
 . Run the client:
 +
-[options="nowrap",subs="+quotes,attributes"]
+[source,options="nowrap",subs="+quotes,attributes"]
 ----
 python client-example1.py -u amqps://user1:password@_messaging.example1.com_:443/myqueue
 ----

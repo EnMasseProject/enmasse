@@ -24,7 +24,7 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
-import io.enmasse.systemtest.selenium.SeleniumContainers;
+import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.timemeasuring.Operation;
@@ -57,6 +57,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.time.Duration.ofMinutes;
+import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -67,8 +69,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
-    protected static final Environment environment = new Environment();
-    protected static final Kubernetes kubernetes = Kubernetes.create(environment);
+    protected static final Environment environment = Environment.getInstance();
+    protected static final Kubernetes kubernetes = Kubernetes.getInstance();
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     protected static AddressApiClient addressApiClient;
@@ -139,6 +141,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
                 log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
                 spaces.add(addressSpace);
+                if (!addressSpace.equals(getSharedAddressSpace())) {
+                    addressSpaceList.add(addressSpace);
+                }
             } else {
                 log.warn("Address space '" + addressSpace + "' already exists.");
                 addrSpacesResponse.add(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()));
@@ -149,9 +154,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         for (AddressSpace addressSpace : results) {
             logCollector.startCollecting(addressSpace);
             addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace));
-            if (!addressSpace.equals(getSharedAddressSpace())) {
-                addressSpaceList.add(addressSpace);
-            }
         }
         Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
             originalAddrSpace.setInfraUuid(addrSpacesResponse.stream().filter(
@@ -234,11 +236,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         AddressSpace addrSpaceResponse;
         if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
             log.info("Address space '{}' exists and will be updated.", addressSpace);
+            final String currentResourceVersion = addressApiClient.getAddressSpace(addressSpace.getName()).getJsonObject("metadata").getString("resourceVersion");
             addressApiClient.replaceAddressSpace(addressSpace);
-            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+            TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressApiClient, addressSpace.getName(), currentResourceVersion);
             if (waitForPlanApplied) {
                 TestUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
             }
+            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
@@ -293,7 +297,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         appendAddresses(addressSpace, budget, destinations);
     }
 
@@ -302,7 +306,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         appendAddresses(addressSpace, wait, budget, destinations);
     }
 
@@ -312,13 +316,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
-        TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget timeout = new TimeoutBudget(10, TimeUnit.MINUTES);
         TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
         logCollector.collectConfigMaps();
     }
 
     protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         logCollector.collectRouterState("setAddresses");
 
         if (expectedCode == HTTP_CONFLICT) {
@@ -344,6 +348,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {
         TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, destinations);
+        logCollector.collectConfigMaps();
+    }
+
+    protected void setAddresses(AddressSpace addressSpace, AddressApiClient apiClient, Destination... destinations) throws Exception {
+        TestUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(10, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, destinations);
         logCollector.collectConfigMaps();
     }
 
@@ -535,7 +544,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     private void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
         if (numReplicas >= 0) {
-            TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+            TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
             TestUtils.setReplicas(kubernetes, null, deployment, numReplicas, budget);
         } else {
             throw new IllegalArgumentException("'numReplicas' must be greater than 0");
@@ -549,7 +558,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getType(), credentials);
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getType());
             assertTrue(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), true), message);
         }
@@ -557,7 +566,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
         for (Destination destination : destinations) {
-            String message = String.format("Client failed, can connect to %s under user %s", destination.getType(), credentials);
+            String message = String.format("Client failed, can connect to %s under user %s", destination.getAddress(), credentials);
             AddressType addressType = AddressType.getEnum(destination.getType());
             assertFalse(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), false), message);
         }
@@ -633,7 +642,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return seleniumProvider;
     }
 
-    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount) {
+    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount) throws Exception {
         int budget = 60; //seconds
         waitForSubscribersConsole(addressSpace, destination, expectedCount, budget);
     }
@@ -643,10 +652,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      *
      * @param budget timeout budget in seconds
      */
-    private void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) {
+    private void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) throws Exception {
         SeleniumProvider selenium = null;
         try {
-            SeleniumContainers.deployFirefoxContainer();
+            SeleniumManagement.deployFirefoxApp();
             selenium = getFirefoxSeleniumProvider();
             ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials);
             console.openWebConsolePage();
@@ -659,7 +668,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             if (selenium != null) {
                 selenium.tearDownDrivers();
             }
-            SeleniumContainers.stopAndRemoveFirefoxContainer();
+            SeleniumManagement.removeFirefoxApp();
         }
     }
 
@@ -715,7 +724,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws
             Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
     }
 
@@ -729,10 +738,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     /**
-     * Wait for destinations are in isReady=true state within default timeout (5 MINUTE)
+     * Wait for destinations are in isReady=true state within default timeout (10 MINUTE)
      */
     protected void waitForDestinationsReady(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         TestUtils.waitForDestinationsReady(addressApiClient, addressSpace, budget, destinations);
     }
 
@@ -965,14 +974,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 .setPassword("password")
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(operation)
-                        .addAddress("queue.*")));
+                        .addAddress("queue/*")));
 
         users.add(new User()
                 .setUsername("user3")
                 .setPassword("password")
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(operation)
-                        .addAddress("topic.*")));
+                        .addAddress("topic/*")));
 
         users.add(new User()
                 .setUsername("user4")
@@ -995,10 +1004,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected List<Destination> getAddressesWildcard() {
-        Destination queue = Destination.queue("queue.1234", getDefaultPlan(AddressType.QUEUE));
-        Destination queue2 = Destination.queue("queue.ABCD", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("topic.2345", getDefaultPlan(AddressType.TOPIC));
-        Destination topic2 = Destination.topic("topic.ABCD", getDefaultPlan(AddressType.TOPIC));
+        Destination queue = Destination.queue("queue/1234", getDefaultPlan(AddressType.QUEUE));
+        Destination queue2 = Destination.queue("queue/ABCD", getDefaultPlan(AddressType.QUEUE));
+        Destination topic = Destination.topic("topic/2345", getDefaultPlan(AddressType.TOPIC));
+        Destination topic2 = Destination.topic("topic/ABCD", getDefaultPlan(AddressType.TOPIC));
 
         return Arrays.asList(queue, queue2, topic, topic2);
     }
@@ -1077,18 +1086,18 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected List<Destination> getAllStandardAddresses() {
         return Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
-                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC.plan()),
-                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE.plan()),
-                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC.plan()),
+                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE),
+                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC),
+                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE),
+                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC),
                 Destination.anycast("test-anycast"),
                 Destination.multicast("test-multicast"));
     }
 
     protected List<Destination> getAllBrokeredAddresses() {
         return Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan()),
-                Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan()));
+                Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE),
+                Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC));
     }
 
     protected void sendDurableMessages(AddressSpace addressSpace, Destination destination,
@@ -1119,15 +1128,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
     //==================================== Asserts methods ===========================================
     //================================================================================================
-    protected void assertSorted(String message, Iterable list) throws Exception {
+    protected <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list) throws Exception {
         assertSorted(message, list, false);
     }
 
-    protected void assertSorted(String message, Iterable list, Comparator comparator) throws Exception {
+    protected <T> void assertSorted(String message, Iterable<T> list, Comparator<T> comparator) throws Exception {
         assertSorted(message, list, false, comparator);
     }
 
-    protected void assertSorted(String message, Iterable list, boolean reverse) {
+    protected <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list, boolean reverse) {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.natural().isOrdered(list), message);
@@ -1135,7 +1144,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             assertTrue(Ordering.natural().reverse().isOrdered(list), message);
     }
 
-    protected void assertSorted(String message, Iterable list, boolean reverse, Comparator comparator) {
+    protected <T> void assertSorted(String message, Iterable<T> list, boolean reverse, Comparator<T> comparator) {
         log.info("Assert sort reverse: " + reverse);
         if (!reverse)
             assertTrue(Ordering.from(comparator).isOrdered(list), message);

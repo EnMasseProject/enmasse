@@ -4,28 +4,17 @@
  */
 package io.enmasse.systemtest;
 
-public enum DestinationPlan {
-    BROKERED_QUEUE("brokered-queue"),
-    BROKERED_TOPIC("brokered-topic"),
-    STANDARD_SMALL_QUEUE("standard-small-queue"),
-    STANDARD_SMALL_TOPIC("standard-small-topic"),
-    STANDARD_LARGE_QUEUE("standard-large-queue"),
-    STANDARD_LARGE_TOPIC("standard-large-topic"),
-    STANDARD_SMALL_ANYCAST("standard-small-anycast"),
-    STANDARD_SMALL_MULTICAST("standard-small-multicast");
-
-    private String plan;
-
-    DestinationPlan(String plan) {
-        this.plan = plan;
-    }
-
-    /**
-     * Gets command for external client
-     *
-     * @return string command
-     */
-    public String plan() {
-        return plan;
-    }
+public interface DestinationPlan {
+    String BROKERED_QUEUE = "brokered-queue";
+    String BROKERED_TOPIC = "brokered-topic";
+    String STANDARD_SMALL_QUEUE = "standard-small-queue";
+    String STANDARD_SMALL_TOPIC = "standard-small-topic";
+    String STANDARD_LARGE_QUEUE = "standard-large-queue";
+    String STANDARD_LARGE_TOPIC = "standard-large-topic";
+    String STANDARD_XLARGE_QUEUE = "standard-xlarge-queue";
+    String STANDARD_XLARGE_TOPIC = "standard-xlarge-topic";
+    String STANDARD_SMALL_ANYCAST = "standard-small-anycast";
+    String STANDARD_SMALL_MULTICAST = "standard-small-multicast";
+    String STANDARD_SMALL_SUBSCRIPTION = "standard-small-subscription";
+    String STANDARD_LARGE_SUBSCRIPTION = "standard-large-subscription";
 }

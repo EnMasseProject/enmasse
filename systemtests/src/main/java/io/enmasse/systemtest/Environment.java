@@ -9,7 +9,10 @@ import org.slf4j.Logger;
 
 public class Environment {
     private static Logger log = CustomLogger.getLogger();
+    private static Environment instance;
+
     public static final String useMinikubeEnv = "USE_MINIKUBE";
+    public static final String ocpVersionEnv = "OC_VERSION";
     public static final String keycloakAdminPasswordEnv = "KEYCLOAK_ADMIN_PASSWORD";
     public static final String keycloakAdminUserEnv = "KEYCLOAK_ADMIN_USER";
     public static final String testLogDirEnv = "TEST_LOGDIR";
@@ -26,17 +29,25 @@ public class Environment {
     private final String keycloakAdminPassword = System.getenv(keycloakAdminPasswordEnv);
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
     private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
+    private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
 
-    public Environment() {
+    private Environment() {
         String debugFormat = "{}:{}";
-        log.debug(debugFormat, useMinikubeEnv, useMinikube);
-        log.debug(debugFormat, keycloakAdminPasswordEnv, keycloakAdminPassword);
-        log.debug(debugFormat, keycloakAdminUserEnv, keycloakAdminUser);
-        log.debug(debugFormat, testLogDirEnv, testLogDir);
-        log.debug(debugFormat, namespaceEnv, namespace);
-        log.debug(debugFormat, urlEnv, url);
-        log.debug(debugFormat, tokenEnv, token);
-        log.debug(debugFormat, upgradeEnv, upgrade);
+        log.info(debugFormat, useMinikubeEnv, useMinikube);
+        log.info(debugFormat, keycloakAdminPasswordEnv, keycloakAdminPassword);
+        log.info(debugFormat, keycloakAdminUserEnv, keycloakAdminUser);
+        log.info(debugFormat, testLogDirEnv, testLogDir);
+        log.info(debugFormat, namespaceEnv, namespace);
+        log.info(debugFormat, urlEnv, url);
+        log.info(debugFormat, tokenEnv, token);
+        log.info(debugFormat, upgradeEnv, upgrade);
+    }
+
+    public static synchronized Environment getInstance() {
+        if (instance == null) {
+            instance = new Environment();
+        }
+        return instance;
     }
 
     /**
@@ -96,5 +107,9 @@ public class Environment {
 
     public boolean isUpgraded() {
         return upgrade;
+    }
+
+    public String getGetOcpVersion() {
+        return ocpVersion;
     }
 }

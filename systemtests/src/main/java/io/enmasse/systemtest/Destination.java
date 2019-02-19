@@ -85,11 +85,11 @@ public class Destination {
     }
 
     public static Destination anycast(String address) {
-        return new Destination(address, ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST.plan());
+        return new Destination(address, ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST);
     }
 
     public static Destination multicast(String address) {
-        return new Destination(address, MULTICAST, DestinationPlan.STANDARD_SMALL_MULTICAST.plan());
+        return new Destination(address, MULTICAST, DestinationPlan.STANDARD_SMALL_MULTICAST);
     }
 
     public static Destination anycast(String address, String plan) {
@@ -168,7 +168,7 @@ public class Destination {
      * plan.
      */
     public String getDeployment() {
-        if (plan.startsWith("pooled-") || plan.startsWith("standard-small") || plan.startsWith("standard-medium")) {
+        if (plan.startsWith("pooled-") || plan.startsWith(AddressSpacePlan.STANDARD_SMALL) || plan.startsWith(AddressSpacePlan.STANDARD_MEDIUM)) {
             return "broker";
         } else {
             return address;
@@ -189,8 +189,8 @@ public class Destination {
         JsonObject entry = new JsonObject();
         entry.put("apiVersion", version);
         entry.put("kind", "Address");
-        entry.put("metadata", this.jsonMetadata(addressSpace));
-        entry.put("spec", this.jsonSpec());
+        entry.put("metadata", jsonMetadata(addressSpace));
+        entry.put("spec", jsonSpec(addressSpace));
         return entry;
     }
 
@@ -210,16 +210,10 @@ public class Destination {
         if (this.getUuid() != null) {
             metadata.put("uid", this.getUuid());
         }
-        if (this.getAddressSpace() != null) {
-            metadata.put("addressSpace", this.getAddressSpace());
-        } else if (addressSpace != null) {
-            metadata.put("addressSpace", addressSpace);
-        }
         return metadata;
     }
 
-
-    public JsonObject jsonSpec() {
+    public JsonObject jsonSpec(String addressSpace) {
         JsonObject spec = new JsonObject();
         if (this.getAddress() != null) {
             spec.put("address", this.getAddress());
@@ -232,6 +226,11 @@ public class Destination {
         }
         if (this.topic != null) {
             spec.put("topic", this.topic);
+        }
+        if (this.getAddressSpace() != null) {
+            spec.put("addressSpace", getAddressSpace());
+        } else if (addressSpace != null) {
+            spec.put("addressSpace", addressSpace);
         }
         return spec;
     }

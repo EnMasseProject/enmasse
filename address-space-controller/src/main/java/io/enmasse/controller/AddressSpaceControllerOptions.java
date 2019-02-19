@@ -19,6 +19,7 @@ public final class AddressSpaceControllerOptions {
     private StandardAuthServiceInfo standardAuthService;
     private boolean enableEventLogger;
     private boolean exposeEndpointsByDefault;
+    private boolean installDefaultResources;
 
     private String environment;
 
@@ -36,10 +37,6 @@ public final class AddressSpaceControllerOptions {
 
     public File getTemplateDir() {
         return templateDir;
-    }
-
-    public Optional<NoneAuthServiceInfo> getNoneAuthService() {
-        return Optional.ofNullable(noneAuthService);
     }
 
     public Optional<StandardAuthServiceInfo> getStandardAuthService() {
@@ -86,7 +83,6 @@ public final class AddressSpaceControllerOptions {
         }
         options.setResourcesDir(resourcesDir);
 
-        options.setNoneAuthService(getNoneAuthService(env, "NONE_AUTHSERVICE_SERVICE_HOST", "NONE_AUTHSERVICE_SERVICE_PORT").orElse(null));
         options.setStandardAuthService(getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
         options.setStandardAuthserviceConfigName(getEnv(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
         options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
@@ -97,6 +93,8 @@ public final class AddressSpaceControllerOptions {
         options.setExposeEndpointsByDefault(getEnv(env, "EXPOSE_ENDPOINTS_BY_DEFAULT").map(Boolean::parseBoolean).orElse(true));
 
         options.setEnvironment(getEnv(env, "ENVIRONMENT").orElse("development"));
+
+        options.setInstallDefaultResources(getEnv(env, "INSTALL_DEFAULT_RESOURCES").map(Boolean::parseBoolean).orElse(true));
 
         options.setWildcardCertSecret(getEnv(env, "WILDCARD_ENDPOINT_CERT_SECRET").orElse(null));
 
@@ -110,13 +108,6 @@ public final class AddressSpaceControllerOptions {
 
         options.setVersion(getEnvOrThrow(env, "VERSION"));
         return options;
-    }
-
-
-    private static Optional<NoneAuthServiceInfo> getNoneAuthService(Map<String, String> env, String hostEnv, String portEnv) {
-
-        return getEnv(env, hostEnv)
-                .map(host -> new NoneAuthServiceInfo(host, Integer.parseInt(getEnvOrThrow(env, portEnv))));
     }
 
     private static Optional<StandardAuthServiceInfo> getStandardAuthService(Map<String, String> env, String configMapEnv) {
@@ -235,5 +226,13 @@ public final class AddressSpaceControllerOptions {
                 ", standardAuthserviceCredentialsSecretName='" + standardAuthserviceCredentialsSecretName + '\'' +
                 ", standardAuthserviceCertSecretName='" + standardAuthserviceCertSecretName + '\'' +
                 '}';
+    }
+
+    public boolean isInstallDefaultResources() {
+        return installDefaultResources;
+    }
+
+    public void setInstallDefaultResources(boolean installDefaultResources) {
+        this.installDefaultResources = installDefaultResources;
     }
 }

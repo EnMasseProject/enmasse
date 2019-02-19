@@ -1,0 +1,16 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: qdrouterd-base
+  labels:
+    enmasse-component: iot
+spec:
+  tags:
+  - from:
+      kind: DockerImage
+      name: enmasseproject/qdrouterd-base:1.4.1
+    importPolicy:
+      scheduled: true
+    name: "1.4.1"
+    referencePolicy:
+      type: Source

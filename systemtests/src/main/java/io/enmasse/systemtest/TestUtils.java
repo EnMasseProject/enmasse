@@ -6,30 +6,31 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.apiclients.OSBApiClient;
-import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.apiclients.UserApiClient;
+import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceTypeData;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -218,7 +219,7 @@ public class TestUtils {
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         return kubernetes.listPods(Collections.singletonMap("infraUuid", addressSpace.getInfraUuid())).stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running")
-                        && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
+                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
                 .collect(Collectors.toList());
     }
 
@@ -231,7 +232,7 @@ public class TestUtils {
     public static List<Pod> listRunningPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running")
-                        && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
+                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
                 .collect(Collectors.toList());
     }
 
@@ -244,8 +245,32 @@ public class TestUtils {
     public static List<Pod> listReadyPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
                 .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
-                        && !pod.getMetadata().getName().startsWith(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
+                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get list of all ready pods
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @return
+     */
+    public static List<Pod> listReadyPods(Kubernetes kubernetes, String namespace) {
+        return kubernetes.listPods(namespace).stream()
+                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
+                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .collect(Collectors.toList());
+    }
+
+    public static List<Pod> listBrokerPods(Kubernetes kubernetes) {
+        return kubernetes.listPods(Collections.singletonMap("role", "broker"));
+    }
+
+    public static List<Pod> listBrokerPods(Kubernetes kubernetes, AddressSpace addressSpace) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("role", "broker");
+        labels.put("infraUuid", addressSpace.getInfraUuid());
+        return kubernetes.listPods(labels);
     }
 
     /**
@@ -466,29 +491,6 @@ public class TestUtils {
         log.info("Address plan {} successfully applied", addressSpace.getPlan());
     }
 
-    /**
-     * Waiting until service instance will be in ready state
-     *
-     * @param apiClient  open service broker api client for sending requests
-     * @param instanceId id of service instance
-     * @throws Exception
-     */
-    public static void waitForServiceInstanceReady(OSBApiClient apiClient, String username, String instanceId) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        boolean isReady = false;
-        while (budget.timeLeft() >= 0 && !isReady) {
-            isReady = isServiceInstanceReady(apiClient.getLastOperation(username, instanceId));
-            if (!isReady) {
-                Thread.sleep(10000);
-            }
-            log.info("Waiting until service instance '{}' will be in ready state", instanceId);
-        }
-        if (!isReady) {
-            throw new IllegalStateException(String.format("Service instance '%s' is not in Ready state within timeout.", instanceId));
-        }
-        log.info("Service instance '{}' is in ready state", instanceId);
-    }
-
     private static void waitUntilEndpointsPresent(AddressApiClient apiClient, String name) throws Exception {
         waitUntilEndpointsPresent(apiClient, name, new TimeoutBudget(15, TimeUnit.SECONDS));
     }
@@ -545,6 +547,36 @@ public class TestUtils {
         CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
         listOfAddresses.complete(convertToListAddress(response, Address.class, object -> !skipAddresses.contains(object.getJsonObject("spec").getString("address"))));
         return listOfAddresses;
+    }
+
+    /**
+     * get list of all Address objects by REST API
+     */
+    public static Future<List<Address>> getAllAddressesObjects(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getAllAddresses();
+        CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToListAddress(response, Address.class, x -> true));
+        return listOfAddresses;
+    }
+
+    /**
+     * get list of all AddressSpaces objects by REST API
+     */
+    public static Future<List<AddressSpace>> getAllAddressSpacesObjects(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getAllAddresseSpaces();
+        CompletableFuture<List<AddressSpace>> listOfAddresses = new CompletableFuture<>();
+        listOfAddresses.complete(convertToAddressSpaceObject(response));
+        return listOfAddresses;
+    }
+
+    /**
+     * get list of all Users objects by REST API
+     */
+    public static Future<List<User>> getAllUsersObjects(UserApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getAllUsers();
+        CompletableFuture<List<User>> listOfUsers = new CompletableFuture<>();
+        listOfUsers.complete(convertToUserObject(response));
+        return listOfUsers;
     }
 
     /**
@@ -620,11 +652,11 @@ public class TestUtils {
                 case "Address":
                     if (filter.test(htmlResponse)) {
                         if (clazz.equals(String.class)) {
-                            addresses.add((T) htmlResponse.getJsonObject("spec").getString("address"));
+                            addresses.add(clazz.cast(htmlResponse.getJsonObject("spec").getString("address")));
                         } else if (clazz.equals(Address.class)) {
-                            addresses.add((T) getAddressObject(htmlResponse));
+                            addresses.add(clazz.cast(getAddressObject(htmlResponse)));
                         } else if (clazz.equals(Destination.class)) {
-                            addresses.add((T) getDestinationObject(htmlResponse));
+                            addresses.add(clazz.cast(getDestinationObject(htmlResponse)));
                         }
                     }
                     break;
@@ -634,11 +666,11 @@ public class TestUtils {
                         for (int i = 0; i < items.size(); i++) {
                             if (filter.test(items.getJsonObject(i))) {
                                 if (clazz.equals(String.class)) {
-                                    addresses.add((T) items.getJsonObject(i).getJsonObject("spec").getString("address"));
+                                    addresses.add(clazz.cast(items.getJsonObject(i).getJsonObject("spec").getString("address")));
                                 } else if (clazz.equals(Address.class)) {
-                                    addresses.add((T) getAddressObject(items.getJsonObject(i)));
+                                    addresses.add(clazz.cast(getAddressObject(items.getJsonObject(i))));
                                 } else if (clazz.equals(Destination.class)) {
-                                    addresses.add((T) getDestinationObject(items.getJsonObject(i)));
+                                    addresses.add(clazz.cast(getDestinationObject(items.getJsonObject(i))));
                                 }
                             }
                         }
@@ -679,6 +711,80 @@ public class TestUtils {
                 throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
         }
         return resultAddrSpace;
+    }
+
+    /**
+     * Convert restapi json response(kind: MessagingUSer or MessagingUserList) from api server to User object
+     *
+     * @param userJson
+     * @return
+     */
+    private static List<User> convertToUserObject(JsonObject userJson) {
+        if (userJson == null) {
+            throw new IllegalArgumentException("null response can't be converted to User");
+        }
+        String kind = userJson.getString("kind");
+        List<User> resultUser = new ArrayList<>();
+        switch (kind) {
+            case "MessagingUser":
+                resultUser.add(convertJsonToUser(userJson));
+                break;
+            case "MessagingUserList":
+                JsonArray items = userJson.getJsonArray("items");
+                for (int i = 0; i < items.size(); i++) {
+                    resultUser.add(convertJsonToUser(items.getJsonObject(i)));
+                }
+                break;
+            default:
+                throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
+        }
+        return resultUser;
+    }
+
+    /**
+     * Convert single JsonObject (kind: AddressSpace) to AddressSpace
+     *
+     * @param userJson
+     * @return
+     */
+    private static User convertJsonToUser(JsonObject userJson) {
+        log.info("Got User object: {}", userJson.toString());
+        String name = userJson.getJsonObject("metadata").getString("name");
+        String namespace = userJson.getJsonObject("metadata").getString("namespace");
+        JsonObject spec = userJson.getJsonObject("spec");
+
+        String username = spec.getString("username");
+        String type = spec.getJsonObject("authentication").getString("type");
+
+        JsonArray authorization = spec.getJsonArray("authorization");
+
+        User user = new User();
+        user.setUsername(username).setType(User.Type.valueOf(type.toUpperCase()));
+
+        if (authorization != null) {
+            for (int i = 0; i < authorization.size(); i++) {
+                JsonObject authz = authorization.getJsonObject(i);
+                User.AuthorizationRule rule = new User.AuthorizationRule();
+
+                JsonArray addresses = authz.getJsonArray("addresses");
+                JsonArray operations = authz.getJsonArray("operations");
+
+                if (addresses != null) {
+                    for (int j = 0; j < addresses.size(); j++) {
+                        rule.addAddress(addresses.getString(j));
+                    }
+                }
+
+                if (operations != null) {
+                    for (int k = 0; k < operations.size(); k++) {
+                        rule.addOperation(operations.getString(k));
+                    }
+                }
+                user.addAuthorization(rule);
+            }
+        }
+
+        return user;
     }
 
     /**
@@ -762,12 +868,12 @@ public class TestUtils {
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
         String uid = metadata.getString("uid");
-        String addressSpaceName = metadata.getString("addressSpace");
         JsonObject annotationsJson = metadata.getJsonObject("annotations");
         Map<String, Object> annotations = new HashMap<>();
         if (annotationsJson != null) {
             annotations = annotationsJson.getMap();
         }
+        String addressSpaceName = name.split("\\.")[0];
 
         JsonObject status = addressJsonObject.getJsonObject("status");
         boolean isReady = status.getBoolean("isReady");
@@ -810,8 +916,8 @@ public class TestUtils {
         log.info("Got address object: {}", addressJsonObject.toString());
         JsonObject metadata = addressJsonObject.getJsonObject("metadata");
         String name = metadata.getString("name");
+        String addressSpace = name.split("\\.")[0];
         String uid = metadata.getString("uid");
-        String addressSpace = metadata.getString("addressSpace");
         JsonObject spec = addressJsonObject.getJsonObject("spec");
         String address = spec.getString("address");
         String type = spec.getString("type");
@@ -1061,7 +1167,7 @@ public class TestUtils {
      * @param dest       destination which will be modified
      * @param plan       definition of AddressPlan
      */
-    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Destination dest, AddressPlan plan) {
+    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Destination dest, AddressPlanDefinition plan) {
         String mapKey = "config.json";
         ConfigMap destConfigMap = kubernetes.getConfigMap(addrSpace.getNamespace(), dest.getAddress());
 
@@ -1130,18 +1236,18 @@ public class TestUtils {
     }
 
     public static RemoteWebDriver getFirefoxDriver() throws Exception {
-        return getRemoteDriver("localhost", 4444, new FirefoxOptions());
+        return getRemoteDriver(SystemtestsKubernetesApps.SELENIUM_FIREFOX + "." + new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io", 80, new FirefoxOptions());
     }
 
     public static RemoteWebDriver getChromeDriver() throws Exception {
-        return getRemoteDriver("localhost", 4443, new ChromeOptions());
+        return getRemoteDriver(SystemtestsKubernetesApps.SELENIUM_CHROME + "." + new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io", 80, new ChromeOptions());
     }
 
     private static RemoteWebDriver getRemoteDriver(String host, int port, Capabilities options) throws Exception {
-        int attempts = 30;
+        int attempts = 60;
         URL hubUrl = new URL(String.format("http://%s:%s/wd/hub", host, port));
         for (int i = 0; i < attempts; i++) {
-            if (pingHost(host, port, 500) && isReachable(hubUrl)) {
+            if (isReachable(hubUrl)) {
                 return new RemoteWebDriver(hubUrl, options);
             }
             Thread.sleep(1000);
@@ -1149,18 +1255,8 @@ public class TestUtils {
         throw new IllegalStateException("Selenium webdriver cannot connect to selenium container");
     }
 
-    public static boolean pingHost(String host, int port, int timeout) {
-        try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(host, port), timeout);
-            log.info("Client is able to ping selenium container");
-            return true;
-        } catch (IOException e) {
-            log.warn("Client is unable to ping selenium container");
-            return false;
-        }
-    }
-
     public static boolean isReachable(URL url) {
+        log.info("Trying to connect to {}", url.toString());
         try {
             url.openConnection();
             url.getContent();
@@ -1186,71 +1282,44 @@ public class TestUtils {
         Assertions.fail(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
-    public static Endpoint deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
-        Endpoint endpoint = kubeClient.createServiceFromResource(namespace, getMessagingClientServiceResource());
-        kubeClient.createDeploymentFromResource(namespace, getMessagingClientDeploymentResource());
-        Thread.sleep(5000);
-        return endpoint;
+    public static void waitUntilCondition(final String forWhat, final BooleanSupplier condition, final TimeoutBudget budget) throws Exception {
+        Objects.requireNonNull(condition);
+        Objects.requireNonNull(budget);
+
+        log.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
+
+        while (!budget.timeoutExpired()) {
+            if (condition.getAsBoolean()) {
+                return;
+            }
+            log.debug("next iteration, remaining time: {}", budget.timeLeft());
+            Thread.sleep(1_000);
+        }
+        Assertions.fail("Failed to wait for: " + forWhat);
     }
 
-    public static void deleteMessagingClientApp(String namespace, Kubernetes kubeClient) {
-        kubeClient.deleteDeployment(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
-        kubeClient.deleteService(namespace, SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString());
+    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final AddressApiClient client, final String name, final String currentResourceVersion) throws Exception {
+        waitForChangedResourceVersion(budget, currentResourceVersion, () -> client.getAddressSpace(name).getJsonObject("metadata").getString("resourceVersion"));
+    }
+
+    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
+            throws Exception {
+        Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
+
+        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, () -> {
+            try {
+                final String newVersion = provideNewResourceVersion.get();
+                return !currentResourceVersion.equals(newVersion);
+            } catch (RuntimeException e) {
+                throw e; // don't pollute the cause chain
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }, budget);
     }
 
     public static String getTopicPrefix(boolean topicSwitch) {
         return topicSwitch ? "topic://" : "";
     }
 
-    private static Deployment getMessagingClientDeploymentResource() {
-        return new DeploymentBuilder()
-                .withNewMetadata()
-                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
-                .endMetadata()
-                .withNewSpec()
-                .withNewSelector()
-                .addToMatchLabels("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
-                .endSelector()
-                .withReplicas(1)
-                .withNewTemplate()
-                .withNewMetadata()
-                .addToLabels("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
-                .endMetadata()
-                .withNewSpec()
-                .addNewContainer()
-                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
-                .withImage("docker.io/kornysd/docker-clients:1.2")
-                .addNewPort()
-                .withContainerPort(4242)
-                .endPort()
-                .withNewLivenessProbe()
-                .withNewTcpSocket()
-                .withNewPort(4242)
-                .endTcpSocket()
-                .withInitialDelaySeconds(10)
-                .withPeriodSeconds(5)
-                .endLivenessProbe()
-                .endContainer()
-                .endSpec()
-                .endTemplate()
-                .endSpec()
-                .build();
-    }
-
-    private static Service getMessagingClientServiceResource() {
-        return new ServiceBuilder()
-                .withNewMetadata()
-                .withName(SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
-                .addToLabels("run", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString())
-                .endMetadata()
-                .withNewSpec()
-                .withSelector(Collections.singletonMap("app", SystemtestsOpenshiftApp.MESSAGING_CLIENTS.toString()))
-                .addNewPort()
-                .withName("http")
-                .withPort(4242)
-                .withProtocol("TCP")
-                .endPort()
-                .endSpec()
-                .build();
-    }
 }

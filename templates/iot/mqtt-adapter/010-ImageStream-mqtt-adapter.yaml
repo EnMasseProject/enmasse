@@ -1,0 +1,7 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: iot-mqtt-adapter
+  labels:
+    app: iot-mqtt-adapter
+    enmasse-component: iot

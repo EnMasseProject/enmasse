@@ -7,6 +7,7 @@ package io.enmasse.systemtest;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -30,9 +31,10 @@ public abstract class Kubernetes {
     protected final Environment environment;
     protected final KubernetesClient client;
     protected final String globalNamespace;
+    private static Kubernetes instance;
 
-    protected Kubernetes(Environment environment, KubernetesClient client, String globalNamespace) {
-        this.environment = environment;
+    protected Kubernetes(KubernetesClient client, String globalNamespace) {
+        this.environment = Environment.getInstance();
         this.client = client;
         this.globalNamespace = globalNamespace;
     }
@@ -52,12 +54,16 @@ public abstract class Kubernetes {
                 "Unable to find port " + portName + " for service " + service.getMetadata().getName());
     }
 
-    public static Kubernetes create(Environment environment) {
-        if (environment.useMinikube()) {
-            return new Minikube(environment, environment.namespace());
-        } else {
-            return new OpenShift(environment, environment.namespace());
+    public static Kubernetes getInstance() {
+        if (instance == null) {
+            Environment env = Environment.getInstance();
+            if (env.useMinikube()) {
+                instance = new Minikube(env.namespace());
+            } else {
+                instance = new OpenShift(env, env.namespace());
+            }
         }
+        return instance;
     }
 
     public String getApiToken() {
@@ -129,8 +135,12 @@ public abstract class Kubernetes {
         client.apps().statefulSets().inNamespace(globalNamespace).withName(name).scale(numReplicas, true);
     }
 
-    public List<Pod> listPods(String uuid) {
-        return new ArrayList<>(client.pods().inNamespace(globalNamespace).withLabel("enmasse.io/uuid", uuid).list().getItems());
+    public List<Pod> listPods(String namespace, String uuid) {
+        return new ArrayList<>(client.pods().inNamespace(namespace).withLabel("enmasse.io/uuid", uuid).list().getItems());
+    }
+
+    public List<Pod> listPods(String namespace) {
+        return new ArrayList<>(client.pods().inNamespace(namespace).list().getItems());
     }
 
     public List<Pod> listPods() {
@@ -240,9 +250,20 @@ public abstract class Kubernetes {
         client.configMaps().inNamespace(namespace).createOrReplace(newConfigMap);
     }
 
+    public void createNamespace(String namespace) {
+        log.info("Following namespace will be created = {}", namespace);
+        Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
+        client.namespaces().create(ns);
+    }
+
     public void deleteNamespace(String namespace) {
         log.info("Following namespace will be removed - {}", namespace);
         client.namespaces().withName(namespace).delete();
+    }
+
+    public boolean namespaceExists(String namespace) {
+        return client.namespaces().list().getItems().stream().map(n -> n.getMetadata().getName())
+                .collect(Collectors.toList()).contains(namespace);
     }
 
     public void deletePod(String namespace, Map<String, String> labels) {
@@ -278,8 +299,8 @@ public abstract class Kubernetes {
 
     /***
      * Returns pod ip
-     * @param namespace
-     * @param podName
+     * @param namespace namespace
+     * @param podName name of pod
      * @return string ip
      */
     public String getPodIp(String namespace, String podName) {
@@ -288,28 +309,123 @@ public abstract class Kubernetes {
 
     /***
      * Creates application from resources
-     * @param namespace
-     * @param resources
-     * @return String name of application
-     * @throws Exception
+     * @param namespace namespace
+     * @param resources deployment resource
+     * @throws Exception whe deployment failed
      */
-    public String createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
-        Deployment depRes = client.apps().deployments().inNamespace(namespace).create(resources);
-        Deployment result = client.apps().deployments().inNamespace(namespace)
-                .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
-        log.info("Deployment {} created", result.getMetadata().getName());
-        return result.getMetadata().getName();
+    public void createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
+        if (!deploymentExists(namespace, resources.getMetadata().getName())) {
+            Deployment depRes = client.apps().deployments().inNamespace(namespace).create(resources);
+            Deployment result = client.apps().deployments().inNamespace(namespace)
+                    .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
+            log.info("Deployment {} created", result.getMetadata().getName());
+        } else {
+            log.info("Deployment {} already exists", resources.getMetadata().getName());
+        }
     }
 
-    /***
-     * Creates service from resource
-     * @param resources
-     * @return endpoint of service
+    /**
+     * Create service from resource
+     *
+     * @param namespace namespace
+     * @param resources service resource
+     * @return endpoint of new service
      */
     public Endpoint createServiceFromResource(String namespace, Service resources) {
-        Service serRes = client.services().inNamespace(namespace).create(resources);
-        log.info("Service {} created", serRes.getMetadata().getName());
-        return getEndpoint(serRes.getMetadata().getName(), namespace, "http");
+        if (!serviceExists(namespace, resources.getMetadata().getName())) {
+            Service serRes = client.services().inNamespace(namespace).create(resources);
+            log.info("Service {} created", serRes.getMetadata().getName());
+        } else {
+            log.info("Service {} already exists", resources.getMetadata().getName());
+        }
+        return getEndpoint(resources.getMetadata().getName(), namespace, "http");
+    }
+
+    /**
+     * Creates ingress from resource
+     *
+     * @param namespace namespace
+     * @param resources resources
+     */
+    public void createIngressFromResource(String namespace, Ingress resources) {
+        if (!ingressExists(namespace, resources.getMetadata().getName())) {
+            Ingress serRes = client.extensions().ingresses().inNamespace(namespace).create(resources);
+            log.info("Ingress {} created", serRes.getMetadata().getName());
+        } else {
+            log.info("Ingress {} already exists", resources.getMetadata().getName());
+        }
+    }
+
+    /**
+     * Deletes ingress
+     *
+     * @param namespace   namespace
+     * @param ingressName ingress name
+     */
+    public void deleteIngress(String namespace, String ingressName) {
+        client.extensions().ingresses().inNamespace(namespace).withName(ingressName).delete();
+        log.info("Ingress {} deleted", ingressName);
+    }
+
+    /**
+     * Test if ingress already exists
+     *
+     * @param namespace   namespace
+     * @param ingressName name of ingress
+     * @return boolean
+     */
+    public boolean ingressExists(String namespace, String ingressName) {
+        return client.extensions().ingresses().inNamespace(namespace).list().getItems().stream()
+                .map(ingress -> ingress.getMetadata().getName()).collect(Collectors.toList()).contains(ingressName);
+    }
+
+    /**
+     * Return host of ingress
+     *
+     * @param namespace   namespace
+     * @param ingressName name of ingress
+     * @return string host
+     */
+    public String getIngressHost(String namespace, String ingressName) {
+        return client.extensions().ingresses().inNamespace(namespace).withName(ingressName).get().getSpec().getRules().get(0).getHost();
+    }
+
+    /**
+     * Create configmap from resource
+     *
+     * @param namespace kubernetes namespace
+     * @param resources configmap resources
+     */
+    public void createConfigmapFromResource(String namespace, ConfigMap resources) {
+        if (!configmapExists(namespace, resources.getMetadata().getName())) {
+            client.configMaps().inNamespace(namespace).create(resources);
+            log.info("Configmap {} in namespace {} created", resources.getMetadata().getName(), namespace);
+        } else {
+            log.info("Configmap {} in namespace {} already exists", resources.getMetadata().getName(), namespace);
+        }
+    }
+
+    /**
+     * Delete configmap from resource
+     *
+     * @param namespace     kubernetes namespace
+     * @param configmapName configmap
+     */
+    public void deleteConfigmap(String namespace, String configmapName) {
+        client.configMaps().inNamespace(namespace).withName(configmapName).delete();
+        log.info("Configmap {} in namespace {} deleted", configmapName, namespace);
+    }
+
+    /**
+     * Test if configmap plready exists
+     *
+     * @param namespace     kubernetes namespace
+     * @param configmapName configmap
+     * @return boolean
+     */
+    public boolean configmapExists(String namespace, String configmapName) {
+        return client.configMaps().inNamespace(namespace).list().getItems().stream()
+                .map(configMap -> configMap.getMetadata().getName()).collect(Collectors.toList()).contains(configmapName);
     }
 
     /***
@@ -323,13 +439,36 @@ public abstract class Kubernetes {
     }
 
     /***
+     * Check if deployment exists
+     * @param namespace kuberntes namespace name
+     * @param appName name of deployment
+     * @return true if deployment exists
+     */
+    public boolean deploymentExists(String namespace, String appName) {
+        return client.apps().deployments().inNamespace(namespace).list().getItems().stream()
+                .map(deployment -> deployment.getMetadata().getName()).collect(Collectors.toList()).contains(appName);
+    }
+
+    /***
      * Delete service by name
-     * @param namespace
-     * @param serviceName
+     * @param namespace kubernetes namespace
+     * @param serviceName service name
      */
     public void deleteService(String namespace, String serviceName) {
         client.services().inNamespace(namespace).withName(serviceName).delete();
         log.info("Service {} removed", serviceName);
+    }
+
+    /**
+     * Test if service already exists
+     *
+     * @param namespace   namespace
+     * @param serviceName service name
+     * @return boolean
+     */
+    public boolean serviceExists(String namespace, String serviceName) {
+        return client.services().inNamespace(namespace).list().getItems().stream()
+                .map(service -> service.getMetadata().getName()).collect(Collectors.toList()).contains(serviceName);
     }
 
     /***
@@ -353,8 +492,8 @@ public abstract class Kubernetes {
 
     /***
      * Wait until pod ready
-     * @param pod
-     * @throws Exception
+     * @param pod pod instance
+     * @throws Exception when pod is not ready in timeout
      */
     public void waitUntilPodIsReady(Pod pod) throws InterruptedException {
         log.info("Waiting until pod: {} is ready", pod.getMetadata().getName());
@@ -369,6 +508,15 @@ public abstract class Kubernetes {
         return listPods().get(0).getMetadata().getLabels().get("app");
     }
 
+
+    /**
+     * Run command on kubernetes pod
+     *
+     * @param pod       pod instance
+     * @param container name of container
+     * @param command   command to run
+     * @return stdout
+     */
     public String runOnPod(Pod pod, String container, String... command) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         log.info("Running command on pod {}: {}", pod.getMetadata().getName(), command);
@@ -401,6 +549,13 @@ public abstract class Kubernetes {
         }
     }
 
+    /**
+     * Creates service account
+     *
+     * @param name      name of servcie account
+     * @param namespace namespace
+     * @return full name
+     */
     public String createServiceAccount(String name, String namespace) {
         log.info("Create serviceaccount {} in namespace {}", name, namespace);
         client.serviceAccounts().inNamespace(namespace)
@@ -408,12 +563,26 @@ public abstract class Kubernetes {
         return "system:serviceaccount:" + namespace + ":" + name;
     }
 
+    /**
+     * Deletes service account
+     *
+     * @param name      name
+     * @param namespace namesapce
+     * @return full name
+     */
     public String deleteServiceAccount(String name, String namespace) {
         log.info("Delete serviceaccount {} from namespace {}", name, namespace);
         client.serviceAccounts().inNamespace(namespace).withName(name).delete();
         return "system:serviceaccount:" + namespace + ":" + name;
     }
 
+    /**
+     * Returns service account token
+     *
+     * @param name      name
+     * @param namespace namespace
+     * @return token
+     */
     public String getServiceaccountToken(String name, String namespace) {
         return new String(Base64.getDecoder().decode(client.secrets().inNamespace(namespace).list().getItems().stream()
                 .filter(secret -> secret.getMetadata().getName().contains(name + "-token")).collect(Collectors.toList())

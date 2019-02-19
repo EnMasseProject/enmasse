@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: address-space-admin
+  labels:
+    app: enmasse
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: enmasse.io:address-space-admin
+subjects:
+- kind: ServiceAccount
+  name: address-space-admin
+  namespace: ${NAMESPACE}

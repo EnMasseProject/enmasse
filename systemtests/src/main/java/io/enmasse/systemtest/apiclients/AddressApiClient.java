@@ -26,8 +26,12 @@ import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public class AddressApiClient extends ApiClient {
-    protected static Logger log = CustomLogger.getLogger();
+    private final static Logger log = CustomLogger.getLogger();
     private final int initRetry = 10;
+
+    private final static String ADDRESS_PATH = "/apis/enmasse.io/v1beta1/addresses";
+    private final static String ADDRESS_SPACE_PATH = "/apis/enmasse.io/v1beta1/addressspaces";
+
     private final String schemaPath;
     private final String addressSpacesPath;
     private final String addressNestedPathPattern;
@@ -222,6 +226,36 @@ public class AddressApiClient extends ApiClient {
                 Optional.empty());
     }
 
+    /**
+     * Get all addressesspaces (non-namespaced)
+     *
+     * @param expectedCode the expected return code
+     * @return the result
+     * @throws Exception if anything goes wrong
+     */
+    public JsonObject getAllAddressSpaces(final int expectedCode) throws Exception {
+        log.info("GET-all-address-spaces: path {}; ", ADDRESS_SPACE_PATH);
+        return doRequestNTimes(initRetry, () -> {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            HttpRequest<JsonObject> request = client.get(endpoint.getPort(), endpoint.getHost(), ADDRESS_SPACE_PATH)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject())
+                    .timeout(20_000);
+            request.send(ar -> responseHandler(ar, responsePromise, expectedCode, "Error: get addressesspaces"));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        }, Optional.of(() -> kubernetes.getRestEndpoint()), Optional.empty());
+    }
+
+    /**
+     * Get all addresses (non-namespaced)
+     *
+     * @return the result
+     * @throws Exception if anything goes wrong
+     */
+    public JsonObject getAllAddresseSpaces() throws Exception {
+        return getAllAddressSpaces(HTTP_OK);
+    }
+
 
     private <T> HttpRequest<T> addRequestParameters(HttpRequest<T> request, Optional<HashMap<String, String>> params) {
         if (params.isPresent()) {
@@ -230,6 +264,36 @@ public class AddressApiClient extends ApiClient {
         }
 
         return request;
+    }
+
+    /**
+     * Get all addresses (non-namespaced)
+     *
+     * @param expectedCode the expected return code
+     * @return the result
+     * @throws Exception if anything goes wrong
+     */
+    public JsonObject getAllAddresses(final int expectedCode) throws Exception {
+        log.info("GET-all-addresses: path {}; ", ADDRESS_PATH);
+        return doRequestNTimes(initRetry, () -> {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            HttpRequest<JsonObject> request = client.get(endpoint.getPort(), endpoint.getHost(), ADDRESS_PATH)
+                    .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
+                    .as(BodyCodec.jsonObject())
+                    .timeout(20_000);
+            request.send(ar -> responseHandler(ar, responsePromise, expectedCode, "Error: get addresses"));
+            return responsePromise.get(30, TimeUnit.SECONDS);
+        }, Optional.of(() -> kubernetes.getRestEndpoint()), Optional.empty());
+    }
+
+    /**
+     * Get all addresses (non-namespaced)
+     *
+     * @return the result
+     * @throws Exception if anything goes wrong
+     */
+    public JsonObject getAllAddresses() throws Exception {
+        return getAllAddresses(HTTP_OK);
     }
 
     /**
@@ -557,4 +621,5 @@ public class AddressApiClient extends ApiClient {
         }
         return responseData;
     }
+
 }

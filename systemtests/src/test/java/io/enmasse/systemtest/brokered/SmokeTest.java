@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
+import static io.enmasse.systemtest.TestTag.smoke;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(nonPR)
+@Tag(smoke)
 class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     /**
@@ -102,13 +104,11 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     void testCreateAlreadyExistingAddress() throws Exception {
         String addr_name = "brokeredAddrA";
-        AddressSpace addressSpaceA = new AddressSpace("brokered-a", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        createAddressSpace(addressSpaceA);
         Destination queueA = Destination.queue(addr_name, getDefaultPlan(AddressType.QUEUE));
-        setAddresses(addressSpaceA, queueA);
+        setAddresses(queueA);
 
         Destination topicA = Destination.topic(addr_name, getDefaultPlan(AddressType.TOPIC));
-        assertThrows(AddressAlreadyExistsException.class, () -> setAddresses(addressSpaceA, HTTP_CONFLICT, topicA),
+        assertThrows(AddressAlreadyExistsException.class, () -> setAddresses(HTTP_CONFLICT, topicA),
                 "setAddresses does not throw right exception");
     }
 }

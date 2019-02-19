@@ -7,6 +7,7 @@ package io.enmasse.controller;
 import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.auth.OpenSSLCertManager;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -37,13 +38,14 @@ public class EndpointController implements Controller {
     @Override
     public AddressSpace handle(AddressSpace addressSpace) {
         updateEndpoints(addressSpace);
+        updateCaCert(addressSpace);
         return addressSpace;
     }
 
     private void updateEndpoints(AddressSpace addressSpace) {
 
         Map<String, String> annotations = new HashMap<>();
-        annotations.put(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName());
+        annotations.put(AnnotationKeys.ADDRESS_SPACE, addressSpace.getMetadata().getName());
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         List<Service> services = client.services().inNamespace(namespace).withLabel(LabelKeys.INFRA_UUID, infraUuid).list().getItems();
@@ -58,8 +60,15 @@ public class EndpointController implements Controller {
             statuses = endpoints.stream().map(e -> e.endpointStatus).collect(Collectors.toList());
         }
 
-        log.debug("Updating endpoints for " + addressSpace.getName() + " to " + statuses);
+        log.debug("Updating endpoints for " + addressSpace.getMetadata().getName() + " to " + statuses);
         addressSpace.getStatus().setEndpointStatuses(statuses);
+    }
+
+    private void updateCaCert(final AddressSpace addressSpace) {
+        final Secret caCert = OpenSSLCertManager.create(client).getCertSecret(KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace));
+        if ( caCert != null ) {
+            addressSpace.getStatus().setCaCert(caCert.getData().get("tls.crt"));
+        }
     }
 
     private static class EndpointInfo {
@@ -75,16 +84,16 @@ public class EndpointController implements Controller {
     public List<EndpointInfo> collectEndpoints(AddressSpace addressSpace, List<Service> services) {
         List<EndpointInfo> endpoints = new ArrayList<>();
 
-        for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-            EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder();
-            statusBuilder.setName(endpoint.getName());
-            statusBuilder.setServiceHost(KubeUtil.getAddressSpaceServiceHost(endpoint.getService(), namespace, addressSpace));
+        for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+            EndpointStatusBuilder statusBuilder = new EndpointStatusBuilder();
+            statusBuilder.withName(endpoint.getName());
+            statusBuilder.withServiceHost(KubeUtil.getAddressSpaceServiceHost(endpoint.getService(), namespace, addressSpace));
             Service service = findService(services, KubeUtil.getAddressSpaceServiceName(endpoint.getService(), addressSpace));
             if (service == null) {
                 continue;
             }
 
-            statusBuilder.setServicePorts(ServiceHelper.getServicePorts(service));
+            statusBuilder.withServicePorts(ServiceHelper.getServicePorts(service));
             endpoints.add(new EndpointInfo(endpoint, statusBuilder.build()));
         }
         return endpoints;
@@ -104,13 +113,13 @@ public class EndpointController implements Controller {
 
         for (EndpointInfo endpoint : endpoints) {
 
-            if (endpoint.endpointSpec.getExposeSpec().isPresent()) {
-                exposedStatuses.add(exposeEndpoint(addressSpace, endpoint, endpoint.endpointSpec.getExposeSpec().get()));
+            if (endpoint.endpointSpec.getExpose() != null) {
+                exposedStatuses.add(exposeEndpoint(addressSpace, endpoint, endpoint.endpointSpec.getExpose()));
             } else {
-                EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder(endpoint.endpointStatus);
+                EndpointStatusBuilder statusBuilder = new EndpointStatusBuilder(endpoint.endpointStatus);
                 Secret certSecret = client.secrets().inNamespace(namespace).withName(KubeUtil.getExternalCertSecretName(endpoint.endpointSpec.getService(), addressSpace)).get();
                 if (certSecret != null) {
-                    statusBuilder.setCertificate(certSecret.getData().get("tls.crt"));
+                    statusBuilder.withCert(certSecret.getData().get("tls.crt"));
                 }
                 exposedStatuses.add(endpoint.endpointStatus);
             }
@@ -120,29 +129,29 @@ public class EndpointController implements Controller {
     }
 
     private EndpointStatus exposeEndpoint(AddressSpace addressSpace, EndpointInfo endpointInfo, ExposeSpec exposeSpec) {
-        EndpointStatus.Builder statusBuilder = new EndpointStatus.Builder(endpointInfo.endpointStatus);
+        EndpointStatusBuilder statusBuilder = new EndpointStatusBuilder(endpointInfo.endpointStatus);
         try {
             switch (exposeSpec.getType()) {
                 case route:
                     Route route = ensureRouteExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
                     if (route != null) {
-                        statusBuilder.setExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
-                        statusBuilder.setExternalHost(route.getSpec().getHost());
-                        if (exposeSpec.getRouteTlsTermination().equals(ExposeSpec.TlsTermination.passthrough)) {
+                        statusBuilder.withExternalPorts(Collections.singletonMap(exposeSpec.getRouteServicePort(), 443));
+                        statusBuilder.withExternalHost(route.getSpec().getHost());
+                        if (exposeSpec.getRouteTlsTermination().equals(TlsTermination.passthrough)) {
                             Secret certSecret = client.secrets().inNamespace(namespace).withName(KubeUtil.getExternalCertSecretName(endpointInfo.endpointSpec.getService(), addressSpace)).get();
                             if (certSecret != null) {
-                                statusBuilder.setCertificate(certSecret.getData().get("tls.crt"));
+                                statusBuilder.withCert(certSecret.getData().get("tls.crt"));
                             }
                         } else {
-                            statusBuilder.setCertificate(route.getSpec().getTls().getCertificate());
+                            statusBuilder.withCert(route.getSpec().getTls().getCertificate());
                         }
                     }
                     break;
                 case loadbalancer:
                     Service service = ensureExternalServiceExists(addressSpace, endpointInfo.endpointSpec, exposeSpec);
                     if (service != null && service.getSpec().getPorts().size() > 0) {
-                        statusBuilder.setExternalHost(service.getSpec().getLoadBalancerIP());
-                        statusBuilder.setExternalPorts(endpointInfo.endpointStatus.getServicePorts());
+                        statusBuilder.withExternalHost(service.getSpec().getLoadBalancerIP());
+                        statusBuilder.withExternalPorts(endpointInfo.endpointStatus.getServicePorts());
                     }
                     break;
             }
@@ -170,13 +179,13 @@ public class EndpointController implements Controller {
                 .withName(routeName)
                 .withNamespace(namespace)
                 .addToAnnotations(exposeSpec.getAnnotations() != null ? exposeSpec.getAnnotations() : Collections.emptyMap())
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getMetadata().getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, serviceName)
-                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType())
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()
                 .editOrNewSpec()
-                .withHost(endpointSpec.getExposeSpec().flatMap(ExposeSpec::getRouteHost).orElse(""))
+                .withHost(endpointSpec.getExpose() != null ? endpointSpec.getExpose().getRouteHost() : "")
                 .withNewTo()
                 .withName(serviceName)
                 .withKind("Service")
@@ -189,17 +198,17 @@ public class EndpointController implements Controller {
                 .endSpec();
 
 
-        if (endpointSpec.getCertSpec().isPresent()) {
-            ExposeSpec.TlsTermination tlsTermination = exposeSpec.getRouteTlsTermination();
-            CertSpec certSpec = endpointSpec.getCertSpec().get();
+        if (endpointSpec.getCert() != null ) {
+            TlsTermination tlsTermination = exposeSpec.getRouteTlsTermination();
+            CertSpec certSpec = endpointSpec.getCert();
 
-            if (tlsTermination.equals(ExposeSpec.TlsTermination.passthrough)) {
+            if (tlsTermination.equals(TlsTermination.passthrough)) {
                 route.editOrNewSpec()
                     .withNewTls()
                     .withTermination("passthrough")
                     .endTls()
                     .endSpec();
-            } else if (tlsTermination.equals(ExposeSpec.TlsTermination.reencrypt)) {
+            } else if (tlsTermination.equals(TlsTermination.reencrypt)) {
                 if ("selfsigned".equals(certSpec.getProvider())) {
                     String caSecretName = KubeUtil.getAddressSpaceExternalCaSecretName(addressSpace);
                     Secret secret = client.secrets().inNamespace(namespace).withName(caSecretName).get();
@@ -260,9 +269,9 @@ public class EndpointController implements Controller {
                 .withName(serviceName)
                 .withNamespace(namespace)
                 .addToAnnotations(exposeSpec.getAnnotations())
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getName())
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpace.getMetadata().getName())
                 .addToAnnotations(AnnotationKeys.SERVICE_NAME, KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace))
-                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType())
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                 .endMetadata()
                 .editOrNewSpec()

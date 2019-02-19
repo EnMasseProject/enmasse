@@ -19,7 +19,8 @@ import java.util.*;
  * Class represent abstract client which keeps common features of client
  */
 public class KubeCMDClient extends CmdClient {
-    protected static int DEFAULT_SYNC_TIMEOUT = 10000;
+    protected static final int DEFAULT_SYNC_TIMEOUT = 10000;
+    protected static final int ONE_MINUTE_TIMEOUT = 60000;
     protected static String CMD = setUpKubernetesCmd();
     private static Logger log = CustomLogger.getLogger();
 
@@ -42,10 +43,8 @@ public class KubeCMDClient extends CmdClient {
      * @return result of execution
      */
     public static ExecutionResultData createOrUpdateCR(String namespace, String definition, boolean replace) throws IOException {
-        File defInFile = null;
-        try {
-            defInFile = new File("crdefinition.file");
-            FileWriter wr = new FileWriter(defInFile.getName());
+        final File defInFile = new File("crdefinition.file");
+        try (FileWriter wr = new FileWriter(defInFile.getName())) {
             wr.write(definition);
             wr.flush();
             log.info("User '{}' created", defInFile.getAbsolutePath());
@@ -240,5 +239,10 @@ public class KubeCMDClient extends CmdClient {
     public static ExecutionResultData createOcUser(String username) {
         List<String> deleteCmd = Arrays.asList(CMD, "create", "user", username);
         return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData getEvents(String namespace) {
+        List<String> command = Arrays.asList(CMD, "get", "events", "-n", namespace);
+        return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 }

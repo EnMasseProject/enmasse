@@ -8,6 +8,7 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.MsgCliApiClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
@@ -42,10 +43,10 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     private static Logger log = CustomLogger.getLogger();
     private Map<String, AddressSpace> provisionedServices = new HashMap<>();
-    private UserCredentials ocTestUser = new UserCredentials("pepik", "pepik");
+    private UserCredentials ocTestUser = Credentials.userCredentials();
 
     private String getUserProjectName(AddressSpace addressSpace) {
-        return String.format("%s-%s", "service", addressSpace.getNamespace());
+        return String.format("%s-%s", "service", addressSpace.getName());
     }
 
     @BeforeEach
@@ -117,8 +118,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE.plan());
-        Destination topic = Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC.plan());
+        Destination queue = Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE);
+        Destination topic = Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC);
         AddressSpace brokered = new AddressSpace("test-messaging-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
@@ -149,7 +150,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE);
         AddressSpace addressSpace = new AddressSpace("test-cert-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
@@ -196,7 +197,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendReceiveInsideCluster() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE.plan());
+        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE);
         AddressSpace addressSpace = new AddressSpace("cluster-messaging-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
@@ -213,28 +214,32 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         consolePage.login(ocTestUser, true);
         consolePage.createAddressWebConsole(queue, false, true);
 
-        Endpoint endpoint = TestUtils.deployMessagingClientApp(namespace, kubernetes);
-        MsgCliApiClient client = new MsgCliApiClient(kubernetes, endpoint);
+        try {
+            SystemtestsKubernetesApps.deployMessagingClientApp(namespace, kubernetes);
+            MsgCliApiClient client = new MsgCliApiClient(kubernetes, SystemtestsKubernetesApps.getMessagingClientEndpoint(namespace, kubernetes));
 
-        ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
+            ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
 
-        ClientArgumentMap arguments = new ClientArgumentMap();
-        arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
-        arguments.put(ClientArgument.ADDRESS, queue.getAddress());
-        arguments.put(ClientArgument.COUNT, "10");
-        arguments.put(ClientArgument.CONN_RECONNECT, "false");
-        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
-        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
-        arguments.put(ClientArgument.CONN_SSL, "true");
-        arguments.put(ClientArgument.TIMEOUT, "10");
-        arguments.put(ClientArgument.LOG_MESSAGES, "json");
-        msgClient.setArguments(arguments);
+            ClientArgumentMap arguments = new ClientArgumentMap();
+            arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
+            arguments.put(ClientArgument.ADDRESS, queue.getAddress());
+            arguments.put(ClientArgument.COUNT, "10");
+            arguments.put(ClientArgument.CONN_RECONNECT, "false");
+            arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+            arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+            arguments.put(ClientArgument.CONN_SSL, "true");
+            arguments.put(ClientArgument.TIMEOUT, "10");
+            arguments.put(ClientArgument.LOG_MESSAGES, "json");
+            msgClient.setArguments(arguments);
 
 
-        JsonObject response = client.sendAndGetStatus(msgClient);
+            JsonObject response = client.sendAndGetStatus(msgClient);
 
-        assertThat(response.getInteger("ecode"), is(0));
-        TestUtils.deleteMessagingClientApp(namespace, kubernetes);
+            assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
+                    response.getInteger("ecode"), is(0));
+        } finally {
+            SystemtestsKubernetesApps.deleteMessagingClientApp(namespace, kubernetes);
+        }
     }
 
     @Test
@@ -251,7 +256,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
         consolePage.login(ocTestUser, true);
-        consolePage.createAddressWebConsole(Destination.queue("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE.plan()),
+        consolePage.createAddressWebConsole(Destination.queue("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE),
                 false, true);
 
         deleteAddressSpaceCreatedBySC(namespace, addressSpace);

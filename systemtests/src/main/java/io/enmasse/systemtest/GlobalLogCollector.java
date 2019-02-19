@@ -4,20 +4,29 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.fabric8.kubernetes.api.model.Pod;
-import org.slf4j.Logger;
-
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.fabric8.kubernetes.api.model.Pod;
 
 public class GlobalLogCollector {
-    private static Logger log = CustomLogger.getLogger();
+    private final static Logger log = CustomLogger.getLogger();
     private final Map<String, LogCollector> collectorMap = new HashMap<>();
     private final Kubernetes kubernetes;
     private final File logDir;
@@ -52,12 +61,10 @@ public class GlobalLogCollector {
         log.info("Collecting configmaps for namespace {}", namespace);
         kubernetes.getAllConfigMaps(namespace).getItems().forEach(configMap -> {
             try {
-                Path path = Paths.get(logDir.getPath(), namespace);
-                File confMapFile = new File(
-                        Files.createDirectories(path).toFile(),
-                        configMap.getMetadata().getName() + "." + operation + ".configmap");
-                if (!confMapFile.exists()) {
-                    try (BufferedWriter bf = Files.newBufferedWriter(confMapFile.toPath())) {
+                Path confMapFile = resolveLogFile(configMap.getMetadata().getName() + "." + operation + ".configmap");
+                log.info("config map '{}' will be archived with path: '{}'", configMap.getMetadata().getName(), confMapFile);
+                if (!Files.exists(confMapFile)) {
+                    try (BufferedWriter bf = Files.newBufferedWriter(confMapFile)) {
                         bf.write(configMap.toString());
                     }
                 }
@@ -74,14 +81,9 @@ public class GlobalLogCollector {
         log.info("Store logs from all terminated pods in namespace '{}'", namespace);
         kubernetes.getLogsOfTerminatedPods(namespace).forEach((podName, podLogTerminated) -> {
             try {
-                Path path = Paths.get(logDir.getPath(), namespace);
-                File podLog = new File(
-                        Files.createDirectories(path).toFile(),
-                        namespace + "." + podName + ".terminated.log");
-                log.info("log of terminated '{}' pod will be archived with path: '{}'",
-                        podName,
-                        path.toString());
-                try (BufferedWriter bf = Files.newBufferedWriter(podLog.toPath())) {
+                Path podLog = resolveLogFile(namespace + "." + podName + ".terminated.log");
+                log.info("log of terminated '{}' pod will be archived with path: '{}'", podName, podLog);
+                try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogTerminated);
                 }
             } catch (IOException e) {
@@ -90,28 +92,13 @@ public class GlobalLogCollector {
         });
     }
 
-    public void collectEvents() {
+    public void collectEvents() throws IOException {
         long timestamp = System.currentTimeMillis();
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        processBuilder.command("kubectl", "get", "events", "-n", namespace);
-        processBuilder.redirectErrorStream(true);
-        Process process;
         log.info("Collecting events in {}", namespace);
-
-        File eventLog = new File(logDir, namespace + ".events." + timestamp);
-        try (FileWriter fileWriter = new FileWriter(eventLog)) {
-            process = processBuilder.start();
-            InputStream stdout = process.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stdout));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                fileWriter.write(line);
-                fileWriter.write("\n");
-            }
-            reader.close();
-            if (!process.waitFor(1, TimeUnit.MINUTES)) {
-                throw new RuntimeException("Command timed out");
-            }
+        ExecutionResultData result = KubeCMDClient.getEvents(namespace);
+        Path eventLog = resolveLogFile(namespace + ".events." + timestamp);
+        try (BufferedWriter writer = Files.newBufferedWriter(eventLog)) {
+            writer.write(result.getStdOut());
         } catch (Exception e) {
             log.error("Error collecting events for {}", namespace, e);
         }
@@ -145,17 +132,15 @@ public class GlobalLogCollector {
 
         String output = kubernetes.runOnPod(pod, "router", allArgs.toArray(new String[0]));
         try {
-            Path path = Paths.get(logDir.getPath(), namespace);
-            File routerAutoLinks = new File(
-                    Files.createDirectories(path).toFile(),
-                    pod.getMetadata().getName() + filesuffix);
-            if (!routerAutoLinks.exists()) {
-                try (BufferedWriter bf = Files.newBufferedWriter(routerAutoLinks.toPath())) {
+            Path routerAutoLinks = resolveLogFile(pod.getMetadata().getName() + filesuffix);
+            log.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
+            if (!Files.exists(routerAutoLinks)) {
+                try (BufferedWriter bf = Files.newBufferedWriter(routerAutoLinks)) {
                     bf.write(output);
                 }
             }
         } catch (IOException e) {
-            log.warn("Error collecting router state: {}", e.getMessage());
+            log.warn("Error collecting router state", e);
         }
     }
 
@@ -165,15 +150,25 @@ public class GlobalLogCollector {
     }
 
     private void collectJmap(Pod pod) {
-        String output = kubernetes.runOnPod(pod, "api-server", "jmap", "-dump:live,format=b,file=/tmp/dump.bin", "1");
+        kubernetes.runOnPod(pod, "api-server", "jmap", "-dump:live,format=b,file=/tmp/dump.bin", "1");
         try {
-            Path path = Paths.get(logDir.getPath(), namespace);
-            File jmapLog = new File(
-                    Files.createDirectories(path).toFile(),
-                    pod.getMetadata().getName() + ".dump." + Instant.now().toString().replace(":", "_") + ".bin");
-            KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/tmp/dump.bin", jmapLog.getAbsolutePath());
+            Path jmapLog = resolveLogFile(pod.getMetadata().getName() + ".dump." + Instant.now().toString().replace(":", "_") + ".bin");
+            KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/tmp/dump.bin", jmapLog.toAbsolutePath().toString());
         } catch (Exception e) {
-            log.warn("Error collecting jmap state: {}", e.getMessage());
+            log.warn("Error collecting jmap state", e);
         }
     }
+
+    /**
+     * Create a new path inside the log directory, and ensure that the parent directory exists.
+     * @param other the path segment, relative to the log directory.
+     * @return The full path.
+     * @throws IOException In case of any IO error
+     */
+    private Path resolveLogFile(final String other) throws IOException {
+        return Files
+                .createDirectories(Paths.get(logDir.getPath(), namespace))
+                .resolve(other);
+    }
+
 }

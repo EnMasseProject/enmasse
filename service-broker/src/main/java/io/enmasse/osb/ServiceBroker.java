@@ -5,6 +5,7 @@
 
 package io.enmasse.osb;
 
+import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
@@ -13,6 +14,7 @@ import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
 import io.enmasse.k8s.api.KubeSchemaApi;
 import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.osb.api.provision.ConsoleProxy;
@@ -42,6 +44,7 @@ public class ServiceBroker extends AbstractVerticle {
 
     static {
         try {
+            CoreCrd.registerCustomCrds();
             AdminCrd.registerCustomCrds();
         } catch (RuntimeException t) {
             t.printStackTrace();
@@ -73,7 +76,7 @@ public class ServiceBroker extends AbstractVerticle {
             if (route == null) {
                 return null;
             }
-            return String.format("https://%s/console/%s", route.getSpec().getHost(), addressSpace.getName());
+            return String.format("https://%s/console/%s", route.getSpec().getHost(), addressSpace.getMetadata().getName());
         };
 
         vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy),
@@ -105,7 +108,13 @@ public class ServiceBroker extends AbstractVerticle {
             options.getStandardAuthserviceConfigName(),
             options.getStandardAuthserviceCredentialsSecretName(),
             options.getStandardAuthserviceCertSecretName());
-        return new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
+        if (keycloakFactory.isKeycloakAvailable()) {
+            log.info("Using Keycloak for User API");
+            return new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
+        } else {
+            log.info("Using Null for User API");
+            return new NullUserApi();
+        }
     }
 
     private static void ensureRouteExists(NamespacedOpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {

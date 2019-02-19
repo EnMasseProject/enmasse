@@ -7,9 +7,9 @@ package io.enmasse.systemtest.standard;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.resources.AddressPlan;
+import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlan;
+import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -46,10 +46,10 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
     void testAppendAddressPlan() throws Exception {
         List<AddressResource> addressResources = Collections.singletonList(new AddressResource("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
-        AddressPlan weakQueuePlan = new AddressPlan(weakQueuePlanName, AddressType.QUEUE, addressResources);
+        AddressPlanDefinition weakQueuePlan = new AddressPlanDefinition(weakQueuePlanName, AddressType.QUEUE, addressResources);
         plansProvider.createAddressPlan(weakQueuePlan);
 
-        AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlan("standard");
+        AddressSpacePlanDefinition standardPlan = plansProvider.getAddressSpacePlan("standard");
         plansProvider.createAddressPlan(weakQueuePlan);
         standardPlan.getAddressPlans().add(weakQueuePlan);
         plansProvider.removeAddressSpacePlan(standardPlan);

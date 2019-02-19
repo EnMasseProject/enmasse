@@ -6,13 +6,17 @@
 package io.enmasse.osb;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceStatus;
 import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointSpecBuilder;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.osb.api.provision.ConsoleProxy;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
@@ -68,16 +72,24 @@ public class HTTPServerTest {
     }
 
     private AddressSpace createAddressSpace(String name) {
-        return new AddressSpace.Builder()
-                .setName(name)
-                .setNamespace(name)
-                .setType("mytype")
-                .setPlan("myplan")
-                .setStatus(new AddressSpaceStatus(false))
-                .appendEndpoint(new EndpointSpec.Builder()
-                        .setName("foo")
-                        .setService("messaging")
+        return new AddressSpaceBuilder()
+                .withMetadata(new ObjectMetaBuilder()
+                        .withName(name)
+                        .withNamespace(name)
                         .build())
+
+                .withNewSpec()
+                .withType("mytype")
+                .withPlan("myplan")
+
+                .addToEndpoints(new EndpointSpecBuilder()
+                        .withName("foo")
+                        .withService("messaging")
+                        .build())
+                .endSpec()
+
+                .withNewStatus(false)
+
                 .build();
     }
 

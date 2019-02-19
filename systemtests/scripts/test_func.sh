@@ -14,16 +14,18 @@ function setup_test_openshift() {
     KUBEADM=$2
     SKIP_DEPENDENCIES=${3:-false}
     UPGRADE=${4:-false}
+    IMAGE_NAMESPACE=${5:-"enmasseci"}
 
     export_required_env
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}"
 
     rm -rf ${TEST_LOGDIR}
     mkdir -p ${TEST_LOGDIR}
 
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${KUBERNETES_API_URL}
     oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
+    oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=${IMAGE_NAMESPACE}
     export KUBERNETES_API_TOKEN=`oc whoami -t`
 
     if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
@@ -40,7 +42,8 @@ function export_required_env {
     SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
     KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
 
-    export KUBERNETES_API_URL=${KUBERNETES_API_URL:-https://localhost:8443}
+    API_URL=$(oc config view -o jsonpath='{.clusters[0].cluster.server}')
+    export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
     export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}
     export KUBERNETES_NAMESPACE=${KUBERNETES_NAMESPACE:-enmasseci}
@@ -324,6 +327,10 @@ function clean_docker_images() {
     fi
 }
 
+function print_images() {
+    DOCKER=${DOCKER:-docker}
+    ${DOCKER} images
+}
 function clean_oc_location() {
     info "Removing previous openshift data"
     if [[ $(get_openshift_version) == '3.9'* ]]; then
@@ -363,8 +370,8 @@ function get_kubeconfig_path() {
 }
 
 function get_oc_args() {
-    OC_39='--service-catalog'
-    OC_310='--enable=*,service-catalog,web-console --insecure-skip-tls-verify=true'
+    OC_39="--public-hostname=$(hostname -I | awk '{print $1}') --service-catalog"
+    OC_310="--public-hostname=$(hostname -I | awk '{print $1}') --enable=*,service-catalog,web-console --insecure-skip-tls-verify=true"
 
     if [[ $(get_openshift_version) == '3.9'* ]]; then
         echo $OC_39
@@ -376,12 +383,18 @@ function get_oc_args() {
 function is_upgraded() {
     IMAGE=$1
     TAG=${TAG:-"latest"}
+
+    IMAGE_TAG=$(echo $IMAGE | cut -f 2 -d ':')
     TEMPLATES=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/templates/* | grep "image")
     DEPLOYMENTS=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/components/*/*-Deployment* | grep "image")
     if [[ "${TEMPLATES}" == *"${IMAGE}"* ]] || [[ "${DEPLOYMENTS}" == *"${IMAGE}"* ]] ; then
         echo "true"
     else
-        echo "false"
+        if [[ "${IMAGE_TAG}" == "${TAG}" ]]; then
+            echo "true"
+        else
+            echo "false"
+        fi
     fi
 }
 

@@ -14,7 +14,8 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.networking.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
-import java.io.IOException;
+import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,13 +33,13 @@ public class NetworkPolicyController implements Controller {
     @Override
     public AddressSpace handle(AddressSpace addressSpace) throws Exception {
         NetworkPolicy networkPolicy = null;
-        InfraConfig infraConfig = parseCurrentInfraConfig(addressSpace);
+        InfraConfig infraConfig = parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace);
         if (infraConfig != null) {
             networkPolicy = infraConfig.getNetworkPolicy();
         }
 
-        if (addressSpace.getNetworkPolicy() != null) {
-            networkPolicy = addressSpace.getNetworkPolicy();
+        if (addressSpace.getSpec().getNetworkPolicy() != null) {
+            networkPolicy = addressSpace.getSpec().getNetworkPolicy();
         }
 
 
@@ -68,20 +69,11 @@ public class NetworkPolicyController implements Controller {
         return !Objects.equals(existingPolicy.getSpec().getEgress(), newPolicy.getSpec().getEgress());
     }
 
-    private InfraConfig parseCurrentInfraConfig(AddressSpace addressSpace) throws IOException {
-        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG) == null) {
-            return null;
-        }
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
-        AddressSpaceType type = addressSpaceResolver.getType(addressSpace.getType());
-        return type.getInfraConfigDeserializer().fromJson(addressSpace.getAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG));
-    }
-
     private io.fabric8.kubernetes.api.model.networking.NetworkPolicy createNetworkPolicy(NetworkPolicy networkPolicy, AddressSpace addressSpace, List<Service> items) {
         NetworkPolicyBuilder builder = new NetworkPolicyBuilder()
                 .editOrNewMetadata()
                 .withName(KubeUtil.getNetworkPolicyName(addressSpace))
-                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getType())
+                .addToLabels(LabelKeys.INFRA_TYPE, addressSpace.getSpec().getType())
                 .addToLabels(LabelKeys.INFRA_UUID, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID))
                 .addToLabels(LabelKeys.APP, "enmasse")
                 .endMetadata();
@@ -128,7 +120,7 @@ public class NetworkPolicyController implements Controller {
 
     private List<NetworkPolicyPort> getPortsForAddressSpace(AddressSpace addressSpace, List<Service> items) {
         List<NetworkPolicyPort> networkPolicyPorts = new ArrayList<>();
-        for (EndpointSpec endpointSpec : addressSpace.getEndpoints()) {
+        for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
             Service service = findService(items, KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace));
             if (service != null) {
                 for (int port : ServiceHelper.getServicePorts(service).values()) {

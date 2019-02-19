@@ -7,7 +7,11 @@ package io.enmasse.systemtest.ability;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.DestinationPlan;
+import org.junit.jupiter.api.Tag;
 
+import static io.enmasse.systemtest.TestTag.sharedBrokered;
+
+@Tag(sharedBrokered)
 public interface ITestBaseBrokered extends ITestBase {
 
     @Override
@@ -19,9 +23,9 @@ public interface ITestBaseBrokered extends ITestBase {
     default String getDefaultPlan(AddressType addressType) {
         switch (addressType) {
             case QUEUE:
-                return DestinationPlan.BROKERED_QUEUE.plan();
+                return DestinationPlan.BROKERED_QUEUE;
             case TOPIC:
-                return DestinationPlan.BROKERED_TOPIC.plan();
+                return DestinationPlan.BROKERED_TOPIC;
         }
         return null;
     }

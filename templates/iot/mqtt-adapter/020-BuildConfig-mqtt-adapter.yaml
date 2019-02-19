@@ -1,0 +1,34 @@
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  name: iot-mqtt-adapter
+  labels:
+    app: iot-mqtt-adapter
+    enmasse-component: iot
+spec:
+  triggers:
+    - type: ImageChange
+    - type: ConfigChange
+  source:
+    type: Git
+    git:
+      uri: https://github.com/eclipse/hono
+      ref: "${HONO_VERSION}"
+  strategy:
+    type: source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: fabric8-s2i-java-custom:latest
+      env:
+      - name: MAVEN_ARGS_APPEND
+        value: -B -pl org.eclipse.hono:hono-adapter-mqtt-vertx --also-make -Pnetty-tcnative
+        #value: -B -pl org.eclipse.hono:hono-adapter-mqtt-vertx --also-make -Pnetty-tcnative -Pmetrics-prometheus
+      - name: ARTIFACT_DIR
+        value: adapters/mqtt-vertx/target
+      - name: ARTIFACT_COPY_ARGS
+        value: "*-exec.jar"
+  output:
+    to:
+      kind: ImageStreamTag
+      name: iot-mqtt-adapter:latest

@@ -70,6 +70,11 @@ public class KubeKeycloakFactory implements KeycloakFactory {
                 .build();
     }
 
+    @Override
+    public boolean isKeycloakAvailable() {
+        return openShiftClient.services().withName("standard-authservice").get() != null;
+    }
+
     private static KeyStore createKeyStore(byte [] ca) {
         try {
             KeyStore keyStore = KeyStore.getInstance("JKS");

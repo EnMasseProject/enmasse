@@ -1,0 +1,32 @@
+{
+    "apiVersion": "enmasse.io/v1beta1",
+    "kind": "Address",
+    "metadata": {
+        "addressSpace": "managed",
+        "annotations": {
+            "enmasse.io/applied-plan": "standard-small-anycast"
+        },
+        "creationTimestamp": "2019-01-14T13:28:13Z",
+        "labels": {
+            "addressType": "anycast"
+        },
+        "name": "managed.foo.control",
+        "namespace": "my-iot-1",
+        "resourceVersion": "1026309",
+        "selfLink": "/apis/enmasse.io/v1beta1/namespaces/my-iot-1/addressspaces/managed",
+        "uid": "3e087178-1800-11e9-8f1b-96000017f276"
+    },
+    "spec": {
+        "address": "foo/bar",
+        "plan": "standard-small-anycast",
+        "type": "anycast"
+    },
+    "status": {
+        "isReady": false,
+        "messages": [
+            "Address foo/bar not found on qdrouterd-lqjsrlq7qt-0",
+            "Address foo/bar not found on qdrouterd-lqjsrlq7qt-1"
+        ],
+        "phase": "Configuring"
+    }
+}

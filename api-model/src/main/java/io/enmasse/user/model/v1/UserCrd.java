@@ -10,15 +10,19 @@ import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class UserCrd {
 
+    public static final String VERSION = "v1beta1";
+    public static final String GROUP = "user.enmasse.io";
+    public static final String API_VERSION = GROUP +"/" + VERSION;
+
     private static final CustomResourceDefinition MESSAGING_USER_CRD;
 
     static {
-        MESSAGING_USER_CRD = CustomResources.createCustomResource(User.GROUP, User.VERSION, User.KIND);
+        MESSAGING_USER_CRD = CustomResources.createCustomResource(GROUP, VERSION, User.KIND);
     }
 
     public static void registerCustomCrds() {
-        KubernetesDeserializer.registerCustomKind(User.API_VERSION, User.KIND, User.class);
-        KubernetesDeserializer.registerCustomKind(UserList.API_VERSION, UserList.KIND, UserList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, User.KIND, User.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, UserList.KIND, UserList.class);
     }
 
     public static CustomResourceDefinition messagingUser() {

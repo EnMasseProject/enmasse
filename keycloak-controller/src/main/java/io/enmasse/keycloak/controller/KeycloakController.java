@@ -8,13 +8,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
 
 import io.fabric8.kubernetes.api.model.*;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +46,6 @@ public class KeycloakController {
 
     public static void main(String [] args) throws Exception {
 
-        Security.addProvider(new BouncyCastleProvider());
         Map<String, String> env = System.getenv();
 
         NamespacedOpenShiftClient client = new DefaultOpenShiftClient();

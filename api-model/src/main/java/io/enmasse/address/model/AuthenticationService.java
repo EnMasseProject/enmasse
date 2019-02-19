@@ -9,20 +9,49 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.model.validation.AuthenticationServiceDetails;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
+
 /**
  * Represents an authentication service for an {@link AddressSpace}.
  */
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@AuthenticationServiceDetails
 public class AuthenticationService {
-    private final AuthenticationServiceType type;
-    private final Map<String, Object> details;
 
-    private AuthenticationService(AuthenticationServiceType type, Map<String, Object> details) {
+    private AuthenticationServiceType type;
+    private Map<String, Object> details = new HashMap<> ();
+
+    public AuthenticationService() {
+    }
+
+    public void setType(AuthenticationServiceType type) {
         this.type = type;
-        this.details = details;
     }
 
     public AuthenticationServiceType getType() {
         return type;
+    }
+
+    public void setDetails(Map<String, Object> details) {
+        this.details = details;
     }
 
     public Map<String, Object> getDetails() {
@@ -41,27 +70,5 @@ public class AuthenticationService {
     @Override
     public int hashCode() {
         return Objects.hash(type, details);
-    }
-
-    public static class Builder {
-        private AuthenticationServiceType type = AuthenticationServiceType.NONE;
-        private Map<String, Object> details = new HashMap<>();
-
-        public Builder setType(AuthenticationServiceType type) {
-            this.type = type;
-            return this;
-        }
-
-        public Builder setDetails(Map<String, Object> details) {
-            Objects.requireNonNull(details);
-            this.details = new HashMap<>(details);
-            return this;
-        }
-
-        public AuthenticationService build() {
-            Objects.requireNonNull(type);
-            Objects.requireNonNull(details);
-            return new AuthenticationService(type, details);
-        }
     }
 }

@@ -32,9 +32,6 @@ import io.sundr.builder.annotations.Inline;
 public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
 
     public static final String KIND = "AddressSpacePlan";
-    public static final String VERSION = "v1beta1";
-    public static final String GROUP = "admin.enmasse.io";
-    public static final String API_VERSION = GROUP + "/" + VERSION;
 
     private String shortDescription;
     private String uuid;
@@ -45,7 +42,7 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     public AddressSpacePlan() {
-        super(KIND, API_VERSION);
+        super(KIND, AdminCrd.API_VERSION);
     }
 
     public void setResources(List<ResourceAllowance> resources) {

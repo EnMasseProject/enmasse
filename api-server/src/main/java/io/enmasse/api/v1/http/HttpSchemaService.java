@@ -4,14 +4,15 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.AddressSpaceSchema;
-import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static io.enmasse.address.model.AddressSpaceSchema.fromAddressSpaceType;
+import static io.enmasse.address.model.AddressSpaceSchemaList.fromSchema;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -35,7 +36,7 @@ public class HttpSchemaService {
     @Produces({MediaType.APPLICATION_JSON})
     public Response getSchema(@PathParam("namespace") String namespace) {
         try {
-            return Response.ok(new AddressSpaceSchemaList(schemaProvider.getSchema())).build();
+            return Response.ok(fromSchema(schemaProvider.getSchema())).build();
         } catch (Exception e) {
             log.warn("Exception handling GET schema", e);
             return Response.serverError().build();
@@ -52,7 +53,7 @@ public class HttpSchemaService {
             if (type == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpaceSchema", addressSpaceType)).build();
             } else {
-                return Response.ok(new AddressSpaceSchema(type, schema.getCreationTimestamp())).build();
+                return Response.ok(fromAddressSpaceType(schema.getCreationTimestamp(), type)).build();
             }
         } catch (Exception e) {
             log.warn("Exception handling GET schema", e);

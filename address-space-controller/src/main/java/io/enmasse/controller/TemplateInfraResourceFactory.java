@@ -16,9 +16,6 @@ import io.enmasse.controller.common.TemplateParameter;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -26,7 +23,6 @@ import java.nio.file.Files;
 import java.util.*;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
-    private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class.getName());
     private static final String KC_IDP_HINT_NONE = "none";
     private static final String KC_IDP_HINT_OPENSHIFT = "openshift-v3";
 
@@ -43,19 +39,19 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private void prepareParameters(InfraConfig infraConfig,
                                    AddressSpace addressSpace,
                                    Map<String, String> parameters) {
-        AuthenticationService authService = addressSpace.getAuthenticationService();
+        AuthenticationService authService = addressSpace.getSpec().getAuthenticationService();
         AuthenticationServiceResolver authResolver = authResolverFactory.getResolver(authService.getType());
 
         Optional<String> kcIdpHint = getKcIdpHint(infraConfig, addressSpace, authService.getType());
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         parameters.put(TemplateParameter.INFRA_NAMESPACE, kubernetes.getNamespace());
-        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
         parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
-        parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getNamespace());
+        parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getMetadata().getNamespace());
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authResolver.getHost(authService));
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authResolver.getPort(authService)));
-        parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getPlan());
+        parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_KC_IDP_HINT, kcIdpHint.orElse(""));
 
         String encodedCaCert = authResolver.getCaSecretName(authService)
@@ -76,10 +72,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         authResolver.getOAuthURL(authService).ifPresent(url -> parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, url));
 
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
-        for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-                endpoint.getCertSpec().ifPresent(cert -> {
-                    serviceCertMapping.put(endpoint.getService(), cert);
-            });
+        for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+            if (endpoint.getCert() != null) {
+                serviceCertMapping.put(endpoint.getService(), endpoint.getCert());
+            }
         }
         parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
         parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertMapping.get("console").getSecretName());
@@ -96,21 +92,22 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         kcIdpHint = getAnnotation(infraConfig.getMetadata().getAnnotations(), AnnotationKeys.KC_IDP_HINT, kcIdpHint);
 
-        if  (addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT) != null) {
-            kcIdpHint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
+        final String hint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
+        if  ( hint != null) {
+            kcIdpHint = hint;
         }
         return KC_IDP_HINT_NONE.equals(kcIdpHint) ? Optional.empty() : Optional.ofNullable(kcIdpHint);
     }
 
     private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
-        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getName());
+        parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
         parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
-        for (EndpointSpec endpoint : addressSpace.getEndpoints()) {
-            endpoint.getCertSpec().ifPresent(cert -> {
-                serviceCertMapping.put(endpoint.getService(), cert);
-            });
+        for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+            if (endpoint.getCert() != null) {
+                serviceCertMapping.put(endpoint.getService(), endpoint.getCert());
+            }
         }
         parameters.put(TemplateParameter.MQTT_SECRET, serviceCertMapping.get("mqtt").getSecretName());
     }
@@ -128,28 +125,46 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         prepareParameters(standardInfraConfig, addressSpace, parameters);
 
-        parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-        parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
-        parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
-        parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
-        parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
+        if (standardInfraConfig.getSpec().getBroker() != null) {
+            parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
+            parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+        }
+
+        if (standardInfraConfig.getSpec().getRouter() != null) {
+            parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
+            parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
+        }
+
+        if (standardInfraConfig.getSpec().getAdmin() != null) {
+            parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        }
+
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
 
         Map<String, String> infraAnnotations = standardInfraConfig.getMetadata().getAnnotations();
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
         List<HasMetadata> items = new ArrayList<>(kubernetes.processTemplate(templateName, parameters).getItems());
-        // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
-        for (HasMetadata item : items) {
-            if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
-                StatefulSet router = (StatefulSet) item;
-                router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());
+
+        if (standardInfraConfig.getSpec().getRouter() != null) {
+            // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
+            for (HasMetadata item : items) {
+                if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
+                    StatefulSet router = (StatefulSet) item;
+                    router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());
+                }
             }
         }
+
         if (Boolean.parseBoolean(getAnnotation(infraAnnotations, AnnotationKeys.WITH_MQTT, "false"))) {
             String mqttTemplateName = getAnnotation(infraAnnotations, AnnotationKeys.MQTT_TEMPLATE_NAME, "standard-space-infra-mqtt");
             items.addAll(createStandardInfraMqtt(addressSpace, mqttTemplateName));
         }
-        return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
+
+        if (standardInfraConfig.getSpec().getBroker() != null) {
+            return applyStorageClassName(standardInfraConfig.getSpec().getBroker().getStorageClassName(), items);
+        } else {
+            return items;
+        }
     }
 
 
@@ -164,12 +179,21 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         prepareParameters(brokeredInfraConfig, addressSpace, parameters);
 
-        parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
-        parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
-        parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        if (brokeredInfraConfig.getSpec().getBroker() != null) {
+            parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
+            parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+        }
+
+        if (brokeredInfraConfig.getSpec().getAdmin() != null) {
+            parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        }
 
         String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
-        return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameters).getItems());
+        if (brokeredInfraConfig.getSpec().getBroker() != null) {
+            return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameters).getItems());
+        } else {
+            return kubernetes.processTemplate(templateName, parameters).getItems();
+        }
     }
 
     private List<HasMetadata> applyStorageClassName(String storageClassName, List<HasMetadata> items) {
@@ -185,12 +209,12 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
     @Override
     public List<HasMetadata> createInfraResources(AddressSpace addressSpace, InfraConfig infraConfig) {
-        if ("standard".equals(addressSpace.getType())) {
+        if ("standard".equals(addressSpace.getSpec().getType())) {
             return createStandardInfra(addressSpace, (StandardInfraConfig) infraConfig);
-        } else if ("brokered".equals(addressSpace.getType())) {
+        } else if ("brokered".equals(addressSpace.getSpec().getType())) {
             return createBrokeredInfra(addressSpace, (BrokeredInfraConfig) infraConfig);
         } else {
-            throw new IllegalArgumentException("Unknown address space type " + addressSpace.getType());
+            throw new IllegalArgumentException("Unknown address space type " + addressSpace.getSpec().getType());
         }
     }
 }

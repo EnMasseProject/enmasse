@@ -1,0 +1,16 @@
+kind: Route
+apiVersion: v1
+metadata:
+  labels:
+    app: iot-http-adapter
+    compnent: iot-http-adapter
+    enmasse-component: iot
+  name: iot-http-adapter
+spec:
+  port:
+    targetPort: https
+  tls:
+    termination: reencrypt
+  to:
+    kind: Service
+    name: iot-http-adapter

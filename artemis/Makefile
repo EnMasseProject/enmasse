@@ -3,7 +3,7 @@ ARTIFACT_BASE=build/artemis-image
 ARTEMIS_HOME=$(ARTIFACT_BASE)/opt/apache-artemis
 
 build/apache-artemis-bin.tar.gz:
-	curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.6.3/apache-artemis-2.6.3-bin.tar.gz
+	curl -o build/apache-artemis-bin.tar.gz http://archive.apache.org/dist/activemq/activemq-artemis/2.6.4/apache-artemis-2.6.4-bin.tar.gz
 
 clean_modules:
 	rm -rf sasl-delegation/target

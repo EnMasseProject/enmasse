@@ -1,0 +1,17 @@
+= Design
+
+This folder contains design documents relating to EnMasse project. The intended audience for this
+documentation are developers and architects wanting to understand more about how EnMasse works.
+
+For end-user documentation, go to our link:http://enmasse.io[website].
+
+== Design documents
+
+* link:overview/architecture.adoc[Architecture]
+* link:ci/README.adoc[Continuous Integration]
+* link:topics/design.adoc[Topics]
+* link:mqtt-over-amqp/README.adoc[MQTT to AMQP protocol mapping]
+
+
+See link:proposals/README.adoc[Design Proposals] for design proposals that contain proposals may be
+implemented already, partially implemented or not implemented at all.

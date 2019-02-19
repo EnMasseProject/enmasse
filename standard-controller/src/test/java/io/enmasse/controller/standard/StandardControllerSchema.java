@@ -29,10 +29,11 @@ public class StandardControllerSchema implements SchemaProvider {
 
     public StandardControllerSchema(List<ResourceAllowance> resourceAllowanceList) {
         plan = new AddressSpacePlanBuilder()
-                .withMetadata(new ObjectMetaBuilder()
-                        .withName("plan1")
-                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "cfg1")
-                        .build())
+                .withNewMetadata()
+                .withName("plan1")
+                .addToAnnotations(AnnotationKeys.DEFINED_BY, "cfg1")
+                .endMetadata()
+
                 .addAllToResources(resourceAllowanceList)
                 .withAddressSpaceType("standard")
                 .withAddressPlans(Arrays.asList(
@@ -46,19 +47,19 @@ public class StandardControllerSchema implements SchemaProvider {
                 ))
                 .build();
 
-        type = new AddressSpaceType.Builder()
-                .setName("standard")
-                .setDescription("standard")
-                .setAddressSpacePlans(Arrays.asList(plan))
-                .setAvailableEndpoints(Collections.singletonList(new EndpointSpec.Builder()
-                        .setName("messaging")
-                        .setService("messaging")
+        type = new AddressSpaceTypeBuilder()
+                .withName("standard")
+                .withDescription("standard")
+                .withPlans(Arrays.asList(plan))
+                .withAvailableEndpoints(Collections.singletonList(new EndpointSpecBuilder()
+                        .withName("messaging")
+                        .withService("messaging")
                         .build()))
-                .setAddressTypes(Arrays.asList(
-                        new AddressType.Builder()
-                                .setName("anycast")
-                                .setDescription("anycast")
-                                .setAddressPlans(Arrays.asList(
+                .withAddressTypes(Arrays.asList(
+                        new AddressTypeBuilder()
+                                .withName("anycast")
+                                .withDescription("anycast")
+                                .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-anycast").build())
                                         .withAddressType("anycast")
@@ -66,10 +67,10 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 new ResourceRequest("router", 0.2000000000)))
                                         .build()))
                                 .build(),
-                        new AddressType.Builder()
-                                .setName("queue")
-                                .setDescription("queue")
-                                .setAddressPlans(Arrays.asList(
+                        new AddressTypeBuilder()
+                                .withName("queue")
+                                .withDescription("queue")
+                                .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("pooled-queue-large").build())
                                                 .withAddressType("queue")
@@ -108,12 +109,19 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .withRequiredResources(Arrays.asList(
                                                         new ResourceRequest("router", 0.2),
                                                         new ResourceRequest("broker", 2.0)))
+                                                .build(),
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("mega-xlarge-queue").build())
+                                                .withAddressType("queue")
+                                                .withRequiredResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.2),
+                                                        new ResourceRequest("broker", 10.0)))
                                                 .build()))
                                 .build(),
-                        new AddressType.Builder()
-                                .setName("topic")
-                                .setDescription("topic")
-                                .setAddressPlans(Arrays.asList(
+                        new AddressTypeBuilder()
+                                .withName("topic")
+                                .withDescription("topic")
+                                .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-topic").build())
                                                 .withAddressType("topic")
@@ -129,25 +137,33 @@ public class StandardControllerSchema implements SchemaProvider {
                                                         new ResourceRequest("broker", 1.0)))
                                                 .build()))
                                 .build(),
-                        new AddressType.Builder()
-                                .setName("subscription")
-                                .setDescription("subscription")
-                                .setAddressPlans(Arrays.asList(
+                        new AddressTypeBuilder()
+                                .withName("subscription")
+                                .withDescription("subscription")
+                                .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-subscription").build())
                                                 .withAddressType("subscription")
                                                 .withRequiredResources(Arrays.asList(
                                                         new ResourceRequest("router", 0.05),
                                                         new ResourceRequest("broker", 0.1)))
+                                                .build(),
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("large-subscription").build())
+                                                .withAddressType("subscription")
+                                                .withRequiredResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.1),
+                                                        new ResourceRequest("broker", 1.0)))
                                                 .build()))
+
                                 .build()))
-                .setInfraConfigs(Arrays.asList(
+                .withInfraConfigs(Arrays.asList(
                         new StandardInfraConfigBuilder()
-                            .withMetadata(new ObjectMetaBuilder()
-                                    .withName("cfg1")
-                                    .addToAnnotations(AnnotationKeys.QUEUE_TEMPLATE_NAME, "queuetemplate")
-                                    .build()
-                                    )
+                            .withNewMetadata()
+                            .withName("cfg1")
+                            .addToAnnotations(AnnotationKeys.QUEUE_TEMPLATE_NAME, "queuetemplate")
+                            .endMetadata()
+
                             .withNewSpec()
                                 .withVersion("latest")
                                 .withNewAdmin()
@@ -156,7 +172,7 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .withNewBroker()
                                     .withNewResources("512Mi", "2Gi")
                                     .withAddressFullPolicy("FAIL")
-                                    .withStorageClassName("default")
+                                    .withStorageClassName("mysc")
                                     .withUpdatePersistentVolumeClaim(false)
                                     .endBroker()
                                 .withNewRouter()
@@ -167,11 +183,10 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .endSpec()
                             .build()
                         ))
-                .setInfraConfigDeserializer(json -> null)
                 .build();
 
-        schema = new Schema.Builder()
-                .setAddressSpaceTypes(Arrays.asList(type))
+        schema = new SchemaBuilder()
+                .withAddressSpaceTypes(type)
                 .build();
     }
 

@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.ability;
 
+import io.enmasse.systemtest.AddressSpacePlan;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.DestinationPlan;
 
@@ -11,10 +12,10 @@ public interface ITestBaseWithoutMqtt extends ITestBase {
 
     @Override
     default String getDefaultPlan(AddressType addressType) {
-        return DestinationPlan.STANDARD_SMALL_ANYCAST.plan();
+        return DestinationPlan.STANDARD_SMALL_ANYCAST;
     }
 
     default String getAddressSpacePlan() {
-        return "standard-small";
+        return AddressSpacePlan.STANDARD_SMALL;
     }
 }

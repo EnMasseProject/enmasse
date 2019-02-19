@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, EnMasse authors.
+ * Copyright 2016-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.controller.standard;
@@ -22,8 +22,10 @@ class BrokerStatusCollector {
         long totalMessageCount = 0;
         for (Pod broker : kubernetes.listBrokers(clusterId)) {
             if (Readiness.isPodReady(broker)) {
-                try (SyncRequestClient brokerClient = brokerClientFactory.connectBrokerManagementClient(broker.getStatus().getPodIP(), 5673)) {
-                    Artemis artemis = new Artemis(brokerClient);
+                try (
+                        SyncRequestClient brokerClient = brokerClientFactory.connectBrokerManagementClient(broker.getStatus().getPodIP(), 5673);
+                        Artemis artemis = new Artemis(brokerClient);
+                        ) {
                     totalMessageCount += artemis.getQueueMessageCount(queue);
                 }
             }

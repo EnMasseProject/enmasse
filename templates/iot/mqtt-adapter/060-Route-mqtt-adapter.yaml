@@ -1,0 +1,16 @@
+kind: Route
+apiVersion: v1
+metadata:
+  labels:
+    app: iot-mqtt-adapter
+    compnent: iot-mqtt-adapter
+    enmasse-component: iot
+  name: iot-mqtt-adapter
+spec:
+  port:
+    targetPort: 8883
+  tls:
+    termination: passthrough
+  to:
+    kind: Service
+    name: iot-mqtt-adapter

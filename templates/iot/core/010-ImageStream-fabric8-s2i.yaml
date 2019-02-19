@@ -1,0 +1,16 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: fabric8-s2i-java
+  labels:
+    enmasse-component: iot
+spec:
+  tags:
+  - from:
+      kind: DockerImage
+      name: fabric8/s2i-java:3.0-java11
+    importPolicy:
+      scheduled: true
+    name: "3.0-java11"
+    referencePolicy:
+      type: Source
