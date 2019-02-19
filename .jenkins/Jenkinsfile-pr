@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
-
-def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
-
+def lib
 pipeline {
     agent {
         node {
@@ -27,13 +25,6 @@ pipeline {
         USE_DUMMY_ADDRESS = true
     }
     stages {
-        stage('wait for agent ready') {
-            steps {
-                script {
-                    lib.waitUntilAgentReady()
-                }
-            }
-        }
         stage('clean') {
             steps {
                 cleanWs()
@@ -43,6 +34,14 @@ pipeline {
             steps {
                 checkout scm
                 sh 'rm -rf artifacts && mkdir -p artifacts'
+            }
+        }
+        stage('wait for agent ready') {
+            steps {
+                script {
+                    lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
+                    lib.waitUntilAgentReady()
+                }
             }
         }
         stage('start openshift') {
