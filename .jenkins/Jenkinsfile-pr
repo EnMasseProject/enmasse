@@ -44,6 +44,16 @@ pipeline {
                 }
             }
         }
+        stage('parse parameters from comment') {
+            steps {
+                script {
+                    if (env.ghprbCommentBody.contains('testcase=')) {
+                        env.TEST_CASE = env.ghprbCommentBody.split('testcase=')[1].split(/\s/)[0]
+                    }
+                    echo "TEST_CASE: ${env.TEST_CASE}"
+                }
+            }
+        }
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
@@ -81,9 +91,6 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        if (env.ghprbCommentBody.contains('@')) {
-                            env.TEST_CASE = env.ghprbCommentBody.split('@')[1]
-                        }
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-pr', env.TEST_CASE)
                     }
                 }
