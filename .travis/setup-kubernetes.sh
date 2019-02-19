@@ -23,10 +23,10 @@ touch $HOME/.kube/config
 
 sudo sh -c 'sed -e 's/journald/json-file/g' -i /etc/docker/daemon.json'
 sudo mkdir -p /etc/containers
-cat<<EOF > /etc/containers/registries.conf
+sudo sh -c "cat<<EOF > /etc/containers/registries.conf
 [registries.search]
 registries = ['docker.io']
-EOF
+EOF"
 
 sudo podman run -d -p 5000:5000 registry
 
