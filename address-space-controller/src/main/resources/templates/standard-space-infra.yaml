@@ -88,6 +88,7 @@ objects:
         saslPlugin: auth_service
         authenticatePeer: yes
         linkCapacity: ${ROUTER_LINK_CAPACITY}
+        initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
       }
 
       listener {
@@ -124,6 +125,7 @@ objects:
         requireSsl: true
         authenticatePeer: yes
         linkCapacity: ${ROUTER_LINK_CAPACITY}
+        initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
       }
 
       sslProfile {
@@ -650,6 +652,9 @@ parameters:
 - description: The link capacity setting for router
   name: ROUTER_LINK_CAPACITY
   value: '250'
+- description: The timeout for establishing reaching open state on client connections
+  name: ROUTER_HANDSHAKE_TIMEOUT
+  value: '30'
 - description: The hostname to use for the exposed route for messaging
   name: CONSOLE_SECRET
   required: true
