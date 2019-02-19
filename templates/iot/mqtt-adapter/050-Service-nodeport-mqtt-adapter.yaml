@@ -1,0 +1,19 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: iot-mqtt-adapter-nodeport
+  labels:
+    app: iot-mqtt-adapter
+    deploymentconfig: iot-mqtt-adapter
+    enmasse-component: iot
+spec:
+  type: NodePort
+  ports:
+    - name: mqtt
+      port: 1883
+      targetPort: 1883
+      protocol: TCP
+      nodePort: 31883
+  selector:
+    app: iot-mqtt-adapter
+    deploymentconfig: iot-mqtt-adapter

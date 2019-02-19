@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: iot-registry
+    component: hono-service-device-registry
+    enmasse-component: iot
+  name: hono-service-device-registry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-registry
+      component: hono-service-device-registry
+  template:
+    metadata:
+      labels:
+        app: iot-registry
+        component: hono-service-device-registry
+    spec:
+      initContainers:
+      - name: copy-example-data
+        image: centos:7
+        volumeMounts:
+        - name: examples
+          mountPath: /etc/examples
+        - name: registry
+          mountPath: /var/lib/hono/device-registry
+        command:
+        - sh
+        - -c
+        - 'cp -u /etc/examples/example-credentials.json /var/lib/hono/device-registry/credentials.json && cp -u /etc/examples/example-tenants.json /var/lib/hono/device-registry/tenants.json'
+      containers:
+      - image: eclipse/hono-service-device-registry:${HONO_VERSION}
+        imagePullPolicy: IfNotPresent
+        name: eclipse-hono-service-device-registry
+        env:
+        - name: SPRING_CONFIG_LOCATION
+          value: file:///etc/config/
+        - name: SPRING_PROFILES_ACTIVE
+          value:
+        - name: LOGGING_CONFIG
+          value: file:///etc/config/logback-spring.xml
+        - name: KUBERNETES_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: HONO_AUTH_HOST
+          value: hono-service-auth.$(KUBERNETES_NAMESPACE).svc
+        - name: HONO_REGISTRY_SVC_SAVE_TO_FILE
+          value: "true"
+        - name: HONO_REGISTRY_SVC_MAX_DEVICES_PER_TENANT
+          value: "100"
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 8088
+            scheme: HTTP
+          initialDelaySeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8088
+            scheme: HTTP
+          initialDelaySeconds: 180
+        ports:
+        - containerPort: 8778
+          name: jolokia
+        - containerPort: 8088
+          name: health
+          protocol: TCP
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        - containerPort: 5671
+          name: amqps
+          protocol: TCP
+        - containerPort: 5672
+          name: amqp
+          protocol: TCP
+        resources:
+          limits:
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /var/lib/hono/device-registry
+          name: registry
+        - mountPath: /etc/config
+          name: conf
+        - mountPath: /etc/tls
+          name: tls
+          readOnly: true
+        - mountPath: /etc/tls-auth-service
+          name: tls-auth-service
+          readOnly: true
+      volumes:
+      - name: registry
+        persistentVolumeClaim:
+          claimName: hono-device-registry-pvc
+      - name: conf
+        configMap:
+          name: hono-service-device-registry-config
+      - name: examples
+        configMap:
+          name: hono-example-data
+      - name: tls
+        secret:
+          secretName: hono-service-device-registry-tls
+      - name: tls-auth-service
+        secret:
+          secretName: hono-service-auth-tls

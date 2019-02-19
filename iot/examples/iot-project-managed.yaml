@@ -1,0 +1,24 @@
+---
+kind: IoTProject
+apiVersion: iot.enmasse.io/v1alpha1
+metadata:
+  name: managed
+spec:
+  downstreamStrategy:
+    managedStrategy:
+      addressSpaceName: managed
+---
+kind: MessagingUser
+apiVersion: user.enmasse.io/v1beta1
+metadata:
+  name: managed.consumer
+spec:
+  username: consumer
+  authentication:
+    type: password
+    password: Zm9vYmFy # <- foobar
+  authorization:
+  - addresses:  [ "telemetry/my-iot-1.managed", "telemetry/my-iot-1.managed/*", "event/my-iot-1.managed", "event/my-iot-1.managed/*" ]
+    operations: [ "recv" ]
+  - addresses:  [ "command/my-iot-1.managed", "command/my-iot-1.managed/*" ]
+    operations: [ "send", "recv" ]

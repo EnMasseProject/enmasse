@@ -1,0 +1,26 @@
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  name: qdr-proxy-configurator
+  labels:
+    enmasse-component: iot
+spec:
+  triggers: 
+    - type: ImageChange
+    - type: ConfigChange
+  source: 
+    type: Git
+    git:
+      uri: https://github.com/enmasseproject/enmasse
+      ref: feature/iot
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: ImageStreamTag
+        name: qdrouterd-base:1.4.1
+      dockerfilePath: iot/qdr-proxy-configurator/Dockerfile.s2i
+  output:
+    to:
+      kind: ImageStreamTag
+      name: qdr-proxy-configurator:latest

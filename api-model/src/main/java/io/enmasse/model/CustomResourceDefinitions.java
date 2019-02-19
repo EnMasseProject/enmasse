@@ -7,6 +7,7 @@ package io.enmasse.model;
 
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
+import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.user.model.v1.UserCrd;
 
 public final class CustomResourceDefinitions {
@@ -20,5 +21,6 @@ public final class CustomResourceDefinitions {
         CoreCrd.registerCustomCrds();
         AdminCrd.registerCustomCrds();
         UserCrd.registerCustomCrds();
+        IoTCrd.registerCustomCrds();
     }
 }

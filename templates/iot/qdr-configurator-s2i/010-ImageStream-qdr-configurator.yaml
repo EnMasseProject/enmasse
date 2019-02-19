@@ -1,0 +1,6 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: qdr-proxy-configurator
+  labels:
+    enmasse-component: iot

@@ -1,0 +1,22 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: iot-mqtt-adapter
+  labels:
+    app: iot-mqtt-adapter
+    deploymentconfig: iot-mqtt-adapter
+    enmasse-component: iot
+  annotations:
+    service.alpha.openshift.io/serving-cert-secret-name: iot-mqtt-adapter-tls
+spec:
+  ports:
+    - name: secure-mqtt
+      port: 8883
+      targetPort: 8883
+      protocol: TCP
+    - name: actuator
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: iot-mqtt-adapter
+    deploymentconfig: iot-mqtt-adapter

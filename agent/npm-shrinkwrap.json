@@ -835,12 +835,12 @@
         },
         "minimist": {
             "version": "0.0.8",
-            "resolved": "https://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz",
+            "resolved": "http://registry.npmjs.org/minimist/-/minimist-0.0.8.tgz",
             "integrity": "sha1-hX/Kv8M5fSYluCKCYuhqp6ARsF0="
         },
         "mkdirp": {
             "version": "0.5.1",
-            "resolved": "https://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz",
+            "resolved": "http://registry.npmjs.org/mkdirp/-/mkdirp-0.5.1.tgz",
             "integrity": "sha1-MAV0OOrGz3+MR2fzhkjWaX11yQM=",
             "requires": {
                 "minimist": "0.0.8"
@@ -1237,7 +1237,7 @@
         },
         "through": {
             "version": "2.3.8",
-            "resolved": "https://registry.npmjs.org/through/-/through-2.3.8.tgz",
+            "resolved": "http://registry.npmjs.org/through/-/through-2.3.8.tgz",
             "integrity": "sha1-DdTJ/6q8NXlgsbckEV1+Doai4fU="
         },
         "tmp": {

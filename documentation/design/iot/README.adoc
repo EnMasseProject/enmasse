@@ -1,0 +1,38 @@
+
+= IoT support
+
+This document describes how IoT is added into the EnMasse system.
+
+== Overview
+
+EnMasse IoT support is an additional layer on top of the EnMasse system. It supports IoT
+specific use cases and protocols, like "telemetry ingestion", "command & control", "MQTT", "HTTP", ...
+
+This is implemented based on the Eclipse Hono project.
+
+== IoT Project CRD
+
+An "IoT project" is a logical entity which scopes a set of devices into a single, IoT specific, namespace.
+
+An IoT project:
+
+* Is part of a Kubernetes namespace
+* Has a name which adheres to the requirements of `.metadata.name`
+* Translates into a Hono tenant name by: `<namespace>.<name>`
+* Can be described in a Kubernetes CRD
+* Connects to one EnMasse standard address space
+* Has its own set of addresses ("telemtry/", "event/", ...) inside that address space
+
+IoT project know three modes of operation:
+
+* **External**: All messaging resources (address space, addresses, users) are provided by the user (external
+                to the IoT project). The configuration of the IoT project contains all necessary information.
+* **Providd**:  to be written
+* **Managed**:  The EnMasse system fully managed the messaging resources.
+
+== Protocol adapters
+
+The Hono protocol adapters are shared, infrastructure components, which will be re-used by all IoT projects.
+Therefore the messages of each Hono tenant (EnMasse IoT project) will be proxies using the Qpid dispatcher router,
+from the Hono protocol adapters, to the target messaging resources of the IoT project.
+

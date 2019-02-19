@@ -6,7 +6,19 @@ BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
-MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics
+IOT_MODULES=\
+	iot/auth \
+	iot/core \
+	iot/device-registry \
+	iot/http-adapter \
+	iot/mqtt-adapter \
+	iot/iot-gc-s2i \
+	iot/iot-operator-s2i \
+	iot/qdr-configurator-s2i \
+	iot/tenant \
+	iot/tenant-service \
+
+MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics $(IOT_MODULES)
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
@@ -15,9 +27,13 @@ prepare:
 
 replace_images: prepare
 	mkdir -p $(BUILDDIR)/replaced
-	cp -r $(MODULES) $(BUILDDIR)/replaced
+	for i in `find $(MODULES) -type f`; do \
+		D=`dirname $$i`; \
+		mkdir -p $(BUILDDIR)/replaced/$$D ; \
+		cp -r $$i $(BUILDDIR)/replaced/$$D/ ; \
+	done
 	for i in `find $(BUILDDIR)/replaced -name "*.yaml"`; do \
-		cat $$i | $(IMAGE_ENV) envsubst '$${ENMASSE_VERSION},$${IMAGE_PULL_POLICY},$${ADDRESS_SPACE_CONTROLLER_IMAGE},$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${NONE_AUTHSERVICE_IMAGE},$${KEYCLOAK_IMAGE},$${KEYCLOAK_CONTROLLER_IMAGE},$${KEYCLOAK_PLUGIN_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${ARTEMIS_IMAGE},$${ARTEMIS_PLUGIN_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${API_SERVER_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE},$${PROMETHEUS_IMAGE},$${ALERTMANAGER_IMAGE},$${GRAFANA_IMAGE},$${KUBE_STATE_METRICS_IMAGE},$${OAUTH_PROXY_IMAGE}' > $$i.tmp; \
+		cat $$i | $(IMAGE_ENV) envsubst '$${ENMASSE_VERSION},$${IMAGE_PULL_POLICY},$${ADDRESS_SPACE_CONTROLLER_IMAGE},$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${NONE_AUTHSERVICE_IMAGE},$${KEYCLOAK_IMAGE},$${KEYCLOAK_CONTROLLER_IMAGE},$${KEYCLOAK_PLUGIN_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${ARTEMIS_IMAGE},$${ARTEMIS_PLUGIN_IMAGE},$${ROUTER_METRICS_IMAGE},$${SUBSERV_IMAGE},$${API_SERVER_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE},$${PROMETHEUS_IMAGE},$${ALERTMANAGER_IMAGE},$${GRAFANA_IMAGE},$${KUBE_STATE_METRICS_IMAGE},$${OAUTH_PROXY_IMAGE},$${HONO_IMAGE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
@@ -54,7 +70,18 @@ $(MONITORING_BUNDLE): replace_images
 		mv $$i.tmp $$i; \
 	done
 
-install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) 
+IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/iot
+$(IOT_BUNDLE): replace_images
+	mkdir -p $(IOT_BUNDLE)
+	for i in $(IOT_MODULES); do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
+	done
+	for i in `find $(IOT_BUNDLE) -name "*.yaml"`; do \
+		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
+		mv $$i.tmp $$i; \
+	done
+
+install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE)
 	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
@@ -62,4 +89,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE)

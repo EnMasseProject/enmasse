@@ -1,0 +1,14 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: hono-device-registry-pvc
+  labels:
+    app: iot-registry
+    component: hono-service-device-registry
+    enmasse-component: iot
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 128M

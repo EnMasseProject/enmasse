@@ -1,0 +1,18 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: qdr-proxy-configurator
+  labels:
+    enmasse-component: iot
+data:
+  qdrouterd.conf: |-
+    router {
+      mode: standalone
+      id: Router.A
+    }
+    
+    listener {
+      host: localhost
+      port: 5672
+      saslMechanisms: ANONYMOUS
+    }

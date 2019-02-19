@@ -1,0 +1,7 @@
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: iot-gc
+  labels:
+    app: iot-core
+    enmasse-component: iot

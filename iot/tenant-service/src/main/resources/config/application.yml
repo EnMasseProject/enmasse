@@ -1,0 +1,32 @@
+enmasse:
+
+  iot:
+
+    vertx:
+      preferNative: true
+
+    tenant:
+
+      app:
+        maxInstances: 1
+        healthCheckBindAddress: 0.0.0.0
+        healthCheckPort: 8088
+
+server:
+  port: -1
+## Enable management server
+management:
+  port: 8081
+  security:
+    enabled: false
+## Disable all but the promtheus endpoint
+endpoints:
+  enabled: false
+  prometheus:
+    enabled: true
+
+management:
+  metrics:
+    export:
+      graphite:
+        enabled: false

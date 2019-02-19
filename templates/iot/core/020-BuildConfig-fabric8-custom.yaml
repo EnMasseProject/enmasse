@@ -1,0 +1,27 @@
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  name: fabric8-s2i-java-custom
+  labels:
+    app: enmasse
+    enmasse-component: iot
+spec:
+  triggers: 
+    - type: ImageChange
+    - type: ConfigChange
+  source: 
+    type: Git
+    git:
+      uri: https://github.com/enmasseproject/enmasse
+      ref: feature/iot
+  strategy:
+    type: Docker
+    dockerStrategy:
+      from:
+        kind: ImageStreamTag
+        name: fabric8-s2i-java:3.0-java11
+      dockerfilePath: iot/fabric8-s2i-java-custom/Dockerfile
+  output:
+    to:
+      kind: ImageStreamTag
+      name: fabric8-s2i-java-custom:latest
