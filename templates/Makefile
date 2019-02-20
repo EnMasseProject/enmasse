@@ -77,7 +77,7 @@ $(IOT_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
 	done
 	for i in `find $(IOT_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
+		cat $$i | HONO_VERSION="$(HONO_VERSION)" NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE},$${HONO_VERSION}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
