@@ -32,7 +32,8 @@ func main() {
 
 	flag.Parse()
 
-	logf.SetLogger(logf.ZapLogger(true /* FIXME: switch to production, or make configurable */))
+	development := os.Getenv("DEVELOPMENT") == "true"
+	logf.SetLogger(logf.ZapLogger(development))
 
 	printVersion()
 
