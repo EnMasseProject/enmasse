@@ -26,10 +26,18 @@ public final class IoTProjects {
     private IoTProjects() {
     }
 
+    /**
+     * A clean interface for working with {@link IoTProject}.
+     */
     public interface Client extends
             MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> {
     }
 
+    /**
+     * Create an {@link IoTProject} client from a {@link KubernetesClient}.
+     * @param client the Kubernetes client
+     * @return The {@link IoTProject} client
+     */
     public static Client forClient(final KubernetesClient client) {
         final MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> result = client
                 .customResources(project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
