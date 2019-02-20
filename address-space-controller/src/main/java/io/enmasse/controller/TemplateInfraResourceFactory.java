@@ -131,11 +131,21 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
 
         if (standardInfraConfig.getSpec().getRouter() != null) {
-            parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
-            parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
+            if (standardInfraConfig.getSpec().getRouter().getResources() != null && standardInfraConfig.getSpec().getRouter().getResources().getMemory() != null) {
+                parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
+            }
+
+            if (standardInfraConfig.getSpec().getRouter().getLinkCapacity() != null) {
+                parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
+            }
+
+            if (standardInfraConfig.getSpec().getRouter().getHandshakeTimeout() != null) {
+                parameters.put(TemplateParameter.ROUTER_HANDSHAKE_TIMEOUT, String.valueOf(standardInfraConfig.getSpec().getRouter().getHandshakeTimeout()));
+            }
+
         }
 
-        if (standardInfraConfig.getSpec().getAdmin() != null) {
+        if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getResources() != null && standardInfraConfig.getSpec().getAdmin().getResources().getMemory() != null) {
             parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
         }
 
@@ -145,7 +155,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
         List<HasMetadata> items = new ArrayList<>(kubernetes.processTemplate(templateName, parameters).getItems());
 
-        if (standardInfraConfig.getSpec().getRouter() != null) {
+        if (standardInfraConfig.getSpec().getRouter() != null && standardInfraConfig.getSpec().getRouter().getMinReplicas() != null) {
             // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
             for (HasMetadata item : items) {
                 if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
@@ -184,7 +194,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
         }
 
-        if (brokeredInfraConfig.getSpec().getAdmin() != null) {
+        if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getResources() != null && brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory() != null) {
             parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
         }
 
