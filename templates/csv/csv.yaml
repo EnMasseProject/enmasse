@@ -139,80 +139,81 @@ spec:
           verbs: [ "get" ]
       deployments:
       - name: api-server
-        replicas: 1
-        selector:
-          matchLabels:
-            app: enmasse
-            component: api-server
-        template:
-          metadata:
-            labels:
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
               app: enmasse
               component: api-server
-          spec:
-            affinity:
-              nodeAffinity:
-                preferredDuringSchedulingIgnoredDuringExecution:
-                  - weight: 1
-                    preference:
-                      matchExpressions:
-                        - key: node-role.enmasse.io/operator-infra
-                          operator: In
-                          values:
-                            - "true"
-            containers:
-            - env:
-              - name: JAVA_OPTS
-                value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
-              - name: CERT_DIR
-                value: /api-server-cert
-              - name: ENABLE_RBAC
-                value: "true"
-              - name: APISERVER_CLIENT_CA_CONFIG_NAME
-                value: extension-apiserver-authentication
-              - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
-                value: kube-system
-              - name: APISERVER_ROUTE_NAME
-                value: restapi
-              - name: STANDARD_AUTHSERVICE_CONFIG_NAME
-                value: keycloak-config
-              - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
-                value: keycloak-credentials
-              - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
-                value: standard-authservice-cert
-              image: ${API_SERVER_IMAGE}
-              imagePullPolicy: ${IMAGE_PULL_POLICY}
-              livenessProbe:
-                httpGet:
-                  path: /healthz
-                  port: http
-                  scheme: HTTP
-                initialDelaySeconds: 30
-              name: api-server
-              ports:
-              - containerPort: 8080
-                name: http
-              - containerPort: 8443
-                name: https
-              readinessProbe:
-                httpGet:
-                  path: /healthz
-                  port: http
-                  scheme: HTTP
-              resources:
-                limits:
-                  memory: 512Mi
-                requests:
-                  memory: 512Mi
-              volumeMounts:
-              - mountPath: /api-server-cert
-                name: api-server-cert
-                readOnly: true
-            serviceAccountName: api-server
-            volumes:
-            - name: api-server-cert
-              secret:
-                secretName: apiserver-cert
+          template:
+            metadata:
+              labels:
+                app: enmasse
+                component: api-server
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                    - weight: 1
+                      preference:
+                        matchExpressions:
+                          - key: node-role.enmasse.io/operator-infra
+                            operator: In
+                            values:
+                              - "true"
+              containers:
+              - env:
+                - name: JAVA_OPTS
+                  value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+                - name: CERT_DIR
+                  value: /api-server-cert
+                - name: ENABLE_RBAC
+                  value: "true"
+                - name: APISERVER_CLIENT_CA_CONFIG_NAME
+                  value: extension-apiserver-authentication
+                - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
+                  value: kube-system
+                - name: APISERVER_ROUTE_NAME
+                  value: restapi
+                - name: STANDARD_AUTHSERVICE_CONFIG_NAME
+                  value: keycloak-config
+                - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
+                  value: keycloak-credentials
+                - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
+                  value: standard-authservice-cert
+                image: ${API_SERVER_IMAGE}
+                imagePullPolicy: ${IMAGE_PULL_POLICY}
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: http
+                    scheme: HTTP
+                  initialDelaySeconds: 30
+                name: api-server
+                ports:
+                - containerPort: 8080
+                  name: http
+                - containerPort: 8443
+                  name: https
+                readinessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: http
+                    scheme: HTTP
+                resources:
+                  limits:
+                    memory: 512Mi
+                  requests:
+                    memory: 512Mi
+                volumeMounts:
+                - mountPath: /api-server-cert
+                  name: api-server-cert
+                  readOnly: true
+              serviceAccountName: api-server
+              volumes:
+              - name: api-server-cert
+                secret:
+                  secretName: apiserver-cert
       - name: address-space-controller
         spec:
           replicas: 1
