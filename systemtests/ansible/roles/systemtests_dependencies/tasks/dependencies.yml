@@ -64,32 +64,3 @@
     name: "nodejs-{{ nodejs_version }}.*"
     state: present
     enablerepo: epel
-
-
-######################################################
-# Task for install maven
-- name: MAVEN | Check if maven is present
-  command: "mvn --version || cd {{ maven_path }}"
-  ignore_errors: true
-  register: mvn_is_installed
-  changed_when: false
-
-- name: MAVEN | Download apache maven
-  get_url:
-    url: https://archive.apache.org/dist/maven/maven-3/3.5.2/binaries/apache-maven-3.5.2-bin.tar.gz
-    dest: "{{ maven_root_path }}"
-  when: mvn_is_installed.rc != 0
-
-- name: MAVEN | Extract apache maven
-  unarchive:
-    src: "{{ maven_root_path }}/apache-maven-3.5.2-bin.tar.gz"
-    dest: "{{ maven_root_path }}"
-  when: mvn_is_installed.rc != 0
-
-- name: MAVEN | Create symlink
-  file:
-    force: yes
-    src: "{{ maven_root_path }}/apache-maven-3.5.2/bin/mvn"
-    dest: '/usr/bin/mvn'
-    state: link
-  when: mvn_is_installed.rc != 0
