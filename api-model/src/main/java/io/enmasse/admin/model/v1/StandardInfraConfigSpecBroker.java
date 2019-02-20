@@ -19,11 +19,12 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "addressFullPolicy", "storageClassName", "updatePersistentVolumeClaim"})
+@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecBrokerResources resources;
     private String addressFullPolicy;
+    private String globalMaxSize;
     private String storageClassName;
     private Boolean updatePersistentVolumeClaim;
 
@@ -48,6 +49,14 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
 
     public String getAddressFullPolicy() {
         return addressFullPolicy;
+    }
+
+    public String getGlobalMaxSize() {
+        return globalMaxSize;
+    }
+
+    public void setGlobalMaxSize(String globalMaxSize) {
+        this.globalMaxSize = globalMaxSize;
     }
 
     public void setStorageClassName(String storageClassName) {
@@ -82,13 +91,14 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         StandardInfraConfigSpecBroker that = (StandardInfraConfigSpecBroker) o;
         return Objects.equals(resources, that.resources) &&
                 Objects.equals(addressFullPolicy, that.addressFullPolicy) &&
+                Objects.equals(globalMaxSize, that.globalMaxSize) &&
                 Objects.equals(storageClassName, that.storageClassName) &&
                 Objects.equals(updatePersistentVolumeClaim, that.updatePersistentVolumeClaim);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, storageClassName, updatePersistentVolumeClaim);
+        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim);
     }
 
     @Override
@@ -97,6 +107,7 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 "resources=" + resources +
                 ", addressFullPolicy='" + addressFullPolicy + '\'' +
                 ", storageClassName='" + storageClassName + '\'' +
+                ", globalMaxSize='" + globalMaxSize + '\'' +
                 ", updatePersistentVolumeClaim=" + updatePersistentVolumeClaim +
                 '}';
     }

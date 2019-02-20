@@ -19,11 +19,12 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "addressFullPolicy", "storageClassName", "updatePersistentVolumeClaim"})
+@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalProperties {
     private BrokeredInfraConfigSpecBrokerResources resources;
     private String addressFullPolicy;
+    private String globalMaxSize;
     private String storageClassName;
     private Boolean updatePersistentVolumeClaim;
 
@@ -41,13 +42,14 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         BrokeredInfraConfigSpecBroker that = (BrokeredInfraConfigSpecBroker) o;
         return Objects.equals(resources, that.resources) &&
                 Objects.equals(addressFullPolicy, that.addressFullPolicy) &&
+                Objects.equals(globalMaxSize, that.globalMaxSize) &&
                 Objects.equals(storageClassName, that.storageClassName) &&
                 Objects.equals(updatePersistentVolumeClaim, that.updatePersistentVolumeClaim);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, storageClassName, updatePersistentVolumeClaim);
+        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim);
     }
 
     @Override
@@ -55,6 +57,7 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         return "BrokeredInfraConfigSpecBroker{" +
                 "resources=" + resources +
                 ", addressFullPolicy='" + addressFullPolicy + '\'' +
+                ", globalMaxSize='" + globalMaxSize + '\'' +
                 ", storageClassName='" + storageClassName + '\'' +
                 ", updatePersistentVolumeClaim=" + updatePersistentVolumeClaim +
                 '}';
@@ -74,6 +77,14 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
 
     public String getAddressFullPolicy() {
         return addressFullPolicy;
+    }
+
+    public String getGlobalMaxSize() {
+        return globalMaxSize;
+    }
+
+    public void setGlobalMaxSize(String globalMaxSize) {
+        this.globalMaxSize = globalMaxSize;
     }
 
     public void setStorageClassName(String storageClassName) {
@@ -100,5 +111,4 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
     public Boolean getUpdatePersistentVolumeClaim() {
         return updatePersistentVolumeClaim;
     }
-
 }

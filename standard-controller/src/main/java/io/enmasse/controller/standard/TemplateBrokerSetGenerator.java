@@ -101,9 +101,23 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         }
 
         if (standardInfraConfig.getSpec().getBroker() != null) {
-            paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-            paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
-            paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
+            if (standardInfraConfig.getSpec().getBroker().getResources() != null) {
+                if (standardInfraConfig.getSpec().getBroker().getResources().getMemory() != null) {
+                    paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
+                }
+                if (standardInfraConfig.getSpec().getBroker().getResources().getStorage() != null) {
+                    paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
+                }
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getAddressFullPolicy() != null) {
+                paramMap.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getGlobalMaxSize() != null) {
+                paramMap.put(TemplateParameter.BROKER_GLOBAL_MAX_SIZE, standardInfraConfig.getSpec().getBroker().getGlobalMaxSize());
+            }
+
         }
 
         KubernetesList items = kubernetes.processTemplate(templateName, paramMap);
