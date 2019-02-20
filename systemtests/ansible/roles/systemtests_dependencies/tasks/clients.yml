@@ -19,29 +19,20 @@
   pip:
     name: cli-proton-python
 
-- name: CLIENTS | Clone cli-java repo
-  git:
-    repo: 'https://github.com/rh-messaging/cli-java.git'
-    dest: "{{ cli_java_git_path }}"
-    update: yes
-    clone: yes
-    force: yes
+- name: CLIENTS | download cli-qpid-jms
+  get_url:
+    url: "{{ cli_qpid_jms_url }}"
+    dest: "{{ client_executable_folder }}/cli-qpid-jms.jar"
 
-- name: CLIENTS | Compile cli-java clients
-  shell: 'mvn clean package -B -DskipTests=true'
-  args:
-    chdir: "{{ cli_java_git_path }}"
-  environment:
-      PATH: "{{ ansible_env.PATH }}:{{ maven_path }}"
+- name: CLIENTS | download cli-artemis-jms
+  get_url:
+    url: "{{ cli_artemis_url }}"
+    dest: "{{ client_executable_folder }}/cli-artemis-jms.jar"
 
-- name: CLIENTS | Move cli-qpid-jms
-  shell: 'cp {{ cli_java_git_path }}/cli-qpid-jms/target/cli-qpid-jms-*-SNAPSHOT-LATEST.jar {{ client_executable_folder }}/cli-qpid-jms.jar'
-
-- name: CLIENTS | Move cli-artemis-jms
-  shell: 'cp {{ cli_java_git_path }}/cli-artemis-jms/target/cli-artemis-jms-*-SNAPSHOT-LATEST.jar {{ client_executable_folder }}/cli-artemis-jms.jar'
-
-- name: CLIENTS | Move cli-activemq
-  shell: 'cp {{ cli_java_git_path }}/cli-activemq/target/cli-activemq-*-SNAPSHOT-LATEST.jar {{ client_executable_folder }}/cli-activemq.jar'
+- name: CLIENTS | download cli-activemq
+  get_url:
+    url: "{{ cli_activemq_url }}"
+    dest: "{{ client_executable_folder }}/cli-activemq.jar"
 
 - name: CLIENTS | Clone rhea repo
   git:
