@@ -12,7 +12,7 @@ spec:
     type: Git
     git:
       uri: https://github.com/enmasseproject/enmasse
-      ref: feature/iot
+      ref: master
   strategy:
     type: Docker
     dockerStrategy:
