@@ -195,7 +195,7 @@ objects:
           - name: CLUSTER_ID
             value: ${CLUSTER_ID}
           - name: GLOBAL_MAX_SIZE
-            value: ${GLOBAL_MAX_SIZE}
+            value: ${BROKER_GLOBAL_MAX_SIZE}
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
           - name: AUTHENTICATION_SERVICE_HOST
@@ -299,6 +299,6 @@ parameters:
   value: 512Mi
 - description: Global max size for all addresses in broker. Cannot be larger than
     a quarter of BROKER_MEMORY_LIMIT
-  name: GLOBAL_MAX_SIZE
+  name: BROKER_GLOBAL_MAX_SIZE
   value: "-1"
 

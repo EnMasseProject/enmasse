@@ -126,8 +126,22 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         prepareParameters(standardInfraConfig, addressSpace, parameters);
 
         if (standardInfraConfig.getSpec().getBroker() != null) {
-            parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-            parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+            if (standardInfraConfig.getSpec().getBroker().getResources() != null) {
+                if (standardInfraConfig.getSpec().getBroker().getResources().getMemory() != null) {
+                    parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
+                }
+                if (standardInfraConfig.getSpec().getBroker().getResources().getStorage() != null) {
+                    parameters.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
+                }
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getAddressFullPolicy() != null) {
+                parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, standardInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getGlobalMaxSize() != null) {
+                parameters.put(TemplateParameter.BROKER_GLOBAL_MAX_SIZE, standardInfraConfig.getSpec().getBroker().getGlobalMaxSize());
+            }
         }
 
         if (standardInfraConfig.getSpec().getRouter() != null) {
@@ -180,8 +194,22 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         prepareParameters(brokeredInfraConfig, addressSpace, parameters);
 
         if (brokeredInfraConfig.getSpec().getBroker() != null) {
-            parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
-            parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+            if (brokeredInfraConfig.getSpec().getBroker().getResources() != null) {
+                if (brokeredInfraConfig.getSpec().getBroker().getResources().getMemory() != null) {
+                    parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
+                }
+                if (brokeredInfraConfig.getSpec().getBroker().getResources().getStorage() != null) {
+                    parameters.put(TemplateParameter.BROKER_STORAGE_CAPACITY, brokeredInfraConfig.getSpec().getBroker().getResources().getStorage());
+                }
+            }
+
+            if (brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy() != null) {
+                parameters.put(TemplateParameter.BROKER_ADDRESS_FULL_POLICY, brokeredInfraConfig.getSpec().getBroker().getAddressFullPolicy());
+            }
+
+            if (brokeredInfraConfig.getSpec().getBroker().getGlobalMaxSize() != null) {
+                parameters.put(TemplateParameter.BROKER_GLOBAL_MAX_SIZE, brokeredInfraConfig.getSpec().getBroker().getGlobalMaxSize());
+            }
         }
 
         if (brokeredInfraConfig.getSpec().getAdmin() != null) {
