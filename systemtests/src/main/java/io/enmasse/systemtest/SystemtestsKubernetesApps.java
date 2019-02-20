@@ -83,12 +83,12 @@ public class SystemtestsKubernetesApps {
         return new Endpoint(kubeClient.getIngressHost(namespace, MESSAGING_CLIENTS), 80);
     }
 
-    public static Endpoint getFirefoxSeleniumAppEndpoint(String namespace, Kubernetes kubeClient) {
-        return new Endpoint(kubeClient.getIngressHost(namespace, SELENIUM_FIREFOX), 80);
+    public static Endpoint getFirefoxSeleniumAppEndpoint(Kubernetes kubeClient) {
+        return new Endpoint(kubeClient.getIngressHost(SELENIUM_PROJECT, SELENIUM_FIREFOX), 80);
     }
 
-    public static Endpoint getChromeSeleniumAppEndpoint(String namespace, Kubernetes kubeClient) {
-        return new Endpoint(kubeClient.getIngressHost(namespace, SELENIUM_CHROME), 80);
+    public static Endpoint getChromeSeleniumAppEndpoint(Kubernetes kubeClient) {
+        return new Endpoint(kubeClient.getIngressHost(SELENIUM_PROJECT, SELENIUM_CHROME), 80);
     }
 
     private static Deployment getSeleniumNodeDeploymentResource(String appName, String imageName) {
