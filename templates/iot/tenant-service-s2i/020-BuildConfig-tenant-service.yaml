@@ -1,9 +1,9 @@
 kind: BuildConfig
 apiVersion: v1
 metadata:
-  name: fabric8-s2i-java-custom
+  name: iot-tenant-service
   labels:
-    app: enmasse
+    app: iot-registry
     enmasse-component: iot
 spec:
   triggers: 
@@ -15,13 +15,17 @@ spec:
       uri: https://github.com/enmasseproject/enmasse
       ref: master
   strategy:
-    type: Docker
-    dockerStrategy:
+    type: Source
+    sourceStrategy:
       from:
         kind: ImageStreamTag
-        name: fabric8-s2i-java:3.0-java11
-      dockerfilePath: iot/fabric8-s2i-java-custom/Dockerfile
+        name: fabric8-s2i-java-custom:java8
+      env:
+      - name: MAVEN_ARGS_APPEND
+        value: -pl io.enmasse:tenant-service --also-make
+      - name: ARTIFACT_DIR
+        value: iot/tenant-service/target
   output:
     to:
       kind: ImageStreamTag
-      name: fabric8-s2i-java-custom:latest
+      name: iot-tenant-service:latest

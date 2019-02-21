@@ -10,13 +10,13 @@ IOT_MODULES=\
 	iot/auth \
 	iot/core \
 	iot/device-registry \
-	iot/http-adapter \
-	iot/mqtt-adapter \
+	iot/http-adapter-s2i \
+	iot/mqtt-adapter-s2i \
 	iot/iot-gc-s2i \
 	iot/iot-operator-s2i \
 	iot/qdr-configurator-s2i \
 	iot/tenant \
-	iot/tenant-service \
+	iot/tenant-service-s2i \
 
 MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics $(IOT_MODULES)
 
