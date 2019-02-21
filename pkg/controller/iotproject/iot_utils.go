@@ -9,6 +9,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/enmasseproject/enmasse/pkg/util"
+
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -119,7 +121,7 @@ func extractEndpointInformation(
 
 	if !addressSpace.Status.IsReady {
 		// not ready, yet … wait
-		return nil, fmt.Errorf("address space is not ready yet")
+		return nil, util.NewObjectNotReadyYetError(addressSpace)
 	}
 
 	endpoint := new(iotv1alpha1.ExternalDownstreamStrategy)
