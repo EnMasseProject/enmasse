@@ -1,9 +1,15 @@
 include ../../Makefile.common
 
-build:
-	@echo "Nothing to build"
+CMD=qdr-proxy-configurator
+
+build/$(CMD):
+	cd $(GOPRJ)/cmd/$(@F) && go build -o $(abspath $@) .
+
+build: build/$(CMD)
 
 package:
 	@echo "Nothing to package"
 
 test:
+
+.PHONY: build/$(CMD)

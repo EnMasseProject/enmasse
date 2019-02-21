@@ -9,6 +9,6 @@ ARG version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit}
 
-ADD qdr-proxy-configurator /
+ADD build/qdr-proxy-configurator /
 
 ENTRYPOINT /qdr-proxy-configurator

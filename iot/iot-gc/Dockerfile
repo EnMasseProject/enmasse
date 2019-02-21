@@ -9,6 +9,6 @@ ARG version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit}
 
-ADD iot-gc /
+ADD build/iot-gc /
 
 ENTRYPOINT /iot-gc
