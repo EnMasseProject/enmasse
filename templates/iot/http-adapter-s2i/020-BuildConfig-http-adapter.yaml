@@ -1,34 +1,34 @@
 kind: BuildConfig
 apiVersion: v1
 metadata:
-  name: iot-mqtt-adapter
+  name: iot-http-adapter
   labels:
-    app: iot-mqtt-adapter
+    app: iot-http-adapter
     enmasse-component: iot
 spec:
-  triggers:
+  triggers: 
     - type: ImageChange
     - type: ConfigChange
-  source:
+  source: 
     type: Git
     git:
       uri: https://github.com/eclipse/hono
       ref: "${HONO_VERSION}"
-  strategy:
+  strategy: 
     type: source
     sourceStrategy:
       from:
         kind: ImageStreamTag
-        name: fabric8-s2i-java-custom:latest
+        name: fabric8-s2i-java-custom:java11
       env:
       - name: MAVEN_ARGS_APPEND
-        value: -B -pl org.eclipse.hono:hono-adapter-mqtt-vertx --also-make -Pnetty-tcnative
-        #value: -B -pl org.eclipse.hono:hono-adapter-mqtt-vertx --also-make -Pnetty-tcnative -Pmetrics-prometheus
+        value: -B -pl org.eclipse.hono:hono-adapter-http-vertx --also-make -Pnetty-tcnative
+        #value: -B -pl org.eclipse.hono:hono-adapter-http-vertx --also-make -Pnetty-tcnative -Pmetrics-prometheus
       - name: ARTIFACT_DIR
-        value: adapters/mqtt-vertx/target
+        value: adapters/http-vertx/target
       - name: ARTIFACT_COPY_ARGS
         value: "*-exec.jar"
   output:
     to:
       kind: ImageStreamTag
-      name: iot-mqtt-adapter:latest
+      name: iot-http-adapter:latest
