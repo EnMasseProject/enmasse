@@ -7,6 +7,9 @@ package iotproject
 
 import (
 	"context"
+	"time"
+
+	"github.com/enmasseproject/enmasse/pkg/util"
 
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -143,15 +146,21 @@ func (r *ReconcileIoTProject) updateProjectStatusReady(ctx context.Context, requ
 	return r.client.Update(ctx, newProject)
 }
 
-func (r *ReconcileIoTProject) applyUpdate(status *iotv1alpha1.ExternalDownstreamStrategy, err error, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+func (r *ReconcileIoTProject) applyUpdate(ctx context.Context, status *iotv1alpha1.ExternalDownstreamStrategy, err error, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
 
 	if err != nil {
+
+		if util.IsNotReadyYetError(err) {
+			// if the resource is not ready yet, then we retry after a delay
+			return reconcile.Result{Requeue: true, RequeueAfter: time.Minute}, nil
+		}
+
 		log.Error(err, "failed to reconcile")
-		err = r.updateProjectStatusError(context.TODO(), request, project)
+		_ = r.updateProjectStatusError(ctx, request, project)
 		return reconcile.Result{}, err
 	}
 
-	err = r.updateProjectStatusReady(context.TODO(), request, project, status)
+	err = r.updateProjectStatusReady(ctx, request, project, status)
 	return reconcile.Result{}, err
 }
 
@@ -165,6 +174,8 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 	// Get project
 	project := &iotv1alpha1.IoTProject{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, project)
+
+	ctx := context.TODO()
 
 	if err != nil {
 
@@ -189,8 +200,8 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Handle as external")
 
-		status, err := r.reconcileExternal(context.TODO(), &request, project)
-		return r.applyUpdate(status, err, &request, project)
+		status, err := r.reconcileExternal(ctx, &request, project)
+		return r.applyUpdate(ctx, status, err, &request, project)
 
 	} else if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy != nil {
 
@@ -198,8 +209,8 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Handle as provided")
 
-		status, err := r.reconcileProvided(context.TODO(), &request, project)
-		return r.applyUpdate(status, err, &request, project)
+		status, err := r.reconcileProvided(ctx, &request, project)
+		return r.applyUpdate(ctx, status, err, &request, project)
 
 	} else if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
 
@@ -208,8 +219,8 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Handle as managed")
 
-		status, err := r.reconcileManaged(context.TODO(), &request, project)
-		return r.applyUpdate(status, err, &request, project)
+		status, err := r.reconcileManaged(ctx, &request, project)
+		return r.applyUpdate(ctx, status, err, &request, project)
 
 	} else {
 
@@ -218,7 +229,7 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Missing or unknown downstream strategy")
 
-		err = r.updateProjectStatusError(context.TODO(), &request, project)
+		err = r.updateProjectStatusError(ctx, &request, project)
 		return reconcile.Result{}, err
 
 	}
