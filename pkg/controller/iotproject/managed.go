@@ -172,7 +172,7 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 	// as we cannot detect a change
 
 	var password []byte
-	if isNewObject(existing) {
+	if util.IsNewObject(existing) {
 		password = []byte(credentials.Password)
 	}
 
