@@ -1,9 +1,9 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package iotproject
+package util
 
 import "testing"
 
@@ -19,7 +19,7 @@ var userTests = []struct {
 
 func TestSplitUser(t *testing.T) {
 	for _, tt := range userTests {
-		addressSpace, username, err := splitUserName(tt.input)
+		addressSpace, username, err := SplitUserName(tt.input)
 
 		if tt.err && err == nil {
 			t.Errorf("splitUserName(%s): expected error", tt.input)
