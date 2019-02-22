@@ -79,7 +79,7 @@ type Credentials struct {
 
 type IoTProjectList struct {
 	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"'`
+	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []IoTProject `json:"items"`
 }
