@@ -6,23 +6,25 @@ BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
+
 IOT_MODULES=\
+	iot/api \
 	iot/auth \
-	iot/core \
+	iot/common \
 	iot/device-registry \
-	iot/http-adapter-s2i \
-	iot/mqtt-adapter-s2i \
-	iot/iot-gc-s2i \
-	iot/iot-operator-s2i \
-	iot/qdr-configurator-s2i \
+	iot/iot-gc \
+	iot/iot-operator \
+	iot/http-adapter \
+	iot/mqtt-adapter \
 	iot/tenant \
-	iot/tenant-service-s2i \
+	iot/tenant-service \
 
 MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics service-monitors prometheus-rules $(IOT_MODULES) csv
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
 	mkdir -p $(PACKAGE_INSTALL_DIR)/bundles
+	mkdir -p $(PACKAGE_INSTALL_DIR)/preview-bundles
 	mkdir -p $(PACKAGE_INSTALL_DIR)/components
 
 replace_images: prepare
@@ -70,14 +72,14 @@ $(MONITORING_BUNDLE): replace_images
 		mv $$i.tmp $$i; \
 	done
 
-IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/iot
+IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/iot
 $(IOT_BUNDLE): replace_images
 	mkdir -p $(IOT_BUNDLE)
 	for i in $(IOT_MODULES); do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
 	done
 	for i in `find $(IOT_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | HONO_VERSION="$(HONO_VERSION)" NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE},$${HONO_VERSION}' > $$i.tmp; \
+		cat $$i | $(IMAGE_ENV) HONO_VERSION="$(HONO_VERSION)" NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE},$${HONO_VERSION},$${IMAGE_PULL_POLICY},$${QDROUTERD_BASE_IMAGE},$${IOT_GC_IMAGE},$${IOT_OPERATOR_IMAGE},$${QDR_PROXY_CONFIGURATOR_IMAGE},$${IOT_TENANT_SERVICE_IMAGE},$${IOT_AUTH_SERVICE_IMAGE},$${IOT_DEVICE_REGISTRY_IMAGE},$${IOT_HTTP_ADAPTER_IMAGE},$${IOT_MQTT_ADAPTER_IMAGE}' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
@@ -92,7 +94,7 @@ install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE
 	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
-	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
+	tar -czf build/$(INSTALLNAME).tgz --exclude="*/preview-bundles" -C build $(INSTALLNAME)
 
 coverage:
 

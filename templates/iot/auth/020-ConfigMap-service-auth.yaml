@@ -2,10 +2,10 @@
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: hono-service-auth-config
+  name: iot-auth-service-config
   labels:
     app: iot-core
-    component: hono-service-auth
+    component: iot-auth-service
     enmasse-component: iot
 data:
   application.yml: |+
@@ -20,8 +20,6 @@ data:
           keyFormat: PEM
           trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
           trustStoreFormat: PEM
-          insecurePortEnabled: true
-          insecurePortBindAddress: 0.0.0.0
         svc:
           permissionsPath: file:///etc/config/permissions.json
       metrics:
@@ -135,10 +133,8 @@ data:
       <configuration>
 
         <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-          <!-- encoders are assigned the type
-               ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
           <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} %-5p [%c{0}] %m%n</pattern>
           </encoder>
         </appender>
 
@@ -157,11 +153,6 @@ data:
 
         <springProfile name="prod">
           <logger name="org.eclipse.hono" level="INFO"/>
-
-          <logger name="io.netty.handler.logging.LoggingHandler" level="INFO"/>
-
-          <logger name="io.vertx.proton.impl" level="INFO"/>
-          <logger name="io.vertx.core.net.impl" level="INFO"/>
         </springProfile>
 
       </configuration>

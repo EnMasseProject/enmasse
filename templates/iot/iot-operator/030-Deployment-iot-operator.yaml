@@ -1,0 +1,35 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: iot-operator
+  labels:
+    app: iot-core
+    name: iot-operator
+    enmasse-component: iot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iot-core
+      name: iot-operator
+  template:
+    metadata:
+      labels:
+        app: iot-core
+        name: iot-operator
+        enmasse-component: iot
+    spec:
+      containers:
+      - name: operator
+        image: ${IOT_OPERATOR_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: "iot-operator"
+        resources:
+          limits:
+            memory: 128Mi
