@@ -154,10 +154,8 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(project *iotv1alpha1.IoTProj
 		existing.ObjectMeta.Labels = project.Labels
 	}
 
-	existing.Spec = enmassev1beta1.AddressSpaceSpec{
-		Type: "standard",
-		Plan: "standard-unlimited",
-	}
+	existing.Spec.Type = "standard"
+	existing.Spec.Plan = "standard-unlimited"
 
 	return nil
 }
@@ -182,29 +180,24 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 	eventName := util.AddressName(project, "event")
 	commandName := util.AddressName(project, "command")
 
-	existing.Spec = userv1beta1.MessagingUserSpec{
-
-		Username: username,
-
-		Authentication: userv1beta1.AuthenticationSpec{
-			Type:     "password",
-			Password: password,
-		},
-
-		Authorization: []userv1beta1.AuthorizationSpec{
-			{
-				Addresses: []string{
-					telemetryName,
-					telemetryName + "/*",
-					eventName,
-					eventName + "/*",
-					commandName,
-					commandName + "/*",
-				},
-				Operations: []string{
-					"send",
-					"recv",
-				},
+	existing.Spec.Username = username
+	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
+		Type:     "password",
+		Password: password,
+	}
+	existing.Spec.Authorization = []userv1beta1.AuthorizationSpec{
+		{
+			Addresses: []string{
+				telemetryName,
+				telemetryName + "/*",
+				eventName,
+				eventName + "/*",
+				commandName,
+				commandName + "/*",
+			},
+			Operations: []string{
+				"send",
+				"recv",
 			},
 		},
 	}
