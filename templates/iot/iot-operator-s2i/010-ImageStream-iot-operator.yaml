@@ -1,7 +1,0 @@
-kind: ImageStream
-apiVersion: v1
-metadata:
-  name: iot-operator
-  labels:
-    app: iot-core
-    enmasse-component: iot

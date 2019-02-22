@@ -2,27 +2,28 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
+  name: iot-auth-service
   labels:
     app: iot-core
-    component: hono-service-auth
+    component: iot-auth-service
     enmasse-component: iot
-  name: hono-service-auth
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: iot-core
-      component: hono-service-auth
+      component: iot-auth-service
   template:
     metadata:
       labels:
         app: iot-core
-        component: hono-service-auth
+        component: iot-auth-service
+        enmasse-component: iot
     spec:
       containers:
-      - image: eclipse/hono-service-auth:${HONO_VERSION}
-        imagePullPolicy: IfNotPresent
-        name: eclipse-hono-service-auth
+      - name: auth-service
+        image: ${IOT_AUTH_SERVICE_IMAGE}
+        imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
         - name: SPRING_CONFIG_LOCATION
           value: file:///etc/config/
@@ -30,40 +31,23 @@ spec:
           value: authentication-impl
         - name: LOGGING_CONFIG
           value: file:///etc/config/logback-spring.xml
-#        - name: HONO_AUTH_SVC_SIGNING_SHARED_SECRET
-#          valueFrom:
-#            secretKeyRef:
-#              name: hono-secrets
-#              key: shared.signing.secret
-#        - name: HONO_AUTH_SVC_VALIDATION_SHARED_SECRET
-#          valueFrom:
-#            secretKeyRef:
-#              name: hono-secrets
-#              key: shared.signing.secret
         - name: KUBERNETES_NAMESPACE
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-#        - name: AB_JOLOKIA_USER
-#          value: jolokia
-#        - name: AB_JOLOKIA_PASSWORD_RANDOM
-#          value: "false"
-#        - name: AB_JOLOKIA_PASSWORD
-#          valueFrom:
-#            secretKeyRef:
-#              name: hono-secrets
-#              key: jolokia.password
         livenessProbe:
+          # change for Hono 0.9
           initialDelaySeconds: 25
           periodSeconds: 9
           tcpSocket:
-            port: 5672
+            port: 5671
           timeoutSeconds: 1
         readinessProbe:
+          # change for Hono 0.9
           initialDelaySeconds: 15
           periodSeconds: 5
           tcpSocket:
-            port: 5672
+            port: 5671
           timeoutSeconds: 1
         resources:
           limits:
@@ -74,9 +58,6 @@ spec:
         - containerPort: 5671
           name: amqps
           protocol: TCP
-        - containerPort: 5672
-          name: amqp
-          protocol: TCP
         volumeMounts:
         - mountPath: /etc/config
           name: conf
@@ -86,7 +67,7 @@ spec:
       volumes:
       - name: conf
         configMap:
-          name: hono-service-auth-config
+          name: iot-auth-service-config
       - name: tls
         secret:
-          secretName: hono-service-auth-tls
+          secretName: iot-auth-service-tls

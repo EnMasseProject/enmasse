@@ -14,13 +14,22 @@
 
   <properties>
     <hono.version>0.8</hono.version>
+
+    <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
     <spring.boot.version>1.5.18.RELEASE</spring.boot.version>
     <spring.version>4.3.19.RELEASE</spring.version>
-    <micrometer.version>1.0.6</micrometer.version>
+    <micrometer.version>1.0.9</micrometer.version>
+    <vertx.version>3.5.4</vertx.version>
+    <netty-tcnative.version>2.0.10.Final</netty-tcnative.version>
+    <netty.version>4.1.19.Final</netty.version>
   </properties>
 
   <modules>
+    <module>iot-auth-service</module>
+    <module>iot-device-registry</module>
+    <module>iot-http-adapter</module>
+    <module>iot-mqtt-adapter</module>
     <module>iot-tenant-service</module>
   </modules>
 
