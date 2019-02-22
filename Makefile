@@ -22,7 +22,14 @@ ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
 endif
 
-all: init test_go build_java docker_build templates
+all: init build_java docker_build templates
+
+test: test_go
+
+ifeq ($(SKIP_TESTS),true)
+else
+all: test_go
+endif
 
 templates: docu_html
 	$(MAKE) -C templates
@@ -33,12 +40,18 @@ build_java:
 build_go: $(GO_DIRS)
 	for i in $?; do $(MAKE) -C $$i build; done
 
-ifeq ($(SKIP_TESTS),true)
-test_go:
-else
-test_go: $(GOPRJ)
+test_go: test_go_vet test_go_run
+
+test_go_vet:
 	cd $(GOPRJ) && go tool vet cmd pkg
-	cd $(GOPRJ) && go test ./...
+
+ifeq (,$(GO2XUNIT))
+test_go_run: $(GOPRJ)
+	cd $(GOPRJ) && go test -v ./...
+else
+test_go_run: $(GOPRJ)
+	-cd $(GOPRJ) && go test -v ./... 2>&1 | tee $(abspath build/go.testoutput)
+	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
 
 coverage_go:
@@ -65,6 +78,7 @@ template_clean:
 	$(MAKE) -C templates clean
 
 clean: clean_java clean_go docu_htmlclean template_clean
+	rm -rf build
 
 docker_build: build_java build_go
 
@@ -114,4 +128,5 @@ docu_check:
 docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
-.PHONY: $(BUILD_TARGETS) $(GO_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: test_go_vet test_go_plain
+.PHONY: all $(BUILD_TARGETS) $(GO_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
