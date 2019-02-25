@@ -53,6 +53,17 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {
+        InfraConfigDefinition infra = new InfraConfigDefinition("kornys", AddressSpaceType.STANDARD, Arrays.asList(
+                new BrokerInfraSpec(Arrays.asList(
+                        new InfraResource("memory", "750Mi"),
+                        new InfraResource("storage", "2Gi"))),
+                new AdminInfraSpec(Collections.singletonList(
+                        new InfraResource("memory", "1Gi"))),
+                new RouterInfraSpec(Collections.singletonList(
+                        new InfraResource("memory", "1Gi")), 300, 1)));
+
+        plansProvider.createInfraConfig(infra);
+
         //define and create address plans
         List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0.0));
         List<AddressResource> addressResourcesTopic = Arrays.asList(
@@ -71,7 +82,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AddressSpaceResource("aggregate", 10.0));
         List<AddressPlanDefinition> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
         AddressSpacePlanDefinition weakSpacePlan = new AddressSpacePlanDefinition("weak-plan",
-                "default", AddressSpaceType.STANDARD, resources, addressPlans);
+                infra.getName(), AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan

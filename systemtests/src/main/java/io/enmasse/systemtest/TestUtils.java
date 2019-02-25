@@ -1236,11 +1236,13 @@ public class TestUtils {
     }
 
     public static RemoteWebDriver getFirefoxDriver() throws Exception {
-        return getRemoteDriver(SystemtestsKubernetesApps.SELENIUM_FIREFOX + "." + new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io", 80, new FirefoxOptions());
+        Endpoint endpoint = SystemtestsKubernetesApps.getFirefoxSeleniumAppEndpoint(Kubernetes.getInstance());
+        return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), new FirefoxOptions());
     }
 
     public static RemoteWebDriver getChromeDriver() throws Exception {
-        return getRemoteDriver(SystemtestsKubernetesApps.SELENIUM_CHROME + "." + new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io", 80, new ChromeOptions());
+        Endpoint endpoint = SystemtestsKubernetesApps.getChromeSeleniumAppEndpoint(Kubernetes.getInstance());
+        return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), new ChromeOptions());
     }
 
     private static RemoteWebDriver getRemoteDriver(String host, int port, Capabilities options) throws Exception {
