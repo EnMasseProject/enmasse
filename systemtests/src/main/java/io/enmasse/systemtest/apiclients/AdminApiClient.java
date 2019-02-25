@@ -87,7 +87,7 @@ public class AdminApiClient extends ApiClient {
         return InfraConfigDefinition.fromJson(getResource("infra-config", type.equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath, config));
     }
 
-    private String getInfraApiPath(InfraConfigDefinition copnfig) {
-        return copnfig.getType().equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath;
+    private String getInfraApiPath(InfraConfigDefinition config) {
+        return config.getType().equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath;
     }
 }

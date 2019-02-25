@@ -4,17 +4,19 @@
  */
 package io.enmasse.systemtest.resources;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.vertx.core.json.JsonObject;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import io.enmasse.systemtest.AddressSpaceType;
+import io.vertx.core.json.JsonObject;
 
 public class InfraConfigDefinition {
 
     private String name;
     private AddressSpaceType type;
     private List<InfraSpecComponent> infraComponents;
+
+    private String version = "0.27-SNAPSHOT"; //TODO externalyze this
 
     public InfraConfigDefinition(String name, AddressSpaceType type, List<InfraSpecComponent> infraComponents) {
         this.name = name;
@@ -48,7 +50,7 @@ public class InfraConfigDefinition {
             JsonObject component = res.toJson();
             spec.put(res.getType(), component);
         }
-        spec.put("version", "1");
+        spec.put("version", version);
         config.put("spec", spec); // </requiredResources>
         return config;
     }
@@ -73,7 +75,9 @@ public class InfraConfigDefinition {
                     component = RouterInfraSpec.fromJson((JsonObject) entry.getValue());
                     break;
             }
-            components.add(component);
+            if(component!=null) {
+                components.add(component);
+            }
         });
 
         return new InfraConfigDefinition(
@@ -81,4 +85,5 @@ public class InfraConfigDefinition {
                 infraDefinition.getString("kind").equals("StandardInfraConfig") ? AddressSpaceType.STANDARD : AddressSpaceType.BROKERED,
                 components);
     }
+
 }
