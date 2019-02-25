@@ -85,5 +85,4 @@ public class InfraConfigDefinition {
                 infraDefinition.getString("kind").equals("StandardInfraConfig") ? AddressSpaceType.STANDARD : AddressSpaceType.BROKERED,
                 components);
     }
-
 }

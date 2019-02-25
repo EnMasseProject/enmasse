@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContext;
 
 import io.enmasse.iot.tenant.impl.TenantServiceImpl;
 import io.enmasse.iot.tenant.utils.HonoUtils;
+import io.enmasse.model.CustomResourceDefinitions;
 import io.vertx.core.Future;
 import io.vertx.core.Verticle;
 import io.vertx.core.Vertx;
@@ -26,6 +27,7 @@ import io.vertx.core.Vertx;
 public class Application extends AbstractApplication {
 
     public static void main(final String[] args) {
+        CustomResourceDefinitions.registerAll();
         SpringApplication.run(Application.class, args);
     }
 

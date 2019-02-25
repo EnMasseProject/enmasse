@@ -57,7 +57,7 @@ public class RouterInfraSpec implements InfraSpecComponent {
 		return minReplicas;
 	}
 
-	public String getRequiredValueFromResource(String resource) throws IllegalStateException {
+    public String getRequiredValueFromResource(String resource) throws IllegalStateException {
         for (InfraResource res : this.getResources()) {
             if (resource.equals(res.getName())) {
                 return res.getValue();
@@ -106,5 +106,4 @@ public class RouterInfraSpec implements InfraSpecComponent {
 
         return new RouterInfraSpec(requiredResources, linkCapacity, minReplicas);
     }
-
 }

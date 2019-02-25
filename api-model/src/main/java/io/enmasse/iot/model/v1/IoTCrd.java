@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.iot.model.v1;
@@ -10,19 +10,23 @@ import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class IoTCrd {
 
-    private static final CustomResourceDefinition CRD;
+    public static final String VERSION = "v1alpha1";
+    public static final String GROUP = "iot.enmasse.io";
+    public static final String API_VERSION = GROUP + "/" + VERSION;
+
+    private static final CustomResourceDefinition PROJECT_CRD;
 
     static {
-        CRD = CustomResources.createCustomResource(Version.GROUP, Version.VERSION, IoTProject.KIND);
+        PROJECT_CRD = CustomResources.createCustomResource(GROUP, VERSION, IoTProject.KIND);
     }
 
     public static void registerCustomCrds() {
-        KubernetesDeserializer.registerCustomKind(Version.API_VERSION, IoTProject.KIND, IoTProject.class);
-        KubernetesDeserializer.registerCustomKind(Version.API_VERSION, IoTProjectList.KIND, IoTProjectList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, IoTProject.KIND, IoTProject.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, IoTProjectList.KIND, IoTProjectList.class);
     }
 
     public static CustomResourceDefinition project() {
-        return CRD;
+        return PROJECT_CRD;
     }
 
 }

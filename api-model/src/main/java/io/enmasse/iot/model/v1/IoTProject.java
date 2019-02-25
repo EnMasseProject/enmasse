@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.iot.model.v1;
@@ -33,7 +33,7 @@ public class IoTProject extends AbstractHasMetadata<IoTProject> {
     private IoTProjectSpec spec;
 
     public IoTProject() {
-        super(KIND, Version.API_VERSION);
+        super(KIND, IoTCrd.API_VERSION);
     }
 
     public void setSpec(final IoTProjectSpec spec) {

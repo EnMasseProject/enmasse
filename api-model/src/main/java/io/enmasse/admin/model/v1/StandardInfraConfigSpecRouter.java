@@ -19,20 +19,22 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity"})
+@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity", "handshakeTimeout"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecRouterResources resources;
-    private int minReplicas;
-    private int linkCapacity;
+    private Integer minReplicas;
+    private Integer linkCapacity;
+    private Integer handshakeTimeout;
 
     public StandardInfraConfigSpecRouter() {
     }
 
-    public StandardInfraConfigSpecRouter(final StandardInfraConfigSpecRouterResources resources, final int minReplicas, final int linkCapacity) {
+    public StandardInfraConfigSpecRouter(final StandardInfraConfigSpecRouterResources resources, final Integer minReplicas, final Integer linkCapacity, final Integer handshakeTimeout) {
         setResources(resources);
         setMinReplicas(minReplicas);
         setLinkCapacity(linkCapacity);
+        setHandshakeTimeout(handshakeTimeout);
     }
 
     public void setResources(StandardInfraConfigSpecRouterResources resources) {
@@ -43,12 +45,28 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         return resources;
     }
 
-    public void setLinkCapacity(int linkCapacity) {
+    public void setLinkCapacity(Integer linkCapacity) {
         this.linkCapacity = linkCapacity;
     }
 
-    public int getLinkCapacity() {
+    public Integer getLinkCapacity() {
         return linkCapacity;
+    }
+
+    public void setMinReplicas(Integer minReplicas) {
+        this.minReplicas = minReplicas;
+    }
+
+    public Integer getMinReplicas() {
+        return minReplicas;
+    }
+
+    public Integer getHandshakeTimeout() {
+        return handshakeTimeout;
+    }
+
+    public void setHandshakeTimeout(Integer handshakeTimeout) {
+        this.handshakeTimeout = handshakeTimeout;
     }
 
     @Override
@@ -57,20 +75,14 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         if (o == null || getClass() != o.getClass()) return false;
         StandardInfraConfigSpecRouter that = (StandardInfraConfigSpecRouter) o;
         return Objects.equals(resources, that.resources) &&
+                Objects.equals(minReplicas, that.minReplicas) &&
+                Objects.equals(handshakeTimeout, that.handshakeTimeout) &&
                 Objects.equals(linkCapacity, that.linkCapacity);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, linkCapacity);
-    }
-
-    public void setMinReplicas(int minReplicas) {
-        this.minReplicas = minReplicas;
-    }
-
-    public int getMinReplicas() {
-        return minReplicas;
+        return Objects.hash(resources, linkCapacity, minReplicas, handshakeTimeout);
     }
 
     @Override
@@ -79,6 +91,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
                 "resources=" + resources +
                 ", minReplicas=" + minReplicas +
                 ", linkCapacity=" + linkCapacity +
+                ", handshakeTimeout=" + handshakeTimeout +
                 '}';
     }
 }
