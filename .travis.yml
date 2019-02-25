@@ -68,7 +68,7 @@ jobs:
         - tar xzf s2i.tar.gz
       install: true
       script:
-        - ./s2i build . fabric8/s2i-java:3.0-java11 tenant-service -e MAVEN_ARGS_APPEND="-pl io.enmasse:tenant-service --also-make" -e ARTIFACT_DIR="iot/tenant-service/target"
+        - ./s2i build . fabric8/s2i-java:3.0-java8 tenant-service -e MAVEN_ARGS_APPEND="-pl io.enmasse:tenant-service --also-make" -e ARTIFACT_DIR="iot/tenant-service/target"
 env:
   global:
     - BRANCH=${TRAVIS_BRANCH}
