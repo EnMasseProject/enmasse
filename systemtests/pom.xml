@@ -120,6 +120,9 @@
                         <excludeTags>${skip.tags}</excludeTags>
                     </properties>
                     <skipTests>${skip.tests}</skipTests>
+                    <systemProperties>
+                        <enmasse.version>${release.version}</enmasse.version>
+                    </systemProperties>
                 </configuration>
                 <dependencies>
                     <dependency>

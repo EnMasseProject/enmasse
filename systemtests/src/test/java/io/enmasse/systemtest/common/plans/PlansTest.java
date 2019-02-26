@@ -60,7 +60,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new AdminInfraSpec(Collections.singletonList(
                         new InfraResource("memory", "1Gi"))),
                 new RouterInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "1Gi")), 300, 1)));
+                        new InfraResource("memory", "1Gi")), 300, 1)), environment.enmasseVersion());
 
         plansProvider.createInfraConfig(infra);
 

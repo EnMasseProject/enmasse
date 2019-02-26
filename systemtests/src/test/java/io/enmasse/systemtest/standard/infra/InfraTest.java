@@ -4,16 +4,21 @@
  */
 package io.enmasse.systemtest.standard.infra;
 
+import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import io.enmasse.systemtest.AddressSpace;
@@ -24,6 +29,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.PlansProvider;
 import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
@@ -40,10 +46,16 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.storage.StorageClass;
 
+@Tag(isolated)
 class InfraTest extends TestBase implements ITestBaseStandard{
 
     private static Logger log = CustomLogger.getLogger();
+
+    private static final List<String> resizingStorageProvisioners = Arrays.asList("kubernetes.io/aws-ebs", "kubernetes.io/gce-pd",
+            "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
+            "kubernetes.io/portworx-volume", "kubernetes.io/rbd");
 
     private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
@@ -70,7 +82,7 @@ class InfraTest extends TestBase implements ITestBaseStandard{
                 new RouterInfraSpec(Collections.singletonList(
                         new InfraResource("memory", "256Mi")), 200, 2),
                 new AdminInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "512Mi")))));
+                        new InfraResource("memory", "512Mi")))), environment.enmasseVersion());
 		plansProvider.createInfraConfig(testInfra);
 
 		exampleAddressPlan = new AddressPlanDefinition("example-queue-plan", AddressType.TOPIC, Arrays.asList(
@@ -94,38 +106,54 @@ class InfraTest extends TestBase implements ITestBaseStandard{
 
         setAddresses(exampleAddressSpace, Destination.topic("example-queue", exampleAddressPlan.getName()));
 
-        assertInfra(exampleAddressSpace, "512Mi", "1Gi", 2, "256Mi", "512Mi");
+        assertInfra("512Mi", Optional.of("1Gi"), 2, "256Mi", "512Mi");
 
 	}
 
 	@Test
 	void testIncrementInfra() throws Exception {
-		testCreateInfra();
+	    testReplaceInfra("1Gi", "2Gi", 3, "512Mi", "768Mi");
+	}
 
-		InfraConfigDefinition infra = new InfraConfigDefinition("test-infra-2", AddressSpaceType.STANDARD,  Arrays.asList(
-                new BrokerInfraSpec(Arrays.asList(
-                        new InfraResource("memory", "1Gi"),
-                                new InfraResource("storage", "2Gi"))), // , true), //TODO check this, bug?
-                new RouterInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "512Mi")), 200, 3),
-                new AdminInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "768Mi")))));
-		plansProvider.createInfraConfig(infra);
+	@Test
+	void testDecrementInfra() throws Exception {
+	    testReplaceInfra("512Mi", "512Mi", 1, "128Mi", "256Mi");
+	}
 
-        AddressSpacePlanDefinition exampleSpacePlan = new AddressSpacePlanDefinition("example-space-plan-2",
-                infra.getName(), AddressSpaceType.STANDARD,
-                Arrays.asList(
-                        new AddressSpaceResource("broker", 3.0),
-                        new AddressSpaceResource("router", 3.0),
-                        new AddressSpaceResource("aggregate", 5.0)),
-                Arrays.asList(exampleAddressPlan));
+	void testReplaceInfra(String brokerMemory, String brokerStorage, int routerReplicas, String routerMemory, String adminMemory) throws Exception {
+	       testCreateInfra();
 
-		plansProvider.createAddressSpacePlan(exampleSpacePlan);
+	        Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
-		exampleAddressSpace.setPlan(exampleSpacePlan.getName());
-		replaceAddressSpace(exampleAddressSpace);
+	        InfraConfigDefinition infra = new InfraConfigDefinition("test-infra-2", AddressSpaceType.STANDARD,  Arrays.asList(
+	                new BrokerInfraSpec(Arrays.asList(
+	                        new InfraResource("memory", brokerMemory),
+	                        new InfraResource("storage", brokerStorage)), updatePersistentVolumeClaim),
+	                new RouterInfraSpec(Collections.singletonList(
+	                        new InfraResource("memory", routerMemory)), 200, routerReplicas),
+	                new AdminInfraSpec(Collections.singletonList(
+	                        new InfraResource("memory", adminMemory)))), environment.enmasseVersion());
+	        plansProvider.createInfraConfig(infra);
 
-		assertInfra(exampleAddressSpace, "1Gi", "2Gi", 3, "512Mi", "768Mi");
+	        AddressSpacePlanDefinition exampleSpacePlan = new AddressSpacePlanDefinition("example-space-plan-2",
+	                infra.getName(), AddressSpaceType.STANDARD,
+	                Arrays.asList(
+	                        new AddressSpaceResource("broker", 3.0),
+	                        new AddressSpaceResource("router", 3.0),
+	                        new AddressSpaceResource("aggregate", 5.0)),
+	                Arrays.asList(exampleAddressPlan));
+
+	        plansProvider.createAddressSpacePlan(exampleSpacePlan);
+
+	        exampleAddressSpace.setPlan(exampleSpacePlan.getName());
+	        replaceAddressSpace(exampleAddressSpace);
+
+            waitUntilInfraReady(brokerMemory,
+                    updatePersistentVolumeClaim!=null && updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(),
+                    routerReplicas,
+                    routerMemory,
+                    adminMemory,
+                    new TimeoutBudget(5, TimeUnit.MINUTES));
 	}
 
 	@Test
@@ -158,8 +186,80 @@ class InfraTest extends TestBase implements ITestBaseStandard{
 		return infra.getAddressResources().stream().filter(isc->isc.getType().equals(type)).findFirst().get();
 	}
 
-	private void assertInfra(AddressSpace exampleAddressSpace, String brokerMemory, String brokerStorage, int routerReplicas, String routermemory, String adminMemory) {
-		log.info("Checking broker infra");
+	private Boolean volumeResizingSupported() {
+        List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);
+        assertEquals(1, brokerPods.size());
+        Pod broker = brokerPods.stream().findFirst().get();
+        PersistentVolumeClaim brokerVolumeClaim = getBrokerPVCData(broker);
+        String brokerStorageClassName = brokerVolumeClaim.getSpec().getStorageClassName();
+        if(brokerStorageClassName!=null) {
+            StorageClass brokerStorageClass = kubernetes.getStorageClass(brokerStorageClassName);
+            if(resizingStorageProvisioners.contains(brokerStorageClass.getProvisioner())) {
+                if(brokerStorageClass.getAllowVolumeExpansion()!=null && brokerStorageClass.getAllowVolumeExpansion()) {
+                    return true;
+                }else {
+                    log.info("Skipping broker volume resize due to allowVolumeExpansion in StorageClass {} disabled", brokerStorageClassName);
+                }
+            }else {
+                log.info("Skipping broker volume resize due to provisioner: {}", brokerStorageClass.getProvisioner());
+            }
+        }else {
+            log.info("Skipping broker volume resize due to missing StorageClass name in PVC {}", brokerVolumeClaim.getMetadata().getName());
+        }
+        return false;
+	}
+
+	private void waitUntilInfraReady(String brokerMemory, Optional<String> brokerStorage, int routerReplicas, String routermemory, String adminMemory, TimeoutBudget timeout) throws InterruptedException {
+	    log.info("Start waiting for infra ready");
+	    AssertionFailedError lastException = null;
+        while (!timeout.timeoutExpired()) {
+            try {
+                assertInfra(brokerMemory, brokerStorage, routerReplicas, routermemory, adminMemory);
+                log.info("assert infra ready succeed");
+                return;
+            }catch(AssertionFailedError e) {
+                lastException = e;
+            }
+            log.debug("next iteration, remaining time: {}", timeout.timeLeft());
+            Thread.sleep(5000);
+        }
+        log.error("Timeout assert infra expired");
+        if(lastException!=null) {
+            throw lastException;
+        }
+	}
+
+	private void assertInfra(String brokerMemory, Optional<String> brokerStorage, int routerReplicas, String routermemory, String adminMemory) {
+        log.info("Checking router infra");
+        List<Pod> routerPods = TestUtils.listRouterPods(kubernetes, exampleAddressSpace);
+        assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
+
+        for (Pod router : routerPods) {
+            ResourceRequirements resources = router.getSpec().getContainers().stream()
+                    .filter(container -> container.getName().equals("router")).findFirst().map(Container::getResources)
+                    .get();
+            assertEquals(routermemory, resources.getLimits().get("memory").getAmount(),
+                    "Router memory limit incorrect");
+            assertEquals(routermemory, resources.getRequests().get("memory").getAmount(),
+                    "Router memory requests incorrect");
+        }
+
+        log.info("Checking admin console infra");
+        List<Pod> adminPods = TestUtils.listAdminConsolePods(kubernetes, exampleAddressSpace);
+        assertEquals(1, adminPods.size());
+
+        // admin pod has 2 containers
+        List<ResourceRequirements> adminResources = adminPods.stream().findFirst().get().getSpec().getContainers()
+                .stream().map(Container::getResources).collect(Collectors.toList());
+
+        for (ResourceRequirements requirements : adminResources) {
+            assertEquals(adminMemory, requirements.getLimits().get("memory").getAmount(),
+                    "Admin console memory limit incorrect");
+            assertEquals(adminMemory, requirements.getRequests().get("memory").getAmount(),
+                    "Admin console memory requests incorrect");
+        }
+
+        log.info("Checking broker infra");
         List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);
         assertEquals(1, brokerPods.size());
 
@@ -171,40 +271,22 @@ class InfraTest extends TestBase implements ITestBaseStandard{
 				.get().get("memory").getAmount();
         assertEquals(brokerMemory, actualBrokerMemory, "Broker memory limit incorrect");
 
+        if(brokerStorage.isPresent()) {
+            PersistentVolumeClaim brokerVolumeClaim = getBrokerPVCData(broker);
+            assertEquals(brokerStorage.get(), brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(),
+                    "Broker data storage request incorrect");
+        }
+   	}
+
+    private PersistentVolumeClaim getBrokerPVCData(Pod broker) {
         String brokerVolumeClaimName = broker.getSpec().getVolumes().stream()
-        		.filter(volume->volume.getName().equals("data"))
-        		.findFirst().get()
-        		.getPersistentVolumeClaim().getClaimName();
-        PersistentVolumeClaim brokerVolumeClaim = TestUtils.listPersistentVolumeClaims(kubernetes, exampleAddressSpace).stream().filter(pvc->pvc.getMetadata().getName().equals(brokerVolumeClaimName)).findFirst().get();
-        assertEquals(brokerStorage, brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(), "Broker data storage request incorrect");
-
-        log.info("Checking router infra");
-        List<Pod> routerPods = TestUtils.listRouterPods(kubernetes, exampleAddressSpace);
-        assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
-
-        for(Pod router : routerPods) {
-        	ResourceRequirements resources = router.getSpec().getContainers().stream()
-    				.filter(container->container.getName().equals("router")).findFirst()
-    				.map(Container::getResources).get();
-            assertEquals(routermemory, resources.getLimits().get("memory").getAmount(), "Router memory limit incorrect");
-            assertEquals(routermemory, resources.getRequests().get("memory").getAmount(), "Router memory requests incorrect");
-        }
-
-        log.info("Checking admin console infra");
-        List<Pod> adminPods = TestUtils.listAdminConsolePods(kubernetes, exampleAddressSpace);
-        assertEquals(1, adminPods.size());
-
-        //admin pod has 2 containers
-        List<ResourceRequirements> adminResources = adminPods.stream().findFirst().get()
-				.getSpec().getContainers().stream()
-				.map(Container::getResources)
-				.collect(Collectors.toList());
-
-        for(ResourceRequirements requirements : adminResources) {
-			assertEquals(adminMemory, requirements.getLimits().get("memory").getAmount(), "Admin console memory limit incorrect");
-			assertEquals(adminMemory, requirements.getRequests().get("memory").getAmount(), "Admin console memory requests incorrect");
-        }
-	}
-
+                .filter(volume->volume.getName().equals("data"))
+                .findFirst().get()
+                .getPersistentVolumeClaim().getClaimName();
+        PersistentVolumeClaim brokerVolumeClaim = TestUtils.listPersistentVolumeClaims(kubernetes, exampleAddressSpace).stream()
+                .filter(pvc->pvc.getMetadata().getName().equals(brokerVolumeClaimName))
+                .findFirst().get();
+        return brokerVolumeClaim;
+    }
 
 }

@@ -20,6 +20,7 @@ public class Environment {
     public static final String urlEnv = "KUBERNETES_API_URL";
     public static final String tokenEnv = "KUBERNETES_API_TOKEN";
     public static final String upgradeEnv = "SYSTEMTESTS_UPGRADED";
+    public static final String enmasseVersionProp = "enmasse.version";
 
     private final String token = System.getenv(tokenEnv);
     private final String url = System.getenv(urlEnv);
@@ -30,6 +31,7 @@ public class Environment {
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
     private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
     private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
+    private final String enmasseVersion = System.getProperty("enmasse.version");
 
     private Environment() {
         String debugFormat = "{}:{}";
@@ -41,6 +43,7 @@ public class Environment {
         log.info(debugFormat, urlEnv, url);
         log.info(debugFormat, tokenEnv, token);
         log.info(debugFormat, upgradeEnv, upgrade);
+        log.info(debugFormat, enmasseVersionProp, enmasseVersion);
     }
 
     public static synchronized Environment getInstance() {
@@ -64,6 +67,7 @@ public class Environment {
      * Store screenshots every time
      */
     private final boolean storeScreenshots = Boolean.parseBoolean(System.getenv("STORE_SCREENSHOTS"));
+
 
     public String getApiUrl() {
         return url;
@@ -111,5 +115,9 @@ public class Environment {
 
     public String getGetOcpVersion() {
         return ocpVersion;
+    }
+
+    public String enmasseVersion() {
+        return enmasseVersion;
     }
 }

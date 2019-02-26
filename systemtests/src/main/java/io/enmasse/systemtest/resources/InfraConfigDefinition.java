@@ -15,13 +15,13 @@ public class InfraConfigDefinition {
     private String name;
     private AddressSpaceType type;
     private List<InfraSpecComponent> infraComponents;
+    private String version;
 
-    private String version = "0.27-SNAPSHOT"; //TODO externalyze this
-
-    public InfraConfigDefinition(String name, AddressSpaceType type, List<InfraSpecComponent> infraComponents) {
+    public InfraConfigDefinition(String name, AddressSpaceType type, List<InfraSpecComponent> infraComponents, String version) {
         this.name = name;
         this.type = type;
         this.infraComponents = infraComponents;
+        this.version = version;
     }
 
     public String getName() {
@@ -34,6 +34,10 @@ public class InfraConfigDefinition {
 
     public List<InfraSpecComponent> getAddressResources() {
         return infraComponents;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     public JsonObject toJson() {
@@ -83,6 +87,6 @@ public class InfraConfigDefinition {
         return new InfraConfigDefinition(
                 metadataDef.getString("name"),
                 infraDefinition.getString("kind").equals("StandardInfraConfig") ? AddressSpaceType.STANDARD : AddressSpaceType.BROKERED,
-                components);
+                components, spec.getString("version"));
     }
 }
