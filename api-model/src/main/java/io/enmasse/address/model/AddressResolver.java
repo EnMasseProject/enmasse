@@ -4,7 +4,7 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.config.AnnotationKeys;
 
 import java.util.Optional;

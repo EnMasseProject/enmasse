@@ -14,7 +14,7 @@ public class AddressPlanList extends AbstractList<AddressPlan> {
     public static final String KIND = "AddressPlanList";
 
     public AddressPlanList() {
-        super(KIND, AdminCrd.API_VERSION);
+        super(KIND, AdminCrd.API_VERSION_V1BETA2);
     }
 
 }

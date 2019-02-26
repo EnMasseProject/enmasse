@@ -5,7 +5,7 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 
 /**

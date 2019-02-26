@@ -17,6 +17,6 @@ public class AddressSpacePlanList extends AbstractList<AddressSpacePlan> {
 
     @JsonCreator
     public AddressSpacePlanList() {
-        super(KIND, AdminCrd.API_VERSION);
+        super(KIND, AdminCrd.API_VERSION_V1BETA1);
     }
 }

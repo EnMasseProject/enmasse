@@ -29,12 +29,13 @@ import io.sundr.builder.annotations.Inline;
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
+public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> implements io.enmasse.admin.model.AddressSpacePlan {
 
     public static final String KIND = "AddressSpacePlan";
 
+    private AddressSpacePlanSpec spec;
+
     private String shortDescription;
-    private String uuid;
     private String addressSpaceType;
     private List<ResourceAllowance> resources = new LinkedList<>();
     private List<String> addressPlans = new LinkedList<>();
@@ -42,7 +43,7 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     public AddressSpacePlan() {
-        super(KIND, AdminCrd.API_VERSION);
+        super(KIND, AdminCrd.API_VERSION_V1BETA1);
     }
 
     public void setResources(List<ResourceAllowance> resources) {
@@ -57,8 +58,25 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
         this.addressPlans = addressPlans;
     }
 
+    @Override
+    public Map<String, Double> getResourceLimits() {
+        if (spec != null) {
+            return spec.getResourceLimits();
+        } else {
+            Map<String, Double> resourceLimits = new HashMap<>();
+            for (ResourceAllowance allowance : resources) {
+                resourceLimits.put(allowance.getName(), allowance.getMax());
+            }
+            return resourceLimits;
+        }
+    }
+
     public List<String> getAddressPlans() {
-        return addressPlans;
+        if (spec != null) {
+            return spec.getAddressPlans();
+        } else {
+            return addressPlans;
+        }
     }
 
     public void setShortDescription(String shortDescription) {
@@ -66,7 +84,11 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
     }
     
     public String getShortDescription() {
-        return shortDescription;
+        if (spec != null) {
+            return spec.getShortDescription();
+        } else {
+            return shortDescription;
+        }
     }
 
     public void setAddressSpaceType(String addressSpaceType) {
@@ -74,15 +96,11 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
     }
     
     public String getAddressSpaceType() {
-        return addressSpaceType;
-    }
-
-    public void setUuid(String uuid) {
-        this.uuid = uuid;
-    }
-    
-    public String getUuid() {
-        return uuid;
+        if (spec != null) {
+            return spec.getAddressSpaceType();
+        } else {
+            return addressSpaceType;
+        }
     }
 
     @Override
@@ -91,21 +109,19 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
         if (o == null || getClass() != o.getClass()) return false;
         AddressSpacePlan that = (AddressSpacePlan) o;
         return Objects.equals(getMetadata(), that.getMetadata()) &&
-                Objects.equals(uuid, that.uuid);
+                Objects.equals(spec, that.getSpec());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getMetadata(), uuid);
+        return Objects.hash(getMetadata(), spec);
     }
 
     @Override
     public String toString() {
         return "AddressSpacePlan{" +
                 "metadata='" + getMetadata()+ '\'' +
-                ", uuid='" + uuid + '\'' +
-                ", resources=" + resources +
-                ", addressPlans=" + addressPlans +
+                ", spec='" + spec + '\'' +
                 '}';
     }
 
@@ -121,5 +137,13 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> {
     @JsonAnySetter
     public void setAdditionalProperty(String name, Object value) {
         this.additionalProperties.put(name, value);
+    }
+
+    public void setSpec(AddressSpacePlanSpec spec) {
+        this.spec = spec;
+    }
+
+    public AddressSpacePlanSpec getSpec() {
+        return spec;
     }
 }

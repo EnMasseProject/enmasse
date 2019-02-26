@@ -8,7 +8,7 @@ import com.fasterxml.jackson.module.jsonSchema.types.ObjectSchema;
 import com.fasterxml.jackson.module.jsonSchema.types.StringSchema;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.Schema;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.osb.api.catalog.InputParameters;
 import io.enmasse.osb.api.catalog.Plan;
 import io.enmasse.osb.api.catalog.Schemas;

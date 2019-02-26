@@ -14,7 +14,7 @@ public class StandardInfraConfigList extends AbstractList<StandardInfraConfig>{
     public static final String KIND = "StandardInfraConfigList";
 
     public StandardInfraConfigList() {
-        super(KIND, AdminCrd.API_VERSION);
+        super(KIND, AdminCrd.API_VERSION_V1BETA1);
     }
 
 }

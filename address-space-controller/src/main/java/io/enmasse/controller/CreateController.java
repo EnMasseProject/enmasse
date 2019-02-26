@@ -7,7 +7,9 @@ package io.enmasse.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.AddressPlan;
+import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
@@ -174,26 +176,26 @@ public class CreateController implements Controller {
 
         Map<String, Double> quota = new HashMap<>();
         Map<String, Double> usage = new HashMap<>();
-        for (ResourceAllowance allowance : plan.getResources()) {
-            quota.put(allowance.getName(), allowance.getMax());
+        for (Map.Entry<String, Double> allowance : plan.getResourceLimits().entrySet()) {
+            quota.put(allowance.getKey(), allowance.getValue());
         }
 
         AddressResolver addressResolver = new AddressResolver(addressSpaceType);
         for (Address address : addresses) {
             AddressPlan addressPlan = addressResolver.getPlan(address);
-            for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
-                usage.compute(resourceRequest.getName(), (s, old) -> {
+            for (Map.Entry<String, Double> resourceRequest : addressPlan.getResources().entrySet()) {
+                usage.compute(resourceRequest.getKey(), (s, old) -> {
                     if (old == null) {
-                        return resourceRequest.getCredit();
+                        return resourceRequest.getValue();
                     } else {
-                        return old + resourceRequest.getCredit();
+                        return old + resourceRequest.getValue();
                     }
                 });
                 usage.compute("aggregate", (s, old) -> {
                     if (old == null) {
-                        return resourceRequest.getCredit();
+                        return resourceRequest.getValue();
                     } else {
-                        return old + resourceRequest.getCredit();
+                        return old + resourceRequest.getValue();
                     }
                 });
             }

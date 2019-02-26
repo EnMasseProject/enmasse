@@ -6,7 +6,7 @@ metadata:
     app: enmasse
 spec:
   group: admin.enmasse.io
-  version: v1beta1
+  version: v1beta2
   scope: Namespaced
   names:
     kind: AddressPlan
@@ -14,15 +14,43 @@ spec:
     singular: addressplan
     plural: addressplans
   versions:
-    - name: v1beta1
+    - name: v1beta2
       served: true
       storage: true
+    - name: v1beta1
+      served: true
+      storage: false
     - name: v1alpha1
       served: true
       storage: false
   validation:
     openAPIV3Schema:
       properties:
+        spec:
+          type: object
+          required:
+            - addressType
+            - resources
+          properties:
+            displayName:
+              type: string
+            displayOrder:
+              type: integer
+            shortDescription:
+              type: string
+            longDescription:
+              type: string
+            uuid:
+              type: string
+            addressType:
+              type: string
+            resources:
+              type: object
+              properties:
+                router:
+                  type: integer
+                broker:
+                  type: integer
         displayName:
           type: string
         displayOrder:

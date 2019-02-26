@@ -14,6 +14,6 @@ public class BrokeredInfraConfigList extends AbstractList<BrokeredInfraConfig> {
     public static final String KIND = "BrokeredInfraConfigList";
 
     public BrokeredInfraConfigList() {
-        super(KIND, AdminCrd.API_VERSION);
+        super(KIND, AdminCrd.API_VERSION_V1BETA1);
     }
 }

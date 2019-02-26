@@ -7,8 +7,7 @@ package io.enmasse.controller.standard;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -35,8 +34,8 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
     private boolean isShardedTopic(AddressPlan addressPlan) {
         if (addressPlan.getAddressType().equals("topic")) {
             boolean isSharded = true;
-            for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
-                if (resourceRequest.getName().equals("broker") && resourceRequest.getCredit() < 1) {
+            for (Map.Entry<String, Double> resourceRequest : addressPlan.getResources().entrySet()) {
+                if (resourceRequest.getKey().equals("broker") && resourceRequest.getValue() < 1) {
                     isSharded = false;
                     break;
                 }

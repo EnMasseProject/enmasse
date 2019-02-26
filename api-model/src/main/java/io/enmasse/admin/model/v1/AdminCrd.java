@@ -10,9 +10,11 @@ import io.fabric8.kubernetes.internal.KubernetesDeserializer;
 
 public class AdminCrd {
 
-    public static final String VERSION = "v1beta1";
+    public static final String VERSION_V1BETA1 = "v1beta1";
+    public static final String VERSION_V1BETA2 = "v1beta2";
     public static final String GROUP = "admin.enmasse.io";
-    public static final String API_VERSION = GROUP + "/" + VERSION;
+    public static final String API_VERSION_V1BETA1 = GROUP + "/" + VERSION_V1BETA1;
+    public static final String API_VERSION_V1BETA2 = GROUP + "/" + VERSION_V1BETA2;
 
     private static final CustomResourceDefinition ADDRESS_PLAN_CRD;
     private static final CustomResourceDefinition ADDRESS_SPACE_PLAN_CRD;
@@ -20,25 +22,25 @@ public class AdminCrd {
     private static final CustomResourceDefinition STANDARD_INFRA_CONFIG_CRD;
 
     static {
-        ADDRESS_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressPlan.KIND);
-        ADDRESS_SPACE_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpacePlan.KIND);
-        BROKERED_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION, BrokeredInfraConfig.KIND);
-        STANDARD_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION, StandardInfraConfig.KIND);
+        ADDRESS_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA2, AddressPlan.KIND);
+        ADDRESS_SPACE_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA2, AddressSpacePlan.KIND);
+        BROKERED_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, BrokeredInfraConfig.KIND);
+        STANDARD_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, StandardInfraConfig.KIND);
     }
 
     public static void registerCustomCrds() {
 
-        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressPlan.KIND, AddressPlan.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressPlanList.KIND, AddressPlanList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA2, AddressPlan.KIND, AddressPlan.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA2, AddressPlanList.KIND, AddressPlanList.class);
 
-        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpacePlan.KIND, AddressSpacePlan.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpacePlanList.KIND, AddressSpacePlanList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA2, AddressSpacePlan.KIND, AddressSpacePlan.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA2, AddressSpacePlanList.KIND, AddressSpacePlanList.class);
 
-        KubernetesDeserializer.registerCustomKind(API_VERSION, BrokeredInfraConfig.KIND, BrokeredInfraConfig.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION, BrokeredInfraConfigList.KIND, BrokeredInfraConfigList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, BrokeredInfraConfig.KIND, BrokeredInfraConfig.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, BrokeredInfraConfigList.KIND, BrokeredInfraConfigList.class);
 
-        KubernetesDeserializer.registerCustomKind(API_VERSION, StandardInfraConfig.KIND, StandardInfraConfig.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION, StandardInfraConfigList.KIND, StandardInfraConfigList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, StandardInfraConfig.KIND, StandardInfraConfig.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, StandardInfraConfigList.KIND, StandardInfraConfigList.class);
 
     }
 

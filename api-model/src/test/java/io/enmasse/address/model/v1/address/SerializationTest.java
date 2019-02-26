@@ -330,7 +330,6 @@ public class SerializationTest {
         AddressSpacePlan addressSpacePlan = mapper.readValue(json, AddressSpacePlan.class);
         assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
         assertThat(addressSpacePlan.getAdditionalProperties().get("displayName"), is("MySpace"));
-        assertFalse(addressSpacePlan.getUuid().isEmpty());
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
         assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
         assertThat(addressSpacePlan.getResources().size(), is(2));
@@ -359,7 +358,6 @@ public class SerializationTest {
         ObjectMapper mapper = new ObjectMapper();
         AddressSpacePlan addressSpacePlan = mapper.readValue(json, AddressSpacePlan.class);
         assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
-        assertNull(addressSpacePlan.getUuid());
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
         assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
         assertThat(addressSpacePlan.getResources().size(), is(2));
@@ -376,7 +374,6 @@ public class SerializationTest {
                 .endMetadata()
 
                 .withShortDescription("desc")
-                .withUuid("uuid")
                 .withAddressPlans(Arrays.asList("a", "b"))
                 .build();
         assertEquals(2, plan.getAddressPlans().size());
@@ -447,10 +444,9 @@ public class SerializationTest {
         assertThat(addressPlan.getMetadata().getName(), is("plan1"));
         assertThat(addressPlan.getAdditionalProperties().get("displayName"), is("MyPlan"));
         assertThat(addressPlan.getAddressType(), is("queue"));
-        assertNull(addressPlan.getUuid());
-        assertThat(addressPlan.getRequiredResources().size(), is(2));
-        assertThat(addressPlan.getRequiredResources().get(0).getName(), is("router"));
-        assertThat(addressPlan.getRequiredResources().get(1).getName(), is("broker"));
+        assertThat(addressPlan.getResources().size(), is(2));
+        assertThat(addressPlan.getResources().get("router"), is(0.2));
+        assertThat(addressPlan.getResources().get("broker"), is(0.5));
     }
 
     @Test
@@ -472,10 +468,9 @@ public class SerializationTest {
         AddressPlan addressPlan = mapper.readValue(json, AddressPlan.class);
         assertThat(addressPlan.getMetadata().getName(), is("plan1"));
         assertThat(addressPlan.getAddressType(), is("queue"));
-        assertNull(addressPlan.getUuid());
-        assertThat(addressPlan.getRequiredResources().size(), is(2));
-        assertThat(addressPlan.getRequiredResources().get(0).getName(), is("router"));
-        assertThat(addressPlan.getRequiredResources().get(1).getName(), is("broker"));
+        assertThat(addressPlan.getResources().size(), is(2));
+        assertThat(addressPlan.getResources().get("router"), is(0.2));
+        assertThat(addressPlan.getResources().get("broker"), is(0.5));
     }
 
     @Test

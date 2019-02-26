@@ -16,7 +16,9 @@ import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.AddressPlan;
+import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +66,7 @@ public class AddressProvisioner {
         AddressType addressType = addressResolver.getType(address);
         AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
 
-        for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
+        for (Map.Entry<String, Double> resourceRequest : addressPlan.getResources().entrySet()) {
             if ("subscription".equals(address.getSpec().getType())) {
                 if (address.getStatus().getBrokerStatuses().isEmpty() && address.getAnnotation(AnnotationKeys.BROKER_ID) == null) {
                     log.warn("Unexpected pooled address without cluster id: " + address.getSpec().getAddress());
@@ -74,16 +76,16 @@ public class AddressProvisioner {
                 if (!address.getStatus().getBrokerStatuses().isEmpty()) {
                     for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
                         if (BrokerState.Active.equals(status.getState())) {
-                            addToUsage(usageMap, status.getContainerId(), "subscription", resourceRequest.getCredit());
+                            addToUsage(usageMap, status.getContainerId(), "subscription", resourceRequest.getValue());
                         }
                     }
                 } else {
-                    addToUsage(usageMap, instanceId, "subscription", resourceRequest.getCredit());
+                    addToUsage(usageMap, instanceId, "subscription", resourceRequest.getValue());
                 }
-            } else if (resourceRequest.getName().equals("router")) {
-                addToUsage(usageMap, "all", "router", resourceRequest.getCredit());
+            } else if (resourceRequest.getKey().equals("router")) {
+                addToUsage(usageMap, "all", "router", resourceRequest.getValue());
 
-            } else if (resourceRequest.getName().equals("broker") && resourceRequest.getCredit() < 1) {
+            } else if (resourceRequest.getKey().equals("broker") && resourceRequest.getValue() < 1) {
                 if (address.getStatus().getBrokerStatuses().isEmpty() && address.getAnnotation(AnnotationKeys.CLUSTER_ID) == null) {
                     log.warn("Unexpected pooled address without cluster id: " + address.getSpec().getAddress());
                     return;
@@ -91,20 +93,20 @@ public class AddressProvisioner {
                 if (!address.getStatus().getBrokerStatuses().isEmpty()) {
                     for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
                         if (BrokerState.Active.equals(status.getState())) {
-                            addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getCredit());
+                            addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getValue());
                         }
                     }
                 } else {
-                    addToUsage(usageMap, address.getAnnotation(AnnotationKeys.CLUSTER_ID), "broker", resourceRequest.getCredit());
+                    addToUsage(usageMap, address.getAnnotation(AnnotationKeys.CLUSTER_ID), "broker", resourceRequest.getValue());
                 }
 
-            } else if (resourceRequest.getName().equals("broker")) {
+            } else if (resourceRequest.getKey().equals("broker")) {
                 if (address.getStatus().getBrokerStatuses().isEmpty()) {
-                    addToUsage(usageMap, getShardedClusterId(address), "broker", resourceRequest.getCredit());
+                    addToUsage(usageMap, getShardedClusterId(address), "broker", resourceRequest.getValue());
                 } else {
                     for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
                         if (BrokerState.Active.equals(status.getState())) {
-                            addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getCredit());
+                            addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getValue());
                         }
                     }
                 }
@@ -121,7 +123,7 @@ public class AddressProvisioner {
 
     public Map<String, Map<String, UsageInfo>> checkQuota(Map<String, Map<String, UsageInfo>> usageMap, Set<Address> pending, Set<Address> all) {
         Map<String, Map<String, UsageInfo>> newUsageMap = usageMap;
-        Map<String, Double> limits = computeLimits();
+        Map<String, Double> limits = addressSpacePlan.getResourceLimits();
 
         Set<Address> pendingSubscriptionsWithConfiguredTopics = filterSubscriptionsWithConfiguredTopics(pending, all);
         Set<Address> pendingSubscriptionsWithPendingTopics = filterSubscriptionsWithPendingTopics(pending, all);
@@ -207,15 +209,15 @@ public class AddressProvisioner {
         return null;
     }
 
-    private boolean scheduleSubscription(Address subscription, Address topic, Map<String, UsageInfo> brokerUsage, Map<String, UsageInfo> subscriptionUsage, ResourceRequest requested) {
+    private boolean scheduleSubscription(Address subscription, Address topic, Map<String, UsageInfo> brokerUsage, Map<String, UsageInfo> subscriptionUsage, double requestedValue) {
         String cluster = topic.getAnnotation(AnnotationKeys.CLUSTER_ID);
         String broker = topic.getAnnotation(AnnotationKeys.BROKER_ID);
 
         AddressPlan topicPlan = addressResolver.getPlan(topic);
         boolean isPooled = false;
 
-        for (ResourceRequest resourceRequest : topicPlan.getRequiredResources()) {
-            if ("broker".equals(resourceRequest.getName()) && resourceRequest.getCredit() < 1) {
+        for (Map.Entry<String, Double> resourceRequest : topicPlan.getResources().entrySet()) {
+            if ("broker".equals(resourceRequest.getKey()) && resourceRequest.getValue() < 1) {
                 isPooled = true;
                 break;
             }
@@ -229,8 +231,8 @@ public class AddressProvisioner {
 
         if (isPooled) {
             UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(broker, k -> new UsageInfo());
-            if (usageInfo.getUsed()+requested.getCredit() <= 1) {
-                usageInfo.addUsed(requested.getCredit());
+            if (usageInfo.getUsed() + requestedValue <= 1) {
+                usageInfo.addUsed(requestedValue);
 
                 // TODO: Remove after releasing 0.26.0
                 subscription.putAnnotation(AnnotationKeys.BROKER_ID, broker);
@@ -258,13 +260,13 @@ public class AddressProvisioner {
             }
             for (BrokerInfo brokerInfo : shardedBrokers) {
                 UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(brokerInfo.getBrokerId(), k -> new UsageInfo());
-                if (brokerInfo.getCredit() + requested.getCredit() <= 1) {
+                if (brokerInfo.getCredit() + requestedValue <= 1) {
                     // TODO: Remove after releasing 0.26.0
                     subscription.putAnnotation(AnnotationKeys.BROKER_ID, brokerInfo.getBrokerId());
                     BrokerStatus brokerStatus = new BrokerStatus(cluster, brokerInfo.getBrokerId());
                     brokerStatus.setState(BrokerState.Active);
                     subscription.getStatus().setBrokerStatuses(Collections.singletonList(brokerStatus));
-                    usageInfo.addUsed(requested.getCredit());
+                    usageInfo.addUsed(requestedValue);
                     break;
                 }
             }
@@ -278,29 +280,29 @@ public class AddressProvisioner {
 
         Map<String, Map<String, UsageInfo>> needed = copyUsageMap(usage);
 
-        for (ResourceRequest resourceRequest : addressPlan.getRequiredResources()) {
-            String resourceName = resourceRequest.getName();
+        for (Map.Entry<String, Double> resourceRequest : addressPlan.getResources().entrySet()) {
+            String resourceName = resourceRequest.getKey();
             Map<String, UsageInfo> resourceUsage = needed.computeIfAbsent(resourceName, k -> new HashMap<>());
             if ("router".equals(resourceName)) {
                 UsageInfo info = resourceUsage.computeIfAbsent("all", k -> new UsageInfo());
-                info.addUsed(resourceRequest.getCredit());
+                info.addUsed(resourceRequest.getValue());
             } else if ("broker".equals(resourceName)) {
                 if ("subscription".equals(address.getSpec().getType())) {
                     Map<String, UsageInfo> subscriptionUsage = needed.computeIfAbsent("subscription", k -> new HashMap<>());
                     if (address.getSpec().getTopic() != null ) {
                         Address topic = findAddress(address.getSpec().getTopic(), addressSet);
-                        if (!scheduleSubscription(address, topic, resourceUsage, subscriptionUsage, resourceRequest)) {
+                        if (!scheduleSubscription(address, topic, resourceUsage, subscriptionUsage, resourceRequest.getValue())) {
                             log.warn("Unable to find broker for scheduling subscription: {}", address);
                             return null;
                         }
                     } else {
                         log.warn("No topic specified for subscription {}", address.getSpec().getAddress());
                     }
-                } else if (resourceRequest.getCredit() < 1) {
-                    boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getCredit());
+                } else if (resourceRequest.getValue() < 1) {
+                    boolean scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getValue());
                     if (!scheduled) {
                         allocateBroker(resourceUsage, pooledClusterIdPrefix);
-                        if (!scheduleAddress(resourceUsage, address, resourceRequest.getCredit())) {
+                        if (!scheduleAddress(resourceUsage, address, resourceRequest.getValue())) {
                             log.warn("Unable to find broker for scheduling {}", address);
                             return null;
                         }
@@ -312,7 +314,7 @@ public class AddressProvisioner {
                     }
                     String clusterId = getShardedClusterId(address);
                     UsageInfo info = new UsageInfo();
-                    info.addUsed(resourceRequest.getCredit());
+                    info.addUsed(resourceRequest.getValue());
                     resourceUsage.put(clusterId, info);
 
                     address.putAnnotation(AnnotationKeys.CLUSTER_ID, clusterId);
@@ -331,9 +333,9 @@ public class AddressProvisioner {
                     brokers.sort(Comparator.comparingDouble(BrokerInfo::getCredit));
 
                     for (BrokerInfo brokerInfo : brokers) {
-                        if (brokerInfo.getCredit() + resourceRequest.getCredit() < 1) {
+                        if (brokerInfo.getCredit() + resourceRequest.getValue() < 1) {
                             UsageInfo used = resourceUsage.get(brokerInfo.getBrokerId());
-                            used.addUsed(resourceRequest.getCredit());
+                            used.addUsed(resourceRequest.getValue());
                             break;
                         } else {
                             log.warn("not enough credit on {} for {} ",brokerInfo.getBrokerId(), address.getSpec().getAddress() );
@@ -346,7 +348,7 @@ public class AddressProvisioner {
 
             double resourceNeeded = sumNeeded(resourceUsage);
             if (resourceNeeded > limits.get(resourceName)) {
-                log.info("address {} for {} needed {} > limit {}", address.getSpec().getAddress(), resourceName, resourceNeeded, limits.get(resourceRequest.getName()));
+                log.info("address {} for {} needed {} > limit {}", address.getSpec().getAddress(), resourceName, resourceNeeded, limits.get(resourceRequest.getKey()));
                 address.getStatus().appendMessage("Quota exceeded");
                 return null;
             }
@@ -430,14 +432,6 @@ public class AddressProvisioner {
         crc32.update(Address.extractAddressSpace(address).getBytes());
         crc32.update(address.getSpec().getAddress().getBytes());
         return "broker-sharded-" + Long.toHexString(crc32.getValue()) + "-" + infraUuid;
-    }
-
-    private Map<String, Double> computeLimits() {
-        Map<String, Double> limits = new HashMap<>();
-        for (ResourceAllowance allowance : addressSpacePlan.getResources()) {
-            limits.put(allowance.getName(), allowance.getMax());
-        }
-        return limits;
     }
 
     public void provisionResources(RouterCluster router, List<BrokerCluster> existingClusters, Map<String, Map<String, UsageInfo>> neededMap, Set<Address> addressSet) {
