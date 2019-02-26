@@ -6,13 +6,15 @@ metadata:
   name: enmasse.${MAVEN_VERSION}
   namespace: placeholder
   annotations:
-    categories: "messaging,amqp"
+    capabilities: Full Lifecycle
+    categories: "Streaming & Messaging"
     certified: "false"
     description: |-
       EnMasse is an open source project for managed, self-service messaging on Kubernetes and OpenShift. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization. 
-    containerImage: docker.io/enmasseproject/address-space-controller:${MAVEN_VERSION}
-    createdAt: <2019-02-19T00::00:00Z>
+    containerImage: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
+    createdAt: 2019-02-19T00:00:00Z
     support: EnMasse
+    alm-examples: '[{"apiVersion":"admin.enmasse.io","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${VERSION}","broker":{"resources":{"storage":"5Gi"},"addressFullPolicy":"DROP"},"router":{"linkCapacity":50}}},{"apiVersion":"admin.enmasse.io","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"addressType":"queue","uuid":"134849d0-39c0-11e9-8500-c85b7644b4a4","shortDescription":"Small Queue","requiredResources":[{"name":"router","credit":0.01},{"name":"broker","credit":0.1}]},{"apiVersion":"admin.enmasse.io","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"addressSpaceType":"standard","uuid":"59e5bcd8-39c0-11e9-8563-c85b7644b4a4","shortDescription":"Small Address Space Plan","resources":[{"name":"router","max":1},{"name":"broker","max":2},{"name":"aggregate","max":2}],"addressPlans":["small-standard-queue"]}]'
 spec:
   maturity: beta
   displayName: EnMasse
@@ -47,6 +49,11 @@ spec:
     email: enmasse@redhat.com
   provider:
     name: EnMasse
+  labels:
+    app: enmasse
+  selector:
+    matchLabels:
+      app: enmasse
   links:
   - name: Documentation
     url: http://enmasse.io/documentation
@@ -211,7 +218,7 @@ spec:
                   readOnly: true
               serviceAccountName: api-server
               volumes:
-              - name: api-server-cert
+              - name: apiserver-cert
                 secret:
                   secretName: apiserver-cert
       - name: address-space-controller
@@ -312,7 +319,7 @@ spec:
     - group: enmasse.io
       version: v1beta1
       kind: AddressSpace 
-      name: addressspaces.enmasse.io
+      name: ddressspaces.enmasse.io
       displayName: Address Space
       description: A group of messaging addresses that can be accessed via the same endpoint
       deploymentName: api-server
@@ -341,12 +348,64 @@ spec:
         name: standardinfraconfigs.admin.enmasse.io
         displayName: Standard Infra Config
         description: Infrastructure configuration template for the standard address space type
+        specDescriptors:
+          - description: The minimum number of router replicas
+            displayName: Min router replicas
+            path: router.minReplicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: The router link capacity
+            displayName: Router link capacity
+            path: router.linkCapacity
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker pod memory size
+            displayName: Broker memory resources
+            path: broker.resources.memory
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker pod storage size
+            displayName: Broker storage resources
+            path: broker.resources.storage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker address full policy controls the behavior of full queues. Can be one of FAIL, DROP, PAGE and BLOCK.
+            displayName: Broker address full policy
+            path: broker.addressFullPolicy
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker global max size limit
+            displayName: Broker global max size
+            path: broker.globalMaxSize
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: BrokeredInfraConfig
         name: brokeredinfraconfigs.admin.enmasse.io
         displayName: Brokered Infra Config
         description: Infrastructure configuration template for the brokered address space type
+        specDescriptors:
+          - description: Broker pod memory size
+            displayName: Broker memory resources
+            path: broker.resources.memory
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker pod storage size
+            displayName: Broker storage resources
+            path: broker.resources.storage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker address full policy controls the behavior of full queues. Can be one of FAIL, DROP, PAGE and BLOCK.
+            displayName: Broker address full policy
+            path: broker.addressFullPolicy
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker global max size limit
+            displayName: Broker global max size
+            path: broker.globalMaxSize
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: AddressSpacePlan
