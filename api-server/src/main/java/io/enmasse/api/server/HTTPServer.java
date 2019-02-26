@@ -23,6 +23,7 @@ import io.vertx.core.http.ClientAuth;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.core.net.PemTrustOptions;
 import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
@@ -30,8 +31,11 @@ import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
+import java.io.*;
 import java.time.Clock;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  * HTTP server for deploying address config
@@ -39,6 +43,7 @@ import java.time.Clock;
 public class HTTPServer extends AbstractVerticle {
     public static final int PORT = 8080;
     public static final int SECURE_PORT = 8443;
+    private static final int PROCESS_LINE_BUFFER_SIZE = 10;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final AddressSpaceApi addressSpaceApi;
     private final SchemaProvider schemaProvider;
@@ -179,10 +184,15 @@ public class HTTPServer extends AbstractVerticle {
             HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
             File certFile = new File(certDir, "tls.crt");
+
+
+
             log.info("Loading key from " + keyFile.getAbsolutePath() + ", cert from " + certFile.getAbsolutePath());
-            options.setKeyCertOptions(new PemKeyCertOptions()
-                    .setKeyPath(keyFile.getAbsolutePath())
-                    .setCertPath(certFile.getAbsolutePath()));
+            runCommand("openssl", "pkcs12", "-export", "-passout", "pass:enmasse", "-in", certFile.getAbsolutePath(), "-inkey", keyFile.getAbsolutePath(), "-name", "server", "-out", "/tmp/cert.p12");
+            runCommand("keytool", "-importkeystore", "-srcstorepass", "enmasse", "-deststorepass", "enmasse", "-destkeystore", "/tmp/keystore.jks", "-srckeystore", "/tmp/cert.p12", "-srcstoretype", "PKCS12");
+            options.setKeyCertOptions(new JksOptions()
+                    .setPassword("enmasse")
+                    .setPath("/tmp/keystore.jks"));
             options.setSsl(true);
 
             if (clientCa != null || requestHeaderClientCa != null) {
@@ -240,5 +250,51 @@ public class HTTPServer extends AbstractVerticle {
 
     public int getActualPort() {
         return httpServer.actualPort();
+    }
+
+    private static void runCommand(String... cmd) {
+        ProcessBuilder keyGenBuilder = new ProcessBuilder(cmd).redirectErrorStream(true);
+
+        log.info("Running command '{}'", keyGenBuilder.command());
+        Deque<String> outBuf = new LinkedBlockingDeque<>(PROCESS_LINE_BUFFER_SIZE);
+        boolean success = false;
+        try {
+            Process process = keyGenBuilder.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    boolean added = outBuf.offerLast(line);
+                    if (log.isDebugEnabled()) {
+                        log.debug("Command output: {}", line);
+                    }
+                    if (!added) {
+                        outBuf.removeFirst();
+                        outBuf.addLast(line);
+                    }
+                }
+            }
+            if (!process.waitFor(1, TimeUnit.MINUTES)) {
+                throw new RuntimeException(String.format("Command '%s' timed out", keyGenBuilder.command()));
+            }
+
+            final int exitValue = process.waitFor();
+            success = exitValue == 0;
+            String msg = String.format("Command '%s' completed with exit value %d", keyGenBuilder.command(), exitValue);
+            if (success) {
+                log.info(msg);
+            } else {
+                log.error(msg);
+                throw new RuntimeException(String.format("Command '%s' failed with exit value %d", keyGenBuilder.command(), exitValue));
+            }
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+            if (!success && !outBuf.isEmpty()) {
+                log.error("Last {} line(s) written by command to stdout/stderr follow", outBuf.size());
+                outBuf.forEach(line -> log.error("Command output: {}", line));
+            }
+        }
     }
 }

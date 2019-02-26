@@ -145,6 +145,87 @@ spec:
           resourceNames: [ "extension-apiserver-authentication" ]
           verbs: [ "get" ]
       deployments:
+      - name: user-api-server
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: enmasse
+              component: user-api-server
+          template:
+            metadata:
+              labels:
+                app: enmasse
+                component: user-api-server
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                    - weight: 1
+                      preference:
+                        matchExpressions:
+                          - key: node-role.enmasse.io/operator-infra
+                            operator: In
+                            values:
+                              - "true"
+              containers:
+              - env:
+                - name: JAVA_OPTS
+                  value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+                - name: CERT_DIR
+                  value: /api-server-cert
+                - name: ENABLE_RBAC
+                  value: "true"
+                - name: APISERVER_CLIENT_CA_CONFIG_NAME
+                  value: extension-apiserver-authentication
+                - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
+                  value: kube-system
+                - name: APISERVER_ROUTE_NAME
+                  value: restapi
+                - name: STANDARD_AUTHSERVICE_CONFIG_NAME
+                  value: keycloak-config
+                - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
+                  value: keycloak-credentials
+                - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
+                  value: standard-authservice-cert
+                image: ${API_SERVER_IMAGE}
+                imagePullPolicy: ${IMAGE_PULL_POLICY}
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: http
+                    scheme: HTTP
+                  initialDelaySeconds: 30
+                name: api-server
+                ports:
+                - containerPort: 8080
+                  name: http
+                - containerPort: 8443
+                  name: https
+                readinessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: http
+                    scheme: HTTP
+                resources:
+                  limits:
+                    memory: 512Mi
+                  requests:
+                    memory: 512Mi
+                volumeMounts:
+                - mountPath: /api-server-cert
+                  name: apiservice-cert
+                  readOnly: true
+              volumes:
+              - name: apiservice-cert
+                secret:
+                defaultMode: 420
+                items:
+                - key: tls.crt
+                  path: apiserver.crt
+                - key: tls.key
+                  path: apiserver.key
+              serviceAccountName: api-server
       - name: api-server
         spec:
           replicas: 1
@@ -214,13 +295,18 @@ spec:
                     memory: 512Mi
                 volumeMounts:
                 - mountPath: /api-server-cert
-                  name: api-server-cert
+                  name: apiservice-cert
                   readOnly: true
-              serviceAccountName: api-server
               volumes:
-              - name: apiserver-cert
+              - name: apiservice-cert
                 secret:
-                  secretName: apiserver-cert
+                defaultMode: 420
+                items:
+                - key: tls.crt
+                  path: apiserver.crt
+                - key: tls.key
+                  path: apiserver.key
+              serviceAccountName: api-server
       - name: address-space-controller
         spec:
           replicas: 1
@@ -319,7 +405,7 @@ spec:
     - group: enmasse.io
       version: v1beta1
       kind: AddressSpace 
-      name: ddressspaces.enmasse.io
+      name: addressspaces.enmasse.io
       displayName: Address Space
       description: A group of messaging addresses that can be accessed via the same endpoint
       deploymentName: api-server
