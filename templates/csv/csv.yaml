@@ -412,10 +412,46 @@ spec:
         name: addressspaceplans.admin.enmasse.io
         displayName: Address Space Plan
         description: Plan describing the capabilities and resource limits of a given address space type
+        specDescriptors:
+          - description: Address space type supported by this plan
+            displayName: Address Space Type
+            path: addressSpaceType
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Max router resources used by this plan
+            displayName: Max routers
+            path: maxResources.router
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Max broker resources used by this plan
+            displayName: Max brokers
+            path: maxResources.broker
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Max aggregate resources used by this plan
+            displayName: Max aggregate
+            path: maxResources.aggregate
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: AddressPlan
         name: addressplans.admin.enmasse.io
         displayName: Address Plan
         description: Plan describing the resource usage of a given address type
-
+        specDescriptors:
+          - description: Address type supported by this plan
+            displayName: Address Type
+            path: addressType
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Router resources used by this plan
+            displayName: Routers
+            path: resources.router
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
+          - description: Broker resources used by this plan
+            displayName: Brokers
+            path: resources.broker
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui.label'
