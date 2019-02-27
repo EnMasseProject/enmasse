@@ -9,6 +9,13 @@ VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut 
 MAVEN_VERSION   ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 TAG             ?= latest
 
+GO2XUNIT        ?= go2xunit
+
+# Go settings
+GOPATH          := $(abspath $(TOPDIR))/go
+GOPRJ           := $(GOPATH)/src/github.com/enmasseproject/enmasse
+export GOPATH
+
 # Image settings
 DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
 IMAGE_VERSION 		   ?= $(TAG)
