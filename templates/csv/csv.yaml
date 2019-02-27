@@ -416,110 +416,21 @@ spec:
         name: standardinfraconfigs.admin.enmasse.io
         displayName: Standard Infra Config
         description: Infrastructure configuration template for the standard address space type
-        specDescriptors:
-          - description: The minimum number of router replicas
-            displayName: Min router replicas
-            path: router.minReplicas
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: The router link capacity
-            displayName: Router link capacity
-            path: router.linkCapacity
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker pod memory size
-            displayName: Broker memory resources
-            path: broker.resources.memory
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker pod storage size
-            displayName: Broker storage resources
-            path: broker.resources.storage
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker address full policy controls the behavior of full queues. Can be one of FAIL, DROP, PAGE and BLOCK.
-            displayName: Broker address full policy
-            path: broker.addressFullPolicy
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker global max size limit
-            displayName: Broker global max size
-            path: broker.globalMaxSize
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: BrokeredInfraConfig
         name: brokeredinfraconfigs.admin.enmasse.io
         displayName: Brokered Infra Config
         description: Infrastructure configuration template for the brokered address space type
-        specDescriptors:
-          - description: Broker pod memory size
-            displayName: Broker memory resources
-            path: broker.resources.memory
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker pod storage size
-            displayName: Broker storage resources
-            path: broker.resources.storage
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker address full policy controls the behavior of full queues. Can be one of FAIL, DROP, PAGE and BLOCK.
-            displayName: Broker address full policy
-            path: broker.addressFullPolicy
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker global max size limit
-            displayName: Broker global max size
-            path: broker.globalMaxSize
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: AddressSpacePlan
         name: addressspaceplans.admin.enmasse.io
         displayName: Address Space Plan
         description: Plan describing the capabilities and resource limits of a given address space type
-        specDescriptors:
-          - description: Address space type supported by this plan
-            displayName: Address Space Type
-            path: addressSpaceType
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Max router resources used by this plan
-            displayName: Max routers
-            path: maxResources.router
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Max broker resources used by this plan
-            displayName: Max brokers
-            path: maxResources.broker
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Max aggregate resources used by this plan
-            displayName: Max aggregate
-            path: maxResources.aggregate
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: AddressPlan
         name: addressplans.admin.enmasse.io
         displayName: Address Plan
         description: Plan describing the resource usage of a given address type
-        specDescriptors:
-          - description: Address type supported by this plan
-            displayName: Address Type
-            path: addressType
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Router resources used by this plan
-            displayName: Routers
-            path: resources.router
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
-          - description: Broker resources used by this plan
-            displayName: Brokers
-            path: resources.broker
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui.label'
