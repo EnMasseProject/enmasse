@@ -406,7 +406,7 @@ spec:
       name: messagingusers.user.enmasse.io
       displayName: Messaging User
       description: A messaging user that can connect to an Address Space
-      deploymentName: api-server
+      deploymentName: user-api-server
       containerPort: 8443
   customresourcedefinitions:
     owned:
