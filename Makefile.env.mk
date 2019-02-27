@@ -11,11 +11,6 @@ TAG             ?= latest
 
 GO2XUNIT        ?= go2xunit
 
-# Go settings
-GOPATH          := $(abspath $(TOPDIR))/go
-GOPRJ           := $(GOPATH)/src/github.com/enmasseproject/enmasse
-export GOPATH
-
 # Image settings
 DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
 IMAGE_VERSION 		   ?= $(TAG)

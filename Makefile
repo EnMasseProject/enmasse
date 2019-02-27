@@ -35,25 +35,22 @@ templates: docu_html
 build_java:
 	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
 
-build_go: $(GO_DIRS)
-	for i in $?; do $(MAKE) -C $$i build; done
-
 test_go: test_go_vet test_go_run
 
 test_go_vet:
-	cd $(GOPRJ) && go tool vet cmd pkg
+	go tool vet cmd pkg
 
 ifeq (,$(GO2XUNIT))
-test_go_run: $(GOPRJ)
-	cd $(GOPRJ) && go test -v ./...
+test_go_run:
+	go test -v ./...
 else
-test_go_run: $(GOPRJ)
-	-cd $(GOPRJ) && go test -v ./... 2>&1 | tee $(abspath build/go.testoutput)
+test_go_run:
+	go test -v ./... 2>&1 | tee $(abspath build/go.testoutput)
 	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
 
 coverage_go:
-	cd $(GOPRJ) && go test -cover ./...
+	go test -cover ./...
 
 buildpush:
 	$(MAKE)
@@ -115,4 +112,4 @@ docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
 .PHONY: test_go_vet test_go_plain
-.PHONY: all $(BUILD_TARGETS) $(GO_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: all $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
