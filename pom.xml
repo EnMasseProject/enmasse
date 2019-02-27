@@ -41,7 +41,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <fabric8.kubernetes-client.version>4.1.1</fabric8.kubernetes-client.version>
-        <sundrio.version>0.13.1</sundrio.version>
+        <sundrio.version>0.16.4</sundrio.version>
         <vertx.version>3.6.2</vertx.version>
         <slf4j.version>1.7.21</slf4j.version>
         <logback.version>1.0.13</logback.version>
