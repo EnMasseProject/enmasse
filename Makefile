@@ -1,11 +1,9 @@
 TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(TOPDIR)/Makefile.env.mk
 
-BUILD_DIRS       = none-authservice
+BUILD_DIRS       = none-authservice iot/iot-operator iot/qdr-proxy-configurator iot/iot-gc
 DOCKER_DIRS      = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker
 FULL_BUILD       = true
-
-GO_DIRS          = iot/qdr-proxy-configurator iot/iot-operator iot/iot-gc
 
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
 BUILD_TARGETS    = init build test package $(DOCKER_TARGETS) coverage
@@ -62,15 +60,6 @@ buildpush:
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
 
-$(GO_DIRS): $(GOPRJ)
-
-$(GOPRJ):
-	mkdir -p $(dir $(GOPRJ))
-	ln -s $(TOPDIR) $(GOPRJ)
-
-clean_go:
-	@rm -Rf $(GOPATH)
-
 clean_java:
 	mvn -B -q clean
 
@@ -93,12 +82,9 @@ $(BUILD_TARGETS): $(BUILD_DIRS)
 $(BUILD_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
-$(DOCKER_TARGETS): $(DOCKER_DIRS) $(GO_DIRS)
+$(DOCKER_TARGETS): $(DOCKER_DIRS)
 $(DOCKER_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
-
-$(GO_DIRS): $(GOPRJ)
-	$(MAKE) -C $@ $(MAKECMDGOALS)
 
 systemtests:
 	make -C systemtests
