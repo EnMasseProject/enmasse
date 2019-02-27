@@ -4,10 +4,10 @@
  */
 package io.enmasse.systemtest.resources;
 
-import io.vertx.core.json.JsonObject;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import io.vertx.core.json.JsonObject;
 
 public class RouterInfraSpec implements InfraSpecComponent {
 
@@ -48,6 +48,14 @@ public class RouterInfraSpec implements InfraSpecComponent {
     public String getType() {
         return type;
     }
+
+    public int getLinkCapacity() {
+		return linkCapacity;
+	}
+
+	public int getMinReplicas() {
+		return minReplicas;
+	}
 
     public String getRequiredValueFromResource(String resource) throws IllegalStateException {
         for (InfraResource res : this.getResources()) {

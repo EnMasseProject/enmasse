@@ -4,6 +4,8 @@
  */
 package io.enmasse.systemtest.apiclients;
 
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
@@ -11,7 +13,6 @@ import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
 import io.enmasse.systemtest.resources.InfraConfigDefinition;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
 
 public class AdminApiClient extends ApiClient {
     protected static Logger log = CustomLogger.getLogger();
@@ -87,7 +88,7 @@ public class AdminApiClient extends ApiClient {
         return InfraConfigDefinition.fromJson(getResource("infra-config", type.equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath, config));
     }
 
-    private String getInfraApiPath(InfraConfigDefinition copnfig) {
-        return copnfig.getType().equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath;
+    private String getInfraApiPath(InfraConfigDefinition config) {
+        return config.getType().equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath;
     }
 }

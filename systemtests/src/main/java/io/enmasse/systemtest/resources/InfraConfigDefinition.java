@@ -4,22 +4,24 @@
  */
 package io.enmasse.systemtest.resources;
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.vertx.core.json.JsonObject;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import io.enmasse.systemtest.AddressSpaceType;
+import io.vertx.core.json.JsonObject;
 
 public class InfraConfigDefinition {
 
     private String name;
     private AddressSpaceType type;
     private List<InfraSpecComponent> infraComponents;
+    private String version;
 
-    public InfraConfigDefinition(String name, AddressSpaceType type, List<InfraSpecComponent> infraComponents) {
+    public InfraConfigDefinition(String name, AddressSpaceType type, List<InfraSpecComponent> infraComponents, String version) {
         this.name = name;
         this.type = type;
         this.infraComponents = infraComponents;
+        this.version = version;
     }
 
     public String getName() {
@@ -32,6 +34,10 @@ public class InfraConfigDefinition {
 
     public List<InfraSpecComponent> getAddressResources() {
         return infraComponents;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     public JsonObject toJson() {
@@ -48,7 +54,7 @@ public class InfraConfigDefinition {
             JsonObject component = res.toJson();
             spec.put(res.getType(), component);
         }
-        spec.put("version", "1");
+        spec.put("version", version);
         config.put("spec", spec); // </requiredResources>
         return config;
     }
@@ -73,12 +79,14 @@ public class InfraConfigDefinition {
                     component = RouterInfraSpec.fromJson((JsonObject) entry.getValue());
                     break;
             }
-            components.add(component);
+            if(component!=null) {
+                components.add(component);
+            }
         });
 
         return new InfraConfigDefinition(
                 metadataDef.getString("name"),
                 infraDefinition.getString("kind").equals("StandardInfraConfig") ? AddressSpaceType.STANDARD : AddressSpaceType.BROKERED,
-                components);
+                components, spec.getString("version"));
     }
 }

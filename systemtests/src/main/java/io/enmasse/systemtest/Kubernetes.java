@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
+import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -234,6 +235,10 @@ public abstract class Kubernetes {
 
     public List<PersistentVolumeClaim> listPersistentVolumeClaims(Map<String, String> labels) {
         return client.persistentVolumeClaims().inNamespace(globalNamespace).withLabels(labels).list().getItems();
+    }
+
+    public StorageClass getStorageClass(String name) {
+        return client.storage().storageClasses().withName(name).get();
     }
 
     public ConfigMapList getAllConfigMaps(String namespace) {

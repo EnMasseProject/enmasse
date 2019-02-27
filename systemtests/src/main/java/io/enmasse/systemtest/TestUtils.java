@@ -5,6 +5,40 @@
 
 package io.enmasse.systemtest;
 
+import java.net.HttpURLConnection;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.function.ThrowingSupplier;
+import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
@@ -14,26 +48,12 @@ import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.VertxException;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.function.ThrowingSupplier;
-import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.remote.RemoteWebDriver;
-import org.slf4j.Logger;
-
-import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.BooleanSupplier;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -271,6 +291,30 @@ public class TestUtils {
         labels.put("role", "broker");
         labels.put("infraUuid", addressSpace.getInfraUuid());
         return kubernetes.listPods(labels);
+    }
+
+    public static List<Pod> listRouterPods(Kubernetes kubernetes, AddressSpace addressSpace) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("capability", "router");
+        labels.put("infraUuid", addressSpace.getInfraUuid());
+        return kubernetes.listPods(labels);
+    }
+
+    public static List<Pod> listAdminConsolePods(Kubernetes kubernetes, AddressSpace addressSpace) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        if(addressSpace.getType()==AddressSpaceType.STANDARD) {
+            labels.put("name", "admin");
+        }else {
+            labels.put("name", "agent");
+        }
+        labels.put("infraUuid", addressSpace.getInfraUuid());
+        return kubernetes.listPods(labels);
+    }
+
+    public static List<PersistentVolumeClaim> listPersistentVolumeClaims(Kubernetes kubernetes, AddressSpace addressSpace) {
+        Map<String, String> labels = new LinkedHashMap<>();
+        labels.put("infraUuid", addressSpace.getInfraUuid());
+        return kubernetes.listPersistentVolumeClaims(labels);
     }
 
     /**
