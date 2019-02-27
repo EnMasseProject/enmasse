@@ -22,13 +22,6 @@ endif
 
 all: init build_java docker_build templates
 
-test: test_go
-
-ifeq ($(SKIP_TESTS),true)
-else
-all: test_go
-endif
-
 templates: docu_html
 	$(MAKE) -C templates
 
@@ -45,6 +38,7 @@ test_go_run:
 	go test -v ./...
 else
 test_go_run:
+	mkdir -p build
 	go test -v ./... 2>&1 | tee $(abspath build/go.testoutput)
 	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
@@ -66,7 +60,7 @@ template_clean:
 clean: clean_java clean_go docu_htmlclean template_clean
 	rm -rf build
 
-docker_build: build_java build_go
+docker_build: build_java build_go test_go
 
 coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
@@ -111,5 +105,4 @@ docu_check:
 docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
-.PHONY: test_go_vet test_go_plain
-.PHONY: all $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: all $(BUILD_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check test_go_vet test_go_plain
