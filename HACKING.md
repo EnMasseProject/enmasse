@@ -10,7 +10,6 @@ To build EnMasse, you need
    * [GNU Make](https://www.gnu.org/software/make/)
    * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7
    * [Go](https://golang.org/) > 1.10.0
-   * [go2xunit](https://github.com/tebeka/go2xunit) >= v1.4.10
 
 *Note*: On OSX, make sure you have [Coreutils](https://www.gnu.org/software/coreutils/) installed, e.g. `brew install coreutils`
 
@@ -169,12 +168,7 @@ connect with development tool to the forwarded port on localhost
 Go unit tests output can be converted into xUnit compatible format by a tool named `go2xunit`. This is
 being used by the build to have a combined test result of Java and Go parts.
 
-By default, when you run tests, `go test` will executed, but doesn't fail the build. Afterwards `go2xunit`
-will be executed to convert the output, and this may be fail the build when one of the unit tests failed.
-
-`go2xunit` is a pre-requisite of the build system, which has to be provided. However you can disable the
-conversion process by setting the make variable `GO2XUNIT` to an empty string. In this case the build will
-still execute `go test`, but skip the conversion.
+You can enable the conversion process by setting the make variable `GO2XUNIT` to the go2xunit executable. In this case the build will execute `go test` and convert the results.
 
 You may also set the variable `GO2XUNIT` to an absolute location of the binary.
 
