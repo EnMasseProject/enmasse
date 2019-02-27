@@ -302,7 +302,11 @@ public class TestUtils {
 
     public static List<Pod> listAdminConsolePods(Kubernetes kubernetes, AddressSpace addressSpace) {
         Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("name", "admin");
+        if(addressSpace.getType()==AddressSpaceType.STANDARD) {
+            labels.put("name", "admin");
+        }else {
+            labels.put("name", "agent");
+        }
         labels.put("infraUuid", addressSpace.getInfraUuid());
         return kubernetes.listPods(labels);
     }
