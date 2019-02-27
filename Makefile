@@ -60,7 +60,7 @@ template_clean:
 clean: clean_java clean_go docu_htmlclean template_clean
 	rm -rf build
 
-docker_build: build_java build_go test_go
+docker_build: build_java test_go
 
 coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage
