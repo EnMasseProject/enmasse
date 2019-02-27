@@ -219,7 +219,13 @@ spec:
               volumes:
               - name: apiservice-cert
                 secret:
-                defaultMode: 420
+                  secretName: v1beta1.user.enmasse.io-cert
+                  defaultMode: 420
+                  items:
+                  - key: tls.crt
+                    path: tls.crt
+                  - key: tls.key
+                    path: tls.key
               serviceAccountName: api-server
       - name: api-server
         spec:
@@ -295,7 +301,13 @@ spec:
               volumes:
               - name: apiservice-cert
                 secret:
-                defaultMode: 420
+                  secretName: v1beta1.enmasse.io-cert
+                  defaultMode: 420
+                  items:
+                  - key: tls.crt
+                    path: tls.crt
+                  - key: tls.key
+                    path: tls.key
               serviceAccountName: api-server
       - name: address-space-controller
         spec:
