@@ -183,9 +183,13 @@ public class HTTPServer extends AbstractVerticle {
         if (new File(certDir).exists()) {
             HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
+            if (!keyFile.exists()) {
+                keyFile = new File(certDir, "apiserver.key");
+            }
             File certFile = new File(certDir, "tls.crt");
-
-
+            if (!certFile.exists()) {
+                certFile = new File(certFile, "apiserver.crt");
+            }
 
             log.info("Loading key from " + keyFile.getAbsolutePath() + ", cert from " + certFile.getAbsolutePath());
             runCommand("openssl", "pkcs12", "-export", "-passout", "pass:enmasse", "-in", certFile.getAbsolutePath(), "-inkey", keyFile.getAbsolutePath(), "-name", "server", "-out", "/tmp/cert.p12");
