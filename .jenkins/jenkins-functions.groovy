@@ -75,6 +75,43 @@ def buildEnmasse() {
     sh 'make docker_build docker_tag'
 }
 
+def postGithubPrComment(def comment) {
+    echo "Posting github comment"
+    def repository_url = scm.userRemoteConfigs[0].url
+    def repository_name = repository_url.replace("https://github.com/","").replace(".git","")
+    echo "Going to run curl command"
+    withCredentials([string(credentialsId: 'enmasse-ci-github-token', variable: 'GITHUB_TOKEN')]) {
+        sh "curl -v -H \"Authorization: token ${GITHUB_TOKEN}\" -X POST -H \"Content-type: application/json\" -d '{\"body\": \"${comment}\"}' \"https://api.github.com/repos/${repository_name}/issues/${ghprbPullId}/comments\" > out.log 2> out.err"
+        def output=readFile("out.log").trim()
+        def output_err=readFile("out.err").trim()
+        echo "curl output=$output output_err=$output_err"
+    }
+}
+
+def postAction(String coresDir, String artifactDir) {
+    def status = currentBuild.result
+    storeArtifacts(artifactDir)
+    makeLinePlot()
+    makeStackedPlot()
+    //store test results from build and system tests
+    junit testResults: '**/TEST-*.xml', allowEmptyResults: true
+    //archive test results and openshift logs
+    archive '**/TEST-*.xml'
+    archive 'templates/build/**'
+    sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
+    sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
+    try {
+        archive "${artifactDir}/**"
+    } catch(all) {
+        echo "Archive failed"
+    } finally {
+        echo "Artifacts are stored"
+    }
+    if (status == null) {
+        currentBuild.result = 'SUCCESS'
+    }
+    tearDownOpenshift()
+    sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
 def postAction(String coresDir, String artifactDir, String debug) {
     if (debug == 'false') {
         sh "sudo unlink ./go/src/github.com/enmasseproject/enmasse || true"
