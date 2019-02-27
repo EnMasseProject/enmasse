@@ -220,11 +220,6 @@ spec:
               - name: apiservice-cert
                 secret:
                 defaultMode: 420
-                items:
-                - key: tls.crt
-                  path: apiserver.crt
-                - key: tls.key
-                  path: apiserver.key
               serviceAccountName: api-server
       - name: api-server
         spec:
@@ -301,11 +296,6 @@ spec:
               - name: apiservice-cert
                 secret:
                 defaultMode: 420
-                items:
-                - key: tls.crt
-                  path: apiserver.crt
-                - key: tls.key
-                  path: apiserver.key
               serviceAccountName: api-server
       - name: address-space-controller
         spec:
