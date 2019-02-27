@@ -188,7 +188,7 @@ public class HTTPServer extends AbstractVerticle {
             }
             File certFile = new File(certDir, "tls.crt");
             if (!certFile.exists()) {
-                certFile = new File(certFile, "apiserver.crt");
+                certFile = new File(certDir, "apiserver.crt");
             }
 
             log.info("Loading key from " + keyFile.getAbsolutePath() + ", cert from " + certFile.getAbsolutePath());
