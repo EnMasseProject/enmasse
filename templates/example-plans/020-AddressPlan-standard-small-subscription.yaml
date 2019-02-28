@@ -1,18 +1,15 @@
-apiVersion: admin.enmasse.io/v1beta1
+apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
 metadata:
   name: standard-small-subscription
   labels:
     app: enmasse
-displayName: Small Subscription
-displayOrder: 0
-shortDescription: Creates a small durable subscription on a topic.
-longDescription: Creates a small durable subscription on a topic, which is then accessed as a distinct address.
-uuid: 6a567f0e-db73-11e8-9e09-d45ddf138840
-addressType: subscription
-requiredResources:
-- name: router
-  credit: 0.001
-- name: broker
-  credit: 0.01
-
+spec:
+  displayName: Small Subscription
+  displayOrder: 0
+  shortDescription: Creates a small durable subscription on a topic.
+  longDescription: Creates a small durable subscription on a topic, which is then accessed as a distinct address.
+  addressType: subscription
+  resources:
+    router: 0.001
+    broker: 0.01

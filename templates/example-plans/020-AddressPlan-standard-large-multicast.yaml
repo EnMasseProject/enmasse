@@ -1,15 +1,14 @@
-apiVersion: admin.enmasse.io/v1beta1
+apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
 metadata:
   name: standard-large-multicast
   labels:
     app: enmasse
-displayName: Large Multicast
-displayOrder: 2
-shortDescription: Creates a large multicast address.
-longDescription: Creates a large multicast address where messages go via a router that does not take ownership of the messages.
-uuid: 370d20e8-db74-11e8-8fbb-d45ddf138840
-addressType: multicast
-requiredResources:
-- name: router
-  credit: 0.1
+spec:
+  displayName: Large Multicast
+  displayOrder: 2
+  shortDescription: Creates a large multicast address.
+  longDescription: Creates a large multicast address where messages go via a router that does not take ownership of the messages.
+  addressType: multicast
+  resources:
+    router: 0.1
