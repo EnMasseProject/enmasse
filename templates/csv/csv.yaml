@@ -387,27 +387,82 @@ spec:
     - group: enmasse.io
       version: v1beta1
       kind: AddressSpace 
-      name: addressspaces.enmasse.io
+      name: addressspaces
       displayName: Address Space
       description: A group of messaging addresses that can be accessed via the same endpoint
       deploymentName: api-server
       containerPort: 8443
+      specDescriptors:
+        - description: The address space type.
+          displayName: Type
+          path: type
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:label'
+        - description: The address space plan.
+          displayName: Plan
+          path: plan
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:label'
+      statusDescriptors:
+        - description: Address space ready.
+          displayName: Ready
+          path: isReady
+          x-descriptors:
+            - 'urn:alm:descriptor:text'
     - group: enmasse.io
       version: v1beta1
       kind: Address
-      name: addresses.enmasse.io
+      name: addresses
       displayName: Address
       description: A messaging address that can be used to send/receive messages to/from
       deploymentName: api-server
       containerPort: 8443
+      specDescriptors:
+        - description: The address type.
+          displayName: Type
+          path: type
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:label'
+        - description: The address plan.
+          displayName: Plan
+          path: plan
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:label'
+      statusDescriptors:
+        - description: Address ready.
+          displayName: Ready
+          path: isReady
+          x-descriptors:
+            - 'urn:alm:descriptor:text'
+        - description: Address phase
+          displayName: Phase
+          path: phase
+          x-descriptors:
+            - 'urn:alm:descriptor:text'
     - group: user.enmasse.io
       version: v1beta1
       kind: MessagingUser
-      name: messagingusers.user.enmasse.io
+      name: messagingusers
       displayName: Messaging User
       description: A messaging user that can connect to an Address Space
       deploymentName: user-api-server
       containerPort: 8443
+      specDescriptors:
+        - description: The user name.
+          displayName: Username
+          path: username
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:label'
+        - description: The authentication type
+          displayName: Authentication type
+          path: authentication.type
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:label'
+        - description: The password
+          displayName: Password
+          path: authentication.password
+          x-descriptors:
+            - 'urn:alm:descriptor:com.tectonic.ui:label'
   customresourcedefinitions:
     owned:
       - group: admin.enmasse.io
@@ -421,7 +476,7 @@ spec:
             displayName: Minimum Router Replicas
             path: router.minReplicas
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
           - description: The link capacity of AMQP producer links attached to the routers.
             displayName: Link capacity
             path: router.linkCapacity
@@ -495,9 +550,56 @@ spec:
         name: addressspaceplans.admin.enmasse.io
         displayName: Address Space Plan
         description: Plan describing the capabilities and resource limits of a given address space type
+        specDescriptors:
+          - description: The name to be displayed in the console UI.
+            displayName: Display Name
+            path: displayName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The description to be shown in the console UI.
+            displayName: Short Description
+            path: shortDescription
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The quota for broker resources
+            displayName: Broker Quota
+            path: resourceLimits.broker
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The quota for router resources
+            displayName: Router Quota
+            path: resourceLimits.router
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The aggregate quota for all resources
+            displayName: Aggregate Quota
+            path: resourceLimits.aggregate
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: AddressPlan
         name: addressplans.admin.enmasse.io
         displayName: Address Plan
         description: Plan describing the resource usage of a given address type
+        specDescriptors:
+          - description: The name to be displayed in the console UI.
+            displayName: Display Name
+            path: displayName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The description to be shown in the console UI.
+            displayName: Short Description
+            path: shortDescription
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The broker resource usage.
+            displayName: Broker Usage
+            path: resources.broker
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The router resource usage.
+            displayName: Router Usage
+            path: resources.router
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
