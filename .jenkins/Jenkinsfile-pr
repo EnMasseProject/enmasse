@@ -33,8 +33,9 @@ pipeline {
         }
         stage('checkout') {
             steps {
-                sh "mkdir -p ${env.GOPATH}/src/github.com/enmasseproject"
                 checkout scm
+                sh "mkdir -p ${env.GOPATH}/src/github.com/enmasseproject"
+                sh "ln -s ${env.WORKSPACE} ${env.GOPATH}/src/github.com/enmasseproject/enmasse"
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
