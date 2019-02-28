@@ -98,7 +98,6 @@ def postAction(String coresDir, String artifactDir) {
     if (status == null) {
         currentBuild.result = 'SUCCESS'
     }
-    tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
 }
 

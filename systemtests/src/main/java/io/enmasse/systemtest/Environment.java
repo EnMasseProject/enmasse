@@ -21,6 +21,7 @@ public class Environment {
     public static final String tokenEnv = "KUBERNETES_API_TOKEN";
     public static final String upgradeEnv = "SYSTEMTESTS_UPGRADED";
     public static final String enmasseVersionProp = "enmasse.version";
+    public static final String domain = "KUBERNETES_DOMAIN";
 
     private final String token = System.getenv(tokenEnv);
     private final String url = System.getenv(urlEnv);
@@ -32,6 +33,7 @@ public class Environment {
     private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
     private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
     private final String enmasseVersion = System.getProperty("enmasse.version");
+    private final String kubernetesDomain = System.getenv().getOrDefault(domain, ".nip.io");
 
     private Environment() {
         String debugFormat = "{}:{}";
@@ -119,5 +121,9 @@ public class Environment {
 
     public String enmasseVersion() {
         return enmasseVersion;
+    }
+
+    public String kubernetesDomain() {
+        return kubernetesDomain;
     }
 }

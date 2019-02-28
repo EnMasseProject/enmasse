@@ -197,6 +197,7 @@ public class SystemtestsKubernetesApps {
     }
 
     private static Ingress getSystemtestsIngressResource(String appName, int port) throws Exception {
+        Environment env = Environment.getInstance();
         IngressBackend backend = new IngressBackend();
         backend.setServiceName(appName);
         backend.setServicePort(new IntOrString(port));
@@ -211,7 +212,7 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .withNewSpec()
                 .withRules(new IngressRuleBuilder()
-                        .withHost(appName + "." + new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io")
+                        .withHost(appName + "." +  (env.kubernetesDomain().equals(".nip.io") ?  new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io" : env.kubernetesDomain()))
                         .withNewHttp()
                         .withPaths(path)
                         .endHttp()
