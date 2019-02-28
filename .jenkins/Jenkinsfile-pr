@@ -22,6 +22,7 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         OPENSHIFT_PROJECT = "enmasse-infra"
+        GOPATH = "${env.WORKSPACE}"
         USE_DUMMY_ADDRESS = true
     }
     stages {
@@ -32,6 +33,7 @@ pipeline {
         }
         stage('checkout') {
             steps {
+                sh "mkdir -p ${env.GOPATH}/src/github.com/enmasseproject"
                 checkout scm
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
