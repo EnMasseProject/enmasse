@@ -353,11 +353,12 @@ public class SaslDelegatingLogin implements LoginModule {
             roles.addAll(defaultRolesAuthenticated);
 
             if (remoteProperties.get(Symbol.valueOf(GROUPS)) instanceof List) {
-                List<String> groups = ((List<String>) ((List) remoteProperties.get(Symbol.valueOf(GROUPS)))).stream()
-                        .map(grp -> grp.replace('*', '#'))
-                        .collect(Collectors.toList());
+                List<String> groups = new ArrayList<>(((List<String>) ((List) remoteProperties.get(Symbol.valueOf(GROUPS)))));
                 groups.retainAll(SPECIAL_AUTHZ_GROUPS);
                 roles.addAll(groups);
+                for (String group : groups) {
+                    roles.add(group + "_#");
+                }
             }
         }
 
