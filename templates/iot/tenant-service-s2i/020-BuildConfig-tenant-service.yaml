@@ -22,9 +22,9 @@ spec:
         name: fabric8-s2i-java-custom:java8
       env:
       - name: MAVEN_ARGS_APPEND
-        value: -pl io.enmasse:tenant-service --also-make
+        value: -pl io.enmasse:iot-tenant-service --also-make
       - name: ARTIFACT_DIR
-        value: iot/tenant-service/target
+        value: iot/iot-tenant-service/target
   output:
     to:
       kind: ImageStreamTag

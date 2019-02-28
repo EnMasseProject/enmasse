@@ -21,7 +21,7 @@
   </properties>
 
   <modules>
-    <module>tenant-service</module>
+    <module>iot-tenant-service</module>
   </modules>
 
   <dependencyManagement>
