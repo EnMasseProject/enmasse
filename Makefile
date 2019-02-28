@@ -50,6 +50,7 @@ test_go_run: $(GOPRJ)
 	cd $(GOPRJ) && go test -v ./...
 else
 test_go_run: $(GOPRJ)
+	mkdir -p build
 	-cd $(GOPRJ) && go test -v ./... 2>&1 | tee $(abspath build/go.testoutput)
 	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
