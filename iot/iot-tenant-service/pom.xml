@@ -11,7 +11,7 @@
     <version>0.27-SNAPSHOT</version>
   </parent>
 
-  <artifactId>tenant-service</artifactId>
+  <artifactId>iot-tenant-service</artifactId>
 
   <properties>
     <!--  Hono requires 3.5.4 -->
