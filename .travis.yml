@@ -18,7 +18,7 @@ cache:
   directories:
     - "$HOME/.m2"
 jdk:
-- openjdk8
+- openjdk11
 python:
   - "2.7.14"
 go:
