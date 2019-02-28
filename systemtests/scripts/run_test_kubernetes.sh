@@ -65,7 +65,7 @@ wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
 #execute test
 if [[ "${TEST_PROFILE}" = "smoke" ]]; then
-    run_test "**.SmokeTest" systemtests-shared-brokered || failure=$(($failure + 1))
+#    run_test "**.SmokeTest" systemtests-shared-brokered || failure=$(($failure + 1))
     run_test "**.SmokeTest" systemtests-shared-standard || failure=$(($failure + 1))
 else
     run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
