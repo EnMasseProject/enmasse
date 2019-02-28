@@ -42,7 +42,9 @@ function export_required_env {
     SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
     KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
 
-    API_URL=$(oc config view -o jsonpath='{.clusters[0].cluster.server}')
+    if oc whoami --show-server=true > /dev/null 2>&1; then
+        API_URL=$(oc whoami --show-server=true)
+    fi
     export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
     export OPENSHIFT_USER=${OPENSHIFT_USER:-test}
     export OPENSHIFT_PASSWD=${OPENSHIFT_PASSWD:-test}

@@ -1,6 +1,6 @@
 def storeArtifacts(String artifactDir) {
-    sh "./systemtests/scripts/store_kubernetes_info.sh '${artifactDir}/openshift-info/'"
-    sh "./systemtests/scripts/collect_logs.sh '/tmp/testlogs' '${artifactDir}/openshift-logs'"
+    sh "./systemtests/scripts/store_kubernetes_info.sh '${artifactDir}/openshift-info/' || true"
+    sh "./systemtests/scripts/collect_logs.sh '/tmp/testlogs' '${artifactDir}/openshift-logs' || true"
     sh "cp -rf ${HOME}/.npm/_logs ${artifactDir}/npm-logs || true"
     sh 'rm -rf /tmp/testlogs'
 }
@@ -98,7 +98,6 @@ def postAction(String coresDir, String artifactDir) {
     if (status == null) {
         currentBuild.result = 'SUCCESS'
     }
-    tearDownOpenshift()
     sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
 }
 
