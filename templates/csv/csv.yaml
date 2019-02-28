@@ -416,12 +416,79 @@ spec:
         name: standardinfraconfigs.admin.enmasse.io
         displayName: Standard Infra Config
         description: Infrastructure configuration template for the standard address space type
+        specDescriptors:
+          - description: The minimal number of AMQP router replicas to create.
+            displayName: Minimum Router Replicas
+            path: router.minReplicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The link capacity of AMQP producer links attached to the routers.
+            displayName: Link capacity
+            path: router.linkCapacity
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The amount of memory to configure for AMQP router pods.
+            displayName: Router Memory
+            path: router.resources.memory
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The amount of memory to configure for message brokers.
+            displayName: Broker Memory
+            path: broker.resources.memory
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The amount of storage to configure for message brokers.
+            displayName: Broker Storage
+            path: broker.resources.storage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The storage class name to use for message broker persistent volumes.
+            displayName: Broker Storage Class
+            path: broker.storageClassName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The policy to apply when message queues are full.
+            displayName: Broker Address Full Policy
+            path: broker.addressFullPolicy
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The amount of memory to configure for the admin operator.
+            displayName: Admin Memory
+            path: admin.resources.memory
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: BrokeredInfraConfig
         name: brokeredinfraconfigs.admin.enmasse.io
         displayName: Brokered Infra Config
         description: Infrastructure configuration template for the brokered address space type
+        specDescriptors:
+          - description: The amount of memory to configure for message brokers.
+            displayName: Broker Memory
+            path: broker.resources.memory
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The amount of storage to configure for message brokers.
+            displayName: Broker Storage
+            path: broker.resources.storage
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The storage class name to use for message broker persistent volumes.
+            displayName: Broker Storage Class
+            path: broker.storageClassName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The policy to apply when message queues are full.
+            displayName: Broker Address Full Policy
+            path: broker.addressFullPolicy
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The amount of memory to configure for the admin operator.
+            displayName: Admin Memory
+            path: admin.resources.memory
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: AddressSpacePlan
