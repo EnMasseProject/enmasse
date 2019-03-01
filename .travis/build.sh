@@ -21,7 +21,7 @@ fi
 echo "Building EnMasse with tag $TAG, version $VERSION from $BRANCH. PR: $PULL_REQUEST"
 make clean
 
-make
+time make
 
 make docu_html
 
@@ -47,4 +47,4 @@ else
 fi
 
 echo "Running systemtests"
-./systemtests/scripts/run_test_kubernetes.sh templates/build/enmasse-${TAG} ${SYSTEMTEST_PROFILE} ${SYSTEMTEST_ARGS}
+time ./systemtests/scripts/run_test_kubernetes.sh templates/build/enmasse-${TAG} ${SYSTEMTEST_PROFILE} ${SYSTEMTEST_ARGS}

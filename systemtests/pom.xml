@@ -128,7 +128,7 @@
                     <dependency>
                         <groupId>org.junit.platform</groupId>
                         <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>${junit.platform.runner.version}</version>
+                        <version>${junit.platform.surefire.provider.version}</version>
                     </dependency>
                 </dependencies>
             </plugin>
