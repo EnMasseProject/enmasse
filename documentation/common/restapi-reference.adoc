@@ -38,8 +38,8 @@ __URL__ : http://enmasse.io
 [[_paths]]
 == Paths
 
-[[_createadminenmassev1alpha1namespacedaddressspaceplan]]
-=== POST /apis/admin.enmasse.io/v1beta1/namespaces/{namespace}/addressspaceplans
+[[_createadminenmassev1beta2namespacedaddressspaceplan]]
+=== POST /apis/admin.enmasse.io/v1beta2/namespaces/{namespace}/addressspaceplans
 
 ==== Description
 create an AddressSpacePlan
@@ -53,7 +53,7 @@ create an AddressSpacePlan
 |**Path**|**namespace** +
 __required__|object name and auth scope, such as for teams and projects|string
 |**Body**|**body** +
-__required__||<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>>
+__required__||<<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>>
 |===
 
 
@@ -62,8 +62,8 @@ __required__||<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1be
 [options="header", cols=".^2a,.^14a,.^4a"]
 |===
 |HTTP Code|Description|Schema
-|**200**|OK|<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>>
-|**201**|Created|<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>>
+|**200**|OK|<<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>>
+|**201**|Created|<<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>>
 |**401**|Unauthorized|No Content
 |===
 
@@ -82,11 +82,11 @@ __required__||<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1be
 
 * addressspaceplan
 * admin
-* enmasse_v1beta1
+* enmasse_v1beta2
 
 
-[[_listadminenmassev1alpha1namespacedaddresspaceplan]]
-=== GET /apis/admin.enmasse.io/v1beta1/namespaces/{namespace}/addressspaceplans
+[[_listadminenmassev1beta2namespacedaddresspaceplan]]
+=== GET /apis/admin.enmasse.io/v1beta2/namespaces/{namespace}/addressspaceplans
 
 ==== Description
 list objects of kind AddressSpacePlan
@@ -109,7 +109,7 @@ __optional__|A selector to restrict the list of returned objects by their labels
 [options="header", cols=".^2a,.^14a,.^4a"]
 |===
 |HTTP Code|Description|Schema
-|**200**|OK|<<_io_enmasse_admin_v1beta1_addressspaceplanlist,io.enmasse.admin.v1beta1.AddressSpacePlanList>>
+|**200**|OK|<<_io_enmasse_admin_v1beta2_addressspaceplanlist,io.enmasse.admin.v1beta2.AddressSpacePlanList>>
 |**401**|Unauthorized|No Content
 |===
 
@@ -123,11 +123,11 @@ __optional__|A selector to restrict the list of returned objects by their labels
 
 * addressspaceplan
 * admin
-* enmasse_v1beta1
+* enmasse_v1beta2
 
 
-[[_readadminenmassev1alpha1namespacedaddressspaceplan]]
-=== GET /apis/admin.enmasse.io/v1beta1/namespaces/{namespace}/addressspaceplans/{name}
+[[_readadminenmassev1beta2namespacedaddressspaceplan]]
+=== GET /apis/admin.enmasse.io/v1beta2/namespaces/{namespace}/addressspaceplans/{name}
 
 ==== Description
 read the specified AddressSpacePlan
@@ -150,7 +150,7 @@ __required__|object name and auth scope, such as for teams and projects|string
 [options="header", cols=".^2a,.^14a,.^4a"]
 |===
 |HTTP Code|Description|Schema
-|**200**|OK|<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>>
+|**200**|OK|<<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>>
 |**401**|Unauthorized|No Content
 |**404**|Not found|No Content
 |===
@@ -170,11 +170,11 @@ __required__|object name and auth scope, such as for teams and projects|string
 
 * addressspaceplan
 * admin
-* enmasse_v1beta1
+* enmasse_v1beta2
 
 
-[[_replaceadminenmassev1alpha1namespacedaddressspaceplan]]
-=== PUT /apis/admin.enmasse.io/v1beta1/namespaces/{namespace}/addressspaceplans/{name}
+[[_replaceadminenmassev1beta2namespacedaddressspaceplan]]
+=== PUT /apis/admin.enmasse.io/v1beta2/namespaces/{namespace}/addressspaceplans/{name}
 
 ==== Description
 replace the specified AddressSpacePlan
@@ -190,7 +190,7 @@ __required__|Name of AddressSpacePlan to replace.|string
 |**Path**|**namespace** +
 __required__|object name and auth scope, such as for teams and projects|string
 |**Body**|**body** +
-__required__||<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>>
+__required__||<<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>>
 |===
 
 
@@ -199,8 +199,8 @@ __required__||<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1be
 [options="header", cols=".^2a,.^14a,.^4a"]
 |===
 |HTTP Code|Description|Schema
-|**200**|OK|<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>>
-|**201**|Created|<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>>
+|**200**|OK|<<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>>
+|**201**|Created|<<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>>
 |**401**|Unauthorized|No Content
 |===
 
@@ -214,11 +214,11 @@ __required__||<<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1be
 
 * addressspaceplan
 * admin
-* enmasse_v1beta1
+* enmasse_v1beta2
 
 
-[[_deleteadminenmassev1alpha1namespacedaddressspaceplan]]
-=== DELETE /apis/admin.enmasse.io/v1beta1/namespaces/{namespace}/addressspaceplans/{name}
+[[_deleteadminenmassev1beta2namespacedaddressspaceplan]]
+=== DELETE /apis/admin.enmasse.io/v1beta2/namespaces/{namespace}/addressspaceplans/{name}
 
 ==== Description
 delete an AddressSpacePlan
@@ -256,7 +256,7 @@ __required__|object name and auth scope, such as for teams and projects|string
 
 * addressspaceplan
 * admin
-* enmasse_v1beta1
+* enmasse_v1beta2
 
 
 [[_createenmassev1alpha1namespacedaddress]]
@@ -1171,120 +1171,6 @@ __optional__|Suggested HTTP return code for this status, 0 if not set.|integer (
 |===
 
 
-[[_io_enmasse_admin_v1beta1_addressplan]]
-=== io.enmasse.admin.v1beta1.AddressPlan
-
-[options="header", cols=".^3a,.^4a"]
-|===
-|Name|Schema
-|**addressType** +
-__required__|string
-|**apiVersion** +
-__required__|enum (admin.enmasse.io/v1beta1)
-|**displayName** +
-__required__|string
-|**displayOrder** +
-__required__|integer
-|**kind** +
-__required__|enum (AddressPlan)
-|**longDescription** +
-__optional__|string
-|**metadata** +
-__required__|<<_objectmeta,ObjectMeta>>
-|**requiredResources** +
-__required__|< <<_io_enmasse_admin_v1beta1_addressplan_requiredresources,requiredResources>> > array
-|**shortDescription** +
-__required__|string
-|**uuid** +
-__required__|string
-|===
-
-[[_io_enmasse_admin_v1beta1_addressplan_requiredresources]]
-**requiredResources**
-
-[options="header", cols=".^3a,.^4a"]
-|===
-|Name|Schema
-|**credit** +
-__required__|number
-|**name** +
-__required__|string
-|===
-
-
-[[_io_enmasse_admin_v1beta1_addressplanlist]]
-=== io.enmasse.admin.v1beta1.AddressPlanList
-
-[options="header", cols=".^3a,.^4a"]
-|===
-|Name|Schema
-|**apiVersion** +
-__required__|enum (admin.enmasse.io/v1beta1)
-|**items** +
-__required__|< <<_io_enmasse_admin_v1beta1_addressplan,io.enmasse.admin.v1beta1.AddressPlan>> > array
-|**kind** +
-__required__|enum (AddressPlanList)
-|===
-
-
-[[_io_enmasse_admin_v1beta1_addressspaceplan]]
-=== io.enmasse.admin.v1beta1.AddressSpacePlan
-
-[options="header", cols=".^3a,.^4a"]
-|===
-|Name|Schema
-|**addressPlans** +
-__optional__|< string > array
-|**addressSpaceType** +
-__required__|string
-|**apiVersion** +
-__required__|enum (admin.enmasse.io/v1beta1)
-|**displayName** +
-__required__|string
-|**displayOrder** +
-__required__|integer
-|**kind** +
-__required__|enum (AddressSpacePlan)
-|**longDescription** +
-__optional__|string
-|**metadata** +
-__required__|<<_objectmeta,ObjectMeta>>
-|**resources** +
-__required__|< <<_io_enmasse_admin_v1beta1_addressspaceplan_resources,resources>> > array
-|**shortDescription** +
-__required__|string
-|**uuid** +
-__required__|string
-|===
-
-[[_io_enmasse_admin_v1beta1_addressspaceplan_resources]]
-**resources**
-
-[options="header", cols=".^3a,.^4a"]
-|===
-|Name|Schema
-|**max** +
-__required__|number
-|**name** +
-__required__|string
-|===
-
-
-[[_io_enmasse_admin_v1beta1_addressspaceplanlist]]
-=== io.enmasse.admin.v1beta1.AddressSpacePlanList
-
-[options="header", cols=".^3a,.^4a"]
-|===
-|Name|Schema
-|**apiVersion** +
-__required__|enum (admin.enmasse.io/v1beta1)
-|**items** +
-__required__|< <<_io_enmasse_admin_v1beta1_addressspaceplan,io.enmasse.admin.v1beta1.AddressSpacePlan>> > array
-|**kind** +
-__required__|enum (AddressSpacePlanList)
-|===
-
-
 [[_io_enmasse_admin_v1beta1_brokeredinfraconfig]]
 === io.enmasse.admin.v1beta1.BrokeredInfraConfig
 
@@ -1531,6 +1417,140 @@ __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter_resources
 |Name|Schema
 |**memory** +
 __optional__|string
+|===
+
+
+[[_io_enmasse_admin_v1beta2_addressplan]]
+=== io.enmasse.admin.v1beta2.AddressPlan
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**apiVersion** +
+__required__|enum (admin.enmasse.io/v1beta2)
+|**kind** +
+__required__|enum (AddressPlan)
+|**metadata** +
+__required__|<<_objectmeta,ObjectMeta>>
+|**spec** +
+__required__|<<_io_enmasse_admin_v1beta2_addressplanspec,io.enmasse.admin.v1beta2.AddressPlanSpec>>
+|===
+
+
+[[_io_enmasse_admin_v1beta2_addressplanlist]]
+=== io.enmasse.admin.v1beta2.AddressPlanList
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**apiVersion** +
+__required__|enum (admin.enmasse.io/v1beta2)
+|**items** +
+__required__|< <<_io_enmasse_admin_v1beta2_addressplan,io.enmasse.admin.v1beta2.AddressPlan>> > array
+|**kind** +
+__required__|enum (AddressPlanList)
+|===
+
+
+[[_io_enmasse_admin_v1beta2_addressplanspec]]
+=== io.enmasse.admin.v1beta2.AddressPlanSpec
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**addressType** +
+__required__|string
+|**displayName** +
+__required__|string
+|**displayOrder** +
+__optional__|integer
+|**longDescription** +
+__optional__|string
+|**resources** +
+__required__|<<_io_enmasse_admin_v1beta2_addressplanspec_resources,resources>>
+|**shortDescription** +
+__optional__|string
+|===
+
+[[_io_enmasse_admin_v1beta2_addressplanspec_resources]]
+**resources**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**broker** +
+__optional__|number
+|**router** +
+__optional__|number
+|===
+
+
+[[_io_enmasse_admin_v1beta2_addressspaceplan]]
+=== io.enmasse.admin.v1beta2.AddressSpacePlan
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**apiVersion** +
+__required__|enum (admin.enmasse.io/v1beta2)
+|**kind** +
+__required__|enum (AddressSpacePlan)
+|**metadata** +
+__required__|<<_objectmeta,ObjectMeta>>
+|**spec** +
+__required__|<<_io_enmasse_admin_v1beta2_addressspaceplanspec,io.enmasse.admin.v1beta2.AddressSpacePlanSpec>>
+|===
+
+
+[[_io_enmasse_admin_v1beta2_addressspaceplanlist]]
+=== io.enmasse.admin.v1beta2.AddressSpacePlanList
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**apiVersion** +
+__required__|enum (admin.enmasse.io/v1beta2)
+|**items** +
+__required__|< <<_io_enmasse_admin_v1beta2_addressspaceplan,io.enmasse.admin.v1beta2.AddressSpacePlan>> > array
+|**kind** +
+__required__|enum (AddressSpacePlanList)
+|===
+
+
+[[_io_enmasse_admin_v1beta2_addressspaceplanspec]]
+=== io.enmasse.admin.v1beta2.AddressSpacePlanSpec
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**addressPlans** +
+__required__|< string > array
+|**addressSpaceType** +
+__required__|string
+|**displayName** +
+__required__|string
+|**displayOrder** +
+__optional__|integer
+|**longDescription** +
+__optional__|string
+|**resourceLimits** +
+__required__|<<_io_enmasse_admin_v1beta2_addressspaceplanspec_resourcelimits,resourceLimits>>
+|**shortDescription** +
+__optional__|string
+|===
+
+[[_io_enmasse_admin_v1beta2_addressspaceplanspec_resourcelimits]]
+**resourceLimits**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**aggregate** +
+__optional__|number
+|**broker** +
+__optional__|number
+|**router** +
+__optional__|number
 |===
 
 
