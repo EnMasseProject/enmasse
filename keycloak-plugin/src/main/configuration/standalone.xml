@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
-<server xmlns="urn:jboss:domain:5.0">
+<server xmlns="urn:jboss:domain:7.0">
     <extensions>
         <extension module="org.jboss.as.clustering.infinispan"/>
         <extension module="org.jboss.as.connector"/>
@@ -80,7 +80,7 @@
         </access-control>
     </management>
     <profile>
-        <subsystem xmlns="urn:jboss:domain:logging:3.0">
+        <subsystem xmlns="urn:jboss:domain:logging:5.0">
             <console-handler name="CONSOLE">
                 <level name="INFO"/>
                 <formatter>
@@ -202,17 +202,17 @@
             <default-missing-method-permissions-deny-access value="true"/>
             <log-system-exceptions value="true"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:io:2.0">
+        <subsystem xmlns="urn:jboss:domain:io:3.0">
             <worker name="default"/>
             <buffer-pool name="default"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:infinispan:4.0">
-            <cache-container name="keycloak" jndi-name="infinispan/Keycloak">
+        <subsystem xmlns="urn:jboss:domain:infinispan:6.0">
+            <cache-container name="keycloak">
                 <local-cache name="realms">
-                    <eviction strategy="LRU" max-entries="10000"/>
+                    <object-memory size="10000"/>
                 </local-cache>
                 <local-cache name="users">
-                    <eviction strategy="LRU" max-entries="10000"/>
+                    <object-memory size="10000"/>
                 </local-cache>
                 <local-cache name="sessions"/>
                 <local-cache name="authenticationSessions"/>
@@ -222,14 +222,14 @@
                 <local-cache name="loginFailures"/>
                 <local-cache name="work"/>
                 <local-cache name="authorization">
-                    <eviction strategy="LRU" max-entries="10000"/>
+                    <object-memory size="10000"/>
                 </local-cache>
                 <local-cache name="keys">
-                    <eviction strategy="LRU" max-entries="1000"/>
+                    <object-memory size="1000"/>
                     <expiration max-idle="3600000"/>
                 </local-cache>
                 <local-cache name="actionTokens">
-                    <eviction strategy="NONE" max-entries="-1"/>
+                    <object-memory size="-1"/>
                     <expiration interval="300000" max-idle="-1"/>
                 </local-cache>
             </cache-container>
@@ -252,14 +252,14 @@
                     <file-store passivation="true" purge="false"/>
                 </local-cache>
             </cache-container>
-            <cache-container name="hibernate" module="org.hibernate.infinispan">
+            <cache-container name="hibernate" module="org.infinispan.hibernate-cache">
                 <local-cache name="entity">
                     <transaction mode="NON_XA"/>
-                    <eviction strategy="LRU" max-entries="10000"/>
+                    <object-memory size="10000"/>
                     <expiration max-idle="100000"/>
                 </local-cache>
                 <local-cache name="local-query">
-                    <eviction strategy="LRU" max-entries="10000"/>
+                    <object-memory size="10000"/>
                     <expiration max-idle="100000"/>
                 </local-cache>
                 <local-cache name="timestamps"/>
@@ -302,7 +302,6 @@
             <remote-naming/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:remoting:4.0">
-            <endpoint/>
             <http-connector name="http-remoting-connector" connector-ref="default" security-realm="ApplicationRealm"/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:request-controller:1.0"/>
@@ -313,7 +312,7 @@
                 </maximum-set>
             </deployment-permissions>
         </subsystem>
-        <subsystem xmlns="urn:wildfly:elytron:1.2" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
+        <subsystem xmlns="urn:wildfly:elytron:3.0" final-providers="combined-providers" disallowed-providers="OracleUcrypto">
             <providers>
                 <aggregate-providers name="combined-providers">
                     <providers name="elytron"/>
@@ -348,17 +347,13 @@
             </security-realms>
             <mappers>
                 <simple-permission-mapper name="default-permission-mapper" mapping-mode="first">
+                    <permission-mapping match-all="true">
+                        <permission-set name="login-permission"/>
+                        <permission-set name="default-permissions"/>
+                    </permission-mapping>
                     <permission-mapping>
                         <principal name="anonymous"/>
-                        <permission class-name="org.wildfly.extension.batch.jberet.deployment.BatchPermission" module="org.wildfly.extension.batch.jberet" target-name="*"/>
-                        <permission class-name="org.wildfly.transaction.client.RemoteTransactionPermission" module="org.wildfly.transaction.client"/>
-                        <permission class-name="org.jboss.ejb.client.RemoteEJBPermission" module="org.jboss.ejb-client"/>
-                    </permission-mapping>
-                    <permission-mapping match-all="true">
-                        <permission class-name="org.wildfly.security.auth.permission.LoginPermission"/>
-                        <permission class-name="org.wildfly.extension.batch.jberet.deployment.BatchPermission" module="org.wildfly.extension.batch.jberet" target-name="*"/>
-                        <permission class-name="org.wildfly.transaction.client.RemoteTransactionPermission" module="org.wildfly.transaction.client"/>
-                        <permission class-name="org.jboss.ejb.client.RemoteEJBPermission" module="org.jboss.ejb-client"/>
+                        <permission-set name="default-permissions"/>
                     </permission-mapping>
                 </simple-permission-mapper>
                 <constant-realm-mapper name="local" realm-name="local"/>
@@ -367,6 +362,16 @@
                     <role name="SuperUser"/>
                 </constant-role-mapper>
             </mappers>
+            <permission-sets>
+                <permission-set name="login-permission">
+                    <permission class-name="org.wildfly.security.auth.permission.LoginPermission"/>
+                </permission-set>
+                <permission-set name="default-permissions">
+                    <permission class-name="org.wildfly.extension.batch.jberet.deployment.BatchPermission" module="org.wildfly.extension.batch.jberet" target-name="*"/>
+                    <permission class-name="org.wildfly.transaction.client.RemoteTransactionPermission" module="org.wildfly.transaction.client"/>
+                    <permission class-name="org.jboss.ejb.client.RemoteEJBPermission" module="org.jboss.ejb-client"/>
+                </permission-set>
+            </permission-sets>
             <http>
                 <http-authentication-factory name="management-http-authentication" http-server-mechanism-factory="global" security-domain="ManagementDomain">
                     <mechanism-configuration>
@@ -456,7 +461,7 @@
             <recovery-environment socket-binding="txn-recovery-environment" status-socket-binding="txn-status-manager"/>
             <object-store path="tx-object-store" relative-to="jboss.server.data.dir"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:undertow:4.0">
+        <subsystem xmlns="urn:jboss:domain:undertow:6.0">
             <buffer-cache name="default"/>
             <server name="default-server">
                 <http-listener name="default" socket-binding="http" redirect-socket="https" proxy-address-forwarding="${env.PROXY_ADDRESS_FORWARDING}" enable-http2="true"/>
@@ -534,7 +539,7 @@
                 <default-provider>default</default-provider>
                 <provider name="default" enabled="true">
                     <properties>
-                        <property name="cacheContainer" value="java:comp/env/infinispan/Keycloak"/>
+                        <property name="cacheContainer" value="java:jboss/infinispan/container/keycloak"/>
                     </properties>
                 </provider>
             </spi>
@@ -565,6 +570,16 @@
             <spi name="x509cert-lookup">
                 <default-provider>${keycloak.x509cert.lookup.provider:default}</default-provider>
                 <provider name="default" enabled="true"/>
+            </spi>
+            <spi name="hostname">
+                <default-provider>${keycloak.hostname.provider:request}</default-provider>
+                <provider name="fixed" enabled="true">
+                    <properties>
+                        <property name="hostname" value="${keycloak.hostname.fixed.hostname:localhost}"/>
+                        <property name="httpPort" value="${keycloak.hostname.fixed.httpPort:-1}"/>
+                        <property name="httpsPort" value="${keycloak.hostname.fixed.httpsPort:-1}"/>
+                    </properties>
+                </provider>
             </spi>
         </subsystem>
     </profile>
