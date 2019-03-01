@@ -46,7 +46,7 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
         return Collections.unmodifiableMap(resourceLimits);
     }
 
-    public void setResources(Map<String, Double> resources) {
+    public void setResourceLimits(Map<String, Double> resources) {
         this.resourceLimits = new HashMap<>(resources);
     }
 
