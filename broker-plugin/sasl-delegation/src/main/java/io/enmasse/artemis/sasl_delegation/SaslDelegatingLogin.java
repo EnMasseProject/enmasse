@@ -32,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.util.*;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.net.ssl.SSLContext;
@@ -352,9 +353,12 @@ public class SaslDelegatingLogin implements LoginModule {
             roles.addAll(defaultRolesAuthenticated);
 
             if (remoteProperties.get(Symbol.valueOf(GROUPS)) instanceof List) {
-                List<String> groups = (List<String>) remoteProperties.get(Symbol.valueOf(GROUPS));
+                List<String> groups = new ArrayList<>(((List<String>) ((List) remoteProperties.get(Symbol.valueOf(GROUPS)))));
                 groups.retainAll(SPECIAL_AUTHZ_GROUPS);
                 roles.addAll(groups);
+                for (String group : groups) {
+                    roles.add(group + "_#");
+                }
             }
         }
 
@@ -364,7 +368,7 @@ public class SaslDelegatingLogin implements LoginModule {
                 List<String> groups = new ArrayList<>();
                 for(Map.Entry<String, String[]> entry : authz.entrySet()) {
                     for(String permission : entry.getValue()) {
-                        groups.add(permission + "_" + entry.getKey());
+                        groups.add(permission + "_" + entry.getKey().replace('*', '#'));
                     }
                 }
                 roles.addAll(groups);

@@ -16,15 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -325,7 +317,7 @@ public class KeycloakUserApi implements UserApi {
     /**
      * Create the set of desired groups.
      *
-     * @param user The user to create the groups for.
+     * @param authorization The authorization rule list to create the groups for.
      * @return A set of groups.
      */
     static Set<String> createDesiredGroupsSet(final List<UserAuthorization> authorization) {
@@ -338,11 +330,9 @@ public class KeycloakUserApi implements UserApi {
 
                 switch (operation) {
                     case manage:
-                        desiredGroups.add("manage_#");
                         desiredGroups.add("manage");
                         break;
                     case view:
-                        desiredGroups.add("monitor_#");
                         desiredGroups.add("monitor");
                         break;
                     default:
@@ -351,8 +341,6 @@ public class KeycloakUserApi implements UserApi {
                                 String groupName = operation.name() + "_" + encodePart(address);
                                 // normal name
                                 desiredGroups.add(groupName);
-                                // brokered name ( the set will remove duplicates for us)
-                                desiredGroups.add(groupName.replace("*", "#"));
                             }
                         }
                         break;
@@ -582,8 +570,8 @@ public class KeycloakUserApi implements UserApi {
 
     static User buildUser(UserRepresentation userRep, List<GroupRepresentation> groupReps) {
         log.debug("Creating user from user representation id {}, name {} part of groups {}", userRep.getId(), userRep.getUsername(), userRep.getGroups());
-        Map<String, Set<Operation>> operationsByAddress = new HashMap<>();
-        Set<Operation> globalOperations = new HashSet<>();
+        Map<String, Set<Operation>> operationsByAddress = new LinkedHashMap<>();
+        Set<Operation> globalOperations = new LinkedHashSet<>();
         for (GroupRepresentation groupRep : groupReps) {
             log.debug("Checking group id {} name {}", groupRep.getId(), groupRep.getName());
             if (groupRep.getName().startsWith("manage")) {
@@ -594,15 +582,15 @@ public class KeycloakUserApi implements UserApi {
                 String[] parts = groupRep.getName().split("_");
                 Operation operation = Operation.valueOf(parts[0]);
                 String address = decodePart(parts[1]);
-                operationsByAddress.computeIfAbsent(address, k -> new HashSet<>())
+                operationsByAddress.computeIfAbsent(address, k -> new LinkedHashSet<>())
                         .add(operation);
             }
         }
 
-        Map<Set<Operation>, Set<String>> operations = new HashMap<>();
+        Map<Set<Operation>, Set<String>> operations = new LinkedHashMap<>();
         for (Map.Entry<String, Set<Operation>> byAddressEntry : operationsByAddress.entrySet()) {
             if (!operations.containsKey(byAddressEntry.getValue())) {
-                operations.put(byAddressEntry.getValue(), new HashSet<>());
+                operations.put(byAddressEntry.getValue(), new LinkedHashSet<>());
             }
             operations.get(byAddressEntry.getValue()).add(byAddressEntry.getKey());
         }
