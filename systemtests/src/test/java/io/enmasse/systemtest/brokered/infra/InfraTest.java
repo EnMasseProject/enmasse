@@ -73,7 +73,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered{
 
     @Test
     void testDecrementInfra() throws Exception {
-        testReplaceInfra("512Mi", "512Mi", "256Mi");
+        testReplaceInfra("256Mi", "512Mi", "256Mi");
     }
 
     void testReplaceInfra(String brokerMemory, String brokerStorage, String adminMemory) throws Exception {
@@ -106,7 +106,14 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered{
 
     @Test
     void testReadInfra() throws Exception {
-        testCreateInfra();
+        testInfra = new InfraConfigDefinition("test-infra-1", AddressSpaceType.BROKERED, Arrays.asList(
+                new BrokerInfraSpec(Arrays.asList(
+                        new InfraResource("memory", "512Mi"),
+                        new InfraResource("storage", "1Gi"))),
+                new AdminInfraSpec(Collections.singletonList(
+                        new InfraResource("memory", "512Mi")))), environment.enmasseVersion());
+        plansProvider.createInfraConfig(testInfra);
+
         InfraConfigDefinition actualInfra = plansProvider.getBrokeredInfraConfig(testInfra.getName());
 
         assertEquals(testInfra.getName(), actualInfra.getName());

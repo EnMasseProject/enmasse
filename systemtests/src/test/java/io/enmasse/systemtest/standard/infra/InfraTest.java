@@ -86,7 +86,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
     @Test
     void testDecrementInfra() throws Exception {
-        testReplaceInfra("512Mi", "512Mi", 1, "128Mi", "256Mi");
+        testReplaceInfra("256Mi", "512Mi", 1, "128Mi", "256Mi");
     }
 
     void testReplaceInfra(String brokerMemory, String brokerStorage, int routerReplicas, String routerMemory, String adminMemory) throws Exception {
@@ -128,7 +128,16 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
     @Test
     void testReadInfra() throws Exception {
-        testCreateInfra();
+        testInfra = new InfraConfigDefinition("test-infra-1", AddressSpaceType.STANDARD, Arrays.asList(
+                new BrokerInfraSpec(Arrays.asList(
+                        new InfraResource("memory", "512Mi"),
+                        new InfraResource("storage", "1Gi"))),
+                new RouterInfraSpec(Collections.singletonList(
+                        new InfraResource("memory", "256Mi")), 200, 2),
+                new AdminInfraSpec(Collections.singletonList(
+                        new InfraResource("memory", "512Mi")))), environment.enmasseVersion());
+        plansProvider.createInfraConfig(testInfra);
+
         InfraConfigDefinition actualInfra = plansProvider.getStandardInfraConfig(testInfra.getName());
 
         assertEquals(testInfra.getName(), actualInfra.getName());
@@ -150,6 +159,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
         assertEquals(expectedRouter.getRequiredValueFromResource("memory"), actualRouter.getRequiredValueFromResource("memory"));
         assertEquals(expectedRouter.getLinkCapacity(), actualRouter.getLinkCapacity());
         assertEquals(expectedRouter.getMinReplicas(), actualRouter.getMinReplicas());
+
     }
 
     private boolean assertInfra(String brokerMemory, Optional<String> brokerStorage, int routerReplicas, String routermemory, String adminMemory) {
