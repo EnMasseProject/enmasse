@@ -18,13 +18,13 @@
 var util = require('util');
 var log = require('./log.js').logger();
 var myutils = require('./utils.js');
+var amqp = require('rhea').create_container();
 
 var Artemis = function (connection) {
     this.connection = connection;
     this.sender = connection.open_sender('activemq.management');
-    this.sender.on('sendable', this._send_pending_requests.bind(this));
-    connection.open_receiver({source:{dynamic:true}});
-    connection.on('receiver_open', this.ready.bind(this));
+    this.sender.on('sendable', this.sender_ready.bind(this));
+    connection.on('receiver_open', this.receiver_ready.bind(this));
     connection.on('message', this.incoming.bind(this));
     connection.on('receiver_error', this.on_receiver_error.bind(this));
     connection.on('sender_error', this.on_sender_error.bind(this));
@@ -53,9 +53,16 @@ Artemis.prototype.log_info = function (context) {
     }
 };
 
-Artemis.prototype.ready = function (context) {
-    log.info('[%s] ready to send requests', this.connection.container_id);
+Artemis.prototype.sender_ready = function () {
+    var tmp_reply_address = 'activemq.management.tmpreply.' + amqp.generate_uuid();
+    log.debug('[%s] sender ready, creating reply to address: %s', this.connection.container_id, tmp_reply_address);
+    this._create_temp_response_queue(tmp_reply_address);
+    this.connection.open_receiver({source:{address: tmp_reply_address}});
+}
+
+Artemis.prototype.receiver_ready = function (context) {
     this.address = context.receiver.remote.attach.source.address;
+    log.info('[%s] ready to send requests, reply to address: %s', this.connection.container_id, this.address);
     this._send_pending_requests();
 };
 
@@ -143,9 +150,14 @@ Artemis.prototype._send_request = function (request) {
     log.debug('[%s] sent: %j', this.id, request);
 }
 
-Artemis.prototype._request = function (resource, operation, parameters) {
-    var request = {application_properties:{'_AMQ_ResourceName':resource, '_AMQ_OperationName':operation}};
+Artemis.prototype._create_request_message = function(resource, operation, parameters) {
+    var request = {application_properties: {'_AMQ_ResourceName': resource, '_AMQ_OperationName': operation}};
     request.body = JSON.stringify(parameters);
+    return request;
+}
+
+Artemis.prototype._request = function (resource, operation, parameters) {
+    var request = this._create_request_message(resource, operation, parameters);
 
     if (this._send_pending_requests()) {
         this._send_request(request);
@@ -158,6 +170,13 @@ Artemis.prototype._request = function (resource, operation, parameters) {
         self.pushed++;
         stack.push(as_handler(resolve, reject));
     });
+}
+
+// No response requested
+Artemis.prototype._create_temp_response_queue = function (name) {
+    var request = this._create_request_message('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, false/*durable*/,
+         1/*max consumers*/, true/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
+    this._send_request(request);
 }
 
 Artemis.prototype.createSubscription = function (name, address, shared) {
@@ -629,7 +648,6 @@ Artemis.prototype.close = function () {
     }
 }
 
-var amqp = require('rhea').create_container();
 module.exports.Artemis = Artemis;
 module.exports.connect = function (options) {
     return new Artemis(amqp.connect(options));
