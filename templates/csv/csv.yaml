@@ -6,39 +6,46 @@ metadata:
   name: enmasse.${MAVEN_VERSION}
   namespace: placeholder
   annotations:
-    capabilities: Full Lifecycle
     categories: "Streaming & Messaging"
     certified: "false"
-    description: |-
-      EnMasse is an open source project for managed, self-service messaging on Kubernetes and OpenShift. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization. 
+    description: Self-service messaging with a uniform interface to manage different messaging infrastructure. 
     containerImage: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
     createdAt: 2019-02-19T00:00:00Z
     support: EnMasse
-    alm-examples: '[{"apiVersion":"admin.enmasse.io","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"storage":"5Gi"},"addressFullPolicy":"DROP"},"router":{"linkCapacity":50}}},{"apiVersion":"admin.enmasse.io","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"addressType":"queue","uuid":"134849d0-39c0-11e9-8500-c85b7644b4a4","shortDescription":"Small Queue","requiredResources":[{"name":"router","credit":0.01},{"name":"broker","credit":0.1}]},{"apiVersion":"admin.enmasse.io","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"addressSpaceType":"standard","uuid":"59e5bcd8-39c0-11e9-8563-c85b7644b4a4","shortDescription":"Small Address Space Plan","resources":[{"name":"router","max":1},{"name":"broker","max":2},{"name":"aggregate","max":2}],"addressPlans":["small-standard-queue"]}]'
+    alm-examples: '[{"apiVersion":"admin.enmasse.io/v1beta1","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"storage":"5Gi"},"addressFullPolicy":"DROP"},"router":{"linkCapacity":50}}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"spec":{"addressType":"queue","shortDescription":"Small Queue","resources":{"router":0.01,"broker":0.1}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressSpacePlan","metadata":{"name":"standard-small"},"addressSpaceType":"standard","shortDescription":"Small Address Space Plan","resourceLimits":{"router":1,"broker":2,"aggregate":2},"addressPlans":["small-standard-queue"]}]'
 spec:
   maturity: beta
   displayName: EnMasse
-  description: |
-    EnMasse
-    =======
-    EnMasse is an open source project for managed, self-service messaging on Kubernetes and OpenShift. EnMasse can run on your own infrastructure or in the cloud, and simplifies running a messaging infrastructure for your organization. The service admin can deploy and manage plans and infrastructure configuration, while messaging tenants can request messaging resources by creating address spaces and addresses.
+  description: >
+    EnMasse provides self-service messaging on Kubernetes and OpenShift with a uniform interface to manage different messaging infrastructure. 
+    See our [website](http://enmasse.io) for more details about the project.
 
-    EnMasse currently supports a standard and a brokered address space type, each with different semantics.
+    ### Supported features
 
-    ## Installation
+    * ** Built-in authentication and authorization ** - Use the built-in or plug in your own authentication service for authentication and authorization of messaging clients.
+    * ** Self-service messaging for applications ** - The service admin deploys and manages the messaging infrastructure, while applications can request messaging resources without caring about the messaging infrastructure.
+    * ** Supports a wide variety of messaging patterns ** - Choose between JMS-style messaging with strict guarantees, or messaging that supports a larger number of connections and higher throughput.
 
-    To start using EnMasse, install the operator and create the desired plans. Example plans can be found [here](https://github.com/EnMasseProject/enmasse/tree/master/templates/example-plans).
+    ### Documentation
+    
+    Documentation for the latest releases can be found on our [website](http://enmasse.io)
 
-    Once plans are installed, messaging tenants can provision messaging by creating an address space:
-    ```
-    apiVersion: enmasse.io/v1beta1
-    kind: AddressSpace
-    metadata:
-      name: myspace
-    spec:
-      type: standard
-      plan: standard-small
-    ```
+    ### Getting help
+
+    * [EnMasse mailing list](https://www.redhat.com/mailman/listinfo/enmasse)
+    * [#enmasse IRC channel on Freenode](https://webchat.freenode.net/?randomnick=1&channels=enmasse&uio=d4)
+
+    ### Contributing
+
+    If you've got some great ideas and use cases for EnMasse, we would love to hear them!
+
+    * Raise issues on [GitHub](https://github.com/EnMasseProject/enmasse/issues).
+    * Read the [Hacking guide](https://github.com/EnMasseProject/enmasse/blob/master/HACKING.md) for details on how to build EnMasse.
+    * Fix issues by opening Pull Requests
+
+    ### License
+
+    EnMasse is licensed under the [Apache License, Version 2.0](https://github.com/EnMasseProject/enmasse/blob/master/LICENSE) license.
   version: ${MAVEN_VERSION}
   keywords: ['messaging', 'amqp', 'iot', 'mqtt']
   icon:
@@ -545,7 +552,7 @@ spec:
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
-        version: v1beta1
+        version: v1beta2
         kind: AddressSpacePlan
         name: addressspaceplans.admin.enmasse.io
         displayName: Address Space Plan
@@ -577,7 +584,7 @@ spec:
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
-        version: v1beta1
+        version: v1beta2
         kind: AddressPlan
         name: addressplans.admin.enmasse.io
         displayName: Address Plan
