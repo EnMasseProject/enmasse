@@ -10,6 +10,6 @@ spec:
   shortDescription: Creates a large queue backed by a dedicated broker.
   longDescription: Creates a large queue backed by a dedicated broker.
   addressType: queue
-  resouces:
+  resources:
     router: 0.1
     broker: 1.0

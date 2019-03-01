@@ -30,7 +30,7 @@ spec:
           type: object
           required:
             - addressSpaceType
-            - maxResources
+            - resourceLimits 
             - addressPlans
           properties:
             displayName:
@@ -41,14 +41,10 @@ spec:
               type: string
             longDescription:
               type: string
-            uuid:
-              type: string
             addressSpaceType:
               type: string
-            maxResources:
+            resourceLimits:
               type: object
-              required:
-                - aggregate
               properties:
                 aggregate:
                   type: number

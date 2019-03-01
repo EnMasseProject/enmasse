@@ -40,17 +40,15 @@ spec:
               type: string
             longDescription:
               type: string
-            uuid:
-              type: string
             addressType:
               type: string
             resources:
               type: object
               properties:
                 router:
-                  type: integer
+                  type: number
                 broker:
-                  type: integer
+                  type: number
         displayName:
           type: string
         displayOrder:
