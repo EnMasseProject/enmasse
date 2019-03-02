@@ -62,7 +62,6 @@
         <junit.jupiter.version>5.4.0</junit.jupiter.version>
         <junit.platform.runner.version>1.4.0</junit.platform.runner.version>
         <junit.platform.launcher.version>1.4.0</junit.platform.launcher.version>
-        <junit.platform.surefire.provider.version>1.3.2</junit.platform.surefire.provider.version>
         <artemis.version>2.6.4</artemis.version>
         <ngwebdriver.version>1.1.4</ngwebdriver.version>
         <paho.version>1.2.0</paho.version>
@@ -837,13 +836,6 @@
                       <vertx.logger-delegate-factory-class-name>io.vertx.core.logging.SLF4JLogDelegateFactory</vertx.logger-delegate-factory-class-name>
                     </systemPropertyVariables>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.platform</groupId>
-                        <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>${junit.platform.surefire.provider.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>com.mycila</groupId>

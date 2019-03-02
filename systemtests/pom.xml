@@ -124,13 +124,6 @@
                         <enmasse.version>${release.version}</enmasse.version>
                     </systemProperties>
                 </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.platform</groupId>
-                        <artifactId>junit-platform-surefire-provider</artifactId>
-                        <version>${junit.platform.surefire.provider.version}</version>
-                    </dependency>
-                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.owasp</groupId>
