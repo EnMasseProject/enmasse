@@ -12,6 +12,7 @@ import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
 import io.enmasse.address.model.*;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
+import io.enmasse.api.common.CheckedFunction;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.Status;
@@ -133,8 +134,7 @@ public class HttpAddressSpaceService {
                                       @PathParam("addressSpace") String addressSpaceName,
                                       @NotNull JsonPatch patch) throws Exception {
 
-        return doPatch(securityContext, namespace, addressSpaceName,
-                jsonNode -> patch.apply(jsonNode));
+        return doPatch(securityContext, namespace, addressSpaceName, patch::apply);
     }
 
     @PATCH
@@ -147,14 +147,13 @@ public class HttpAddressSpaceService {
                                       @NotNull JsonMergePatch patch) throws Exception {
 
 
-        return doPatch(securityContext, namespace, addressSpaceName,
-                jsonNode -> patch.apply(jsonNode));
+        return doPatch(securityContext, namespace, addressSpaceName, patch::apply);
     }
 
-    private Response doPatch(@Context SecurityContext securityContext, @PathParam("namespace") String namespace, @PathParam("addressSpace") String addressSpaceName,
+    private Response doPatch(@Context SecurityContext securityContext, String namespace, String addressSpaceName,
                              CheckedFunction<JsonNode, JsonNode, JsonPatchException> patcher) throws Exception {
         return doRequest("Error patching address space " + addressSpaceName, () -> {
-            verifyAuthorized(securityContext, namespace, ResourceVerb.update);
+            verifyAuthorized(securityContext, namespace, ResourceVerb.patch);
 
             Optional<AddressSpace> existing = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName);
 
@@ -175,7 +174,7 @@ public class HttpAddressSpaceService {
             AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
             addressSpaceResolver.validate(replacement);
             if (!addressSpaceApi.replaceAddressSpace(replacement)) {
-                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+                return Response.status(400).entity(Status.failureStatus(400,"AddressSpace", addressSpaceName)).build();
             }
             AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, replacement.getMetadata().getName()).orElse(replacement);
             return Response.ok().entity(removeSecrets(replaced)).build();
@@ -207,6 +206,10 @@ public class HttpAddressSpaceService {
             }
         } else {
             validateChanges(existing, addressSpace);
+
+            // Question - not sure of the intent here. This prevents the removal of any annotation (or label) which
+            // seem very restrictive. Why do we do this?  validateChanges have already ensured that the special
+            // anotatons and labels are preserved.
             Map<String, String> annotations = existing.getMetadata().getAnnotations();
             if (annotations == null) {
                 annotations = new HashMap<>();
@@ -463,10 +466,4 @@ public class HttpAddressSpaceService {
                                 .build())))
                 .collect(Collectors.toList());
     }
-
-    @FunctionalInterface
-    public interface CheckedFunction<T, R, E extends Throwable> {
-        R apply(T t) throws E;
-    }
-
 }

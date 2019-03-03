@@ -248,7 +248,7 @@ public class HttpAddressSpaceServiceTest {
     }
 
     @Test
-    public void testJsonPatch_RFC6902() throws Exception {
+    public void jsonPatch_RFC6902() throws Exception {
         addressSpaceApi.createAddressSpace(a1);
 
         final JsonPatch patch = mapper.readValue("[{\"op\":\"add\",\"path\":\"/metadata/annotations/fish\",\"value\":\"dorado\"}]", JsonPatch.class);
@@ -259,7 +259,7 @@ public class HttpAddressSpaceServiceTest {
     }
 
     @Test
-    public void testJsonMergePatch_RFC7386() throws Exception {
+    public void jsonMergePatch_RFC7386() throws Exception {
         addressSpaceApi.createAddressSpace(a1);
 
         final JsonMergePatch mergePatch = mapper.readValue("{\"metadata\":{\"annotations\":{\"fish\":\"dorado\"}}}\n", JsonMergePatch.class);
@@ -270,7 +270,7 @@ public class HttpAddressSpaceServiceTest {
     }
 
     @Test
-    public void testPatchAddressSpaceNotFound() throws Exception {
+    public void patchAddressSpaceNotFound() throws Exception {
         final JsonPatch patch = mapper.readValue("[{\"op\":\"add\",\"path\":\"/metadata/annotations/fish\",\"value\":\"dorado\"}]", JsonPatch.class);
 
         Response response = addressSpaceService.patchAddressSpace(securityContext, "myns", "unknown", patch);
@@ -278,7 +278,7 @@ public class HttpAddressSpaceServiceTest {
     }
 
     @Test
-    public void testPatchNameIgnored() throws Exception {
+    public void patchImmutable() throws Exception {
         addressSpaceApi.createAddressSpace(a1);
 
         final JsonPatch patch = mapper.readValue("[" +

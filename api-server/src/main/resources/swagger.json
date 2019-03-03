@@ -733,6 +733,48 @@
                     }
                 }
             },
+            "patch": {
+                "tags": [
+                    "enmasse_v1beta1",
+                    "addresses"
+                ],
+                "description": "patches (RFC6902) the specified Address",
+                "operationId": "patchesEnmasseV1alpha1NamespacedAddress",
+                "consumes": [
+                    "application/json-patch+json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of Address to replace",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/JsonPatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.v1beta1.Address"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
             "delete": {
                 "tags": [
                     "enmasse_v1beta1",
@@ -940,6 +982,49 @@
                     },
                     "201": {
                         "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            },
+            "patch": {
+                "tags": [
+                    "enmasse_v1beta1",
+                    "auth",
+                    "user"
+                ],
+                "description": "patches (RFC6902) the specified MessagingUser",
+                "operationId": "patchesEnmasseV1alpha1NamespacedMessagingUser",
+                "consumes": [
+                    "application/json-patch+json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "path",
+                        "description": "Name of MessagingUser to replace. Must include addressSpace and dot separator in the name (that is, 'myspace.user1'",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/JsonPatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/io.enmasse.user.v1beta1.MessagingUser"
                         }

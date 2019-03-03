@@ -20,7 +20,12 @@ import java.util.concurrent.Callable;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
+import io.enmasse.address.model.AddressSpace;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +45,7 @@ import io.enmasse.user.model.v1.UserList;
 import io.enmasse.user.model.v1.UserSpecBuilder;
 
 public class HttpUserServiceTest {
+    private ObjectMapper mapper = new ObjectMapper();
     private HttpUserService userService;
     private TestAddressSpaceApi addressSpaceApi;
     private TestUserApi userApi;
@@ -383,4 +389,46 @@ public class HttpUserServiceTest {
         assertThat(response.getStatus(), is(200));
         assertThat(userApi.listUsers("ns1").getItems().size(), is(0));
     }
+
+    @Test
+    public void jsonPatch_RFC6902() throws Exception {
+        final JsonPatch patch = mapper.readValue("[{\"op\":\"add\",\"path\":\"/spec/authentication/password\",\"value\":\"dorado\"}]", JsonPatch.class);
+
+        Response response = userService.patchUser(securityContext, u1.getMetadata().getNamespace(), u1.getMetadata().getName(), patch);
+        assertThat(response.getStatus(), is(200));
+        assertThat(((User) response.getEntity()).getSpec().getAuthentication().getPassword(), is("dorado"));
+    }
+
+    @Test
+    public void jsonMergePatch_RFC7386() throws Exception {
+        final JsonPatch patch = mapper.readValue("[{\"op\":\"add\",\"path\":\"/spec/authentication/password\",\"value\":\"dorado\"}]", JsonPatch.class);
+
+        Response response = userService.patchUser(securityContext, u1.getMetadata().getNamespace(), u1.getMetadata().getName(), patch);
+        assertThat(response.getStatus(), is(200));
+        assertThat(((User) response.getEntity()).getSpec().getAuthentication().getPassword(), is("dorado"));
+    }
+
+    @Test
+    public void patchUserNotFound() throws Exception {
+        final JsonPatch patch = mapper.readValue("[{\"op\":\"add\",\"path\":\"/metadata/annotations/fish\",\"value\":\"dorado\"}]", JsonPatch.class);
+
+        Response response = userService.patchUser(securityContext, "myns", "myspace.unknown", patch);
+        assertThat(response.getStatus(), is(404));
+    }
+
+    @Test
+    public void patchImmutable() throws Exception {
+
+        final JsonPatch patch = mapper.readValue("[" +
+                "{\"op\":\"replace\",\"path\":\"/metadata/name\",\"value\":\"newname\"}," +
+                "{\"op\":\"replace\",\"path\":\"/metadata/namespace\",\"value\":\"newnamespace\"}" +
+                "]", JsonPatch.class);
+
+        Response response = userService.patchUser(securityContext, u1.getMetadata().getNamespace(), u1.getMetadata().getName(), patch);
+        assertThat(response.getStatus(), is(200));
+        User updated = (User) response.getEntity();
+        assertThat(updated.getMetadata().getName(), is(u1.getMetadata().getName()));
+        assertThat(updated.getMetadata().getNamespace(), is(u1.getMetadata().getNamespace()));
+    }
+
 }
