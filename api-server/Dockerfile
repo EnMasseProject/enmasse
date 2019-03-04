@@ -1,5 +1,7 @@
 FROM enmasseproject/java-base:8-11
 
+RUN yum -y install openssl && yum -y clean all
+
 ARG version
 ARG maven_version
 ARG commit
