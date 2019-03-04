@@ -7,5 +7,7 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 
 public interface Controller {
+    void beforeAll();
     AddressSpace handle(AddressSpace addressSpace) throws Exception;
+    void afterAll();
 }

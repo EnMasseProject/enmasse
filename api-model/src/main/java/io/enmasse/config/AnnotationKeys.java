@@ -33,4 +33,8 @@ public interface AnnotationKeys {
     String OPENSHIFT_SERVING_CERT_SECRET_NAME = "service.alpha.openshift.io/serving-cert-secret-name";
     String APPLIED_PLAN = "enmasse.io/applied-plan";
     String OAUTH_URL = "enmasse.io/oauth-url";
+    String IDENTITY_PROVIDER_URL = "enmasse.io/identity-provider-url";
+    String IDENTITY_PROVIDER_CLIENT_ID = "enmasse.io/identity-provider-client-id";
+    String IDENTITY_PROVIDER_CLIENT_SECRET = "enmasse.io/identity-provider-client-secret";
+    String BROWSER_SECURITY_HEADERS = "enmasse.io/browser-security-headers";
 }

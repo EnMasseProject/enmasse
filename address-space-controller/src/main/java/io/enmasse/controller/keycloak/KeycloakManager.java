@@ -3,12 +3,17 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.keycloak.controller;
+package io.enmasse.controller.keycloak;
 
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.controller.Controller;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.Watcher;
 import io.enmasse.user.api.UserApi;
+import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
@@ -16,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,14 +29,16 @@ import static io.enmasse.user.model.v1.Operation.recv;
 import static io.enmasse.user.model.v1.Operation.send;
 import static io.enmasse.user.model.v1.Operation.view;
 
-public class KeycloakManager implements Watcher<AddressSpace>
+public class RealmController implements Controller
 {
-    private static final Logger log = LoggerFactory.getLogger(KeycloakManager.class);
+    private static final Logger log = LoggerFactory.getLogger(RealmController.class);
     private static final String MASTER_REALM = "master";
     private final KeycloakApi keycloak;
-    private final KubeApi kube;
+    private final Map<String, KeycloakRealmParams> realmState = new ConcurrentHashMap<>();
+    private volatile Set<String> currentRealmNames = new HashSet<>();
     private final UserApi userApi;
-    private KeycloakRealmParams lastParams;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
+    private final KeycloakFactory keycloakFactory;
 
     public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi) {
         this.keycloak = keycloak;
@@ -71,34 +79,40 @@ public class KeycloakManager implements Watcher<AddressSpace>
     }
 
     @Override
-    public void onUpdate(List<AddressSpace> addressSpaces) throws Exception {
-        KeycloakRealmParams keycloakRealmParams = this.kube.getIdentityProviderParams();
+    public void beforeAll() {
+        currentRealmNames = keycloak.getRealmNames();
+    }
+
+    @Override
+    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
+        AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService())
+                .orElse(null);
+        if (authenticationService == null) {
+            log.warn("Error finding authentication service for address space {}, definition: {}.", addressSpace.getMetadata().getName(), addressSpace);
+            return addressSpace;
+        }
+
+        if (!"standard".equals(authenticationService.getMetadata().getName())) {
+            log.debug("Skipping operations on address space {}, not using standard authentication service", addressSpace.getMetadata().getName());
+            return addressSpace;
+        }
+
+        if (authenticationService.getSpec().getRealm() == null) {
+            log.debug("Realm specified in authentication service, not performing any per-address space realm operations");
+            return addressSpace;
+        }
+
+        KeycloakRealmParams keycloakRealmParams = KeycloakRealmParams.fromAuthenticationService(authenticationService);
+        String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+        KeycloakRealmParams lastParams = realmState.get(realmName);
         if (!Objects.equals(lastParams, keycloakRealmParams)) {
             log.info("Identity provider params: {}", keycloakRealmParams);
-            updateExistingRealms(keycloakRealmParams);
-            lastParams = keycloakRealmParams;
+            keycloak.updateRealm(realmName, keycloakRealmParams);
+            realmState.put(realmName, keycloakRealmParams);
         }
 
-        Map<String, AddressSpace> standardAuthSvcSpaces =
-                addressSpaces.stream()
-                             .filter(x -> x.getSpec().getAuthenticationService().getType() == AuthenticationServiceType.STANDARD && x.getSpec().getEndpoints() != null)
-                             .collect(Collectors.toMap(
-                                     addressSpace -> Optional
-                                         .ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME))
-                                         .orElse(addressSpace.getMetadata().getName()),
-                                     Function.identity()));
-
-        Set<String> realmNames = keycloak.getRealmNames();
-        log.info("Actual: {}, Desired: {}", realmNames, standardAuthSvcSpaces.keySet());
-        for(String realmName : realmNames) {
-            if(standardAuthSvcSpaces.remove(realmName) == null && !MASTER_REALM.equals(realmName)) {
-                log.info("Deleting realm {}", realmName);
-                keycloak.deleteRealm(realmName);
-            }
-        }
-        for(Map.Entry<String, AddressSpace> entry : standardAuthSvcSpaces.entrySet()) {
-            AddressSpace addressSpace = entry.getValue();
-            String realmName = entry.getKey();
+        // TODO: Ideally cache or add a 'prepare' step to all controllers
+        if (!currentRealmNames.contains(realmName)) {
             log.info("Creating realm {}", realmName);
             String userName = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY);
             String userId = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY_UID);
@@ -140,12 +154,8 @@ public class KeycloakManager implements Watcher<AddressSpace>
         }
     }
 
-    private void updateExistingRealms(KeycloakRealmParams updatedParams) {
-        keycloak.getRealmNames().stream()
-                .filter(name -> !name.equals(MASTER_REALM))
-                .forEach(name -> {
-                    log.info("Updating realm {}", name);
-                    keycloak.updateRealm(name, updatedParams);
-                });
+    @Override
+    public void afterAll(Set<AddressSpace> addressSpaces) {
+
     }
 }

@@ -235,7 +235,6 @@ public class KeycloakController {
             log.info("{} already exists, not generating", getKeycloakCredentialsSecretName(env));
         }
 
-        final String keycloakConfigName = getKeycloakConfigName(env);
         final String oauthClientName = getOauthClientName(env, client.getNamespace());
         String oauthClientSecret = null;
         boolean oauthClientAccessible = false;
@@ -268,12 +267,12 @@ public class KeycloakController {
             } catch (KubernetesClientException e) {
                 if (String.valueOf(e.getMessage()).toLowerCase().contains("forbidden!")) {
                     String message = "Unable to get or create the oauthclient '{}' owing to cluster access restrictions." +
-                            " Ensure that settings within the configmap '{}' match those of the oauthclient" +
+                            " Ensure that settings within the 'standard' AuthenticationService match those of the oauthclient" +
                             " supplied by the cluster's admin. {}";
                     if (log.isDebugEnabled()) {
-                        log.debug(message, oauthClientName, keycloakConfigName, e.getMessage(), e);
+                        log.debug(message, oauthClientName, e.getMessage(), e);
                     } else {
-                        log.warn(message, oauthClientName, keycloakConfigName, e.getMessage());
+                        log.warn(message, oauthClientName, e.getMessage());
                     }
                 } else {
                     throw e;
@@ -281,62 +280,8 @@ public class KeycloakController {
             }
         }
 
-        ConfigMap existingConfig = client.configMaps().withName(keycloakConfigName).get();
+        AuthenticationService existingServiceRef = client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).withName("standard").get();
 
-        if (existingConfig == null) {
-            ConfigMapBuilder configMapBuilder = new ConfigMapBuilder()
-                    .editOrNewMetadata()
-                    .withName(keycloakConfigName)
-                    .addToLabels("app", "enmasse")
-                    .endMetadata();
-
-            if (isOpenShift) {
-                String keycloakOauthUrl = getKeycloakAuthUrl(client, env);
-                configMapBuilder.addToData("oauthUrl", keycloakOauthUrl);
-
-                String openshiftOauthUrl = getOpenShiftOauthUrl(client);
-                if (openshiftOauthUrl == null || openshiftOauthUrl.contains("https://localhost:8443") || openshiftOauthUrl.contains("https://127.0.0.1:8443")) {
-                    openshiftOauthUrl = String.format("https://%s:%s", env.get("KUBERNETES_SERVICE_HOST"), env.get("KUBERNETES_SERVICE_PORT"));
-                }
-                configMapBuilder.addToData("identityProviderUrl", openshiftOauthUrl);
-            }
-
-            if (oauthClientAccessible) {
-                configMapBuilder.addToData("identityProviderClientId", oauthClientName);
-                configMapBuilder.addToData("identityProviderClientSecret", oauthClientSecret);
-            } else {
-                log.warn("Unable to initialize identityProviderClientId and identityProviderClientSecret " +
-                        "on config map {} as these details cannot be determined automatically.", keycloakConfigName);
-            }
-
-            configMapBuilder.addToData("hostname", "standard-authservice");
-            configMapBuilder.addToData("port", "5671");
-            configMapBuilder.addToData("caSecretName", getKeycloakCertSecretName(env));
-
-            client.configMaps().createOrReplace(configMapBuilder.build());
-            log.debug("Created config map: {} ", keycloakConfigName);
-        } else if (oauthClientAccessible) {
-            boolean updateRequired = false;
-            log.info("{} already exists, not generating", keycloakConfigName);
-            Map<String, String> updateMap = new HashMap<>(existingConfig.getData());
-            if (!oauthClientName.equals(updateMap.get("identityProviderClientId"))) {
-                updateMap.put("identityProviderClientId", oauthClientName);
-                log.info("Updating identityProviderClientId: {}", oauthClientName);
-                updateRequired = true;
-            }
-            if (!oauthClientSecret.equals(updateMap.get("identityProviderClientSecret"))) {
-                updateMap.put("identityProviderClientSecret", oauthClientSecret);
-                log.info("Updating identityProviderClientSecret");
-                updateRequired = true;
-            }
-
-            if (updateRequired) {
-                existingConfig.setData(updateMap);
-                client.configMaps().createOrReplace(existingConfig);
-            }
-        }
-
-        AuthenticationService existingServiceRef = client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).withName("standard").get();
         if (existingServiceRef == null) {
 
             AuthenticationServiceBuilder builder = new AuthenticationServiceBuilder()
@@ -353,10 +298,43 @@ public class KeycloakController {
             if (isOpenShift) {
                 String keycloakOauthUrl = getKeycloakAuthUrl(client, env);
                 builder.editMetadata().addToAnnotations(AnnotationKeys.OAUTH_URL, keycloakOauthUrl);
+                                String openshiftOauthUrl = getOpenShiftOauthUrl(client);
+                if (openshiftOauthUrl == null || openshiftOauthUrl.contains("https://localhost:8443") || openshiftOauthUrl.contains("https://127.0.0.1:8443")) {
+                    openshiftOauthUrl = String.format("https://%s:%s", env.get("KUBERNETES_SERVICE_HOST"), env.get("KUBERNETES_SERVICE_PORT"));
+                }
+                builder.editMetadata().addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_URL, openshiftOauthUrl);
             }
 
+            if (oauthClientAccessible) {
+                builder.editMetadata().addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID, oauthClientName);
+                builder.editMetadata().addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET, oauthClientSecret);
+            } else {
+                log.warn("Unable to initialize identityProviderClientId and identityProviderClientSecret " +
+                        "on authentication service 'standard' as these details cannot be determined automatically.");
+            }
+
+
+            AuthenticationService authenticationService = builder.build();
             client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).create(
-                    builder.build());
+                    authenticationService);
+            log.debug("Created authentication service: {} ", authenticationService);
+        } else if (oauthClientAccessible) {
+            boolean updateRequired = false;
+            log.info("{} already exists, not generating", existingServiceRef.getMetadata().getName());
+            if (!oauthClientName.equals(existingServiceRef.getAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID))) {
+                existingServiceRef.putAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID, oauthClientName);
+                log.info("Updating identityProviderClientId: {}", oauthClientName);
+                updateRequired = true;
+            }
+            if (!oauthClientSecret.equals(existingServiceRef.getAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET))) {
+                existingServiceRef.putAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET, oauthClientSecret);
+                log.info("Updating identityProviderClientSecret");
+                updateRequired = true;
+            }
+
+            if (updateRequired) {
+                client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).createOrReplace(existingServiceRef);
+            }
         }
     }
 

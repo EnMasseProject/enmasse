@@ -2,7 +2,7 @@
  * Copyright 2017-2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.keycloak.controller;
+package io.enmasse.controller.keycloak;
 
 import io.enmasse.user.keycloak.KeycloakFactory;
 import org.keycloak.admin.client.resource.IdentityProviderResource;
@@ -26,7 +26,6 @@ public class Keycloak implements KeycloakApi {
     private static final String IDENTITY_PROVIDER_BASE_URL = "baseUrl";
 
     private final KeycloakFactory keycloakFactory;
-    private final Map<String, KeycloakRealmParams> realmState = new ConcurrentHashMap<>();
     private volatile org.keycloak.admin.client.Keycloak keycloak;
 
     public Keycloak(KeycloakFactory keycloakFactory) {

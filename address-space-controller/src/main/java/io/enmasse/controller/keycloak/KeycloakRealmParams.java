@@ -2,12 +2,12 @@
  * Copyright 2017-2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.keycloak.controller;
+package io.enmasse.controller.keycloak;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.client.KubernetesClient;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.config.AnnotationKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +32,14 @@ public class KeycloakRealmParams {
         this.browserSecurityHeaders = browserSecurityHeaders == null ? Collections.emptyMap() : new HashMap<>(browserSecurityHeaders);
     }
 
-    public static KeycloakRealmParams fromKube(KubernetesClient client, String configName) {
+    public static KeycloakRealmParams fromAuthenticationService(AuthenticationService authenticationService) {
 
-        ConfigMap config = client.configMaps().withName(configName).get();
-        String identityProviderUrl = config.getData().get("identityProviderUrl");
-        String identityProviderClientId = config.getData().get("identityProviderClientId");
-        String identityProviderClientSecret = config.getData().get("identityProviderClientSecret");
+        String identityProviderUrl = authenticationService.getAnnotation(AnnotationKeys.IDENTITY_PROVIDER_URL);
+        String identityProviderClientId = authenticationService.getAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID);
+        String identityProviderClientSecret = authenticationService.getAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET);
 
         Map<String, String> browserSecurityHeaders = new HashMap<>();
-        String browserSecurityHeadersString = config.getData().get("browserSecurityHeaders");
+        String browserSecurityHeadersString = authenticationService.getAnnotation(AnnotationKeys.BROWSER_SECURITY_HEADERS);
         if (browserSecurityHeadersString != null) {
             try {
                 ObjectNode data = mapper.readValue(browserSecurityHeadersString, ObjectNode.class);
