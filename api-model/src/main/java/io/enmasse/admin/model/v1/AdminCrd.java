@@ -67,4 +67,8 @@ public class AdminCrd {
         return STANDARD_INFRA_CONFIG_CRD;
     }
 
+    public static CustomResourceDefinition authenticationServices() {
+        return AUTHENTICATION_SERVICE_CRD;
+    }
+
 }

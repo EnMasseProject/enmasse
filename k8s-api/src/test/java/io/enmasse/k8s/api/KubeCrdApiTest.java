@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class AddressSpacePlanApiTest extends JULInitializingTest {
+class KubeCrdApiTest extends JULInitializingTest {
 
     private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
 
@@ -41,7 +41,10 @@ class AddressSpacePlanApiTest extends JULInitializingTest {
     void testNotifiesExisting() throws Exception {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
         CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
-        AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(client, client.getNamespace(), crd);
+        CrdApi<AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(client, client.getNamespace(), crd,
+                AddressSpacePlan.class,
+                AddressSpacePlanList.class,
+                DoneableAddressSpacePlan.class);
 
         client.customResources(crd, AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class)
                 .createNew()
@@ -55,7 +58,7 @@ class AddressSpacePlanApiTest extends JULInitializingTest {
                 .done();
 
         CompletableFuture<List<AddressSpacePlan>> promise = new CompletableFuture<>();
-        try (Watch watch = addressSpacePlanApi.watchAddressSpacePlans(items -> {
+        try (Watch watch = addressSpacePlanApi.watchResources(items -> {
             if (!items.isEmpty()) {
                 promise.complete(items);
             }
@@ -70,10 +73,13 @@ class AddressSpacePlanApiTest extends JULInitializingTest {
     void testNotifiesCreated() throws Exception {
         NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
         CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
-        AddressSpacePlanApi addressSpacePlanApi = new KubeAddressSpacePlanApi(client, client.getNamespace(), crd);
+        CrdApi<AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(client, client.getNamespace(), crd,
+                AddressSpacePlan.class,
+                AddressSpacePlanList.class,
+                DoneableAddressSpacePlan.class);
 
         CompletableFuture<List<AddressSpacePlan>> promise = new CompletableFuture<>();
-        try (Watch watch = addressSpacePlanApi.watchAddressSpacePlans(items -> {
+        try (Watch watch = addressSpacePlanApi.watchResources(items -> {
             if (!items.isEmpty()) {
                 promise.complete(items);
             }

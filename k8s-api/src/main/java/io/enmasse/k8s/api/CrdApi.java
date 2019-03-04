@@ -4,10 +4,8 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.admin.model.v1.AddressPlan;
-
 import java.time.Duration;
 
-public interface AddressPlanApi {
-    Watch watchAddressPlans(Watcher<AddressPlan> watcher, Duration resyncInterval);
+public interface CrdApi<T> {
+    Watch watchResources(Watcher<T> watcher, Duration resyncInterval);
 }
