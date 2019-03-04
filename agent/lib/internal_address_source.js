@@ -339,10 +339,14 @@ function extract_plan_details (plan) {
 
 AddressSource.prototype.get_address_types = function () {
     var options = this.config;
-    var address_space_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta1/namespaces/', 'addressspaceplans/' + this.config.ADDRESS_SPACE_PLAN, options);
-    var address_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta1/namespaces/', 'addressplans', options);
+    var address_space_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta2/namespaces/', 'addressspaceplans/' + this.config.ADDRESS_SPACE_PLAN, options);
+    var address_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta2/namespaces/', 'addressplans', options);
     return kubernetes.get_raw(address_space_plan_path, options).then(function (address_space_plan) {
-            return address_space_plan.addressPlans;
+            if (address_space_plan.spec !== undefined) {
+                return address_space_plan.spec.addressPlans;
+            } else {
+                return address_space_plan.addressPlans;
+            }
         }).then(function (supported_plans) {
             return kubernetes.get_raw(address_plan_path, options).then(function (address_plans) {
                 // remove plans not part of address space plan
