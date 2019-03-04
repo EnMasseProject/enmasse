@@ -10,7 +10,38 @@ import (
 
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func checkLabels(t *testing.T, component string, name string, labels map[string]string) {
+	if labels["app"] != "enmasse" {
+		t.Error("Metadata 'app' label is not 'enmasse'")
+	}
+
+	if labels["component"] != component {
+		t.Errorf("Metadata 'component' label is not '%s'", component)
+	}
+
+	if labels["name"] != name {
+		t.Errorf("Metadata 'name' label is not '%s'", name)
+	}
+}
+
+func checkSelector(t *testing.T, component string, name string, selector *metav1.LabelSelector) {
+	if selector == nil {
+		t.Fatal("Null selector")
+	}
+
+	checkLabels(t, component, name, selector.MatchLabels)
+}
+
+func TestApplyDeploymentDefaults(t *testing.T) {
+	d := appv1.Deployment{}
+	ApplyDeploymentDefaults(&d, "mycomponent", "myname")
+
+	checkLabels(t, "mycomponent", "myname", d.ObjectMeta.Labels)
+	checkSelector(t, "mycomponent", "myname", d.Spec.Selector)
+}
 
 func TestAddContainer(t *testing.T) {
 	d := appv1.Deployment{}

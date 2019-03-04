@@ -13,7 +13,6 @@ package:
 build/operatorImageMap.yaml:
 	echo "" > "$@"
 	
-	echo "enmasse-controller-manager: $(ENMASSE_CONTROLLER_MANAGER_IMAGE)" >> "$@"
 	echo "iot-auth-service: $(IOT_AUTH_SERVICE_IMAGE)" >> "$@"
 	echo "iot-device-registry: $(IOT_DEVICE_REGISTRY_IMAGE)" >> "$@"
 	echo "iot-gc: $(IOT_GC_IMAGE)" >> "$@"
@@ -21,7 +20,9 @@ build/operatorImageMap.yaml:
 	echo "iot-mqtt-adapter: $(IOT_MQTT_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-tenant-service: $(IOT_TENANT_SERVICE_IMAGE)" >> "$@"
 	echo "qdr-proxy-configurator: $(QDR_PROXY_CONFIGURATOR_IMAGE)" >> "$@"
-	echo "qdrouterd-base: $(QDROUTERD_BASE_IMAGE)" >> "$@"
+	echo "none-authservice: $(NONE_AUTHSERVICE_IMAGE)" >> "$@"
+	echo "keycloak: $(KEYCLOAK_IMAGE)" >> "$@"
+	echo "keycloak-plugin: $(KEYCLOAK_PLUGIN_IMAGE)" >> "$@"
 
 test:
 

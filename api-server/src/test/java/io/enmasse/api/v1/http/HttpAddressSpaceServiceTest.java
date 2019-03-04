@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import javax.ws.rs.core.MediaType;
@@ -26,6 +27,9 @@ import javax.ws.rs.core.UriInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -47,15 +51,25 @@ public class HttpAddressSpaceServiceTest {
     private AddressSpace a2;
     private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
-    private HostResolver hostResolver;
+    private AuthenticationServiceRegistry authenticationServiceRegistry;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
-        hostResolver = mock(HostResolver.class);
-        when(hostResolver.isHostResolveable(any())).thenReturn(true);
-        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(), Clock.systemUTC(), hostResolver);
+        authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        AuthenticationService authenticationService = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .endMetadata()
+                .withNewStatus()
+                .withHost("example")
+                .withPort(5671)
+                .endStatus()
+                .build();
+        when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
+        when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
+        addressSpaceService = new HttpAddressSpaceService(addressSpaceApi, new TestSchemaProvider(), Clock.systemUTC(), authenticationServiceRegistry);
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
         a1 = new AddressSpaceBuilder()
@@ -213,8 +227,8 @@ public class HttpAddressSpaceServiceTest {
     }
 
     @Test
-    public void testCreateUnresolvableAuthService() {
-        when(hostResolver.isHostResolveable(any())).thenReturn(false);
+    public void testCreateUnresolvableAuthenticationService() {
+        when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.empty());
         UriInfo mockUriInfo = mock(UriInfo.class);
         Response response = invoke(() -> addressSpaceService.createAddressSpace(securityContext, mockUriInfo, a1.getMetadata().getNamespace(), a1));
         assertThat(response.getStatus(), is(500));

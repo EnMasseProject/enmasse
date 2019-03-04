@@ -9,13 +9,10 @@ import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
-import io.enmasse.k8s.api.CachingSchemaProvider;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
-import io.enmasse.k8s.api.KubeSchemaApi;
-import io.enmasse.k8s.api.SchemaApi;
+import io.enmasse.k8s.api.*;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
+import io.enmasse.user.api.UserApiWithFallback;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.user.keycloak.KeycloakFactory;
@@ -63,13 +60,15 @@ public class ServiceBroker extends AbstractVerticle {
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
+        AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
+
         ensureRouteExists(client, options);
         ensureCredentialsExist(client, options);
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
-        UserApi userApi = createUserApi(options);
+        UserApi userApi = createUserApi(options, authenticationServiceRegistry);
 
         ConsoleProxy consoleProxy = addressSpace -> {
             Route route = client.routes().withName(options.getConsoleProxyRouteName()).get();
@@ -103,18 +102,9 @@ public class ServiceBroker extends AbstractVerticle {
         }
     }
 
-    private UserApi createUserApi(ServiceBrokerOptions options) {
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client,
-            options.getStandardAuthserviceConfigName(),
-            options.getStandardAuthserviceCredentialsSecretName(),
-            options.getStandardAuthserviceCertSecretName());
-        if (keycloakFactory.isKeycloakAvailable()) {
-            log.info("Using Keycloak for User API");
-            return new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
-        } else {
-            log.info("Using Null for User API");
-            return new NullUserApi();
-        }
+    private UserApi createUserApi(ServiceBrokerOptions options, AuthenticationServiceRegistry authenticationServiceRegistry) {
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client, authenticationServiceRegistry);
+        return new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, Clock.systemUTC()), new NullUserApi());
     }
 
     private static void ensureRouteExists(NamespacedOpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {

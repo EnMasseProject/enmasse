@@ -148,7 +148,7 @@ func appendTrustStoresForSecretCertificates(container *corev1.Container, env []s
 		container.Env = append(container.Env, corev1.EnvVar{Name: e, Value: "/etc/tls-service-ca/service-ca.crt"})
 	}
 
-	install.AppendVolumeMountSimple(container, "tls-service-ca", "/etc/tls-service-ca", true)
+	install.ApplyVolumeMountSimple(container, "tls-service-ca", "/etc/tls-service-ca", true)
 
 	return nil
 }

@@ -15,8 +15,6 @@ public final class AddressSpaceControllerOptions {
 
     private File templateDir;
     private File resourcesDir;
-    private NoneAuthServiceInfo noneAuthService;
-    private StandardAuthServiceInfo standardAuthService;
     private boolean enableEventLogger;
     private boolean exposeEndpointsByDefault;
     private boolean installDefaultResources;
@@ -37,10 +35,6 @@ public final class AddressSpaceControllerOptions {
 
     public File getTemplateDir() {
         return templateDir;
-    }
-
-    public Optional<StandardAuthServiceInfo> getStandardAuthService() {
-        return Optional.ofNullable(standardAuthService);
     }
 
     public boolean isEnableEventLogger() {
@@ -83,7 +77,6 @@ public final class AddressSpaceControllerOptions {
         }
         options.setResourcesDir(resourcesDir);
 
-        options.setStandardAuthService(getStandardAuthService(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
         options.setStandardAuthserviceConfigName(getEnv(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
         options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
         options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
@@ -110,16 +103,6 @@ public final class AddressSpaceControllerOptions {
         return options;
     }
 
-    private static Optional<StandardAuthServiceInfo> getStandardAuthService(Map<String, String> env, String configMapEnv) {
-        return getEnv(env, configMapEnv).map(e -> {
-            if (e.isEmpty()) {
-                return null;
-            } else {
-                return new StandardAuthServiceInfo(e);
-            }
-        });
-    }
-
     private static Optional<String> getEnv(Map<String, String> env, String envVar) {
         return Optional.ofNullable(env.get(envVar));
     }
@@ -142,14 +125,6 @@ public final class AddressSpaceControllerOptions {
 
     public void setTemplateDir(File templateDir) {
         this.templateDir = templateDir;
-    }
-
-    public void setNoneAuthService(NoneAuthServiceInfo noneAuthService) {
-        this.noneAuthService = noneAuthService;
-    }
-
-    public void setStandardAuthService(StandardAuthServiceInfo standardAuthService) {
-        this.standardAuthService = standardAuthService;
     }
 
     public void setEnableEventLogger(boolean enableEventLogger) {
@@ -213,8 +188,6 @@ public final class AddressSpaceControllerOptions {
         return "AddressSpaceControllerOptions{" +
                 "templateDir=" + templateDir +
                 ", resourcesDir=" + resourcesDir +
-                ", noneAuthService=" + noneAuthService +
-                ", standardAuthService=" + standardAuthService +
                 ", enableEventLogger=" + enableEventLogger +
                 ", exposeEndpointsByDefault=" + exposeEndpointsByDefault +
                 ", environment='" + environment + '\'' +

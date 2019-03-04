@@ -1,0 +1,62 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring.adoc
+
+[id='con-external-authentication-service-api-{context}']
+= External authentication service API
+
+An `external` authentication service must implement an AMQP SASL handshake, read the connection
+properties of the client, and respond with the expected connection properties containing the
+authentication and authorization information. The authentication service is queried by the address
+space components such as the router and broker, whenever a new connection is established to the
+messaging endpoints.
+
+== Authentication
+
+The requested identity of the client can be read from the SASL handshake `username`. The
+implementation can then authenticate the user.
+
+The authenticated identity will be returned in the `authenticated-identity` map with the following
+key/values. While this example uses JSON, it should be set as an AMQP map on the connection
+property.
+
+[source,json,options="nowrap"]
+----
+{
+    "authenticated-identity": {
+        "sub": "myid",
+        "preferred_username": "myuser"
+    }
+}
+----
+
+== Authorization
+
+Authorization is a capability that can be requested by the client using the `ADDRESS-AUTHZ`
+connection capability. If this is set on the connection, the server responds with this
+capability in the offered capabilities, and add the authorization information to the connection
+properties.
+
+The authorization information is stored within a map that correlates the address to a list of operations allowed on
+that address. The following connection property information contains the policies for the addresses
+`myqueue` and `mytopic`:
+
+[source,json,options="nowrap"]
+----
+{
+    "address-authz": {
+        "myqueue": [
+          "send",
+          "recv"
+        ],
+        "mytopic": [
+          "send"
+        ]
+    }
+}
+----
+
+The allowed operations are:
+
+* `send` - User can send to the address.
+* `recv` - User can receive from the address.

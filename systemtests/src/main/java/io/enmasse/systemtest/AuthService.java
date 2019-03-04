@@ -4,11 +4,33 @@
  */
 package io.enmasse.systemtest;
 
-public enum AuthService {
-    NONE, STANDARD;
+public class AuthService {
+    private String type;
+    private String name;
 
-    @Override
-    public String toString() {
-        return super.toString().toLowerCase();
+    public AuthService(String type, String name) {
+        this.type = type;
+        this.name = name;
     }
+
+    public AuthService() {}
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public static AuthService NONE = new AuthService("none", "none-authservice");
+    public static AuthService STANDARD = new AuthService("standard", "standard-authservice");
 }

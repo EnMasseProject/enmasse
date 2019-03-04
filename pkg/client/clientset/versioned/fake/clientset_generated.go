@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -9,6 +9,8 @@ package fake
 
 import (
 	clientset "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
+	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1"
+	fakeadminv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1/fake"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	fakeenmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1/fake"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1alpha1"
@@ -63,6 +65,16 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 }
 
 var _ clientset.Interface = &Clientset{}
+
+// AdminV1beta1 retrieves the AdminV1beta1Client
+func (c *Clientset) AdminV1beta1() adminv1beta1.AdminV1beta1Interface {
+	return &fakeadminv1beta1.FakeAdminV1beta1{Fake: &c.Fake}
+}
+
+// Admin retrieves the AdminV1beta1Client
+func (c *Clientset) Admin() adminv1beta1.AdminV1beta1Interface {
+	return &fakeadminv1beta1.FakeAdminV1beta1{Fake: &c.Fake}
+}
 
 // EnmasseV1beta1 retrieves the EnmasseV1beta1Client
 func (c *Clientset) EnmasseV1beta1() enmassev1beta1.EnmasseV1beta1Interface {

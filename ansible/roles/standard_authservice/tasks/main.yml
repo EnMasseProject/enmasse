@@ -7,4 +7,25 @@
   shell: oc label secret keycloak-credentials -n {{ namespace }} app=enmasse
   when: secret_exists.rc == 0
 - name: Apply the Standard Authentication Service configuration
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/standard-authservice
+  shell:
+    cmd: |
+      cat <<EOF | oc apply -f -
+      apiVersion: admin.enmasse.io/v1beta1
+      kind: AuthenticationService
+      metadata:
+        name: standard-authservice
+        labels:
+          app: enmasse
+      spec:
+        type: standard
+        standard:
+          routeName: keycloak
+          serviceName: standard-authservice
+          deploymentName: keycloak
+          credentialsSecret:
+            name: keycloak-credentials
+          storage:
+            type: persistent-claim
+            claimName: keycloak-data
+            size: 5Gi
+      EOF

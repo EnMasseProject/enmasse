@@ -7,6 +7,21 @@
 
 .Procedure
 
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service admin
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u admin
+----
+
+. Select namespace where {ProductName} is installed:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 . Create a certificate to use with the `none` authentication service. For testing purposes, you can create a self-signed certificate:
 +
@@ -22,14 +37,40 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-au
 ----
 {cmdcli} create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
 ----
+
+. Create an `AuthenticationService` definition:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: none-authservice
+spec:
+  type: none
+  none:
+    certificateSecret:
+      name: none-authservice-cert
+----
 endif::[]
 
-. Create the `none` authentication service:
+ifeval::["{cmdcli}" == "oc"]
+. Create an `AuthenticationService` definition:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: none-authservice
+spec:
+  type: none
+----
+endif::[]
+
+. Deploy the authentication service:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f ./install/components/none-authservice
+{cmdcli} create -f none-authservice.yaml
 ----
-
-
-

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -54,4 +55,32 @@ func detectOpenshift() bool {
 	log.V(2).Info(fmt.Sprintf("Body: %v", string(body)))
 
 	return err == nil
+}
+
+func OpenshiftUri() (string, error) {
+
+	config, err := config.GetConfig()
+	if err != nil {
+		log.Error(err, "Error getting config: %v")
+		return "", err
+	}
+
+	client, err := routev1.NewForConfig(config)
+	if err != nil {
+		return "", err
+	}
+
+	result := client.RESTClient().Get().AbsPath("/.well-known/oauth-authorization-server").Do()
+	if err := result.Error(); err != nil {
+		return "", err
+	}
+	ret, err := result.Raw()
+	if err != nil {
+		return "", err
+	}
+	data := make(map[string]interface{})
+	json.Unmarshal(ret, &data)
+
+	url := data["issuer"].(string)
+	return url, nil
 }

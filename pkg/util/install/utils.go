@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func createDefaultLabels(labels map[string]string, component string, name string) map[string]string {
+func CreateDefaultLabels(labels map[string]string, component string, name string) map[string]string {
 
 	if labels == nil {
 		labels = make(map[string]string)
@@ -30,14 +30,14 @@ func createDefaultLabels(labels map[string]string, component string, name string
 
 // Apply standard set of labels
 func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, name string) {
-	meta.Labels = createDefaultLabels(meta.Labels, component, name)
+	meta.Labels = CreateDefaultLabels(meta.Labels, component, name)
 }
 
 // Apply some default service values
 func ApplyServiceDefaults(service *corev1.Service, component string, name string) {
 
 	ApplyDefaultLabels(&service.ObjectMeta, component, name)
-	service.Spec.Selector = createDefaultLabels(nil, component, name)
+	service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 
 }
 
@@ -47,10 +47,10 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 	ApplyDefaultLabels(&deployment.ObjectMeta, component, name)
 
 	deployment.Spec.Selector = &v1.LabelSelector{
-		MatchLabels: createDefaultLabels(nil, component, name),
+		MatchLabels: CreateDefaultLabels(nil, component, name),
 	}
 
-	deployment.Spec.Template.ObjectMeta.Labels = createDefaultLabels(deployment.Spec.Template.ObjectMeta.Labels, component, name)
+	deployment.Spec.Template.ObjectMeta.Labels = CreateDefaultLabels(deployment.Spec.Template.ObjectMeta.Labels, component, name)
 
 }
 
@@ -81,6 +81,38 @@ func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator
 	err := mutator(c)
 	if err == nil {
 		deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, *c)
+	}
+
+	return err
+}
+
+func ApplyInitContainer(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container)) {
+	// call "with error", and eat up the error
+	_ = ApplyInitContainerWithError(deployment, name, func(container *corev1.Container) error {
+		mutator(container)
+		return nil
+	})
+}
+
+func ApplyInitContainerWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container) error) error {
+
+	if deployment.Spec.Template.Spec.InitContainers == nil {
+		deployment.Spec.Template.Spec.InitContainers = make([]corev1.Container, 0)
+	}
+
+	for i, c := range deployment.Spec.Template.Spec.InitContainers {
+		if c.Name == name {
+			return mutator(&deployment.Spec.Template.Spec.InitContainers[i])
+		}
+	}
+
+	c := &corev1.Container{
+		Name: name,
+	}
+
+	err := mutator(c)
+	if err == nil {
+		deployment.Spec.Template.Spec.InitContainers = append(deployment.Spec.Template.Spec.InitContainers, *c)
 	}
 
 	return err
@@ -171,6 +203,34 @@ func DropVolume(deployment *appsv1.Deployment, name string) {
 	}
 }
 
+func ApplyContainerImage(container *corev1.Container, imageName string, override *v1beta1.ImageOverride) error {
+
+	resolved, err := images.GetImage(imageName)
+	if err != nil {
+		return err
+	}
+
+	var pullPolicy corev1.PullPolicy
+
+	if override != nil {
+		if override.Name != "" {
+			resolved = override.Name
+		}
+		if override.PullPolicy != "" {
+			pullPolicy = override.PullPolicy
+		}
+	}
+
+	container.Image = resolved
+	if pullPolicy != "" {
+		container.ImagePullPolicy = pullPolicy
+	} else {
+		container.ImagePullPolicy = images.PullPolicyFromImageName(resolved)
+	}
+
+	return nil
+}
+
 func SetContainerImage(container *corev1.Container, imageName string, overrides v1beta1.ImageOverridesProvider) error {
 
 	resolved, err := images.GetImage(imageName)
@@ -253,7 +313,7 @@ func ApplyVolumeMount(container *corev1.Container, name string, mutator func(mou
 	})
 }
 
-func AppendVolumeMountSimple(container *corev1.Container, name string, path string, readOnly bool) {
+func ApplyVolumeMountSimple(container *corev1.Container, name string, path string, readOnly bool) {
 	ApplyVolumeMount(container, name, func(mount *corev1.VolumeMount) {
 		mount.MountPath = path
 		mount.ReadOnly = readOnly
@@ -275,4 +335,70 @@ func DropVolumeMount(container *corev1.Container, name string) {
 			)
 		}
 	}
+}
+
+func ApplyEnvWithError(container *corev1.Container, name string, mutator func(envvar *corev1.EnvVar) error) error {
+
+	if container.Env == nil {
+		container.Env = make([]corev1.EnvVar, 0)
+	}
+
+	for i, e := range container.Env {
+		if e.Name == name {
+			return mutator(&container.Env[i])
+		}
+	}
+
+	e := &corev1.EnvVar{
+		Name: name,
+	}
+
+	err := mutator(e)
+	if err == nil {
+		container.Env = append(container.Env, *e)
+	}
+
+	return err
+}
+
+func ApplyEnv(container *corev1.Container, name string, mutator func(envvar *corev1.EnvVar)) {
+	_ = ApplyEnvWithError(container, name, func(envvar *corev1.EnvVar) error {
+		mutator(envvar)
+		return nil
+	})
+}
+
+func ApplyEnvSimple(container *corev1.Container, name string, value string) {
+	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
+		envvar.ValueFrom = nil
+		envvar.Value = value
+	})
+}
+
+func ApplyEnvSecret(container *corev1.Container, name string, secretKey string, secretName string) {
+	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
+		envvar.Value = ""
+		envvar.ValueFrom = &corev1.EnvVarSource{
+			SecretKeyRef: &corev1.SecretKeySelector{
+				Key: secretKey,
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: secretName,
+				},
+			},
+		}
+	})
+}
+
+func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey string, configMapName string) {
+	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
+		envvar.Value = ""
+		envvar.ValueFrom = &corev1.EnvVarSource{
+			ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+				Key: configMapKey,
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: configMapName,
+				},
+			},
+		}
+	})
 }

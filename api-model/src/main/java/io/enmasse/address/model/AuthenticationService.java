@@ -36,6 +36,7 @@ import io.sundr.builder.annotations.Inline;
 @AuthenticationServiceDetails
 public class AuthenticationService {
 
+    private String name;
     private AuthenticationServiceType type;
     private Map<String, Object> details = new HashMap<> ();
 
@@ -58,17 +59,26 @@ public class AuthenticationService {
         return Collections.unmodifiableMap(details);
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        final AuthenticationService status = (AuthenticationService) o;
-        return type == status.type &&
-                Objects.equals(details, status.details);
+        final AuthenticationService that = (AuthenticationService) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(details, that.details);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, details);
+        return Objects.hash(name, type, details);
     }
 }

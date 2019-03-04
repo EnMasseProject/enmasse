@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -13,6 +13,7 @@ import (
 	time "time"
 
 	versioned "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
+	admin "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/admin"
 	enmasse "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/enmasse"
 	internalinterfaces "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/internalinterfaces"
 	iot "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/iot"
@@ -163,9 +164,14 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
+	Admin() admin.Interface
 	Enmasse() enmasse.Interface
 	Iot() iot.Interface
 	User() user.Interface
+}
+
+func (f *sharedInformerFactory) Admin() admin.Interface {
+	return admin.New(f, f.namespace, f.tweakListOptions)
 }
 
 func (f *sharedInformerFactory) Enmasse() enmasse.Interface {

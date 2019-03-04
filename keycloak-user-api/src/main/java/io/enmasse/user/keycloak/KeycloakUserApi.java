@@ -131,6 +131,14 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
+    public synchronized boolean isAvailable() {
+        if (keycloak == null) {
+            keycloak = keycloakFactory.createInstance();
+        }
+        return keycloak != null;
+    }
+
+    @Override
     public Optional<User> getUserWithName(String realmName, String resourceName) throws Exception {
         log.info("Retrieving user {} in realm {}", resourceName, realmName);
         return withRealm(realmName, realm -> realm.users().list().stream()

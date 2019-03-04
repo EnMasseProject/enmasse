@@ -24,6 +24,21 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-client</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-multipart-provider</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.resteasy</groupId>
+      <artifactId>resteasy-jackson2-provider</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>k8s-api</artifactId>
       <scope>compile</scope>

@@ -24,12 +24,12 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        refs= {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> implements io.enmasse.admin.model.AddressSpacePlan {
+public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalProperties<AddressSpacePlan> implements io.enmasse.admin.model.AddressSpacePlan {
 
     public static final String KIND = "AddressSpacePlan";
 
@@ -39,8 +39,6 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> impl
     private String addressSpaceType;
     private List<ResourceAllowance> resources = new LinkedList<>();
     private List<String> addressPlans = new LinkedList<>();
-
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     public AddressSpacePlan() {
         super(KIND, AdminCrd.API_VERSION_V1BETA1);
@@ -123,20 +121,6 @@ public class AddressSpacePlan extends AbstractHasMetadata<AddressSpacePlan> impl
                 "metadata='" + getMetadata()+ '\'' +
                 ", spec='" + spec + '\'' +
                 '}';
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperties(Map<String, Object> additionalProperties) {
-        this.additionalProperties = additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
     public void setSpec(AddressSpacePlanSpec spec) {

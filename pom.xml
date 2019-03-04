@@ -120,7 +120,6 @@
         <module>address-space-controller</module>
         <module>api-server</module>
         <module>keycloak-plugin</module>
-        <module>keycloak-controller</module>
         <module>systemtests</module>
         <module>artemis</module>
         <module>broker-plugin</module>

@@ -42,21 +42,6 @@ ifeval::["{cmdcli}" == "kubectl"]
 {cmdcli} config set-context $(kubectl config current-context) --namespace=_{ProductNamespace}_
 ----
 
-. Create a certificate to use with the `standard` authentication service. For testing purposes, you can create a self-signed certificate:
-+
-[options="nowrap",subs="+quotes,attributes"]
-----
-mkdir -p standard-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice._{ProductNamespace}_.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
-----
-
-. Create a secret with the `standard` authentication service certificate:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
-----
-
 . Create a certificate to use with the API server. For testing purposes, you can create a self-signed certificate:
 +
 [options="nowrap",subs="+quotes,attributes"]
@@ -73,13 +58,6 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ----
 endif::[]
 
-. Deploy the standard authentication service:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} apply -f install/components/standard-authservice
-----
-
 . Deploy using the `{ProductBundleName}` bundle:
 +
 [options="nowrap",subs="attributes"]
@@ -92,4 +70,11 @@ endif::[]
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} apply -f install/components/example-plans
+----
+
+. (Optional) Install example authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/example-authservice
 ----

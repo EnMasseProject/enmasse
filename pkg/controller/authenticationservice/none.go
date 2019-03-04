@@ -1,0 +1,75 @@
+/*
+ * Copyright 2019, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+package authenticationservice
+
+import (
+	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/util/install"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	intstr "k8s.io/apimachinery/pkg/util/intstr"
+)
+
+func applyNoneAuthServiceDefaults(authservice *adminv1beta1.AuthenticationService) error {
+	if authservice.Spec.None == nil {
+		authservice.Spec.None = &adminv1beta1.AuthenticationServiceSpecNone{}
+	}
+	if authservice.Spec.None.CertificateSecret == nil {
+		authservice.Spec.None.CertificateSecret = &corev1.SecretReference{
+			Name: "none-authservice-cert",
+		}
+	}
+	return nil
+}
+
+func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationService, deployment *appsv1.Deployment) error {
+	install.ApplyDeploymentDefaults(deployment, "none-authservice", authservice.Name)
+	install.ApplyContainer(deployment, "none-authservice", func(container *corev1.Container) {
+		install.ApplyContainerImage(container, "none-authservice", authservice.Spec.None.Image)
+		container.Env = []corev1.EnvVar{
+			{
+				Name:  "LISTENPORT",
+				Value: "5671",
+			},
+		}
+
+		container.LivenessProbe = &corev1.Probe{
+			InitialDelaySeconds: 60,
+			Handler: corev1.Handler{
+				TCPSocket: &corev1.TCPSocketAction{
+					Port: intstr.FromString("amqps"),
+				},
+			},
+		}
+
+		container.Ports = []corev1.ContainerPort{{
+			ContainerPort: 5671,
+			Name:          "amqps",
+		}}
+
+		install.ApplyVolumeMountSimple(container, "none-authservice-cert", "/opt/none-authservice/cert", true)
+	})
+
+	install.ApplySecretVolume(deployment, "none-authservice-cert", authservice.Spec.None.CertificateSecret.Name)
+
+	return nil
+}
+
+func applyNoneAuthServiceService(authservice *adminv1beta1.AuthenticationService, service *corev1.Service) error {
+	install.ApplyServiceDefaults(service, "none-authservice", authservice.Name)
+	if service.Annotations == nil {
+		service.Annotations = make(map[string]string)
+	}
+	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = "none-authservice-cert"
+	service.Spec.Ports = []corev1.ServicePort{
+		{
+			Port:       5671,
+			Protocol:   corev1.ProtocolTCP,
+			TargetPort: intstr.FromString("amqps"),
+			Name:       "amqps",
+		},
+	}
+	return nil
+}

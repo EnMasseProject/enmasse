@@ -255,8 +255,13 @@ public class AddressSpace {
         spec.put("type", this.getType().toString().toLowerCase());
         spec.put("plan", this.getPlan());
         JsonObject authService = new JsonObject();
-        authService.put("type", this.getAuthService().toString());
-        spec.put("authenticationService", authService);
+        if (getAuthService().getName() != null) {
+            authService.put("name", this.getAuthService().getName());
+            spec.put("authenticationService", authService);
+        } else if (getAuthService().getType() != null) {
+            authService.put("type", this.getAuthService().getType());
+            spec.put("authenticationService", authService);
+        }
         if (!this.getEndpoints().isEmpty() && this.useEndpointsInJson) {
             spec.put("endpoints", this.jsonEndpoints());
         }

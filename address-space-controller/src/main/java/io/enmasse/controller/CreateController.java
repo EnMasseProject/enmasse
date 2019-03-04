@@ -80,7 +80,7 @@ public class CreateController implements Controller {
     }
 
     @Override
-    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
+    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
         Schema schema = schemaProvider.getSchema();
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
         addressSpaceResolver.validate(addressSpace);

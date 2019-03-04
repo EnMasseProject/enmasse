@@ -83,8 +83,8 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 		// volume mounts
 
-		install.AppendVolumeMountSimple(container, "config", "/etc/config", true)
-		install.AppendVolumeMountSimple(container, "tls", "/etc/tls", true)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
+		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 
 		// return
 

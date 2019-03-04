@@ -44,7 +44,7 @@ func loadImageMapFrom(fileName string) (map[string]string, error) {
 
 }
 
-const defaultImageMapFileName = "/etc/operatorImageMap.yaml"
+const defaultImageMapFileName = "operatorImageMap.yaml"
 
 func init() {
 	defaultPullPolicy = corev1.PullPolicy(os.Getenv("ENMASSE_DEFAULT_PULL_POLICY"))

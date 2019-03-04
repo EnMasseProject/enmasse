@@ -12,6 +12,11 @@ import java.util.Optional;
 
 public class NullUserApi implements UserApi {
     @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
+    @Override
     public Optional<User> getUserWithName(String realm, String name) {
         return Optional.empty();
     }
