@@ -82,14 +82,14 @@ def postAction(String coresDir, String artifactDir) {
     makeLinePlot()
     makeStackedPlot()
     //store test results from build and system tests
-    junit testResults: '**/TEST-*.xml', allowEmptyResults: true
+    junit testResults: '**/target/**/TEST-*.xml', allowEmptyResults: true
     //archive test results and openshift logs
-    archive '**/TEST-*.xml'
-    archive 'templates/build/**'
+    archiveArtifacts '**/target/**/TEST-*.xml'
+    archiveArtifacts 'templates/build/**'
     sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
     sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
     try {
-        archive "${artifactDir}/**"
+        archiveArtifacts "${artifactDir}/**"
     } catch(all) {
         echo "Archive failed"
     } finally {
