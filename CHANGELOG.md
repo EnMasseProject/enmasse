@@ -1,6 +1,11 @@
 ## 0.27.0
 * Upgrade to Artemis 2.6.4
 
+## 0.26.3
+* Fixes an issue where the storage class name would not get set for persistent volume claims in the standard address space.
+* Upgrade to Apache ActiveMQ Artemis 2.6.4.
+* Upgrade the Qpid Dispatch Router base image (to qdrouterd-base:1.5-DISPATCH-1273).  This fixes a Router defect whereby the 'to' field of a message is not authorized against valid targets for anonymous senders.
+
 ## 0.26.2
 * Fix issue in infra config versions
 * Prevent use of user API to throw errors when using none authservice
