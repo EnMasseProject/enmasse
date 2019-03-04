@@ -143,28 +143,11 @@ public class AddressSpaceController {
 
     private void configureDefaultResources(NamespacedOpenShiftClient client, File resourcesDir) {
         String namespace = client.getNamespace();
-        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "brokeredinfraconfigs"),
-                client.customResources(AdminCrd.brokeredInfraConfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class, DoneableBrokeredInfraConfig.class).inNamespace(namespace),
-                BrokeredInfraConfig.class,
-                Comparator.comparing(BrokeredInfraConfig::getVersion));
-
-        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "standardinfraconfigs"),
-                client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
-                StandardInfraConfig.class,
-                Comparator.comparing(StandardInfraConfig::getVersion));
 
         KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "configmaps"),
                 client.configMaps().inNamespace(namespace),
                 ConfigMap.class,
                 (c1, c2) -> c1.getData().equals(c2.getData()) ? 0 : -1);
-
-        KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressplans"),
-                client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace),
-                AddressPlan.class);
-
-        KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressspaceplans"),
-                client.customResources(AdminCrd.addressSpacePlans(), AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class).inNamespace(namespace),
-                AddressSpacePlan.class);
     }
 
     private CertProviderFactory createCertProviderFactory(AddressSpaceControllerOptions options, CertManager certManager) {
