@@ -23,7 +23,7 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 0,
-      "iteration": 1543492346380,
+      "iteration": 1551910554391,
       "links": [],
       "panels": [
         {
@@ -190,7 +190,7 @@ data:
               "type": "date"
             },
             {
-              "alias": "Component",
+              "alias": "component",
               "colorMode": null,
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
@@ -200,66 +200,13 @@ data:
               "dateFormat": "YYYY-MM-DD HH:mm:ss",
               "decimals": 2,
               "mappingType": 1,
-              "pattern": "kubernetes_pod_name",
+              "pattern": "job",
               "thresholds": [],
               "type": "number",
               "unit": "short"
             },
             {
-              "alias": "Summary",
-              "colorMode": null,
-              "colors": [
-                "rgba(245, 54, 54, 0.9)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(50, 172, 45, 0.97)"
-              ],
-              "dateFormat": "YYYY-MM-DD HH:mm:ss",
-              "decimals": 2,
-              "mappingType": 1,
-              "pattern": "summary",
-              "thresholds": [],
-              "type": "number",
-              "unit": "short"
-            },
-            {
-              "alias": "Status",
-              "colorMode": "cell",
-              "colors": [
-                "rgba(50, 172, 45, 0.97)",
-                "rgba(237, 129, 40, 0.89)",
-                "rgba(245, 54, 54, 0.9)"
-              ],
-              "dateFormat": "YYYY-MM-DD HH:mm:ss",
-              "decimals": 2,
-              "mappingType": 1,
-              "pattern": "Value",
-              "thresholds": [
-                "1",
-                "2"
-              ],
-              "type": "string",
-              "unit": "short",
-              "valueMaps": [
-                {
-                  "text": "OK",
-                  "value": "0"
-                },
-                {
-                  "text": "Warning",
-                  "value": "1"
-                },
-                {
-                  "text": "Critical",
-                  "value": "2"
-                },
-                {
-                  "text": "Unknown",
-                  "value": "3"
-                }
-              ]
-            },
-            {
-              "alias": "Namespace",
+              "alias": "",
               "colorMode": null,
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
@@ -271,6 +218,25 @@ data:
               "mappingType": 1,
               "pattern": "namespace",
               "thresholds": [],
+              "type": "number",
+              "unit": "short"
+            },
+            {
+              "alias": "",
+              "colorMode": "cell",
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "mappingType": 1,
+              "pattern": "Value",
+              "thresholds": [
+                "0",
+                "1"
+              ],
               "type": "number",
               "unit": "short"
             },
@@ -291,7 +257,7 @@ data:
           ],
           "targets": [
             {
-              "expr": "health",
+              "expr": "component_health",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -608,7 +574,7 @@ data:
           ],
           "targets": [
             {
-              "expr": "address_spaces_total - sum(address_spaces_ready_total{job=\"component-health\"})  without (namespace, name)",
+              "expr": "address_spaces_not_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -856,5 +822,5 @@ data:
       "timezone": "",
       "title": "EnMasse",
       "uid": "-9RKOzbmk",
-      "version": 1
+      "version": 4
     }

@@ -9,67 +9,52 @@ spec:
   groups:
   - name: ComponentHealth
     rules:
-    - alert: Component_Health
-      annotations:
-        description: '{{ $labels.summary }}'
-        value: "{{ $value }}"
-        severity: warning
-      expr: health == 1
-      for: 180s
-    - alert: Component_Health
-      annotations:
-        description: '{{ $labels.summary }}'
-        value: "{{ $value }}"
+
+    - record: address_spaces_ready_total
+      expr: sum(address_space_status_ready) by (service,namespace)
+    - record: address_spaces_not_ready_total
+      expr: sum(address_space_status_not_ready) by (service,namespace)
+
+    - record: component_health
+      expr: up{job="address-space-controller"} or on(namespace) (1- absent(up{job="address-space-controller"}) )
+
+    - record: component_health
+      expr: up{job="api-server"} or on(namespace) (1- absent(up{job="api-server"}) )
+
+    - alert: ComponentHealth
+      annotations: 
+        description: "{{ $labels.job }} has been down for over 5 minutes"
         severity: critical
-      expr: health == 2
-      for: 180s
-    - alert: Component_Health
+      expr: component_health == 0
+      for: 300s
+    - alert: AddressSpaceHealth
       annotations:
-        description: '{{ $labels.summary }}'
-        value: "{{ $value }}"
-        severity: unknown
-      expr: health == 3
-      for: 180s
-    - alert: Component_Ping
-      annotations:
-        description: "Component unreachable"
-        value: "{{ $value }}"
-        severity: critical
-      expr: up != 1
-      for: 180s
-    - alert: Address_Space_Health
-      annotations:
-        description: '{{ $labels.summary }}'
+        description: Address Space(s) have been in a not ready state for over 5 minutes
         value: "{{ $value }}"
         severity: warning
       expr: address_spaces_not_ready_total > 0
       for: 300s
-    - alert: Address_Health
+    - alert: AddressHealth
       annotations:
-        description: '{{ $labels.summary }}'
+        description: Address(s) have been in a not ready state for over 5 minutes
         value: "{{ $value }}"
         severity: warning
       expr: addresses_not_ready_total > 0
       for: 300s
-    - alert: Terminating_Pods
+    - alert: TerminatingPods
       annotations:
-        description: '{{ $labels.pod }}'
-        value: "{{ $value }}"
+        description: Pod {{ $labels.pod }} has been in a terminating state for over 5 minutes
         severity: warning
       expr: kube_pod_container_status_terminated == 1
       for: 180s
-    - alert: Restarting_Pods
+    - alert: RestartingPods
       annotations:
-        description: '{{ $labels.pod }}'
-        value: "{{ $value }}"
+        description: Pod {{ $labels.pod }} has restarted over 5 times in the last 10 minutes
         severity: warning
       expr: rate(kube_pod_container_status_restarts_total[10m]) * 600 > 5
-      for: 180s
-    - alert: Pending_Pods
+    - alert: PendingPods
       annotations:
-        description: '{{ $labels.pod }}'
-        phase: '{{ $labels.phase }}'
-        value: "{{ $value }}"
+        description: Pod {{ $labels.pod }} has been in a pending phase for over 5 minutes.
         severity: warning
       expr: kube_pod_status_phase{phase="Pending"} == 1
       for: 180s
