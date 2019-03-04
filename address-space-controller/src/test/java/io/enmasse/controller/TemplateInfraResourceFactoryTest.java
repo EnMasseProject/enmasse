@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AuthenticationServiceRegistry;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.EndpointSpecBuilder;
 import io.enmasse.config.AnnotationKeys;

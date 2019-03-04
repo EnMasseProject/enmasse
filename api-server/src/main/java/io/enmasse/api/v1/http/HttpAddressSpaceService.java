@@ -14,6 +14,7 @@ import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.CheckedFunction;
 import io.enmasse.api.common.Exceptions;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.Status;
 import io.enmasse.api.common.UuidGenerator;
@@ -53,15 +54,15 @@ public class HttpAddressSpaceService {
     private final SchemaProvider schemaProvider;
 
     private final AddressSpaceApi addressSpaceApi;
-    private final HostResolver hostResolver;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final UuidGenerator uuidGenerator = new UuidGenerator();
     private final Clock clock;
 
-    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock, HostResolver hostResolver) {
+    public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock, AuthenticationServiceRegistry authenticationServiceRegistry) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.clock = clock;
-        this.hostResolver = hostResolver;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
     }
 
     private Response doRequest(String errorMessage, Callable<Response> request) throws Exception {
@@ -238,14 +239,11 @@ public class HttpAddressSpaceService {
         return addressSpace;
     }
     private AuthenticationService resolveDefaultAuthService() {
+        io.enmasse.admin.model.v1.AuthenticationService defaultAuthService = authenticationServiceRegistry.resolveDefaultAuthenticationService().orElseThrow(
+                () -> new InternalServerErrorException("No authentication service specified, and unable to resolve default: no authentication services found"));
+
         AuthenticationService authenticationService = new AuthenticationService();
-        if (hostResolver.isHostResolveable("standard-authservice")) {
-            authenticationService.setType(AuthenticationServiceType.STANDARD);
-        } else if (hostResolver.isHostResolveable("none-authservice")) {
-            authenticationService.setType(AuthenticationServiceType.NONE);
-        } else {
-            throw new InternalServerErrorException("No authentication service specified, and unable to resolve default: no authentication services found");
-        }
+        authenticationService.setName(defaultAuthService.getMetadata().getName());
         return authenticationService;
     }
 

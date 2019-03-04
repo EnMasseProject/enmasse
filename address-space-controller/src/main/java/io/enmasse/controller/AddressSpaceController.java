@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.util.*;
 
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.*;
@@ -89,13 +88,7 @@ public class AddressSpaceController {
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
-        AuthenticationServiceRegistry authenticationServiceRegistry = authenticationService -> {
-            if (authenticationService.getName() == null) {
-                return schemaProvider.getSchema().findAuthenticationService(authenticationService.getType().getName());
-            } else {
-                return schemaProvider.getSchema().findAuthenticationService(authenticationService.getName());
-            }
-        };
+        AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
 
         InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, isOpenShift);
 

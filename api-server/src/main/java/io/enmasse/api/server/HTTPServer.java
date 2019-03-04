@@ -9,6 +9,7 @@ import io.enmasse.api.auth.AllowAllAuthInterceptor;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.v1.http.*;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -56,7 +57,7 @@ public class HTTPServer extends AbstractVerticle {
     private final boolean isRbacEnabled;
     private final String version;
     private final Clock clock;
-    private final HostResolver hostResolver;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final int port;
     private final int securePort;
 
@@ -72,7 +73,7 @@ public class HTTPServer extends AbstractVerticle {
             String clientCa,
             String requestHeaderClientCa,
             Clock clock,
-            HostResolver hostResolver) {
+            AuthenticationServiceRegistry authenticationServiceRegistry) {
         this(addressSpaceApi,
                 schemaProvider,
                 authApi,
@@ -82,7 +83,7 @@ public class HTTPServer extends AbstractVerticle {
                 clientCa,
                 requestHeaderClientCa,
                 clock,
-                hostResolver,
+                authenticationServiceRegistry,
                 PORT,
                 SECURE_PORT);
     }
@@ -96,7 +97,7 @@ public class HTTPServer extends AbstractVerticle {
             String clientCa,
             String requestHeaderClientCa,
             Clock clock,
-            HostResolver hostResolver,
+            AuthenticationServiceRegistry authenticationServiceRegistry,
             int port,
             int securePort) {
         this.addressSpaceApi = addressSpaceApi;
@@ -110,7 +111,7 @@ public class HTTPServer extends AbstractVerticle {
         this.isRbacEnabled = options.isEnableRbac();
         this.version = options.getVersion();
         this.clock = clock;
-        this.hostResolver = hostResolver;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.port = port;
         this.securePort = securePort;
     }
@@ -139,7 +140,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi, schemaProvider, clock));
         deployment.getRegistry().addSingletonResource(new HttpClusterAddressService(addressSpaceApi, schemaProvider, clock));
         deployment.getRegistry().addSingletonResource(new HttpSchemaService(schemaProvider));
-        deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi, schemaProvider, clock, hostResolver));
+        deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi, schemaProvider, clock, authenticationServiceRegistry));
         deployment.getRegistry().addSingletonResource(new HttpClusterAddressSpaceService(addressSpaceApi, clock));
         deployment.getRegistry().addSingletonResource(new HttpUserService(addressSpaceApi, userApi, clock));
         deployment.getRegistry().addSingletonResource(new HttpClusterUserService(userApi, clock));
