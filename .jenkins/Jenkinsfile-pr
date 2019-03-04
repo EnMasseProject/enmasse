@@ -3,7 +3,7 @@ def lib
 pipeline {
     agent {
         node {
-            label 'enmasse'
+            label 'enmasse-jdk11'
         }
     }
     parameters {
