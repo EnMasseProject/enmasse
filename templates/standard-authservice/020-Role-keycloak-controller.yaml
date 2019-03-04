@@ -11,3 +11,6 @@ rules:
   - apiGroups: [ "", "route.openshift.io" ]
     resources: [ "routes", "routes/custom-host", "routes/status"]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "admin.enmasse.io" ]
+    resources: [ "authenticationservices" ]
+    verbs: [ "get", "list", "create" ]

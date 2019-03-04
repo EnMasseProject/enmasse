@@ -12,6 +12,9 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.*;
 
+import io.enmasse.admin.model.v1.*;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -331,6 +334,29 @@ public class KeycloakController {
                 existingConfig.setData(updateMap);
                 client.configMaps().createOrReplace(existingConfig);
             }
+        }
+
+        AuthenticationService existingServiceRef = client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).withName("standard").get();
+        if (existingServiceRef == null) {
+
+            AuthenticationServiceBuilder builder = new AuthenticationServiceBuilder()
+                    .withNewMetadata()
+                    .withName("standard")
+                    .addToLabels(LabelKeys.APP, "enmasse")
+                    .endMetadata()
+                    .withNewSpec()
+                    .withHost("standard-authservice")
+                    .withPort(5671)
+                    .withCaCertSecretName(getKeycloakCertSecretName(env))
+                    .endSpec();
+
+            if (isOpenShift) {
+                String keycloakOauthUrl = getKeycloakAuthUrl(client, env);
+                builder.editMetadata().addToAnnotations(AnnotationKeys.OAUTH_URL, keycloakOauthUrl);
+            }
+
+            client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).create(
+                    builder.build());
         }
     }
 
