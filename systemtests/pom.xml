@@ -116,8 +116,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <properties>
-                        <includeTags>${tags}</includeTags>
-                        <excludeTags>${skip.tags}</excludeTags>
+                        <groups>${tags}</groups>
+                        <excludedGroups>${skip.tags}</excludedGroups>
                     </properties>
                     <skipTests>${skip.tests}</skipTests>
                     <systemProperties>
