@@ -5,7 +5,10 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.AddressPlan;
+import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.*;
@@ -239,9 +242,9 @@ public class AddressController implements Watcher<Address> {
                         if (address != null) {
                             AddressPlan plan = addressResolver.getPlan(address);
                             int brokerNeeded = 0;
-                            for (ResourceRequest resourceRequest : plan.getRequiredResources()) {
-                                if (resourceRequest.getName().equals("broker")) {
-                                    brokerNeeded = (int) resourceRequest.getCredit();
+                            for (Map.Entry<String, Double> resourceRequest : plan.getResources().entrySet()) {
+                                if (resourceRequest.getKey().equals("broker")) {
+                                    brokerNeeded = resourceRequest.getValue().intValue();
                                     break;
                                 }
                             }
@@ -448,8 +451,8 @@ public class AddressController implements Watcher<Address> {
     }
 
     private boolean isPooled(AddressPlan plan) {
-        for (ResourceRequest request : plan.getRequiredResources()) {
-            if ("broker".equals(request.getName()) && request.getCredit() < 1.0) {
+        for (Map.Entry<String, Double> request : plan.getResources().entrySet()) {
+            if ("broker".equals(request.getKey()) && request.getValue() < 1.0) {
                 return true;
             }
         }

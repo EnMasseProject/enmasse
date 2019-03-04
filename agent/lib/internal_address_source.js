@@ -309,17 +309,32 @@ AddressSource.prototype.delete_address = function (definition) {
 function display_order (plan_a, plan_b) {
     // explicitly ordered plans always come before those with undefined order
     var a = plan_a.displayOrder === undefined ? Number.MAX_VALUE : plan_a.displayOrder;
+    if (plan_a.spec !== undefined) {
+        a = plan_a.spec.displayOrder === undefined ? Number.MAX_VALUE : plan_a.spec.displayOrder;
+    }
     var b = plan_b.displayOrder === undefined ? Number.MAX_VALUE : plan_b.displayOrder;
+    if (plan_b.spec !== undefined) {
+        b = plan_b.spec.displayOrder === undefined ? Number.MAX_VALUE : plan_b.spec.displayOrder;
+    }
     return a - b;
 }
 
 function extract_plan_details (plan) {
-    return {
-        name: plan.metadata.name,
-        displayName: plan.displayName || plan.metadata.name,
-        shortDescription: plan.shortDescription,
-        longDescription: plan.longDescription,
-    };
+    if (plan.spec !== undefined) {
+        return {
+            name: plan.metadata.name,
+            displayName: plan.spec.displayName || plan.metadata.name,
+            shortDescription: plan.spec.shortDescription,
+            longDescription: plan.spec.longDescription,
+        };
+    } else {
+        return {
+            name: plan.metadata.name,
+            displayName: plan.displayName || plan.metadata.name,
+            shortDescription: plan.shortDescription,
+            longDescription: plan.longDescription,
+        };
+    }
 }
 
 AddressSource.prototype.get_address_types = function () {
@@ -338,11 +353,12 @@ AddressSource.prototype.get_address_types = function () {
                 //group by addressType
                 var types = [];
                 var by_type = plans.reduce(function (map, plan) {
-                    var list = map[plan.addressType];
+                    var addressType = plan.spec !== undefined ? plan.spec.addressType : plan.addressType;
+                    var list = map[addressType];
                     if (list === undefined) {
                         list = [];
-                        map[plan.addressType] = list;
-                        types.push(plan.addressType);
+                        map[addressType] = list;
+                        types.push(addressType);
                     }
                     list.push(plan);
                     return map;

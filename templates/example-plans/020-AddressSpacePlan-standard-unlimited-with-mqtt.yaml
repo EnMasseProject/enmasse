@@ -1,4 +1,4 @@
-apiVersion: admin.enmasse.io/v1beta1
+apiVersion: admin.enmasse.io/v1beta2
 kind: AddressSpacePlan
 metadata:
   name: standard-unlimited-with-mqtt
@@ -6,34 +6,31 @@ metadata:
     app: enmasse
   annotations:
     enmasse.io/defined-by: default-with-mqtt
-displayName: Unlimited With MQTT
-displayOrder: 0
-shortDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support.
-longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support. This plan allows an unlimited number of routers (minimum 2) and brokers, and is suitable for applications where you do not want to impose any restrictions.
-uuid: b10bce7c-db6e-11e8-a6b8-d45ddf138840
-addressSpaceType: standard
-resources:
-- name: router
-  max: 10000.0
-- name: broker
-  max: 10000.0
-- name: aggregate
-  max: 10000.0
-addressPlans:
-- standard-small-anycast
-- standard-medium-anycast
-- standard-large-anycast
-- standard-small-multicast
-- standard-medium-multicast
-- standard-large-multicast
-- standard-small-queue
-- standard-medium-queue
-- standard-large-queue
-- standard-xlarge-queue
-- standard-small-topic
-- standard-medium-topic
-- standard-large-topic
-- standard-xlarge-topic
-- standard-small-subscription
-- standard-medium-subscription
-- standard-large-subscription
+spec:
+  displayName: Unlimited With MQTT
+  displayOrder: 0
+  shortDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support.
+  longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support. This plan allows an unlimited number of routers (minimum 2) and brokers, and is suitable for applications where you do not want to impose any restrictions.
+  addressSpaceType: standard
+  resourceLimits:
+    router: 10000.0
+    broker: 10000.0
+    aggregate: 10000.0
+  addressPlans:
+  - standard-small-anycast
+  - standard-medium-anycast
+  - standard-large-anycast
+  - standard-small-multicast
+  - standard-medium-multicast
+  - standard-large-multicast
+  - standard-small-queue
+  - standard-medium-queue
+  - standard-large-queue
+  - standard-xlarge-queue
+  - standard-small-topic
+  - standard-medium-topic
+  - standard-large-topic
+  - standard-xlarge-topic
+  - standard-small-subscription
+  - standard-medium-subscription
+  - standard-large-subscription

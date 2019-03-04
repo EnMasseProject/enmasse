@@ -34,7 +34,7 @@ public class StandardInfraConfig extends AbstractInfraConfig<StandardInfraConfig
     private StandardInfraConfigSpec spec;
 
     public StandardInfraConfig() {
-        super(KIND, AdminCrd.API_VERSION);
+        super(KIND, AdminCrd.API_VERSION_V1BETA1);
     }
 
     public void setSpec(StandardInfraConfigSpec spec) {

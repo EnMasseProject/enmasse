@@ -413,14 +413,16 @@ ConfigMapServer.prototype.add_address_plan = function (params) {
     var plan = {
         kind: 'AddressPlan',
         metadata: {name: params.plan_name},
-        displayName: params.display_name,
-        shortDescription: params.shortDescription,
-        longDescription: params.longDescription,
-        displayOrder: params.displayOrder,
-        addressType: params.address_type,
+        spec: {
+            displayName: params.display_name,
+            shortDescription: params.shortDescription,
+            longDescription: params.longDescription,
+            displayOrder: params.displayOrder,
+            addressType: params.address_type,
+        }
     };
-    if (params.required_resources) {
-        plan.requiredResources = params.required_resources;
+    if (params.resources) {
+        plan.resources = params.resources;
     }
     this.add_resource('addressplans', plan);
 };

@@ -1,15 +1,14 @@
-apiVersion: admin.enmasse.io/v1beta1
+apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
 metadata:
   name: standard-medium-multicast
   labels:
     app: enmasse
-displayName: Medium Multicast
-displayOrder: 1
-shortDescription: Creates a medium multicast address.
-longDescription: Creates a medium multicast address where messages go via a router that does not take ownership of the messages.
-uuid: 36a53db6-db74-11e8-b24f-d45ddf138840
-addressType: multicast
-requiredResources:
-- name: router
-  credit: 0.01
+spec:
+  displayName: Medium Multicast
+  displayOrder: 1
+  shortDescription: Creates a medium multicast address.
+  longDescription: Creates a medium multicast address where messages go via a router that does not take ownership of the messages.
+  addressType: multicast
+  resources:
+    router: 0.01

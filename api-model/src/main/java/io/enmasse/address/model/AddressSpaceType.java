@@ -4,7 +4,7 @@
  */
 package io.enmasse.address.model;
 
-import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;

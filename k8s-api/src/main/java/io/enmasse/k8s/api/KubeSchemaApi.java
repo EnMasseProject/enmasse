@@ -5,7 +5,12 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.AddressPlan;
+import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AdminCrd;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
@@ -31,8 +36,8 @@ public class KubeSchemaApi implements SchemaApi {
             .withZone(ZoneId.of("UTC"));
     private final boolean isOpenShift;
 
-    private volatile List<AddressSpacePlan> currentAddressSpacePlans;
-    private volatile List<AddressPlan> currentAddressPlans;
+    private volatile List<io.enmasse.admin.model.v1.AddressSpacePlan> currentAddressSpacePlans;
+    private volatile List<io.enmasse.admin.model.v1.AddressPlan> currentAddressPlans;
     private volatile List<StandardInfraConfig> currentStandardInfraConfigs;
     private volatile List<BrokeredInfraConfig> currentBrokeredInfraConfigs;
 
@@ -60,7 +65,7 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
-        String definedBy = addressSpacePlan.getAnnotation(AnnotationKeys.DEFINED_BY);
+        String definedBy = addressSpacePlan.getMetadata().getAnnotations().get(AnnotationKeys.DEFINED_BY);
         if (!infraTemplateNames.contains(definedBy)) {
             String error = "Error validating address space plan " + addressSpacePlan.getMetadata().getName() + ": missing infra config definition " + definedBy + ", found: " + infraTemplateNames;
             log.warn(error);
@@ -76,10 +81,7 @@ public class KubeSchemaApi implements SchemaApi {
             throw new SchemaValidationException(error);
         }
 
-        Set<String> resources = addressSpacePlan.getResources().stream()
-                .map(ResourceAllowance::getName)
-                .collect(Collectors.toSet());
-
+        Set<String> resources = addressSpacePlan.getResourceLimits().keySet();
         List<String> required = "brokered".equals(addressSpacePlan.getAddressSpaceType()) ? Arrays.asList("broker") : Arrays.asList("broker", "router", "aggregate");
         if (!resources.containsAll(required)) {
             Set<String> missing = new HashSet<>(required);
@@ -101,7 +103,7 @@ public class KubeSchemaApi implements SchemaApi {
                 requiredResources.add("broker");
             }
         }
-        Set<String> resourcesUsed = addressPlan.getRequiredResources().stream().map(ResourceRequest::getName).collect(Collectors.toSet());
+        Set<String> resourcesUsed = addressPlan.getResources().keySet();
 
         if (!resourcesUsed.containsAll(requiredResources)) {
             Set<String> missing = new HashSet<>(requiredResources);
@@ -283,7 +285,7 @@ public class KubeSchemaApi implements SchemaApi {
         }
     }
 
-    Schema assembleSchema(List<AddressSpacePlan> addressSpacePlans, List<AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs) {
+    Schema assembleSchema(List<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlans, List<io.enmasse.admin.model.v1.AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs) {
         if (addressSpacePlans == null || addressPlans == null || brokeredInfraConfigs == null || standardInfraConfigs == null) {
             return null;
         }
@@ -295,7 +297,7 @@ public class KubeSchemaApi implements SchemaApi {
         }
 
         List<AddressSpacePlan> validAddressSpacePlans = new ArrayList<>();
-        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+        for (io.enmasse.admin.model.v1.AddressSpacePlan addressSpacePlan : addressSpacePlans) {
             List<AddressPlan> plansForAddressSpacePlan = new ArrayList<>();
             for (String addressPlanName : addressSpacePlan.getAddressPlans()) {
                 try {

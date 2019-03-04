@@ -34,7 +34,7 @@ public class BrokeredInfraConfig extends AbstractInfraConfig<BrokeredInfraConfig
     private BrokeredInfraConfigSpec spec;
 
     public BrokeredInfraConfig() {
-        super(KIND, AdminCrd.API_VERSION);
+        super(KIND, AdminCrd.API_VERSION_V1BETA1);
     }
 
     @Override
