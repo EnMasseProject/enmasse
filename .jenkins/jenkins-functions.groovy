@@ -81,6 +81,7 @@ def postAction(String coresDir, String artifactDir) {
     storeArtifacts(artifactDir)
     makeLinePlot()
     makeStackedPlot()
+    sh "find . > ${artifactDir}/output.txt"
     //store test results from build and system tests
     junit testResults: '**/target/**/TEST-*.xml', allowEmptyResults: true
     //archive test results and openshift logs
