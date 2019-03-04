@@ -25,11 +25,11 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @SuppressWarnings("serial")
-public abstract class AbstractInfraConfig<T> extends AbstractHasMetadata<T> implements InfraConfig {
+public abstract class AbstractHasMetadataWithAdditionalProperties<T> extends AbstractHasMetadata<T> implements WithAdditionalProperties {
 
     private Map<String, Object> additionalProperties = new HashMap<>(0);
 
-    protected AbstractInfraConfig(String kind, String apiVersion) {
+    protected AbstractHasMetadataWithAdditionalProperties(String kind, String apiVersion) {
         super(kind, apiVersion);
     }
 

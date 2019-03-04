@@ -20,14 +20,14 @@ import io.sundr.builder.annotations.Inline;
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
         refs= {
-                @BuildableReference(AbstractInfraConfig.class),
+                @BuildableReference(AbstractHasMetadataWithAdditionalProperties.class),
                 @BuildableReference(AbstractHasMetadata.class)
         },
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class BrokeredInfraConfig extends AbstractInfraConfig<BrokeredInfraConfig> {
+public class BrokeredInfraConfig extends AbstractHasMetadataWithAdditionalProperties<BrokeredInfraConfig> implements InfraConfig {
 
     public static final String KIND = "BrokeredInfraConfig";
 
