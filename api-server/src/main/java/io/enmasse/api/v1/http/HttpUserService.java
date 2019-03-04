@@ -69,6 +69,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 public class HttpUserService {
 
     private static final String RESOURCE_NAME = "messagingusers";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     static final String BASE_URI = "/apis/" +  UserCrd.GROUP + "/{version:v1alpha1|v1beta1}/namespaces/{namespace}/" + RESOURCE_NAME;
 
     private static final Logger log = LoggerFactory.getLogger(HttpUserService.class.getName());
@@ -253,12 +254,11 @@ public class HttpUserService {
             }
             User existingUser = existing.get();
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode source = mapper.valueToTree(existingUser);
+            JsonNode source = MAPPER.valueToTree(existingUser);
 
             JsonNode patched = patcher.apply(source);
 
-            User replacement = mapper.treeToValue(patched, User.class);
+            User replacement = MAPPER.treeToValue(patched, User.class);
             replacement = overrideNameAndNamespace(existingUser, replacement);
 
             if (!userApi.replaceUser(realm, replacement)) {

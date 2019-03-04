@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
  */
 public class HttpAddressServiceBase {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressServiceBase.class.getName());
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final AddressApiHelper apiHelper;
     private final Clock clock;
 
@@ -296,12 +297,11 @@ public class HttpAddressServiceBase {
             }
             Address existingAddress = existing.get();
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode source = mapper.valueToTree(existingAddress);
+            JsonNode source = MAPPER.valueToTree(existingAddress);
 
             JsonNode patched = patcher.apply(source);
 
-            Address replacement = mapper.treeToValue(patched, Address.class);
+            Address replacement = MAPPER.treeToValue(patched, Address.class);
 
             replacement = setAddressDefaults(namespace, addressSpace, replacement, existingAddress);
             DefaultValidator.validate(replacement);

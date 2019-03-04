@@ -49,6 +49,7 @@ public class HttpAddressSpaceService {
     static final String BASE_URI = "/apis/enmasse.io/{version:v1alpha1|v1beta1}/namespaces/{namespace}/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceService.class.getName());
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final SchemaProvider schemaProvider;
 
     private final AddressSpaceApi addressSpaceApi;
@@ -161,12 +162,11 @@ public class HttpAddressSpaceService {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
 
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode source = mapper.valueToTree(existing.get());
+            JsonNode source = MAPPER.valueToTree(existing.get());
 
             JsonNode patched = patcher.apply(source);
 
-            AddressSpace replacement = mapper.treeToValue(patched, AddressSpace.class);
+            AddressSpace replacement = MAPPER.treeToValue(patched, AddressSpace.class);
 
             replacement = setAddressSpaceDefaults(securityContext, namespace, replacement, existing.get());
             DefaultValidator.validate(replacement);
@@ -207,9 +207,6 @@ public class HttpAddressSpaceService {
         } else {
             validateChanges(existing, addressSpace);
 
-            // Question - not sure of the intent here. This prevents the removal of any annotation (or label) which
-            // seem very restrictive. Why do we do this?  validateChanges have already ensured that the special
-            // anotatons and labels are preserved.
             Map<String, String> annotations = existing.getMetadata().getAnnotations();
             if (annotations == null) {
                 annotations = new HashMap<>();
