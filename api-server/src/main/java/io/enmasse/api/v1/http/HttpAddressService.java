@@ -4,6 +4,8 @@
  */
 package io.enmasse.api.v1.http;
 
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
 import io.enmasse.address.model.Address;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.UnprocessableEntityException;
@@ -67,6 +69,31 @@ public class HttpAddressService extends HttpAddressServiceBase {
         checkAddressObjectNameNotNull(payload, addressName);
         String addressSpace = parseAddressSpace(payload.getMetadata().getName());
         return internalReplaceAddress(securityContext, namespace, addressSpace, addressName, payload);
+    }
+
+    @PATCH
+    @Consumes({MediaType.APPLICATION_JSON_PATCH_JSON})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{addressName}")
+    public Response patchAddress(@Context SecurityContext securityContext,
+                                 @PathParam("namespace") String namespace,
+                                 @PathParam("addressName") String addressName,
+                                 @NotNull JsonPatch patch) throws Exception {
+        String addressSpace = parseAddressSpace(addressName);
+        return patchInternal(securityContext, namespace, addressSpace, addressName, patch::apply);
+    }
+
+    @PATCH
+    @Consumes({"application/merge-patch+json"})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{addressName}")
+    public Response patchAddress(@Context SecurityContext securityContext,
+                                 @PathParam("namespace") String namespace,
+                                 @PathParam("addressName") String addressName,
+                                 @NotNull JsonMergePatch patch) throws Exception {
+
+        String addressSpace = parseAddressSpace(addressName);
+        return patchInternal(securityContext, namespace, addressSpace, addressName, patch::apply);
     }
 
     @DELETE

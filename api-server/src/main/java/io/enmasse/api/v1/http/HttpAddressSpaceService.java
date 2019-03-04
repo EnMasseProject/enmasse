@@ -4,9 +4,15 @@
  */
 package io.enmasse.api.v1.http;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
 import io.enmasse.address.model.*;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
+import io.enmasse.api.common.CheckedFunction;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.Status;
@@ -43,6 +49,7 @@ public class HttpAddressSpaceService {
     static final String BASE_URI = "/apis/enmasse.io/{version:v1alpha1|v1beta1}/namespaces/{namespace}/addressspaces";
 
     private static final Logger log = LoggerFactory.getLogger(HttpAddressSpaceService.class.getName());
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final SchemaProvider schemaProvider;
 
     private final AddressSpaceApi addressSpaceApi;
@@ -119,6 +126,62 @@ public class HttpAddressSpaceService {
         });
     }
 
+    @PATCH
+    @Consumes({MediaType.APPLICATION_JSON_PATCH_JSON})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{addressSpace}")
+    public Response patchAddressSpace(@Context SecurityContext securityContext,
+                                      @PathParam("namespace") String namespace,
+                                      @PathParam("addressSpace") String addressSpaceName,
+                                      @NotNull JsonPatch patch) throws Exception {
+
+        return doPatch(securityContext, namespace, addressSpaceName, patch::apply);
+    }
+
+    @PATCH
+    @Consumes({"application/merge-patch+json"})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{addressSpace}")
+    public Response patchAddressSpace(@Context SecurityContext securityContext,
+                                      @PathParam("namespace") String namespace,
+                                      @PathParam("addressSpace") String addressSpaceName,
+                                      @NotNull JsonMergePatch patch) throws Exception {
+
+
+        return doPatch(securityContext, namespace, addressSpaceName, patch::apply);
+    }
+
+    private Response doPatch(@Context SecurityContext securityContext, String namespace, String addressSpaceName,
+                             CheckedFunction<JsonNode, JsonNode, JsonPatchException> patcher) throws Exception {
+        return doRequest("Error patching address space " + addressSpaceName, () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.patch);
+
+            Optional<AddressSpace> existing = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName);
+
+            if (!existing.isPresent()) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
+
+            JsonNode source = MAPPER.valueToTree(existing.get());
+
+            JsonNode patched = patcher.apply(source);
+
+            AddressSpace replacement = MAPPER.treeToValue(patched, AddressSpace.class);
+
+            replacement = setAddressSpaceDefaults(securityContext, namespace, replacement, existing.get());
+            DefaultValidator.validate(replacement);
+
+            AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schemaProvider.getSchema());
+            addressSpaceResolver.validate(replacement);
+            if (!addressSpaceApi.replaceAddressSpace(replacement)) {
+                return Response.status(400).entity(Status.failureStatus(400,"AddressSpace", addressSpaceName)).build();
+            }
+            AddressSpace replaced = addressSpaceApi.getAddressSpaceWithName(namespace, replacement.getMetadata().getName()).orElse(replacement);
+            return Response.ok().entity(removeSecrets(replaced)).build();
+        });
+    }
+
+
     private AddressSpace setAddressSpaceDefaults(SecurityContext securityContext, String namespace, AddressSpace addressSpace, AddressSpace existing) {
         if (existing == null) {
             if (addressSpace.getMetadata().getNamespace() == null) {
@@ -143,6 +206,7 @@ public class HttpAddressSpaceService {
             }
         } else {
             validateChanges(existing, addressSpace);
+
             Map<String, String> annotations = existing.getMetadata().getAnnotations();
             if (annotations == null) {
                 annotations = new HashMap<>();

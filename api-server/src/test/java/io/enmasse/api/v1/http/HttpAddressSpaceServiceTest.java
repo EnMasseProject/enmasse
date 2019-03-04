@@ -23,6 +23,9 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +48,7 @@ public class HttpAddressSpaceServiceTest {
     private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
     private HostResolver hostResolver;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     @BeforeEach
     public void setup() {
@@ -241,5 +245,52 @@ public class HttpAddressSpaceServiceTest {
         Response response = invoke(() -> addressSpaceService.deleteAddressSpaces(securityContext, "myns"));
         assertThat(response.getStatus(), is(200));
         assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
+    }
+
+    @Test
+    public void jsonPatch_RFC6902() throws Exception {
+        addressSpaceApi.createAddressSpace(a1);
+
+        final JsonPatch patch = mapper.readValue("[{\"op\":\"add\",\"path\":\"/metadata/annotations/fish\",\"value\":\"dorado\"}]", JsonPatch.class);
+
+        Response response = addressSpaceService.patchAddressSpace(securityContext, a1.getMetadata().getNamespace(), a1.getMetadata().getName(), patch);
+        assertThat(response.getStatus(), is(200));
+        assertThat(((AddressSpace) response.getEntity()).getAnnotation("fish"), is("dorado"));
+    }
+
+    @Test
+    public void jsonMergePatch_RFC7386() throws Exception {
+        addressSpaceApi.createAddressSpace(a1);
+
+        final JsonMergePatch mergePatch = mapper.readValue("{\"metadata\":{\"annotations\":{\"fish\":\"dorado\"}}}\n", JsonMergePatch.class);
+
+        Response response = addressSpaceService.patchAddressSpace(securityContext, a1.getMetadata().getNamespace(), a1.getMetadata().getName(), mergePatch);
+        assertThat(response.getStatus(), is(200));
+        assertThat(((AddressSpace) response.getEntity()).getAnnotation("fish"), is("dorado"));
+    }
+
+    @Test
+    public void patchAddressSpaceNotFound() throws Exception {
+        final JsonPatch patch = mapper.readValue("[{\"op\":\"add\",\"path\":\"/metadata/annotations/fish\",\"value\":\"dorado\"}]", JsonPatch.class);
+
+        Response response = addressSpaceService.patchAddressSpace(securityContext, "myns", "unknown", patch);
+        assertThat(response.getStatus(), is(404));
+    }
+
+    @Test
+    public void patchImmutable() throws Exception {
+        addressSpaceApi.createAddressSpace(a1);
+
+        final JsonPatch patch = mapper.readValue("[" +
+                "{\"op\":\"replace\",\"path\":\"/metadata/name\",\"value\":\"newname\"}," +
+                "{\"op\":\"replace\",\"path\":\"/metadata/namespace\",\"value\":\"newnamespace\"}" +
+                "]", JsonPatch.class);
+
+        Response response = addressSpaceService.patchAddressSpace(securityContext, a1.getMetadata().getNamespace(), a1.getMetadata().getName(), patch);
+        // Should we reject a patch contain a name/namespace change etc?
+        assertThat(response.getStatus(), is(200));
+        AddressSpace updated = (AddressSpace) response.getEntity();
+        assertThat(updated.getMetadata().getName(), is(a1.getMetadata().getName()));
+        assertThat(updated.getMetadata().getNamespace(), is(a1.getMetadata().getNamespace()));
     }
 }

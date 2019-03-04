@@ -4,11 +4,13 @@
  */
 package io.enmasse.api.v1.http;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressList;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatchException;
+import io.enmasse.address.model.*;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
+import io.enmasse.api.common.CheckedFunction;
 import io.enmasse.api.common.Exceptions;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.SchemaProvider;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
  */
 public class HttpAddressServiceBase {
     private static final Logger log = LoggerFactory.getLogger(HttpAddressServiceBase.class.getName());
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final AddressApiHelper apiHelper;
     private final Clock clock;
 
@@ -201,7 +204,7 @@ public class HttpAddressServiceBase {
         overrideAnnotation(existing, address, AnnotationKeys.CLUSTER_ID);
         overrideAnnotation(existing, address, AnnotationKeys.APPLIED_PLAN);
         overrideAnnotation(existing, address, AnnotationKeys.INFRA_UUID);
-        overrideLabel(existing, address, LabelKeys.ADDRESS_SPACE);
+        overrideLabel(existing, address, LabelKeys.ADDRESS_SPACE); //  Aren't these labels applied to the underlying cm rather than the address?
         overrideLabel(existing, address, LabelKeys.NAMESPACE);
     }
 
@@ -279,6 +282,32 @@ public class HttpAddressServiceBase {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
             apiHelper.deleteAddresses(namespace);
             return Response.ok(Status.successStatus(200)).build();
+        });
+    }
+
+    protected Response patchInternal(@Context SecurityContext securityContext, String namespace, String addressSpace, String addressName,
+                                     CheckedFunction<JsonNode, JsonNode, JsonPatchException> patcher) throws Exception {
+        return doRequest("Error patching address space " + addressName, () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.patch);
+
+            Optional<Address> existing = apiHelper.getAddress(namespace, addressSpace, addressName);
+
+            if (!existing.isPresent()) {
+                return Response.status(404).entity(Status.notFound("Address", addressName)).build();
+            }
+            Address existingAddress = existing.get();
+
+            JsonNode source = MAPPER.valueToTree(existingAddress);
+
+            JsonNode patched = patcher.apply(source);
+
+            Address replacement = MAPPER.treeToValue(patched, Address.class);
+
+            replacement = setAddressDefaults(namespace, addressSpace, replacement, existingAddress);
+            DefaultValidator.validate(replacement);
+            replacement = apiHelper.replaceAddress(addressSpace, replacement);
+
+            return Response.ok().entity(replacement).build();
         });
     }
 

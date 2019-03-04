@@ -20,6 +20,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
+import javax.ws.rs.PATCH;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -33,6 +34,12 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
+import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
+import io.enmasse.api.common.CheckedFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +61,7 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
+import io.enmasse.user.model.v1.UserSpecBuilder;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
@@ -61,6 +69,7 @@ import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 public class HttpUserService {
 
     private static final String RESOURCE_NAME = "messagingusers";
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     static final String BASE_URI = "/apis/" +  UserCrd.GROUP + "/{version:v1alpha1|v1beta1}/namespaces/{namespace}/" + RESOURCE_NAME;
 
     private static final Logger log = LoggerFactory.getLogger(HttpUserService.class.getName());
@@ -198,6 +207,75 @@ public class HttpUserService {
             User replaced = userApi.getUserWithName(realm, user.getMetadata().getName()).orElse(user);
             return Response.ok().entity(replaced).build();
         });
+    }
+
+    @PATCH
+    @Consumes({MediaType.APPLICATION_JSON_PATCH_JSON})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{userName}")
+    public Response patchUser(@Context SecurityContext securityContext,
+                              @PathParam("namespace") String namespace,
+                              @PathParam("userName") String userNameWithAddressSpace,
+                              @NotNull JsonPatch patch) throws Exception {
+        String addressSpace = parseAddressSpace(userNameWithAddressSpace);
+        return doPatch(securityContext, namespace, addressSpace, userNameWithAddressSpace, patch::apply);
+    }
+
+    @PATCH
+    @Consumes({"application/merge-patch+json"})
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("{userName}")
+    public Response patchUser(@Context SecurityContext securityContext,
+                              @PathParam("namespace") String namespace,
+                              @PathParam("userName") String userNameWithAddressSpace,
+                              @NotNull JsonMergePatch patch) throws Exception {
+
+        String addressSpace = parseAddressSpace(userNameWithAddressSpace);
+        return doPatch(securityContext, namespace, addressSpace, userNameWithAddressSpace, patch::apply);
+    }
+
+    protected Response doPatch(@Context SecurityContext securityContext, String namespace, String addressSpaceName, String userNameWithAddressSpace,
+                               CheckedFunction<JsonNode, JsonNode, JsonPatchException> patcher) throws Exception {
+        return doRequest("Error patching user " + userNameWithAddressSpace, () -> {
+            verifyAuthorized(securityContext, namespace, ResourceVerb.patch);
+
+            checkAddressSpaceName(userNameWithAddressSpace, addressSpaceName);
+            AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceName).orElse(null);
+            if (addressSpace == null) {
+                return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
+            }
+            String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+            log.debug("Retrieving user {} in realm {} namespace {}", userNameWithAddressSpace, realm, namespace);
+
+            Optional<User> existing = userApi.getUserWithName(realm, userNameWithAddressSpace);
+
+            if (!existing.isPresent()) {
+                return Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build();
+            }
+            User existingUser = existing.get();
+
+            JsonNode source = MAPPER.valueToTree(existingUser);
+
+            JsonNode patched = patcher.apply(source);
+
+            User replacement = MAPPER.treeToValue(patched, User.class);
+            replacement = overrideNameAndNamespace(existingUser, replacement);
+
+            if (!userApi.replaceUser(realm, replacement)) {
+                return Response.status(404).entity(Status.notFound("MessagingUser", replacement.getMetadata().getName())).build();
+            }
+            return Response.ok().entity(replacement).build();
+        });
+    }
+
+    private User overrideNameAndNamespace(User existingUser, User replacement) {
+        replacement = new UserBuilder(replacement)
+                .withSpec(new UserSpecBuilder(replacement.getSpec())
+                        .withUsername(existingUser.getSpec().getUsername())
+                        .build())
+                .withMetadata(new ObjectMetaBuilder(existingUser.getMetadata())
+                        .withNamespace(existingUser.getMetadata().getNamespace()).build()).build();
+        return replacement;
     }
 
     @DELETE
