@@ -14,7 +14,7 @@ func init() {
 
 	// add ourselves to the list of controllers
 
-	if util.IsModuleEnabled("iot") {
+	if util.IsModuleEnabled("IOT_PROJECT") {
 		AddToManagerFuncs = append(AddToManagerFuncs, iotproject.Add)
 	}
 }

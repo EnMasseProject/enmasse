@@ -7,6 +7,7 @@ package v1alpha1
 
 import (
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -82,4 +83,52 @@ type IoTProjectList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []IoTProject `json:"items"`
+}
+
+// +genclient
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type IoTConfig struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   IoTConfigSpec   `json:"spec,omitempty"`
+	Status IoTConfigStatus `json:"status,omitempty"`
+}
+
+type IoTConfigSpec struct {
+	Adapters               []AdapterSpec   `json:"adapters,omitempty"`
+	DefaultImageProperties ImageProperties `json:"defaultImageProperties,omitempty"`
+}
+
+type ImageProperties struct {
+	Repository     *string `json:"repository,omitempty"`
+	UseImageStream *bool   `json:"useImageStream,omitempty"`
+
+	Tag        string         `json:"tag,omitempty"`
+	PullPolicy *v1.PullPolicy `json:"PullPolicy,omitempty"`
+}
+
+type AdapterSpec struct {
+	AdapterType string `json:"type"`
+	Replicas    int    `json:"replicas"`
+}
+
+type IoTConfigStatus struct {
+	Initialized bool   `json:"initialized"`
+	State       string `json:"state"`
+}
+
+const (
+	ConfigStateWrongName = "WrongName"
+	ConfigStateRunning   = "Running"
+)
+
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+
+type IoTConfigList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+
+	Items []IoTConfig `json:"items"`
 }

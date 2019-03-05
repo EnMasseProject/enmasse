@@ -33,6 +33,9 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&IoTProject{},
 		&IoTProjectList{},
+
+		&IoTConfig{},
+		&IoTConfigList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
