@@ -7,4 +7,6 @@
 
 package v1alpha1
 
+type IoTConfigExpansion interface{}
+
 type IoTProjectExpansion interface{}

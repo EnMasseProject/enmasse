@@ -16,12 +16,17 @@ import (
 
 type IotV1alpha1Interface interface {
 	RESTClient() rest.Interface
+	IoTConfigsGetter
 	IoTProjectsGetter
 }
 
 // IotV1alpha1Client is used to interact with features provided by the iot.enmasse.io group.
 type IotV1alpha1Client struct {
 	restClient rest.Interface
+}
+
+func (c *IotV1alpha1Client) IoTConfigs(namespace string) IoTConfigInterface {
+	return newIoTConfigs(c, namespace)
 }
 
 func (c *IotV1alpha1Client) IoTProjects(namespace string) IoTProjectInterface {

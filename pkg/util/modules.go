@@ -66,16 +66,18 @@ func IsModuleEnabled(module string) bool {
 
 func isModuleEnabled(environment environmentProvider, module string) bool {
 
+	module = strings.ToUpper(module)
+
 	// check is "everything" is enabled ...
 	if isBooleanEnv(environment, "CONTROLLER_ENABLE_ALL", false) {
 		// ... it is
 		return true
 	}
 
-	val := getBooleanEnv(environment, "CONTROLLER_ENABLE_"+strings.ToUpper(module))
+	val := getBooleanEnv(environment, "CONTROLLER_ENABLE_"+module)
 	// if val is set ...
 	if val != nil {
-		// ... it is authorative
+		// ... it is authoritative
 		return *val
 	}
 

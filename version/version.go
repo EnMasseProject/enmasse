@@ -5,6 +5,17 @@
 
 package version
 
-var (
-	Version = "0.0.1"
+import (
+	"os"
 )
+
+var (
+	Version string
+)
+
+func init() {
+	Version = os.Getenv("ENMASSE_VERSION")
+	if Version == "" {
+		Version = "latest"
+	}
+}

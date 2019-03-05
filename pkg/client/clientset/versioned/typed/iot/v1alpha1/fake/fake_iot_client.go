@@ -17,6 +17,10 @@ type FakeIotV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeIotV1alpha1) IoTConfigs(namespace string) v1alpha1.IoTConfigInterface {
+	return &FakeIoTConfigs{c, namespace}
+}
+
 func (c *FakeIotV1alpha1) IoTProjects(namespace string) v1alpha1.IoTProjectInterface {
 	return &FakeIoTProjects{c, namespace}
 }
