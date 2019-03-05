@@ -10,11 +10,14 @@
 * Install EnMasse with IoT services
 
   ```
+  oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
+  
   oc apply -f templates/build/enmasse-latest/install/components/standard-authservice
   oc apply -f templates/build/enmasse-latest/install/components/example-roles
   oc apply -f templates/build/enmasse-latest/install/components/example-plans
-  oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
-  oc apply -f templates/build/enmasse-latest/install/bundles/iot
+  oc apply -f templates/build/enmasse-latest/install/components/enmasse-controller-manager
+  
+  oc apply -f templates/build/enmasse-latest/install/preview-bundles/iot
   ```
 
 * Wait for the EnMasse installation to succeed. The following command should show all pods to be ready:

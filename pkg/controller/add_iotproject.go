@@ -7,11 +7,14 @@ package controller
 
 import (
 	"github.com/enmasseproject/enmasse/pkg/controller/iotproject"
+	"github.com/enmasseproject/enmasse/pkg/util"
 )
 
 func init() {
 
 	// add ourselves to the list of controllers
 
-	AddToManagerFuncs = append(AddToManagerFuncs, iotproject.Add)
+	if util.IsModuleEnabled("iot") {
+		AddToManagerFuncs = append(AddToManagerFuncs, iotproject.Add)
+	}
 }

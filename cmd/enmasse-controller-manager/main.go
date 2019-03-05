@@ -39,14 +39,6 @@ func main() {
 
 	printVersion()
 
-	/*
-	   namespace, err:= k8sutil.GetWatchNamespace()
-	   if err != nil {
-	       log.Error(err, "failed to get watch namespace")
-	       os.Exit(1)
-	   }
-	*/
-
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Error(err, "Failed to get configuration")
@@ -55,7 +47,7 @@ func main() {
 
 	mgr, err := manager.New(cfg, manager.Options{})
 	if err != nil {
-		log.Error(err, "")
+		log.Error(err, "Failed to create manager")
 		os.Exit(1)
 	}
 
