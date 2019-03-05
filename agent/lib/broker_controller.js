@@ -291,11 +291,13 @@ function exclude_subscriptions(type) {
 }
 
 function excluded_addresses(address) {
-    return address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications';
+    return address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications' || address === 'activemq.management';
 }
 
 function is_temp_queue(a) {
-    return a.type === 'queue' && a.temporary;
+    return a.type === 'queue' &&
+        (a.temporary || (a.name.startsWith('activemq.management.tmpreply') && a.durable === false &&
+            a.maxConsumers === a.consumers && a.consumers > 0 /* ignore in-use response queues */))
 }
 
 function is_wildcard_sub(a) {
