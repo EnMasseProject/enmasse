@@ -76,17 +76,11 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 		ObjectMeta: v1.ObjectMeta{Namespace: project.Namespace, Name: strategy.AddressSpaceName + "." + adapterUserName},
 	}
 
-	pwd, err := util.GeneratePassword(32)
-	if err != nil {
-		return nil, err
-	}
-
 	credentials := &iotv1alpha1.Credentials{
 		Username: adapterUserName,
-		Password: pwd,
 	}
 
-	_, err = controllerutil.CreateOrUpdate(ctx, r.client, adapterUser, func(existing runtime.Object) error {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, adapterUser, func(existing runtime.Object) error {
 		existingUser := existing.(*userv1beta1.MessagingUser)
 
 		log.Info("Reconcile messaging user", "MessagingUser", existingUser)
@@ -168,23 +162,40 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 
 	username := credentials.Username
 
-	// only set password when we are creating the object initially
-	// as we cannot detect a change
-
-	var password []byte
-	if util.IsNewObject(existing) {
-		password = []byte(credentials.Password)
-	}
-
 	telemetryName := util.AddressName(project, "telemetry")
 	eventName := util.AddressName(project, "event")
 	commandName := util.AddressName(project, "command")
 
 	existing.Spec.Username = username
 	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
-		Type:     "password",
-		Password: password,
+		Type: "password",
 	}
+
+	// if the status has endpoint information ...
+
+	if project.Status.DownstreamEndpoint != nil {
+		// ... we extract the password and return it
+		credentials.Password = project.Status.DownstreamEndpoint.Password
+	}
+	newPassword := false
+	// if the password is not set ...
+	if credentials.Password == "" {
+		// ... we generate a new one ...
+		password, err := util.GeneratePassword(32)
+		if err != nil {
+			return err
+		}
+		// ... and return it in the credentials structure
+		credentials.Password = password
+		newPassword = true
+	}
+
+	if newPassword || util.IsNewObject(existing) {
+		// only set password when we are creating the object initially
+		// or created a new password ... as we cannot detect a change
+		existing.Spec.Authentication.Password = []byte(credentials.Password)
+	}
+
 	existing.Spec.Authorization = []userv1beta1.AuthorizationSpec{
 		{
 			Addresses: []string{
