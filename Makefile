@@ -5,7 +5,10 @@ BUILD_DIRS       = none-authservice
 DOCKER_DIRS      = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin keycloak-controller router router-metrics mqtt-gateway mqtt-lwt service-broker iot/iot-tenant-service iot/iot-auth-service iot/iot-device-registry iot/iot-http-adapter iot/iot-mqtt-adapter
 FULL_BUILD       = true
 
-GO_DIRS          = iot/qdr-proxy-configurator iot/iot-operator iot/iot-gc
+GO_DIRS          = \
+	enmasse-controller-manager \
+	iot/qdr-proxy-configurator \
+	iot/iot-gc \
 
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
 BUILD_TARGETS    = init build test package $(DOCKER_TARGETS) coverage
@@ -130,4 +133,4 @@ docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
 .PHONY: test_go_vet test_go_plain
-.PHONY: all $(BUILD_TARGETS) $(GO_TARGETS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: all $(BUILD_TARGETS) $(GO_DIRS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check

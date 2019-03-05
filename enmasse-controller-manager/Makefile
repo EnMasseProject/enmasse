@@ -1,6 +1,6 @@
-include ../../Makefile.common
+include ../Makefile.common
 
-CMD=iot-operator
+CMD=enmasse-controller-manager
 
 build/$(CMD):
 	cd $(GOPRJ)/cmd/$(@F) && go build -o $(abspath $@) .

@@ -1,27 +1,25 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: iot-operator
+  name: enmasse-controller-manager
   labels:
-    app: iot-core
-    name: iot-operator
-    enmasse-component: iot
+    app: enmasse
+    name: enmasse-controller-manager
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: iot-core
-      name: iot-operator
+      app: enmasse
+      name: enmasse-controller-manager
   template:
     metadata:
       labels:
-        app: iot-core
-        name: iot-operator
-        enmasse-component: iot
+        app: enmasse
+        name: enmasse-controller-manager
     spec:
       containers:
-      - name: operator
-        image: ${IOT_OPERATOR_IMAGE}
+      - name: controller
+        image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
         - name: POD_NAME
@@ -29,7 +27,7 @@ spec:
             fieldRef:
               fieldPath: metadata.name
         - name: OPERATOR_NAME
-          value: "iot-operator"
+          value: "enmasse-controller-manager"
         resources:
           limits:
             memory: 128Mi
