@@ -65,6 +65,7 @@ buildpush:
 
 $(GO_DIRS): $(GOPRJ)
 
+
 $(GOPRJ):
 	mkdir -p $(dir $(GOPRJ))
 	ln -s $(TOPDIR) $(GOPRJ)
