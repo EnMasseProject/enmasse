@@ -336,7 +336,7 @@ public class KeycloakController {
             }
         }
 
-        AuthenticationService existingServiceRef = client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).withName("standard").get();
+        AuthenticationService existingServiceRef = client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).withName("standard").get();
         if (existingServiceRef == null) {
 
             AuthenticationServiceBuilder builder = new AuthenticationServiceBuilder()
@@ -355,7 +355,7 @@ public class KeycloakController {
                 builder.editMetadata().addToAnnotations(AnnotationKeys.OAUTH_URL, keycloakOauthUrl);
             }
 
-            client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).create(
+            client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).create(
                     builder.build());
         }
     }
