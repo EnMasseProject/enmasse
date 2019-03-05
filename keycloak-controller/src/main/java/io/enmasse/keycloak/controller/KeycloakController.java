@@ -4,43 +4,32 @@
  */
 package io.enmasse.keycloak.controller;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.time.Clock;
-import java.time.Duration;
-import java.util.*;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.fabric8.kubernetes.api.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.ConfigMapAddressSpaceApi;
-import io.enmasse.k8s.api.ResourceChecker;
-import io.enmasse.user.api.UserApi;
-import io.enmasse.user.keycloak.KeycloakFactory;
-import io.enmasse.user.keycloak.KeycloakUserApi;
-import io.enmasse.user.keycloak.KubeKeycloakFactory;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.OAuthClient;
 import io.fabric8.openshift.api.model.OAuthClientBuilder;
 import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.api.model.User;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
 
 
 public class KeycloakController {
@@ -52,7 +41,6 @@ public class KeycloakController {
         Map<String, String> env = System.getenv();
 
         NamespacedOpenShiftClient client = new DefaultOpenShiftClient();
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
 
         boolean autoCreate = Optional.ofNullable(System.getenv("AUTO_CREATE")).map(Boolean::parseBoolean).orElse(false);
 
@@ -62,34 +50,6 @@ public class KeycloakController {
             ensureConfigurationExists(client, env, isOpenShift);
             ensurePersistentVolumeClaimExists(client, env);
         }
-
-        final String keycloakConfigName = getKeycloakConfigName(env);
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client,
-                keycloakConfigName,
-                getKeycloakCredentialsSecretName(env),
-                getKeycloakCertSecretName(env));
-
-        KubeApi kubeApi = new KubeApi() {
-
-        };
-
-
-        UserApi userApi = new KeycloakUserApi(keycloakFactory, Clock.systemUTC());
-
-        KeycloakManager keycloakManager = new KeycloakManager(new Keycloak(keycloakFactory), kubeApi, userApi);
-
-        Duration resyncInterval = getEnv(env, "RESYNC_INTERVAL")
-                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
-                .orElse(Duration.ofMinutes(5));
-
-        Duration checkInterval = getEnv(env, "CHECK_INTERVAL")
-                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
-                .orElse(Duration.ofSeconds(30));
-
-        ResourceChecker<AddressSpace> resourceChecker = new ResourceChecker<>(keycloakManager, checkInterval);
-        resourceChecker.start();
-        addressSpaceApi.watchAddressSpaces(resourceChecker, resyncInterval);
-
     }
 
     private static void ensurePersistentVolumeClaimExists(NamespacedOpenShiftClient client, Map<String, String> env) {
