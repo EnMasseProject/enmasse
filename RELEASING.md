@@ -19,6 +19,10 @@ Before a release, a release candidate is created and announced to allow the comm
 
 Normally, a release is made within 24 hours after the release candidate is considered satisfactory.
 
+## Update CHANGELOG.md
+
+Add relevant changes to CHANGELOG.md.
+
 ## Creating a new release branch
 
 The release branch should be on the form MAJOR.MINOR. The `scripts/branch-release.sh` script creates a release branch for a minor version. To create a new release branch, simply run it with the version name as argument (NB: important to run it from the repository root folder):
@@ -53,3 +57,17 @@ operation:
 2. Create tag and push branch and tag to github
 
 Travis will detect that the tag has been created, and then build and publish the release.
+
+## Updating documentation
+
+* Checkout the [website documentation](https://github.com/EnMasseProject/enmasse.io)
+* Add the new version to the documentation [build file](https://github.com/EnMasseProject/enmasse.io/blob/master/build.rb#L5)
+* Push changes to website, travis CI will build and publish the new docs
+
+## Update release tag changelog
+
+Edit the release tag on github with the changes from CHANGELOG.md (Example: https://github.com/EnMasseProject/enmasse/releases/tag/0.26.0).
+
+## Announce release
+
+Send an e-mail to enmasse@redhat.com announcing the release, including changes for the release.
