@@ -8,7 +8,8 @@ import java.util.Set;
 
 public interface KeycloakApi {
     Set<String> getRealmNames();
+    boolean isAvailable();
     void createRealm(String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params);
-    void updateRealm(String realmName, KeycloakRealmParams updated);
+    void updateRealm(String realmName, KeycloakRealmParams current, KeycloakRealmParams updated);
     void deleteRealm(String realmName);
 }

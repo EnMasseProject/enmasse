@@ -12,6 +12,7 @@ import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
+import io.enmasse.user.api.UserApiWithFallback;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
@@ -70,19 +71,11 @@ public class ApiServer extends AbstractVerticle {
 
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client,
-                options.getStandardAuthserviceConfigName(),
-                options.getStandardAuthserviceCredentialsSecretName(),
-                options.getStandardAuthserviceCertSecretName());
+        AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
+
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client, authenticationServiceRegistry);
         Clock clock = Clock.systemUTC();
-        UserApi userApi = null;
-        if (keycloakFactory.isKeycloakAvailable()) {
-            log.info("Using Keycloak for User API");
-            userApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
-        } else {
-            log.info("Using Null for User API");
-            userApi = new NullUserApi();
-        }
+        UserApi userApi = new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout()), new NullUserApi());
 
         String clientCa;
         String requestHeaderClientCa;
@@ -97,7 +90,6 @@ public class ApiServer extends AbstractVerticle {
         }
 
         Metrics metrics = new Metrics();
-        AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
 
         HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry);
 

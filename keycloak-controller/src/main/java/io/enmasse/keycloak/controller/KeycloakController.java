@@ -70,32 +70,7 @@ public class KeycloakController {
                 getKeycloakCertSecretName(env));
 
         KubeApi kubeApi = new KubeApi() {
-            @Override
-            public String findUserId(String userName) {
-                if (isOpenShift) {
-                    if (userName == null || userName.isEmpty() || userName.contains(":")) {
-                        return "";
-                    }
-                    try {
-                        User user = client.users().withName(userName).get();
-                        if (user == null) {
-                            return "";
-                        }
-                        log.info("Found user {} with id {}", user.getMetadata().getName(), user.getMetadata().getUid());
-                        return user.getMetadata().getUid();
-                    } catch (KubernetesClientException e) {
-                        log.warn("Exception looking up user id, returning empty", e);
-                        return "";
-                    }
-                } else {
-                    return "";
-                }
-            }
 
-            @Override
-            public KeycloakRealmParams getIdentityProviderParams() {
-                return KeycloakRealmParams.fromKube(client, keycloakConfigName);
-            }
         };
 
 
@@ -230,7 +205,7 @@ public class KeycloakController {
                     .addToData("admin.username", b64enc.encodeToString(adminUser))
                     .addToData("admin.password", b64enc.encodeToString(adminPassword))
                     .withType("Opaque");
-            client.secrets().createOrReplace(secretBuilder.build());
+            existingCredentials = client.secrets().createOrReplace(secretBuilder.build());
         } else {
             log.info("{} already exists, not generating", getKeycloakCredentialsSecretName(env));
         }
@@ -313,6 +288,7 @@ public class KeycloakController {
                         "on authentication service 'standard' as these details cannot be determined automatically.");
             }
 
+            builder.editMetadata().addToAnnotations(AnnotationKeys.KEYCLOAK_CREDENTIALS_SECRET_NAME, existingCredentials.getMetadata().getName());
 
             AuthenticationService authenticationService = builder.build();
             client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).create(

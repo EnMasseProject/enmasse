@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class Keycloak implements KeycloakApi {
@@ -48,6 +47,14 @@ public class Keycloak implements KeycloakApi {
         return withKeycloak(kc -> kc.realms().findAll().stream()
                 .map(RealmRepresentation::getRealm)
                 .collect(Collectors.toSet()));
+    }
+
+    @Override
+    public synchronized boolean isAvailable() {
+        if (keycloak == null) {
+            keycloak = keycloakFactory.createInstance();
+        }
+        return keycloak != null;
     }
 
     @Override
@@ -97,14 +104,12 @@ public class Keycloak implements KeycloakApi {
 
         withKeycloak(kc -> {
             kc.realms().create(newRealm);
-            realmState.put(realmName, params);
             return true;
         });
     }
 
     @Override
-    public void updateRealm(String realmName, KeycloakRealmParams updated) {
-        KeycloakRealmParams current = realmState.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
+    public void updateRealm(String realmName, KeycloakRealmParams current, KeycloakRealmParams updated) {
         if (!updated.equals(current)) {
             withKeycloak(kc -> {
                 RealmResource realm = kc.realm(realmName);
@@ -152,10 +157,6 @@ public class Keycloak implements KeycloakApi {
                         realm.update(realmRep);
                         log.info("Updated browser security headers of {}", realmName);
                     }
-
-                    if (!updatedProviderItems.isEmpty() || browserSecurityHeadersChanged) {
-                        realmState.put(realmName, updated);
-                    }
                 }
                 return true;
             });
@@ -167,13 +168,7 @@ public class Keycloak implements KeycloakApi {
     @Override
     public void deleteRealm(String realmName) {
         withKeycloak(kc -> {
-
-            try {
-                kc.realm(realmName).remove();
-            } finally {
-                realmState.remove(realmName);
-            }
-
+            kc.realm(realmName).remove();
             return true;
         });
     }

@@ -38,7 +38,7 @@ public class StatusController implements Controller {
     }
 
     @Override
-    public AddressSpace handle(AddressSpace addressSpace) {
+    public AddressSpace reconcile(AddressSpace addressSpace) {
         checkComponentsReady(addressSpace);
         checkAuthServiceReady(addressSpace);
         return addressSpace;

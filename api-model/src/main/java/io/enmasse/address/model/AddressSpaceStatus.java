@@ -36,7 +36,7 @@ import io.sundr.builder.annotations.Inline;
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressSpaceStatus {
-    @JsonProperty("isReady")
+    @JsonProperty("isAvailable")
     private boolean ready = false;
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid EndpointStatus> endpointStatuses = new ArrayList<>();

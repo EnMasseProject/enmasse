@@ -34,7 +34,7 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Status {
 
-    @JsonProperty("isReady")
+    @JsonProperty("isAvailable")
     private boolean ready = false;
     private Phase phase = Phase.Pending;
     private List<String> messages = new ArrayList<>();

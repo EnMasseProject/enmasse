@@ -6,7 +6,9 @@ package io.enmasse.user.keycloak;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
@@ -37,29 +39,29 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final NamespacedOpenShiftClient openShiftClient;
-    private final String keycloakConfigName;
-    private final String keycloakCredentialsSecretName;
-    private final String keycloakCertSecretName;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
 
-    public KubeKeycloakFactory(NamespacedOpenShiftClient openShiftClient, String keycloakConfigName, String keycloakCredentialsSecretName, String keycloakCertSecretName) {
+    public KubeKeycloakFactory(NamespacedOpenShiftClient openShiftClient, AuthenticationServiceRegistry authenticationServiceRegistry) {
         this.openShiftClient = openShiftClient;
-        this.keycloakConfigName = keycloakConfigName;
-        this.keycloakCredentialsSecretName = keycloakCredentialsSecretName;
-        this.keycloakCertSecretName = keycloakCertSecretName;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
     }
 
     @Override
     public Keycloak createInstance() {
-        ConfigMap keycloakConfig = openShiftClient.configMaps().withName(keycloakConfigName).get();
-        Secret credentials = openShiftClient.secrets().withName(keycloakCredentialsSecretName).get();
+        AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationServiceByName("standard").orElse(null);
+        if (authenticationService == null) {
+            return null;
+        }
 
-        String keycloakUri = String.format("https://%s:8443/auth", keycloakConfig.getData().get("hostname"));
+        Secret credentials = openShiftClient.secrets().withName(authenticationService.getAnnotation(AnnotationKeys.KEYCLOAK_CREDENTIALS_SECRET_NAME)).get();
+
+        String keycloakUri = String.format("https://%s:8443/auth", authenticationService.getSpec().getHost());
         Base64.Decoder b64dec = Base64.getDecoder();
         String adminUser = new String(b64dec.decode(credentials.getData().get("admin.username")), StandardCharsets.UTF_8);
         String adminPassword = new String(b64dec.decode(credentials.getData().get("admin.password")), StandardCharsets.UTF_8);
         log.info("User keycloak URI {}", keycloakUri);
 
-        Secret certificate = openShiftClient.secrets().withName(keycloakCertSecretName).get();
+        Secret certificate = openShiftClient.secrets().withName(authenticationService.getSpec().getCaCertSecretName()).get();
 
         KeyStore trustStore = createKeyStore(b64dec.decode(certificate.getData().get("tls.crt")));
         ResteasyJackson2Provider provider = new ResteasyJackson2Provider() {
@@ -87,12 +89,6 @@ public class KubeKeycloakFactory implements KeycloakFactory {
                 .resteasyClient(resteasyClient)
                 .build();
     }
-
-    @Override
-    public boolean isKeycloakAvailable() {
-        return openShiftClient.services().withName("standard-authservice").get() != null;
-    }
-
 
     private static KeyStore createKeyStore(byte [] ca) {
         try {

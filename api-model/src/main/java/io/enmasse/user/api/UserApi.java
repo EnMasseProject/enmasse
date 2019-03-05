@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface UserApi {
+    boolean isAvailable();
     Optional<User> getUserWithName(String realm, String name) throws Exception;
     void createUser(String realm, User user) throws Exception;
     boolean replaceUser(String realm, User user) throws Exception;

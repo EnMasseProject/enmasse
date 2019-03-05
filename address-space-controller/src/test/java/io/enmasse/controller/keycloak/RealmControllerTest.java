@@ -2,15 +2,17 @@
  * Copyright 2017-2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.keycloak.controller;
+package io.enmasse.controller.keycloak;
 
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,27 +23,51 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class KeycloakManagerTest {
+public class RealmControllerTest {
 
-    private KeycloakManager manager;
+    private RealmController manager;
     private Set<String> realms;
     private List<String> updatedRealms;
     private Map<String, String> realmAdminUsers;
-    private KubeApi mockKubeApi;
+    private UserLookupApi mockUserLookupApi;
+    private AuthenticationServiceRegistry mockAuthenticationServiceRegistry;
 
     @BeforeEach
     public void setup() {
         realms = new HashSet<>();
         updatedRealms = new LinkedList<>();
         realmAdminUsers = new HashMap<>();
-        mockKubeApi = mock(KubeApi.class);
-        when(mockKubeApi.findUserId(any())).thenReturn("");
-        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new KeycloakRealmParams("http://example.com", "id", "secret", Collections.singletonMap("hdr1", "value1")));
+        mockUserLookupApi = mock(UserLookupApi.class);
+        when(mockUserLookupApi.findUserId(any())).thenReturn("");
 
-        manager = new KeycloakManager(new KeycloakApi() {
+        AuthenticationService authenticationService = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_URL, "http://bar.com")
+                .addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID, "i")
+                .addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET, "secret1")
+                .addToAnnotations(AnnotationKeys.BROWSER_SECURITY_HEADERS, "{\"hdr2\":\"value2\"}")
+                .endMetadata()
+                .withNewSpec()
+                .withHost("example.com")
+                .withPort(5671)
+                .endSpec()
+                .build();
+        mockAuthenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        io.enmasse.address.model.AuthenticationService standardSvc = new io.enmasse.address.model.AuthenticationServiceBuilder()
+                .withName("standard")
+                .build();
+        when(mockAuthenticationServiceRegistry.findAuthenticationService(standardSvc)).thenReturn(Optional.of(authenticationService));
+
+        manager = new RealmController(new KeycloakApi() {
             @Override
             public Set<String> getRealmNames() {
                 return new HashSet<>(realms);
+            }
+
+            @Override
+            public boolean isAvailable() {
+                return true;
             }
 
             @Override
@@ -50,7 +76,7 @@ public class KeycloakManagerTest {
             }
 
             @Override
-            public void updateRealm(String realmName, KeycloakRealmParams updated) {
+            public void updateRealm(String realmName, KeycloakRealmParams current, KeycloakRealmParams updated) {
                 updatedRealms.add(realmName);
             }
 
@@ -58,7 +84,12 @@ public class KeycloakManagerTest {
             public void deleteRealm(String realmName) {
                 realms.remove(realmName);
             }
-        }, mockKubeApi, new UserApi() {
+        }, mockUserLookupApi, new UserApi() {
+            @Override
+            public boolean isAvailable() {
+                return true;
+            }
+
             @Override
             public Optional<User> getUserWithName(String realm, String name) {
                 return Optional.empty();
@@ -108,18 +139,18 @@ public class KeycloakManagerTest {
             public void deleteUsers(String namespace) {
 
             }
-        });
+        }, mockAuthenticationServiceRegistry);
     }
 
     @Test
     public void testAddAddressSpace() throws Exception {
-        manager.onUpdate(Collections.singletonList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
+        manager.reconcile(createAddressSpace("a1", AuthenticationServiceType.NONE));
         assertTrue(realms.isEmpty());
 
-        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD)));
+        manager.reconcile(createAddressSpace("a2", AuthenticationServiceType.STANDARD));
         assertTrue(realms.contains("a2"));
 
-        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.reconcile(createAddressSpace("a3", AuthenticationServiceType.STANDARD));
         assertTrue(realms.contains("a2"));
         assertTrue(realms.contains("a3"));
         assertEquals(2, realms.size());
@@ -130,8 +161,12 @@ public class KeycloakManagerTest {
 
     @Test
     public void testRemoveAddressSpace() throws Exception {
-        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
-        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.reconcile(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
+        manager.reconcile(createAddressSpace("a2", AuthenticationServiceType.STANDARD));
+        manager.reconcile(createAddressSpace("a3", AuthenticationServiceType.STANDARD));
+
+        manager.prepare();
+        manager.retainAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
 
         assertTrue(realms.contains("a1"));
         assertFalse(realms.contains("a2"));
@@ -141,11 +176,12 @@ public class KeycloakManagerTest {
 
     @Test
     public void testAuthTypeChanged() throws Exception {
-        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD)));
+        manager.reconcile(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
         assertTrue(realms.contains("a1"));
         assertEquals(1, realms.size());
 
-        manager.onUpdate(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
+        manager.prepare();
+        manager.retainAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertFalse(realms.contains("a1"));
         assertEquals(0, realms.size());
     }
@@ -153,16 +189,38 @@ public class KeycloakManagerTest {
     @Test
     public void testUpdateRealm() throws Exception {
         List<AddressSpace> spaces = Collections.singletonList(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
-        manager.onUpdate(spaces);
+        manager.prepare();
+        for (AddressSpace addressSpace : spaces) {
+            manager.reconcile(addressSpace);
+        }
         assertTrue(realms.contains("a1"));
         assertTrue(updatedRealms.isEmpty());
 
-        manager.onUpdate(spaces);
+        manager.prepare();
+        for (AddressSpace addressSpace : spaces) {
+            manager.reconcile(addressSpace);
+        }
         assertTrue(updatedRealms.isEmpty());
 
-        when(mockKubeApi.getIdentityProviderParams()).thenReturn(new KeycloakRealmParams("http://example.com", "id", "secret2", Collections.singletonMap("hdr1", "value1")));
+        AuthenticationService authenticationService = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_URL, "http://example.com")
+                .addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID, "id")
+                .addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET, "secret2")
+                .addToAnnotations(AnnotationKeys.BROWSER_SECURITY_HEADERS, "{\"hdr1\":\"value1\"}")
+                .endMetadata()
+                .withNewSpec()
+                .withHost("example.com")
+                .withPort(5671)
+                .endSpec()
+                .build();
+        when(mockAuthenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
 
-        manager.onUpdate(spaces);
+        manager.prepare();
+        for (AddressSpace addressSpace : spaces) {
+            manager.reconcile(addressSpace);
+        }
         assertEquals(1, updatedRealms.size());
     }
 
@@ -172,6 +230,7 @@ public class KeycloakManagerTest {
                         .withName(name)
                         .withNamespace("myns")
                         .addToAnnotations(AnnotationKeys.CREATED_BY, "developer")
+                        .addToAnnotations(AnnotationKeys.REALM_NAME, name)
                         .build())
 
                 .withNewSpec()
@@ -182,7 +241,7 @@ public class KeycloakManagerTest {
                         .withName("console")
                         .withService("console")
                         .build())
-                .withAuthenticationService(new AuthenticationServiceBuilder().withType(authType).build())
+                .withAuthenticationService(new io.enmasse.address.model.AuthenticationServiceBuilder().withName(authType.getName()).build())
                 .endSpec()
 
                 .withNewStatus()

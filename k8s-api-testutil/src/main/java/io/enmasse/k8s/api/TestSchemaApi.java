@@ -6,6 +6,8 @@ package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
@@ -95,6 +97,15 @@ public class TestSchemaApi implements SchemaApi {
                                 .build()
 
                 ))
+                .withAuthenticationServices(new AuthenticationServiceBuilder()
+                        .withNewMetadata()
+                        .withName("standard")
+                        .endMetadata()
+                        .withNewSpec()
+                        .withHost("example.com")
+                        .withPort(5671)
+                        .endSpec()
+                        .build())
                 .build();
     }
 

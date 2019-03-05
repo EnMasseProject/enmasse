@@ -5,7 +5,6 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.*;
@@ -89,6 +88,10 @@ public class ControllerChain implements Watcher<AddressSpace> {
             return;
         }
 
+        for (Controller controller : chain) {
+            controller.prepare();
+        }
+
         for (AddressSpace addressSpace : resources) {
             try {
                 log.info("Checking address space {}:{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
@@ -97,7 +100,7 @@ public class ControllerChain implements Watcher<AddressSpace> {
                 for (Controller controller : chain) {
                     log.info("Controller {}", controller);
                     log.debug("Address space input: {}", addressSpace);
-                    addressSpace = controller.handle(addressSpace);
+                    addressSpace = controller.reconcile(addressSpace);
                 }
 
                 log.debug("Controller chain output: {}", addressSpace);
@@ -110,7 +113,14 @@ public class ControllerChain implements Watcher<AddressSpace> {
                 log.warn("Error processing address space {}", addressSpace.getMetadata().getName(), e);
             }
         }
-        retainAddressSpaces(resources);
+
+        for (Controller controller : chain) {
+            try {
+                controller.retainAll(resources);
+            } catch (Exception e) {
+                log.warn("Exception in {} retainAll", controller, e);
+            }
+        }
 
         long now = System.currentTimeMillis();
         metrics.reportMetric(new Metric("version", new MetricValue(0, now, new MetricLabel("name", "address-space-controller"), new MetricLabel("version", version))));
@@ -140,12 +150,5 @@ public class ControllerChain implements Watcher<AddressSpace> {
                 MetricType.gauge,
                 new MetricValue(resources.size(), now)));
 
-    }
-
-    private void retainAddressSpaces(List<AddressSpace> desiredAddressSpaces) {
-        String [] uuids = desiredAddressSpaces.stream()
-                .map(a -> a.getAnnotation(AnnotationKeys.INFRA_UUID))
-                .toArray(String[]::new);
-        kubernetes.deleteResourcesNotIn(uuids);
     }
 }

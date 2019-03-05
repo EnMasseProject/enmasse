@@ -37,4 +37,5 @@ public interface AnnotationKeys {
     String IDENTITY_PROVIDER_CLIENT_ID = "enmasse.io/identity-provider-client-id";
     String IDENTITY_PROVIDER_CLIENT_SECRET = "enmasse.io/identity-provider-client-secret";
     String BROWSER_SECURITY_HEADERS = "enmasse.io/browser-security-headers";
+    String KEYCLOAK_CREDENTIALS_SECRET_NAME = "enmasse.io/keycloak-credentials-secret-name";
 }

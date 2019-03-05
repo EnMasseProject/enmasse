@@ -13,5 +13,6 @@ import java.util.Optional;
  */
 public interface AuthenticationServiceRegistry {
     Optional<io.enmasse.admin.model.v1.AuthenticationService> findAuthenticationService(AuthenticationService authenticationService);
+    Optional<io.enmasse.admin.model.v1.AuthenticationService> findAuthenticationServiceByName(String name);
     Optional<io.enmasse.admin.model.v1.AuthenticationService> resolveDefaultAuthenticationService();
 }

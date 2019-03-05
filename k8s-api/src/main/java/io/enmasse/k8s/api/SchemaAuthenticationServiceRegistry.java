@@ -22,12 +22,17 @@ public class SchemaAuthenticationServiceRegistry implements AuthenticationServic
 
     @Override
     public Optional<AuthenticationService> findAuthenticationService(io.enmasse.address.model.AuthenticationService authenticationService) {
-        Schema schema = schemaProvider.getSchema();
         if (authenticationService.getName() == null) {
-            return schema.findAuthenticationService(authenticationService.getType().getName());
+            return findAuthenticationServiceByName(authenticationService.getType().getName());
         } else {
-            return schema.findAuthenticationService(authenticationService.getName());
+            return findAuthenticationServiceByName(authenticationService.getName());
         }
+    }
+
+    @Override
+    public Optional<AuthenticationService> findAuthenticationServiceByName(String name) {
+        Schema schema = schemaProvider.getSchema();
+        return schema.findAuthenticationService(name);
     }
 
     @Override

@@ -6,14 +6,11 @@
 package io.enmasse.controller.keycloak;
 
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.Controller;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.enmasse.k8s.api.Watcher;
 import io.enmasse.user.api.UserApi;
-import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
@@ -29,21 +26,21 @@ import static io.enmasse.user.model.v1.Operation.recv;
 import static io.enmasse.user.model.v1.Operation.send;
 import static io.enmasse.user.model.v1.Operation.view;
 
-public class RealmController implements Controller
-{
+public class RealmController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(RealmController.class);
     private static final String MASTER_REALM = "master";
     private final KeycloakApi keycloak;
     private final Map<String, KeycloakRealmParams> realmState = new ConcurrentHashMap<>();
     private volatile Set<String> currentRealmNames = new HashSet<>();
     private final UserApi userApi;
+    private final UserLookupApi userLookupApi;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
-    private final KeycloakFactory keycloakFactory;
 
-    public KeycloakManager(KeycloakApi keycloak, KubeApi kube, UserApi userApi) {
+    public RealmController(KeycloakApi keycloak, UserLookupApi userLookupApi, UserApi userApi, AuthenticationServiceRegistry authenticationServiceRegistry) {
         this.keycloak = keycloak;
-        this.kube = kube;
+        this.userLookupApi = userLookupApi;
         this.userApi = userApi;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
     }
 
     private EndpointSpec getConsoleEndpoint(AddressSpace addressSpace) {
@@ -79,12 +76,18 @@ public class RealmController implements Controller
     }
 
     @Override
-    public void beforeAll() {
+    public void prepare() {
+        if (!keycloak.isAvailable()) {
+            return;
+        }
         currentRealmNames = keycloak.getRealmNames();
     }
 
     @Override
-    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
+    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
+        if (!keycloak.isAvailable()) {
+            return addressSpace;
+        }
         AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService())
                 .orElse(null);
         if (authenticationService == null) {
@@ -97,27 +100,20 @@ public class RealmController implements Controller
             return addressSpace;
         }
 
-        if (authenticationService.getSpec().getRealm() == null) {
+        if (authenticationService.getSpec().getRealm() != null) {
             log.debug("Realm specified in authentication service, not performing any per-address space realm operations");
             return addressSpace;
         }
 
         KeycloakRealmParams keycloakRealmParams = KeycloakRealmParams.fromAuthenticationService(authenticationService);
         String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        KeycloakRealmParams lastParams = realmState.get(realmName);
-        if (!Objects.equals(lastParams, keycloakRealmParams)) {
-            log.info("Identity provider params: {}", keycloakRealmParams);
-            keycloak.updateRealm(realmName, keycloakRealmParams);
-            realmState.put(realmName, keycloakRealmParams);
-        }
 
-        // TODO: Ideally cache or add a 'prepare' step to all controllers
         if (!currentRealmNames.contains(realmName)) {
             log.info("Creating realm {}", realmName);
             String userName = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY);
             String userId = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY_UID);
             if (userId == null || userId.isEmpty()) {
-                userId = kube.findUserId(userName);
+                userId = userLookupApi.findUserId(userName);
             }
 
             EndpointStatus endpointStatus = getConsoleEndpointStatus(addressSpace);
@@ -128,6 +124,7 @@ public class RealmController implements Controller
             } else {
                 String consoleUri = getConsoleUri(endpointStatus);
                 keycloak.createRealm(addressSpace.getMetadata().getNamespace(), realmName, consoleUri, keycloakRealmParams);
+                realmState.put(realmName, keycloakRealmParams);
                 userApi.createUser(realmName, new UserBuilder()
                         .withMetadata(new ObjectMetaBuilder()
                                 .withName(addressSpace.getMetadata().getName() + "." + KubeUtil.sanitizeUserName(userName))
@@ -152,10 +149,45 @@ public class RealmController implements Controller
                         .build());
             }
         }
+
+        KeycloakRealmParams lastParams = realmState.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
+        if (!Objects.equals(lastParams, keycloakRealmParams)) {
+            log.info("Identity provider params: {}", keycloakRealmParams);
+            keycloak.updateRealm(realmName, lastParams, keycloakRealmParams);
+            realmState.put(realmName, keycloakRealmParams);
+        }
+        return addressSpace;
     }
 
     @Override
-    public void afterAll(Set<AddressSpace> addressSpaces) {
+    public void retainAll(List<AddressSpace> addressSpaces) {
+        if (!keycloak.isAvailable()) {
+            return;
+        }
+        Map<String, AddressSpace> standardAuthSvcSpaces = addressSpaces.stream()
+                .filter(x -> {
+                    AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(x.getSpec().getAuthenticationService()).orElse(null);
+                    return authenticationService != null && "standard".equals(authenticationService.getMetadata().getName());
+                }).collect(Collectors.toMap(
+                        addressSpace ->
+                                Optional.ofNullable(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME))
+                                .orElse(addressSpace.getMetadata().getName()),
+                        Function.identity()));
 
+        for(String realmName : currentRealmNames) {
+            if(standardAuthSvcSpaces.remove(realmName) == null && !MASTER_REALM.equals(realmName)) {
+                log.info("Deleting realm {}", realmName);
+                try {
+                    keycloak.deleteRealm(realmName);
+                } finally {
+                    realmState.remove(realmName);
+                }
+            }
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "RealmController";
     }
 }
