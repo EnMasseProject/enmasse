@@ -50,6 +50,12 @@ spec:
               key: oauthUrl
               name: keycloak-config
               optional: true
+        args:
+        - start-keycloak.sh
+        - -b
+        - 0.0.0.0
+        - -c
+        - standalone.xml
         image: ${KEYCLOAK_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         livenessProbe:
