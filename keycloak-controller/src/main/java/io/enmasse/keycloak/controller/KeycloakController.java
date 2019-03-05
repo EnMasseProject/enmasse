@@ -215,7 +215,7 @@ public class KeycloakController {
             }
         }
 
-        AuthenticationService existingServiceRef = client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).withName("standard").get();
+        AuthenticationService existingServiceRef = client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).withName("standard").get();
 
         if (existingServiceRef == null) {
 
