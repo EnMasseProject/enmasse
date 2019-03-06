@@ -21,12 +21,12 @@ func (r *ReconcileIoTConfig) processCollector(ctx context.Context, config *iotv1
 
 func (r *ReconcileIoTConfig) reconcileCollectorDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", "iot-core", "iot-gc")
+	install.ApplyDeploymentDefaults(deployment, "iot", "iot-core", deployment.Name)
 
 	deployment.Spec.Replicas = nil
 
 	err := install.ApplyContainerWithError(deployment, "collector", func(container *corev1.Container) error {
-		if err := SetContainerImage(container, "iot-gc", MakeImageProperties(config)); err != nil {
+		if err := install.SetContainerImage(container, "iot-gc", MakeImageProperties(config)); err != nil {
 			return err
 		}
 

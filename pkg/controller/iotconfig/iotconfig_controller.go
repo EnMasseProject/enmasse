@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -65,6 +66,24 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 
 	// watch for generated Deployment resources
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
+		OwnerType:    &iotv1alpha1.IoTConfig{},
+		IsController: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	// watch for generated Service resources
+	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
+		OwnerType:    &iotv1alpha1.IoTConfig{},
+		IsController: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	// watch for generated ConfigMap resources
+	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
 		OwnerType:    &iotv1alpha1.IoTConfig{},
 		IsController: true,
 	})
@@ -128,6 +147,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
 	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processAuthService(ctx, config)
+	})
 
 	return rc.Result()
 }
@@ -158,6 +180,54 @@ func (r *ReconcileIoTConfig) processDeployment(ctx context.Context, name string,
 		}
 
 		return manipulator(config, existingDeployment)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processService(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error) error {
+
+	service := corev1.Service{
+		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &service, func(existing runtime.Object) error {
+		existingService := existing.(*corev1.Service)
+
+		if err := controllerutil.SetControllerReference(config, existingService, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, existingService)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.ConfigMap) error) error {
+
+	service := corev1.ConfigMap{
+		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &service, func(existing runtime.Object) error {
+		existingConfigMap := existing.(*corev1.ConfigMap)
+
+		if err := controllerutil.SetControllerReference(config, existingConfigMap, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, existingConfigMap)
 	})
 
 	if err != nil {

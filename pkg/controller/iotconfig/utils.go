@@ -28,15 +28,8 @@ func MakeImageProperties(config *iotv1alpha1.IoTConfig) iotv1alpha1.ImagePropert
 	})
 }
 
-func SetContainerImage(container *corev1.Container, imageName string, properties iotv1alpha1.ImageProperties) error {
-
-	image, err := install.MakeImage(imageName, properties)
-	if err != nil {
-		return err
-	}
-
-	container.Image = image
-	container.ImagePullPolicy = *properties.PullPolicy
-
-	return nil
+// This sets the default Hono probes
+func SetHonoProbes(container *corev1.Container) {
+	container.ReadinessProbe = install.ApplyHttpProbe(container.ReadinessProbe, 10, "/readiness", 8088)
+	container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 180, "/liveness", 8088)
 }

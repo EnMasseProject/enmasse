@@ -13,33 +13,45 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
+
+func createDefaultLabels(labels map[string]string, component string, app string, name string) map[string]string {
+
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+
+	labels["component"] = component
+	labels["app"] = app
+	labels["name"] = name
+
+	return labels
+}
+
+// Apply standard set of labels
+func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, app string, name string) {
+	meta.Labels = createDefaultLabels(meta.Labels, component, app, name)
+}
+
+// Apply some default service values
+func ApplyServiceDefaults(service *corev1.Service, component string, app string, name string) {
+
+	ApplyDefaultLabels(&service.ObjectMeta, component, app, name)
+	service.Spec.Selector = createDefaultLabels(nil, component, app, name)
+
+}
 
 // Apply some default deployment values
 func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, app string, name string) {
-	if deployment.Labels == nil {
-		deployment.Labels = make(map[string]string)
-	}
 
-	deployment.Labels["component"] = component
-	deployment.Labels["app"] = app
-	deployment.Labels["name"] = name
+	ApplyDefaultLabels(&deployment.ObjectMeta, component, app, name)
 
 	deployment.Spec.Selector = &v1.LabelSelector{
-		MatchLabels: map[string]string{
-			"component": component,
-			"app":       app,
-			"name":      name,
-		},
+		MatchLabels: createDefaultLabels(nil, component, app, name),
 	}
 
-	if deployment.Spec.Template.ObjectMeta.Labels == nil {
-		deployment.Spec.Template.ObjectMeta.Labels = make(map[string]string)
-	}
-
-	deployment.Spec.Template.ObjectMeta.Labels["component"] = component
-	deployment.Spec.Template.ObjectMeta.Labels["app"] = app
-	deployment.Spec.Template.ObjectMeta.Labels["name"] = name
+	deployment.Spec.Template.ObjectMeta.Labels = createDefaultLabels(deployment.Spec.Template.ObjectMeta.Labels, component, app, name)
 
 }
 
@@ -71,6 +83,57 @@ func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator
 	if err == nil {
 		deployment.Spec.Template.Spec.Containers = append(deployment.Spec.Template.Spec.Containers, *c)
 	}
+
+	return err
+}
+
+func ApplyConfigMapVolume(deployment *appsv1.Deployment, name string, configMapName string) {
+	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
+		if volume.ConfigMap == nil {
+			volume.ConfigMap = &corev1.ConfigMapVolumeSource{}
+		}
+		volume.ConfigMap.Name = configMapName
+	})
+}
+
+func ApplySecretVolume(deployment *appsv1.Deployment, name string, secretName string) {
+	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
+		if volume.Secret == nil {
+			volume.Secret = &corev1.SecretVolumeSource{}
+		}
+		volume.Secret.SecretName = secretName
+	})
+}
+
+func ApplyVolume(deployment *appsv1.Deployment, name string, mutator func(*corev1.Volume)) {
+	// call "with error", and eat up the error
+	_ = ApplyVolumeWithError(deployment, name, func(volume *corev1.Volume) error {
+		mutator(volume)
+		return nil
+	})
+}
+
+func ApplyVolumeWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Volume) error) error {
+
+	if deployment.Spec.Template.Spec.Volumes == nil {
+		deployment.Spec.Template.Spec.Volumes = make([]corev1.Volume, 0)
+	}
+
+	for i, c := range deployment.Spec.Template.Spec.Volumes {
+		if c.Name == name {
+			return mutator(&deployment.Spec.Template.Spec.Volumes[i])
+		}
+	}
+
+	v := &corev1.Volume{
+		Name: name,
+	}
+
+	err := mutator(v)
+	if err == nil {
+		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, *v)
+	}
+
 	return err
 }
 
@@ -171,4 +234,35 @@ func MakeImage(baseName string, properties iotv1alpha1.ImageProperties) (string,
 	name = *properties.Repository + "/" + name
 
 	return name, nil
+}
+
+func SetContainerImage(container *corev1.Container, imageName string, properties iotv1alpha1.ImageProperties) error {
+
+	image, err := MakeImage(imageName, properties)
+	if err != nil {
+		return err
+	}
+
+	container.Image = image
+	container.ImagePullPolicy = *properties.PullPolicy
+
+	return nil
+}
+
+// Apply a simple HTTP probe
+func ApplyHttpProbe(probe *corev1.Probe, initialDelaySeconds int32, path string, port uint16) *corev1.Probe {
+	if probe == nil {
+		probe = &corev1.Probe{}
+	}
+
+	probe.InitialDelaySeconds = initialDelaySeconds
+	probe.Exec = nil
+	probe.TCPSocket = nil
+	probe.HTTPGet = &corev1.HTTPGetAction{
+		Path:   path,
+		Port:   intstr.FromInt(int(port)),
+		Scheme: corev1.URISchemeHTTP,
+	}
+
+	return probe
 }
