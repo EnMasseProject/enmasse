@@ -50,6 +50,16 @@ public class KeycloakController {
             ensureConfigurationExists(client, env, isOpenShift);
             ensurePersistentVolumeClaimExists(client, env);
         }
+
+        Object lock = new Object();
+        try {
+            synchronized (lock) {
+                while (true) {
+                    lock.wait();
+                }
+            }
+        } catch (InterruptedException ex) {
+        }
     }
 
     private static void ensurePersistentVolumeClaimExists(NamespacedOpenShiftClient client, Map<String, String> env) {

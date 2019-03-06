@@ -13,4 +13,4 @@ rules:
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "admin.enmasse.io" ]
     resources: [ "authenticationservices" ]
-    verbs: [ "get", "list", "create" ]
+    verbs: [ "get", "list", "create", "update", "patch" ]
