@@ -53,7 +53,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
-class ApiServerTest extends TestBase {
+public class ApiServerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
@@ -176,7 +176,7 @@ class ApiServerTest extends TestBase {
         }
     }
 
-    private static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
+    public static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
         List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
             MqttMessage m = new MqttMessage();
             m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));

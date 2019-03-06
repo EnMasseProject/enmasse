@@ -1,0 +1,331 @@
+/*
+ * Copyright 2018, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+package io.enmasse.systemtest.common.certs;
+
+import static io.enmasse.systemtest.TestTag.isolated;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.slf4j.Logger;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.CertSpecBuilder;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.ExposeSpecBuilder;
+import io.enmasse.address.model.ExposeType;
+import io.enmasse.address.model.TlsTermination;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.VertxFactory;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.common.api.ApiServerTest;
+import io.enmasse.systemtest.executor.Executor;
+import io.enmasse.systemtest.standard.QueueTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
+
+@Tag(isolated)
+class CertProviderTest extends TestBase {
+
+    public enum CertProvider {
+        certBundle,
+        selfsigned,
+        openshift,
+        wildcard
+    }
+
+    private static Logger log = CustomLogger.getLogger();
+    private static String ENDPOINT_PREFIX = "test-endpoint-";
+
+    private List<File> createdFiles;
+
+    private AddressSpace addressSpace;
+    private UserCredentials user;
+    private Address queue;
+    private Address topic;
+
+    @BeforeEach
+    void setUp() {
+        createdFiles = new ArrayList<>();
+    }
+
+    @AfterEach
+    void tearDown() {
+        createdFiles.forEach(FileUtils::deleteQuietly);
+    }
+
+    @Test
+    void testSelfSigned() throws Exception {
+
+        createTestEnv(new CertSpecBuilder()
+                .withProvider(CertProvider.selfsigned.name())
+                .build());
+
+        String caCert = new String(Base64.getDecoder().decode(getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
+
+        AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
+        amqpClient.getConnectOptions().setCredentials(user).setCert(caCert);
+
+        MqttConnectOptions mqttOptions = new MqttConnectOptions();
+        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(caCert.getBytes())));
+        mqttOptions.setUserName(user.getUsername());
+        mqttOptions.setPassword(user.getPassword().toCharArray());
+        IMqttClient mqttClient = mqttClientFactory.build()
+                .addressSpace(addressSpace)
+                .mqttConnectionOptions(mqttOptions).create();
+
+        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
+                .setSsl(true)
+                .setTrustAll(false)
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertValue(Buffer.buffer(caCert)))
+                .setVerifyHost(false));
+
+        testCertProvider(amqpClient, mqttClient, webClient);
+    }
+
+    @Test
+    void testCertBundle() throws Exception {
+        File caCert = createTempFile("certAuthority", "crt");
+        File caKey = createTempFile("certAuthority", "key");
+        createSelfSignedCert(caCert, caKey);
+        String randomName = UUID.randomUUID().toString();
+        File keyFile = createTempFile(randomName, "key");
+        File csrFile = createTempFile(randomName, "csr");
+        createCsr(keyFile, csrFile);
+        File crtFile = signCsr(caKey, caCert, keyFile, csrFile);
+        String key = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(keyFile));
+        String cert = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(crtFile));
+
+        createTestEnv(new CertSpecBuilder()
+                .withProvider(CertProvider.certBundle.name())
+                .withTlsKey(key)
+                .withTlsCert(cert)
+                .build());
+
+        AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
+        amqpClient.getConnectOptions()
+            .setCredentials(user)
+            .getProtonClientOptions()
+                .setSsl(true)
+                .setHostnameVerificationAlgorithm("")
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertPath(caCert.getAbsolutePath()))
+                .setTrustAll(false);
+
+        MqttConnectOptions mqttOptions = new MqttConnectOptions();
+        mqttOptions.setSocketFactory(getSocketFactory(new FileInputStream(caCert)));
+        mqttOptions.setUserName(user.getUsername());
+        mqttOptions.setPassword(user.getPassword().toCharArray());
+        IMqttClient mqttClient = mqttClientFactory.build()
+                .addressSpace(addressSpace)
+                .mqttConnectionOptions(mqttOptions).create();
+
+        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
+                .setSsl(true)
+                .setTrustAll(false)
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertPath(caCert.getAbsolutePath()))
+                .setVerifyHost(false));
+
+        testCertProvider(amqpClient, mqttClient, webClient);
+
+    }
+
+    @Test
+    @DisabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "true")
+    void testOpenshiftCertProvider() throws Exception {
+
+        Executor executor = new Executor(false);
+        executor.execute(Arrays.asList(
+                "oc", "config", "view", "--raw", "-o", "json"));
+        JsonObject configJson = new JsonObject(executor.getStdOut());
+        JsonArray clusters = configJson.getJsonArray("clusters");
+        String b64CaCert = null;
+        for(Object clusterObj : clusters) {
+            if(clusterObj instanceof JsonObject) {
+                JsonObject obj = (JsonObject)clusterObj;
+                JsonObject cluster = obj.getJsonObject("cluster");
+                if(cluster.containsKey("certificate-authority-data")) {
+                    b64CaCert = cluster.getString("certificate-authority-data");
+                }
+            }
+        }
+        if(b64CaCert==null) {
+            fail("certificate-authority-data not found "+executor.getStdOut());
+        }
+        String caCert = new String(Base64.getDecoder().decode(b64CaCert));
+
+        createTestEnv(new CertSpecBuilder()
+                .withProvider(CertProvider.openshift.name())
+                .build());
+
+        AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
+        amqpClient.getConnectOptions()
+            .setCredentials(user)
+            .setCert(caCert);
+
+        MqttConnectOptions mqttOptions = new MqttConnectOptions();
+        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(caCert.getBytes())));
+        mqttOptions.setUserName(user.getUsername());
+        mqttOptions.setPassword(user.getPassword().toCharArray());
+        IMqttClient mqttClient = mqttClientFactory.build()
+                .addressSpace(addressSpace)
+                .mqttConnectionOptions(mqttOptions).create();
+
+        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
+                .setSsl(true)
+                .setTrustAll(false)
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertValue(Buffer.buffer(caCert)))
+                .setVerifyHost(false));
+
+        testCertProvider(amqpClient, mqttClient, webClient);
+
+    }
+
+    private void createTestEnv(CertSpec endpointCert) throws Exception {
+        addressSpace = AddressSpaceUtils.createAddressSpaceObject("cert-provider-addr-space", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        addressSpace.getSpec().setEndpoints(Arrays.asList(
+                createEndpointSpec("messaging", "amqps", endpointCert),
+                createEndpointSpec("console", "https", endpointCert),
+                createEndpointSpec("mqtt", "secure-mqtt", endpointCert)));
+        createAddressSpace(addressSpace);
+
+        user = new UserCredentials("user1", "password1");
+        createUser(addressSpace, user);
+
+        queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        setAddresses(addressSpace, queue, topic);
+    }
+
+    private EndpointSpec createEndpointSpec(String service, String servicePort, CertSpec endpointCert) {
+        return new EndpointSpec(ENDPOINT_PREFIX + service,
+                service,
+                new ExposeSpecBuilder()
+                .withRouteServicePort(servicePort)
+                .withType(ExposeType.route)
+                .withRouteTlsTermination(TlsTermination.passthrough)
+                .build(),
+                endpointCert);
+    }
+
+    private void testCertProvider(AmqpClient amqpClient, IMqttClient mqttClient, WebClient webClient) throws Exception {
+        QueueTest.runQueueTest(amqpClient, queue);
+
+        mqttClient.connect();
+        ApiServerTest.simpleMQTTSendReceive(topic, mqttClient, 3);
+        mqttClient.disconnect();
+
+        CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
+        webClient.get(getConsoleRoute(addressSpace)).ssl(true).send(ar->{
+            log.info("get console "+ar.toString());
+            if (ar.succeeded()) {
+                HttpResponse<Buffer> response = ar.result();
+                if (response.statusCode() == HttpURLConnection.HTTP_OK || response.statusCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
+                    promise.complete(Optional.empty());
+                } else {
+                    promise.complete(Optional.of(new RuntimeException("Status " + response.statusCode())));
+                }
+            } else {
+                log.info("Exception in get console", ar.cause());
+                promise.complete(Optional.of(ar.cause()));
+            }
+        });
+
+        Optional<Throwable> optError = promise.get();
+        if(optError.isPresent()) {
+            fail(optError.get());
+        }
+    }
+
+    private void createSelfSignedCert(File cert, File key) throws Exception {
+        new Executor().execute(Arrays.asList("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
+                "-out", cert.getAbsolutePath(), "-keyout", key.getAbsolutePath()));
+    }
+
+    public void createCsr(File keyFile, File csrFile) throws Exception {
+        String subjString = "/O=enmasse-systemtests";
+        new Executor().execute(Arrays.asList("openssl", "req", "-new", "-batch", "-nodes", "-keyout",
+                keyFile.getAbsolutePath(), "-subj", subjString, "-out", csrFile.getAbsolutePath()));
+    }
+
+    public File signCsr(File caKey, File caCert, File csrKey, File csrCsr) throws Exception {
+        File crtFile = createTempFile(FilenameUtils.removeExtension(csrKey.getName()), "crt");
+        new Executor().execute(Arrays.asList("openssl", "x509", "-req", "-days", "11000", "-in",
+                csrCsr.getAbsolutePath(), "-CA", caCert.getAbsolutePath(), "-CAkey", caKey.getAbsolutePath(),
+                "-CAcreateserial", "-out", crtFile.getAbsolutePath()));
+        return crtFile;
+    }
+
+    private File createTempFile(String prefix, String suffix) throws IOException {
+        File file = File.createTempFile(prefix, suffix);
+        createdFiles.add(file);
+        return file;
+    }
+
+    private SSLSocketFactory getSocketFactory(InputStream caCrtFile) throws Exception {
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+        X509Certificate caCert = (X509Certificate) cf.generateCertificate(caCrtFile);
+
+        KeyStore caKs = KeyStore.getInstance(KeyStore.getDefaultType());
+        caKs.load(null, null);
+        caKs.setCertificateEntry("ca-certificate", caCert);
+        TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
+        tmf.init(caKs);
+
+        SSLContext context = mqttClientFactory.tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
+        context.init(null, tmf.getTrustManagers(), new SecureRandom());
+
+        return context.getSocketFactory();
+    }
+
+}
