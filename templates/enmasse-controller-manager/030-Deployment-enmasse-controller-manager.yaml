@@ -17,6 +17,7 @@ spec:
         app: enmasse
         name: enmasse-controller-manager
     spec:
+      serviceAccountName: enmasse-controller-manager
       containers:
       - name: controller
         image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}

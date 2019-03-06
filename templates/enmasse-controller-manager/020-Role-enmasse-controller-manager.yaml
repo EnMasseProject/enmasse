@@ -1,0 +1,10 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:enmasse-controller-manager
+rules:
+  - apiGroups: [ "admin.enmasse.io" ]
+    resources: [ "authenticationservice" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
