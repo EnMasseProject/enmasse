@@ -8,3 +8,6 @@ rules:
   - apiGroups: [ "admin.enmasse.io" ]
     resources: [ "authenticationservice" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+  - apiGroups: [ "iot.enmasse.io" ]
+    resources: [ "iotconfig" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
