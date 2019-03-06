@@ -25,6 +25,7 @@ import io.enmasse.iot.model.IoTProjects;
 import io.enmasse.iot.model.IoTProjects.Client;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -73,7 +74,7 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
 
     @Override
     public void get(
-            final String tenantId,
+            final String tenantId, final Span span,
             final Handler<AsyncResult<TenantResult<JsonObject>>> resultHandler) {
 
         logger.trace("Get - Tenant Id: {}", tenantId);
@@ -88,10 +89,10 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
     }
 
     @Override
-    public void get(final X500Principal subjectDn,
+    public void get(final X500Principal subjectDn, final Span span,
             final Handler<AsyncResult<TenantResult<JsonObject>>> resultHandler) {
 
-        super.get(subjectDn, resultHandler);
+        super.get(subjectDn, span, resultHandler);
 
     }
 

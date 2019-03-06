@@ -19,7 +19,7 @@ public class MetricsConfiguration {
     public MeterRegistryCustomizer<MeterRegistry> commonTags() {
 
         return r -> r.config().commonTags(
-                MetricsTags.forService(MetricsTags.VALUE_SERVICE_REGISTRY));
+                MetricsTags.forService("tenant-service"));
 
     }
 

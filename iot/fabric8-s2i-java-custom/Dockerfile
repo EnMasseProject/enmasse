@@ -4,7 +4,7 @@
 FROM fabric8/s2i-java:3.0-java11
 
 ENV \
-    NETTY_TCNATIVE_VERSION=2.0.10.Final
+    NETTY_TCNATIVE_VERSION=2.0.17.Final
 
 USER root
 

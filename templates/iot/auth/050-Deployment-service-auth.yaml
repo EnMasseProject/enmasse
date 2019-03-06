@@ -35,20 +35,18 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
-        livenessProbe:
-          # change for Hono 0.9
-          initialDelaySeconds: 25
-          periodSeconds: 9
-          tcpSocket:
-            port: 5671
-          timeoutSeconds: 1
         readinessProbe:
-          # change for Hono 0.9
-          initialDelaySeconds: 15
-          periodSeconds: 5
-          tcpSocket:
-            port: 5671
-          timeoutSeconds: 1
+          httpGet:
+            path: /readiness
+            port: 8088
+            scheme: HTTP
+          initialDelaySeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /liveness
+            port: 8088
+            scheme: HTTP
+          initialDelaySeconds: 180
         resources:
           limits:
             memory: 512Mi
