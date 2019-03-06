@@ -7,8 +7,6 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -27,15 +25,10 @@ public class DeleteController implements Controller {
 
 
     @Override
-    public void retainAll(List<AddressSpace> desiredAddressSpaces) {
+    public void reconcileAll(List<AddressSpace> desiredAddressSpaces) {
         String [] uuids = desiredAddressSpaces.stream()
                 .map(a -> a.getAnnotation(AnnotationKeys.INFRA_UUID))
                 .toArray(String[]::new);
         kubernetes.deleteResourcesNotIn(uuids);
-    }
-
-    @Override
-    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
-        return addressSpace;
     }
 }

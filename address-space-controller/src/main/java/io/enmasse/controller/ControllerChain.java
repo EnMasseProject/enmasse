@@ -88,10 +88,6 @@ public class ControllerChain implements Watcher<AddressSpace> {
             return;
         }
 
-        for (Controller controller : chain) {
-            controller.prepare();
-        }
-
         for (AddressSpace addressSpace : resources) {
             try {
                 log.info("Checking address space {}:{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
@@ -116,9 +112,9 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
         for (Controller controller : chain) {
             try {
-                controller.retainAll(resources);
+                controller.reconcileAll(resources);
             } catch (Exception e) {
-                log.warn("Exception in {} retainAll", controller, e);
+                log.warn("Exception in {} reconcileAll", controller, e);
             }
         }
 

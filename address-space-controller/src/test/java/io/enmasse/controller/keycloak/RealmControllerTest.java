@@ -58,6 +58,7 @@ public class RealmControllerTest {
                 .withName("standard")
                 .build();
         when(mockAuthenticationServiceRegistry.findAuthenticationService(standardSvc)).thenReturn(Optional.of(authenticationService));
+        when(mockAuthenticationServiceRegistry.findAuthenticationServiceByName(AuthenticationServiceType.STANDARD.getName())).thenReturn(Optional.of(authenticationService));
 
         manager = new RealmController(new KeycloakApi() {
             @Override
@@ -66,17 +67,12 @@ public class RealmControllerTest {
             }
 
             @Override
-            public boolean isAvailable() {
-                return true;
-            }
-
-            @Override
             public void createRealm(String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params) {
                 realms.add(realmName);
             }
 
             @Override
-            public void updateRealm(String realmName, KeycloakRealmParams current, KeycloakRealmParams updated) {
+            public void updateRealm(String realmName, KeycloakRealmParams updated) {
                 updatedRealms.add(realmName);
             }
 
@@ -144,13 +140,13 @@ public class RealmControllerTest {
 
     @Test
     public void testAddAddressSpace() throws Exception {
-        manager.reconcile(createAddressSpace("a1", AuthenticationServiceType.NONE));
+        manager.reconcileAll(Collections.singletonList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertTrue(realms.isEmpty());
 
-        manager.reconcile(createAddressSpace("a2", AuthenticationServiceType.STANDARD));
+        manager.reconcileAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a2"));
 
-        manager.reconcile(createAddressSpace("a3", AuthenticationServiceType.STANDARD));
+        manager.reconcileAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a2"));
         assertTrue(realms.contains("a3"));
         assertEquals(2, realms.size());
@@ -161,12 +157,8 @@ public class RealmControllerTest {
 
     @Test
     public void testRemoveAddressSpace() throws Exception {
-        manager.reconcile(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
-        manager.reconcile(createAddressSpace("a2", AuthenticationServiceType.STANDARD));
-        manager.reconcile(createAddressSpace("a3", AuthenticationServiceType.STANDARD));
-
-        manager.prepare();
-        manager.retainAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.reconcileAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a2", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
+        manager.reconcileAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD), createAddressSpace("a3", AuthenticationServiceType.STANDARD)));
 
         assertTrue(realms.contains("a1"));
         assertFalse(realms.contains("a2"));
@@ -176,12 +168,11 @@ public class RealmControllerTest {
 
     @Test
     public void testAuthTypeChanged() throws Exception {
-        manager.reconcile(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
+        manager.reconcileAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.STANDARD)));
         assertTrue(realms.contains("a1"));
         assertEquals(1, realms.size());
 
-        manager.prepare();
-        manager.retainAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
+        manager.reconcileAll(Arrays.asList(createAddressSpace("a1", AuthenticationServiceType.NONE)));
         assertFalse(realms.contains("a1"));
         assertEquals(0, realms.size());
     }
@@ -189,17 +180,11 @@ public class RealmControllerTest {
     @Test
     public void testUpdateRealm() throws Exception {
         List<AddressSpace> spaces = Collections.singletonList(createAddressSpace("a1", AuthenticationServiceType.STANDARD));
-        manager.prepare();
-        for (AddressSpace addressSpace : spaces) {
-            manager.reconcile(addressSpace);
-        }
+        manager.reconcileAll(spaces);
         assertTrue(realms.contains("a1"));
         assertTrue(updatedRealms.isEmpty());
 
-        manager.prepare();
-        for (AddressSpace addressSpace : spaces) {
-            manager.reconcile(addressSpace);
-        }
+        manager.reconcileAll(spaces);
         assertTrue(updatedRealms.isEmpty());
 
         AuthenticationService authenticationService = new AuthenticationServiceBuilder()
@@ -216,11 +201,9 @@ public class RealmControllerTest {
                 .endSpec()
                 .build();
         when(mockAuthenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
+        when(mockAuthenticationServiceRegistry.findAuthenticationServiceByName(any())).thenReturn(Optional.of(authenticationService));
 
-        manager.prepare();
-        for (AddressSpace addressSpace : spaces) {
-            manager.reconcile(addressSpace);
-        }
+        manager.reconcileAll(spaces);
         assertEquals(1, updatedRealms.size());
     }
 
@@ -230,7 +213,6 @@ public class RealmControllerTest {
                         .withName(name)
                         .withNamespace("myns")
                         .addToAnnotations(AnnotationKeys.CREATED_BY, "developer")
-                        .addToAnnotations(AnnotationKeys.REALM_NAME, name)
                         .build())
 
                 .withNewSpec()

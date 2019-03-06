@@ -229,7 +229,7 @@ public class KeycloakController {
 
         if (existingServiceRef == null) {
 
-            AuthenticationServiceBuilder builder = new AuthenticationServiceBuilder()
+            AuthenticationService authenticationService = new AuthenticationServiceBuilder()
                     .withNewMetadata()
                     .withName("standard")
                     .addToLabels(LabelKeys.APP, "enmasse")
@@ -238,29 +238,29 @@ public class KeycloakController {
                     .withHost("standard-authservice")
                     .withPort(5671)
                     .withCaCertSecretName(getKeycloakCertSecretName(env))
-                    .endSpec();
+                    .endSpec()
+                    .build();
 
             if (isOpenShift) {
                 String keycloakOauthUrl = getKeycloakAuthUrl(client, env);
-                builder.editMetadata().addToAnnotations(AnnotationKeys.OAUTH_URL, keycloakOauthUrl);
+                authenticationService.putAnnotation(AnnotationKeys.OAUTH_URL, keycloakOauthUrl);
                                 String openshiftOauthUrl = getOpenShiftOauthUrl(client);
                 if (openshiftOauthUrl == null || openshiftOauthUrl.contains("https://localhost:8443") || openshiftOauthUrl.contains("https://127.0.0.1:8443")) {
                     openshiftOauthUrl = String.format("https://%s:%s", env.get("KUBERNETES_SERVICE_HOST"), env.get("KUBERNETES_SERVICE_PORT"));
                 }
-                builder.editMetadata().addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_URL, openshiftOauthUrl);
+                authenticationService.putAnnotation(AnnotationKeys.IDENTITY_PROVIDER_URL, openshiftOauthUrl);
             }
 
             if (oauthClientAccessible) {
-                builder.editMetadata().addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID, oauthClientName);
-                builder.editMetadata().addToAnnotations(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET, oauthClientSecret);
+                authenticationService.putAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_ID, oauthClientName);
+                authenticationService.putAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET, oauthClientSecret);
             } else {
                 log.warn("Unable to initialize identityProviderClientId and identityProviderClientSecret " +
                         "on authentication service 'standard' as these details cannot be determined automatically.");
             }
 
-            builder.editMetadata().addToAnnotations(AnnotationKeys.KEYCLOAK_CREDENTIALS_SECRET_NAME, existingCredentials.getMetadata().getName());
+            authenticationService.putAnnotation(AnnotationKeys.KEYCLOAK_CREDENTIALS_SECRET_NAME, existingCredentials.getMetadata().getName());
 
-            AuthenticationService authenticationService = builder.build();
             client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(client.getNamespace()).create(
                     authenticationService);
             log.debug("Created authentication service: {} ", authenticationService);
@@ -275,6 +275,12 @@ public class KeycloakController {
             if (!oauthClientSecret.equals(existingServiceRef.getAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET))) {
                 existingServiceRef.putAnnotation(AnnotationKeys.IDENTITY_PROVIDER_CLIENT_SECRET, oauthClientSecret);
                 log.info("Updating identityProviderClientSecret");
+                updateRequired = true;
+            }
+
+            if (!existingCredentials.getMetadata().getName().equals(existingServiceRef.getAnnotation(AnnotationKeys.KEYCLOAK_CREDENTIALS_SECRET_NAME))) {
+                existingServiceRef.putAnnotation(AnnotationKeys.KEYCLOAK_CREDENTIALS_SECRET_NAME, existingCredentials.getMetadata().getName());
+                log.info("Updating keycloakCredentialsSecretName");
                 updateRequired = true;
             }
 

@@ -103,11 +103,11 @@ public class AddressSpaceController {
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
+        controllerChain.addController(new RealmController(new Keycloak(keycloakFactory), new KubeUserLookupApi(controllerClient, isOpenShift), userApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
-        controllerChain.addController(new RealmController(new Keycloak(keycloakFactory), new KubeUserLookupApi(controllerClient, isOpenShift), userApi, authenticationServiceRegistry));
         controllerChain.addController(new DeleteController(kubernetes));
         controllerChain.start();
 

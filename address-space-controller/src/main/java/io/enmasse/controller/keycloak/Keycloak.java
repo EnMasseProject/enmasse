@@ -8,11 +8,14 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import org.keycloak.admin.client.resource.IdentityProviderResource;
 import org.keycloak.admin.client.resource.IdentityProvidersResource;
 import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.representations.idm.*;
+import org.keycloak.representations.idm.ClientRepresentation;
+import org.keycloak.representations.idm.IdentityProviderRepresentation;
+import org.keycloak.representations.idm.RealmRepresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class Keycloak implements KeycloakApi {
@@ -25,6 +28,7 @@ public class Keycloak implements KeycloakApi {
     private static final String IDENTITY_PROVIDER_BASE_URL = "baseUrl";
 
     private final KeycloakFactory keycloakFactory;
+    private final Map<String, KeycloakRealmParams> realmState = new ConcurrentHashMap<>();
     private volatile org.keycloak.admin.client.Keycloak keycloak;
 
     public Keycloak(KeycloakFactory keycloakFactory) {
@@ -47,14 +51,6 @@ public class Keycloak implements KeycloakApi {
         return withKeycloak(kc -> kc.realms().findAll().stream()
                 .map(RealmRepresentation::getRealm)
                 .collect(Collectors.toSet()));
-    }
-
-    @Override
-    public synchronized boolean isAvailable() {
-        if (keycloak == null) {
-            keycloak = keycloakFactory.createInstance();
-        }
-        return keycloak != null;
     }
 
     @Override
@@ -104,12 +100,14 @@ public class Keycloak implements KeycloakApi {
 
         withKeycloak(kc -> {
             kc.realms().create(newRealm);
+            realmState.put(realmName, params);
             return true;
         });
     }
 
     @Override
-    public void updateRealm(String realmName, KeycloakRealmParams current, KeycloakRealmParams updated) {
+    public void updateRealm(String realmName, KeycloakRealmParams updated) {
+        KeycloakRealmParams current = realmState.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
         if (!updated.equals(current)) {
             withKeycloak(kc -> {
                 RealmResource realm = kc.realm(realmName);
@@ -157,6 +155,10 @@ public class Keycloak implements KeycloakApi {
                         realm.update(realmRep);
                         log.info("Updated browser security headers of {}", realmName);
                     }
+
+                    if (!updatedProviderItems.isEmpty() || browserSecurityHeadersChanged) {
+                        realmState.put(realmName, updated);
+                    }
                 }
                 return true;
             });
@@ -168,7 +170,13 @@ public class Keycloak implements KeycloakApi {
     @Override
     public void deleteRealm(String realmName) {
         withKeycloak(kc -> {
-            kc.realm(realmName).remove();
+
+            try {
+                kc.realm(realmName).remove();
+            } finally {
+                realmState.remove(realmName);
+            }
+
             return true;
         });
     }
