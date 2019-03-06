@@ -23,6 +23,7 @@ public class AdminCrd {
     private static final CustomResourceDefinition BROKERED_INFRA_CONFIG_CRD;
     private static final CustomResourceDefinition STANDARD_INFRA_CONFIG_CRD;
     private static final CustomResourceDefinition AUTHENTICATION_SERVICE_CRD;
+    private static final CustomResourceDefinition CONSOLE_SERVICE_CRD;
 
     static {
         ADDRESS_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA2, AddressPlan.KIND);
@@ -30,6 +31,7 @@ public class AdminCrd {
         BROKERED_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, BrokeredInfraConfig.KIND);
         STANDARD_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, StandardInfraConfig.KIND);
         AUTHENTICATION_SERVICE_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, AuthenticationService.KIND);
+        CONSOLE_SERVICE_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, ConsoleService.KIND);
     }
 
     public static void registerCustomCrds() {
@@ -48,6 +50,9 @@ public class AdminCrd {
 
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, AuthenticationService.KIND, AuthenticationService.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, AuthenticationServiceList.KIND, AuthenticationServiceList.class);
+
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, ConsoleService.KIND, ConsoleService.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, ConsoleServiceList.KIND, ConsoleServiceList.class);
 
     }
 
@@ -69,6 +74,10 @@ public class AdminCrd {
 
     public static CustomResourceDefinition authenticationServices() {
         return AUTHENTICATION_SERVICE_CRD;
+    }
+
+    public static CustomResourceDefinition consoleServices() {
+        return CONSOLE_SERVICE_CRD;
     }
 
 }

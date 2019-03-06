@@ -96,7 +96,7 @@ public class AddressSpaceController {
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
         AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
 
-        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, System.getenv(), isOpenShift);
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, System.getenv(), isOpenShift, schemaProvider);
 
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
         Clock clock = Clock.systemUTC();

@@ -502,16 +502,22 @@ objects:
             value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
           - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-          - name: AUTHENTICATION_SERVICE_OAUTH_URL
-            value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-          - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
-            value: ${AUTHENTICATION_SERVICE_KC_IDP_HINT}
           - name: ADDRESS_SPACE
             value: ${ADDRESS_SPACE}
           - name: ADDRESS_SPACE_NAMESPACE
             value: ${ADDRESS_SPACE_NAMESPACE}
           - name: MESSAGING_CERT
             value: /opt/agent/messaging-cert/tls.crt
+          - name: CONSOLE_OAUTH_DISCOVERY_URL
+            value: ${CONSOLE_OAUTH_DISCOVERY_URL}
+          - name: CONSOLE_OAUTH_CLIENT_ID
+            value: ${CONSOLE_OAUTH_CLIENT_ID}
+          - name: CONSOLE_OAUTH_CLIENT_SECRET
+            value: ${CONSOLE_OAUTH_CLIENT_SECRET}
+          - name: CONSOLE_OAUTH_SCOPE
+            value: ${CONSOLE_OAUTH_SCOPE}
+          - name: CONSOLE_LINK
+            value: ${CONSOLE_LINK}
           image: ${AGENT_IMAGE}
           imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
@@ -708,8 +714,6 @@ parameters:
   name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
 - description: The URL to use for OAUTH (if not set, OAUTH is not used)
   name: AUTHENTICATION_SERVICE_OAUTH_URL
-- description: Name of Keycloak Identification Provider Hint
-  name: AUTHENTICATION_SERVICE_KC_IDP_HINT
 - description: Name standard infra config
   name: STANDARD_INFRA_CONFIG_NAME
   required: true
@@ -767,3 +771,13 @@ parameters:
 - name: TOPIC_FORWARDER_IMAGE
   description: Topic Forwarder Image
   value: ${env.TOPIC_FORWARDER_IMAGE}
+- description:
+  name: CONSOLE_OAUTH_DISCOVERY_URL
+- description:
+  name: CONSOLE_OAUTH_CLIENT_ID
+- description:
+  name: CONSOLE_OAUTH_CLIENT_SECRET
+- description:
+  name: CONSOLE_OAUTH_SCOPE
+- description:
+  name: CONSOLE_LINK

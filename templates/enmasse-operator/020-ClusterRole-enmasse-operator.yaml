@@ -7,4 +7,4 @@ metadata:
 rules:
   - apiGroups: [ "oauth.openshift.io" ]
     resources: [ "oauthclients" ]
-    verbs: [ "create", "get", "list", "watch" ]
+    verbs: [ "create", "get", "update", "list", "watch" ]

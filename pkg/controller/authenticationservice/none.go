@@ -26,7 +26,8 @@ func applyNoneAuthServiceDefaults(ctx context.Context, client client.Client, sch
 			Name: secretName,
 		}
 		if !util.IsOpenshift() {
-			err := CreateAuthserviceSecret(ctx, client, scheme, secretName, authservice, func(secret *corev1.Secret) error {
+			err := util.CreateSecret(ctx, client, scheme, authservice.Namespace, secretName, authservice, func(secret *corev1.Secret) error {
+				install.ApplyDefaultLabels(&secret.ObjectMeta, "none-authservice", secretName)
 				cn := util.ServiceToCommonName(authservice.Namespace, authservice.Name)
 				return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
 			})

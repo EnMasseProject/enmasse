@@ -15,6 +15,8 @@ import (
 type Interface interface {
 	// AuthenticationServices returns a AuthenticationServiceInformer.
 	AuthenticationServices() AuthenticationServiceInformer
+	// ConsoleServices returns a ConsoleServiceInformer.
+	ConsoleServices() ConsoleServiceInformer
 }
 
 type version struct {
@@ -31,4 +33,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // AuthenticationServices returns a AuthenticationServiceInformer.
 func (v *version) AuthenticationServices() AuthenticationServiceInformer {
 	return &authenticationServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// ConsoleServices returns a ConsoleServiceInformer.
+func (v *version) ConsoleServices() ConsoleServiceInformer {
+	return &consoleServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

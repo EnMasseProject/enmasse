@@ -29,51 +29,55 @@ function bind_event(source, event, target, method) {
 }
 
 function start(env) {
-    kubernetes.get_messaging_route_hostname(env).then(function (result) {
-        if (result !== undefined) env.MESSAGING_ROUTE_HOSTNAME = result;
-        var address_source = new AddressSource(env);
-        var console_server = new ConsoleServer(address_source, env);
-        bind_event(address_source, 'addresses_defined', console_server.addresses);
+    kubernetes.is_openshift().then((openshift) => {
+        kubernetes.get_messaging_route_hostname(env).then(function (result) {
+            if (result !== undefined) env.MESSAGING_ROUTE_HOSTNAME = result;
+            var address_source = new AddressSource(env);
 
-        console_server.listen(env);
+            var console_server = new ConsoleServer(address_source, env, openshift);
+            bind_event(address_source, 'addresses_defined', console_server.addresses);
 
-        if (env.ADDRESS_SPACE_TYPE === 'brokered') {
-            bind_event(address_source, 'addresses_defined', console_server.metrics);
-            console_server.listen_health(env);
-            var event_logger = env.ENABLE_EVENT_LOGGER == 'true' ? kubernetes.post_event : undefined;
-            var bc = require('../lib/broker_controller.js').create_agent(event_logger);
-            bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
-            bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
-            bind_event(address_source, 'addresses_defined', bc);
-            bind_event(bc, 'address_stats_retrieved', address_source, 'check_status');
-            bc.connect(tls_options.get_client_options({host:env.BROKER_SERVICE_HOST, port:env.BROKER_SERVICE_PORT,username:'console'}));
-        } else {
-            //assume standard address space for now
-            var StandardStats = require('../lib/standard_stats.js');
-            var stats = new StandardStats();
-            stats.init(console_server);
+            console_server.listen(env).then(() => {
+                if (env.ADDRESS_SPACE_TYPE === 'brokered') {
+                    bind_event(address_source, 'addresses_defined', console_server.metrics);
+                    console_server.listen_health(env);
+                    var event_logger = env.ENABLE_EVENT_LOGGER === 'true' ? kubernetes.post_event : undefined;
+                    var bc = require('../lib/broker_controller.js').create_agent(event_logger);
+                    bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
+                    bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
+                    bind_event(address_source, 'addresses_defined', bc);
+                    bind_event(bc, 'address_stats_retrieved', address_source, 'check_status');
+                    bc.connect(tls_options.get_client_options({host:env.BROKER_SERVICE_HOST, port:env.BROKER_SERVICE_PORT,username:'console'}));
+                } else {
+                    //assume standard address space for now
+                    var StandardStats = require('../lib/standard_stats.js');
+                    var stats = new StandardStats();
+                    stats.init(console_server);
 
-            var ragent = new Ragent();
-            ragent.disable_connectivity = true;
-            bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses')
-            ragent.start_listening(env);
-            ragent.listen_health({HEALTH_PORT:8888});
-        }
+                    var ragent = new Ragent();
+                    ragent.disable_connectivity = true;
+                    bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses')
+                    ragent.start_listening(env);
+                    ragent.listen_health({HEALTH_PORT:8888});
+                }
 
-        process.on('SIGTERM', function () {
-            log.info('Shutdown started');
-            var exitHandler = function () {
-                process.exit(0);
-            };
-            var timeout = setTimeout(exitHandler, 2000);
+                process.on('SIGTERM', function () {
+                    log.info('Shutdown started');
+                    var exitHandler = function () {
+                        process.exit(0);
+                    };
+                    var timeout = setTimeout(exitHandler, 2000);
 
-            console_server.close(function() {
-                log.info("Console server closed");
-                clearTimeout(timeout);
-                exitHandler();
-            });
+                    console_server.close(function() {
+                        log.info("Console server closed");
+                        clearTimeout(timeout);
+                        exitHandler();
+                    });
+                });
+            }).catch((e) => {log.error("Failed to listen ", e)})
+
         });
-    });
+    }).catch((e) => {log.error("Failed to check for openshift", e)});
 }
 
 if (require.main === module) {

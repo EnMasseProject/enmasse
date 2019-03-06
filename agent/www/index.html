@@ -99,7 +99,8 @@
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
-              <li><a href="logout" id="logout">Logout</a></li>
+              <li ng-hide=global_console_disabled><a href="console" id="globalconsole">Return to Console</a></li>
+              <li ng-hide=!global_console_disabled><a href="logout" id="logout">Logout</a></li>
             </ul>
           </li>
         </ul>

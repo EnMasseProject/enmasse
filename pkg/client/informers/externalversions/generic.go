@@ -47,6 +47,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=admin.enmasse.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("authenticationservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta1().AuthenticationServices().Informer()}, nil
+	case v1beta1.SchemeGroupVersion.WithResource("consoleservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta1().ConsoleServices().Informer()}, nil
 
 		// Group=enmasse.io, Version=v1beta1
 	case enmassev1beta1.SchemeGroupVersion.WithResource("addresses"):

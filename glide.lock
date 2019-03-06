@@ -16,6 +16,18 @@ imports:
   - spew
 - name: github.com/ghodss/yaml
   version: 73d445a93680fa1a78ae23a5839bad48f32ba1ee
+- name: github.com/gin-contrib/sse
+  version: 5545eab6dad3bbbd6c5ae9186383c2a9d23c0dae
+- name: github.com/gin-gonic/contrib
+  version: 54ff787f7c73aec36275e1384c705389b1772ba9
+  subpackages:
+  - static
+- name: github.com/gin-gonic/gin
+  version: b869fe1415e4b9eb52f247441830d502aece2d4d
+  subpackages:
+  - binding
+  - json
+  - render
 - name: github.com/go-logr/logr
   version: 9fb12b3b21c5415d16ac18dc5cd42c1cfdd40c4e
 - name: github.com/go-logr/zapr

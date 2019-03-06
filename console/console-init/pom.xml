@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <parent>
+        <groupId>io.enmasse</groupId>
+        <artifactId>console</artifactId>
+        <version>0.28-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.enmasse</groupId>
+    <artifactId>console-init</artifactId>
+    <properties>
+        <console-node-install-directory>${project.build.directory}/build</console-node-install-directory>
+        <console-ui-directory>${project.basedir}/ui</console-ui-directory>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install npm - console</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <npmVersion>${npm.version}</npmVersion>
+                            <workingDirectory>ui</workingDirectory>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm install - console</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <workingDirectory>${console-node-install-directory}</workingDirectory>
+                            <arguments>install -C ${console-ui-directory}</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm build - console</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <workingDirectory>${console-node-install-directory}</workingDirectory>
+                            <environmentVariables>
+                                <REACT_APP_VERSION>${project.version}</REACT_APP_VERSION>
+                                <REACT_APP_NAME>Enmasse Console</REACT_APP_NAME>
+                            </environmentVariables>
+                            <arguments>run-script build -C ${console-ui-directory}</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>dist</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <ignoreMissingDescriptor>false</ignoreMissingDescriptor>
+                            <descriptors>
+                                <descriptor>src/assembly/unix-dist.xml</descriptor>
+                            </descriptors>
+                            <tarLongFileMode>gnu</tarLongFileMode>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

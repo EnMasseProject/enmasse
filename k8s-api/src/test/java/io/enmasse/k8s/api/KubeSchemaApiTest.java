@@ -31,6 +31,7 @@ public class KubeSchemaApiTest {
     private CrdApi<StandardInfraConfig> standardInfraConfigApi;
     private CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi;
     private CrdApi<AuthenticationService> authenticationServiceApi;
+    private CrdApi<ConsoleService> consoleServiceApi;
 
     @BeforeEach
     public void setup() {
@@ -39,11 +40,12 @@ public class KubeSchemaApiTest {
         standardInfraConfigApi = mock(CrdApi.class);
         brokeredInfraConfigApi = mock(CrdApi.class);
         authenticationServiceApi = mock(CrdApi.class);
+        consoleServiceApi = mock(CrdApi.class);
     }
 
     @Test
     public void testSchemaAssemble() {
-        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), false);
+        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, Clock.systemUTC(), false);
 
         List<AddressSpacePlan> addressSpacePlans = Arrays.asList(
                 new AddressSpacePlanBuilder()
@@ -116,7 +118,14 @@ public class KubeSchemaApiTest {
                         .endMetadata()
                         .build());
 
-        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs, authenticationServices);
+        List<ConsoleService> consoleServices = Arrays.asList(
+                new ConsoleServiceBuilder()
+                        .withNewMetadata()
+                        .withName("console")
+                        .endMetadata()
+                        .build());
+
+        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs, authenticationServices, consoleServices);
 
         assertTrue(schema.findAddressSpaceType("standard").isPresent());
         assertTrue(schema.findAddressSpaceType("brokered").isPresent());
@@ -156,6 +165,7 @@ public class KubeSchemaApiTest {
         CrdApi<StandardInfraConfig> standardInfraConfigApi = mock(CrdApi.class);
         CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi = mock(CrdApi.class);
         CrdApi<AuthenticationService> authenticationServiceApi = mock(CrdApi.class);
+        CrdApi<ConsoleService> consoleServiceApi = mock(CrdApi.class);
 
         Watch mockWatch = mock(Watch.class);
 
@@ -165,7 +175,7 @@ public class KubeSchemaApiTest {
         when(standardInfraConfigApi.watchResources(any(), any())).thenReturn(mockWatch);
         when(authenticationServiceApi.watchResources(any(), any())).thenReturn(mockWatch);
 
-        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), true);
+        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, consoleServiceApi, Clock.systemUTC(), true);
 
         schemaApi.watchSchema(items -> { }, Duration.ofSeconds(5));
         verify(addressSpacePlanApi).watchResources(any(), eq(Duration.ofSeconds(5)));
