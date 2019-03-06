@@ -24,11 +24,11 @@ public class OpenshiftLoginWebPage implements IWebPage {
     }
 
     private WebElement getUsernameTextInput() {
-        return selenium.getDriver().findElement(By.id("inputUsername"));
+        return selenium.getDriver().findElement(By.id("username"));
     }
 
     private WebElement getPasswordTextInput() {
-        return selenium.getDriver().findElement(By.id("inputPassword"));
+        return selenium.getDriver().findElement(By.id("password"));
     }
 
     private WebElement getLoginButton() {
