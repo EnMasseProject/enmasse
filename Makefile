@@ -20,6 +20,8 @@ DOCKER_DIRS = \
 	mqtt-gateway \
 	mqtt-lwt \
 	service-broker \
+	console/console-init \
+	console/console-httpd \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
 	iot/iot-device-registry-file \

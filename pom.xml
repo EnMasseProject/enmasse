@@ -127,6 +127,7 @@
         <module>bundle</module>
         <module>iot</module>
         <module>controller-manager</module>
+        <module>console</module>
     </modules>
 
     <dependencyManagement>

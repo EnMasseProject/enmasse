@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
@@ -57,30 +58,57 @@ func detectOpenshift() bool {
 	return err == nil
 }
 
-func OpenshiftUri() (string, error) {
+func OpenshiftUri() (*url.URL, bool, error) {
+
+	data, err := WellKnownOauthMetadata();
+	if err != nil {
+		log.Error(err, "Error getting well-known OAuth metadata: %v")
+		return nil, false, err
+	}
+
+	openshiftUrl := data["issuer"].(string)
+	rewritten := false
+	// When oc cluster is run without a  --public-hostname= argument, openshiftUrl will refer to a loopback, which
+	// cannot be used from within a pod.  This works around this problem.
+	if openshiftUrl == "" || strings.Contains(openshiftUrl, "https://localhost:8443") || strings.Contains(openshiftUrl, "https://127.0.0.1:8443") {
+		openshiftUrl = fmt.Sprintf("https://%s:%s", GetEnvOrDefault("KUBERNETES_SERVICE_HOST", "172.30.0.1"), GetEnvOrDefault("KUBERNETES_SERVICE_PORT", "443"))
+		rewritten = true
+	}
+
+	u, err := url.Parse(openshiftUrl)
+	if err != nil {
+		return nil, false, err
+	}
+	return u, rewritten, nil
+
+}
+
+func WellKnownOauthMetadata() (map[string]interface{}, error) {
 
 	config, err := config.GetConfig()
 	if err != nil {
 		log.Error(err, "Error getting config: %v")
-		return "", err
+		return nil, err
 	}
 
 	client, err := routev1.NewForConfig(config)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	result := client.RESTClient().Get().AbsPath("/.well-known/oauth-authorization-server").Do()
 	if err := result.Error(); err != nil {
-		return "", err
+		return nil, err
 	}
 	ret, err := result.Raw()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	data := make(map[string]interface{})
-	json.Unmarshal(ret, &data)
+	err = json.Unmarshal(ret, &data)
+	if err != nil {
+		return nil, err
+	}
 
-	url := data["issuer"].(string)
-	return url, nil
+	return data, nil
 }

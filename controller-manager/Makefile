@@ -17,5 +17,9 @@ build/operatorImageMap.yaml:
 	echo "none-authservice: $(NONE_AUTHSERVICE_IMAGE)" >> "$@"
 	echo "keycloak: $(KEYCLOAK_IMAGE)" >> "$@"
 	echo "keycloak-plugin: $(KEYCLOAK_PLUGIN_IMAGE)" >> "$@"
+	echo "console-init: $(CONSOLE_INIT_IMAGE)" >> "$@"
+	echo "console-proxy-openshift: $(CONSOLE_PROXY_OPENSHIFT_IMAGE)" >> "$@"
+	echo "console-proxy-kubernetes: $(CONSOLE_PROXY_KUBERNETES_IMAGE)" >> "$@"
+	echo "console-httpd: $(CONSOLE_HTTPD_IMAGE)" >> "$@"
 
 .PHONY: build/operatorImageMap.yaml

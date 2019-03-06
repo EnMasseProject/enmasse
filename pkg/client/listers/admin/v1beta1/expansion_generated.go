@@ -14,3 +14,11 @@ type AuthenticationServiceListerExpansion interface{}
 // AuthenticationServiceNamespaceListerExpansion allows custom methods to be added to
 // AuthenticationServiceNamespaceLister.
 type AuthenticationServiceNamespaceListerExpansion interface{}
+
+// ConsoleServiceListerExpansion allows custom methods to be added to
+// ConsoleServiceLister.
+type ConsoleServiceListerExpansion interface{}
+
+// ConsoleServiceNamespaceListerExpansion allows custom methods to be added to
+// ConsoleServiceNamespaceLister.
+type ConsoleServiceNamespaceListerExpansion interface{}

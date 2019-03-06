@@ -21,6 +21,10 @@ func (c *FakeAdminV1beta1) AuthenticationServices(namespace string) v1beta1.Auth
 	return &FakeAuthenticationServices{c, namespace}
 }
 
+func (c *FakeAdminV1beta1) ConsoleServices(namespace string) v1beta1.ConsoleServiceInterface {
+	return &FakeConsoleServices{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeAdminV1beta1) RESTClient() rest.Interface {

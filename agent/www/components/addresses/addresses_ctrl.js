@@ -3,6 +3,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
 
         $scope.clickNavigationItem("Addresses");
         $scope.admin_disabled = address_service.admin_disabled;
+        $scope.$root.global_console_disabled = address_service.global_console_disabled;
         $scope.get_stored_chart_config = function (address) {
             var chart = get_donut_chart(address, 'shard_depth_chart', 'Stored', get_tooltip_for_shard(address));
             if (address.shards) {
@@ -20,10 +21,23 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         };
 
         $scope.notification = {show_alert:false, alert_msg:''};
-        $scope.removeNotification=function(){
+        $scope.removeNotification=function() {
             $scope.notification.show_alert=false;
-          }
-          
+          };
+
+        address_service.add_additional_listener(function(reason) {
+            if (reason === 'request_error' && address_service.error_queue.length > 0) {
+                var msg = '';
+                while(address_service.error_queue.length > 0) {
+                    msg += address_service.error_queue.pop();
+                }
+                $scope.$apply(() => {
+                    $scope.notification.alert_msg = msg;
+                    $scope.notification.show_alert = true;
+                });
+            }
+        });
+
         $scope.get_plan_display_name = function (type, plan) {
             return address_service.get_plan_display_name(type, plan);
         };
@@ -155,6 +169,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             $scope.items.sort(compareFn);
           }
           $scope.admin_disabled = address_service.admin_disabled;
+          $scope.$root.global_console_disabled = address_service.global_console_disabled;
           $scope.items.forEach( function (item) {
             if (item.senders + item.receivers > 0) {
               if (!item.ingress_outcomes_link_table) {
@@ -408,11 +423,9 @@ angular.module('patternfly.modals').controller('PeerLostController', ['$scope', 
                 },
                 size: 'lg'
             });
-            console.log("modalInstance %s", modalInstance);
         };
 
         address_service.add_additional_listener(function(reason) {
-            console.log('callback %s', reason);
             if (reason === 'peer_disconnected') {
                 if (!$scope.modalInstance) {
                     console.log("disconnected");

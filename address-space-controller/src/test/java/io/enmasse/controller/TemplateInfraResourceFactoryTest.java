@@ -17,7 +17,12 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -27,11 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.EndpointSpecBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.k8s.util.JULInitializingTest;
@@ -54,6 +55,8 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
         client = kubeServer.getClient();
         client.secrets().createNew().editOrNewMetadata().withName("certs").endMetadata().addToData("tls.crt", "cert").done();
         AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        SchemaProvider schemaProvider = mock(SchemaProvider.class);
+        when(schemaProvider.getSchema()).thenReturn(mock(Schema.class));
         AuthenticationService authenticationService = new AuthenticationServiceBuilder()
                 .withNewMetadata()
                 .withName("standard")
@@ -75,7 +78,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                         new File("src/test/resources/templates"),
                         true),
                 authenticationServiceRegistry,
-                Collections.emptyMap(), false);
+                Collections.emptyMap(), true, schemaProvider);
     }
 
     @Test
