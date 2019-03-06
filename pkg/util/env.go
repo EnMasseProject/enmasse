@@ -7,6 +7,7 @@ package util
 
 import (
 	"os"
+	"strings"
 )
 
 func GetEnvOrDefault(key string, defaultValue string) string {
@@ -16,4 +17,17 @@ func GetEnvOrDefault(key string, defaultValue string) string {
 	} else {
 		return defaultValue
 	}
+}
+
+func GetBooleanEnvOrDefault(key string, defaultValue bool) bool {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	} else {
+		return "true" == strings.ToLower(value)
+	}
+}
+
+func GetBooleanEnv(key string) bool {
+	return GetBooleanEnvOrDefault(key, false)
 }

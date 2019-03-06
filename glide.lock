@@ -1,5 +1,5 @@
-hash: 45a993d745c8331b8582290753687b89e5403b549caf9fdf07834d0960f8ea47
-updated: 2019-01-29T11:13:38.35343336+01:00
+hash: 97f0731de95d35f2e171733ca62e9c96f0a4d5b392d850b2395ad47bfd88c031
+updated: 2019-03-07T09:29:15.877945148+01:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -19,7 +19,7 @@ imports:
 - name: github.com/go-logr/logr
   version: 9fb12b3b21c5415d16ac18dc5cd42c1cfdd40c4e
 - name: github.com/go-logr/zapr
-  version: 7536572e8d55209135cd5e7ccf7fce43dca217ab
+  version: 03f06a783fbb7dfaf3f629c7825480e43a7105e6
 - name: github.com/gogo/protobuf
   version: c0656edd0d9eab7c66d1eb0c568f9039345796f7
   subpackages:
@@ -44,7 +44,7 @@ imports:
 - name: github.com/google/gofuzz
   version: 44d81051d367757e1c7c6a5a86423ece9afcf63c
 - name: github.com/google/uuid
-  version: 9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8
+  version: 0cd6bf5da1e1c83f8b45653022c74f71af0538a4
 - name: github.com/googleapis/gnostic
   version: 0c5108395e2debce0d731cf0287ddf7242066aba
   subpackages:
@@ -73,8 +73,12 @@ imports:
   version: bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94
 - name: github.com/modern-go/reflect2
   version: 05fbef0ca5da472bbf96c9322b84a53edc03c9fd
+- name: github.com/openshift/api
+  version: 5ad8479f64f1b60ee9c62ce8ef1fe6638838725e
+- name: github.com/openshift/client-go
+  version: 431ec9a26e5021f35fa41ee9a89842db9bfdb370
 - name: github.com/operator-framework/operator-sdk
-  version: cc5fe885869c181d820557bd296f092637fa70af
+  version: 6754b70169f1b62355516947270e33b9f73d8159
   subpackages:
   - pkg/k8sutil
   - version
@@ -83,25 +87,26 @@ imports:
 - name: github.com/peterbourgon/diskv
   version: 5f041e8faa004a95c88a202771f4cc3e991971e6
 - name: github.com/prometheus/client_golang
-  version: 12af604cf208d3105ced825c65231b4ecf00a8cc
+  version: 9a369d2d384a32f2836ed433d12194f9ca19f0ed
   subpackages:
   - prometheus
   - prometheus/internal
   - prometheus/promhttp
 - name: github.com/prometheus/client_model
-  version: 56726106282f1985ea77d5305743db7231b0c0a8
+  version: fd36f4220a901265f90734c3183c5f0c91daa0b8
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: cfeb6f9992ffa54aaa4f2170ade4067ee478b250
+  version: bf857faf208676b0294bd49959aa34c8d98163ed
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: bf6a532e95b1f7a62adf0ab5050a5bb2237ad2f4
+  version: d0f344d83b0c80a1bc03b547a2374a9ec6711144
   subpackages:
   - internal/util
+  - iostats
   - nfs
   - xfs
 - name: github.com/spf13/pflag
@@ -111,7 +116,7 @@ imports:
 - name: go.uber.org/multierr
   version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
 - name: go.uber.org/zap
-  version: 82e3b47c1fe49387143b1a051a9ab6f34a08678d
+  version: d2a364dac1d9b70c651d9f47381c5912361e5596
   subpackages:
   - buffer
   - internal/bufferpool
@@ -155,7 +160,7 @@ imports:
   subpackages:
   - rate
 - name: golang.org/x/tools
-  version: 0a99049195aff55f007fc4dfd48e3ec2b4d5f602
+  version: 69e0dcfa1121488c38c3c8f9624f7de769003896
 - name: google.golang.org/appengine
   version: 4a4468ece617fc8205e99368fa2200e9d1fad421
   subpackages:
@@ -196,6 +201,7 @@ imports:
   - core/v1
   - events/v1beta1
   - extensions/v1beta1
+  - imagepolicy/v1alpha1
   - networking/v1
   - policy/v1beta1
   - rbac/v1
@@ -210,9 +216,14 @@ imports:
 - name: k8s.io/apimachinery
   version: 6dd46049f39503a1fc8d65de4bd566829e95faff
   subpackages:
+  - pkg/api/apitesting
+  - pkg/api/apitesting/fuzzer
+  - pkg/api/apitesting/roundtrip
+  - pkg/api/equality
   - pkg/api/errors
   - pkg/api/meta
   - pkg/api/resource
+  - pkg/apis/meta/fuzzer
   - pkg/apis/meta/internalversion
   - pkg/apis/meta/v1
   - pkg/apis/meta/v1/unstructured
@@ -236,11 +247,14 @@ imports:
   - pkg/util/diff
   - pkg/util/errors
   - pkg/util/framer
+  - pkg/util/httpstream
+  - pkg/util/httpstream/spdy
   - pkg/util/intstr
   - pkg/util/json
   - pkg/util/mergepatch
   - pkg/util/naming
   - pkg/util/net
+  - pkg/util/remotecommand
   - pkg/util/runtime
   - pkg/util/sets
   - pkg/util/strategicpatch
@@ -252,6 +266,7 @@ imports:
   - pkg/version
   - pkg/watch
   - third_party/forked/golang/json
+  - third_party/forked/golang/netutil
   - third_party/forked/golang/reflect
 - name: k8s.io/client-go
   version: 1638f8970cefaa404ff3a62950f88b08292b2696
@@ -328,9 +343,9 @@ imports:
 - name: k8s.io/code-generator
   version: 3dcf91f64f638563e5106f21f50c31fa361c918d
 - name: k8s.io/gengo
-  version: 0689ccc1d7d65d9dd1bedcc3b0b1ed7df91ba266
+  version: 7a1b7fb0289f3b6f206589cdcfcad73009b6e840
 - name: k8s.io/klog
-  version: 8139d8cb77af419532b33dfa7dd09fbc5f1d344f
+  version: a5bc97fbc634d635061f3146511332c7e313a55a
 - name: k8s.io/kube-openapi
   version: 0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803
   subpackages:

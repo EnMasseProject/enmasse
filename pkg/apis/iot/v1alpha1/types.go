@@ -96,9 +96,25 @@ type IoTConfig struct {
 	Status IoTConfigStatus `json:"status,omitempty"`
 }
 
+func (config *IoTConfig) WantDefaultRoutes() bool {
+	return config.Spec.WantDefaultRoutes()
+}
+
 type IoTConfigSpec struct {
 	Adapters               []AdapterSpec   `json:"adapters,omitempty"`
 	DefaultImageProperties ImageProperties `json:"defaultImageProperties,omitempty"`
+
+	EnableDefaultRoutes *bool `json:"enableDefaultRoutes,omitempty"`
+}
+
+func (spec *IoTConfigSpec) WantDefaultRoutes() bool {
+
+	if spec.EnableDefaultRoutes != nil {
+		return *spec.EnableDefaultRoutes
+	}
+
+	return util.IsOpenshift()
+
 }
 
 type ImageProperties struct {

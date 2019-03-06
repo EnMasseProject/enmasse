@@ -22,18 +22,21 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
+const appAuthService = "iot-core"
+const nameAuthService = "iot-auth-service"
+
 func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, "iot-auth-service", config, r.reconcileAuthServiceDeployment)
+		return r.processDeployment(ctx, nameAuthService, config, r.reconcileAuthServiceDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, "iot-auth-service", config, r.reconcileAuthServiceService)
+		return r.processService(ctx, nameAuthService, config, r.reconcileAuthServiceService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, "iot-auth-service-config", config, r.reconcileAuthServiceConfigMap)
+		return r.processConfigMap(ctx, nameAuthService+"-config", config, r.reconcileAuthServiceConfigMap)
 	})
 
 	return rc.Result()
@@ -41,7 +44,7 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 
 func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", "iot-core", deployment.Name)
+	install.ApplyDeploymentDefaults(deployment, "iot", appAuthService, deployment.Name)
 
 	deployment.Spec.Replicas = nil
 
@@ -79,6 +82,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 		container.VolumeMounts[0].Name = "conf"
 		container.VolumeMounts[0].MountPath = "/etc/config"
+		container.VolumeMounts[0].ReadOnly = false
 
 		container.VolumeMounts[1].Name = "tls"
 		container.VolumeMounts[1].MountPath = "/etc/tls"
@@ -95,7 +99,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "conf", "iot-auth-service-config")
+	install.ApplyConfigMapVolume(deployment, "conf", nameAuthService+"-config")
 	install.ApplySecretVolume(deployment, "tls", "iot-auth-service-tls")
 
 	// return
@@ -105,7 +109,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 func (r *ReconcileIoTConfig) reconcileAuthServiceService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", "iot-core", service.Name)
+	install.ApplyServiceDefaults(service, "iot", appAuthService, service.Name)
 
 	if len(service.Spec.Ports) != 1 {
 		service.Spec.Ports = make([]corev1.ServicePort, 1)
@@ -121,39 +125,21 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceService(config *iotv1alpha1.IoT
 	}
 
 	// FIXME: remove OpenShift specific feature
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = "iot-auth-service-tls"
+	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = nameAuthService + "-tls"
 
 	return nil
 }
 
 func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
-	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", "iot-core", "iot-auth-service")
+	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", appAuthService, configMap.Name)
 
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)
 	}
 
 	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE xml>
-<configuration>
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} %-5p [%c{0}] %m%n</pattern>
-		</encoder>
-	</appender>
-	<root level="INFO">
-		<appender-ref ref="STDOUT" />
-	</root>
-	<springProfile name="dev">
-		<logger name="org.eclipse.hono" level="DEBUG"/>
-	</springProfile>
-	<springProfile name="prod">
-		<logger name="org.eclipse.hono" level="INFO"/>
-	</springProfile>
-</configuration>
-`
+		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
 	}
 
 	configMap.Data["application.yml"] = `

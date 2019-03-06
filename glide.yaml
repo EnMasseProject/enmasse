@@ -2,6 +2,10 @@ package: github.com/enmasseproject/enmasse
 import:
   - package: k8s.io/client-go
     version: ^9
+  - package: github.com/openshift/client-go
+    version: release-3.11
+  - package: github.com/openshift/api
+    version: release-3.11
   - package: go.uber.org/multierr
     version: ^1.1
   - package: go.uber.org/atomic

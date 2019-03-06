@@ -14,6 +14,8 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	routev1 "github.com/openshift/api/route/v1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -91,6 +93,26 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 		return err
 	}
 
+	// watch for generated PVC resources
+	err = c.Watch(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, &handler.EnqueueRequestForOwner{
+		OwnerType:    &iotv1alpha1.IoTConfig{},
+		IsController: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	if util.IsOpenshift() {
+		// watch for generated Route resources
+		err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
+			OwnerType:    &iotv1alpha1.IoTConfig{},
+			IsController: true,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -149,6 +171,12 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processAuthService(ctx, config)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processTenantService(ctx, config)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processDeviceRegistry(ctx, config)
 	})
 
 	return rc.Result()
@@ -216,11 +244,11 @@ func (r *ReconcileIoTConfig) processService(ctx context.Context, name string, co
 
 func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.ConfigMap) error) error {
 
-	service := corev1.ConfigMap{
+	cm := corev1.ConfigMap{
 		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &service, func(existing runtime.Object) error {
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &cm, func(existing runtime.Object) error {
 		existingConfigMap := existing.(*corev1.ConfigMap)
 
 		if err := controllerutil.SetControllerReference(config, existingConfigMap, r.scheme); err != nil {
@@ -228,6 +256,54 @@ func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, 
 		}
 
 		return manipulator(config, existingConfigMap)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processPersistentVolumeClaim(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.PersistentVolumeClaim) error) error {
+
+	pvc := corev1.PersistentVolumeClaim{
+		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &pvc, func(existing runtime.Object) error {
+		existingPersistentVolumeClaim := existing.(*corev1.PersistentVolumeClaim)
+
+		if err := controllerutil.SetControllerReference(config, existingPersistentVolumeClaim, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, existingPersistentVolumeClaim)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, service *routev1.Route) error) error {
+
+	route := routev1.Route{
+		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &route, func(existing runtime.Object) error {
+		existingRoute := existing.(*routev1.Route)
+
+		if err := controllerutil.SetControllerReference(config, existingRoute, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, existingRoute)
 	})
 
 	if err != nil {

@@ -5,12 +5,16 @@
 package lsp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"go/ast"
+	"go/parser"
 	"go/token"
 	"net"
 	"os"
 	"sync"
+	"unicode/utf8"
 
 	"golang.org/x/tools/go/packages"
 	"golang.org/x/tools/internal/jsonrpc2"
@@ -31,8 +35,14 @@ func RunServer(ctx context.Context, stream jsonrpc2.Stream, opts ...interface{})
 // RunServerOnPort starts an LSP server on the given port and does not exit.
 // This function exists for debugging purposes.
 func RunServerOnPort(ctx context.Context, port int, opts ...interface{}) error {
+	return RunServerOnAddress(ctx, fmt.Sprintf(":%v", port))
+}
+
+// RunServerOnPort starts an LSP server on the given port and does not exit.
+// This function exists for debugging purposes.
+func RunServerOnAddress(ctx context.Context, addr string, opts ...interface{}) error {
 	s := &server{}
-	ln, err := net.Listen("tcp", fmt.Sprintf(":%v", port))
+	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
@@ -59,6 +69,8 @@ type server struct {
 	signatureHelpEnabled bool
 	snippetsSupported    bool
 
+	textDocumentSyncKind protocol.TextDocumentSyncKind
+
 	viewMu sync.Mutex
 	view   source.View
 }
@@ -75,16 +87,33 @@ func (s *server) Initialize(ctx context.Context, params *protocol.InitializePara
 	s.snippetsSupported = params.Capabilities.TextDocument.Completion.CompletionItem.SnippetSupport
 	s.signatureHelpEnabled = true
 
-	rootPath, err := fromProtocolURI(*params.RootURI).Filename()
+	var rootURI protocol.DocumentURI
+	if params.RootURI != nil {
+		rootURI = *params.RootURI
+	}
+	sourceURI, err := fromProtocolURI(rootURI)
 	if err != nil {
 		return nil, err
 	}
+	rootPath, err := sourceURI.Filename()
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO(rstambler): Change this default to protocol.Incremental (or add a
+	// flag). Disabled for now to simplify debugging.
+	s.textDocumentSyncKind = protocol.Full
+
 	s.view = cache.NewView(&packages.Config{
+		Context: ctx,
 		Dir:     rootPath,
-		Mode:    packages.LoadSyntax,
+		Mode:    packages.LoadImports,
 		Fset:    token.NewFileSet(),
-		Tests:   true,
 		Overlay: make(map[string][]byte),
+		ParseFile: func(fset *token.FileSet, filename string, src []byte) (*ast.File, error) {
+			return parser.ParseFile(fset, filename, src, parser.AllErrors|parser.ParseComments)
+		},
+		Tests: true,
 	})
 
 	return &protocol.InitializeResult{
@@ -101,7 +130,7 @@ func (s *server) Initialize(ctx context.Context, params *protocol.InitializePara
 				TriggerCharacters: []string{"(", ","},
 			},
 			TextDocumentSync: protocol.TextDocumentSyncOptions{
-				Change:    float64(protocol.Full), // full contents of file sent on each update
+				Change:    float64(s.textDocumentSyncKind),
 				OpenClose: true,
 			},
 			TypeDefinitionProvider: true,
@@ -156,14 +185,95 @@ func (s *server) DidOpen(ctx context.Context, params *protocol.DidOpenTextDocume
 	return nil
 }
 
+func bytesOffset(content []byte, pos protocol.Position) int {
+	var line, char, offset int
+
+	for len(content) > 0 {
+		if line == int(pos.Line) && char == int(pos.Character) {
+			return offset
+		}
+
+		r, size := utf8.DecodeRune(content)
+		char++
+		// The offsets are based on a UTF-16 string representation.
+		// So the rune should be checked twice for two code units in UTF-16.
+		if r >= 0x10000 {
+			if line == int(pos.Line) && char == int(pos.Character) {
+				return offset
+			}
+			char++
+		}
+		offset += size
+		content = content[size:]
+		if r == '\n' {
+			line++
+			char = 0
+		}
+	}
+	return -1
+}
+
+func (s *server) applyChanges(ctx context.Context, params *protocol.DidChangeTextDocumentParams) (string, error) {
+	if len(params.ContentChanges) == 1 && params.ContentChanges[0].Range == nil {
+		// If range is empty, we expect the full content of file, i.e. a single change with no range.
+		change := params.ContentChanges[0]
+		if change.RangeLength != 0 {
+			return "", jsonrpc2.NewErrorf(jsonrpc2.CodeInternalError, "unexpected change range provided")
+		}
+		return change.Text, nil
+	}
+
+	sourceURI, err := fromProtocolURI(params.TextDocument.URI)
+	if err != nil {
+		return "", err
+	}
+
+	file, err := s.view.GetFile(ctx, sourceURI)
+	if err != nil {
+		return "", jsonrpc2.NewErrorf(jsonrpc2.CodeInternalError, "file not found")
+	}
+
+	content := file.GetContent()
+	for _, change := range params.ContentChanges {
+		start := bytesOffset(content, change.Range.Start)
+		if start == -1 {
+			return "", jsonrpc2.NewErrorf(jsonrpc2.CodeInternalError, "invalid range for content change")
+		}
+		end := bytesOffset(content, change.Range.End)
+		if end == -1 {
+			return "", jsonrpc2.NewErrorf(jsonrpc2.CodeInternalError, "invalid range for content change")
+		}
+		var buf bytes.Buffer
+		buf.Write(content[:start])
+		buf.WriteString(change.Text)
+		buf.Write(content[end:])
+		content = buf.Bytes()
+	}
+	return string(content), nil
+}
+
 func (s *server) DidChange(ctx context.Context, params *protocol.DidChangeTextDocumentParams) error {
 	if len(params.ContentChanges) < 1 {
 		return jsonrpc2.NewErrorf(jsonrpc2.CodeInternalError, "no content changes provided")
 	}
-	// We expect the full content of file, i.e. a single change with no range.
-	if change := params.ContentChanges[0]; change.RangeLength == 0 {
-		s.cacheAndDiagnose(ctx, params.TextDocument.URI, change.Text)
+
+	var text string
+	switch s.textDocumentSyncKind {
+	case protocol.Incremental:
+		var err error
+		text, err = s.applyChanges(ctx, params)
+		if err != nil {
+			return err
+		}
+	case protocol.Full:
+		// We expect the full content of file, i.e. a single change with no range.
+		change := params.ContentChanges[0]
+		if change.RangeLength != 0 {
+			return jsonrpc2.NewErrorf(jsonrpc2.CodeInternalError, "unexpected change range provided")
+		}
+		text = change.Text
 	}
+	s.cacheAndDiagnose(ctx, params.TextDocument.URI, text)
 	return nil
 }
 
@@ -180,19 +290,24 @@ func (s *server) DidSave(context.Context, *protocol.DidSaveTextDocumentParams) e
 }
 
 func (s *server) DidClose(ctx context.Context, params *protocol.DidCloseTextDocumentParams) error {
-	s.setContent(ctx, fromProtocolURI(params.TextDocument.URI), nil)
+	sourceURI, err := fromProtocolURI(params.TextDocument.URI)
+	if err != nil {
+		return err
+	}
+	s.setContent(ctx, sourceURI, nil)
 	return nil
 }
 
 func (s *server) Completion(ctx context.Context, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	f, err := s.view.GetFile(ctx, fromProtocolURI(params.TextDocument.URI))
+	sourceURI, err := fromProtocolURI(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
-	tok, err := f.GetToken()
+	f, err := s.view.GetFile(ctx, sourceURI)
 	if err != nil {
 		return nil, err
 	}
+	tok := f.GetToken()
 	pos := fromProtocolPosition(tok, params.Position)
 	items, prefix, err := source.Completion(ctx, f, pos)
 	if err != nil {
@@ -209,14 +324,15 @@ func (s *server) CompletionResolve(context.Context, *protocol.CompletionItem) (*
 }
 
 func (s *server) Hover(ctx context.Context, params *protocol.TextDocumentPositionParams) (*protocol.Hover, error) {
-	f, err := s.view.GetFile(ctx, fromProtocolURI(params.TextDocument.URI))
+	sourceURI, err := fromProtocolURI(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
-	tok, err := f.GetToken()
+	f, err := s.view.GetFile(ctx, sourceURI)
 	if err != nil {
 		return nil, err
 	}
+	tok := f.GetToken()
 	pos := fromProtocolPosition(tok, params.Position)
 	ident, err := source.Identifier(ctx, s.view, f, pos)
 	if err != nil {
@@ -237,14 +353,15 @@ func (s *server) Hover(ctx context.Context, params *protocol.TextDocumentPositio
 }
 
 func (s *server) SignatureHelp(ctx context.Context, params *protocol.TextDocumentPositionParams) (*protocol.SignatureHelp, error) {
-	f, err := s.view.GetFile(ctx, fromProtocolURI(params.TextDocument.URI))
+	sourceURI, err := fromProtocolURI(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
-	tok, err := f.GetToken()
+	f, err := s.view.GetFile(ctx, sourceURI)
 	if err != nil {
 		return nil, err
 	}
+	tok := f.GetToken()
 	pos := fromProtocolPosition(tok, params.Position)
 	info, err := source.SignatureHelp(ctx, f, pos)
 	if err != nil {
@@ -254,14 +371,15 @@ func (s *server) SignatureHelp(ctx context.Context, params *protocol.TextDocumen
 }
 
 func (s *server) Definition(ctx context.Context, params *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
-	f, err := s.view.GetFile(ctx, fromProtocolURI(params.TextDocument.URI))
+	sourceURI, err := fromProtocolURI(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
-	tok, err := f.GetToken()
+	f, err := s.view.GetFile(ctx, sourceURI)
 	if err != nil {
 		return nil, err
 	}
+	tok := f.GetToken()
 	pos := fromProtocolPosition(tok, params.Position)
 	ident, err := source.Identifier(ctx, s.view, f, pos)
 	if err != nil {
@@ -271,14 +389,15 @@ func (s *server) Definition(ctx context.Context, params *protocol.TextDocumentPo
 }
 
 func (s *server) TypeDefinition(ctx context.Context, params *protocol.TextDocumentPositionParams) ([]protocol.Location, error) {
-	f, err := s.view.GetFile(ctx, fromProtocolURI(params.TextDocument.URI))
+	sourceURI, err := fromProtocolURI(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
-	tok, err := f.GetToken()
+	f, err := s.view.GetFile(ctx, sourceURI)
 	if err != nil {
 		return nil, err
 	}
+	tok := f.GetToken()
 	pos := fromProtocolPosition(tok, params.Position)
 	ident, err := source.Identifier(ctx, s.view, f, pos)
 	if err != nil {

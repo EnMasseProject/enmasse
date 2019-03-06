@@ -5,7 +5,6 @@
 package cache
 
 import (
-	"fmt"
 	"go/ast"
 	"go/token"
 	"io/ioutil"
@@ -23,72 +22,69 @@ type File struct {
 	ast     *ast.File
 	token   *token.File
 	pkg     *packages.Package
+	meta    *metadata
+	imports []*ast.ImportSpec
 }
 
-// Read returns the contents of the file, reading it from file system if needed.
-func (f *File) Read() ([]byte, error) {
+// GetContent returns the contents of the file, reading it from file system if needed.
+func (f *File) GetContent() []byte {
 	f.view.mu.Lock()
 	defer f.view.mu.Unlock()
-	return f.read()
+	f.read()
+	return f.content
 }
 
-func (f *File) GetFileSet() (*token.FileSet, error) {
-	if f.view.Config.Fset == nil {
-		return nil, fmt.Errorf("no fileset for file view config")
-	}
-	return f.view.Config.Fset, nil
+func (f *File) GetFileSet() *token.FileSet {
+	return f.view.Config.Fset
 }
 
-func (f *File) GetToken() (*token.File, error) {
+func (f *File) GetToken() *token.File {
 	f.view.mu.Lock()
 	defer f.view.mu.Unlock()
 	if f.token == nil {
 		if err := f.view.parse(f.URI); err != nil {
-			return nil, err
-		}
-		if f.token == nil {
-			return nil, fmt.Errorf("failed to find or parse %v", f.URI)
+			return nil
 		}
 	}
-	return f.token, nil
+	return f.token
 }
 
-func (f *File) GetAST() (*ast.File, error) {
+func (f *File) GetAST() *ast.File {
 	f.view.mu.Lock()
 	defer f.view.mu.Unlock()
 	if f.ast == nil {
 		if err := f.view.parse(f.URI); err != nil {
-			return nil, err
+			return nil
 		}
 	}
-	return f.ast, nil
+	return f.ast
 }
 
-func (f *File) GetPackage() (*packages.Package, error) {
+func (f *File) GetPackage() *packages.Package {
 	f.view.mu.Lock()
 	defer f.view.mu.Unlock()
 	if f.pkg == nil {
 		if err := f.view.parse(f.URI); err != nil {
-			return nil, err
+			return nil
 		}
 	}
-	return f.pkg, nil
+	return f.pkg
 }
 
-// read is the internal part of Read that presumes the lock is already held
-func (f *File) read() ([]byte, error) {
+// read is the internal part of GetContent. It assumes that the caller is
+// holding the mutex of the file's view.
+func (f *File) read() {
 	if f.content != nil {
-		return f.content, nil
+		return
 	}
-	// we don't know the content yet, so read it
+	// We don't know the content yet, so read it.
 	filename, err := f.URI.Filename()
 	if err != nil {
-		return nil, err
+		return
 	}
 	content, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return
 	}
 	f.content = content
-	return f.content, nil
 }

@@ -13,7 +13,10 @@ import (
 )
 
 func (s *server) cacheAndDiagnose(ctx context.Context, uri protocol.DocumentURI, content string) {
-	sourceURI := fromProtocolURI(uri)
+	sourceURI, err := fromProtocolURI(uri)
+	if err != nil {
+		return // handle error?
+	}
 	if err := s.setContent(ctx, sourceURI, []byte(content)); err != nil {
 		return // handle error?
 	}
@@ -48,11 +51,22 @@ func toProtocolDiagnostics(ctx context.Context, v source.View, diagnostics []sou
 	reports := []protocol.Diagnostic{}
 	for _, diag := range diagnostics {
 		tok := v.FileSet().File(diag.Start)
+		src := diag.Source
+		if src == "" {
+			src = "LSP"
+		}
+		var severity protocol.DiagnosticSeverity
+		switch diag.Severity {
+		case source.SeverityError:
+			severity = protocol.SeverityError
+		case source.SeverityWarning:
+			severity = protocol.SeverityWarning
+		}
 		reports = append(reports, protocol.Diagnostic{
 			Message:  diag.Message,
 			Range:    toProtocolRange(tok, diag.Range),
-			Severity: protocol.SeverityError, // all diagnostics have error severity for now
-			Source:   "LSP",
+			Severity: severity,
+			Source:   src,
 		})
 	}
 	return reports

@@ -11,6 +11,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/openshift/api"
+
 	"github.com/enmasseproject/enmasse/version"
 
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
@@ -58,8 +60,13 @@ func main() {
 
 	// register APIs
 
+	if err := api.Install(scheme.Scheme); err != nil {
+		log.Error(err, "Failed to register OpenShift schema")
+		os.Exit(1)
+	}
+
 	if err := enmassescheme.AddToScheme(scheme.Scheme); err != nil {
-		log.Error(err, "Failed to register schema")
+		log.Error(err, "Failed to register EnMasse schema")
 		os.Exit(1)
 	}
 

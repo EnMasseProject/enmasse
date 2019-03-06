@@ -32,23 +32,34 @@ cp "$ROOTDIR/test/ansible-memcached/defaults.yml" memcached-operator/roles/memca
 cp "$ROOTDIR/test/ansible-memcached/asserts.yml"  memcached-operator/molecule/default/asserts.yml
 cp "$ROOTDIR/test/ansible-memcached/molecule.yml"  memcached-operator/molecule/test-local/molecule.yml
 cp -a "$ROOTDIR/test/ansible-memcached/memfin" memcached-operator/roles/
+cp -a "$ROOTDIR/test/ansible-memcached/secret" memcached-operator/roles/
 cat "$ROOTDIR/test/ansible-memcached/watches-finalizer.yaml" >> memcached-operator/watches.yaml
+cat "$ROOTDIR/test/ansible-memcached/prepare-test-image.yml" >> memcached-operator/molecule/test-local/prepare.yml
+# Append v1 kind to watches to test watching already registered GVK
+cat "$ROOTDIR/test/ansible-memcached/watches-v1-kind.yaml" >> memcached-operator/watches.yaml
 
 
 # Test local
 pushd memcached-operator
+sed -i 's|\(FROM quay.io/operator-framework/ansible-operator\)\(:.*\)\?|\1:dev|g' build/Dockerfile
 OPERATORDIR="$(pwd)"
 TEST_CLUSTER_PORT=24443 operator-sdk test local --namespace default
 
 # Test cluster
 DEST_IMAGE="quay.io/example/memcached-operator:v0.0.2-test"
-sed -i 's|\(FROM quay.io/operator-framework/ansible-operator\)\(:.*\)\?|\1:dev|g' build/Dockerfile
 operator-sdk build --enable-tests "$DEST_IMAGE"
 trap_add 'remove_prereqs' EXIT
 deploy_prereqs
-TEST_CLUSTER_PORT=25443 operator-sdk test cluster --image-pull-policy Never --namespace default --service-account memcached-operator ${DEST_IMAGE}
+operator-sdk test cluster --image-pull-policy Never --namespace default --service-account memcached-operator ${DEST_IMAGE}
 
 remove_prereqs
 
 popd
+popd
+
+pushd "${ROOTDIR}/test/ansible-inventory"
+
+sed -i 's|\(FROM quay.io/operator-framework/ansible-operator\)\(:.*\)\?|\1:dev|g' build/Dockerfile
+TEST_CLUSTER_PORT=24443 operator-sdk test local --namespace default
+
 popd

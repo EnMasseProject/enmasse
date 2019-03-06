@@ -87,6 +87,15 @@ func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator
 	return err
 }
 
+func ApplyPersistentVolume(deployment *appsv1.Deployment, name string, claimName string) {
+	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
+		if volume.PersistentVolumeClaim == nil {
+			volume.PersistentVolumeClaim = &corev1.PersistentVolumeClaimVolumeSource{}
+		}
+		volume.PersistentVolumeClaim.ClaimName = claimName
+	})
+}
+
 func ApplyConfigMapVolume(deployment *appsv1.Deployment, name string, configMapName string) {
 	ApplyVolume(deployment, name, func(volume *corev1.Volume) {
 		if volume.ConfigMap == nil {

@@ -200,6 +200,11 @@ func (in *IoTConfigSpec) DeepCopyInto(out *IoTConfigSpec) {
 		copy(*out, *in)
 	}
 	in.DefaultImageProperties.DeepCopyInto(&out.DefaultImageProperties)
+	if in.EnableDefaultRoutes != nil {
+		in, out := &in.EnableDefaultRoutes, &out.EnableDefaultRoutes
+		*out = new(bool)
+		**out = **in
+	}
 	return
 }
 
