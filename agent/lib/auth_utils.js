@@ -144,6 +144,10 @@ function patch(sessions, kc_idp_hint) {
                 log.info("Modified redirect: %s", target);
             }
 
+            if (!target) {
+                target = "/";
+            }
+            log.info("Sending redirect: %s", target);
             response.statusCode = 302;
             response.setHeader('Location', target);
             response.end();

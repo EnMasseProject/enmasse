@@ -769,9 +769,9 @@
             "integrity": "sha1-nbe1lJatPzz+8wp1FC0tkwrXJlE="
         },
         "jwk-to-pem": {
-            "version": "1.2.6",
-            "resolved": "https://registry.npmjs.org/jwk-to-pem/-/jwk-to-pem-1.2.6.tgz",
-            "integrity": "sha1-1QfOzkAInFJI4J7GgmaiAwqcYyU=",
+            "version": "2.0.1",
+            "resolved": "https://registry.npmjs.org/jwk-to-pem/-/jwk-to-pem-2.0.1.tgz",
+            "integrity": "sha512-KKu0WuDDjqw2FlRFp9/vk9TMO/KvgpZVKzdhhYcNyy5OwE8dw9lOK5OQTQHIJ7m+HioI/4P44sAtVuDrQ8KQfw==",
             "requires": {
                 "asn1.js": "4.10.1",
                 "elliptic": "6.4.1",
@@ -779,11 +779,11 @@
             }
         },
         "keycloak-connect": {
-            "version": "3.4.3",
-            "resolved": "https://registry.npmjs.org/keycloak-connect/-/keycloak-connect-3.4.3.tgz",
-            "integrity": "sha1-Z3W1mRJdJNUk9uZKXlEv2gBpLE4=",
+            "version": "4.8.3",
+            "resolved": "https://registry.npmjs.org/keycloak-connect/-/keycloak-connect-4.8.3.tgz",
+            "integrity": "sha512-4MRRDmztHl2c1JiyxoZO3aAkqeYQ06gKUXJQ5BjL1RGZuqDs2I8vmSUL+ou4Gm0NamoJa87daT1NBg98ZW1mhw==",
             "requires": {
-                "jwk-to-pem": "1.2.6"
+                "jwk-to-pem": "2.0.1"
             }
         },
         "levn": {
