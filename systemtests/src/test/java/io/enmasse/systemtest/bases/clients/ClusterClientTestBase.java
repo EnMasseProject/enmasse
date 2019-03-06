@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.bases.clients;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.MsgCliApiClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -13,6 +14,7 @@ import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,12 +66,12 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver, boolean websocket) throws Exception {
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.queue("message-basic" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueue("message-basic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket, true, false).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "message");
         if (websocket) {
@@ -97,12 +99,12 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         AbstractClient sender = new PahoMQTTClientSender();
         AbstractClient receiver = new PahoMQTTClientReceiver();
 
-        Destination dest = Destination.topic("message-basic-mqtt",
+        Address dest = AddressUtils.createTopic("message-basic-mqtt",
                 sharedAddressSpace.getType().equals(AddressSpaceType.STANDARD) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, false, false, true).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "message");
         arguments.put(ClientArgument.TIMEOUT, "20");
@@ -117,7 +119,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         String receiverId = cliApiClient.sendAndGetId(receiver);
 
         if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(new ArtemisManagement(), sharedAddressSpace, dest.getAddress(), 1);
+            waitForSubscribers(new ArtemisManagement(), sharedAddressSpace, dest.getSpec().getAddress(), 1);
         } else {
             Thread.sleep(10_000); //mqtt connection is not in console
         }

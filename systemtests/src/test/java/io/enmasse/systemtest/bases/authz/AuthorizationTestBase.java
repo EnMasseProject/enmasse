@@ -4,10 +4,12 @@
  */
 package io.enmasse.systemtest.bases.authz;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
@@ -29,11 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private static Logger log = CustomLogger.getLogger();
-    private final Destination queue = Destination.queue("authz-queue", getDefaultPlan(AddressType.QUEUE));
-    private final Destination topic = Destination.topic("authz-topic", getDefaultPlan(AddressType.TOPIC));
-    private final Destination anycast = Destination.anycast("authz-anycast");
-    private final Destination multicast = Destination.multicast("authz-multicast");
-    private List<Destination> addresses;
+    private final Address queue = AddressUtils.createQueue("authz-queue", getDefaultPlan(AddressType.QUEUE));
+    private final Address topic = AddressUtils.createTopic("authz-topic", getDefaultPlan(AddressType.TOPIC));
+    private final Address anycast = AddressUtils.createAnycast("authz-anycast");
+    private final Address multicast = AddressUtils.createMulticast("authz-multicast");
+    private List<Address> addresses;
 
     private void initAddresses() throws Exception {
         addresses = new ArrayList<>();
@@ -43,7 +45,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             addresses.add(anycast);
             addresses.add(multicast);
         }
-        setAddresses(addresses.toArray(new Destination[0]));
+        setAddresses(addresses.toArray(new Address[0]));
     }
 
     protected void doTestSendAuthz() throws Exception {
@@ -63,7 +65,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .setPassword(allowedUser.getPassword())
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(User.Operation.SEND)
-                        .addAddresses(addresses.stream().map(Destination::getAddress).collect(Collectors.toList()))));
+                        .addAddresses(addresses.stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList()))));
 
         assertSend(allowedUser);
         removeUser(sharedAddressSpace, allowedUser.getUsername());
@@ -101,7 +103,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .setPassword(allowedUser.getPassword())
                 .addAuthorization(new User.AuthorizationRule()
                         .addOperation(User.Operation.RECEIVE)
-                        .addAddresses(addresses.stream().map(Destination::getAddress).collect(Collectors.toList()))));
+                        .addAddresses(addresses.stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList()))));
         assertReceive(allowedUser);
         removeUser(sharedAddressSpace, allowedUser.getUsername());
 
@@ -140,13 +142,13 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     }
 
     protected void doTestSendAuthzWithWIldcards() throws Exception {
-        List<Destination> addresses = getAddressesWildcard();
+        List<Address> addresses = getAddressesWildcard();
         List<User> users = createUsersWildcard(sharedAddressSpace, User.Operation.SEND);
 
-        setAddresses(addresses.toArray(new Destination[0]));
+        setAddresses(addresses.toArray(new Address[0]));
 
         for (User user : users) {
-            for (Destination destination : addresses) {
+            for (Address destination : addresses) {
                 assertSendWildcard(user, destination);
             }
             removeUser(sharedAddressSpace, user.getUsername());
@@ -154,13 +156,13 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     }
 
     protected void doTestReceiveAuthzWithWIldcards() throws Exception {
-        List<Destination> addresses = getAddressesWildcard();
+        List<Address> addresses = getAddressesWildcard();
         List<User> users = createUsersWildcard(sharedAddressSpace, User.Operation.RECEIVE);
 
-        setAddresses(addresses.toArray(new Destination[0]));
+        setAddresses(addresses.toArray(new Address[0]));
 
         for (User user : users) {
-            for (Destination destination : addresses) {
+            for (Address destination : addresses) {
                 assertReceiveWildcard(user, destination);
             }
             removeUser(sharedAddressSpace, user.getUsername());
@@ -171,39 +173,39 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     // Help methods
     //===========================================================================================================
 
-    private void assertSendWildcard(User user, Destination destination) throws Exception {
+    private void assertSendWildcard(User user, Address destination) throws Exception {
         List<String> addresses = user.getAuthorization().stream()
                 .map(authz -> authz.getAddresses().stream())
                 .flatMap(Stream::distinct)
                 .collect(Collectors.toList());
 
         UserCredentials credentials = new UserCredentials(user.getUsername(), user.getPassword());
-        if (addresses.stream().filter(address -> destination.getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
+        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
             assertTrue(canSend(destination, credentials),
                     String.format("Authz failed, user %s cannot send message to destination %s", credentials,
-                            destination.getAddress()));
+                            destination.getSpec().getAddress()));
         } else {
             assertFalse(canSend(destination, credentials),
                     String.format("Authz failed, user %s can send message to destination %s", credentials,
-                            destination.getAddress()));
+                            destination.getSpec().getAddress()));
         }
     }
 
-    private void assertReceiveWildcard(User user, Destination destination) throws Exception {
+    private void assertReceiveWildcard(User user, Address destination) throws Exception {
         List<String> addresses = user.getAuthorization().stream()
                 .map(authz -> authz.getAddresses().stream())
                 .flatMap(Stream::distinct)
                 .collect(Collectors.toList());
 
         UserCredentials credentials = new UserCredentials(user.getUsername(), user.getPassword());
-        if (addresses.stream().filter(address -> destination.getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
+        if (addresses.stream().filter(address -> destination.getSpec().getAddress().contains(address.replace("*", ""))).collect(Collectors.toList()).size() > 0) {
             assertTrue(canReceive(destination, credentials),
                     String.format("Authz failed, user %s cannot receive message from destination %s", credentials,
-                            destination.getAddress()));
+                            destination.getSpec().getAddress()));
         } else {
             assertFalse(canReceive(destination, credentials),
                     String.format("Authz failed, user %s can receive message from destination %s", credentials,
-                            destination.getAddress()));
+                            destination.getSpec().getAddress()));
         }
     }
 
@@ -255,9 +257,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private boolean canSend(Destination destination, UserCredentials credentials) throws Exception {
+    private boolean canSend(Address destination, UserCredentials credentials) throws Exception {
         logWithSeparator(log,
-                String.format("Try send message under user %s from %s %s", credentials, destination.getType(), destination.getAddress()),
+                String.format("Try send message under user %s from %s %s", credentials, destination.getSpec().getType(), destination.getSpec().getAddress()),
                 String.format("***** Try to open sender client under user %s", credentials),
                 String.format("***** Try to open receiver client under user %s", defaultCredentials));
         AmqpClient sender = createClient(destination, credentials);
@@ -266,9 +268,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         return canAuth(sender, receiver, destination, true);
     }
 
-    private boolean canReceive(Destination destination, UserCredentials credentials) throws Exception {
+    private boolean canReceive(Address destination, UserCredentials credentials) throws Exception {
         logWithSeparator(log,
-                String.format("Try receive message under user %s from %s %s", credentials, destination.getType(), destination.getAddress()),
+                String.format("Try receive message under user %s from %s %s", credentials, destination.getSpec().getType(), destination.getSpec().getAddress()),
                 String.format("***** Try to open sender client under user %s", defaultCredentials),
                 String.format("***** Try to open receiver client under user %s", credentials));
 
@@ -278,10 +280,10 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         return canAuth(sender, receiver, destination, false);
     }
 
-    private boolean canAuth(AmqpClient sender, AmqpClient receiver, Destination destination, boolean checkSender) throws Exception {
+    private boolean canAuth(AmqpClient sender, AmqpClient receiver, Address destination, boolean checkSender) throws Exception {
         try {
-            Future<List<Message>> received = receiver.recvMessages(destination.getAddress(), 1);
-            Future<Integer> sent = sender.sendMessages(destination.getAddress(), Collections.singletonList("msg1"));
+            Future<List<Message>> received = receiver.recvMessages(destination.getSpec().getAddress(), 1);
+            Future<Integer> sent = sender.sendMessages(destination.getSpec().getAddress(), Collections.singletonList("msg1"));
 
             if (checkSender) {
                 int numSent = sent.get(1, TimeUnit.MINUTES);
@@ -300,10 +302,10 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             }
 
             if (cause instanceof SecurityException || cause instanceof SaslSystemException || cause instanceof AuthenticationException || cause instanceof UnauthorizedAccessException) {
-                log.info("canAuth {} ({}): {}", destination.getAddress(), destination.getType(), ex.getMessage());
+                log.info("canAuth {} ({}): {}", destination.getSpec().getAddress(), destination.getSpec().getType(), ex.getMessage());
                 return false;
             } else {
-                log.warn("canAuth {} ({}) exception", destination.getAddress(), destination.getType(), ex);
+                log.warn("canAuth {} ({}) exception", destination.getSpec().getAddress(), destination.getSpec().getType(), ex);
                 throw ex;
             }
         } finally {
@@ -312,10 +314,10 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         }
     }
 
-    private AmqpClient createClient(Destination dest, UserCredentials credentials) throws Exception {
+    private AmqpClient createClient(Address dest, UserCredentials credentials) throws Exception {
         AmqpClient client = null;
 
-        switch (dest.getType()) {
+        switch (dest.getSpec().getType()) {
             case "queue":
                 client = amqpClientFactory.createQueueClient(sharedAddressSpace);
                 break;

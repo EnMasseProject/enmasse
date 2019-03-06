@@ -5,10 +5,12 @@
 package io.enmasse.systemtest.bases.web;
 
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.RheaWebPage;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 
@@ -52,11 +54,11 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
     //============================ do test methods ===============================================
     //============================================================================================
 
-    protected void doWebSocketSendReceive(Destination destination) throws Exception {
+    protected void doWebSocketSendReceive(Address destination) throws Exception {
         setAddresses(destination);
         int count = 10;
 
-        rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getAddress(),
+        rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getSpec().getAddress(),
                 count, defaultCredentials, sharedAddressSpace.getType());
         assertTrue(rheaWebPage.checkCountMessage(count * 2), "Browser client didn't sent and received all messages");
     }

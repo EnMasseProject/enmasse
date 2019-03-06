@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;

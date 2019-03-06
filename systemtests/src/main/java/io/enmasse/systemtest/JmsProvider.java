@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.address.model.Address;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 
@@ -33,33 +34,33 @@ public class JmsProvider {
         return (javax.jms.Destination) context.lookup(address);
     }
 
-    private HashMap<String, String> createAddressMap(Destination destination) {
+    private HashMap<String, String> createAddressMap(Address destination) {
         String identification;
-        if (destination.getType().equals(AddressType.QUEUE.toString())) {
+        if (destination.getSpec().getType().equals(AddressType.QUEUE.toString())) {
             identification = "queue.";
         } else {
             identification = "topic.";
         }
 
         return new HashMap<String, String>() {{
-            put(identification + destination.getAddress(), destination.getAddress());
+            put(identification + destination.getSpec().getAddress(), destination.getSpec().getAddress());
         }};
     }
 
-    public Context createContext(String route, UserCredentials credentials, String cliID, Destination address) throws Exception {
+    public Context createContext(String route, UserCredentials credentials, String cliID, Address address) throws Exception {
         Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(), cliID,
                 createAddressMap(address));
         context = new InitialContext(env);
         return context;
     }
 
-    public Context createContextForShared(String route, UserCredentials credentials, Destination address) throws Exception {
+    public Context createContextForShared(String route, UserCredentials credentials, Address address) throws Exception {
         Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(),
                 createAddressMap(address));
         return new InitialContext(env);
     }
 
-    public Connection createConnection(String route, UserCredentials credentials, String cliID, Destination address) throws Exception {
+    public Connection createConnection(String route, UserCredentials credentials, String cliID, Address address) throws Exception {
         context = createContext(route, credentials, cliID, address);
         ConnectionFactory connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionFactory");
         connection = connectionFactory.createConnection();

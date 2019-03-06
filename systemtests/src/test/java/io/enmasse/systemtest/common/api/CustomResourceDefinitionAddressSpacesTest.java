@@ -5,13 +5,16 @@
 
 package io.enmasse.systemtest.common.api;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.CliOutputData;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -182,24 +185,24 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             // Address part
             //===========================
 
-            Destination queue = new Destination("queue", null, brokered.getName(), "queue",
-                    Destination.QUEUE, DestinationPlan.BROKERED_QUEUE);
-            Destination topicBrokered = new Destination("topic", null, brokered.getName(), "topic",
-                    Destination.TOPIC, DestinationPlan.BROKERED_TOPIC);
-            Destination topicStandard = new Destination("topic", null, standard.getName(), "topic",
-                    Destination.TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
-            Destination anycast = new Destination("anycast", null, standard.getName(), "anycast",
-                    Destination.ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST);
+            Address queue = AddressUtils.createAddress("queue", null, brokered.getName(), "queue",
+                    AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
+            Address topicBrokered = AddressUtils.createAddress("topic", null, brokered.getName(), "topic",
+                    AddressType.TOPIC.toString(), DestinationPlan.BROKERED_TOPIC);
+            Address topicStandard = AddressUtils.createAddress("topic", null, standard.getName(), "topic",
+                    AddressType.TOPIC.toString(), DestinationPlan.STANDARD_LARGE_TOPIC);
+            Address anycast = AddressUtils.createAddress("anycast", null, standard.getName(), "anycast",
+                    AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_SMALL_ANYCAST);
 
-            assertTrue(KubeCMDClient.createCR(namespace, queue.toYaml(addressApiClient.getApiVersion())).getRetCode());
-            assertTrue(KubeCMDClient.createCR(namespace, topicBrokered.toYaml(addressApiClient.getApiVersion())).getRetCode());
-            assertTrue(KubeCMDClient.createCR(namespace, topicStandard.toYaml(addressApiClient.getApiVersion())).getRetCode());
-            assertTrue(KubeCMDClient.createCR(namespace, anycast.toYaml(addressApiClient.getApiVersion())).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(queue)).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(topicBrokered)).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(topicStandard)).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(anycast)).getRetCode());
 
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
 
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
 
             TestUtils.waitForDestinationsReady(apiClient, brokered, new TimeoutBudget(5, TimeUnit.MINUTES), queue, topicBrokered);
@@ -207,8 +210,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
 
-            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
+            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getSpec().getAddress()))).isReady());
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
 
             TestUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
@@ -216,12 +219,12 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
 
-            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
+            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getSpec().getAddress()))).isReady());
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getSpec().getAddress()))).getPhase(),
                     "Active");
-            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus().isEmpty());
+            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getSpec().getAddress()))).getStatus().isEmpty());
 
             //===========================
             // Clean part

@@ -5,11 +5,12 @@
 
 package io.enmasse.systemtest.standard.mqtt;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -79,7 +80,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     @Test
     @Disabled("related issue: #1529")
     void testRetainedMessages() throws Exception {
-        Destination topic = Destination.topic("retained-message-topic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address topic = AddressUtils.createTopic("retained-message-topic", DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
@@ -91,14 +92,14 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
         //send retained message to the topic
         IMqttClient publisher = mqttClientFactory.create();
         publisher.connect();
-        publisher.publish(topic.getAddress(), retainedMessage);
+        publisher.publish(topic.getSpec().getAddress(), retainedMessage);
         publisher.disconnect();
 
         //each client which will subscribe to the topic should receive retained message!
         IMqttClient subscriber = mqttClientFactory.create();
         subscriber.connect();
         CompletableFuture<MqttMessage> messageFuture = new CompletableFuture<>();
-        subscriber.subscribe(topic.getAddress(), (topic1, message) -> messageFuture.complete(message));
+        subscriber.subscribe(topic.getSpec().getAddress(), (topic1, message) -> messageFuture.complete(message));
         MqttMessage receivedMessage = messageFuture.get(1, TimeUnit.MINUTES);
         assertTrue(receivedMessage.isRetained(), "Retained message expected");
 
@@ -107,14 +108,14 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
 
     private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
 
-        Destination dest = Destination.topic(MYTOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address dest = AddressUtils.createTopic(MYTOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(dest);
 
         IMqttClient client = mqttClientFactory.create();
         client.connect();
 
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getAddress(), messages.size(), subscriberQos);
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getAddress(), messages);
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), subscriberQos);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
 
         int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
         assertThat("Incorrect count of messages published",

@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import io.enmasse.systemtest.AddressSpace;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.PlansProvider;
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;

@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.amqp.AmqpClient;
 
 import java.util.List;
@@ -14,8 +15,8 @@ public abstract class BrokerManagement {
     protected String resourceProperty;
     protected String operationProperty;
 
-    public abstract List<String> getQueueNames(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception;
+    public abstract List<String> getQueueNames(AmqpClient queueClient, Address replyQueue, String topic) throws Exception;
 
-    public abstract int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, String queue) throws Exception;
+    public abstract int getSubscriberCount(AmqpClient queueClient, Address replyQueue, String queue) throws Exception;
 
 }

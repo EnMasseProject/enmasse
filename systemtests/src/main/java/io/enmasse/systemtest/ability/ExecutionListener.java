@@ -7,6 +7,7 @@ package io.enmasse.systemtest.ability;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;

@@ -4,7 +4,10 @@
  */
 package io.enmasse.systemtest.apiclients;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
@@ -372,14 +375,14 @@ public class AddressApiClient extends ApiClient {
      * @param destinations variable count of destinations that you can delete
      * @throws Exception
      */
-    public void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+    public void deleteAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
         if (destinations.length == 0) {
-            for (Destination destination : TestUtils.convertToListAddress(getAddresses(addressSpace, HTTP_OK, Optional.empty()),
-                    Destination.class, object -> true)) {
+            for (Address destination : TestUtils.convertToListAddress(getAddresses(addressSpace, HTTP_OK, Optional.empty()),
+                    Address.class, object -> true)) {
                 deleteAddress(addressSpace.getName(), destination, HTTP_OK);
             }
         } else {
-            for (Destination destination : destinations) {
+            for (Address destination : destinations) {
                 deleteAddress(addressSpace.getName(), destination, HTTP_OK);
             }
         }
@@ -389,14 +392,14 @@ public class AddressApiClient extends ApiClient {
         return String.format(addressNestedPathPattern, addressSpace);
     }
 
-    public void deleteAddress(String addressSpace, Destination destination, int expectedCode) throws Exception {
-        doDelete(getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace), expectedCode);
+    public void deleteAddress(String addressSpace, Address destination, int expectedCode) throws Exception {
+        doDelete(getAddressPath(addressSpace) + "/" + AddressUtils.generateAddressMetadataName(addressSpace, destination), expectedCode);
     }
 
-    public void replaceAddress(String addressSpace, Destination destination, int expectedCode) throws Exception {
-        String path = getAddressPath(addressSpace) + "/" + destination.getAddressName(addressSpace);
+    public void replaceAddress(String addressSpace, Address destination, int expectedCode) throws Exception {
+        String path = getAddressPath(addressSpace) + "/" + AddressUtils.generateAddressMetadataName(addressSpace, destination);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        JsonObject payload = destination.toJson(apiVersion, addressSpace);
+        JsonObject payload = AddressUtils.addressToJson(addressSpace, destination);
         log.info("UPDATE-address: path {}: {}", path, payload.toString());
         doRequestNTimes(initRetry, () -> {
                     client.put(endpoint.getPort(), endpoint.getHost(), path)
@@ -427,17 +430,17 @@ public class AddressApiClient extends ApiClient {
     }
 
 
-    public void appendAddresses(AddressSpace addressSpace, int batchSize, Destination... destinations) throws Exception {
+    public void appendAddresses(AddressSpace addressSpace, int batchSize, Address... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
-        List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
+        List<Address> current = new ArrayList<>(TestUtils.convertToListAddress(response, io.enmasse.address.model.Address.class, object -> true));
 
-        List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
+        List<Address> toCreate = new ArrayList<>(Arrays.asList(destinations));
 
         toCreate.removeAll(current);
 
         log.info("Current: {}, desired: {}, toCreate: {}", current, destinations, toCreate);
 
-        destinations = toCreate.toArray(new Destination[0]);
+        destinations = toCreate.toArray(new Address[0]);
         if (batchSize > destinations.length) {
             throw new IllegalArgumentException(String.format(
                     "Size of batches cannot be greater then count of addresses! got %s; expected <= %s",
@@ -450,7 +453,7 @@ public class AddressApiClient extends ApiClient {
             int start = 0;
             try {
                 while (start < destinations.length) {
-                    Destination[] splice = Arrays.copyOfRange(destinations, start, Math.min(start + batchSize, destinations.length));
+                    Address[] splice = Arrays.copyOfRange(destinations, start, Math.min(start + batchSize, destinations.length));
                     JsonObject payload = createAddressListPayloadJson(addressSpace, splice);
                     createAddresses(addressSpace, payload, HTTP_CREATED);
                     start += splice.length;
@@ -463,62 +466,62 @@ public class AddressApiClient extends ApiClient {
         }
     }
 
-    public void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+    public void appendAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
 
-        List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
+        List<Address> current = new ArrayList<>(TestUtils.convertToListAddress(response, Address.class, object -> true));
 
-        List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
+        List<Address> toCreate = new ArrayList<>(Arrays.asList(destinations));
 
         toCreate.removeAll(current);
 
-        for (Destination destination : toCreate) {
+        for (Address destination : toCreate) {
             createAddress(addressSpace, destination, HTTP_CREATED);
         }
     }
 
-    private JsonObject createAddressListPayloadJson(AddressSpace addressSpace, Destination... destinations) {
+    private JsonObject createAddressListPayloadJson(AddressSpace addressSpace, Address... destinations) throws Exception {
         JsonObject addressList = new JsonObject();
         addressList.put("apiVersion", getApiVersion());
         addressList.put("kind", "AddressList");
         JsonArray items = new JsonArray();
-        for (Destination destination : destinations) {
-            JsonObject item = destination.toJson(this.getApiVersion(), addressSpace.getName());
+        for (Address destination : destinations) {
+            JsonObject item = AddressUtils.addressToJson(addressSpace.getName(), destination);
             items.add(item);
         }
         addressList.put("items", items);
         return addressList;
     }
 
-    public void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        setAddresses(addressSpace, HTTP_CREATED, destinations);
+    public void setAddresses(AddressSpace addressSpace, Address... addresses) throws Exception {
+        setAddresses(addressSpace, HTTP_CREATED, addresses);
     }
 
-    public void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
+    public void setAddresses(AddressSpace addressSpace, int expectedCode, Address... addresses) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
 
-        List<Destination> current = new ArrayList<>(TestUtils.convertToListAddress(response, Destination.class, object -> true));
+        List<Address> current = new ArrayList<>(TestUtils.convertToListAddress(response, Address.class, object -> true));
 
-        List<Destination> toCreate = new ArrayList<>(Arrays.asList(destinations));
-        List<Destination> toDelete = new ArrayList<>(current);
+        List<Address> toCreate = new ArrayList<>(Arrays.asList(addresses));
+        List<Address> toDelete = new ArrayList<>(current);
 
         toDelete.removeAll(toCreate);
         toCreate.removeAll(current);
 
         log.info("Creating {}", toCreate);
 
-        for (Destination destination : toCreate) {
+        for (Address destination : toCreate) {
             createAddress(addressSpace, destination, expectedCode);
         }
 
         log.info("Deleting {}", toDelete);
-        for (Destination destination : toDelete) {
+        for (Address destination : toDelete) {
             deleteAddress(addressSpace.getName(), destination, HTTP_OK);
         }
     }
 
-    public void createAddress(Destination destination, int expectedCode) throws Exception {
-        JsonObject addressJson = destination.toJson(apiVersion);
+    public void createAddress(Address destination, int expectedCode) throws Exception {
+        JsonObject addressJson = AddressUtils.addressToJson(destination);
         log.info("POST-address: path {}; body: {}", addressResourcePath, addressJson.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -537,12 +540,12 @@ public class AddressApiClient extends ApiClient {
                 Optional.empty());
     }
 
-    public void createAddress(Destination destination) throws Exception {
+    public void createAddress(Address destination) throws Exception {
         createAddress(destination, HTTP_CREATED);
     }
 
-    public void createAddress(AddressSpace addressSpace, Destination destination, int expectedCode) throws Exception {
-        JsonObject entry = destination.toJson(this.getApiVersion(), addressSpace.getName());
+    public void createAddress(AddressSpace addressSpace, Address destination, int expectedCode) throws Exception {
+        JsonObject entry = AddressUtils.addressToJson(addressSpace.getName(), destination);
         log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getName()), entry.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -561,7 +564,7 @@ public class AddressApiClient extends ApiClient {
                 Optional.empty());
     }
 
-    public void createAddress(AddressSpace addressSpace, Destination destination) throws Exception {
+    public void createAddress(AddressSpace addressSpace, Address destination) throws Exception {
         createAddress(addressSpace, destination, HTTP_CREATED);
     }
 

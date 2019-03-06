@@ -5,10 +5,12 @@
 package io.enmasse.systemtest.bases.web;
 
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
@@ -92,15 +94,15 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), addressApiClient, consoleAddrSpace, user);
         consoleWebPage.openWebConsolePage();
-        Destination q1 = Destination.queue("new-queue-instance-1", consoleQueuePlan1.getName());
-        Destination t2 = Destination.topic("new-topic-instance-2", consoleTopicPlan2.getName());
-        Destination q3 = Destination.queue("new-queue-instance-3", consoleQueuePlan3.getName());
+        Address q1 = AddressUtils.createQueue("new-queue-instance-1", consoleQueuePlan1.getName());
+        Address t2 = AddressUtils.createTopic("new-topic-instance-2", consoleTopicPlan2.getName());
+        Address q3 = AddressUtils.createQueue("new-queue-instance-3", consoleQueuePlan3.getName());
         consoleWebPage.createAddressesWebConsole(q1, t2, q3);
 
         String assertMessage = "Address plan wasn't set properly";
-        assertEquals(q1.getPlan(), consoleWebPage.getAddressItem(q1).getPlan(), assertMessage);
-        assertEquals(t2.getPlan(), consoleWebPage.getAddressItem(t2).getPlan(), assertMessage);
-        assertEquals(q3.getPlan(), consoleWebPage.getAddressItem(q3).getPlan(), assertMessage);
+        assertEquals(q1.getSpec().getPlan(), consoleWebPage.getAddressItem(q1).getPlan(), assertMessage);
+        assertEquals(t2.getSpec().getPlan(), consoleWebPage.getAddressItem(t2).getPlan(), assertMessage);
+        assertEquals(q3.getSpec().getPlan(), consoleWebPage.getAddressItem(q3).getPlan(), assertMessage);
 
         //simple send/receive
         amqpClientFactory = new AmqpClientFactory(kubernetes, environment, consoleAddrSpace, user);

@@ -4,9 +4,11 @@
  */
 package io.enmasse.systemtest.standard;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
@@ -54,12 +56,12 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         standardPlan.getAddressPlans().add(weakQueuePlan);
         plansProvider.removeAddressSpacePlan(standardPlan);
 
-        ArrayList<Destination> dest = new ArrayList<>();
+        ArrayList<Address> dest = new ArrayList<>();
         int destCount = 20;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.queue("weak-queue-" + i, weakQueuePlan.getName()));
+            dest.add(AddressUtils.createQueue("weak-queue-" + i, weakQueuePlan.getName()));
         }
-        setAddresses(dest.toArray(new Destination[0]));
+        setAddresses(dest.toArray(new Address[0]));
 
         double requiredCredit = weakQueuePlan.getRequiredCreditFromResource("broker");
         int replicasCount = (int) (destCount * requiredCredit);
@@ -68,7 +70,7 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         Future<List<Address>> standardAddresses = getAddressesObjects(Optional.empty()); //get all addresses
         for (int i = 0; i < destCount; i++) {
             assertThat("Queue plan wasn't set properly",
-                    standardAddresses.get(20, TimeUnit.SECONDS).get(i).getPlan(), is(weakQueuePlan.getName()));
+                    standardAddresses.get(20, TimeUnit.SECONDS).get(i).getSpec().getPlan(), is(weakQueuePlan.getName()));
         }
     }
 

@@ -4,35 +4,24 @@
  */
 package io.enmasse.systemtest.brokered.infra;
 
-import static io.enmasse.systemtest.TestTag.isolated;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.ability.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.infra.InfraTestBase;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.resources.*;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.AuthService;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.ability.ITestBaseBrokered;
-import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
-import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
-import io.enmasse.systemtest.resources.AddressSpaceResource;
-import io.enmasse.systemtest.resources.AdminInfraSpec;
-import io.enmasse.systemtest.resources.BrokerInfraSpec;
-import io.enmasse.systemtest.resources.InfraConfigDefinition;
-import io.enmasse.systemtest.resources.InfraResource;
-import io.enmasse.systemtest.resources.InfraSpecComponent;
+
+import static io.enmasse.systemtest.TestTag.isolated;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(isolated)
-class InfraTest extends InfraTestBase implements ITestBaseBrokered{
+class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     @Test
     void testCreateInfra() throws Exception {
@@ -61,7 +50,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered{
                 exampleSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(exampleAddressSpace);
 
-        setAddresses(exampleAddressSpace, Destination.topic("example-queue", exampleAddressPlan.getName()));
+        setAddresses(exampleAddressSpace, AddressUtils.createTopic("example-queue", exampleAddressPlan.getName()));
 
         assertInfra("512Mi", Optional.of("1Gi"), "512Mi");
     }
@@ -81,7 +70,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered{
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
-        InfraConfigDefinition infra = new InfraConfigDefinition("test-infra-2", AddressSpaceType.BROKERED,  Arrays.asList(
+        InfraConfigDefinition infra = new InfraConfigDefinition("test-infra-2", AddressSpaceType.BROKERED, Arrays.asList(
                 new BrokerInfraSpec(Arrays.asList(
                         new InfraResource("memory", brokerMemory),
                         new InfraResource("storage", brokerStorage)), updatePersistentVolumeClaim),
@@ -100,7 +89,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered{
         replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
-                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim!=null && updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(), adminMemory),
+                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim != null && updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(), adminMemory),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 

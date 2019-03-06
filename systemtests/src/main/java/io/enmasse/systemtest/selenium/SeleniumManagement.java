@@ -8,7 +8,7 @@ package io.enmasse.systemtest.selenium;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.fabric8.kubernetes.api.model.Pod;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.slf4j.Logger;
 
 import java.util.List;

@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.slf4j.Logger;

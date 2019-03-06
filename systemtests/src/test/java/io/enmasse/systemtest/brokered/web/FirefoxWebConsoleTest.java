@@ -5,10 +5,10 @@
 package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -19,12 +19,12 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestCreateDeleteAddress(AddressUtils.createQueue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestCreateDeleteAddress(AddressUtils.createTopic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test
@@ -150,8 +150,8 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
 
     @Test
     void testAddressStatus() throws Exception {
-        doTestAddressStatus(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
-        doTestAddressStatus(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestAddressStatus(AddressUtils.createQueue("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestAddressStatus(AddressUtils.createTopic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test
@@ -164,9 +164,9 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
         //TODO(sdavey)
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
                         getDefaultPlan(AddressType.QUEUE)),
-                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
                         getDefaultPlan(AddressType.QUEUE)));
     }
 

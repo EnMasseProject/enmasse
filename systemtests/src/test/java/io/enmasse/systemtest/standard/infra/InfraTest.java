@@ -4,38 +4,26 @@
  */
 package io.enmasse.systemtest.standard.infra;
 
-import static io.enmasse.systemtest.TestTag.isolated;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.ability.ITestBaseStandard;
+import io.enmasse.systemtest.bases.infra.InfraTestBase;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import io.enmasse.systemtest.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.AuthService;
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.TestUtils;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
-import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
-import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
-import io.enmasse.systemtest.resources.AddressSpaceResource;
-import io.enmasse.systemtest.resources.AdminInfraSpec;
-import io.enmasse.systemtest.resources.BrokerInfraSpec;
-import io.enmasse.systemtest.resources.InfraConfigDefinition;
-import io.enmasse.systemtest.resources.InfraResource;
-import io.enmasse.systemtest.resources.InfraSpecComponent;
-import io.enmasse.systemtest.resources.RouterInfraSpec;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
+
+import static io.enmasse.systemtest.TestTag.isolated;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(isolated)
 class InfraTest extends InfraTestBase implements ITestBaseStandard {
@@ -73,7 +61,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                 exampleSpacePlan.getName(), AuthService.STANDARD);
         createAddressSpace(exampleAddressSpace);
 
-        setAddresses(exampleAddressSpace, Destination.topic("example-queue", exampleAddressPlan.getName()));
+        setAddresses(exampleAddressSpace, AddressUtils.createTopic("example-queue", exampleAddressPlan.getName()));
 
         assertInfra("512Mi", Optional.of("1Gi"), 2, "256Mi", "512Mi");
 

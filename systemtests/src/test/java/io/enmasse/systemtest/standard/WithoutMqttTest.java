@@ -8,6 +8,8 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseWithoutMqtt;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -34,7 +36,7 @@ class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
         defaultCredentials.setUsername("test");
         defaultCredentials.setPassword("test");
         createUser(addressSpace, defaultCredentials);
-        setAddresses(addressSpace, Destination.anycast("a1"));
+        setAddresses(addressSpace, AddressUtils.createAnycast("a1"));
     }
 
     @Test

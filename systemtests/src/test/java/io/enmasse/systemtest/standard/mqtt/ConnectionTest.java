@@ -5,10 +5,11 @@
 
 package io.enmasse.systemtest.standard.mqtt;
 
-import io.enmasse.systemtest.Destination;
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttConnectionLostCallback;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -32,7 +33,7 @@ public class ConnectionTest extends TestBaseWithShared implements ITestBaseStand
      */
     @Test
     public void newSessionDisconnectsExisting() throws Exception {
-        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address dest = AddressUtils.createTopic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();

@@ -5,10 +5,11 @@
 
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.Destination;
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    public static void runAnycastTest(Destination dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+    public static void runAnycastTest(Address dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
         if (clients.length == 0) {
             throw new IllegalStateException("Clients are required for this test");
         }
@@ -35,9 +36,9 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
         }
         List<Future<List<Message>>> received = new ArrayList<>();
         for (AmqpClient client : clients) {
-            received.add(client.recvMessages(dest.getAddress(), 1));
+            received.add(client.recvMessages(dest.getSpec().getAddress(), 1));
         }
-        Future<Integer> sendResult = clients[0].sendMessages(dest.getAddress(), msgs);
+        Future<Integer> sendResult = clients[0].sendMessages(dest.getSpec().getAddress(), msgs);
         assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
         for (int i = 0; i < received.size(); i++) {
             assertThat("Wrong count of messages received: receiver" + i,
@@ -47,7 +48,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     void testMultipleReceivers() throws Exception {
-        Destination dest = Destination.anycast("anycastMultipleReceivers");
+        Address dest = AddressUtils.createAnycast("anycastMultipleReceivers");
         setAddresses(dest);
         AmqpClient client1 = amqpClientFactory.createQueueClient();
         AmqpClient client2 = amqpClientFactory.createQueueClient();
@@ -58,8 +59,8 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     void testRestApi() throws Exception {
-        Destination a1 = Destination.anycast("anycastRest1");
-        Destination a2 = Destination.anycast("anycastRest2");
+        Address a1 = AddressUtils.createAnycast("anycastRest1");
+        Address a2 = AddressUtils.createAnycast("anycastRest2");
 
         runRestApiTest(sharedAddressSpace, a1, a2);
     }
@@ -67,12 +68,12 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
     @Test
     void testScaleRouterAutomatically() throws Exception {
         //deploy addresses
-        ArrayList<Destination> dest = new ArrayList<>();
+        ArrayList<Address> dest = new ArrayList<>();
         int destCount = 210;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.anycast("medium-anycast-" + i, "standard-medium-anycast"));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
+            dest.add(AddressUtils.createAnycast("medium-anycast-" + i, "standard-medium-anycast"));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
         }
-        setAddresses(dest.toArray(new Destination[0]));
+        setAddresses(dest.toArray(new Address[0]));
 //        TODO once getAddressPlanConfig() method will be implemented
 //        double requiredCredit = getAddressPlanConfig(DestinationPlan.STANDARD_SMALL_ANYCAST()).getRequiredCreditFromResource("router");
 //        int replicasCount = (int) (destCount * requiredCredit);
@@ -89,7 +90,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
         //remove part of destinations
         int removeCount = 120;
-        deleteAddresses(dest.subList(0, removeCount).toArray(new Destination[0])); //router credit =>2.1-1.2 => max(2, 0.90 pods + dummy-address in special case)
+        deleteAddresses(dest.subList(0, removeCount).toArray(new Address[0])); //router credit =>2.1-1.2 => max(2, 0.90 pods + dummy-address in special case)
         waitForRouterReplicas(sharedAddressSpace, 2);
 
         //simple send/receive

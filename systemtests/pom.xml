@@ -108,6 +108,10 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.enmasse</groupId>
+            <artifactId>api-model</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

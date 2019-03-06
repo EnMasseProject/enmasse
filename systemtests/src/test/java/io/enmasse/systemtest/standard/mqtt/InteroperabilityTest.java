@@ -5,12 +5,13 @@
 
 package io.enmasse.systemtest.standard.mqtt;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -47,7 +48,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendMqttReceiveAmqp() throws Exception {
-        Destination mqttTopic = Destination.topic(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address mqttTopic = AddressUtils.createTopic(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp";
@@ -57,9 +58,9 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
         mqttClient.connect();
 
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
-        Future<List<Message>> recvResultAmqp = amqpClient.recvMessages(mqttTopic.getAddress(), messages.size());
+        Future<List<Message>> recvResultAmqp = amqpClient.recvMessages(mqttTopic.getSpec().getAddress(), messages.size());
 
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(mqttClient, mqttTopic.getAddress(), messages);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(mqttClient, mqttTopic.getSpec().getAddress(), messages);
 
         int sentCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
         assertThat("Incorrect count of messages sent",
@@ -77,20 +78,20 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendAmqpReceiveMqtt() throws Exception {
-        Destination mqttTopic = Destination.topic(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address mqttTopic = AddressUtils.createTopic(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send amqp, receive mqtt :)";
-        List<Message> messages = amqpMessageGenerator(mqttTopic.getAddress(), 20, payloadPrefix);
+        List<Message> messages = amqpMessageGenerator(mqttTopic.getSpec().getAddress(), 20, payloadPrefix);
 
         IMqttClient mqttClient = mqttClientFactory.create();
         mqttClient.connect();
 
-        List<CompletableFuture<MqttMessage>> receivedFutures = MqttUtils.subscribeAndReceiveMessages(mqttClient, mqttTopic.getAddress(), messages.size(), 1);
+        List<CompletableFuture<MqttMessage>> receivedFutures = MqttUtils.subscribeAndReceiveMessages(mqttClient, mqttTopic.getSpec().getAddress(), messages.size(), 1);
 
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
 
-        Future<Integer> sendResultAmqp = amqpClient.sendMessages(mqttTopic.getAddress(), messages.toArray(new Message[messages.size()]));
+        Future<Integer> sendResultAmqp = amqpClient.sendMessages(mqttTopic.getSpec().getAddress(), messages.toArray(new Message[messages.size()]));
 
         assertThat("Incorrect count of messages sent",
                 sendResultAmqp.get(1, TimeUnit.MINUTES), is(messages.size()));

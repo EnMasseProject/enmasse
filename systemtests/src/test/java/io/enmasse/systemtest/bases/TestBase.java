@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.bases;
 
 import com.google.common.collect.Ordering;
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
@@ -22,6 +23,7 @@ import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
@@ -29,6 +31,7 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -56,10 +59,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.time.Duration.ofMinutes;
 import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.time.Duration.ofMinutes;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -290,73 +293,73 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //====================================== Address methods =========================================
     //================================================================================================
 
-    protected void deleteAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+    protected void deleteAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddresses");
         TestUtils.delete(addressApiClient, addressSpace, destinations);
     }
 
-    protected void appendAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
+    protected void appendAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         appendAddresses(addressSpace, budget, destinations);
     }
 
-    protected void appendAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
+    protected void appendAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Address... destinations) throws Exception {
         appendAddresses(addressSpace, true, timeout, destinations);
     }
 
-    protected void appendAddresses(AddressSpace addressSpace, boolean wait, Destination... destinations) throws Exception {
+    protected void appendAddresses(AddressSpace addressSpace, boolean wait, Address... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         appendAddresses(addressSpace, wait, budget, destinations);
     }
 
-    protected void appendAddresses(AddressSpace addressSpace, boolean wait, TimeoutBudget timeout, Destination... destinations) throws Exception {
+    protected void appendAddresses(AddressSpace addressSpace, boolean wait, TimeoutBudget timeout, Address... destinations) throws Exception {
         TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, destinations);
         logCollector.collectConfigMaps();
     }
 
-    protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Destination... destinations) throws Exception {
+    protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Address... destinations) throws Exception {
         TimeoutBudget timeout = new TimeoutBudget(10, TimeUnit.MINUTES);
         TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
         logCollector.collectConfigMaps();
     }
 
-    protected void setAddresses(AddressSpace addressSpace, int expectedCode, Destination... destinations) throws Exception {
+    protected void setAddresses(AddressSpace addressSpace, int expectedCode, Address... addresses) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         logCollector.collectRouterState("setAddresses");
 
         if (expectedCode == HTTP_CONFLICT) {
             try {
-                setAddresses(addressSpace, budget, expectedCode, destinations);
+                setAddresses(addressSpace, budget, expectedCode, addresses);
             } catch (ExecutionException ee) {
                 log.info(ee.getMessage());
                 throw new AddressAlreadyExistsException("Address cannot be created, already exists");
             }
         } else {
-            setAddresses(addressSpace, budget, expectedCode, destinations);
+            setAddresses(addressSpace, budget, expectedCode, addresses);
         }
     }
 
-    protected void setAddresses(AddressSpace addressSpace, Destination... destinations) throws Exception {
-        setAddresses(addressSpace, HttpURLConnection.HTTP_CREATED, destinations);
+    protected void setAddresses(AddressSpace addressSpace, Address... addresses) throws Exception {
+        setAddresses(addressSpace, HttpURLConnection.HTTP_CREATED, addresses);
     }
 
 
-    protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Destination... destinations) throws Exception {
-        setAddresses(addressSpace, timeout, HttpURLConnection.HTTP_CREATED, destinations);
+    protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, Address... addresses) throws Exception {
+        setAddresses(addressSpace, timeout, HttpURLConnection.HTTP_CREATED, addresses);
     }
 
-    protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Destination... destinations) throws Exception {
-        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, destinations);
+    protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Address... addresses) throws Exception {
+        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, addresses);
         logCollector.collectConfigMaps();
     }
 
-    protected void setAddresses(AddressSpace addressSpace, AddressApiClient apiClient, Destination... destinations) throws Exception {
-        TestUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(10, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, destinations);
+    protected void setAddresses(AddressSpace addressSpace, AddressApiClient apiClient, Address... addresses) throws Exception {
+        TestUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(10, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, addresses);
         logCollector.collectConfigMaps();
     }
 
-    protected void replaceAddress(AddressSpace addressSpace, Destination destination) throws Exception {
+    protected void replaceAddress(AddressSpace addressSpace, Address destination) throws Exception {
         TestUtils.replaceAddress(addressApiClient, addressSpace, destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
     }
 
@@ -527,7 +530,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return list of Destinations
      * @throws Exception
      */
-    protected Future<List<Destination>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
+    protected Future<List<Address>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
         return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
@@ -556,19 +559,19 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addressSpace.getType().equals(AddressSpaceType.BROKERED);
     }
 
-    protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
-        for (Destination destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getAddress(), credentials);
-            AddressType addressType = AddressType.getEnum(destination.getType());
-            assertTrue(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), true), message);
+    protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations) throws Exception {
+        for (Address destination : destinations) {
+            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getSpec().getAddress(), credentials);
+            AddressType addressType = AddressType.getEnum(destination.getSpec().getType());
+            assertTrue(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getSpec().getAddress(), true), message);
         }
     }
 
-    protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Destination> destinations) throws Exception {
-        for (Destination destination : destinations) {
-            String message = String.format("Client failed, can connect to %s under user %s", destination.getAddress(), credentials);
-            AddressType addressType = AddressType.getEnum(destination.getType());
-            assertFalse(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getAddress(), false), message);
+    protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations) throws Exception {
+        for (Address destination : destinations) {
+            String message = String.format("Client failed, can connect to %s under user %s", destination.getSpec().getAddress(), credentials);
+            AddressType addressType = AddressType.getEnum(destination.getSpec().getType());
+            assertFalse(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getSpec().getAddress(), false), message);
         }
     }
 
@@ -642,7 +645,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return seleniumProvider;
     }
 
-    protected void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount) throws Exception {
+    protected void waitForSubscribersConsole(AddressSpace addressSpace, Address destination, int expectedCount) throws Exception {
         int budget = 60; //seconds
         waitForSubscribersConsole(addressSpace, destination, expectedCount, budget);
     }
@@ -652,7 +655,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      *
      * @param budget timeout budget in seconds
      */
-    private void waitForSubscribersConsole(AddressSpace addressSpace, Destination destination, int expectedCount, int budget) throws Exception {
+    private void waitForSubscribersConsole(AddressSpace addressSpace, Address destination, int expectedCount, int budget) throws Exception {
         SeleniumProvider selenium = null;
         try {
             SeleniumManagement.deployFirefoxApp();
@@ -691,7 +694,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             queueClient = amqpClientFactory.createQueueClient(addressSpace);
             queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(managementCredentials));
             String replyQueueName = "reply-queue";
-            Destination replyQueue = Destination.queue(replyQueueName, getDefaultPlan(AddressType.QUEUE));
+            Address replyQueue = AddressUtils.createQueue(replyQueueName, getDefaultPlan(AddressType.QUEUE));
             appendAddresses(addressSpace, replyQueue);
 
             boolean done = false;
@@ -713,16 +716,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    private void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget, long checkInterval) throws Exception {
+    private void waitForBrokerReplicas(AddressSpace addressSpace, Address destination, int expectedReplicas, boolean readyRequired, TimeoutBudget budget, long checkInterval) throws Exception {
         TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, addressSpace, expectedReplicas, readyRequired, destination, budget, checkInterval);
     }
 
-    private void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination,
+    private void waitForBrokerReplicas(AddressSpace addressSpace, Address destination,
                                        int expectedReplicas, TimeoutBudget budget) throws Exception {
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, true, budget, 5000);
     }
 
-    protected void waitForBrokerReplicas(AddressSpace addressSpace, Destination destination, int expectedReplicas) throws
+    protected void waitForBrokerReplicas(AddressSpace addressSpace, Address destination, int expectedReplicas) throws
             Exception {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         waitForBrokerReplicas(addressSpace, destination, expectedReplicas, budget);
@@ -740,7 +743,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * Wait for destinations are in isReady=true state within default timeout (10 MINUTE)
      */
-    protected void waitForDestinationsReady(AddressSpace addressSpace, Destination... destinations) throws Exception {
+    protected void waitForDestinationsReady(AddressSpace addressSpace, Address... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         TestUtils.waitForDestinationsReady(addressApiClient, addressSpace, budget, destinations);
     }
@@ -755,7 +758,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @throws Exception
      */
     private List<String> getBrokerQueueNames(BrokerManagement brokerManagement, AmqpClient
-            queueClient, Destination replyQueue, String topic) throws Exception {
+            queueClient, Address replyQueue, String topic) throws Exception {
         return brokerManagement.getQueueNames(queueClient, replyQueue, topic);
     }
 
@@ -768,7 +771,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return
      * @throws Exception
      */
-    private int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Destination
+    private int getSubscriberCount(BrokerManagement brokerManagement, AmqpClient queueClient, Address
             replyQueue, String topic) throws Exception {
         List<String> queueNames = getBrokerQueueNames(brokerManagement, queueClient, replyQueue, topic);
 
@@ -783,25 +786,25 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return subscriberCount.get();
     }
 
-    protected ArrayList<Destination> generateTopicsList(String prefix, IntStream range) {
-        ArrayList<Destination> addresses = new ArrayList<>();
-        range.forEach(i -> addresses.add(Destination.topic(prefix + i, getDefaultPlan(AddressType.QUEUE))));
+    protected ArrayList<Address> generateTopicsList(String prefix, IntStream range) {
+        ArrayList<Address> addresses = new ArrayList<>();
+        range.forEach(i -> addresses.add(AddressUtils.createTopic(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
-    protected ArrayList<Destination> generateQueueList(String prefix, IntStream range) {
-        ArrayList<Destination> addresses = new ArrayList<>();
-        range.forEach(i -> addresses.add(Destination.queue(prefix + i, getDefaultPlan(AddressType.QUEUE))));
+    protected ArrayList<Address> generateQueueList(String prefix, IntStream range) {
+        ArrayList<Address> addresses = new ArrayList<>();
+        range.forEach(i -> addresses.add(AddressUtils.createQueue(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
-    protected ArrayList<Destination> generateQueueTopicList(String infix, IntStream range) {
-        ArrayList<Destination> addresses = new ArrayList<>();
+    protected ArrayList<Address> generateQueueTopicList(String infix, IntStream range) {
+        ArrayList<Address> addresses = new ArrayList<>();
         range.forEach(i -> {
             if (i % 2 == 0) {
-                addresses.add(Destination.topic(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
+                addresses.add(AddressUtils.createTopic(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
             } else {
-                addresses.add(Destination.queue(String.format("queue-%s-%d", infix, i), getDefaultPlan(AddressType.QUEUE)));
+                addresses.add(AddressUtils.createQueue(String.format("queue-%s-%d", infix, i), getDefaultPlan(AddressType.QUEUE)));
             }
         });
         return addresses;
@@ -825,7 +828,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach N receivers into one address with default username/password
      */
-    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination,
+    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Address destination,
                                                    int receiverCount) throws Exception {
         return attachReceivers(addressSpace, destination, receiverCount, defaultCredentials);
     }
@@ -833,7 +836,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach N receivers into one address with own username/password
      */
-    List<AbstractClient> attachReceivers(AddressSpace addressSpace, Destination destination,
+    List<AbstractClient> attachReceivers(AddressSpace addressSpace, Address destination,
                                          int receiverCount, UserCredentials credentials) throws Exception {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
@@ -842,7 +845,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
-        arguments.put(ClientArgument.ADDRESS, destination.getAddress());
+        arguments.put(ClientArgument.ADDRESS, destination.getSpec().getAddress());
         arguments.put(ClientArgument.CONN_PROPERTY, "connection_property1~50");
         arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
 
@@ -861,7 +864,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach senders to destinations (for N-th destination is attached N+1 senders)
      */
-    List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Destination> destinations) {
+    List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Address> destinations) {
         List<AbstractClient> senders = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
@@ -878,7 +881,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
 
         for (int i = 0; i < destinations.size(); i++) {
-            arguments.put(ClientArgument.ADDRESS, destinations.get(i).getAddress());
+            arguments.put(ClientArgument.ADDRESS, destinations.get(i).getSpec().getAddress());
             for (int j = 0; j < i + 1; j++) {
                 AbstractClient send = new RheaClientSender();
                 send.setArguments(arguments);
@@ -893,7 +896,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach receivers to destinations (for N-th destination is attached N+1 senders)
      */
-    List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Destination> destinations) {
+    List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations) {
         List<AbstractClient> receivers = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
@@ -907,7 +910,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
 
         for (int i = 0; i < destinations.size(); i++) {
-            arguments.put(ClientArgument.ADDRESS, destinations.get(i).getAddress());
+            arguments.put(ClientArgument.ADDRESS, destinations.get(i).getSpec().getAddress());
             for (int j = 0; j < i + 1; j++) {
                 AbstractClient rec = new RheaClientReceiver();
                 rec.setArguments(arguments);
@@ -922,7 +925,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * create M connections with N receivers and K senders
      */
-    protected AbstractClient attachConnector(AddressSpace addressSpace, Destination destination,
+    protected AbstractClient attachConnector(AddressSpace addressSpace, Address destination,
                                              int connectionCount,
                                              int senderCount, int receiverCount, UserCredentials credentials) {
         ClientArgumentMap arguments = new ClientArgumentMap();
@@ -932,7 +935,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
         arguments.put(ClientArgument.OBJECT_CONTROL, "CESR");
-        arguments.put(ClientArgument.ADDRESS, destination.getAddress());
+        arguments.put(ClientArgument.ADDRESS, destination.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(connectionCount));
         arguments.put(ClientArgument.SENDER_COUNT, Integer.toString(senderCount));
         arguments.put(ClientArgument.RECEIVER_COUNT, Integer.toString(receiverCount));
@@ -1003,11 +1006,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return users;
     }
 
-    protected List<Destination> getAddressesWildcard() {
-        Destination queue = Destination.queue("queue/1234", getDefaultPlan(AddressType.QUEUE));
-        Destination queue2 = Destination.queue("queue/ABCD", getDefaultPlan(AddressType.QUEUE));
-        Destination topic = Destination.topic("topic/2345", getDefaultPlan(AddressType.TOPIC));
-        Destination topic2 = Destination.topic("topic/ABCD", getDefaultPlan(AddressType.TOPIC));
+    protected List<Address> getAddressesWildcard() {
+        Address queue = AddressUtils.createQueue("queue/1234", getDefaultPlan(AddressType.QUEUE));
+        Address queue2 = AddressUtils.createQueue("queue/ABCD", getDefaultPlan(AddressType.QUEUE));
+        Address topic = AddressUtils.createTopic("topic/2345", getDefaultPlan(AddressType.TOPIC));
+        Address topic2 = AddressUtils.createTopic("topic/ABCD", getDefaultPlan(AddressType.TOPIC));
 
         return Arrays.asList(queue, queue2, topic, topic2);
     }
@@ -1021,8 +1024,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * body for rest api tests
      */
-    protected void runRestApiTest(AddressSpace addressSpace, Destination d1, Destination d2) throws Exception {
-        List<String> destinationsNames = Arrays.asList(d1.getAddress(), d2.getAddress());
+    protected void runRestApiTest(AddressSpace addressSpace, Address d1, Address d2) throws Exception {
+        List<String> destinationsNames = Arrays.asList(d1.getSpec().getAddress(), d2.getSpec().getAddress());
         setAddresses(addressSpace, d1);
         appendAddresses(addressSpace, d2);
 
@@ -1032,22 +1035,22 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
 
         //get specific address d2
-        response = getAddresses(addressSpace, Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
+        response = getAddresses(addressSpace, Optional.ofNullable(AddressUtils.sanitizeAddress(d2.getMetadata().getName())));
         assertThat("Rest api does not return specific address", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
 
         deleteAddresses(addressSpace, d1);
 
         //d2
-        response = getAddresses(addressSpace, Optional.ofNullable(TestUtils.sanitizeAddress(d2.getName())));
+        response = getAddresses(addressSpace, Optional.ofNullable(AddressUtils.sanitizeAddress(d2.getMetadata().getName())));
         assertThat("Rest api does not return right addresses", response.get(1, TimeUnit.MINUTES), is(destinationsNames.subList(1, 2)));
-        log.info("address {} successfully deleted", d1.getAddress());
+        log.info("address {} successfully deleted", d1.getSpec().getAddress());
 
         deleteAddresses(addressSpace, d2);
 
         //empty
         response = getAddresses(addressSpace, Optional.empty());
         assertThat("Rest api returns addresses", response.get(1, TimeUnit.MINUTES), is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", d2.getAddress());
+        log.info("addresses {} successfully deleted", d2.getSpec().getAddress());
 
         setAddresses(addressSpace, d1, d2);
         deleteAddresses(addressSpace, d1, d2);
@@ -1057,15 +1060,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 
-    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Destination dest, int count) throws Exception {
+    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Address dest, int count) throws Exception {
         sendReceiveLargeMessage(jmsProvider, sizeInMB, dest, count, DeliveryMode.NON_PERSISTENT);
     }
 
-    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Destination dest, int count, int mode) throws Exception {
+    protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Address dest, int count, int mode) throws Exception {
         int size = sizeInMB * 1024 * 1024;
 
         Session session = jmsProvider.getConnection().createSession(false, Session.AUTO_ACKNOWLEDGE);
-        javax.jms.Queue testQueue = (javax.jms.Queue) jmsProvider.getDestination(dest.getAddress());
+        javax.jms.Queue testQueue = (javax.jms.Queue) jmsProvider.getDestination(dest.getSpec().getAddress());
         List<javax.jms.Message> messages = jmsProvider.generateMessages(session, count, size);
 
         MessageProducer sender = session.createProducer(testQueue);
@@ -1084,43 +1087,43 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, namespace, logCollector);
     }
 
-    protected List<Destination> getAllStandardAddresses() {
+    protected List<Address> getAllStandardAddresses() {
         return Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE),
-                Destination.topic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC),
-                Destination.queue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE),
-                Destination.topic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC),
-                Destination.anycast("test-anycast"),
-                Destination.multicast("test-multicast"));
+                AddressUtils.createQueue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE),
+                AddressUtils.createTopic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC),
+                AddressUtils.createQueue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE),
+                AddressUtils.createTopic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC),
+                AddressUtils.createAnycast("test-anycast"),
+                AddressUtils.createMulticast("test-multicast"));
     }
 
-    protected List<Destination> getAllBrokeredAddresses() {
+    protected List<Address> getAllBrokeredAddresses() {
         return Arrays.asList(
-                Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE),
-                Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC));
+                AddressUtils.createQueue("test-queue", DestinationPlan.BROKERED_QUEUE),
+                AddressUtils.createTopic("test-topic", DestinationPlan.BROKERED_TOPIC));
     }
 
-    protected void sendDurableMessages(AddressSpace addressSpace, Destination destination,
+    protected void sendDurableMessages(AddressSpace addressSpace, Address destination,
                                        UserCredentials credentials, int count) throws Exception {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
         List<Message> listOfMessages = new ArrayList<>();
         IntStream.range(0, count).forEach(num -> {
             Message msg = Message.Factory.create();
-            msg.setAddress(destination.getAddress());
+            msg.setAddress(destination.getSpec().getAddress());
             msg.setDurable(true);
             listOfMessages.add(msg);
         });
-        Future<Integer> sent = client.sendMessages(destination.getAddress(), listOfMessages.toArray(new Message[0]));
+        Future<Integer> sent = client.sendMessages(destination.getSpec().getAddress(), listOfMessages.toArray(new Message[0]));
         assertThat("Cannot send durable messages to " + destination, sent.get(1, TimeUnit.MINUTES), is(count));
         client.close();
     }
 
-    protected void receiveDurableMessages(AddressSpace addressSpace, Destination dest,
+    protected void receiveDurableMessages(AddressSpace addressSpace, Address dest,
                                           UserCredentials credentials, int count) throws Exception {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
-        ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getAddress(), count);
+        ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getSpec().getAddress(), count);
         assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
         client.close();
     }

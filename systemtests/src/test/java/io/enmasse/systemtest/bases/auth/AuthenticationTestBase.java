@@ -4,8 +4,10 @@
  */
 package io.enmasse.systemtest.bases.auth;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 
 import java.util.ArrayList;
@@ -20,32 +22,32 @@ public abstract class AuthenticationTestBase extends TestBase {
     protected static final String mqttAddress = "t1";
     protected static final String anonymousUser = "anonymous";
     protected static final String anonymousPswd = "anonymous";
-    protected final List<Destination> amqpAddressList = Arrays.asList(
-            Destination.queue("auth-queue", getDefaultPlan(AddressType.QUEUE)),
-            Destination.topic("auth-topic", getDefaultPlan(AddressType.TOPIC)),
-            Destination.anycast("auth-anycast"),
-            Destination.multicast("auth-multicast"));
+    protected final List<Address> amqpAddressList = Arrays.asList(
+            AddressUtils.createQueue("auth-queue", getDefaultPlan(AddressType.QUEUE)),
+            AddressUtils.createTopic("auth-topic", getDefaultPlan(AddressType.TOPIC)),
+            AddressUtils.createAnycast("auth-anycast"),
+            AddressUtils.createMulticast("auth-multicast"));
 
     @Override
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
         super.createAddressSpace(addressSpace);
-        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
+        List<Address> brokeredAddressList = new ArrayList<>(amqpAddressList);
         if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
             brokeredAddressList = amqpAddressList.subList(0, 2);
         }
-        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
+        setAddresses(addressSpace, brokeredAddressList.toArray(new Address[0]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
     }
 
     @Override
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         super.createAddressSpaceList(addressSpaces);
-        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
+        List<Address> brokeredAddressList = new ArrayList<>(amqpAddressList);
         for (AddressSpace addressSpace : addressSpaces) {
             if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
                 brokeredAddressList = amqpAddressList.subList(0, 2);
             }
-            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
+            setAddresses(addressSpace, brokeredAddressList.toArray(new Address[0]));
             //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
         }
     }

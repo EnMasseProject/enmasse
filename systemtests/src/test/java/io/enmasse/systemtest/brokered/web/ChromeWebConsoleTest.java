@@ -5,10 +5,10 @@
 package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -22,13 +22,13 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(Destination.queue("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestCreateDeleteAddress(AddressUtils.createQueue("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(Destination.topic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestCreateDeleteAddress(AddressUtils.createTopic("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test
@@ -169,9 +169,9 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
     @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
                         getDefaultPlan(AddressType.QUEUE)),
-                Destination.queue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
                         getDefaultPlan(AddressType.QUEUE)));
     }
 

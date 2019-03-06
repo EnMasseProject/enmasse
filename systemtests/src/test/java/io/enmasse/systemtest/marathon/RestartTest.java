@@ -4,7 +4,9 @@
  */
 package io.enmasse.systemtest.marathon;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,11 +47,11 @@ class RestartTest extends MarathonTestBase {
         createUser(brokered, user);
         createUser(standard, user);
 
-        List<Destination> brokeredAddresses = getAllBrokeredAddresses();
-        List<Destination> standardAddresses = getAllStandardAddresses();
+        List<Address> brokeredAddresses = getAllBrokeredAddresses();
+        List<Address> standardAddresses = getAllStandardAddresses();
 
-        setAddresses(brokered, brokeredAddresses.toArray(new Destination[0]));
-        setAddresses(standard, standardAddresses.toArray(new Destination[0]));
+        setAddresses(brokered, brokeredAddresses.toArray(new Address[0]));
+        setAddresses(standard, standardAddresses.toArray(new Address[0]));
 
         assertCanConnect(brokered, user, brokeredAddresses);
         assertCanConnect(standard, user, standardAddresses);
@@ -80,9 +82,9 @@ class RestartTest extends MarathonTestBase {
         createAddressSpaceList(standard);
         createUser(standard, user);
 
-        List<Destination> standardAddresses = getAllStandardAddresses();
+        List<Address> standardAddresses = getAllStandardAddresses();
 
-        setAddresses(standard, standardAddresses.toArray(new Destination[0]));
+        setAddresses(standard, standardAddresses.toArray(new Address[0]));
 
         assertCanConnect(standard, user, standardAddresses);
 
@@ -104,7 +106,7 @@ class RestartTest extends MarathonTestBase {
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
-                                   List<Destination> brAddresses, List<Destination> stAddresses) throws Exception {
+                                   List<Address> brAddresses, List<Address> stAddresses) throws Exception {
         log.info("Check if system works");
         TestUtils.runUntilPass(60, () -> getAddressSpace(brokered.getName()));
         TestUtils.runUntilPass(60, () -> getAddressSpace(standard.getName()));

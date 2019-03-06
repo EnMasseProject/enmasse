@@ -4,15 +4,18 @@
  */
 package io.enmasse.systemtest.common.api;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
@@ -170,31 +173,31 @@ class UserApiTest extends TestBase {
 
     @Test
     void testUpdateUserPermissionsUserAPI() throws Exception {
-        Destination queue = Destination.queue("myqueue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address queue = AddressUtils.createQueue("myqueue", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(standard, queue);
 
         UserCredentials cred = new UserCredentials("pepa", "pepapw");
         User testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
-                        .addAddress(queue.getAddress())
+                        .addAddress(queue.getSpec().getAddress())
                         .addOperation(User.Operation.SEND));
 
         createUser(standard, testUser);
 
         AmqpClient client = amqpClientFactory.createQueueClient(standard);
         client.getConnectOptions().setCredentials(cred);
-        assertThat(client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(1, TimeUnit.MINUTES), is(2));
+        assertThat(client.sendMessages(queue.getSpec().getAddress(), Arrays.asList("kuk", "puk")).get(1, TimeUnit.MINUTES), is(2));
 
         testUser = new User().setUserCredentials(cred).addAuthorization(
                 new User.AuthorizationRule()
-                        .addAddress(queue.getAddress())
+                        .addAddress(queue.getSpec().getAddress())
                         .addOperation(User.Operation.RECEIVE));
 
         updateUser(standard, testUser);
         Throwable exception = assertThrows(ExecutionException.class,
-                () -> client.sendMessages(queue.getAddress(), Arrays.asList("kuk", "puk")).get(10, TimeUnit.SECONDS));
+                () -> client.sendMessages(queue.getSpec().getAddress(), Arrays.asList("kuk", "puk")).get(10, TimeUnit.SECONDS));
         assertTrue(exception.getCause() instanceof UnauthorizedAccessException);
-        assertThat(client.recvMessages(queue.getAddress(), 2).get(1, TimeUnit.MINUTES).size(), is(2));
+        assertThat(client.recvMessages(queue.getSpec().getAddress(), 2).get(1, TimeUnit.MINUTES).size(), is(2));
     }
 
     @Test
@@ -344,7 +347,7 @@ class UserApiTest extends TestBase {
 
     @Test
     void testServiceaccountUser() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address queue = AddressUtils.createQueue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(standard, queue);
         UserCredentials serviceAccount = new UserCredentials("test-service-account", "");
         createUserServiceAccount(standard, serviceAccount, environment.namespace());

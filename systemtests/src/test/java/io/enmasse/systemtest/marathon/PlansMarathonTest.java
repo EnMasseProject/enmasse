@@ -4,8 +4,10 @@
  */
 package io.enmasse.systemtest.marathon;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
@@ -65,13 +67,13 @@ class PlansMarathonTest extends MarathonTestBase {
         UserCredentials cred = new UserCredentials("testus", "papyrus");
         createUser(manyAddressesSpace, cred);
 
-        ArrayList<Destination> dest = new ArrayList<>();
+        ArrayList<Address> dest = new ArrayList<>();
         int destCount = 3900;
         int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));
+            dest.add(AddressUtils.createQueue("xxs-queue-" + i, xxsQueuePlan.getName()));
         }
-        setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
+        setAddresses(manyAddressesSpace, dest.toArray(new Address[0]));
 
         for (int i = 0; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
@@ -83,7 +85,7 @@ class PlansMarathonTest extends MarathonTestBase {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (int i = toDeleteCount; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }
@@ -119,14 +121,14 @@ class PlansMarathonTest extends MarathonTestBase {
         UserCredentials cred = new UserCredentials("testus", "papyrus");
         createUser(manyAddressesSpace, cred);
 
-        ArrayList<Destination> dest = new ArrayList<>();
+        ArrayList<Address> dest = new ArrayList<>();
         int destCount = 3900;
         int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.queue("xxs-queue-" + i, xxsQueuePlan.getName()));
+            dest.add(AddressUtils.createQueue("xxs-queue-" + i, xxsQueuePlan.getName()));
         }
 
-        appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Destination[0]));
+        appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Address[0]));
 
         for (int i = 0; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
@@ -138,7 +140,7 @@ class PlansMarathonTest extends MarathonTestBase {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (int i = toDeleteCount; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }

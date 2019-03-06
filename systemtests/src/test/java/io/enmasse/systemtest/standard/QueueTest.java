@@ -5,11 +5,14 @@
 
 package io.enmasse.systemtest.standard;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
@@ -45,14 +48,14 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         }
     }
 
-    public static void runQueueTest(AmqpClient client, Destination dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+    public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         runQueueTest(client, dest, 1024);
     }
 
-    public static void runQueueTest(AmqpClient client, Destination dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+    public static void runQueueTest(AmqpClient client, Address dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
-        Future<Integer> numSent = client.sendMessages(dest.getAddress(), msgs, predicate);
+        Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
 
         assertNotNull(numSent, "Sending messages didn't start");
         int actual = 0;
@@ -65,7 +68,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong count of messages sent", actual, is(msgs.size()));
 
         predicate = new Count<>(msgs.size());
-        Future<List<Message>> received = client.recvMessages(dest.getAddress(), predicate);
+        Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), predicate);
         actual = 0;
         try {
             actual = received.get(1, TimeUnit.MINUTES).size();
@@ -80,9 +83,9 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testColocatedQueues() throws Exception {
-        Destination q1 = Destination.queue("queue1", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Destination q2 = Destination.queue("queue2", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Destination q3 = Destination.queue("queue3", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address q1 = AddressUtils.createQueue("queue1", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address q2 = AddressUtils.createQueue("queue2", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address q3 = AddressUtils.createQueue("queue3", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(q1, q2, q3);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -93,8 +96,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedQueues() throws Exception {
-        Destination q1 = Destination.queue("shardedQueue1", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Destination q2 = new Destination("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address q1 = AddressUtils.createQueue("shardedQueue1", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address q2 = AddressUtils.createAddress("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
         addressApiClient.createAddress(q2);
 
         appendAddresses(q1);
@@ -108,8 +111,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
-        Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
+        Address q1 = AddressUtils.createQueue("queue1", getDefaultPlan(AddressType.QUEUE));
+        Address q2 = AddressUtils.createQueue("queue2", getDefaultPlan(AddressType.QUEUE));
 
         runRestApiTest(sharedAddressSpace, q1, q2);
     }
@@ -118,13 +121,13 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Tag(nonPR)
     void testCreateDeleteQueue() throws Exception {
         List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
-        Destination destExtra = Destination.queue("ext-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address destExtra = AddressUtils.createQueue("ext-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
 
-        List<Destination> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(Destination.queue(queue, DestinationPlan.STANDARD_SMALL_QUEUE)));
+        List<Address> addresses = new ArrayList<>();
+        queues.forEach(queue -> addresses.add(AddressUtils.createQueue(queue, DestinationPlan.STANDARD_SMALL_QUEUE)));
 
         AmqpClient client = amqpClientFactory.createQueueClient();
-        for (Destination address : addresses) {
+        for (Address address : addresses) {
             setAddresses(address, destExtra);
             Thread.sleep(20_000);
 
@@ -133,7 +136,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             deleteAddresses(address);
             Future<List<String>> response = getAddresses(Optional.empty());
             assertThat("Extra destination was not created ",
-                    response.get(20, TimeUnit.SECONDS), is(Collections.singletonList(destExtra.getAddress())));
+                    response.get(20, TimeUnit.SECONDS), is(Collections.singletonList(destExtra.getSpec().getAddress())));
             deleteAddresses(destExtra);
             response = getAddresses(Optional.empty());
             assertThat("No destinations are expected",
@@ -144,7 +147,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testMessagePriorities() throws Exception {
-        Destination dest = Destination.queue("messagePrioritiesQueue", getDefaultPlan(AddressType.QUEUE));
+        Address dest = AddressUtils.createQueue("messagePrioritiesQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -154,18 +157,18 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         List<Message> listOfMessages = new ArrayList<>();
         for (int i = 0; i < msgsCount; i++) {
             Message msg = Message.Factory.create();
-            msg.setAddress(dest.getAddress());
-            msg.setBody(new AmqpValue(dest.getAddress()));
+            msg.setAddress(dest.getSpec().getAddress());
+            msg.setBody(new AmqpValue(dest.getSpec().getAddress()));
             msg.setSubject("subject");
             msg.setPriority((short) (i % 10));
             listOfMessages.add(msg);
         }
 
-        Future<Integer> sent = client.sendMessages(dest.getAddress(),
+        Future<Integer> sent = client.sendMessages(dest.getSpec().getAddress(),
                 listOfMessages.toArray(new Message[0]));
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
 
-        Future<List<Message>> received = client.recvMessages(dest.getAddress(), msgsCount);
+        Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), msgsCount);
         assertThat("Wrong count of messages received", received.get(1, TimeUnit.MINUTES).size(), is(msgsCount));
 
         int sub = 1;
@@ -179,22 +182,22 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testScaledown() throws Exception {
-        Destination before = Destination.queue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Destination after = Destination.queue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address before = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address after = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
         testScale(before, after);
     }
 
     @Test
     void testScaleup() throws Exception {
-        Destination before = Destination.queue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Destination after = Destination.queue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address before = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address after = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
         testScale(before, after);
     }
 
-    private void testScale(Destination before, Destination after) throws Exception {
-        assertEquals(before.getAddress(), after.getAddress());
-        assertEquals(before.getName(), after.getName());
-        assertEquals(before.getType(), after.getType());
+    private void testScale(Address before, Address after) throws Exception {
+        assertEquals(before.getSpec().getAddress(), after.getSpec().getAddress());
+        assertEquals(before.getMetadata().getName(), after.getMetadata().getName());
+        assertEquals(before.getSpec().getType(), after.getSpec().getType());
         setAddresses(before);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -206,7 +209,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         final int numReceivedAfterScaledPhase1 = numReceivedAfterScaled / 2;
         final int numReceivedAfterScaledPhase2 = numReceivedAfterScaled - numReceivedAfterScaledPhase1;
 
-        List<Future<Integer>> sent = prefixes.stream().map(prefix -> client.sendMessages(before.getAddress(), TestUtils.generateMessages(prefix, numMessages))).collect(Collectors.toList());
+        List<Future<Integer>> sent = prefixes.stream().map(prefix -> client.sendMessages(before.getSpec().getAddress(), TestUtils.generateMessages(prefix, numMessages))).collect(Collectors.toList());
 
         assertAll("All sender should send all messages",
                 () -> assertThat("Wrong count of messages sent: sender0",
@@ -219,30 +222,30 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
                         sent.get(3).get(1, TimeUnit.MINUTES), is(numMessages))
         );
 
-        Future<List<Message>> received = client.recvMessages(before.getAddress(), numReceiveBeforeDraining);
+        Future<List<Message>> received = client.recvMessages(before.getSpec().getAddress(), numReceiveBeforeDraining);
         assertThat("Wrong count of messages received",
                 received.get(1, TimeUnit.MINUTES).size(), is(numReceiveBeforeDraining));
 
 
         replaceAddress(getSharedAddressSpace(), after);
         // Receive messages sent before address was replaced
-        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numReceivedAfterScaledPhase1).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase1));
+        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numReceivedAfterScaledPhase1).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase1));
 
         Thread.sleep(30_000);
 
         // Give system a chance to do something stupid
-        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numReceivedAfterScaledPhase2).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase2));
+        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numReceivedAfterScaledPhase2).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase2));
 
         // Ensure send and receive works after address was replaced
-        assertThat("Wrong count of messages sent", client.sendMessages(after.getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
-        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
+        assertThat("Wrong count of messages sent", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
 
         // Ensure there are no brokers in Draining state
         TestUtils.waitForBrokersDrained(addressApiClient, getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
 
         // Ensure send and receive works after all brokers are drained
-        assertThat("Wrong count of messages sent", client.sendMessages(after.getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
-        assertThat("Wrong count of messages received", client.recvMessages(after.getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
+        assertThat("Wrong count of messages sent", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
     }
 
     @Test
@@ -263,9 +266,9 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             }
 
             //define destinations
-            Destination[] destinations = new Destination[destinationCount];
+            Address[] destinations = new Address[destinationCount];
             for (int destI = 0; destI < destinationCount; destI++) {
-                destinations[destI] = Destination.queue(String.format("%s.%s.%s", destNamePrefix, i, destI), getDefaultPlan(AddressType.QUEUE));
+                destinations[destI] = AddressUtils.createQueue(String.format("%s.%s.%s", destNamePrefix, i, destI), getDefaultPlan(AddressType.QUEUE));
             }
 
             //run async: append addresses; create users; send/receive messages
@@ -293,7 +296,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
-        Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,

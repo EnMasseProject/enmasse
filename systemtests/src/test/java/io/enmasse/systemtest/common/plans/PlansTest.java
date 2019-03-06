@@ -4,16 +4,19 @@
  */
 package io.enmasse.systemtest.common.plans;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.*;
@@ -91,19 +94,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(weakAddressSpace);
 
         //deploy destinations
-        Destination weakQueueDest = Destination.queue("weak-queue", weakQueuePlan.getName());
-        Destination weakTopicDest = Destination.topic("weak-topic", weakTopicPlan.getName());
+        Address weakQueueDest = AddressUtils.createQueue("weak-queue", weakQueuePlan.getName());
+        Address weakTopicDest = AddressUtils.createTopic("weak-topic", weakTopicPlan.getName());
         setAddresses(weakAddressSpace, weakQueueDest, weakTopicDest);
 
         //get destinations
-        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getName()));
-        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getName()));
+        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getMetadata().getName()));
+        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getMetadata().getName()));
 
         String assertMessage = "Queue plan wasn't set properly";
         assertAll("Both destination should contain right addressPlan",
-                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
                         weakQueuePlan.getName(), assertMessage),
-                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
+                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
                         weakTopicPlan.getName(), assertMessage));
 
         //simple send/receive
@@ -165,48 +168,48 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         //check router limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.anycast("a1", anycastPlan.getName()),
-                        Destination.anycast("a2", anycastPlan.getName()),
-                        Destination.anycast("a3", anycastPlan.getName())
+                        AddressUtils.createAnycast("a1", anycastPlan.getName()),
+                        AddressUtils.createAnycast("a2", anycastPlan.getName()),
+                        AddressUtils.createAnycast("a3", anycastPlan.getName())
                 ),
                 Collections.singletonList(
-                        Destination.anycast("a4", anycastPlan.getName())
+                        AddressUtils.createAnycast("a4", anycastPlan.getName())
                 ), user);
 
         //check broker limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.queue("q1", queuePlan.getName()),
-                        Destination.queue("q2", queuePlan.getName())
+                        AddressUtils.createQueue("q1", queuePlan.getName()),
+                        AddressUtils.createQueue("q2", queuePlan.getName())
                 ),
                 Collections.singletonList(
-                        Destination.queue("q3", queuePlan.getName())
+                        AddressUtils.createQueue("q3", queuePlan.getName())
                 ), user);
 
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.queue("q1", queuePlan.getName()), // 0.6
-                        Destination.queue("q2", queuePlan.getName()), // 0.6
-                        Destination.queue("q3", queuePlan2.getName()), // 0.1
-                        Destination.queue("q4", queuePlan2.getName()), // 0.1
-                        Destination.queue("q5", queuePlan2.getName()), // 0.1
-                        Destination.queue("q6", queuePlan2.getName()), // 0.1
-                        Destination.queue("q7", queuePlan3.getName()), // 0.049
-                        Destination.queue("q8", queuePlan3.getName()), // 0.049
-                        Destination.queue("q9", queuePlan3.getName()), // 0.049
-                        Destination.queue("q10", queuePlan3.getName()), // 0.049
-                        Destination.queue("q11", queuePlan3.getName()), // 0.049
-                        Destination.queue("q12", queuePlan3.getName()) // 0.049
+                        AddressUtils.createQueue("q1", queuePlan.getName()), // 0.6
+                        AddressUtils.createQueue("q2", queuePlan.getName()), // 0.6
+                        AddressUtils.createQueue("q3", queuePlan2.getName()), // 0.1
+                        AddressUtils.createQueue("q4", queuePlan2.getName()), // 0.1
+                        AddressUtils.createQueue("q5", queuePlan2.getName()), // 0.1
+                        AddressUtils.createQueue("q6", queuePlan2.getName()), // 0.1
+                        AddressUtils.createQueue("q7", queuePlan3.getName()), // 0.049
+                        AddressUtils.createQueue("q8", queuePlan3.getName()), // 0.049
+                        AddressUtils.createQueue("q9", queuePlan3.getName()), // 0.049
+                        AddressUtils.createQueue("q10", queuePlan3.getName()), // 0.049
+                        AddressUtils.createQueue("q11", queuePlan3.getName()), // 0.049
+                        AddressUtils.createQueue("q12", queuePlan3.getName()) // 0.049
                 ), Collections.emptyList(), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.topic("t1", topicPlan.getName()),
-                        Destination.topic("t2", topicPlan.getName())
+                        AddressUtils.createTopic("t1", topicPlan.getName()),
+                        AddressUtils.createTopic("t2", topicPlan.getName())
                 ),
                 Collections.singletonList(
-                        Destination.topic("t3", topicPlan.getName())
+                        AddressUtils.createTopic("t3", topicPlan.getName())
                 ), user);
     }
 
@@ -244,21 +247,21 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         //check broker limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.queue("q1", queuePlan.getName()),
-                        Destination.queue("q2", queuePlan.getName())
+                        AddressUtils.createQueue("q1", queuePlan.getName()),
+                        AddressUtils.createQueue("q2", queuePlan.getName())
                 ),
                 Collections.singletonList(
-                        Destination.queue("q3", queuePlan.getName())
+                        AddressUtils.createQueue("q3", queuePlan.getName())
                 ), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.topic("t1", topicPlan.getName()),
-                        Destination.topic("t2", topicPlan.getName())
+                        AddressUtils.createTopic("t1", topicPlan.getName()),
+                        AddressUtils.createTopic("t2", topicPlan.getName())
                 ),
                 Collections.singletonList(
-                        Destination.topic("t3", topicPlan.getName())
+                        AddressUtils.createTopic("t3", topicPlan.getName())
                 ), user);
     }
 
@@ -287,22 +290,22 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         UserCredentials cred = new UserCredentials("testus", "papyrus");
         createUser(manyAddressesSpace, cred);
 
-        ArrayList<Destination> dest = new ArrayList<>();
+        ArrayList<Address> dest = new ArrayList<>();
         int destCount = 4;
         int toDeleteCount = 2;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.queue("xl-queue-" + i, xlQueuePlan.getName()));
+            dest.add(AddressUtils.createQueue("xl-queue-" + i, xlQueuePlan.getName()));
         }
 
-        setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
-        for (Destination destination : dest) {
+        setAddresses(manyAddressesSpace, dest.toArray(new Address[0]));
+        for (Address destination : dest) {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
         assertCanConnect(manyAddressesSpace, cred, dest);
 
-        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
-        for (Destination destination : dest.subList(toDeleteCount, destCount)) {
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Address[0]));
+        for (Address destination : dest.subList(toDeleteCount, destCount)) {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
@@ -351,20 +354,20 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(addressSpace);
         createUser(addressSpace, user);
 
-        Destination queue = Destination.queue("test-queue", queuePlan.getName());
-        Destination queue2 = Destination.queue("test-queue2", queuePlan.getName());
-        Destination queue3 = Destination.queue("test-queue3", queuePlan.getName());
+        Address queue = AddressUtils.createQueue("test-queue", queuePlan.getName());
+        Address queue2 = AddressUtils.createQueue("test-queue2", queuePlan.getName());
+        Address queue3 = AddressUtils.createQueue("test-queue3", queuePlan.getName());
         setAddresses(addressSpace, queue, queue2, queue3);
 
         assertAll(
                 () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue.getAddress(), messageContent, 100, false),
+                        queue.getSpec().getAddress(), messageContent, 100, false),
                         "Client does not fail"),
                 () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue2.getAddress(), messageContent, 100, false),
+                        queue2.getSpec().getAddress(), messageContent, 100, false),
                         "Client does not fail"),
                 () -> assertTrue(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue3.getAddress(), messageContent, 50, false),
+                        queue3.getSpec().getAddress(), messageContent, 50, false),
                         "Client fails"));
     }
 
@@ -396,10 +399,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(messagePersistAddressSpace);
 
         //deploy destinations
-        Destination queue1 = Destination.queue("queue1-beta", queuePlanBeta.getName());
-        Destination queue2 = Destination.queue("queue2-beta", queuePlanBeta.getName());
-        Destination queue3 = Destination.queue("queue3-alpha", queuePlanAlpha.getName());
-        Destination queue4 = Destination.queue("queue4-alpha", queuePlanAlpha.getName());
+        Address queue1 = AddressUtils.createQueue("queue1-beta", queuePlanBeta.getName());
+        Address queue2 = AddressUtils.createQueue("queue2-beta", queuePlanBeta.getName());
+        Address queue3 = AddressUtils.createQueue("queue3-alpha", queuePlanAlpha.getName());
+        Address queue4 = AddressUtils.createQueue("queue4-alpha", queuePlanAlpha.getName());
 
         setAddresses(messagePersistAddressSpace, queue1, queue2);
         appendAddresses(messagePersistAddressSpace, queue3, queue4);
@@ -412,10 +415,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         queueClient.getConnectOptions().setCredentials(user);
 
         List<String> msgs = TestUtils.generateMessages(1000);
-        Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getAddress(), msgs);
-        Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getAddress(), msgs);
-        Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getAddress(), msgs);
-        Future<Integer> sendResult4 = queueClient.sendMessages(queue4.getAddress(), msgs);
+        Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getSpec().getAddress(), msgs);
+        Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getSpec().getAddress(), msgs);
+        Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getSpec().getAddress(), msgs);
+        Future<Integer> sendResult4 = queueClient.sendMessages(queue4.getSpec().getAddress(), msgs);
         assertAll("All senders should send all messages",
                 () -> assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size())),
                 () -> assertThat("Incorrect count of messages sent", sendResult2.get(1, TimeUnit.MINUTES), is(msgs.size())),
@@ -433,8 +436,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 addressNames.size(), is(2));
 
         //receive messages from remaining addresses
-        Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getAddress(), msgs.size());
-        Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getAddress(), msgs.size());
+        Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getSpec().getAddress(), msgs.size());
+        Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getSpec().getAddress(), msgs.size());
         assertThat("Incorrect count of messages received", recvResult3.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
@@ -467,7 +470,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(messagePersistAddressSpace);
 
         //deploy destinations
-        Destination queue = Destination.queue("distributed-queue", queuePlanDistributed.getName());
+        Address queue = AddressUtils.createQueue("distributed-queue", queuePlanDistributed.getName());
         setAddresses(messagePersistAddressSpace, queue);
 
         //pod should have 2 replicas
@@ -481,7 +484,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         queueClient.getConnectOptions().setCredentials(user);
 
         List<String> msgs = TestUtils.generateMessages(100_000);
-        Future<Integer> sendResult1 = queueClient.sendMessages(queue.getAddress(), msgs);
+        Future<Integer> sendResult1 = queueClient.sendMessages(queue.getSpec().getAddress(), msgs);
         assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         //replace original plan in address by another
@@ -489,7 +492,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         assertEquals(getAddressesObjects(
                 messagePersistAddressSpace,
-                Optional.of(queue.getName())).get(10, TimeUnit.SECONDS).get(0).getPlan(),
+                Optional.of(queue.getMetadata().getName())).get(10, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
                 queuePlanSharded.getName(),
                 "New plan wasn't set correctly");
 
@@ -501,7 +504,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
 
         //receive messages
-        Future<List<Message>> recvResult = queueClient.recvMessages(queue.getAddress(), msgs.size());
+        Future<List<Message>> recvResult = queueClient.recvMessages(queue.getSpec().getAddress(), msgs.size());
         assertThat("Incorrect count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
@@ -572,8 +575,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
-        Destination queue = Destination.queue("test-queue", beforeQueuePlan.getName());
-        Destination topic = Destination.topic("test-topic", beforeTopicPlan.getName());
+        Address queue = AddressUtils.createQueue("test-queue", beforeQueuePlan.getName());
+        Address topic = AddressUtils.createTopic("test-topic", beforeTopicPlan.getName());
 
         setAddresses(addressSpace, queue, topic);
 
@@ -584,7 +587,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         receiveDurableMessages(addressSpace, queue, user, 16);
 
-        Destination afterQueue = Destination.queue("test-queue-2", afterQueuePlan.getName());
+        Address afterQueue = AddressUtils.createQueue("test-queue-2", afterQueuePlan.getName());
         appendAddresses(addressSpace, afterQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic));
@@ -592,7 +595,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         addressSpace.setPlan(pooledAddressSpacePlan.getName());
         replaceAddressSpace(addressSpace);
 
-        Destination pooledQueue = Destination.queue("test-queue-3", pooledQueuePlan.getName());
+        Address pooledQueue = AddressUtils.createQueue("test-queue-3", pooledQueuePlan.getName());
         appendAddresses(addressSpace, pooledQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(queue, topic, afterQueue, pooledQueue));
@@ -633,7 +636,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
-        Destination queue = Destination.queue("test-queue", beforeQueuePlan.getName());
+        Address queue = AddressUtils.createQueue("test-queue", beforeQueuePlan.getName());
 
         setAddresses(addressSpace, queue);
 
@@ -644,7 +647,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         receiveDurableMessages(addressSpace, queue, user, 16);
 
-        Destination afterQueue = Destination.queue("test-queue-2", afterQueuePlan.getName());
+        Address afterQueue = AddressUtils.createQueue("test-queue-2", afterQueuePlan.getName());
         appendAddresses(addressSpace, afterQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue));
@@ -692,13 +695,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
-        List<Destination> queues = Arrays.asList(
-                Destination.queue("test-queue-1", beforeQueuePlan.getName()),
-                Destination.queue("test-queue-2", beforeQueuePlan.getName())
+        List<Address> queues = Arrays.asList(
+                AddressUtils.createQueue("test-queue-1", beforeQueuePlan.getName()),
+                AddressUtils.createQueue("test-queue-2", beforeQueuePlan.getName())
         );
 
 
-        setAddresses(addressSpace, queues.toArray(new Destination[0]));
+        setAddresses(addressSpace, queues.toArray(new Address[0]));
         assertCanConnect(addressSpace, user, queues);
 
         addressSpace.setPlan(afterAddressSpacePlan.getName());
@@ -739,23 +742,23 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         UserCredentials cred = new UserCredentials("test-user", "test-password");
         createUser(addressSpace, cred);
 
-        List<Destination> queues = IntStream.range(0, 8).boxed().map(i ->
-                Destination.queue("queue-" + i, beforeQueuePlan.getName()))
+        List<Address> queues = IntStream.range(0, 8).boxed().map(i ->
+                AddressUtils.createQueue("queue-" + i, beforeQueuePlan.getName()))
                 .collect(Collectors.toList());
-        setAddresses(addressSpace, queues.toArray(new Destination[0]));
+        setAddresses(addressSpace, queues.toArray(new Address[0]));
 
         assertThat("Failed there are no 2 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(2));
 
-        for (Destination queue : queues) {
+        for (Address queue : queues) {
             sendDurableMessages(addressSpace, queue, cred, 400);
         }
 
-        Destination queueAfter = Destination.queue("queue-1", afterQueuePlan.getName());
+        Address queueAfter = AddressUtils.createQueue("queue-1", afterQueuePlan.getName());
         replaceAddress(addressSpace, queueAfter);
 
         assertThat("Failed there are no 3 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(3));
 
-        for (Destination queue : queues) {
+        for (Address queue : queues) {
             receiveDurableMessages(addressSpace, queue, cred, 400);
         }
     }
@@ -764,24 +767,24 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     // Help methods
     //------------------------------------------------------------------------------------------------
 
-    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, UserCredentials credentials)
+    private void checkLimits(AddressSpace addressSpace, List<Address> allowedDest, List<Address> notAllowedDest, UserCredentials credentials)
             throws Exception {
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
-                Arrays.toString(allowedDest.stream().map(Destination::getName).toArray(String[]::new)),
-                Arrays.toString(notAllowedDest.stream().map(Destination::getName).toArray(String[]::new)));
+                Arrays.toString(allowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)),
+                Arrays.toString(notAllowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)));
 
-        setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Destination[0]));
+        setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Address[0]));
         List<Future<List<Address>>> getAddresses = new ArrayList<>();
-        for (Destination dest : allowedDest) {
-            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getName())));
+        for (Address dest : allowedDest) {
+            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
         }
 
         for (Future<List<Address>> getAddress : getAddresses) {
             Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
-            log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
-            String assertMessage = String.format("Address from allowed %s is not ready", address.getName());
-            assertEquals("Active", address.getPhase(), assertMessage);
+            log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+            String assertMessage = String.format("Address from allowed %s is not ready", address.getMetadata().getName());
+            assertEquals("Active", address.getStatus().getPhase(), assertMessage);
         }
 
         assertCanConnect(addressSpace, credentials, allowedDest);
@@ -789,23 +792,23 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         getAddresses.clear();
         if (notAllowedDest.size() > 0) {
             try {
-                appendAddresses(addressSpace, new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Destination[0]));
+                appendAddresses(addressSpace, new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Address[0]));
             } catch (IllegalStateException ex) {
                 if (!ex.getMessage().contains("addresses are not matched")) {
                     throw ex;
                 }
             }
 
-            for (Destination dest : notAllowedDest) {
-                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getName())));
+            for (Address dest : notAllowedDest) {
+                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
             }
 
             for (Future<List<Address>> getAddress : getAddresses) {
                 Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
-                log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
-                String assertMessage = String.format("Address from notAllowed %s is ready", address.getName());
-                assertEquals("Pending", address.getPhase(), assertMessage);
-                assertTrue(address.getStatusMessages().contains("Quota exceeded"), "No status message is present");
+                log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+                String assertMessage = String.format("Address from notAllowed %s is ready", address.getMetadata().getName());
+                assertEquals("Pending", address.getStatus().getPhase(), assertMessage);
+                assertTrue(address.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
             }
         }
 
@@ -813,13 +816,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 
-        for (Destination dest : allowedDest) {
+        for (Address dest : allowedDest) {
             AddressWebItem item = (AddressWebItem) selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
             assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Ready", item.getStatus(), is(AddressStatus.READY));
         }
 
-        for (Destination dest : notAllowedDest) {
+        for (Address dest : notAllowedDest) {
             AddressWebItem item = (AddressWebItem) selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
             assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));

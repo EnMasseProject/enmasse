@@ -4,15 +4,19 @@
  */
 package io.enmasse.systemtest.bases.clients;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.function.Executable;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -72,12 +76,12 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.queue("message-basic" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueue("message-basic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
         arguments.put(ClientArgument.TIMEOUT, "30");
@@ -106,12 +110,12 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.queue("receiver-round-robin" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueue("receiver-round-robin" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount / 2));
         arguments.put(ClientArgument.TIMEOUT, "100");
 
@@ -123,7 +127,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         Future<Boolean> rec2Result = receiver2.runAsync();
 
         if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getAddress(), 2);
+            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getSpec().getAddress(), 2);
         } else {
             waitForSubscribersConsole(sharedAddressSpace, dest, 2);
         }
@@ -152,12 +156,12 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.topic("topic-subscribe" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createTopic("topic-subscribe" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(ClientArgument.ADDRESS, TestUtils.getTopicPrefix(hasTopicPrefix) + dest.getAddress());
+        arguments.put(ClientArgument.ADDRESS, TestUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
         arguments.put(ClientArgument.TIMEOUT, "100");
@@ -171,7 +175,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
         if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getAddress(), 2);
+            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getSpec().getAddress(), 2);
         } else {
             waitForSubscribersConsole(sharedAddressSpace, dest, 2);
         }
@@ -194,12 +198,12 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver_browse, receiver_receive));
         int expectedMsgCount = 10;
 
-        Destination dest = Destination.queue("message-browse" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueue("message-browse" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
@@ -226,7 +230,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
     }
 
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        Destination dest = Destination.queue("drain-queue" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueue("drain-queue" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -234,7 +238,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         int expectedMsgCount = 50;
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(ClientArgument.ADDRESS, dest.getAddress());
+        arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
 
@@ -257,13 +261,13 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         int expectedMsgCount = 10;
 
         clients.addAll(Arrays.asList(sender, receiver));
-        Destination queue = Destination.queue("selector-queue" + ClientType.getAddressName(sender),
+        Address queue = AddressUtils.createQueue("selector-queue" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(queue);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.ADDRESS, queue.getAddress());
+        arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
         arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
         arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
         arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
@@ -284,18 +288,18 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         //receiver with selector colour = red
         arguments.put(ClientArgument.SELECTOR, "colour = 'red'");
         receiver.setArguments(arguments);
+        final Executable executable = () -> assertEquals(expectedMsgCount, receiver.getMessages().size(),
+                String.format("Expected %d received messages 'colour = red'", expectedMsgCount));
         assertAll(
                 () -> assertTrue(receiver.run(), "Receiver 'colour = red' failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, receiver.getMessages().size(),
-                        String.format("Expected %d received messages 'colour = red'", expectedMsgCount)));
+                executable);
 
         //receiver with selector number > 12.5
         arguments.put(ClientArgument.SELECTOR, "number > 12.5");
         receiver.setArguments(arguments);
         assertAll(
                 () -> assertTrue(receiver.run(), "Receiver 'number > 12.5' failed, expected return code 0"),
-                () -> assertEquals(expectedMsgCount, receiver.getMessages().size(),
-                        String.format("Expected %d received messages 'colour = red'", expectedMsgCount)));
+                executable);
 
 
         //receiver with selector a AND b
@@ -321,13 +325,13 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, sender2, subscriber, subscriber2));
         int expectedMsgCount = 5;
 
-        Destination topic = Destination.topic("selector-topic" + ClientType.getAddressName(sender),
+        Address topic = AddressUtils.createTopic("selector-topic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(topic);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.ADDRESS, TestUtils.getTopicPrefix(hasTopicPrefix) + topic.getAddress());
+        arguments.put(ClientArgument.ADDRESS, TestUtils.getTopicPrefix(hasTopicPrefix) + topic.getSpec().getAddress());
         arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
         arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
         arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
@@ -359,7 +363,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         Future<Boolean> result2 = subscriber2.runAsync();
 
         if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(artemisManagement, sharedAddressSpace, topic.getAddress(), 2);
+            waitForSubscribers(artemisManagement, sharedAddressSpace, topic.getSpec().getAddress(), 2);
         } else {
             waitForSubscribersConsole(sharedAddressSpace, topic, 2);
         }
