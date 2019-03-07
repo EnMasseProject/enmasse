@@ -88,6 +88,21 @@ public class GlobalLogCollector {
         });
     }
 
+    public void collectLogsOfPodsByLabels(Map<String, String> labels) {
+        log.info("Store logs from all pods in namespace '{}' matching labels {}", namespace, labels);
+        kubernetes.getLogsByLables(namespace, labels).forEach((podName, podLogs) -> {
+            try {
+                Path podLog = resolveLogFile(namespace + "." + podName + ".log");
+                log.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
+                try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
+                    bf.write(podLogs);
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        });
+    }
+
     public void collectEvents() throws IOException {
         long timestamp = System.currentTimeMillis();
         log.info("Collecting events in {}", namespace);

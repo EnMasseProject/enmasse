@@ -20,6 +20,7 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,10 +53,13 @@ import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.VertxFactory;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.apiclients.OcpEnmasseAppApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.common.api.ApiServerTest;
 import io.enmasse.systemtest.executor.Executor;
@@ -63,7 +67,6 @@ import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.ext.web.client.HttpResponse;
@@ -181,56 +184,42 @@ class CertProviderTest extends TestBase {
     @Test
     @DisabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "true")
     void testOpenshiftCertProvider() throws Exception {
-
-        Executor executor = new Executor(false);
-        executor.execute(Arrays.asList(
-                "oc", "config", "view", "--raw", "-o", "json"));
-        JsonObject configJson = new JsonObject(executor.getStdOut());
-        JsonArray clusters = configJson.getJsonArray("clusters");
-        String b64CaCert = null;
-        for(Object clusterObj : clusters) {
-            if(clusterObj instanceof JsonObject) {
-                JsonObject obj = (JsonObject)clusterObj;
-                JsonObject cluster = obj.getJsonObject("cluster");
-                if(cluster.containsKey("certificate-authority-data")) {
-                    b64CaCert = cluster.getString("certificate-authority-data");
-                }
-            }
-        }
-        if(b64CaCert==null) {
-            fail("certificate-authority-data not found "+executor.getStdOut());
-        }
-        String caCert = new String(Base64.getDecoder().decode(b64CaCert));
-
         createTestEnv(new CertSpecBuilder()
                 .withProvider(CertProvider.openshift.name())
-                .build());
+                .build(),
+                false);
+        try {
+            SystemtestsKubernetesApps.deployOcpEnmasseApp(environment.namespace(), kubernetes);
+            OcpEnmasseAppApiClient client = new OcpEnmasseAppApiClient(kubernetes, SystemtestsKubernetesApps.getOcpEnmasseAppEndpoint(environment.namespace(), kubernetes));
 
-        AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
-        amqpClient.getConnectOptions()
-            .setCredentials(user)
-            .setCert(caCert);
+            JsonObject request = new JsonObject();
+            request.put("username", user.getUsername());
+            request.put("password", user.getPassword());
 
-        MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(caCert.getBytes())));
-        mqttOptions.setUserName(user.getUsername());
-        mqttOptions.setPassword(user.getPassword().toCharArray());
-        IMqttClient mqttClient = mqttClientFactory.build()
-                .addressSpace(addressSpace)
-                .mqttConnectionOptions(mqttOptions).create();
+            Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
 
-        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
-                .setSsl(true)
-                .setTrustAll(false)
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(caCert)))
-                .setVerifyHost(false));
+            request.put("messagingHost", messagingEndpoint.getHost());
+            request.put("messagingPort", messagingEndpoint.getPort());
 
-        testCertProvider(amqpClient, mqttClient, webClient);
+            Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
+            request.put("mqttHost", mqttEndpoint.getHost());
+            request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
 
+            JsonObject response = client.test(request);
+            if(response.containsKey("error")) {
+                fail("Error testing openshift provider "+response.getString("error"));
+            }
+        }finally {
+            logCollector.collectLogsOfPodsByLabels(Collections.singletonMap("app", SystemtestsKubernetesApps.OCP_ENMASSE_APP));
+            SystemtestsKubernetesApps.deleteOcpEnmasseApp(environment.namespace(), kubernetes);
+        }
     }
 
     private void createTestEnv(CertSpec endpointCert) throws Exception {
+        createTestEnv(endpointCert, true);
+    }
+
+    private void createTestEnv(CertSpec endpointCert, boolean createAddresses) throws Exception {
         addressSpace = AddressSpaceUtils.createAddressSpaceObject("cert-provider-addr-space", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
         addressSpace.getSpec().setEndpoints(Arrays.asList(
                 createEndpointSpec("messaging", "amqps", endpointCert),
@@ -241,9 +230,11 @@ class CertProviderTest extends TestBase {
         user = new UserCredentials("user1", "password1");
         createUser(addressSpace, user);
 
-        queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
-        topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
-        setAddresses(addressSpace, queue, topic);
+        if(createAddresses) {
+            queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
+            topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
+            setAddresses(addressSpace, queue, topic);
+        }
     }
 
     private EndpointSpec createEndpointSpec(String service, String servicePort, CertSpec endpointCert) {

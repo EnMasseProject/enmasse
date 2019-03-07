@@ -103,8 +103,8 @@ public abstract class Kubernetes {
         }
     }
 
-    public HashMap<String, String> getLogsOfTerminatedPods(String namespace) {
-        HashMap<String, String> terminatedPodsLogs = new HashMap<>();
+    public Map<String, String> getLogsOfTerminatedPods(String namespace) {
+        Map<String, String> terminatedPodsLogs = new HashMap<>();
         try {
             client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
                 pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
@@ -126,6 +126,23 @@ public abstract class Kubernetes {
             allExceptions.printStackTrace();
         }
         return terminatedPodsLogs;
+    }
+
+    public Map<String, String> getLogsByLables(String namespace, Map<String,String> labels) {
+        Map<String, String> logs = new HashMap<>();
+        try {
+            client.pods().inNamespace(namespace).withLabels(labels).list().getItems().stream()
+                .forEach(pod->{
+                    logs.put(pod.getMetadata().getName(),
+                            client.pods().inNamespace(namespace)
+                                .withName(pod.getMetadata().getName())
+                                .getLog());
+                });
+        } catch (Exception e) {
+            log.error("Error getting logs by labels.");
+            e.printStackTrace();
+        }
+        return logs;
     }
 
     public void setDeploymentReplicas(String name, int numReplicas) {

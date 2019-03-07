@@ -22,6 +22,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CHROME = "selenium-chrome";
     public static final String SELENIUM_PROJECT = "selenium";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
+    public static final String OCP_ENMASSE_APP = "ocp-enmasse-app";
 
     public static void deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(MESSAGING_CLIENTS, 4242));
@@ -35,6 +36,21 @@ public class SystemtestsKubernetesApps {
             kubeClient.deleteDeployment(namespace, MESSAGING_CLIENTS);
             kubeClient.deleteService(namespace, MESSAGING_CLIENTS);
             kubeClient.deleteIngress(namespace, MESSAGING_CLIENTS);
+        }
+    }
+
+    public static void deployOcpEnmasseApp(String namespace, Kubernetes kubeClient) throws Exception {
+        kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(OCP_ENMASSE_APP, 8080));
+        kubeClient.createDeploymentFromResource(namespace, getOcpEnmasseAppDeploymentResource());
+        kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(OCP_ENMASSE_APP, 8080));
+        Thread.sleep(5000);
+    }
+
+    public static void deleteOcpEnmasseApp(String namespace, Kubernetes kubeClient) {
+        if (kubeClient.deploymentExists(namespace, OCP_ENMASSE_APP)) {
+            kubeClient.deleteDeployment(namespace, OCP_ENMASSE_APP);
+            kubeClient.deleteService(namespace, OCP_ENMASSE_APP);
+            kubeClient.deleteIngress(namespace, OCP_ENMASSE_APP);
         }
     }
 
@@ -89,6 +105,10 @@ public class SystemtestsKubernetesApps {
 
     public static Endpoint getChromeSeleniumAppEndpoint(Kubernetes kubeClient) {
         return new Endpoint(kubeClient.getIngressHost(SELENIUM_PROJECT, SELENIUM_CHROME), 80);
+    }
+
+    public static Endpoint getOcpEnmasseAppEndpoint(String namespace, Kubernetes kubeClient) {
+        return new Endpoint(kubeClient.getIngressHost(namespace, OCP_ENMASSE_APP), 80);
     }
 
     private static Deployment getSeleniumNodeDeploymentResource(String appName, String imageName) {
@@ -233,6 +253,41 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .addToData("rhea.html", htmlContent)
                 .addToData("rhea.js", jsContent)
+                .build();
+    }
+
+    private static Deployment getOcpEnmasseAppDeploymentResource() {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(OCP_ENMASSE_APP)
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", OCP_ENMASSE_APP)
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", OCP_ENMASSE_APP)
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(OCP_ENMASSE_APP)
+                .withImage("famargon/ocp-enmasse-app:latest")
+                .addNewPort()
+                .withContainerPort(8080)
+                .endPort()
+                .withNewLivenessProbe()
+                .withNewTcpSocket()
+                .withNewPort(8080)
+                .endTcpSocket()
+                .withInitialDelaySeconds(10)
+                .withPeriodSeconds(5)
+                .endLivenessProbe()
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
                 .build();
     }
 }
