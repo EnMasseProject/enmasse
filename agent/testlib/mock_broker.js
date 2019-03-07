@@ -466,9 +466,13 @@ MockBroker.prototype.verify_subscription = function (queues, name, topic) {
     return results[0];
 };
 
+function is_mgmt_temp(entity) {
+    return entity.name.indexOf("activemq.management.tmpreply") > -1;
+}
+
 MockBroker.prototype.verify_addresses = function (expected) {
-    var addresses = this.list_addresses();
-    var queues = this.list_queues();
+    var addresses = this.list_addresses().filter(a => !is_mgmt_temp(a));
+    var queues = this.list_queues().filter(q => !is_mgmt_temp(q));
     for (var i = 0; i < expected.length; i++) {
         if (expected[i].type === 'queue') {
             this.verify_queue(addresses, queues, expected[i].address);
