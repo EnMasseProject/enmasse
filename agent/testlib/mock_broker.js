@@ -478,8 +478,8 @@ MockBroker.prototype.verify_addresses = function (expected) {
             this.verify_subscription(queues, expected[i].address, expected[i].topic);
         }
     }
-    assert.equal(addresses.length, 0);
-    assert.equal(queues.length, 0);
+    assert.equal(addresses.length, 0, util.format("Found addresses: %s", JSON.stringify(addresses)));
+    assert.equal(queues.length, 0, util.format("Found queues: %s", JSON.stringify(queues)));
 };
 
 MockBroker.prototype.verify_address_settings = function (expected) {
