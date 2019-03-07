@@ -257,8 +257,10 @@ class CertProviderTest extends TestBase {
         ApiServerTest.simpleMQTTSendReceive(topic, mqttClient, 3);
         mqttClient.disconnect();
 
+        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
-        webClient.get(getConsoleRoute(addressSpace)).ssl(true).send(ar->{
+        webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true)
+        .send(ar->{
             log.info("get console "+ar.toString());
             if (ar.succeeded()) {
                 HttpResponse<Buffer> response = ar.result();
