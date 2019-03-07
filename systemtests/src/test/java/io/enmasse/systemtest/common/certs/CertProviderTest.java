@@ -205,6 +205,8 @@ class CertProviderTest extends TestBase {
             request.put("mqttHost", mqttEndpoint.getHost());
             request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
 
+            log.info("Making request to openshift app {}", request);
+
             JsonObject response = client.test(request);
             if(response.containsKey("error")) {
                 fail("Error testing openshift provider "+response.getString("error"));
