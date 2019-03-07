@@ -38,7 +38,7 @@ templates: docu_html
 	$(MAKE) -C templates
 
 build_java:
-	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
+	$(IMAGE_ENV) mvn package -B $(MAVEN_ARGS)
 
 build_go: $(GO_DIRS)
 	for i in $?; do $(MAKE) -C $$i build; done
