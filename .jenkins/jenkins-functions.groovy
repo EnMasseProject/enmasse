@@ -71,7 +71,7 @@ def waitUntilAgentReady() {
 }
 
 def buildEnmasse() {
-    sh 'MOCHA_ARGS="--reporter=mocha-junit-reporter" make'
+    sh 'make'
     sh 'make docker_tag'
 }
 
