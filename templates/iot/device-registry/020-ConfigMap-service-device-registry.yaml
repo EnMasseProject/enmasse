@@ -46,14 +46,6 @@ data:
         svc:
           filename: /var/lib/hono/device-registry/tenants.json
           saveToFile: true
-      metrics:
-        legacy: false
-    management:
-      metrics:
-        enabled: false
-        export:
-          graphite:
-            enabled: false
 
   logback-spring.xml: |+
       <?xml version="1.0" encoding="UTF-8"?>

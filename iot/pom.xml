@@ -13,16 +13,15 @@
   <packaging>pom</packaging>
 
   <properties>
-    <hono.version>0.8</hono.version>
+    <hono.version>0.9</hono.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
-    <spring.boot.version>1.5.18.RELEASE</spring.boot.version>
-    <spring.version>4.3.19.RELEASE</spring.version>
+    <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
     <micrometer.version>1.0.9</micrometer.version>
-    <vertx.version>3.5.4</vertx.version>
-    <netty-tcnative.version>2.0.10.Final</netty-tcnative.version>
-    <netty.version>4.1.19.Final</netty.version>
+    <vertx.version>3.6.3</vertx.version>
+    <netty-tcnative.version>2.0.17.Final</netty-tcnative.version>
+    <netty.version>4.1.30.Final</netty.version>
   </properties>
 
   <modules>
@@ -54,19 +53,15 @@
       </dependency>
 
       <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative</artifactId>
+        <version>${netty-tcnative.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>io.micrometer</groupId>
         <artifactId>micrometer-registry-prometheus</artifactId>
         <version>${micrometer.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-web</artifactId>
-        <version>${spring.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-webmvc</artifactId>
-        <version>${spring.version}</version>
       </dependency>
 
     </dependencies>

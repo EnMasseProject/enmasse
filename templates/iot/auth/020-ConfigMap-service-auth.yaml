@@ -12,6 +12,8 @@ data:
     hono:
       app:
         maxInstances: 1
+        healthCheckBindAddress: 0.0.0.0
+        healthCheckPort: 8088
       auth:
         amqp:
           bindAddress: 0.0.0.0
@@ -22,14 +24,6 @@ data:
           trustStoreFormat: PEM
         svc:
           permissionsPath: file:///etc/config/permissions.json
-      metrics:
-        legacy: false
-    management:
-      metrics:
-        enabled: false
-        export:
-          graphite:
-            enabled: false
 
   permissions.json: |+
     {
