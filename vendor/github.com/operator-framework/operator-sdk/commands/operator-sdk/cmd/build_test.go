@@ -90,6 +90,9 @@ spec:
       containers:
         - name: memcached-operator
           image: quay.io/coreos/operator-sdk-dev:test-framework-operator
+          ports:
+          - containerPort: 60000
+            name: metrics
           command:
           - memcached-operator
           imagePullPolicy: Always
@@ -105,9 +108,9 @@ spec:
 
 func TestVerifyDeploymentImage(t *testing.T) {
 	if err := verifyDeploymentImage([]byte(memcachedNamespaceManExample), "quay.io/coreos/operator-sdk-dev:test-framework-operator"); err != nil {
-		t.Fatalf("Incorrectly reported an error: %v", err)
+		t.Fatalf("verifyDeploymentImage incorrectly reported an error: %v", err)
 	}
 	if err := verifyDeploymentImage([]byte(memcachedNamespaceManExample), "different-image-name"); err == nil {
-		t.Fatal("No error reported on an incorrect manifest")
+		t.Fatal("verifyDeploymentImage did not report an error on an incorrect manifest")
 	}
 }

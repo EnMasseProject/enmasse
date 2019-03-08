@@ -20,40 +20,20 @@ import (
 	"github.com/operator-framework/operator-sdk/internal/util/diffutil"
 )
 
-func TestCR(t *testing.T) {
+func TestCr(t *testing.T) {
 	r, err := NewResource(appApiVersion, appKind)
 	if err != nil {
 		t.Fatal(err)
 	}
 	s, buf := setupScaffoldAndWriter()
-	err = s.Execute(appConfig, &CR{Resource: r})
+	err = s.Execute(appConfig, &Cr{Resource: r})
 	if err != nil {
-		t.Fatalf("Failed to execute the scaffold: (%v)", err)
+		t.Fatalf("failed to execute the scaffold: (%v)", err)
 	}
 
 	if crExp != buf.String() {
 		diffs := diffutil.Diff(crExp, buf.String())
-		t.Fatalf("Expected vs actual differs.\n%v", diffs)
-	}
-}
-
-func TestCRCustomSpec(t *testing.T) {
-	r, err := NewResource(appApiVersion, appKind)
-	if err != nil {
-		t.Fatal(err)
-	}
-	s, buf := setupScaffoldAndWriter()
-	err = s.Execute(appConfig, &CR{
-		Resource: r,
-		Spec:     "# Custom spec here\ncustomSize: 6",
-	})
-	if err != nil {
-		t.Fatalf("Failed to execute the scaffold: (%v)", err)
-	}
-
-	if crCustomSpecExp != buf.String() {
-		diffs := diffutil.Diff(crCustomSpecExp, buf.String())
-		t.Fatalf("Expected vs actual differs.\n%v", diffs)
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
 
@@ -64,13 +44,4 @@ metadata:
 spec:
   # Add fields here
   size: 3
-`
-
-const crCustomSpecExp = `apiVersion: app.example.com/v1alpha1
-kind: AppService
-metadata:
-  name: example-appservice
-spec:
-  # Custom spec here
-  customSize: 6
 `

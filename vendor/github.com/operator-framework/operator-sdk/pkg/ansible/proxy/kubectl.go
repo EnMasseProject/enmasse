@@ -93,7 +93,7 @@ func MakeRegexpArray(str string) ([]*regexp.Regexp, error) {
 func MakeRegexpArrayOrDie(str string) []*regexp.Regexp {
 	result, err := MakeRegexpArray(str)
 	if err != nil {
-		log.Error(err, "Error compiling re")
+		log.Error(err, "error compiling re")
 		os.Exit(1)
 	}
 	return result
@@ -102,7 +102,7 @@ func MakeRegexpArrayOrDie(str string) []*regexp.Regexp {
 func matchesRegexp(str string, regexps []*regexp.Regexp) bool {
 	for _, re := range regexps {
 		if re.MatchString(str) {
-			log.Info("Matched found", "MatchString", str, "Regexp", re)
+			log.Info("matched found", "MatchString", str, "Regexp", re)
 			return true
 		}
 	}
@@ -148,9 +148,7 @@ func (f *FilterServer) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Info("Filter rejection", "Request.Method", req.Method, "Request.URL", req.URL.Path, "Host", host)
 	rw.WriteHeader(http.StatusForbidden)
-	if _, err := rw.Write([]byte("<h3>Unauthorized</h3>")); err != nil {
-		log.Error(err, "Failed to write response body")
-	}
+	rw.Write([]byte("<h3>Unauthorized</h3>"))
 }
 
 // Server is a http.Handler which proxies Kubernetes APIs to remote API server.
@@ -161,7 +159,7 @@ type server struct {
 type responder struct{}
 
 func (r *responder) Error(w http.ResponseWriter, req *http.Request, err error) {
-	log.Error(err, "Error while proxying request")
+	log.Error(err, "error while proxying request")
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
@@ -235,9 +233,7 @@ func (s *server) ListenUnix(path string) (net.Listener, error) {
 	// Remove any socket, stale or not, but fall through for other files
 	fi, err := os.Stat(path)
 	if err == nil && (fi.Mode()&os.ModeSocket) != 0 {
-		if err := os.Remove(path); err != nil {
-			return nil, err
-		}
+		os.Remove(path)
 	}
 	// Default to only user accessible socket, caller can open up later if desired
 	oldmask := syscall.Umask(0077)

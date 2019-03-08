@@ -31,7 +31,6 @@ import (
 	"k8s.io/client-go/discovery/cached"
 	"k8s.io/client-go/kubernetes"
 	cgoscheme "k8s.io/client-go/kubernetes/scheme"
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/restmapper"
 	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
@@ -74,14 +73,10 @@ func setup(kubeconfigPath, namespacedManPath *string, localOperator bool) error 
 			if err != nil {
 				return fmt.Errorf("failed to get service host: %v", err)
 			}
-			if err := os.Setenv("KUBERNETES_SERVICE_HOST", addrs[0]); err != nil {
-				return fmt.Errorf("failed to set kubernetes host env var: (%v)", err)
-			}
+			os.Setenv("KUBERNETES_SERVICE_HOST", addrs[0])
 		}
 		if len(os.Getenv("KUBERNETES_SERVICE_PORT")) == 0 {
-			if err := os.Setenv("KUBERNETES_SERVICE_PORT", "443"); err != nil {
-				return fmt.Errorf("failed to set kubernetes port env var: (%v)", err)
-			}
+			os.Setenv("KUBERNETES_SERVICE_PORT", "443")
 		}
 		kubeconfig, err = rest.InClusterConfig()
 		*singleNamespace = true
@@ -104,12 +99,8 @@ func setup(kubeconfigPath, namespacedManPath *string, localOperator bool) error 
 		return fmt.Errorf("failed to build the kubeclient: %v", err)
 	}
 	scheme := runtime.NewScheme()
-	if err := cgoscheme.AddToScheme(scheme); err != nil {
-		return fmt.Errorf("failed to add cgo scheme to runtime scheme: (%v)", err)
-	}
-	if err := extscheme.AddToScheme(scheme); err != nil {
-		return fmt.Errorf("failed to add api extensions scheme to runtime scheme: (%v)", err)
-	}
+	cgoscheme.AddToScheme(scheme)
+	extscheme.AddToScheme(scheme)
 	cachedDiscoveryClient := cached.NewMemCacheClient(kubeclient.Discovery())
 	restMapper = restmapper.NewDeferredDiscoveryRESTMapper(cachedDiscoveryClient)
 	restMapper.Reset()

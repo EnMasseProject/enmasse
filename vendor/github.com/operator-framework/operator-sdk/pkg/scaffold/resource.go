@@ -23,8 +23,6 @@ import (
 	"strings"
 
 	"github.com/markbates/inflect"
-
-	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 var (
@@ -33,6 +31,8 @@ var (
 	ResourceVersionRegexp = regexp.MustCompile("^v[1-9][0-9]*((alpha|beta)[1-9][0-9]*)?$")
 	// ResourceKindRegexp matches Kubernetes API Kind's.
 	ResourceKindRegexp = regexp.MustCompile("^[A-Z]{1}[a-zA-Z0-9]+$")
+	// ResourceGroupRegexp matches Kubernetes API Group's.
+	ResourceGroupRegexp = regexp.MustCompile("^[a-z0-9]+$")
 )
 
 // Resource contains the information required to scaffold files for a resource.
@@ -127,8 +127,8 @@ func (r *Resource) checkAndSetGroups() error {
 	r.FullGroup = fg[0]
 	r.Group = g[0]
 
-	if err := validation.IsDNS1123Subdomain(r.Group); err != nil {
-		return fmt.Errorf("group name is invalid: %v", err)
+	if !ResourceGroupRegexp.MatchString(r.Group) {
+		return errors.New("group should consist of lowercase alphabetical characters")
 	}
 	return nil
 }

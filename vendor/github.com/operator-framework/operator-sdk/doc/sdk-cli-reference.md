@@ -9,15 +9,14 @@ Usage:
 
 ### Args
 
-* `image` - is the container image to be built, e.g. "quay.io/example/operator:v0.0.1".
+* image - is the container image to be built, e.g. "quay.io/example/operator:v0.0.1".
 
 ### Flags
-
-* `--enable-tests` - enable in-cluster testing by adding test binary to the image
+* `--enable-tests` bool - enable in-cluster testing by adding test binary to the image
 * `--namespaced-manifest` string - path of namespaced resources manifest for tests (default "deploy/operator.yaml")
 * `--test-location` string - location of tests (default "./test/e2e")
-* `--docker-build-args` string - extra, optional docker build arguments as one string such as `"--build-arg https_proxy=$https_proxy"` (default "")
 * `-h, --help` - help for build
+
 
 ### Use
 
@@ -26,12 +25,14 @@ The operator-sdk build command compiles the code and builds the executables. Aft
 If `--enable-tests` is set, the build command will also build the testing binary, add it to the docker image, and generate
 a `deploy/test-pod.yaml` file that allows a user to run the tests as a pod on a cluster.
 
-### Example
+### Example:
 
 #### Build
 
-```console
-$ operator-sdk build quay.io/example/operator:v0.0.1
+```bash
+operator-sdk build quay.io/example/operator:v0.0.1
+
+# Output:
 building example-operator...
 
 building container quay.io/example/operator:v0.0.1...
@@ -78,8 +79,10 @@ Generators for shell completions
 
 Example:
 
-```console
-$ operator-sdk completion bash
+```bash
+operator-sdk completion bash
+
+# Output:
 # bash completion for operator-sdk                         -*- shell-script -*-
 ...
 # ex: ts=4 sw=4 et filetype=sh
@@ -91,11 +94,11 @@ Prints the most recent Golang packages and versions required by operators. Print
 
 ### Flags
 
-* `--as-file` - Print packages and versions in Gopkg.toml format.
+* `--as-file` Print packages and versions in Gopkg.toml format.
 
 ### Example
 
-```console
+```bash
 $ operator-sdk print-deps --as-file
 required = [
   "k8s.io/code-generator/cmd/defaulter-gen",
@@ -125,7 +128,7 @@ Currently only runs `deepcopy-gen` to generate the required `DeepCopy()` functio
 
 #### Example
 
-```console
+```bash
 $ tree pkg/apis/app/v1alpha1/
 pkg/apis/app/v1alpha1/
 ├── appservice_types.go
@@ -133,8 +136,8 @@ pkg/apis/app/v1alpha1/
 ├── register.go
 
 $ operator-sdk generate k8s
-INFO[0000] Running deepcopy code-generation for Custom Resource group versions: [app:[v1alpha1], ]
-INFO[0001] Code-generation complete.                    
+Running code-generation for custom resource group versions: [app:v1alpha1]
+Generating deepcopy funcs
 
 $ tree pkg/apis/app/v1alpha1/
 pkg/apis/app/v1alpha1/
@@ -144,81 +147,23 @@ pkg/apis/app/v1alpha1/
 └── zz_generated.deepcopy.go
 ```
 
-### openapi
-
-Runs the [kube-openapi][openapi-code-generator] OpenAPIv3 code generator for all Custom Resource Definition (CRD) API tagged fields under `pkg/apis/...`.
-
-**Note**: This command must be run every time a tagged API struct or struct field for a custom resource type is updated.
-
-#### Example
-
-```console
-$ tree pkg/apis/app/v1alpha1/
-pkg/apis/app/v1alpha1/
-├── appservice_types.go
-├── doc.go
-├── register.go
-
-$ operator-sdk generate openapi
-INFO[0000] Running OpenAPI code-generation for Custom Resource group versions: [app:[v1alpha1], ]
-INFO[0001] Create deploy/crds/app_v1alpha1_appservice_crd.yaml
-INFO[0001] Code-generation complete.                    
-
-$ tree pkg/apis/app/v1alpha1/
-pkg/apis/app/v1alpha1/
-├── appservice_types.go
-├── doc.go
-├── register.go
-└── zz_generated.openapi.go
-```
-
 ## olm-catalog
 
-Parent command for all OLM Catalog related commands.
+Parent command for all OLM Catalog-related commands.
 
 ### gen-csv
 
-Writes a Cluster Service Version (CSV) manifest and concatenated CRD files to `deploy/olm-catalog`.
+Generates a Cluster Service Version manifest file in `deploy/olm-catalog`.
 
 #### Flags
 
-* `--csv-version` (required) Semantic version of the CSV manifest.
-* `--csv-config` Path to CSV config file. Defaults to deploy/olm-catalog/csv-config.yaml.
+* `--csv-version` (required) operator semantic version with which to create the CSV file.
 
 #### Example
 
-```console
+```bash
 $ operator-sdk olm-catalog gen-csv --csv-version 0.1.1
-INFO[0000] Generating CSV manifest version 0.1.1
-INFO[0000] Fill in the following required fields in file deploy/olm-catalog/operator-name.csv.yaml:
-	spec.keywords
-	spec.maintainers
-	spec.provider
-	spec.labels
-INFO[0000] Create deploy/olm-catalog/operator-name.csv.yaml     
-INFO[0000] Create deploy/olm-catalog/_generated.concat_crd.yaml
-```
-
-## migrate
-
-Adds a main.go source file and any associated source files for an operator that
-is not of the "go" type.
-
-**Note**: This command will look for playbook.yml in the project root, if you use the .yaml extension
-you will need to rename it before running migrate or manually add it to your Dockerfile.
-
-### Example
-
-```console
-$ operator-sdk migrate
-2019/01/10 15:02:45 No playbook was found, so not including it in the new Dockerfile
-2019/01/10 15:02:45 renamed Dockerfile to build/Dockerfile.sdkold and replaced with newer version
-2019/01/10 15:02:45 Compare the new Dockerfile to your old one and manually migrate any customizations
-INFO[0000] Create cmd/manager/main.go
-INFO[0000] Create Gopkg.toml
-INFO[0000] Create build/Dockerfile
-INFO[0000] Create bin/entrypoint
-INFO[0000] Create bin/user_setup
+Generating CSV manifest version 0.1.1
 ```
 
 ## new
@@ -231,78 +176,72 @@ Scaffolds a new operator project.
 
 ### Flags
 
-* `--skip-git-init` - Do not init the directory as a git repository
-* `--type` string - Type of operator to initialize: "ansible", "helm", or "go" (default "go"). Also requires the following flags if `--type=ansible` or `--type=helm`
-* `--api-version` string - CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
-* `--kind` string - CRD Kind. (e.g AppService)
-* `--generate-playbook` - Generate a playbook skeleton. (Only used for `--type ansible`)
-* `--cluster-scoped` - Initialize the operator to be cluster-scoped instead of namespace-scoped
+
+* `--skip-git-init` Do not init the directory as a git repository
+* `--type` Type of operator to initialize: "ansible", "helm", or "go" (default "go"). Also requires the following flags if `--type=ansible` or `--type=helm`
+  * `--api-version` CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
+  * `--kind` CRD Kind. (e.g AppService)
+* `--cluster-scoped` Initialize the operator to be cluster-scoped instead of namespace-scoped
 * `-h, --help` - help for new
 
 ### Example
 
 Go project:
-
-```console
-$ mkdir $GOPATH/src/github.com/example.com/
-$ cd $GOPATH/src/github.com/example.com/
-$ operator-sdk new app-operator
+```bash
+mkdir $GOPATH/src/github.com/example.com/
+cd $GOPATH/src/github.com/example.com/
+operator-sdk new app-operator
 ```
 
 Ansible project:
-
-```console
-$ operator-sdk new app-operator --type=ansible --api-version=app.example.com/v1alpha1 --kind=AppService
+```bash
+operator-sdk new app-operator --type=ansible --api-version=app.example.com/v1alpha1 --kind=AppService
 ```
 
 Helm project:
-
-```console
-$ operator-sdk new app-operator --type=helm --api-version=app.example.com/v1alpha1 --kind=AppService
+```bash
+operator-sdk new app-operator --type=helm --api-version=app.example.com/v1alpha1 --kind=AppService
 ```
 
 ## add
 
 ### api
 
-Adds the API definition for a new custom resource under `pkg/apis` and generates the CRD and CR files under `depoy/crds/...`, and generates Kubernetes deepcopy functions and OpenAPIv3 validation specs for the new API.
+Adds the
+api definition for a new custom resource under `pkg/apis` and generates the CRD and CR files under `depoy/crds/...`.
 
 #### Flags
 
-* `--api-version` string - CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
-* `--kind` string - CRD Kind. (e.g AppService)
+* `--api-version` CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
+* `--kind` CRD Kind. (e.g AppService)
 
 #### Example
 
-```console
+```bash
 $ operator-sdk add api --api-version app.example.com/v1alpha1 --kind AppService
-INFO[0000] Generating api version app.example.com/v1alpha1 for kind AppService.
-INFO[0000] Create pkg/apis/app/v1alpha1/appservice_types.go
-INFO[0000] Create pkg/apis/addtoscheme_app_v1alpha1.go  
-INFO[0000] Create pkg/apis/app/v1alpha1/register.go     
-INFO[0000] Create pkg/apis/app/v1alpha1/doc.go          
-INFO[0000] Create deploy/crds/app_v1alpha1_appservice_cr.yaml
-INFO[0000] Create deploy/crds/app_v1alpha1_appservice_crd.yaml
-INFO[0001] Running deepcopy code-generation for Custom Resource group versions: [app:[v1alpha1], ]
-INFO[0002] Code-generation complete.                    
-INFO[0002] Running OpenAPI code-generation for Custom Resource group versions: [app:[v1alpha1], ]
-INFO[0004] Create deploy/crds/app_v1alpha1_appservice_crd.yaml
-INFO[0004] Code-generation complete.                    
-INFO[0004] API generation complete.
+Create pkg/apis/app/v1alpha1/appservice_types.go
+Create pkg/apis/addtoscheme_app_v1alpha1.go
+Create pkg/apis/app/v1alpha1/register.go
+Create pkg/apis/app/v1alpha1/doc.go
+Create deploy/crds/app_v1alpha1_appservice_cr.yaml
+Create deploy/crds/app_v1alpha1_appservice_crd.yaml
+Running code-generation for custom resource group versions: [app:v1alpha1]
+Generating deepcopy funcs
 ```
 
 ### controller
 
-Adds a new controller under `pkg/controller/<kind>/...` that, by default, reconciles a custom resource for the specified apiversion and kind.
+Adds a new
+controller under `pkg/controller/<kind>/...` that, by default, reconciles a custom resource for the specified apiversion and kind.
 
 #### Flags
 
-* `--api-version` string - CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
-* `--kind` string - CRD Kind. (e.g AppService)
+* `--api-version` CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
+* `--kind` CRD Kind. (e.g AppService)
 
 #### Example
 
-```console
+```bash
 $ operator-sdk add controller --api-version app.example.com/v1alpha1 --kind AppService
 Create pkg/controller/appservice/appservice_controller.go
 Create pkg/controller/add_appservice.go
@@ -314,99 +253,16 @@ Generates the CRD and the CR files for the specified api-version and kind.
 
 #### Flags
 
-* `--api-version` string - CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
-* `--kind` string - CRD Kind. (e.g AppService)
+* `--api-version` CRD APIVersion in the format `$GROUP_NAME/$VERSION` (e.g app.example.com/v1alpha1)
+* `--kind` CRD Kind. (e.g AppService)
 
 #### Example
 
-```console
+```bash
 $ operator-sdk add crd --api-version app.example.com/v1alpha1 --kind AppService
 Generating custom resource definition (CRD) files
 Create deploy/crds/app_v1alpha1_appservice_crd.yaml
 Create deploy/crds/app_v1alpha1_appservice_cr.yaml
-```
-
-## run
-
-### ansible
-
-Runs as an ansible operator process. This is intended to be used when running
-in a Pod inside a cluster. Developers wanting to run their operator locally
-should use `up local` instead.
-
-#### Flags
-
-* `--reconcile-period` string - Default reconcile period for controllers (default 1m0s)
-* `--watches-file` string - Path to the watches file to use (default "./watches.yaml")
-
-#### Example
-
-```console
-$ operator-sdk run ansible --watches-file=/opt/ansible/watches.yaml --reconcile-period=30s
-```
-
-### helm
-
-Runs as a helm operator process. This is intended to be used when running
-in a Pod inside a cluster. Developers wanting to run their operator locally
-should use `up local` instead.
-
-#### Flags
-
-* `--reconcile-period` string - Default reconcile period for controllers (default 1m0s)
-* `--watches-file` string - Path to the watches file to use (default "./watches.yaml")
-
-#### Example
-
-```console
-$ operator-sdk run helm --watches-file=/opt/helm/watches.yaml --reconcile-period=30s
-```
-
-## scorecard
-
-Run scorecard tests on an operator
-
-### Flags
-
-* `basic-tests` - Enable basic operator checks (default true)
-* `cr-manifest` string - (required) Path to manifest for Custom Resource
-* `csv-path` string - (required if `olm-tests` is set) Path to CSV being tested
-* `global-manifest` string - Path to manifest for Global resources (e.g. CRD manifests)
-* `init-timeout` int - Timeout for status block on CR to be created, in seconds (default 10)
-* `kubeconfig` string - Path to kubeconfig of custom resource created in cluster
-* `namespace` string - Namespace of custom resource created in cluster
-* `namespaced-manifest` string - Path to manifest for namespaced resources (e.g. RBAC and Operator manifest)
-* `olm-tests` - Enable OLM integration checks (default true)
-* `proxy-image` string - Image name for scorecard proxy (default "quay.io/operator-framework/scorecard-proxy")
-* `proxy-pull-policy` string - Pull policy for scorecard proxy image (default "Always")
-* `verbose` - Enable verbose logging
-* `-h, --help` - help for scorecard
-
-### Example
-
-```console
-$ operator-sdk scorecard --cr-manifest deploy/crds/cache_v1alpha1_memcached_cr.yaml --csv-path deploy/memcachedoperator.0.0.2.csv.yaml
-Checking for existence of spec and status blocks in CR
-Checking that operator actions are reflected in status
-Checking that writing into CRs has an effect
-Checking for CRD resources
-Checking for existence CR example
-Checking spec descriptors
-Checking status descriptors
-Basic Operator:
-        Spec Block Exists: 1/1 points
-        Status Block Exist: 1/1 points
-        Operator actions are reflected in status: 1/1 points
-        Writing into CRs has an effect: 1/1 points
-OLM Integration:
-        Owned CRDs have resources listed: 1/1 points
-        CRs have at least 1 example: 0/1 points
-        Spec fields with descriptors: 1/1 points
-        Status fields with descriptors: 0/1 points
-
-Total Score: 6/8 points
-SUGGESTION: Add an alm-examples annotation to your CSV to pass the CRs have at least 1 example test
-SUGGESTION: Add a status descriptor for nodes
 ```
 
 ## test
@@ -414,22 +270,17 @@ SUGGESTION: Add a status descriptor for nodes
 ### Available Commands
 
 #### local
-
 Runs the tests locally
 
 ##### Args
-
-* `test-location` - location of e2e test files (e.g. "./test/e2e/")
+* <test-location> string - location of e2e test files (e.g. "./test/e2e/")
 
 ##### Flags
-
-* `--debug` - Enable debug-level logging
 * `--kubeconfig` string - location of kubeconfig for kubernetes cluster (default "~/.kube/config")
 * `--global-manifest` string - path to manifest for global resources (default "deploy/crd.yaml)
 * `--namespaced-manifest` string - path to manifest for per-test, namespaced resources (default: combines deploy/service_account.yaml, deploy/rbac.yaml, and deploy/operator.yaml)
-* `--namespace` string - if non-empty, single namespace to run tests in (e.g. "operator-test") (default: "")
-* `--go-test-flags` string - Additional flags to pass to go test
-* `--molecule-test-flags` string - Additional flags to pass to molecule test
+*  `--namespace` string - if non-empty, single namespace to run tests in (e.g. "operator-test") (default: "")
+* `--go-test-flags` string - extra arguments to pass to `go test` (e.g. -f "-v -parallel=2")
 * `--up-local` - enable running operator locally with go run instead of as an image in the cluster
 * `--no-setup` - disable test resource creation
 * `--image` string - use a different operator image from the one specified in the namespaced manifest
@@ -439,38 +290,39 @@ Runs the tests locally
 
 The operator-sdk test command runs go tests built using the Operator SDK's test framework.
 
-##### Example
+##### Example:
 
-```console
+```bash
 $ operator-sdk test local ./test/e2e/
-ok    github.com/operator-framework/operator-sdk-samples/memcached-operator/test/e2e  20.410s
+
+# Output:
+ok  	github.com/operator-framework/operator-sdk-samples/memcached-operator/test/e2e	20.410s
 ```
 
 #### cluster
-
 Runs the e2e tests packaged in an operator image as a pod in the cluster
 
 ##### Args
-
-* `image-name` - the operator image that is used to run the tests in a pod (e.g. "quay.io/example/memcached-operator:v0.0.1")
+* <image-name> string - the operator image that is used to run the tests in a pod (e.g. "quay.io/example/memcached-operator:v0.0.1")
 
 ##### Flags
-
 * `--kubeconfig` string - location of kubeconfig for kubernetes cluster (default "~/.kube/config")
 * `--image-pull-policy` string - set test pod image pull policy. Allowed values: Always, Never (default "Always")
 * `--namespace` string - namespace to run tests in (default "default")
 * `--pending-timeout` int - timeout in seconds for testing pod to stay in pending state (default 60s)
 * `--service-account` string - service account to run tests on (default "default")
-* `-h, --help` - help for cluster
+* `--help` - help for cluster
 
 ##### Use
 
 The operator-sdk test command runs go tests embedded in an operator image built using the Operator SDK.
 
-##### Example
+##### Example:
 
-```console
+```bash
 $ operator-sdk test cluster quay.io/example/memcached-operator:v0.0.1
+
+# Output:
 Test Successfully Completed
 ```
 
@@ -482,39 +334,40 @@ Test Successfully Completed
 
 ##### Use
 
-The `operator-sdk up local` command launches the operator on the local machine
-with the ability to access a kubernetes cluster using a kubeconfig file, and
-setting any necessary environment variables that the operator would expect to
-find when running in a cluster. For Go-based operators, this command will
-compile and run the operator binary. In the case of non-Go operators, it runs
-the operator-sdk binary itself as the operator.
+The operator-sdk up local command launches the operator on the local machine
+by building the operator binary with the ability to access a
+kubernetes cluster using a kubeconfig file.
 
 ##### Flags
 
-* `--go-ldflags` string - Set Go linker options
 * `--kubeconfig` string - The file path to kubernetes configuration file; defaults to $HOME/.kube/config
+
 * `--namespace` string - The namespace where the operator watches for changes. (default "default")
-* `--operator-flags` string - Flags that the local operator may need.
+
+* `--operator-flags` - Flags that the local operator may need.
+
 * `-h, --help` - help for local
 
 ##### Example
 
-```console
-$ operator-sdk up local --kubeconfig "mycluster.kubecfg" --namespace "default" --operator-flags "--flag1 value1 --flag2=value2"
+```bash
+operator-sdk up local --kubeconfig "mycluster.kubecfg" \
+  --namespace "default" \
+  --operator-flags "--flag1 value1 --flag2=value2"
 ```
 
 The below example will use the default kubeconfig, the default namespace environment var, and pass in flags for the operator.
 To use the operator flags, your operator must know how to handle the option. Below imagine an operator that understands the `resync-interval` flag.
 
-```console
-$ operator-sdk up local --operator-flags "--resync-interval 10"
+```bash
+operator-sdk up local --operator-flags "--resync-interval 10"
 ```
 
 If you are planning on using a different namespace than the default, then you should use the `--namespace` flag to change where the operator is watching for custom resources to be created.
 For this to work your operator must handle the `WATCH_NAMESPACE` environment variable. To do that you can use the [utility function][utility_link] `k8sutil.GetWatchNamespace` in your operator.
 
-```console
-$ operator-sdk up local --namespace "testing"
+```bash
+operator-sdk up local --namespace "testing"
 ```
 
 ### Flags
@@ -523,4 +376,3 @@ $ operator-sdk up local --namespace "testing"
 
 [utility_link]: https://github.com/operator-framework/operator-sdk/blob/89bf021063d18b6769bdc551ed08fc37027939d5/pkg/util/k8sutil/k8sutil.go#L140
 [k8s-code-generator]: https://github.com/kubernetes/code-generator
-[openapi-code-generator]: https://github.com/kubernetes/kube-openapi

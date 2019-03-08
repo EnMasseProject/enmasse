@@ -15,8 +15,6 @@
 package add
 
 import (
-	"fmt"
-
 	"github.com/operator-framework/operator-sdk/internal/util/projutil"
 	"github.com/operator-framework/operator-sdk/pkg/scaffold"
 	"github.com/operator-framework/operator-sdk/pkg/scaffold/input"
@@ -26,12 +24,12 @@ import (
 )
 
 func NewControllerCmd() *cobra.Command {
-	controllerCmd := &cobra.Command{
+	apiCmd := &cobra.Command{
 		Use:   "controller",
 		Short: "Adds a new controller pkg",
 		Long: `operator-sdk add controller --kind=<kind> --api-version=<group/version> creates a new
 controller pkg under pkg/controller/<kind> that, by default, reconciles on a custom resource for the specified apiversion and kind.
-The controller will expect to use the custom resource type that should already be defined under pkg/apis/<group>/<version>
+The controller will expect to use the custom resource type that should already be defined under pkg/apis/<group>/<version> 
 via the "operator-sdk add api --kind=<kind> --api-version=<group/version>" command.
 This command must be run from the project root directory.
 If the controller pkg for that Kind already exists at pkg/controller/<kind> then the command will not overwrite and return an error.
@@ -46,35 +44,29 @@ Example:
 	└── controller.go
 
 `,
-		RunE: controllerRun,
+		Run: controllerRun,
 	}
 
-	controllerCmd.Flags().StringVar(&apiVersion, "api-version", "", "Kubernetes APIVersion that has a format of $GROUP_NAME/$VERSION (e.g app.example.com/v1alpha1)")
-	if err := controllerCmd.MarkFlagRequired("api-version"); err != nil {
-		log.Fatalf("Failed to mark `api-version` flag for `add controller` subcommand as required")
-	}
-	controllerCmd.Flags().StringVar(&kind, "kind", "", "Kubernetes resource Kind name. (e.g AppService)")
-	if err := controllerCmd.MarkFlagRequired("kind"); err != nil {
-		log.Fatalf("Failed to mark `kind` flag for `add controller` subcommand as required")
-	}
+	apiCmd.Flags().StringVar(&apiVersion, "api-version", "", "Kubernetes APIVersion that has a format of $GROUP_NAME/$VERSION (e.g app.example.com/v1alpha1)")
+	apiCmd.MarkFlagRequired("api-version")
+	apiCmd.Flags().StringVar(&kind, "kind", "", "Kubernetes resource Kind name. (e.g AppService)")
+	apiCmd.MarkFlagRequired("kind")
 
-	return controllerCmd
+	return apiCmd
 }
 
-func controllerRun(cmd *cobra.Command, args []string) error {
-	projutil.MustInProjectRoot()
-
+func controllerRun(cmd *cobra.Command, args []string) {
 	// Only Go projects can add controllers.
-	if err := projutil.CheckGoProjectCmd(cmd); err != nil {
-		return err
-	}
+	projutil.MustGoProjectCmd(cmd)
+
+	projutil.MustInProjectRoot()
 
 	log.Infof("Generating controller version %s for kind %s.", apiVersion, kind)
 
 	// Create and validate new resource
 	r, err := scaffold.NewResource(apiVersion, kind)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	cfg := &input.Config{
@@ -88,9 +80,8 @@ func controllerRun(cmd *cobra.Command, args []string) error {
 		&scaffold.AddController{Resource: r},
 	)
 	if err != nil {
-		return fmt.Errorf("controller scaffold failed: (%v)", err)
+		log.Fatalf("add scaffold failed: (%v)", err)
 	}
 
 	log.Info("Controller generation complete.")
-	return nil
 }

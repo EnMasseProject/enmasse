@@ -28,12 +28,12 @@ func TestControllerKind(t *testing.T) {
 	s, buf := setupScaffoldAndWriter()
 	err = s.Execute(appConfig, &ControllerKind{Resource: r})
 	if err != nil {
-		t.Fatalf("Failed to execute the scaffold: (%v)", err)
+		t.Fatalf("failed to execute the scaffold: (%v)", err)
 	}
 
 	if controllerKindExp != buf.String() {
 		diffs := diffutil.Diff(controllerKindExp, buf.String())
-		t.Fatalf("Expected vs actual differs.\n%v", diffs)
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
 
@@ -43,7 +43,6 @@ import (
 	"context"
 
 	appv1alpha1 "github.com/example-inc/app-operator/pkg/apis/app/v1alpha1"
-
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

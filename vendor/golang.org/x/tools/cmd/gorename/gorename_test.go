@@ -48,8 +48,6 @@ func TestGeneratedFiles(t *testing.T) {
 			env = append(env, envVar)
 		}
 	}
-	// gorename currently requires GOPATH mode.
-	env = append(env, "GO111MODULE=off")
 
 	// Testing renaming in packages that include cgo files:
 	for iter, renameTest := range []test{
@@ -312,9 +310,6 @@ func g() { fmt.Println(test.Foo(3)) }
 // buildGorename builds the gorename executable.
 // It returns its path, and a cleanup function.
 func buildGorename(t *testing.T) (tmp, bin string, cleanup func()) {
-	if runtime.GOOS == "android" {
-		t.Skipf("the dependencies are not available on android")
-	}
 
 	tmp, err := ioutil.TempDir("", "gorename-regtest-")
 	if err != nil {

@@ -72,7 +72,7 @@ func UpdateRoleForResource(r *Resource, absProjectPath string) error {
 		// check if the resource already exists
 		for _, resource := range pr.Resources {
 			if resource == r.Resource {
-				log.Infof("RBAC rules in deploy/role.yaml already up to date for the resource (%v, %v)", r.APIVersion, r.Kind)
+				log.Infof("deploy/role.yaml RBAC rules already up to date for the resource (%v, %v)", r.APIVersion, r.Kind)
 				return nil
 			}
 		}
@@ -93,9 +93,7 @@ func UpdateRoleForResource(r *Resource, absProjectPath string) error {
 			return fmt.Errorf("failed to marshal role(%+v): %v", role, err)
 		}
 		m := &map[string]interface{}{}
-		if err = yaml.Unmarshal(d, m); err != nil {
-			return fmt.Errorf("failed to unmarshal role(%+v): %v", role, err)
-		}
+		err = yaml.Unmarshal(d, m)
 		data, err := yaml.Marshal(m)
 		if err != nil {
 			return fmt.Errorf("failed to marshal role(%+v): %v", role, err)
@@ -116,7 +114,7 @@ func UpdateRoleForResource(r *Resource, absProjectPath string) error {
 		// check if the resource already exists
 		for _, resource := range pr.Resources {
 			if resource == r.Resource {
-				log.Infof("RBAC rules in deploy/role.yaml already up to date for the resource (%v, %v)", r.APIVersion, r.Kind)
+				log.Infof("deploy/role.yaml RBAC rules already up to date for the resource (%v, %v)", r.APIVersion, r.Kind)
 				return nil
 			}
 		}

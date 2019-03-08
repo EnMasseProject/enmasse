@@ -16,7 +16,7 @@ spec:
       containers:
         - name: memcached-operator
           # Replace this with the built image name
-          image: quay.io/coreos/operator-sdk-dev:test-framework-operator
+          image: quay.io/coreos/operator-sdk-dev:test-framework-operator-runtime
           ports:
           - containerPort: 60000
             name: metrics
@@ -28,9 +28,5 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "memcached-operator"

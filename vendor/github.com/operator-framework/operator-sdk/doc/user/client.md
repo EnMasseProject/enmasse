@@ -269,7 +269,7 @@ import (
 func (r *ReconcileApp) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	...
 	
-	mem := &cachev1alpha1.Memcached{}
+	mem := &cachev1alpha.Memcached{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, mem)
 
 	...

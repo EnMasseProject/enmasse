@@ -24,12 +24,12 @@ func TestOperator(t *testing.T) {
 	s, buf := setupScaffoldAndWriter()
 	err := s.Execute(appConfig, &Operator{})
 	if err != nil {
-		t.Fatalf("Failed to execute the scaffold: (%v)", err)
+		t.Fatalf("failed to execute the scaffold: (%v)", err)
 	}
 
 	if operatorExp != buf.String() {
 		diffs := diffutil.Diff(operatorExp, buf.String())
-		t.Fatalf("Expected vs actual differs.\n%v", diffs)
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
 
@@ -37,12 +37,12 @@ func TestOperatorClusterScoped(t *testing.T) {
 	s, buf := setupScaffoldAndWriter()
 	err := s.Execute(appConfig, &Operator{IsClusterScoped: true})
 	if err != nil {
-		t.Fatalf("Failed to execute the scaffold: (%v)", err)
+		t.Fatalf("failed to execute the scaffold: (%v)", err)
 	}
 
 	if operatorClusterScopedExp != buf.String() {
 		diffs := diffutil.Diff(operatorClusterScopedExp, buf.String())
-		t.Fatalf("Expected vs actual differs.\n%v", diffs)
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
 
@@ -65,9 +65,20 @@ spec:
         - name: app-operator
           # Replace this with the built image name
           image: REPLACE_IMAGE
+          ports:
+          - containerPort: 60000
+            name: metrics
           command:
           - app-operator
           imagePullPolicy: Always
+          readinessProbe:
+            exec:
+              command:
+                - stat
+                - /tmp/operator-sdk-ready
+            initialDelaySeconds: 4
+            periodSeconds: 10
+            failureThreshold: 1
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
@@ -100,9 +111,20 @@ spec:
         - name: app-operator
           # Replace this with the built image name
           image: REPLACE_IMAGE
+          ports:
+          - containerPort: 60000
+            name: metrics
           command:
           - app-operator
           imagePullPolicy: Always
+          readinessProbe:
+            exec:
+              command:
+                - stat
+                - /tmp/operator-sdk-ready
+            initialDelaySeconds: 4
+            periodSeconds: 10
+            failureThreshold: 1
           env:
             - name: WATCH_NAMESPACE
               value: ""

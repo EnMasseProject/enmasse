@@ -28,7 +28,7 @@ import (
 func TestNewFromWatches(t *testing.T) {
 	cwd, err := os.Getwd()
 	if err != nil {
-		t.Fatalf("Unable to get working director: %v", err)
+		t.Fatalf("unable to get working director: %v", err)
 	}
 
 	validTemplate := struct {
@@ -45,11 +45,11 @@ func TestNewFromWatches(t *testing.T) {
 	}
 	f, err := os.Create("testdata/valid.yaml")
 	if err != nil {
-		t.Fatalf("Unable to create valid.yaml: %v", err)
+		t.Fatalf("unable to create valid.yaml: %v", err)
 	}
 	err = tmpl.Execute(f, validTemplate)
 	if err != nil {
-		t.Fatalf("Unable to create valid.yaml: %v", err)
+		t.Fatalf("unable to create valid.yaml: %v", err)
 		return
 	}
 
@@ -120,11 +120,9 @@ func TestNewFromWatches(t *testing.T) {
 						Group:   "app.example.com",
 						Kind:    "NoFinalizer",
 					},
-					Path:                        validTemplate.ValidPlaybook,
-					manageStatus:                true,
-					reconcilePeriod:             &twoSeconds,
-					watchDependentResources:     true,
-					watchClusterScopedResources: false,
+					Path:            validTemplate.ValidPlaybook,
+					manageStatus:    true,
+					reconcilePeriod: &twoSeconds,
 				},
 				schema.GroupVersionKind{
 					Version: "v1alpha1",
@@ -136,30 +134,13 @@ func TestNewFromWatches(t *testing.T) {
 						Group:   "app.example.com",
 						Kind:    "Playbook",
 					},
-					Path:                        validTemplate.ValidPlaybook,
-					manageStatus:                true,
-					watchDependentResources:     true,
-					watchClusterScopedResources: false,
+					Path:         validTemplate.ValidPlaybook,
+					manageStatus: true,
 					Finalizer: &Finalizer{
 						Name: "finalizer.app.example.com",
 						Role: validTemplate.ValidRole,
 						Vars: map[string]interface{}{"sentinel": "finalizer_running"},
 					},
-				},
-				schema.GroupVersionKind{
-					Version: "v1alpha1",
-					Group:   "app.example.com",
-					Kind:    "WatchClusterScoped",
-				}: runner{
-					GVK: schema.GroupVersionKind{
-						Version: "v1alpha1",
-						Group:   "app.example.com",
-						Kind:    "WatchClusterScoped",
-					},
-					Path:                        validTemplate.ValidPlaybook,
-					manageStatus:                true,
-					watchDependentResources:     true,
-					watchClusterScopedResources: true,
 				},
 				schema.GroupVersionKind{
 					Version: "v1alpha1",
@@ -240,7 +221,7 @@ func TestNewFromWatches(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			m, err := NewFromWatches(tc.path)
 			if err != nil && !tc.shouldError {
-				t.Fatalf("Error occurred unexpectedly: %v", err)
+				t.Fatalf("err: %v occurred unexpectedly", err)
 			}
 			if err != nil && tc.shouldError {
 				return
@@ -248,29 +229,29 @@ func TestNewFromWatches(t *testing.T) {
 			for k, expectedR := range tc.expectedMap {
 				r, ok := m[k]
 				if !ok {
-					t.Fatalf("Did not find expected GVK: %v", k)
+					t.Fatalf("did not find expected GVK: %v", k)
 				}
 				run, ok := r.(*runner)
 				if !ok {
-					t.Fatalf("Here: %#v", r)
+					t.Fatalf("here: %#v", r)
 				}
 				if run.Path != expectedR.Path {
-					t.Fatalf("The GVK: %v unexpected path: %v expected path: %v", k, run.Path, expectedR.Path)
+					t.Fatalf("the GVK: %v unexpected path: %v expected path: %v", k, run.Path, expectedR.Path)
 				}
 				if run.GVK != expectedR.GVK {
-					t.Fatalf("The GVK: %v\nunexpected GVK: %#v\nexpected GVK: %#v", k, run.GVK, expectedR.GVK)
+					t.Fatalf("the GVK: %v\nunexpected GVK: %#v\nexpected GVK: %#v", k, run.GVK, expectedR.GVK)
 				}
 				if run.manageStatus != expectedR.manageStatus {
-					t.Fatalf("The GVK: %v\nunexpected manageStatus:%#v\nexpected manageStatus: %#v", k, run.manageStatus, expectedR.manageStatus)
+					t.Fatalf("the GVK: %v\nunexpected manageStatus:%#v\nexpected manageStatus: %#v", k, run.manageStatus, expectedR.manageStatus)
 				}
 				if run.Finalizer != expectedR.Finalizer {
 					if run.Finalizer.Name != expectedR.Finalizer.Name || run.Finalizer.Playbook != expectedR.Finalizer.Playbook || run.Finalizer.Role != expectedR.Finalizer.Role || reflect.DeepEqual(run.Finalizer.Vars["sentinel"], expectedR.Finalizer.Vars["sentininel"]) {
-						t.Fatalf("The GVK: %v\nunexpected finalizer: %#v\nexpected finalizer: %#v", k, run.Finalizer, expectedR.Finalizer)
+						t.Fatalf("the GVK: %v\nunexpected finalizer: %#v\nexpected finalizer: %#v", k, run.Finalizer, expectedR.Finalizer)
 					}
 				}
 				if expectedR.reconcilePeriod != nil {
 					if *run.reconcilePeriod != *expectedR.reconcilePeriod {
-						t.Fatalf("The GVK: %v unexpected reconcile period: %v expected reconcile period: %v", k, run.reconcilePeriod, expectedR.reconcilePeriod)
+						t.Fatalf("the GVK: %v unexpected reconcile period: %v expected reconcile period: %v", k, run.reconcilePeriod, expectedR.reconcilePeriod)
 					}
 				}
 			}
