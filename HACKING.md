@@ -216,13 +216,13 @@ container.
 #### NodeJS components
 
 If you have a NodeJS component running in a pod that you wish to debug, temporarily edit the deployment and add the
-NodeJS debug option `--debug` to a `_NODE_OPTIONS` environment variable to the container.  By default, NodeJS
-will listen on port 5858.
+NodeJS debug option `--inspect` to a `_NODE_OPTIONS` environment variable to the container.  By default, NodeJS
+will listen on port 9229.
 
 ```yaml
 - env:
  - name: _NODE_OPTIONS
-   value: --debug
+   value: --inspect
 ```
 
 #### Port Forwarding
