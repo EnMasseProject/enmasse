@@ -37,3 +37,28 @@ class HelloWorld(MessagingHandler):
 Container(HelloWorld("amqps://_messaging-route-hostname_:443", "myqueue")).run()
 ----
 
+== Known issue with hierarchical topics
+
+A known issue exists where creating a multicast topic in {ProductName} causes the {BrokerName} to instead create it as an anycast topic.
+
+The workaround for this issue involves setting the capability topic in the source.
+
+.Procedure
+
+. In the `simple_recv.py` file, add the following lines:
+
+[source,python,options="nowrap",subs="+quotes,attributes"]
+----
+class CapabilityOptions(ReceiverOption):
+    def apply(self, receiver):
+        receiver.source.capabilities.put_object(symbol("topic"))
+----
+
+. Modify the following line to add `options=CapabilityOptions()`:
+
+[source,python,options="nowrap",subs="+quotes,attributes"]
+----
+def on_start(self, event):
+        event.container.create_receiver(self.url, options=CapabilityOptions())
+----
+
