@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:8-11
+FROM enmasseproject/java-base:11-0
 
 RUN yum -y install openssl && yum -y clean all
 
