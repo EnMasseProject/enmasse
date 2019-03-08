@@ -6,8 +6,14 @@ package io.enmasse.systemtest.common.upgrade;
 
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -24,8 +30,8 @@ class UpgradeTest extends TestBase {
 
     @Test
     void testFunctionalityBeforeAndAfterUpgrade() throws Exception {
-        AddressSpace brokered = new AddressSpace("brokered-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        AddressSpace standard = new AddressSpace("standard-addr-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("brokered-addr-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard-addr-space", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
         List<Address> standardAddresses = getAllStandardAddresses();
         List<Address> brokeredAddresses = getAllBrokeredAddresses();
 
@@ -61,8 +67,8 @@ class UpgradeTest extends TestBase {
         } else {
             log.info("After upgrade phase");
 
-            brokered = getAddressSpace(brokered.getName());
-            standard = getAddressSpace(standard.getName());
+            brokered = getAddressSpace(brokered.getMetadata().getName());
+            standard = getAddressSpace(standard.getMetadata().getName());
 
             waitForAddressSpaceReady(brokered);
             waitForAddressSpaceReady(standard);

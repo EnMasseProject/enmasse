@@ -4,10 +4,10 @@
  */
 package io.enmasse.systemtest.resources;
 
+import io.vertx.core.json.JsonObject;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import io.vertx.core.json.JsonObject;
 
 public class BrokerInfraSpec implements InfraSpecComponent {
 
@@ -61,18 +61,18 @@ public class BrokerInfraSpec implements InfraSpecComponent {
     }
 
     public String getAddressFullPolicy() {
-		return addressFullPolicy;
-	}
+        return addressFullPolicy;
+    }
 
-	public String getStorageClassName() {
-		return storageClassName;
-	}
+    public String getStorageClassName() {
+        return storageClassName;
+    }
 
-	public Boolean getUpdatePersistentVolumeClaim() {
-		return updatePersistentVolumeClaim;
-	}
+    public Boolean getUpdatePersistentVolumeClaim() {
+        return updatePersistentVolumeClaim;
+    }
 
-	public String getRequiredValueFromResource(String resource) throws IllegalStateException {
+    public String getRequiredValueFromResource(String resource) throws IllegalStateException {
         for (InfraResource res : this.getResources()) {
             if (resource.equals(res.getName())) {
                 return res.getValue();

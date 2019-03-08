@@ -10,8 +10,8 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Disabled;
@@ -80,7 +80,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     @Test
     @Disabled("related issue: #1529")
     void testRetainedMessages() throws Exception {
-        Address topic = AddressUtils.createTopic("retained-message-topic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address topic = AddressUtils.createTopicAddressObject("retained-message-topic", DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
@@ -108,7 +108,7 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
 
     private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
 
-        Address dest = AddressUtils.createTopic(MYTOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address dest = AddressUtils.createTopicAddressObject(MYTOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(dest);
 
         IMqttClient client = mqttClientFactory.create();

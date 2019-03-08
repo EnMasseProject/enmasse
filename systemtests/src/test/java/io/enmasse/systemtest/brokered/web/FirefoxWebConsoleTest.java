@@ -8,8 +8,8 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -19,12 +19,12 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createQueue("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestCreateDeleteAddress(AddressUtils.createQueueAddressObject("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createTopic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestCreateDeleteAddress(AddressUtils.createTopicAddressObject("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test
@@ -150,8 +150,8 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
 
     @Test
     void testAddressStatus() throws Exception {
-        doTestAddressStatus(AddressUtils.createQueue("test-queue", getDefaultPlan(AddressType.QUEUE)));
-        doTestAddressStatus(AddressUtils.createTopic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestAddressStatus(AddressUtils.createQueueAddressObject("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestAddressStatus(AddressUtils.createTopicAddressObject("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test
@@ -164,9 +164,9 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
         //TODO(sdavey)
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
                         getDefaultPlan(AddressType.QUEUE)),
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
                         getDefaultPlan(AddressType.QUEUE)));
     }
 

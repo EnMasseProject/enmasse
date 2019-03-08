@@ -8,8 +8,8 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -22,13 +22,13 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createQueue("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestCreateDeleteAddress(AddressUtils.createQueueAddressObject("test-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createTopic("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestCreateDeleteAddress(AddressUtils.createTopicAddressObject("test-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 
     @Test
@@ -169,9 +169,9 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
     @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
                         getDefaultPlan(AddressType.QUEUE)),
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
                         getDefaultPlan(AddressType.QUEUE)));
     }
 

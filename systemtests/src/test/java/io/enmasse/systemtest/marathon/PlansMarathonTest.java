@@ -5,14 +5,17 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceResource;
 import io.enmasse.systemtest.standard.QueueTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,8 +63,8 @@ class PlansMarathonTest extends MarathonTestBase {
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
-        AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
-                manyAddressesPlan.getName(), AuthService.STANDARD);
+        AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
+                manyAddressesPlan.getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
@@ -71,7 +74,7 @@ class PlansMarathonTest extends MarathonTestBase {
         int destCount = 3900;
         int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createQueue("xxs-queue-" + i, xxsQueuePlan.getName()));
+            dest.add(AddressUtils.createQueueAddressObject("xxs-queue-" + i, xxsQueuePlan.getName()));
         }
         setAddresses(manyAddressesSpace, dest.toArray(new Address[0]));
 
@@ -114,8 +117,8 @@ class PlansMarathonTest extends MarathonTestBase {
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
-        AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
-                manyAddressesPlan.getName(), AuthService.STANDARD);
+        AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
+                manyAddressesPlan.getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
@@ -125,7 +128,7 @@ class PlansMarathonTest extends MarathonTestBase {
         int destCount = 3900;
         int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createQueue("xxs-queue-" + i, xxsQueuePlan.getName()));
+            dest.add(AddressUtils.createQueueAddressObject("xxs-queue-" + i, xxsQueuePlan.getName()));
         }
 
         appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Address[0]));

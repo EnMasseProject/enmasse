@@ -5,13 +5,15 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.PlansProvider;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -59,7 +61,7 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 20;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createQueue("weak-queue-" + i, weakQueuePlan.getName()));
+            dest.add(AddressUtils.createQueueAddressObject("weak-queue-" + i, weakQueuePlan.getName()));
         }
         setAddresses(dest.toArray(new Address[0]));
 

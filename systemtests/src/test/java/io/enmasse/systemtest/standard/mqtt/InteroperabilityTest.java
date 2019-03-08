@@ -11,8 +11,8 @@ import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
@@ -48,7 +48,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendMqttReceiveAmqp() throws Exception {
-        Address mqttTopic = AddressUtils.createTopic(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address mqttTopic = AddressUtils.createTopicAddressObject(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp";
@@ -78,7 +78,7 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendAmqpReceiveMqtt() throws Exception {
-        Address mqttTopic = AddressUtils.createTopic(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address mqttTopic = AddressUtils.createTopicAddressObject(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send amqp, receive mqtt :)";

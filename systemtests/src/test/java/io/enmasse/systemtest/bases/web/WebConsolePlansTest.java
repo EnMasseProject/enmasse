@@ -6,11 +6,12 @@ package io.enmasse.systemtest.bases.web;
 
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressResource;
 import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
@@ -19,6 +20,8 @@ import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -83,8 +86,8 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         plansProvider.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
-        AddressSpace consoleAddrSpace = new AddressSpace("console-plan-instance", AddressSpaceType.STANDARD,
-                consolePlan.getName(), AuthService.STANDARD);
+        AddressSpace consoleAddrSpace = AddressSpaceUtils.createAddressSpaceObject("console-plan-instance", AddressSpaceType.STANDARD,
+                consolePlan.getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(consoleAddrSpace);
 
         //create new user
@@ -94,9 +97,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), addressApiClient, consoleAddrSpace, user);
         consoleWebPage.openWebConsolePage();
-        Address q1 = AddressUtils.createQueue("new-queue-instance-1", consoleQueuePlan1.getName());
-        Address t2 = AddressUtils.createTopic("new-topic-instance-2", consoleTopicPlan2.getName());
-        Address q3 = AddressUtils.createQueue("new-queue-instance-3", consoleQueuePlan3.getName());
+        Address q1 = AddressUtils.createQueueAddressObject("new-queue-instance-1", consoleQueuePlan1.getName());
+        Address t2 = AddressUtils.createTopicAddressObject("new-topic-instance-2", consoleTopicPlan2.getName());
+        Address q3 = AddressUtils.createQueueAddressObject("new-queue-instance-3", consoleQueuePlan3.getName());
         consoleWebPage.createAddressesWebConsole(q1, t2, q3);
 
         String assertMessage = "Address plan wasn't set properly";

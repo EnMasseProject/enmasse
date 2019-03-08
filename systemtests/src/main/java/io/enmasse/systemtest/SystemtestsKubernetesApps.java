@@ -212,7 +212,7 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .withNewSpec()
                 .withRules(new IngressRuleBuilder()
-                        .withHost(appName + "." +  (env.kubernetesDomain().equals(".nip.io") ?  new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io" : env.kubernetesDomain()))
+                        .withHost(appName + "." + (env.kubernetesDomain().equals(".nip.io") ? new URL(Environment.getInstance().getApiUrl()).getHost() + ".nip.io" : env.kubernetesDomain()))
                         .withNewHttp()
                         .withPaths(path)
                         .endHttp()

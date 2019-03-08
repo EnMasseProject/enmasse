@@ -4,13 +4,14 @@
  */
 package io.enmasse.systemtest.amqp;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.slf4j.Logger;
 
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,27 +41,27 @@ public class AmqpClientFactory {
         clients.clear();
     }
 
-    public AmqpClient createQueueClient(AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createQueueClient(AddressSpace addressSpace) throws Exception {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, addressSpace);
     }
 
-    public AmqpClient createQueueClient() throws UnknownHostException, InterruptedException {
+    public AmqpClient createQueueClient() throws Exception {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
-    public AmqpClient createTopicClient(AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createTopicClient(AddressSpace addressSpace) throws Exception {
         return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, addressSpace);
     }
 
-    public AmqpClient createTopicClient() throws UnknownHostException, InterruptedException {
+    public AmqpClient createTopicClient() throws Exception {
         return createClient(new TopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
-    public AmqpClient createDurableTopicClient() throws UnknownHostException, InterruptedException {
+    public AmqpClient createDurableTopicClient() throws Exception {
         return createClient(new DurableTopicTerminusFactory(), ProtonQoS.AT_LEAST_ONCE, defaultAddressSpace);
     }
 
-    public AmqpClient createAddressClient(AddressSpace addressSpace, AddressType addressType) throws InterruptedException, UnknownHostException {
+    public AmqpClient createAddressClient(AddressSpace addressSpace, AddressType addressType) throws Exception {
         switch (addressType) {
             case QUEUE:
             case ANYCAST:
@@ -74,20 +75,20 @@ public class AmqpClientFactory {
         throw new IllegalArgumentException("Unknown type " + addressType);
     }
 
-    public AmqpClient createBroadcastClient(AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createBroadcastClient(AddressSpace addressSpace) throws Exception {
         return createClient(new QueueTerminusFactory(), ProtonQoS.AT_MOST_ONCE, addressSpace);
     }
 
-    public AmqpClient createBroadcastClient() throws UnknownHostException, InterruptedException {
+    public AmqpClient createBroadcastClient() throws Exception {
         return createBroadcastClient(defaultAddressSpace);
     }
 
-    public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws UnknownHostException, InterruptedException {
+    public AmqpClient createClient(TerminusFactory terminusFactory, ProtonQoS qos, AddressSpace addressSpace) throws Exception {
         assertNotNull(addressSpace, "Address space is null");
-        Endpoint messagingEndpoint = addressSpace.getEndpointByServiceName("messaging");
+        Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
         if (messagingEndpoint == null) {
-            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging");
-            messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging");
+            messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         }
         Endpoint clientEndpoint;
         ProtonClientOptions clientOptions = new ProtonClientOptions();

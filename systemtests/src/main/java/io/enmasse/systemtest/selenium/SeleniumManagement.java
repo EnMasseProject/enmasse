@@ -5,7 +5,10 @@
 package io.enmasse.systemtest.selenium;
 
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -63,7 +66,7 @@ public class SeleniumManagement {
                     List<String> current = TestUtils.listReadyPods(Kubernetes.getInstance(), SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
                     current.removeAll(beforeRestart);
                     log.info("Following pods are in ready state {}", current);
-                    return  current.size() == beforeRestart.size();
+                    return current.size() == beforeRestart.size();
                 },
                 new TimeoutBudget(1, TimeUnit.MINUTES));
     }

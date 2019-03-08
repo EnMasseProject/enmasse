@@ -5,12 +5,15 @@
 package io.enmasse.systemtest.brokered;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.JmsProvider;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -51,7 +54,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     private void doTopicWildcardTest(String plan) throws Exception {
-        Address t0 = AddressUtils.createTopic("topic", plan);
+        Address t0 = AddressUtils.createTopicAddressObject("topic", plan);
         setAddresses(t0);
 
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
@@ -80,15 +83,15 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Address t1 = AddressUtils.createTopic("topic1", getDefaultPlan(AddressType.TOPIC));
-        Address t2 = AddressUtils.createTopic("topic2", getDefaultPlan(AddressType.TOPIC));
+        Address t1 = AddressUtils.createTopicAddressObject("topic1", getDefaultPlan(AddressType.TOPIC));
+        Address t2 = AddressUtils.createTopicAddressObject("topic2", getDefaultPlan(AddressType.TOPIC));
 
         runRestApiTest(sharedAddressSpace, t1, t2);
     }
 
     @Test
     void testMessageSubscription(JmsProvider jmsProvider) throws Exception {
-        Address addressTopic = AddressUtils.createTopic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
@@ -127,7 +130,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
-        Address addressTopic = AddressUtils.createTopic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
@@ -189,7 +192,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
-        Address addressTopic = AddressUtils.createTopic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
@@ -232,7 +235,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
-        Address addressTopic = AddressUtils.createTopic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         Context context1 = jmsProvider.createContextForShared(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials, addressTopic);
@@ -281,7 +284,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
-        Address addressTopic = AddressUtils.createTopic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         Context context1 = jmsProvider.createContextForShared(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials, addressTopic);

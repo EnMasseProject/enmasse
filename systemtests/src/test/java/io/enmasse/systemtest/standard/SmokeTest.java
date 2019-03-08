@@ -6,12 +6,12 @@ package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.DestinationPlan;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -45,11 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(smoke)
 class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private Address queue = AddressUtils.createQueue("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE);
-    private Address topic = AddressUtils.createTopic("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC);
-    private Address mqttTopic = AddressUtils.createTopic("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC);
-    private Address anycast = AddressUtils.createAnycast("smokeanycast");
-    private Address multicast = AddressUtils.createMulticast("smokemulticast");
+    private Address queue = AddressUtils.createQueueAddressObject("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE);
+    private Address topic = AddressUtils.createTopicAddressObject("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC);
+    private Address mqttTopic = AddressUtils.createTopicAddressObject("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC);
+    private Address anycast = AddressUtils.createAnycastAddressObject("smokeanycast");
+    private Address multicast = AddressUtils.createMulticastAddressObject("smokemulticast");
 
     @BeforeEach
     void createAddresses() throws Exception {

@@ -7,6 +7,7 @@ package io.enmasse.systemtest.bases;
 
 import com.google.common.collect.Ordering;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
@@ -23,7 +24,6 @@ import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
@@ -31,6 +31,8 @@ import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.timemeasuring.Operation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
@@ -57,6 +59,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
@@ -138,10 +141,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
-        List<AddressSpace> addrSpacesResponse = new ArrayList<>();
         ArrayList<AddressSpace> spaces = new ArrayList<>();
         for (AddressSpace addressSpace : addressSpaces) {
-            if (!TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+            if (!AddressSpaceUtils.existAddressSpace(addressApiClient, addressSpace.getMetadata().getName())) {
                 log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
                 spaces.add(addressSpace);
                 if (!addressSpace.equals(getSharedAddressSpace())) {
@@ -149,49 +151,36 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 }
             } else {
                 log.warn("Address space '" + addressSpace + "' already exists.");
-                addrSpacesResponse.add(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()));
+                AddressSpaceUtils.getAddressSpaceObject(addressApiClient, addressSpace.getMetadata().getName());
             }
         }
         addressApiClient.createAddressSpaceList(spaces.toArray(new AddressSpace[0]));
-        List<AddressSpace> results = TestUtils.getAddressSpacesObjects(addressApiClient);
-        for (AddressSpace addressSpace : results) {
+        for (AddressSpace addressSpace : spaces) {
+            AddressSpaceUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+            AddressSpaceUtils.syncAddressSpaceObject(addressSpace, addressApiClient);
             logCollector.startCollecting(addressSpace);
-            addrSpacesResponse.add(TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace));
+            log.info("Address space is ready for use - {}", addressSpace);
         }
-        Arrays.stream(addressSpaces).forEach(originalAddrSpace -> {
-            originalAddrSpace.setInfraUuid(addrSpacesResponse.stream().filter(
-                    resposeAddrSpace -> resposeAddrSpace.getName().equals(originalAddrSpace.getName())).findFirst().get().getInfraUuid());
-            if (originalAddrSpace.getEndpoints().isEmpty()) {
-                originalAddrSpace.setEndpoints(addrSpacesResponse.stream().filter(
-                        resposeAddrSpace -> resposeAddrSpace.getName().equals(originalAddrSpace.getName())).findFirst().get().getEndpoints());
-                log.info(String.format("Address-space '%s' endpoints successfully set", originalAddrSpace.getName()));
-            }
-            log.info(String.format("Address-space successfully created: %s", originalAddrSpace));
-        });
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     protected void createAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
-        AddressSpace addrSpaceResponse;
-        if (!TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
+        if (!AddressSpaceUtils.existAddressSpace(apiClient, addressSpace.getMetadata().getName())) {
             log.info("Address space '{}' doesn't exist and will be created.", addressSpace);
             apiClient.createAddressSpace(addressSpace);
-            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(apiClient, addressSpace);
+            AddressSpaceUtils.waitForAddressSpaceReady(apiClient, addressSpace);
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
         } else {
-            addrSpaceResponse = TestUtils.getAddressSpaceObject(apiClient, addressSpace.getName());
+            AddressSpaceUtils.waitForAddressSpaceReady(apiClient, addressSpace);
             log.info("Address space '" + addressSpace + "' already exists.");
         }
-
-        addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
-        log.info("Address-space '{}' endpoints successfully set.", addressSpace.getName());
-
-        addressSpace.setInfraUuid(addrSpaceResponse.getInfraUuid());
-        log.info("Address-space successfully created: '{}'", addressSpace);
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace, addressApiClient);
+        logCollector.startCollecting(addressSpace);
+        log.info("Address space is ready for use - {}", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
@@ -212,17 +201,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected static void deleteAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
-        if (TestUtils.existAddressSpace(apiClient, addressSpace.getName())) {
-            TestUtils.deleteAddressSpaceAndWait(apiClient, kubernetes, addressSpace, logCollector);
+        if (AddressSpaceUtils.existAddressSpace(apiClient, addressSpace.getMetadata().getName())) {
+            AddressSpaceUtils.deleteAddressSpaceAndWait(apiClient, kubernetes, addressSpace, logCollector);
         } else {
             log.info("Address space '" + addressSpace + "' doesn't exists!");
         }
     }
 
     protected void deleteAllAddressSpaces() throws Exception {
-        TestUtils.deleteAllAddressSpaces(addressApiClient, logCollector);
+        AddressSpaceUtils.deleteAllAddressSpaces(addressApiClient, logCollector);
         for (AddressSpace addressSpace : addressSpaceList) {
-            TestUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+            AddressSpaceUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
         }
     }
 
@@ -236,39 +225,33 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_ADDRESS_SPACE);
-        AddressSpace addrSpaceResponse;
-        if (TestUtils.existAddressSpace(addressApiClient, addressSpace.getName())) {
+        if (AddressSpaceUtils.existAddressSpace(addressApiClient, addressSpace.getMetadata().getName())) {
             log.info("Address space '{}' exists and will be updated.", addressSpace);
-            final String currentResourceVersion = addressApiClient.getAddressSpace(addressSpace.getName()).getJsonObject("metadata").getString("resourceVersion");
+            final String currentResourceVersion = addressApiClient.getAddressSpace(addressSpace.getMetadata().getName()).getJsonObject("metadata").getString("resourceVersion");
             addressApiClient.replaceAddressSpace(addressSpace);
-            TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressApiClient, addressSpace.getName(), currentResourceVersion);
+            TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressApiClient, addressSpace.getMetadata().getName(), currentResourceVersion);
             if (waitForPlanApplied) {
-                TestUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
+                AddressSpaceUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
             }
-            addrSpaceResponse = TestUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+            AddressSpaceUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
 
             if (!addressSpace.equals(getSharedAddressSpace())) {
                 addressSpaceList.add(addressSpace);
             }
         } else {
-            addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
+            AddressSpaceUtils.getAddressSpaceObject(addressApiClient, addressSpace.getMetadata().getName());
             log.info("Address space '{}' does not exists.", addressSpace);
         }
-
-        addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
-        log.info("Address-space '{}' endpoints successfully set.", addressSpace.getName());
-
-        addressSpace.setInfraUuid(addrSpaceResponse.getInfraUuid());
-        log.info("Address-space successfully updated: '{}'", addressSpace);
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace, addressApiClient);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     protected AddressSpace getAddressSpace(String name) throws Exception {
-        return TestUtils.getAddressSpaceObject(addressApiClient, name);
+        return AddressSpaceUtils.getAddressSpaceObject(addressApiClient, name);
     }
 
     protected List<AddressSpace> getAddressSpaces() throws Exception {
-        return TestUtils.getAddressSpacesObjects(addressApiClient);
+        return AddressSpaceUtils.getAddressSpacesObjects(addressApiClient);
     }
 
     protected void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
@@ -276,17 +259,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void waitForAddressSpaceReady(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
-        TestUtils.waitForAddressSpaceReady(apiClient, addressSpace);
+        AddressSpaceUtils.waitForAddressSpaceReady(apiClient, addressSpace);
     }
 
     protected void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
-        TestUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
+        AddressSpaceUtils.waitForAddressSpacePlanApplied(addressApiClient, addressSpace);
     }
 
-    protected boolean reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {
-        AddressSpace addrSpaceResponse = TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName());
-        addressSpace.setEndpoints(addrSpaceResponse.getEndpoints());
-        return !addrSpaceResponse.getEndpoints().isEmpty();
+    protected void reloadAddressSpaceEndpoints(AddressSpace addressSpace) throws Exception {
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace, addressApiClient);
     }
 
     //================================================================================================
@@ -296,7 +277,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void deleteAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddresses");
-        TestUtils.delete(addressApiClient, addressSpace, destinations);
+        AddressUtils.delete(addressApiClient, addressSpace, destinations);
     }
 
     protected void appendAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
@@ -314,13 +295,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, TimeoutBudget timeout, Address... destinations) throws Exception {
-        TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, destinations);
+        AddressUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, destinations);
         logCollector.collectConfigMaps();
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Address... destinations) throws Exception {
         TimeoutBudget timeout = new TimeoutBudget(10, TimeUnit.MINUTES);
-        TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
+        AddressUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
         logCollector.collectConfigMaps();
     }
 
@@ -350,21 +331,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void setAddresses(AddressSpace addressSpace, TimeoutBudget timeout, int expectedCode, Address... addresses) throws Exception {
-        TestUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, addresses);
+        AddressUtils.setAddresses(addressApiClient, kubernetes, timeout, addressSpace, true, expectedCode, addresses);
         logCollector.collectConfigMaps();
     }
 
     protected void setAddresses(AddressSpace addressSpace, AddressApiClient apiClient, Address... addresses) throws Exception {
-        TestUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(10, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, addresses);
+        AddressUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(10, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, addresses);
         logCollector.collectConfigMaps();
     }
 
     protected void replaceAddress(AddressSpace addressSpace, Address destination) throws Exception {
-        TestUtils.replaceAddress(addressApiClient, addressSpace, destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
-    }
-
-    protected JsonObject sendRestApiRequest(HttpMethod method, URL url, int expectedCode, Optional<JsonObject> payload) throws Exception {
-        return TestUtils.sendRestApiRequest(addressApiClient, method, url, expectedCode, payload);
+        AddressUtils.replaceAddress(addressApiClient, addressSpace, destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
     }
 
     /**
@@ -375,7 +352,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @throws Exception
      */
     protected Future<List<String>> getAddresses(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, addressSpace, addressName, new ArrayList<>());
+        return AddressUtils.getAddresses(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
     /**
@@ -386,7 +363,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @throws Exception
      */
     protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName, Optional<HashMap<String, String>> requestParams) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, requestParams, new ArrayList<>());
+        return AddressUtils.getAddressesObjects(addressApiClient, addressSpace, addressName, requestParams, new ArrayList<>());
     }
 
     protected Future<List<Address>> getAddressesObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
@@ -405,17 +382,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected JsonObject createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
-        log.info("User {} in address space {} will be created", credentials, addressSpace.getName());
+        log.info("User {} in address space {} will be created", credentials, addressSpace.getMetadata().getName());
         if (!userExist(addressSpace, credentials.getUsername())) {
-            return getUserApiClient().createUser(addressSpace.getName(), credentials);
+            return getUserApiClient().createUser(addressSpace.getMetadata().getName(), credentials);
         }
         return new JsonObject();
     }
 
     protected JsonObject createUser(AddressSpace addressSpace, User user) throws Exception {
-        log.info("User {} in address space {} will be created", user, addressSpace.getName());
+        log.info("User {} in address space {} will be created", user, addressSpace.getMetadata().getName());
         if (!userExist(addressSpace, user.getUsername())) {
-            return getUserApiClient().createUser(addressSpace.getName(), user);
+            return getUserApiClient().createUser(addressSpace.getMetadata().getName(), user);
         }
         return new JsonObject();
     }
@@ -430,13 +407,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected JsonObject createUserFederated(AddressSpace addressSpace, User user) throws Exception {
-        log.info("Federated user {} in address space {} will be created", user.getUsername(), addressSpace.getName());
+        log.info("Federated user {} in address space {} will be created", user.getUsername(), addressSpace.getMetadata().getName());
         if (!userExist(addressSpace, user.getUsername())) {
             KubeCMDClient.createOcUser(user.getUsername());
             String userID = KubeCMDClient.getOpenshiftUserId(user.getUsername());
             return getUserApiClient().createUser(
-                    addressSpace.getName(),
-                    user.toJson(addressSpace.getName(), user.getUsername(), user.getUsername(), userID),
+                    addressSpace.getMetadata().getName(),
+                    user.toJson(addressSpace.getMetadata().getName(), user.getUsername(), user.getUsername(), userID),
                     HTTP_CREATED);
         }
         return new JsonObject();
@@ -457,23 +434,23 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected JsonObject createUserServiceaccount(AddressSpace addressSpace, User user, String namespace) throws Exception {
-        log.info("ServiceAccount user {} in address space {} will be created", user.getUsername(), addressSpace.getName());
+        log.info("ServiceAccount user {} in address space {} will be created", user.getUsername(), addressSpace.getMetadata().getName());
         if (!userExist(addressSpace, user.getUsername())) {
             String serviceaccountName = kubernetes.createServiceAccount(user.getUsername(), namespace);
             user.setUsername(serviceaccountName);
-            return getUserApiClient().createUser(addressSpace.getName(), user);
+            return getUserApiClient().createUser(addressSpace.getMetadata().getName(), user);
         }
         return new JsonObject();
     }
 
     protected JsonObject updateUser(AddressSpace addressSpace, User user) throws Exception {
-        log.info("User {} in address space {} will be updated", user, addressSpace.getName());
-        return getUserApiClient().updateUser(addressSpace.getName(), user);
+        log.info("User {} in address space {} will be updated", user, addressSpace.getMetadata().getName());
+        return getUserApiClient().updateUser(addressSpace.getMetadata().getName(), user);
     }
 
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
-        log.info("User {} in address space {} will be removed", username, addressSpace.getName());
-        getUserApiClient().deleteUser(addressSpace.getName(), username);
+        log.info("User {} in address space {} will be removed", username, addressSpace.getMetadata().getName());
+        getUserApiClient().deleteUser(addressSpace.getMetadata().getName(), username);
     }
 
     protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
@@ -496,13 +473,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected boolean userExist(AddressSpace addressSpace, String username) throws Exception {
-        String id = String.format("%s.%s", addressSpace.getName(), username);
-        JsonObject response = getUserApiClient().getUserList(addressSpace.getName());
-        log.info("User list for {}: {}", addressSpace.getName(), response.toString());
+        String id = String.format("%s.%s", addressSpace.getMetadata().getName(), username);
+        JsonObject response = getUserApiClient().getUserList(addressSpace.getMetadata().getName());
+        log.info("User list for {}: {}", addressSpace.getMetadata().getName(), response.toString());
         JsonArray users = response.getJsonArray("items");
         for (Object user : users) {
             if (((JsonObject) user).getJsonObject("metadata").getString("name").equals(id)) {
-                log.info("User {} in addressspace {} already exists", username, addressSpace.getName());
+                log.info("User {} in addressspace {} already exists", username, addressSpace.getMetadata().getName());
                 return true;
             }
         }
@@ -521,17 +498,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected Future<SchemaData> getSchema() throws Exception {
         return TestUtils.getSchema(addressApiClient);
-    }
-
-    /**
-     * give you a list of objects of all deployed addresses (or single deployed address)
-     *
-     * @param addressName name of single address
-     * @return list of Destinations
-     * @throws Exception
-     */
-    protected Future<List<Address>> getDestinationsObjects(AddressSpace addressSpace, Optional<String> addressName) throws Exception {
-        return TestUtils.getDestinationsObjects(addressApiClient, addressSpace, addressName, new ArrayList<>());
     }
 
     protected void scaleKeycloak(int numReplicas) throws Exception {
@@ -556,7 +522,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected boolean isBrokered(AddressSpace addressSpace) {
-        return addressSpace.getType().equals(AddressSpaceType.BROKERED);
+        return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
     }
 
     protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations) throws Exception {
@@ -608,16 +574,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    protected Endpoint getMessagingRoute(AddressSpace addressSpace) {
-        Endpoint messagingEndpoint = addressSpace.getEndpointByServiceName("messaging");
+    protected Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
+        Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
         if (messagingEndpoint == null) {
-            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "messaging-" + addressSpace.getInfraUuid());
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
             messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName);
         }
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
         } else {
-            return kubernetes.getEndpoint("messaging-" + addressSpace.getInfraUuid(), "amqps");
+            return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), "amqps");
         }
     }
 
@@ -626,9 +592,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {
-        Endpoint consoleEndpoint = addressSpace.getEndpointByServiceName("console");
+        Endpoint consoleEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "console");
         if (consoleEndpoint == null) {
-            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "console");
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "console");
             consoleEndpoint = kubernetes.getExternalEndpoint(externalEndpointName);
         }
         String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
@@ -694,7 +660,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             queueClient = amqpClientFactory.createQueueClient(addressSpace);
             queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(managementCredentials));
             String replyQueueName = "reply-queue";
-            Address replyQueue = AddressUtils.createQueue(replyQueueName, getDefaultPlan(AddressType.QUEUE));
+            Address replyQueue = AddressUtils.createQueueAddressObject(replyQueueName, getDefaultPlan(AddressType.QUEUE));
             appendAddresses(addressSpace, replyQueue);
 
             boolean done = false;
@@ -732,11 +698,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void waitForRouterReplicas(AddressSpace addressSpace, int expectedReplicas) throws
-            InterruptedException {
+            Exception {
         TimeoutBudget budget = new TimeoutBudget(3, TimeUnit.MINUTES);
         Map<String, String> labels = new HashMap<>();
         labels.put("name", "qdrouterd");
-        labels.put("infraUuid", addressSpace.getInfraUuid());
+        labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         TestUtils.waitForNReplicas(kubernetes, expectedReplicas, labels, budget);
     }
 
@@ -788,13 +754,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected ArrayList<Address> generateTopicsList(String prefix, IntStream range) {
         ArrayList<Address> addresses = new ArrayList<>();
-        range.forEach(i -> addresses.add(AddressUtils.createTopic(prefix + i, getDefaultPlan(AddressType.QUEUE))));
+        range.forEach(i -> addresses.add(AddressUtils.createTopicAddressObject(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
     protected ArrayList<Address> generateQueueList(String prefix, IntStream range) {
         ArrayList<Address> addresses = new ArrayList<>();
-        range.forEach(i -> addresses.add(AddressUtils.createQueue(prefix + i, getDefaultPlan(AddressType.QUEUE))));
+        range.forEach(i -> addresses.add(AddressUtils.createQueueAddressObject(prefix + i, getDefaultPlan(AddressType.QUEUE))));
         return addresses;
     }
 
@@ -802,16 +768,16 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         ArrayList<Address> addresses = new ArrayList<>();
         range.forEach(i -> {
             if (i % 2 == 0) {
-                addresses.add(AddressUtils.createTopic(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
+                addresses.add(AddressUtils.createTopicAddressObject(String.format("topic-%s-%d", infix, i), getDefaultPlan(AddressType.TOPIC)));
             } else {
-                addresses.add(AddressUtils.createQueue(String.format("queue-%s-%d", infix, i), getDefaultPlan(AddressType.QUEUE)));
+                addresses.add(AddressUtils.createQueueAddressObject(String.format("queue-%s-%d", infix, i), getDefaultPlan(AddressType.QUEUE)));
             }
         });
         return addresses;
     }
 
     protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, UserCredentials
-            credentials, String address, String content, int count, boolean logToOutput) {
+            credentials, String address, String content, int count, boolean logToOutput) throws Exception {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
@@ -864,7 +830,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach senders to destinations (for N-th destination is attached N+1 senders)
      */
-    List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Address> destinations) {
+    List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Address> destinations) throws Exception {
         List<AbstractClient> senders = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
@@ -896,7 +862,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach receivers to destinations (for N-th destination is attached N+1 senders)
      */
-    List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations) {
+    List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations) throws Exception {
         List<AbstractClient> receivers = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
@@ -927,7 +893,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected AbstractClient attachConnector(AddressSpace addressSpace, Address destination,
                                              int connectionCount,
-                                             int senderCount, int receiverCount, UserCredentials credentials) {
+                                             int senderCount, int receiverCount, UserCredentials credentials) throws Exception {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
         arguments.put(ClientArgument.TIMEOUT, "120");
@@ -1007,10 +973,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected List<Address> getAddressesWildcard() {
-        Address queue = AddressUtils.createQueue("queue/1234", getDefaultPlan(AddressType.QUEUE));
-        Address queue2 = AddressUtils.createQueue("queue/ABCD", getDefaultPlan(AddressType.QUEUE));
-        Address topic = AddressUtils.createTopic("topic/2345", getDefaultPlan(AddressType.TOPIC));
-        Address topic2 = AddressUtils.createTopic("topic/ABCD", getDefaultPlan(AddressType.TOPIC));
+        Address queue = AddressUtils.createQueueAddressObject("queue/1234", getDefaultPlan(AddressType.QUEUE));
+        Address queue2 = AddressUtils.createQueueAddressObject("queue/ABCD", getDefaultPlan(AddressType.QUEUE));
+        Address topic = AddressUtils.createTopicAddressObject("topic/2345", getDefaultPlan(AddressType.TOPIC));
+        Address topic2 = AddressUtils.createTopicAddressObject("topic/ABCD", getDefaultPlan(AddressType.TOPIC));
 
         return Arrays.asList(queue, queue2, topic, topic2);
     }
@@ -1089,18 +1055,18 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected List<Address> getAllStandardAddresses() {
         return Arrays.asList(
-                AddressUtils.createQueue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE),
-                AddressUtils.createTopic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createQueue("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE),
-                AddressUtils.createTopic("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC),
-                AddressUtils.createAnycast("test-anycast"),
-                AddressUtils.createMulticast("test-multicast"));
+                AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE),
+                AddressUtils.createTopicAddressObject("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC),
+                AddressUtils.createQueueAddressObject("test-queue-sharded", DestinationPlan.STANDARD_LARGE_QUEUE),
+                AddressUtils.createTopicAddressObject("test-topic-sharded", DestinationPlan.STANDARD_LARGE_TOPIC),
+                AddressUtils.createAnycastAddressObject("test-anycast"),
+                AddressUtils.createMulticastAddressObject("test-multicast"));
     }
 
     protected List<Address> getAllBrokeredAddresses() {
         return Arrays.asList(
-                AddressUtils.createQueue("test-queue", DestinationPlan.BROKERED_QUEUE),
-                AddressUtils.createTopic("test-topic", DestinationPlan.BROKERED_TOPIC));
+                AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE),
+                AddressUtils.createTopicAddressObject("test-topic", DestinationPlan.BROKERED_TOPIC));
     }
 
     protected void sendDurableMessages(AddressSpace addressSpace, Address destination,

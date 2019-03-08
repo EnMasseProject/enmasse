@@ -9,8 +9,8 @@ import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -23,33 +23,33 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createQueue("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE),
-                AddressUtils.createQueue("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE));
+        doTestCreateDeleteAddress(AddressUtils.createQueueAddressObject("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE),
+                AddressUtils.createQueueAddressObject("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createTopic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopic("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
+        doTestCreateDeleteAddress(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
+                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteDurableSubscription() throws Exception {
-        doTestCreateDeleteDurableSubscription(AddressUtils.createTopic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopic("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
+        doTestCreateDeleteDurableSubscription(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
+                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
     }
 
     @Test
     void testCreateDeleteAnycast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createAnycast("test-anycast-chrome"));
+        doTestCreateDeleteAddress(AddressUtils.createAnycastAddressObject("test-anycast-chrome"));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteMulticast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createMulticast("test-multicast-chrome"));
+        doTestCreateDeleteAddress(AddressUtils.createMulticastAddressObject("test-multicast-chrome"));
     }
 
     @Test
@@ -189,9 +189,9 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
                         getDefaultPlan(AddressType.QUEUE)),
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
                         getDefaultPlan(AddressType.QUEUE)));
     }
 

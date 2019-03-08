@@ -10,8 +10,8 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -83,9 +83,9 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testColocatedQueues() throws Exception {
-        Address q1 = AddressUtils.createQueue("queue1", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Address q2 = AddressUtils.createQueue("queue2", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Address q3 = AddressUtils.createQueue("queue3", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address q1 = AddressUtils.createQueueAddressObject("queue1", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address q2 = AddressUtils.createQueueAddressObject("queue2", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address q3 = AddressUtils.createQueueAddressObject("queue3", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(q1, q2, q3);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -96,8 +96,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedQueues() throws Exception {
-        Address q1 = AddressUtils.createQueue("shardedQueue1", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Address q2 = AddressUtils.createAddress("shardedQueue2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address q1 = AddressUtils.createQueueAddressObject("shardedQueue1", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address q2 = AddressUtils.createAddressObject("shardedQueue2", null, sharedAddressSpace.getMetadata().getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
         addressApiClient.createAddress(q2);
 
         appendAddresses(q1);
@@ -111,8 +111,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Address q1 = AddressUtils.createQueue("queue1", getDefaultPlan(AddressType.QUEUE));
-        Address q2 = AddressUtils.createQueue("queue2", getDefaultPlan(AddressType.QUEUE));
+        Address q1 = AddressUtils.createQueueAddressObject("queue1", getDefaultPlan(AddressType.QUEUE));
+        Address q2 = AddressUtils.createQueueAddressObject("queue2", getDefaultPlan(AddressType.QUEUE));
 
         runRestApiTest(sharedAddressSpace, q1, q2);
     }
@@ -121,10 +121,10 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Tag(nonPR)
     void testCreateDeleteQueue() throws Exception {
         List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
-        Address destExtra = AddressUtils.createQueue("ext-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address destExtra = AddressUtils.createQueueAddressObject("ext-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
 
         List<Address> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(AddressUtils.createQueue(queue, DestinationPlan.STANDARD_SMALL_QUEUE)));
+        queues.forEach(queue -> addresses.add(AddressUtils.createQueueAddressObject(queue, DestinationPlan.STANDARD_SMALL_QUEUE)));
 
         AmqpClient client = amqpClientFactory.createQueueClient();
         for (Address address : addresses) {
@@ -147,7 +147,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testMessagePriorities() throws Exception {
-        Address dest = AddressUtils.createQueue("messagePrioritiesQueue", getDefaultPlan(AddressType.QUEUE));
+        Address dest = AddressUtils.createQueueAddressObject("messagePrioritiesQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -182,15 +182,15 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testScaledown() throws Exception {
-        Address before = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Address after = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address before = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address after = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
         testScale(before, after);
     }
 
     @Test
     void testScaleup() throws Exception {
-        Address before = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Address after = AddressUtils.createQueue("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address before = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address after = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
         testScale(before, after);
     }
 
@@ -268,7 +268,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             //define destinations
             Address[] destinations = new Address[destinationCount];
             for (int destI = 0; destI < destinationCount; destI++) {
-                destinations[destI] = AddressUtils.createQueue(String.format("%s.%s.%s", destNamePrefix, i, destI), getDefaultPlan(AddressType.QUEUE));
+                destinations[destI] = AddressUtils.createQueueAddressObject(String.format("%s.%s.%s", destNamePrefix, i, destI), getDefaultPlan(AddressType.QUEUE));
             }
 
             //run async: append addresses; create users; send/receive messages
@@ -296,7 +296,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
-        Address addressQueue = AddressUtils.createQueue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,

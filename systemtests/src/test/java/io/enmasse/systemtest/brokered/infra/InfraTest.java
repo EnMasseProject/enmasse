@@ -4,11 +4,16 @@
  */
 package io.enmasse.systemtest.brokered.infra;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -41,16 +46,16 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
         AddressSpacePlanDefinition exampleSpacePlan = new AddressSpacePlanDefinition("example-space-plan",
                 testInfra.getName(),
                 AddressSpaceType.BROKERED,
-                Arrays.asList(new AddressSpaceResource("broker", 3.0)),
+                Collections.singletonList(new AddressSpaceResource("broker", 3.0)),
                 Arrays.asList(exampleAddressPlan));
 
         plansProvider.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new AddressSpace("example-address-space", AddressSpaceType.BROKERED,
-                exampleSpacePlan.getName(), AuthService.STANDARD);
+        exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.BROKERED,
+                exampleSpacePlan.getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(exampleAddressSpace);
 
-        setAddresses(exampleAddressSpace, AddressUtils.createTopic("example-queue", exampleAddressPlan.getName()));
+        setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getName()));
 
         assertInfra("512Mi", Optional.of("1Gi"), "512Mi");
     }
@@ -80,12 +85,12 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         AddressSpacePlanDefinition exampleSpacePlan = new AddressSpacePlanDefinition("example-space-plan-2",
                 infra.getName(), AddressSpaceType.BROKERED,
-                Arrays.asList(new AddressSpaceResource("broker", 3.0)),
-                Arrays.asList(exampleAddressPlan));
+                Collections.singletonList(new AddressSpaceResource("broker", 3.0)),
+                Collections.singletonList(exampleAddressPlan));
 
         plansProvider.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace.setPlan(exampleSpacePlan.getName());
+        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getName()).endSpec().done();
         replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(

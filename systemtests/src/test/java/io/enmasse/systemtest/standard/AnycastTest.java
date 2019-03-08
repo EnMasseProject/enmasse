@@ -48,7 +48,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     void testMultipleReceivers() throws Exception {
-        Address dest = AddressUtils.createAnycast("anycastMultipleReceivers");
+        Address dest = AddressUtils.createAnycastAddressObject("anycastMultipleReceivers");
         setAddresses(dest);
         AmqpClient client1 = amqpClientFactory.createQueueClient();
         AmqpClient client2 = amqpClientFactory.createQueueClient();
@@ -59,8 +59,8 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     void testRestApi() throws Exception {
-        Address a1 = AddressUtils.createAnycast("anycastRest1");
-        Address a2 = AddressUtils.createAnycast("anycastRest2");
+        Address a1 = AddressUtils.createAnycastAddressObject("anycastRest1");
+        Address a2 = AddressUtils.createAnycastAddressObject("anycastRest2");
 
         runRestApiTest(sharedAddressSpace, a1, a2);
     }
@@ -71,7 +71,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 210;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createAnycast("medium-anycast-" + i, "standard-medium-anycast"));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
+            dest.add(AddressUtils.createAnycastAddressObject("medium-anycast-" + i, "standard-medium-anycast"));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
         }
         setAddresses(dest.toArray(new Address[0]));
 //        TODO once getAddressPlanConfig() method will be implemented

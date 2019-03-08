@@ -4,11 +4,16 @@
  */
 package io.enmasse.systemtest.standard.infra;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -57,11 +62,11 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         plansProvider.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new AddressSpace("example-address-space", AddressSpaceType.STANDARD,
-                exampleSpacePlan.getName(), AuthService.STANDARD);
+        exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.STANDARD,
+                exampleSpacePlan.getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(exampleAddressSpace);
 
-        setAddresses(exampleAddressSpace, AddressUtils.createTopic("example-queue", exampleAddressPlan.getName()));
+        setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getName()));
 
         assertInfra("512Mi", Optional.of("1Gi"), 2, "256Mi", "512Mi");
 
@@ -101,7 +106,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                 Arrays.asList(exampleAddressPlan));
         plansProvider.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace.setPlan(exampleSpacePlan.getName());
+        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getName()).endSpec().done();
         replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(

@@ -6,7 +6,9 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -33,7 +35,6 @@ import java.util.stream.Collectors;
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
@@ -57,9 +58,9 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testColocatedTopics() throws Exception {
-        Address t1 = AddressUtils.createTopic("col-topic1", DestinationPlan.STANDARD_SMALL_TOPIC);
-        Address t2 = AddressUtils.createTopic("col-topic2", DestinationPlan.STANDARD_SMALL_TOPIC);
-        Address t3 = AddressUtils.createTopic("col-topic3", DestinationPlan.STANDARD_SMALL_TOPIC);
+        Address t1 = AddressUtils.createTopicAddressObject("col-topic1", DestinationPlan.STANDARD_SMALL_TOPIC);
+        Address t2 = AddressUtils.createTopicAddressObject("col-topic2", DestinationPlan.STANDARD_SMALL_TOPIC);
+        Address t3 = AddressUtils.createTopicAddressObject("col-topic3", DestinationPlan.STANDARD_SMALL_TOPIC);
         setAddresses(t1, t2, t3);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -70,8 +71,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedTopic() throws Exception {
-        Address t1 = AddressUtils.createTopic("shardedTopic1", DestinationPlan.STANDARD_LARGE_TOPIC);
-        Address t2 = AddressUtils.createAddress("shardedTopic2", null, sharedAddressSpace.getName(), "sharded_addr_2", AddressType.TOPIC.toString(), DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address t1 = AddressUtils.createTopicAddressObject("shardedTopic1", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address t2 = AddressUtils.createAddressObject("shardedTopic2", null, sharedAddressSpace.getMetadata().getName(), "sharded_addr_2", AddressType.TOPIC.toString(), DestinationPlan.STANDARD_LARGE_TOPIC);
         addressApiClient.createAddress(t2);
 
         appendAddresses(t1);
@@ -85,8 +86,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Address t1 = AddressUtils.createTopic("topicRest1", getDefaultPlan(AddressType.TOPIC));
-        Address t2 = AddressUtils.createTopic("topicRest2", getDefaultPlan(AddressType.TOPIC));
+        Address t1 = AddressUtils.createTopicAddressObject("topicRest1", getDefaultPlan(AddressType.TOPIC));
+        Address t2 = AddressUtils.createTopicAddressObject("topicRest2", getDefaultPlan(AddressType.TOPIC));
 
         runRestApiTest(sharedAddressSpace, t1, t2);
     }
@@ -94,7 +95,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testMessageSelectorsAppProperty() throws Exception {
-        Address selTopic = AddressUtils.createTopic("selectorTopicAppProp", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address selTopic = AddressUtils.createTopicAddressObject("selectorTopicAppProp", DestinationPlan.STANDARD_LARGE_TOPIC);
         String linkName = "linkSelectorTopicAppProp";
         setAddresses(selTopic);
 
@@ -197,7 +198,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testMessageSelectorsProperty() throws Exception {
-        Address selTopic = AddressUtils.createTopic("selectorTopicProp", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address selTopic = AddressUtils.createTopicAddressObject("selectorTopicProp", DestinationPlan.STANDARD_LARGE_TOPIC);
         String linkName = "linkSelectorTopicProp";
         setAddresses(selTopic);
 
@@ -241,8 +242,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnPooledTopic() throws Exception {
-        Address topic = AddressUtils.createTopic("mytopic", DestinationPlan.STANDARD_SMALL_TOPIC);
-        Address subscription = AddressUtils.createSubscription("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
+        Address topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_SMALL_TOPIC);
+        Address subscription = AddressUtils.createSubscriptionAddressObject("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         setAddresses(topic, subscription);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -268,9 +269,9 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnShardedTopic() throws Exception {
-        Address topic = AddressUtils.createTopic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
-        Address subscription1 = AddressUtils.createSubscription("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
-        Address subscription2 = AddressUtils.createSubscription("anothersub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
+        Address topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address subscription1 = AddressUtils.createSubscriptionAddressObject("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
+        Address subscription2 = AddressUtils.createSubscriptionAddressObject("anothersub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         setAddresses(topic, subscription1, subscription2);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -303,8 +304,8 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testDurableSubscriptionOnShardedTopic2() throws Exception {
-        Address topic = AddressUtils.createTopic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
-        Address subscription1 = AddressUtils.createSubscription("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
+        Address topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address subscription1 = AddressUtils.createSubscriptionAddressObject("mysub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         setAddresses(topic, subscription1);
 
         AmqpClient client = amqpClientFactory.createTopicClient();
@@ -319,7 +320,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
 
         log.info("Creating second subscription");
-        Address subscription2 = AddressUtils.createSubscription("anothersub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
+        Address subscription2 = AddressUtils.createSubscriptionAddressObject("anothersub", "mytopic", DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
         appendAddresses(subscription2);
 
         log.info("Sending second batch");
@@ -348,7 +349,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     private void doTopicWildcardTest(String plan) throws Exception {
-        Address t0 = AddressUtils.createTopic("topic", plan);
+        Address t0 = AddressUtils.createTopicAddressObject("topic", plan);
         setAddresses(t0);
 
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();

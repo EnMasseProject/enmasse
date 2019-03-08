@@ -5,12 +5,17 @@
 package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.ArtemisManagement;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -55,13 +60,13 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.clear();
     }
 
-    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) {
-        if (addressSpace.getType().equals(AddressSpaceType.STANDARD) && websocket) {
-            Endpoint messagingEndpoint = addressSpace.getEndpointByName("messaging-wss");
+    private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) throws Exception {
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) && websocket) {
+            Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, "messaging-wss");
             if (TestUtils.resolvable(messagingEndpoint)) {
                 return messagingEndpoint;
             } else {
-                return kubernetes.getEndpoint("messaging-" + addressSpace.getInfraUuid(), "https");
+                return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), "https");
             }
         } else {
             return getMessagingRoute(addressSpace);
@@ -76,7 +81,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createQueue("message-basic" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueueAddressObject("message-basic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -87,7 +92,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.TIMEOUT, "30");
         if (websocket) {
             arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
-            if (sharedAddressSpace.getType() == AddressSpaceType.STANDARD) {
+            if (sharedAddressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
                 arguments.put(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
             }
         }
@@ -110,7 +115,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createQueue("receiver-round-robin" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueueAddressObject("receiver-round-robin" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -156,7 +161,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createTopic("topic-subscribe" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createTopicAddressObject("topic-subscribe" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(dest);
 
@@ -198,7 +203,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver_browse, receiver_receive));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createQueue("message-browse" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueueAddressObject("message-browse" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -230,7 +235,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
     }
 
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        Address dest = AddressUtils.createQueue("drain-queue" + ClientType.getAddressName(sender),
+        Address dest = AddressUtils.createQueueAddressObject("drain-queue" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
@@ -261,7 +266,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         int expectedMsgCount = 10;
 
         clients.addAll(Arrays.asList(sender, receiver));
-        Address queue = AddressUtils.createQueue("selector-queue" + ClientType.getAddressName(sender),
+        Address queue = AddressUtils.createQueueAddressObject("selector-queue" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.QUEUE));
         setAddresses(queue);
 
@@ -325,7 +330,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, sender2, subscriber, subscriber2));
         int expectedMsgCount = 5;
 
-        Address topic = AddressUtils.createTopic("selector-topic" + ClientType.getAddressName(sender),
+        Address topic = AddressUtils.createTopicAddressObject("selector-topic" + ClientType.getAddressName(sender),
                 getDefaultPlan(AddressType.TOPIC));
         setAddresses(topic);
 

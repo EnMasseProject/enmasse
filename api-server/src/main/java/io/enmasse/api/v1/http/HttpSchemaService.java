@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * API for serving address utils schema.
+ * API for serving address model schema.
  */
 @Path(HttpSchemaService.BASE_URI)
 public class HttpSchemaService {

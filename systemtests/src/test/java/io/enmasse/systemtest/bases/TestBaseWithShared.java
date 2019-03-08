@@ -5,12 +5,15 @@
 package io.enmasse.systemtest.bases;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
@@ -26,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
-    private static final Address dummyAddress = AddressUtils.createQueue("dummy-address", DestinationPlan.STANDARD_SMALL_QUEUE);
+    private static final Address dummyAddress = AddressUtils.createQueueAddressObject("dummy-address", DestinationPlan.STANDARD_SMALL_QUEUE);
     protected static AddressSpace sharedAddressSpace;
     private static Logger log = CustomLogger.getLogger();
     private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
@@ -42,12 +45,11 @@ public abstract class TestBaseWithShared extends TestBase {
     @BeforeEach
     public void setupShared() throws Exception {
         spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
-        sharedAddressSpace = new AddressSpace(
+        sharedAddressSpace = AddressSpaceUtils.createAddressSpaceObject(
                 getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()),
                 getAddressSpaceType(),
-                AuthService.STANDARD);
-        log.info("Test is running in multitenant mode");
-        createSharedAddressSpace(sharedAddressSpace);
+                AuthenticationServiceType.STANDARD);
+        createAddressSpace(sharedAddressSpace);
         if (environment.useDummyAddress() && !skipDummyAddress()) {
             if (!addressExists(dummyAddress)) {
                 log.info("'{}' address doesn't exist and will be created", dummyAddress);
@@ -77,7 +79,7 @@ public abstract class TestBaseWithShared extends TestBase {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    spaceCountMap.put(sharedAddressSpace.getType(), spaceCountMap.get(sharedAddressSpace.getType()) + 1);
+                    spaceCountMap.put(AddressSpaceType.valueOf(sharedAddressSpace.getSpec().getType()), spaceCountMap.get(AddressSpaceType.valueOf(sharedAddressSpace.getSpec().getType())) + 1);
                 }
             } else {
                 log.warn("Remove address spaces when test failed - SKIPPED!");
@@ -91,22 +93,18 @@ public abstract class TestBaseWithShared extends TestBase {
         }
     }
 
-    private void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
-        super.createAddressSpace(addressSpace);
-    }
-
     /**
      * get all addresses except 'dummy-address'
      */
     protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return TestUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getSpec().getAddress()));
+        return AddressUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getSpec().getAddress()));
     }
 
     /**
      * check if address exists
      */
     private boolean addressExists(Address destination) throws Exception {
-        Future<List<String>> addresses = TestUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
+        Future<List<String>> addresses = AddressUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
                 new ArrayList<>());
         List<String> address = addresses.get(20, TimeUnit.SECONDS);
         log.info("found addresses");
@@ -116,15 +114,11 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName, Optional<HashMap<String, String>> requestParams) throws Exception {
-        return TestUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, requestParams, Collections.singletonList(dummyAddress.getSpec().getAddress()));
+        return AddressUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, requestParams, Collections.singletonList(dummyAddress.getSpec().getAddress()));
     }
 
     protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
         return getAddressesObjects(addressName, Optional.empty());
-    }
-
-    private Future<List<Address>> getDestinationsObjects(Optional<String> addressName) throws Exception {
-        return TestUtils.getDestinationsObjects(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getSpec().getAddress()));
     }
 
     /**
@@ -137,7 +131,7 @@ public abstract class TestBaseWithShared extends TestBase {
         if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
             setAddresses(sharedAddressSpace, destinations);
         } else {
-            List<Address> inShared = getDestinationsObjects(Optional.empty())
+            List<Address> inShared = getAddressesObjects(Optional.empty())
                     .get(10, TimeUnit.SECONDS);
             if (inShared.size() > 0) {
                 deleteAddresses(inShared.toArray(new Address[0]));
@@ -168,7 +162,7 @@ public abstract class TestBaseWithShared extends TestBase {
 
     protected void appendAddresses(boolean wait, int batchSize, Address... destinations) throws Exception {
         TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
-        TestUtils.appendAddresses(addressApiClient, kubernetes, timeout, sharedAddressSpace, wait, batchSize, destinations);
+        AddressUtils.appendAddresses(addressApiClient, kubernetes, timeout, sharedAddressSpace, wait, batchSize, destinations);
         logCollector.collectConfigMaps();
     }
 
@@ -213,14 +207,14 @@ public abstract class TestBaseWithShared extends TestBase {
     /**
      * attach senders to destinations
      */
-    protected List<AbstractClient> attachSenders(List<Address> destinations) {
+    protected List<AbstractClient> attachSenders(List<Address> destinations) throws Exception {
         return attachSenders(sharedAddressSpace, destinations);
     }
 
     /**
      * attach receivers to destinations
      */
-    protected List<AbstractClient> attachReceivers(List<Address> destinations) {
+    protected List<AbstractClient> attachReceivers(List<Address> destinations) throws Exception {
         return attachReceivers(sharedAddressSpace, destinations);
     }
 
@@ -228,7 +222,7 @@ public abstract class TestBaseWithShared extends TestBase {
      * create M connections with N receivers and K senders
      */
     protected AbstractClient attachConnector(Address destination, int connectionCount,
-                                             int senderCount, int receiverCount) {
+                                             int senderCount, int receiverCount) throws Exception {
         return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, defaultCredentials);
     }
 

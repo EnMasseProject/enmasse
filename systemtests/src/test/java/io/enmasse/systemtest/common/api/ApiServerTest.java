@@ -5,13 +5,15 @@
 package io.enmasse.systemtest.common.api;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.resources.*;
@@ -19,6 +21,8 @@ import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.AnycastTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -105,25 +109,28 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testConsoleMessagingMqttRoutes() throws Exception {
-        AddressSpace addressSpace = new AddressSpace("routes-space", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("routes-space", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
         String endpointPrefix = "test-endpoint-";
-        addressSpace.setEndpoints(Arrays.asList(
-                new AddressSpaceEndpoint(endpointPrefix + "messaging", "messaging", "amqps"),
-                new AddressSpaceEndpoint(endpointPrefix + "console", "console", "https"),
-                new AddressSpaceEndpoint(endpointPrefix + "mqtt", "mqtt", "secure-mqtt")),
-                true);
+
+        addressSpace = new DoneableAddressSpace(addressSpace)
+                .editSpec()
+                .addNewEndpoint(endpointPrefix + "messaging", "messaging", "amqps")
+                .addNewEndpoint(endpointPrefix + "console", "console", "https")
+                .addNewEndpoint(endpointPrefix + "mqtt", "mqtt", "secure-mqtt")
+                .endSpec()
+                .done();
         createAddressSpace(addressSpace);
 
         UserCredentials luckyUser = new UserCredentials("lucky", "luckyPswd");
         createUser(addressSpace, luckyUser);
 
         //try to get all external endpoints
-        kubernetes.getExternalEndpoint(endpointPrefix + "messaging-" + addressSpace.getInfraUuid());
-        kubernetes.getExternalEndpoint(endpointPrefix + "console-" + addressSpace.getInfraUuid());
-        kubernetes.getExternalEndpoint(endpointPrefix + "mqtt-" + addressSpace.getInfraUuid());
+        kubernetes.getExternalEndpoint(endpointPrefix + "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        kubernetes.getExternalEndpoint(endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        kubernetes.getExternalEndpoint(endpointPrefix + "mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
 
         //messsaging
-        Address anycast = AddressUtils.createAnycast("test-routes-anycast");
+        Address anycast = AddressUtils.createAnycastAddressObject("test-routes-anycast");
         setAddresses(addressSpace, anycast);
         AmqpClient client1 = amqpClientFactory.createQueueClient(addressSpace);
         client1.getConnectOptions().setCredentials(luckyUser);
@@ -132,7 +139,7 @@ class ApiServerTest extends TestBase {
         AnycastTest.runAnycastTest(anycast, client1, client2);
 
         //mqtt
-        Address topic = AddressUtils.createTopic("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
         appendAddresses(addressSpace, topic);
         Thread.sleep(10_000);
         MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace, luckyUser);
@@ -190,13 +197,13 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testRestApiAddressResourceParams() throws Exception {
-        AddressSpace addressSpace = new AddressSpace("test-rest-api-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        AddressSpace addressSpace2 = new AddressSpace("test-rest-api-addr-space2", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-rest-api-addr-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace2 = AddressSpaceUtils.createAddressSpaceObject("test-rest-api-addr-space2", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(addressSpace, addressSpace2);
 
         logWithSeparator(log, "Check if uuid is propagated");
         String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
-        Address dest1 = AddressUtils.createAddress("test-rest-api-queue", uuid, addressSpace.getName(),
+        Address dest1 = AddressUtils.createAddressObject("test-rest-api-queue", uuid, addressSpace.getMetadata().getName(),
                 "test-rest-api-queue", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
 
         setAddresses(addressSpace, dest1);
@@ -204,7 +211,7 @@ class ApiServerTest extends TestBase {
         assertEquals(uuid, dest1AddressObj.getMetadata().getUid(), "Address uuid is not equal");
 
         logWithSeparator(log, "Check if name is optional");
-        Address dest2 = AddressUtils.createAddress(null, null, addressSpace.getName(),
+        Address dest2 = AddressUtils.createAddressObject(null, null, addressSpace.getMetadata().getName(),
                 "test-rest-api-queue2", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
         setAddresses(addressSpace, dest2);
 
@@ -213,38 +220,38 @@ class ApiServerTest extends TestBase {
         Future<List<Address>> addressesObjects = getAddressesObjects(addressSpace, Optional.empty(), Optional.of(queryParams));
         Address returnedAddress = addressesObjects.get(30, TimeUnit.SECONDS).get(0);
         log.info("Got address: {}", returnedAddress.getMetadata().getName());
-        assertTrue(returnedAddress.getMetadata().getName().contains(String.format("%s.%s", addressSpace.getName(), dest2.getSpec().getAddress())),
+        assertTrue(returnedAddress.getMetadata().getName().contains(String.format("%s.%s", addressSpace.getMetadata().getName(), dest2.getSpec().getAddress())),
                 "Address name is wrongly generated");
 
         logWithSeparator(log, "Check if addressSpace is optional");
-        Address dest3 = AddressUtils.createAddress(null, null, null,
+        Address dest3 = AddressUtils.createAddressObject(null, null, null,
                 "test-rest-api-queue3", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
         deleteAddresses(addressSpace);
         setAddresses(addressSpace, dest3);
 
         Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
-        assertEquals(addressSpace.getName(), dest3AddressObj.getSpec().getAddressSpace(), "Addressspace name is empty");
+        assertEquals(addressSpace.getMetadata().getName(), dest3AddressObj.getSpec().getAddressSpace(), "Addressspace name is empty");
 
         logWithSeparator(log, "Check behavior when addressSpace is set to another existing address space");
-        Address dest4 = AddressUtils.createAddress(null, null, addressSpace2.getName(),
+        Address dest4 = AddressUtils.createAddressObject(null, null, addressSpace2.getMetadata().getName(),
                 "test-rest-api-queue4", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
 
         Throwable exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4));
         assertThat("Exception does not contain correct information", exception.getMessage(), containsString("does not match address space"));
 
-        Address destWithoutAddress = AddressUtils.createQueue(null, DestinationPlan.BROKERED_QUEUE);
+        Address destWithoutAddress = AddressUtils.createQueueAddressObject(null, DestinationPlan.BROKERED_QUEUE);
         exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress));
         JsonObject serverResponse = new JsonObject(exception.getCause().getMessage());
         assertEquals("spec.address: must not be null", serverResponse.getString("message"),
                 "Incorrect response from server on missing address!");
 
-        Address destWithoutType = AddressUtils.createAddress("not-created-address", null, DestinationPlan.BROKERED_QUEUE);
+        Address destWithoutType = AddressUtils.createAddressObject("not-created-address", null, DestinationPlan.BROKERED_QUEUE);
         exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType));
         serverResponse = new JsonObject(exception.getCause().getMessage());
         assertEquals("spec.type: must not be null", serverResponse.getString("message"),
                 "Incorrect response from server on missing type!");
 
-        Address destWithoutPlan = AddressUtils.createQueue("not-created-queue", null);
+        Address destWithoutPlan = AddressUtils.createQueueAddressObject("not-created-queue", null);
         exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutPlan));
 
         serverResponse = new JsonObject(exception.getCause().getMessage());
@@ -269,27 +276,27 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testCreateAddressResource() throws Exception {
-        AddressSpace addrSpace = new AddressSpace("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_UNLIMITED);
+        AddressSpace addrSpace = AddressSpaceUtils.createAddressSpaceObject("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_UNLIMITED);
         createAddressSpace(addrSpace);
 
         final Set<String> names = new LinkedHashSet<>();
 
-        Address anycast = AddressUtils.createAddress("addr1", null, addrSpace.getName(), "addr_1", AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_SMALL_ANYCAST);
-        names.add(String.format("%s.%s", addrSpace.getName(), anycast.getMetadata().getName()));
+        Address anycast = AddressUtils.createAddressObject("addr1", null, addrSpace.getMetadata().getName(), "addr_1", AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_SMALL_ANYCAST);
+        names.add(String.format("%s.%s", addrSpace.getMetadata().getName(), anycast.getMetadata().getName()));
         addressApiClient.createAddress(anycast);
         List<Address> addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(1));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
-        Address multicast = AddressUtils.createAddress("addr2", null, addrSpace.getName(), "addr_2", AddressType.MULTICAST.toString(), DestinationPlan.STANDARD_SMALL_MULTICAST);
-        names.add(String.format("%s.%s", addrSpace.getName(), multicast.getMetadata().getName()));
+        Address multicast = AddressUtils.createAddressObject("addr2", null, addrSpace.getMetadata().getName(), "addr_2", AddressType.MULTICAST.toString(), DestinationPlan.STANDARD_SMALL_MULTICAST);
+        names.add(String.format("%s.%s", addrSpace.getMetadata().getName(), multicast.getMetadata().getName()));
         addressApiClient.createAddress(multicast);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertThat(addresses.size(), is(2));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
         String uuid = UUID.randomUUID().toString();
-        Address longname = AddressUtils.createAddress(addrSpace.getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address longname = AddressUtils.createAddressObject(addrSpace.getMetadata().getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getMetadata().getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
         names.add(longname.getMetadata().getName());
         addressApiClient.createAddress(longname);
         addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
@@ -298,7 +305,7 @@ class ApiServerTest extends TestBase {
 
         // ensure that getting all addresses (non-namespaces) returns the same result
 
-        Set<String> allNames = TestUtils.getAllAddressesObjects(addressApiClient).get(30, TimeUnit.SECONDS)
+        Set<String> allNames = AddressUtils.getAllAddressesObjects(addressApiClient).get(30, TimeUnit.SECONDS)
                 .stream().map(address -> address.getMetadata().getName())
                 .collect(Collectors.toSet());
 
@@ -322,28 +329,28 @@ class ApiServerTest extends TestBase {
             AddressApiClient nameSpaceClient1 = new AddressApiClient(kubernetes, namespace1);
             AddressApiClient nameSpaceClient2 = new AddressApiClient(kubernetes, namespace2);
 
-            AddressSpace brokered = new AddressSpace("brokered", namespace1, AddressSpaceType.BROKERED, AuthService.STANDARD);
-            AddressSpace standard = new AddressSpace("standard", namespace2, AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_SMALL, AuthService.STANDARD);
+            AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("brokered", namespace1, AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+            AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard", namespace2, AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
 
             createAddressSpace(brokered, nameSpaceClient1);
             createAddressSpace(standard, nameSpaceClient2);
 
             assertThat("Get all address spaces does not contain 2 address spaces",
-                    TestUtils.getAllAddressSpacesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(2));
+                    AddressSpaceUtils.getAllAddressSpacesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(2));
 
             log.info("------------------ Address part ----------------------");
 
-            Address brokeredQueue = AddressUtils.createQueue("test-queue", DestinationPlan.BROKERED_QUEUE);
-            Address brokeredTopic = AddressUtils.createTopic("test-topic", DestinationPlan.BROKERED_TOPIC);
+            Address brokeredQueue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
+            Address brokeredTopic = AddressUtils.createTopicAddressObject("test-topic", DestinationPlan.BROKERED_TOPIC);
 
-            Address standardQueue = AddressUtils.createQueue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
-            Address standardTopic = AddressUtils.createTopic("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC);
+            Address standardQueue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
+            Address standardTopic = AddressUtils.createTopicAddressObject("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC);
 
             setAddresses(brokered, nameSpaceClient1, brokeredQueue, brokeredTopic);
             setAddresses(standard, nameSpaceClient2, standardQueue, standardTopic);
 
             assertThat("Get all addresses does not contain 4 addresses",
-                    TestUtils.getAllAddressesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(4));
+                    AddressUtils.getAllAddressesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(4));
 
             log.info("-------------------- User part -----------------------");
 
@@ -352,8 +359,8 @@ class ApiServerTest extends TestBase {
 
             UserCredentials cred = new UserCredentials("pepa", "novak");
 
-            userApiClient1.createUser(brokered.getName(), cred);
-            userApiClient2.createUser(standard.getName(), cred);
+            userApiClient1.createUser(brokered.getMetadata().getName(), cred);
+            userApiClient2.createUser(standard.getMetadata().getName(), cred);
 
             assertThat("Get all users does not contain 2 password users",
                     TestUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
@@ -374,7 +381,7 @@ class ApiServerTest extends TestBase {
             String token = KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
 
-            AddressSpace addrSpace = new AddressSpace("non-admin-addr-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
+            AddressSpace addrSpace = AddressSpaceUtils.createAddressSpaceObject("non-admin-addr-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace, token);
 
             createAddressSpace(addrSpace, apiClient);
@@ -390,8 +397,8 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testReplaceAddressSpace() throws Exception {
-        AddressSpace addressspace = new AddressSpace("test-replace-address-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        Address dest = AddressUtils.createQueue("test-queue", DestinationPlan.BROKERED_QUEUE);
+        AddressSpace addressspace = AddressSpaceUtils.createAddressSpaceObject("test-replace-address-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        Address dest = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
         UserCredentials cred = new UserCredentials("david", "password");
 
         createAddressSpace(addressspace);
@@ -404,15 +411,16 @@ class ApiServerTest extends TestBase {
 
         assertCanConnect(addressspace, cred, Collections.singletonList(dest));
 
-        addressspace.setName("another-name");
+        addressspace = new DoneableAddressSpace(addressspace).editMetadata().withName("another-name").endMetadata().done();
 
-        Throwable exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(addressspace, HTTP_NOT_FOUND));
-        assertTrue(exception.getMessage().contains(String.format("AddressSpace %s not found", addressspace.getName())));
+        AddressSpace finalAddressspace1 = addressspace;
+        Throwable exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(finalAddressspace1, HTTP_NOT_FOUND));
+        assertTrue(exception.getMessage().contains(String.format("AddressSpace %s not found", addressspace.getMetadata().getName())));
 
-        addressspace.setName("test-replace-address-space");
-        addressspace.setPlan("no-exists");
+        addressspace = new DoneableAddressSpace(addressspace).editMetadata().withName("test-replace-address-space").endMetadata().editSpec().withPlan("no-exists").endSpec().done();
 
-        exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(addressspace, HTTP_BAD_REQUEST));
+        AddressSpace finalAddressspace = addressspace;
+        exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(finalAddressspace, HTTP_BAD_REQUEST));
         assertTrue(exception.getMessage().contains("Unknown address space plan no-exists"));
     }
 }

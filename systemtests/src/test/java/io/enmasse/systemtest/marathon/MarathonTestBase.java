@@ -5,15 +5,19 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.SysytemTestsErrorCollector;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
@@ -133,7 +137,7 @@ abstract class MarathonTestBase extends TestBase {
         int queueCount = 1500;
 
         IntStream.range(0, queueCount).forEach(i ->
-                queueList.add(AddressUtils.createQueue(String.format("test-queue-status-%d", i), getDefaultPlan(AddressType.QUEUE)))
+                queueList.add(AddressUtils.createQueueAddressObject(String.format("test-queue-status-%d", i), getDefaultPlan(AddressType.QUEUE)))
         );
 
         runTestInLoop(60, () -> {
@@ -165,7 +169,7 @@ abstract class MarathonTestBase extends TestBase {
 
         //create queues
         for (int i = 0; i < queueCount; i++) {
-            queueList.add(AddressUtils.createQueue(String.format("test-queue-sendreceive-%d", i), getDefaultPlan(AddressType.QUEUE)));
+            queueList.add(AddressUtils.createQueueAddressObject(String.format("test-queue-sendreceive-%d", i), getDefaultPlan(AddressType.QUEUE)));
         }
         setAddresses(addressSpace, queueList.toArray(new Address[0]));
 
@@ -204,8 +208,8 @@ abstract class MarathonTestBase extends TestBase {
         createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
-        Address queue = AddressUtils.createQueue("test-create-delete-users-queue", getDefaultPlan(AddressType.QUEUE));
-        Address topic = AddressUtils.createTopic("test-create-delete-users-topic", getDefaultPlan(AddressType.TOPIC));
+        Address queue = AddressUtils.createQueueAddressObject("test-create-delete-users-queue", getDefaultPlan(AddressType.QUEUE));
+        Address topic = AddressUtils.createTopicAddressObject("test-create-delete-users-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
 
@@ -236,8 +240,8 @@ abstract class MarathonTestBase extends TestBase {
         createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
-        Address queue = AddressUtils.createQueue("test-auth-send-receive-queue", getDefaultPlan(AddressType.QUEUE));
-        Address topic = AddressUtils.createTopic("test-auth-send-receive-topic", getDefaultPlan(AddressType.TOPIC));
+        Address queue = AddressUtils.createQueueAddressObject("test-auth-send-receive-queue", getDefaultPlan(AddressType.QUEUE));
+        Address topic = AddressUtils.createTopicAddressObject("test-auth-send-receive-topic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressSpace, queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
 
@@ -262,7 +266,7 @@ abstract class MarathonTestBase extends TestBase {
 
         //create queues
         for (int i = 0; i < topicCount; i++) {
-            topicList.add(AddressUtils.createTopic(String.format("test-topic-pubsub-%d", i), getDefaultPlan(AddressType.TOPIC)));
+            topicList.add(AddressUtils.createTopicAddressObject(String.format("test-topic-pubsub-%d", i), getDefaultPlan(AddressType.TOPIC)));
         }
         setAddresses(addressSpace, topicList.toArray(new Address[0]));
 
@@ -339,8 +343,8 @@ abstract class MarathonTestBase extends TestBase {
         int destinationCount = 20;
 
         for (int i = 0; i < destinationCount; i++) {
-            queueList.add(AddressUtils.createQueue(String.format(queuePattern, i), getDefaultPlan(AddressType.QUEUE)));
-            topicList.add(AddressUtils.createTopic(String.format(topicPattern, i), getDefaultPlan(AddressType.TOPIC)));
+            queueList.add(AddressUtils.createQueueAddressObject(String.format(queuePattern, i), getDefaultPlan(AddressType.QUEUE)));
+            topicList.add(AddressUtils.createTopicAddressObject(String.format(topicPattern, i), getDefaultPlan(AddressType.TOPIC)));
         }
 
         AmqpClient queueClient;

@@ -7,7 +7,9 @@ package io.enmasse.systemtest.executor;
 import io.enmasse.systemtest.CustomLogger;
 import org.slf4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -213,7 +215,7 @@ public class Executor {
                     log.info("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
                         data.append(scanner.nextLine());
-                        if(appendLineSeparator) {
+                        if (appendLineSeparator) {
                             data.append(System.getProperty("line.separator"));
                         }
                     }

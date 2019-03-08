@@ -4,11 +4,11 @@
  */
 package io.enmasse.systemtest.resources;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.enmasse.systemtest.AddressSpaceType;
 import io.vertx.core.json.JsonObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class InfraConfigDefinition {
 
@@ -79,7 +79,7 @@ public class InfraConfigDefinition {
                     component = RouterInfraSpec.fromJson((JsonObject) entry.getValue());
                     break;
             }
-            if(component!=null) {
+            if (component != null) {
                 components.add(component);
             }
         });

@@ -5,12 +5,18 @@
 package io.enmasse.systemtest.brokered;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressAlreadyExistsException;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.standard.QueueTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
@@ -38,14 +44,14 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
      */
     @Test
     void testAddressTypes() throws Exception {
-        Address queueA = AddressUtils.createQueue("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
+        Address queueA = AddressUtils.createQueueAddressObject("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
         setAddresses(queueA);
 
         AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(sharedAddressSpace);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
         amqpQueueCli.close();
 
-        Address topicB = AddressUtils.createTopic("brokeredTopicB", getDefaultPlan(AddressType.TOPIC));
+        Address topicB = AddressUtils.createTopicAddressObject("brokeredTopicB", getDefaultPlan(AddressType.TOPIC));
         setAddresses(topicB);
 
         AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(sharedAddressSpace);
@@ -74,14 +80,14 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
      */
     @Test
     void testCreateDeleteAddressSpace() throws Exception {
-        AddressSpace addressSpaceA = new AddressSpace("brokered-create-delete-a", AddressSpaceType.BROKERED,
-                AuthService.STANDARD);
+        AddressSpace addressSpaceA = AddressSpaceUtils.createAddressSpaceObject("brokered-create-delete-a", AddressSpaceType.BROKERED,
+                AuthenticationServiceType.STANDARD);
 
-        AddressSpace addressSpaceC = new AddressSpace("brokered-create-delete-c", AddressSpaceType.BROKERED,
-                AuthService.STANDARD);
+        AddressSpace addressSpaceC = AddressSpaceUtils.createAddressSpaceObject("brokered-create-delete-c", AddressSpaceType.BROKERED,
+                AuthenticationServiceType.STANDARD);
         createAddressSpaceList(addressSpaceA, addressSpaceC);
 
-        Address queueB = AddressUtils.createQueue("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
+        Address queueB = AddressUtils.createQueueAddressObject("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
         UserCredentials user = new UserCredentials("test", "test");
         createUser(addressSpaceA, user);
@@ -107,10 +113,10 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     void testCreateAlreadyExistingAddress() throws Exception {
         String addr_name = "brokeredAddrA";
-        Address queueA = AddressUtils.createQueue(addr_name, getDefaultPlan(AddressType.QUEUE));
+        Address queueA = AddressUtils.createQueueAddressObject(addr_name, getDefaultPlan(AddressType.QUEUE));
         setAddresses(queueA);
 
-        Address topicA = AddressUtils.createTopic(addr_name, getDefaultPlan(AddressType.TOPIC));
+        Address topicA = AddressUtils.createTopicAddressObject(addr_name, getDefaultPlan(AddressType.TOPIC));
         assertThrows(AddressAlreadyExistsException.class, () -> setAddresses(HTTP_CONFLICT, topicA),
                 "setAddresses does not throw right exception");
     }

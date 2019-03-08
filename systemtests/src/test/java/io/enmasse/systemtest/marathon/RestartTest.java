@@ -5,7 +5,12 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
@@ -41,8 +46,8 @@ class RestartTest extends MarathonTestBase {
     void testRandomDeletePods() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
-        AddressSpace standard = new AddressSpace("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
-        AddressSpace brokered = new AddressSpace("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(standard, brokered);
         createUser(brokered, user);
         createUser(standard, user);
@@ -78,7 +83,7 @@ class RestartTest extends MarathonTestBase {
     void testHAqdrouter() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
-        AddressSpace standard = new AddressSpace("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(standard);
         createUser(standard, user);
 
@@ -108,8 +113,8 @@ class RestartTest extends MarathonTestBase {
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Address> brAddresses, List<Address> stAddresses) throws Exception {
         log.info("Check if system works");
-        TestUtils.runUntilPass(60, () -> getAddressSpace(brokered.getName()));
-        TestUtils.runUntilPass(60, () -> getAddressSpace(standard.getName()));
+        TestUtils.runUntilPass(60, () -> getAddressSpace(brokered.getMetadata().getName()));
+        TestUtils.runUntilPass(60, () -> getAddressSpace(standard.getMetadata().getName()));
         TestUtils.runUntilPass(60, () -> createUser(brokered, new UserCredentials("jenda", "cenda")));
         TestUtils.runUntilPass(60, () -> createUser(standard, new UserCredentials("jura", "fura")));
         TestUtils.runUntilPass(60, () -> {

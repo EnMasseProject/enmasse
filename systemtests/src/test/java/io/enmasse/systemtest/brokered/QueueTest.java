@@ -11,8 +11,8 @@ import io.enmasse.systemtest.JmsProvider;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Matchers;
@@ -50,7 +50,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Tag(nonPR)
     void testMessageGroup() throws Exception {
-        Address dest = AddressUtils.createQueue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
+        Address dest = AddressUtils.createQueueAddressObject("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient(sharedAddressSpace);
@@ -95,15 +95,15 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Address q1 = AddressUtils.createQueue("queue1", getDefaultPlan(AddressType.QUEUE));
-        Address q2 = AddressUtils.createQueue("queue2", getDefaultPlan(AddressType.QUEUE));
+        Address q1 = AddressUtils.createQueueAddressObject("queue1", getDefaultPlan(AddressType.QUEUE));
+        Address q2 = AddressUtils.createQueueAddressObject("queue2", getDefaultPlan(AddressType.QUEUE));
 
         runRestApiTest(sharedAddressSpace, q1, q2);
     }
 
     @Test
     void testTransactionCommitReject(JmsProvider jmsProvider) throws Exception {
-        Address addressQueue = AddressUtils.createQueue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
@@ -172,7 +172,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testLoadMessages(JmsProvider jmsProvider) throws Exception {
-        Address addressQueue = AddressUtils.createQueue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
@@ -216,7 +216,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
-        Address addressQueue = AddressUtils.createQueue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,

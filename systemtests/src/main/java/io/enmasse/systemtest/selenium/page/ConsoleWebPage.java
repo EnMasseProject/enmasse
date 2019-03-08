@@ -7,7 +7,12 @@ package io.enmasse.systemtest.selenium.page;
 
 import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
@@ -390,7 +395,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (defaultAddressSpace.getAuthService().equals(AuthService.STANDARD)) {
+        if (defaultAddressSpace.getSpec().getAuthenticationService().getType().equals(AuthenticationServiceType.STANDARD)) {
             if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), clickOnOpenshift, viaOpenShift))
                 throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
         }

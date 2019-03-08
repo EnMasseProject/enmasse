@@ -31,10 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private static Logger log = CustomLogger.getLogger();
-    private final Address queue = AddressUtils.createQueue("authz-queue", getDefaultPlan(AddressType.QUEUE));
-    private final Address topic = AddressUtils.createTopic("authz-topic", getDefaultPlan(AddressType.TOPIC));
-    private final Address anycast = AddressUtils.createAnycast("authz-anycast");
-    private final Address multicast = AddressUtils.createMulticast("authz-multicast");
+    private final Address queue = AddressUtils.createQueueAddressObject("authz-queue", getDefaultPlan(AddressType.QUEUE));
+    private final Address topic = AddressUtils.createTopicAddressObject("authz-topic", getDefaultPlan(AddressType.TOPIC));
+    private final Address anycast = AddressUtils.createAnycastAddressObject("authz-anycast");
+    private final Address multicast = AddressUtils.createMulticastAddressObject("authz-multicast");
     private List<Address> addresses;
 
     private void initAddresses() throws Exception {

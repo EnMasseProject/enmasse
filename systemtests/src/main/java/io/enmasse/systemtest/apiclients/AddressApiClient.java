@@ -5,7 +5,11 @@
 package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.AddressAlreadyExistsException;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.AsyncResult;
@@ -80,8 +84,8 @@ public class AddressApiClient extends ApiClient {
         }
     }
 
-    public void createAddressSpace(AddressSpace addressSpace, int expectedCode) throws Exception {
-        JsonObject config = addressSpace.toJson(getApiVersion());
+    public void createAddressSpace(io.enmasse.address.model.AddressSpace addressSpace, int expectedCode) throws Exception {
+        JsonObject config = AddressSpaceUtils.addressSpaceToJson(addressSpace);
 
         log.info("POST-address-space: path {}; body {}", addressSpacesPath, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -110,8 +114,8 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void replaceAddressSpace(AddressSpace addressSpace, int expectedCode) throws Exception {
-        String path = addressSpacesPath + "/" + addressSpace.getName();
-        JsonObject config = addressSpace.toJson(getApiVersion());
+        String path = addressSpacesPath + "/" + addressSpace.getMetadata().getName();
+        JsonObject config = AddressSpaceUtils.addressSpaceToJson(addressSpace);
 
         log.info("UPDATE-address-space: path {}; body {}", addressSpacesPath, config.toString());
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -132,7 +136,7 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace, int expectedCode) throws Exception {
-        String path = addressSpacesPath + "/" + addressSpace.getName();
+        String path = addressSpacesPath + "/" + addressSpace.getMetadata().getName();
         log.info("DELETE-address-space: path '{}'", path);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
@@ -307,11 +311,11 @@ public class AddressApiClient extends ApiClient {
      * @throws Exception
      */
     public JsonObject getAddresses(AddressSpace addressSpace, Optional<String> addressName, int expectedCode, Optional<HashMap<String, String>> params) throws Exception {
-        String path = getAddressPath(addressSpace.getName()) + (addressName.map(s -> {
-            if (s.startsWith(addressSpace.getName())) {
+        String path = getAddressPath(addressSpace.getMetadata().getName()) + (addressName.map(s -> {
+            if (s.startsWith(addressSpace.getMetadata().getName())) {
                 return "/" + s;
             } else {
-                return "/" + addressSpace.getName() + "." + s;
+                return "/" + addressSpace.getMetadata().getName() + "." + s;
             }
         }).orElse(""));
         log.info("GET-addresses: path {}; ", path);
@@ -377,13 +381,13 @@ public class AddressApiClient extends ApiClient {
      */
     public void deleteAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
         if (destinations.length == 0) {
-            for (Address destination : TestUtils.convertToListAddress(getAddresses(addressSpace, HTTP_OK, Optional.empty()),
+            for (Address destination : AddressUtils.convertToListAddress(getAddresses(addressSpace, HTTP_OK, Optional.empty()),
                     Address.class, object -> true)) {
-                deleteAddress(addressSpace.getName(), destination, HTTP_OK);
+                deleteAddress(addressSpace.getMetadata().getName(), destination, HTTP_OK);
             }
         } else {
             for (Address destination : destinations) {
-                deleteAddress(addressSpace.getName(), destination, HTTP_OK);
+                deleteAddress(addressSpace.getMetadata().getName(), destination, HTTP_OK);
             }
         }
     }
@@ -432,7 +436,7 @@ public class AddressApiClient extends ApiClient {
 
     public void appendAddresses(AddressSpace addressSpace, int batchSize, Address... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
-        List<Address> current = new ArrayList<>(TestUtils.convertToListAddress(response, io.enmasse.address.model.Address.class, object -> true));
+        List<Address> current = new ArrayList<>(AddressUtils.convertToListAddress(response, io.enmasse.address.model.Address.class, object -> true));
 
         List<Address> toCreate = new ArrayList<>(Arrays.asList(destinations));
 
@@ -469,7 +473,7 @@ public class AddressApiClient extends ApiClient {
     public void appendAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
 
-        List<Address> current = new ArrayList<>(TestUtils.convertToListAddress(response, Address.class, object -> true));
+        List<Address> current = new ArrayList<>(AddressUtils.convertToListAddress(response, Address.class, object -> true));
 
         List<Address> toCreate = new ArrayList<>(Arrays.asList(destinations));
 
@@ -486,7 +490,7 @@ public class AddressApiClient extends ApiClient {
         addressList.put("kind", "AddressList");
         JsonArray items = new JsonArray();
         for (Address destination : destinations) {
-            JsonObject item = AddressUtils.addressToJson(addressSpace.getName(), destination);
+            JsonObject item = AddressUtils.addressToJson(addressSpace.getMetadata().getName(), destination);
             items.add(item);
         }
         addressList.put("items", items);
@@ -500,7 +504,7 @@ public class AddressApiClient extends ApiClient {
     public void setAddresses(AddressSpace addressSpace, int expectedCode, Address... addresses) throws Exception {
         JsonObject response = getAddresses(addressSpace, HTTP_OK, Optional.empty());
 
-        List<Address> current = new ArrayList<>(TestUtils.convertToListAddress(response, Address.class, object -> true));
+        List<Address> current = new ArrayList<>(AddressUtils.convertToListAddress(response, Address.class, object -> true));
 
         List<Address> toCreate = new ArrayList<>(Arrays.asList(addresses));
         List<Address> toDelete = new ArrayList<>(current);
@@ -516,7 +520,7 @@ public class AddressApiClient extends ApiClient {
 
         log.info("Deleting {}", toDelete);
         for (Address destination : toDelete) {
-            deleteAddress(addressSpace.getName(), destination, HTTP_OK);
+            deleteAddress(addressSpace.getMetadata().getName(), destination, HTTP_OK);
         }
     }
 
@@ -545,12 +549,12 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void createAddress(AddressSpace addressSpace, Address destination, int expectedCode) throws Exception {
-        JsonObject entry = AddressUtils.addressToJson(addressSpace.getName(), destination);
-        log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getName()), entry.toString());
+        JsonObject entry = AddressUtils.addressToJson(addressSpace.getMetadata().getName(), destination);
+        log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getMetadata().getName()), entry.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-                    client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getName()))
+                    client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getMetadata().getName()))
                             .timeout(20_000)
                             .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                             .as(BodyCodec.jsonObject())
@@ -569,11 +573,11 @@ public class AddressApiClient extends ApiClient {
     }
 
     public void createAddresses(AddressSpace addressSpace, JsonObject payload, int expectedCode) throws Exception {
-        log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getName()), payload.toString());
+        log.info("POST-address: path {}; body: {}", getAddressPath(addressSpace.getMetadata().getName()), payload.toString());
 
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         doRequestNTimes(initRetry, () -> {
-                    client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getName()))
+                    client.post(endpoint.getPort(), endpoint.getHost(), getAddressPath(addressSpace.getMetadata().getName()))
                             .timeout(20_000)
                             .putHeader(HttpHeaders.AUTHORIZATION.toString(), authzString)
                             .as(BodyCodec.jsonObject())

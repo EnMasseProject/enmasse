@@ -6,10 +6,14 @@ package io.enmasse.systemtest.bases.web;
 
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.RheaWebPage;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
@@ -32,13 +36,13 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
     }
 
     @Override
-    protected Endpoint getMessagingRoute(AddressSpace addressSpace) {
-        if (addressSpace.getType().equals(AddressSpaceType.STANDARD)) {
-            Endpoint messagingEndpoint = addressSpace.getEndpointByName("messaging-wss");
+    protected Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, "messaging-wss");
             if (TestUtils.resolvable(messagingEndpoint)) {
                 return messagingEndpoint;
             } else {
-                return kubernetes.getEndpoint("messaging-" + addressSpace.getInfraUuid(), "https");
+                return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), "https");
             }
         } else {
             return super.getMessagingRoute(addressSpace);
@@ -59,7 +63,7 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
         int count = 10;
 
         rheaWebPage.sendReceiveMessages(getMessagingRoute(sharedAddressSpace).toString(), destination.getSpec().getAddress(),
-                count, defaultCredentials, sharedAddressSpace.getType());
+                count, defaultCredentials, AddressSpaceType.valueOf(sharedAddressSpace.getSpec().getType().toUpperCase()));
         assertTrue(rheaWebPage.checkCountMessage(count * 2), "Browser client didn't sent and received all messages");
     }
 }

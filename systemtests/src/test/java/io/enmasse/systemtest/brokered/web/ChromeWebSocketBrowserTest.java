@@ -7,8 +7,8 @@ package io.enmasse.systemtest.brokered.web;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -20,11 +20,11 @@ class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBa
 
     @Test
     void testWebSocketSendReceiveQueue() throws Exception {
-        doWebSocketSendReceive(AddressUtils.createQueue("websocket-queue", getDefaultPlan(AddressType.QUEUE)));
+        doWebSocketSendReceive(AddressUtils.createQueueAddressObject("websocket-queue", getDefaultPlan(AddressType.QUEUE)));
     }
 
     @Test
     void testWebSocketSendReceiveTopic() throws Exception {
-        doWebSocketSendReceive(AddressUtils.createTopic("websocket-topic", getDefaultPlan(AddressType.TOPIC)));
+        doWebSocketSendReceive(AddressUtils.createTopicAddressObject("websocket-topic", getDefaultPlan(AddressType.TOPIC)));
     }
 }

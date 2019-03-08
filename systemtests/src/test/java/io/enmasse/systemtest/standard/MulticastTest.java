@@ -14,8 +14,8 @@ class MulticastTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testRestApi() throws Exception {
-        Address m1 = AddressUtils.createMulticast("multicastRest1");
-        Address m2 = AddressUtils.createMulticast("multicastRest2");
+        Address m1 = AddressUtils.createMulticastAddressObject("multicastRest1");
+        Address m2 = AddressUtils.createMulticastAddressObject("multicastRest2");
 
         runRestApiTest(sharedAddressSpace, m1, m2);
     }

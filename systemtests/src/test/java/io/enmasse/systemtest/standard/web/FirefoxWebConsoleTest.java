@@ -9,8 +9,8 @@ import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -20,30 +20,30 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createQueue("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE),
-                AddressUtils.createQueue("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE));
+        doTestCreateDeleteAddress(AddressUtils.createQueueAddressObject("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE),
+                AddressUtils.createQueueAddressObject("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE));
     }
 
     @Test
     void testCreateDeleteDurableSubscription() throws Exception {
-        doTestCreateDeleteDurableSubscription(AddressUtils.createTopic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopic("test-topic2", DestinationPlan.STANDARD_XLARGE_TOPIC));
+        doTestCreateDeleteDurableSubscription(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
+                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_XLARGE_TOPIC));
     }
 
     @Test
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createTopic("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopic("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
+        doTestCreateDeleteAddress(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
+                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
     }
 
     @Test
     void testCreateDeleteAnycast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createAnycast("test-anycast-firefox"));
+        doTestCreateDeleteAddress(AddressUtils.createAnycastAddressObject("test-anycast-firefox"));
     }
 
     @Test
     void testCreateDeleteMulticast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createMulticast("test-multicast-firefox"));
+        doTestCreateDeleteAddress(AddressUtils.createMulticastAddressObject("test-multicast-firefox"));
     }
 
     @Test
@@ -166,10 +166,10 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
 
     @Test
     void testAddressStatus() throws Exception {
-        doTestAddressStatus(AddressUtils.createQueue("test-queue", getDefaultPlan(AddressType.QUEUE)));
-        doTestAddressStatus(AddressUtils.createTopic("test-topic", getDefaultPlan(AddressType.TOPIC)));
-        doTestAddressStatus(AddressUtils.createAnycast("test-anycast"));
-        doTestAddressStatus(AddressUtils.createMulticast("test-multicast"));
+        doTestAddressStatus(AddressUtils.createQueueAddressObject("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestAddressStatus(AddressUtils.createTopicAddressObject("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestAddressStatus(AddressUtils.createAnycastAddressObject("test-anycast"));
+        doTestAddressStatus(AddressUtils.createMulticastAddressObject("test-multicast"));
     }
 
     @Test
@@ -197,9 +197,9 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
         //TODO(sdavey)
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
                         getDefaultPlan(AddressType.QUEUE)),
-                AddressUtils.createQueue("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
+                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
                         getDefaultPlan(AddressType.QUEUE)));
     }
 
