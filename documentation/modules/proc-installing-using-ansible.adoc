@@ -11,7 +11,6 @@ configuring the system. Example inventory files can be found in the `ansible/inv
 An example inventory file that enables both the API server and service broker integration:
 
 [source,options="nowrap"]
-.link:service_admin/example.inventory[example.inventory]
 ----
 include::../service_admin/example.inventory[]
 ----

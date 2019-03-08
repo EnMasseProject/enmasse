@@ -17,7 +17,6 @@
 . Save Python client example to a file:
 +
 [source,python,options="nowrap"]
-.link:resources/client-example1.py[client-example1.py]
 ----
 include::../common/client-example1.py[]
 ----
