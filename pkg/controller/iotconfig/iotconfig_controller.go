@@ -181,6 +181,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processHttpAdapter(ctx, config)
 	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processMqttAdapter(ctx, config)
+	})
 
 	return rc.Result()
 }

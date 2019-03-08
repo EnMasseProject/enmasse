@@ -28,44 +28,44 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
-const appHttpAdapter = "iot-http-adapter"
-const nameHttpAdapter = "iot-http-adapter"
-const routeHttpAdapter = "iot-http-adapter"
+const appMqttAdapter = "iot-mqtt-adapter"
+const nameMqttAdapter = "iot-mqtt-adapter"
+const routeMqttAdapter = "iot-mqtt-adapter"
 
-func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameHttpAdapter, config, r.reconcileHttpAdapterDeployment)
+		return r.processDeployment(ctx, nameMqttAdapter, config, r.reconcileMqttAdapterDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameHttpAdapter, config, r.reconcileHttpAdapterService)
+		return r.processService(ctx, nameMqttAdapter, config, r.reconcileMqttAdapterService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, r.reconcileHttpAdapterConfigMap)
+		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, r.reconcileMqttAdapterConfigMap)
 	})
 	if config.WantDefaultRoutes() {
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeHttpAdapter, config, r.reconcileHttpAdapterRoute)
+			return r.processRoute(ctx, routeMqttAdapter, config, r.reconcileMqttAdapterRoute)
 		})
 	} else {
 		if util.IsOpenshift() {
-			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeHttpAdapter}})
+			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeMqttAdapter}})
 		}
 	}
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", appHttpAdapter, deployment.Name)
+	install.ApplyDeploymentDefaults(deployment, "iot", appMqttAdapter, deployment.Name)
 
 	deployment.Spec.Replicas = nil
 
-	err := install.ApplyContainerWithError(deployment, "http-adapter", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "iot-http-adapter"}, config); err != nil {
+	err := install.ApplyContainerWithError(deployment, "mqtt-adapter", func(container *corev1.Container) error {
+		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "iot-mqtt-adapter"}, config); err != nil {
 			return err
 		}
 
@@ -76,7 +76,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 		}
 		container.Ports = []corev1.ContainerPort{
 			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
-			{Name: "https", ContainerPort: 8443, Protocol: corev1.ProtocolTCP},
+			{Name: "mqtts", ContainerPort: 8883, Protocol: corev1.ProtocolTCP},
 		}
 
 		SetHonoProbes(container)
@@ -90,10 +90,10 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
 
-			{Name: "HONO_HTTP_NATIVE_TLS_REQUIRED", Value: "false"},
+			{Name: "HONO_MQTT_NATIVE_TLS_REQUIRED", Value: "false"},
 		}
 
-		AppendHonoAdapterEnvs(container, "http-adapter@HONO", "http-secret")
+		AppendHonoAdapterEnvs(container, "mqtt-adapter@HONO", "mqtt-secret")
 
 		// volume mounts
 
@@ -130,18 +130,18 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "config", nameHttpAdapter+"-config")
-	install.ApplySecretVolume(deployment, "tls", nameHttpAdapter+"-tls")
-	install.ApplySecretVolume(deployment, "secrets", nameHttpAdapter+"-secrets")
+	install.ApplyConfigMapVolume(deployment, "config", nameMqttAdapter+"-config")
+	install.ApplySecretVolume(deployment, "tls", nameMqttAdapter+"-tls")
+	install.ApplySecretVolume(deployment, "secrets", nameMqttAdapter+"-secrets")
 
 	// return
 
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", appHttpAdapter, service.Name)
+	install.ApplyServiceDefaults(service, "iot", appMqttAdapter, service.Name)
 
 	if len(service.Spec.Ports) != 1 {
 		service.Spec.Ports = make([]corev1.ServicePort, 1)
@@ -149,9 +149,9 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoT
 
 	// HTTP port
 
-	service.Spec.Ports[0].Name = "https"
-	service.Spec.Ports[0].Port = 8443
-	service.Spec.Ports[0].TargetPort = intstr.FromInt(8443)
+	service.Spec.Ports[0].Name = "mqtts"
+	service.Spec.Ports[0].Port = 8883
+	service.Spec.Ports[0].TargetPort = intstr.FromInt(8883)
 	service.Spec.Ports[0].Protocol = corev1.ProtocolTCP
 
 	// annotations
@@ -161,14 +161,14 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoT
 	}
 
 	// FIXME: remove OpenShift specific feature
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = nameHttpAdapter + "-tls"
+	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = nameMqttAdapter + "-tls"
 
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
-	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", appHttpAdapter, configMap.Name)
+	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", appMqttAdapter, configMap.Name)
 
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)
@@ -184,7 +184,7 @@ hono:
     maxInstances: 1
     healthCheckPort: 8088
     healthCheckBindAddress: 0.0.0.0
-  http:
+  mqtt:
     bindAddress: 0.0.0.0
     keyPath: /etc/tls/tls.key
     certPath: /etc/tls/tls.crt
@@ -206,14 +206,14 @@ hono:
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
 
-	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", appHttpAdapter, route.Name)
+	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", appMqttAdapter, route.Name)
 
 	// Port
 
 	route.Spec.Port = &routev1.RoutePort{
-		TargetPort: intstr.FromString("https"),
+		TargetPort: intstr.FromString("mqtts"),
 	}
 
 	// Path
@@ -226,13 +226,12 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTCo
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	route.Spec.TLS.Termination = routev1.TLSTerminationEdge
-	route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+	route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
 
 	// Service
 
 	route.Spec.To.Kind = "Service"
-	route.Spec.To.Name = nameHttpAdapter
+	route.Spec.To.Name = nameMqttAdapter
 
 	// return
 

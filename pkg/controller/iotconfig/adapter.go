@@ -74,3 +74,22 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 
 	return nil
 }
+
+func AppendHonoAdapterEnvs(container *corev1.Container, username string, password string) {
+	container.Env = append(container.Env, []corev1.EnvVar{
+		{Name: "HONO_MESSAGING_HOST", Value: "localhost"},
+		{Name: "HONO_MESSAGING_PORT", Value: "5672"},
+		{Name: "HONO_COMMAND_HOST", Value: "localhost"},
+		{Name: "HONO_COMMAND_PORT", Value: "5672"},
+
+		{Name: "HONO_REGISTRATION_HOST", Value: "iot-device-registry.$(KUBERNETES_NAMESPACE).svc"},
+		{Name: "HONO_REGISTRATION_USERNAME", Value: username},
+		{Name: "HONO_REGISTRATION_PASSWORD", Value: password},
+		{Name: "HONO_CREDENTIALS_HOST", Value: "iot-device-registry.$(KUBERNETES_NAMESPACE).svc"},
+		{Name: "HONO_CREDENTIALS_USERNAME", Value: username},
+		{Name: "HONO_CREDENTIALS_PASSWORD", Value: password},
+		{Name: "HONO_TENANT_HOST", Value: "iot-tenant-service.$(KUBERNETES_NAMESPACE).svc"},
+		{Name: "HONO_TENANT_USERNAME", Value: username},
+		{Name: "HONO_TENANT_PASSWORD", Value: password},
+	}...)
+}
