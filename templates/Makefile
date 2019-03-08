@@ -9,14 +9,7 @@ PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 
 IOT_MODULES=\
 	iot/api \
-	iot/auth \
 	iot/common \
-	iot/device-registry \
-	iot/iot-gc \
-	iot/http-adapter \
-	iot/mqtt-adapter \
-	iot/tenant \
-	iot/tenant-service \
 
 MODULES=\
 	$(IOT_MODULES) \
