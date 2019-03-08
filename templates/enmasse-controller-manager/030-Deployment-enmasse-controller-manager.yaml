@@ -29,16 +29,8 @@ spec:
               fieldPath: metadata.name
         - name: OPERATOR_NAME
           value: "enmasse-controller-manager"
-        - name: ENMASSE_DEFAULT_IMG_PULL_POLICY
+        - name: ENMASSE_DEFAULT_PULL_POLICY
           value: "${IMAGE_PULL_POLICY}"
-        - name: ENMASSE_DEFAULT_IMG_REGISTRY
-          value: "${DOCKER_REGISTRY}"
-        - name: ENMASSE_DEFAULT_IMG_ORG
-          value: "${DOCKER_ORG}"
-        - name: ENMASSE_DEFAULT_IMG_TAG
-          value: "${IMAGE_VERSION}"
-        - name: ENMASSE_IMG_ENMASSEPROJECT_QDROUTERD_BASE
-          value: "${QDROUTERD_BASE_IMAGE}"
         resources:
           limits:
             memory: 128Mi

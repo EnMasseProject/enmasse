@@ -8,8 +8,6 @@ package iotconfig
 import (
 	"context"
 
-	"github.com/enmasseproject/enmasse/pkg/util/images"
-
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -51,7 +49,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	deployment.Spec.Replicas = nil
 
 	err := install.ApplyContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "iot-tenant-service"}, config); err != nil {
+		if err := install.SetContainerImage(container, "iot-tenant-service", config); err != nil {
 			return err
 		}
 

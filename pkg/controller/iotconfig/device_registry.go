@@ -8,8 +8,6 @@ package iotconfig
 import (
 	"context"
 
-	"github.com/enmasseproject/enmasse/pkg/util/images"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -69,7 +67,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 	deployment.Spec.Replicas = nil
 
 	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "iot-device-registry"}, config); err != nil {
+		if err := install.SetContainerImage(container, "iot-device-registry", config); err != nil {
 			return err
 		}
 

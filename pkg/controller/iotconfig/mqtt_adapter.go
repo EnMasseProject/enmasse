@@ -8,8 +8,6 @@ package iotconfig
 import (
 	"context"
 
-	"github.com/enmasseproject/enmasse/pkg/util/images"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -65,7 +63,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 	deployment.Spec.Replicas = nil
 
 	err := install.ApplyContainerWithError(deployment, "mqtt-adapter", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "iot-mqtt-adapter"}, config); err != nil {
+		if err := install.SetContainerImage(container, "iot-mqtt-adapter", config); err != nil {
 			return err
 		}
 

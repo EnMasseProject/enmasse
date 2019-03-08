@@ -27,10 +27,10 @@ func (spec *IoTConfigSpec) WantDefaultRoutes() bool {
 
 }
 
-func (config *IoTConfig) GetImageOverrides() []v1beta1.ImageOverride {
+func (config *IoTConfig) GetImageOverrides() map[string]v1beta1.ImageOverride {
 	return config.Spec.ImageOverrides
 }
 
-func (spec *IoTConfigSpec) GetImageOverrides() []v1beta1.ImageOverride {
+func (spec *IoTConfigSpec) GetImageOverrides() map[string]v1beta1.ImageOverride {
 	return spec.ImageOverrides
 }

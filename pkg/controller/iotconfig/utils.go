@@ -6,21 +6,9 @@
 package iotconfig
 
 import (
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	corev1 "k8s.io/api/core/v1"
 )
-
-func FindAdapterSpec(config *iotv1alpha1.IoTConfig, adapterType string) *iotv1alpha1.AdapterSpec {
-
-	for _, a := range config.Spec.Adapters {
-		if a.AdapterType == adapterType {
-			return &a
-		}
-	}
-
-	return nil
-}
 
 // This sets the default Hono probes
 func SetHonoProbes(container *corev1.Container) {

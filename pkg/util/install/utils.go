@@ -153,20 +153,34 @@ func ApplyVolumeWithError(deployment *appsv1.Deployment, name string, mutator fu
 	return err
 }
 
-func SetContainerImage(container *corev1.Container, img images.ImageRequest, overrides v1beta1.ImageOverridesProvider) error {
+func SetContainerImage(container *corev1.Container, imageName string, overrides v1beta1.ImageOverridesProvider) error {
 
-	resolved, err := img.Resolve(images.DefaultResolvers(overrides.GetImageOverrides()))
+	resolved, err := images.GetImage(imageName)
 	if err != nil {
 		return err
 	}
 
-	image, err := resolved.ToImageName()
-	if err != nil {
-		return err
+	var pullPolicy corev1.PullPolicy
+
+	overrideMap := overrides.GetImageOverrides()
+	if overrideMap != nil {
+		val, ok := overrideMap[imageName]
+		if ok {
+			if val.Name != "" {
+				resolved = val.Name
+			}
+			if val.PullPolicy != "" {
+				pullPolicy = val.PullPolicy
+			}
+		}
 	}
 
-	container.Image = image
-	container.ImagePullPolicy = resolved.PullPolicy
+	container.Image = resolved
+	if pullPolicy != "" {
+		container.ImagePullPolicy = pullPolicy
+	} else {
+		container.ImagePullPolicy = images.PullPolicyFromImageName(resolved)
+	}
 
 	return nil
 }

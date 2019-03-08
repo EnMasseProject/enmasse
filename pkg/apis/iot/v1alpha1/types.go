@@ -101,7 +101,7 @@ type IoTConfigSpec struct {
 
 	EnableDefaultRoutes *bool `json:"enableDefaultRoutes,omitempty"`
 
-	ImageOverrides []v1beta1.ImageOverride `json:"imageOverrides,omitempty"`
+	ImageOverrides map[string]v1beta1.ImageOverride `json:"imageOverrides,omitempty"`
 }
 
 type AdapterSpec struct {

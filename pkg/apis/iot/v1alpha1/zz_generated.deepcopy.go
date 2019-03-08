@@ -175,9 +175,9 @@ func (in *IoTConfigSpec) DeepCopyInto(out *IoTConfigSpec) {
 	}
 	if in.ImageOverrides != nil {
 		in, out := &in.ImageOverrides, &out.ImageOverrides
-		*out = make([]v1beta1.ImageOverride, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
+		*out = make(map[string]v1beta1.ImageOverride, len(*in))
+		for key, val := range *in {
+			(*out)[key] = val
 		}
 	}
 	return

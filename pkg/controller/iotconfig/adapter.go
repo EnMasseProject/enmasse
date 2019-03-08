@@ -2,7 +2,6 @@ package iotconfig
 
 import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
-	"github.com/enmasseproject/enmasse/pkg/util/images"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -12,7 +11,7 @@ import (
 func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
 	err := install.ApplyContainerWithError(deployment, "qdr-cfg", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "qdr-proxy-configurator"}, config); err != nil {
+		if err := install.SetContainerImage(container, "qdr-proxy-configurator", config); err != nil {
 			return err
 		}
 
@@ -38,7 +37,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 	}
 
 	err = install.ApplyContainerWithError(deployment, "qdr-proxy", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "qdrouterd-base"}, config); err != nil {
+		if err := install.SetContainerImage(container, "qdrouterd-base", config); err != nil {
 			return err
 		}
 

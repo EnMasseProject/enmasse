@@ -10,24 +10,10 @@ import (
 )
 
 type ImageOverride struct {
-	Match ImageMatch `json:"match"`
-
-	Registry     string            `json:"registry ,omitempty"`
-	Organization string            `json:"organization,omitempty"`
-	Name         string            `json:"name,omitempty"`
-	Tag          string            `json:"tag,omitempty"`
-	PullPolicy   corev1.PullPolicy `json:"pullPolicy,omitempty"`
-}
-
-type ImageMatch struct {
-	ByNameMatch *ByNameMatch `json:"byName,omitempty"`
-}
-
-type ByNameMatch struct {
-	Organization string `json:"organization,omitempty"`
-	Name         string `json:"name,omitempty"`
+	Name       string            `json:"name"`
+	PullPolicy corev1.PullPolicy `json:"pullPolicy,omitempty"`
 }
 
 type ImageOverridesProvider interface {
-	GetImageOverrides() []ImageOverride
+	GetImageOverrides() map[string]ImageOverride
 }
