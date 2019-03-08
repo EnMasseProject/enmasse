@@ -14,7 +14,7 @@ import (
 /*
  * Be careful with the comments in this file. The prefix "+" indicates that this is being processed
  * by the client generator. The location, empty lines, and other comments in this file may confuse
- * the generate, and produce a non-version version.
+ * the generator, and produce a non-version version.
  */
 
 // ** AddressSpace

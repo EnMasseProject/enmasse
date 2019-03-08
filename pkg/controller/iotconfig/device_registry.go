@@ -8,6 +8,8 @@ package iotconfig
 import (
 	"context"
 
+	"github.com/enmasseproject/enmasse/pkg/util/images"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -67,7 +69,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 	deployment.Spec.Replicas = nil
 
 	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, "iot-device-registry", MakeImageProperties(config)); err != nil {
+		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "iot-device-registry"}, config); err != nil {
 			return err
 		}
 
@@ -158,9 +160,9 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryService(config *iotv1alpha1.
 
 	// HTTP port
 
-	service.Spec.Ports[1].Name = "http"
-	service.Spec.Ports[1].Port = 8080
-	service.Spec.Ports[1].TargetPort = intstr.FromInt(8008)
+	service.Spec.Ports[1].Name = "https"
+	service.Spec.Ports[1].Port = 8443
+	service.Spec.Ports[1].TargetPort = intstr.FromInt(8443)
 	service.Spec.Ports[1].Protocol = corev1.ProtocolTCP
 
 	// annotations
@@ -262,7 +264,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryRoute(config *iotv1alpha1.Io
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	route.Spec.TLS.Termination = routev1.TLSTerminationEdge
+	route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
 	route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
 
 	// Service

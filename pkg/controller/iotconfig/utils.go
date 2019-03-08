@@ -22,12 +22,6 @@ func FindAdapterSpec(config *iotv1alpha1.IoTConfig, adapterType string) *iotv1al
 	return nil
 }
 
-func MakeImageProperties(config *iotv1alpha1.IoTConfig) iotv1alpha1.ImageProperties {
-	return install.FlattenImageProperties([]*iotv1alpha1.ImageProperties{
-		&config.Spec.DefaultImageProperties,
-	})
-}
-
 // This sets the default Hono probes
 func SetHonoProbes(container *corev1.Container) {
 	container.ReadinessProbe = install.ApplyHttpProbe(container.ReadinessProbe, 10, "/readiness", 8088)

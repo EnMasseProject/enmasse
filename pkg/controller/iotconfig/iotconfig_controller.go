@@ -178,6 +178,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processDeviceRegistry(ctx, config)
 	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processHttpAdapter(ctx, config)
+	})
 
 	return rc.Result()
 }

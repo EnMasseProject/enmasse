@@ -9,6 +9,7 @@ import (
 	"context"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/util/images"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -26,7 +27,7 @@ func (r *ReconcileIoTConfig) reconcileCollectorDeployment(config *iotv1alpha1.Io
 	deployment.Spec.Replicas = nil
 
 	err := install.ApplyContainerWithError(deployment, "collector", func(container *corev1.Container) error {
-		if err := install.SetContainerImage(container, "iot-gc", MakeImageProperties(config)); err != nil {
+		if err := install.SetContainerImage(container, images.ImageRequest{"enmasseproject", "iot-gc"}, config); err != nil {
 			return err
 		}
 

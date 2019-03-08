@@ -6,8 +6,8 @@
 package v1alpha1
 
 import (
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -96,33 +96,12 @@ type IoTConfig struct {
 	Status IoTConfigStatus `json:"status,omitempty"`
 }
 
-func (config *IoTConfig) WantDefaultRoutes() bool {
-	return config.Spec.WantDefaultRoutes()
-}
-
 type IoTConfigSpec struct {
-	Adapters               []AdapterSpec   `json:"adapters,omitempty"`
-	DefaultImageProperties ImageProperties `json:"defaultImageProperties,omitempty"`
+	Adapters []AdapterSpec `json:"adapters,omitempty"`
 
 	EnableDefaultRoutes *bool `json:"enableDefaultRoutes,omitempty"`
-}
 
-func (spec *IoTConfigSpec) WantDefaultRoutes() bool {
-
-	if spec.EnableDefaultRoutes != nil {
-		return *spec.EnableDefaultRoutes
-	}
-
-	return util.IsOpenshift()
-
-}
-
-type ImageProperties struct {
-	Repository     *string `json:"repository,omitempty"`
-	UseImageStream *bool   `json:"useImageStream,omitempty"`
-
-	Tag        string         `json:"tag,omitempty"`
-	PullPolicy *v1.PullPolicy `json:"PullPolicy,omitempty"`
+	ImageOverrides []v1beta1.ImageOverride `json:"imageOverrides,omitempty"`
 }
 
 type AdapterSpec struct {

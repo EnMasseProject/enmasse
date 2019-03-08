@@ -6,41 +6,12 @@
 package util
 
 import (
-	"os"
 	"strings"
 )
 
-type environmentProvider interface {
-	lookupEnv(string) (string, bool)
-}
-
-// OS environment provider
-
-type OSEnvironmentProvider struct {
-}
-
-func (p OSEnvironmentProvider) lookupEnv(name string) (string, bool) {
-	return os.LookupEnv(name)
-}
-
-var _ environmentProvider = OSEnvironmentProvider{}
-
-// mock environment provider
-
-type MockEnvironmentProvider struct {
-	environment map[string]string
-}
-
-func (p MockEnvironmentProvider) lookupEnv(name string) (string, bool) {
-	val, ok := p.environment[name]
-	return val, ok
-}
-
-var _ environmentProvider = MockEnvironmentProvider{}
-
 // implementation
 
-func isBooleanEnv(environment environmentProvider, name string, defaultValue bool) bool {
+func isBooleanEnv(environment EnvironmentProvider, name string, defaultValue bool) bool {
 	val := getBooleanEnv(environment, name)
 	if val == nil {
 		return defaultValue
@@ -49,8 +20,8 @@ func isBooleanEnv(environment environmentProvider, name string, defaultValue boo
 	}
 }
 
-func getBooleanEnv(environment environmentProvider, name string) *bool {
-	val, ok := environment.lookupEnv(name)
+func getBooleanEnv(environment EnvironmentProvider, name string) *bool {
+	val, ok := environment.LookupEnv(name)
 	if !ok {
 		return nil
 	} else {
@@ -64,7 +35,7 @@ func IsModuleEnabled(module string) bool {
 	return isModuleEnabled(&OSEnvironmentProvider{}, module)
 }
 
-func isModuleEnabled(environment environmentProvider, module string) bool {
+func isModuleEnabled(environment EnvironmentProvider, module string) bool {
 
 	module = strings.ToUpper(module)
 
