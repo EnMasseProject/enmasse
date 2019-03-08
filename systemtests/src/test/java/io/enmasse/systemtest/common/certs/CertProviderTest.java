@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
@@ -69,7 +68,6 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.PemTrustOptions;
-import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 
@@ -123,33 +121,62 @@ class CertProviderTest extends TestBase {
                 .addressSpace(addressSpace)
                 .mqttConnectionOptions(mqttOptions).create();
 
+        testCertProvider(amqpClient, mqttClient);
+    }
+
+    @Test
+    void testConsoleSelfSignedTrustEndpointCert() throws Exception {
+        createTestEnv(new CertSpecBuilder()
+                .withProvider(CertProvider.selfsigned.name())
+                .build(), false);
+
+        String caCert = new String(Base64.getDecoder().decode(getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
+
         WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(false)
                 .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(caCert)))
+                          .addCertValue(Buffer.buffer(caCert)))
                 .setVerifyHost(false));
 
-        testCertProvider(amqpClient, mqttClient, webClient);
+        testConsole(webClient);
+    }
+
+    @Test
+    void testConsoleSelfSignedTrustCaCert() throws Exception {
+        createTestEnv(new CertSpecBuilder()
+                .withProvider(CertProvider.selfsigned.name())
+                .build(), false);
+
+        String endpointCert = new String(Base64.getDecoder().decode(
+                getAddressSpace(addressSpace.getMetadata().getName())
+                        .getSpec()
+                        .getEndpoints()
+                        .stream()
+                        .filter(e->e.getService().equals("console"))
+                        .findFirst()
+                        .get()
+                        .getCert()
+                        .getTlsCert()));
+
+        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
+                .setSsl(true)
+                .setTrustAll(false)
+                .setPemTrustOptions(new PemTrustOptions()
+                          .addCertValue(Buffer.buffer(endpointCert)))
+                .setVerifyHost(false));
+
+        testConsole(webClient);
     }
 
     @Test
     void testCertBundle() throws Exception {
-        File caCert = createTempFile("certAuthority", "crt");
-        File caKey = createTempFile("certAuthority", "key");
-        createSelfSignedCert(caCert, caKey);
-        String randomName = UUID.randomUUID().toString();
-        File keyFile = createTempFile(randomName, "key");
-        File csrFile = createTempFile(randomName, "csr");
-        createCsr(keyFile, csrFile);
-        File crtFile = signCsr(caKey, caCert, keyFile, csrFile);
-        String key = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(keyFile));
-        String cert = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(crtFile));
+        CertBundle certBundle = createCertBundle();
 
         createTestEnv(new CertSpecBuilder()
                 .withProvider(CertProvider.certBundle.name())
-                .withTlsKey(key)
-                .withTlsCert(cert)
+                .withTlsKey(certBundle.getKey())
+                .withTlsCert(certBundle.getCert())
                 .build());
 
         AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
@@ -159,26 +186,59 @@ class CertProviderTest extends TestBase {
                 .setSsl(true)
                 .setHostnameVerificationAlgorithm("")
                 .setPemTrustOptions(new PemTrustOptions()
-                        .addCertPath(caCert.getAbsolutePath()))
+                        .addCertPath(certBundle.getCaCert().getAbsolutePath()))
                 .setTrustAll(false);
 
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setSocketFactory(getSocketFactory(new FileInputStream(caCert)));
+        mqttOptions.setSocketFactory(getSocketFactory(new FileInputStream(certBundle.getCaCert())));
         mqttOptions.setUserName(user.getUsername());
         mqttOptions.setPassword(user.getPassword().toCharArray());
         IMqttClient mqttClient = mqttClientFactory.build()
                 .addressSpace(addressSpace)
                 .mqttConnectionOptions(mqttOptions).create();
 
+        testCertProvider(amqpClient, mqttClient);
+
+    }
+
+    @Test
+    void testConsoleCertBundleTrustEndpointCert() throws Exception {
+        CertBundle certBundle = createCertBundle();
+
+        createTestEnv(new CertSpecBuilder()
+                .withProvider(CertProvider.certBundle.name())
+                .withTlsKey(certBundle.getKey())
+                .withTlsCert(certBundle.getCert())
+                .build(), false);
+
         WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(false)
                 .setPemTrustOptions(new PemTrustOptions()
-                        .addCertPath(caCert.getAbsolutePath()))
+                        .addCertPath(certBundle.getCrtFile().getAbsolutePath()))
                 .setVerifyHost(false));
 
-        testCertProvider(amqpClient, mqttClient, webClient);
+        testConsole(webClient);
+    }
 
+    @Test
+    void testConsoleCertBundleTrustCaCert() throws Exception {
+        CertBundle certBundle = createCertBundle();
+
+        createTestEnv(new CertSpecBuilder()
+                .withProvider(CertProvider.certBundle.name())
+                .withTlsKey(certBundle.getKey())
+                .withTlsCert(certBundle.getCert())
+                .build(), false);
+
+        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
+                .setSsl(true)
+                .setTrustAll(false)
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertPath(certBundle.getCaCert().getAbsolutePath()))
+                .setVerifyHost(false));
+
+        testConsole(webClient);
     }
 
     @Test
@@ -197,13 +257,16 @@ class CertProviderTest extends TestBase {
             request.put("password", user.getPassword());
 
             Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
-
             request.put("messagingHost", messagingEndpoint.getHost());
             request.put("messagingPort", messagingEndpoint.getPort());
 
             Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
             request.put("mqttHost", mqttEndpoint.getHost());
             request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
+
+            Endpoint consoleEndpoint = kubernetes.getEndpoint("console-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
+            request.put("consoleHost", consoleEndpoint.getHost());
+            request.put("consolePort", consoleEndpoint.getPort());
 
             log.info("Making request to openshift app {}", request);
 
@@ -250,25 +313,21 @@ class CertProviderTest extends TestBase {
                 endpointCert);
     }
 
-    private void testCertProvider(AmqpClient amqpClient, IMqttClient mqttClient, WebClient webClient) throws Exception {
+    private void testCertProvider(AmqpClient amqpClient, IMqttClient mqttClient) throws Exception {
         QueueTest.runQueueTest(amqpClient, queue);
-
         mqttClient.connect();
         ApiServerTest.simpleMQTTSendReceive(topic, mqttClient, 3);
         mqttClient.disconnect();
+    }
 
+    private void testConsole(WebClient webClient) throws Exception {
         Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
         webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true)
         .send(ar->{
             log.info("get console "+ar.toString());
             if (ar.succeeded()) {
-                HttpResponse<Buffer> response = ar.result();
-                if (response.statusCode() == HttpURLConnection.HTTP_OK || response.statusCode() == HttpURLConnection.HTTP_MOVED_TEMP) {
-                    promise.complete(Optional.empty());
-                } else {
-                    promise.complete(Optional.of(new RuntimeException("Status " + response.statusCode())));
-                }
+                promise.complete(Optional.empty());
             } else {
                 log.info("Exception in get console", ar.cause());
                 promise.complete(Optional.of(ar.cause()));
@@ -321,6 +380,20 @@ class CertProviderTest extends TestBase {
         context.init(null, tmf.getTrustManagers(), new SecureRandom());
 
         return context.getSocketFactory();
+    }
+
+    private CertBundle createCertBundle() throws Exception {
+        File caCert = createTempFile("certAuthority", "crt");
+        File caKey = createTempFile("certAuthority", "key");
+        createSelfSignedCert(caCert, caKey);
+        String randomName = UUID.randomUUID().toString();
+        File keyFile = createTempFile(randomName, "key");
+        File csrFile = createTempFile(randomName, "csr");
+        createCsr(keyFile, csrFile);
+        File crtFile = signCsr(caKey, caCert, keyFile, csrFile);
+        String key = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(keyFile));
+        String cert = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(crtFile));
+        return new CertBundle(caCert, crtFile, key, cert);
     }
 
 }
