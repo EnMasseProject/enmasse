@@ -45,7 +45,6 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, r.reconcileHttpAdapterConfigMap)
 	})
-
 	if config.WantDefaultRoutes() {
 		rc.ProcessSimple(func() error {
 			return r.processRoute(ctx, routeHttpAdapter, config, r.reconcileHttpAdapterRoute)
@@ -100,8 +99,14 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 			{Name: "HONO_COMMAND_PORT", Value: "5672"},
 
 			{Name: "HONO_REGISTRATION_HOST", Value: "iot-device-registry.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_REGISTRATION_USERNAME", Value: "http-adapter@HONO"},
+			{Name: "HONO_REGISTRATION_PASSWORD", Value: "http-secret"},
 			{Name: "HONO_CREDENTIALS_HOST", Value: "iot-device-registry.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_CREDENTIALS_USERNAME", Value: "http-adapter@HONO"},
+			{Name: "HONO_CREDENTIALS_PASSWORD", Value: "http-secret"},
 			{Name: "HONO_TENANT_HOST", Value: "iot-tenant-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_TENANT_USERNAME", Value: "http-adapter@HONO"},
+			{Name: "HONO_TENANT_PASSWORD", Value: "http-secret"},
 		}
 
 		// volume mounts
@@ -110,16 +115,16 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 			container.VolumeMounts = make([]corev1.VolumeMount, 3)
 		}
 
-		container.VolumeMounts[0].Name = "conf"
+		container.VolumeMounts[0].Name = "config"
 		container.VolumeMounts[0].MountPath = "/etc/config"
-		container.VolumeMounts[0].ReadOnly = false
+		container.VolumeMounts[0].ReadOnly = true
 
 		container.VolumeMounts[1].Name = "tls"
 		container.VolumeMounts[1].MountPath = "/etc/tls"
 		container.VolumeMounts[1].ReadOnly = true
 
-		container.VolumeMounts[2].Name = "tls-auth-service"
-		container.VolumeMounts[2].MountPath = "/etc/tls-auth-service"
+		container.VolumeMounts[2].Name = "secrets"
+		container.VolumeMounts[2].MountPath = "/etc/secrets"
 		container.VolumeMounts[2].ReadOnly = true
 
 		// return
@@ -139,9 +144,9 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "conf", nameHttpAdapter+"-config")
+	install.ApplyConfigMapVolume(deployment, "config", nameHttpAdapter+"-config")
 	install.ApplySecretVolume(deployment, "tls", nameHttpAdapter+"-tls")
-	install.ApplySecretVolume(deployment, "tls-auth-service", "iot-auth-service-tls")
+	install.ApplySecretVolume(deployment, "secrets", nameHttpAdapter+"-secrets")
 
 	// return
 
@@ -202,17 +207,14 @@ hono:
     port: 5671
     trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
-    credentialsPath: /etc/secrets/registry.properties
   credentials:
     port: 5671
     trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
-    credentialsPath: /etc/secrets/registry.properties
   tenant:
     port: 5671
     trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
-    credentialsPath: /etc/secrets/registry.properties
 `
 
 	return nil

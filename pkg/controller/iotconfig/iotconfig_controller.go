@@ -269,6 +269,30 @@ func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, 
 	return nil
 }
 
+func (r *ReconcileIoTConfig) processSecret(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error) error {
+
+	secret := corev1.Secret{
+		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, &secret, func(existing runtime.Object) error {
+		existingSecret := existing.(*corev1.Secret)
+
+		if err := controllerutil.SetControllerReference(config, existingSecret, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, existingSecret)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
 func (r *ReconcileIoTConfig) processPersistentVolumeClaim(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.PersistentVolumeClaim) error) error {
 
 	pvc := corev1.PersistentVolumeClaim{
