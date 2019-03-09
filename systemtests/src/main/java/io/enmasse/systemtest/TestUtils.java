@@ -1296,7 +1296,7 @@ public class TestUtils {
             if (isReachable(hubUrl)) {
                 return new RemoteWebDriver(hubUrl, options);
             }
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         }
         throw new IllegalStateException("Selenium webdriver cannot connect to selenium container");
     }
@@ -1323,7 +1323,7 @@ public class TestUtils {
                 return;
             }
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
-            Thread.sleep(1000);
+            Thread.sleep(2000);
         }
         Assertions.fail(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
@@ -1339,7 +1339,7 @@ public class TestUtils {
                 return;
             }
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
-            Thread.sleep(1_000);
+            Thread.sleep(2000);
         }
         Assertions.fail("Failed to wait for: " + forWhat);
     }
