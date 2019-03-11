@@ -85,6 +85,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
+
 			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
 
 			{Name: "HONO_MQTT_NATIVE_TLS_REQUIRED", Value: "false"},
@@ -93,7 +94,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 		AppendHonoAdapterEnvs(container, "mqtt-adapter@HONO", "mqtt-secret")
 
 		if err := AppendTrustStores(config, container, []string{
-			"HONO_CREDENTIAL_TRUST_STORE_PATH",
+			"HONO_CREDENTIALS_TRUST_STORE_PATH",
 			"HONO_REGISTRATION_TRUST_STORE_PATH",
 			"HONO_TENANT_TRUST_STORE_PATH",
 		}); err != nil {
