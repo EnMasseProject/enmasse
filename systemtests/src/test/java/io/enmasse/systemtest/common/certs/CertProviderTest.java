@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
@@ -55,6 +55,7 @@ import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.VertxFactory;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -248,6 +249,7 @@ class CertProviderTest extends TestBase {
                 .withProvider(CertProvider.openshift.name())
                 .build(),
                 false);
+        boolean testSucceeded = false;
         try {
             SystemtestsKubernetesApps.deployOcpEnmasseApp(environment.namespace(), kubernetes);
             OcpEnmasseAppApiClient client = new OcpEnmasseAppApiClient(kubernetes, SystemtestsKubernetesApps.getOcpEnmasseAppEndpoint(environment.namespace(), kubernetes));
@@ -268,14 +270,33 @@ class CertProviderTest extends TestBase {
             request.put("consoleHost", consoleEndpoint.getHost());
             request.put("consolePort", consoleEndpoint.getPort());
 
-            log.info("Making request to openshift app {}", request);
-
-            JsonObject response = client.test(request);
-            if(response.containsKey("error")) {
-                fail("Error testing openshift provider "+response.getString("error"));
+            TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
+            Exception lastException = null;
+            while (!timeout.timeoutExpired()) {
+                try {
+                    log.info("Making request to openshift app {}", request);
+                    JsonObject response = client.test(request);
+                    if(response.containsKey("error")) {
+                        fail("Error testing openshift provider "+response.getString("error"));
+                    }else {
+                        testSucceeded=true;
+                        return;
+                    }
+                }catch(Exception e) {
+                    lastException = e;
+                }
+                log.debug("next iteration, remaining time: {}", timeout.timeLeft());
+                Thread.sleep(5000);
             }
+            log.error("Timeout expired");
+            if(lastException!=null) {
+                throw lastException;
+            }
+
         }finally {
-            logCollector.collectLogsOfPodsByLabels(Collections.singletonMap("app", SystemtestsKubernetesApps.OCP_ENMASSE_APP));
+            if(!testSucceeded) {
+                logCollector.collectLogsOfPodsByLabels(Collections.singletonMap("app", SystemtestsKubernetesApps.OCP_ENMASSE_APP));
+            }
             SystemtestsKubernetesApps.deleteOcpEnmasseApp(environment.namespace(), kubernetes);
         }
     }
