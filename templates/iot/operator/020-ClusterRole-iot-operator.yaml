@@ -3,17 +3,8 @@ kind: ClusterRole
 metadata:
   labels:
     app: enmasse
-  name: enmasse.io:enmasse-controller-manager
+  name: enmasse.io:iot-operator
 rules:
-  - apiGroups: [ "" ]
-    resources: [ "configmaps", "secrets", "pods", "services", "persistentvolumeclaims" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
-  - apiGroups: [ "apps" ]
-    resources: [ "deployments" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
-  - apiGroups: [ "route.openshift.io" ]
-    resources: [ "routes" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
   - apiGroups: [ "enmasse.io" ]
     resources: [ "addressspaces", "addresses" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]

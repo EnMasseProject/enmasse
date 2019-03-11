@@ -13,6 +13,7 @@ package:
 build/operatorImageMap.yaml:
 	echo "" > "$@"
 	
+	echo "enmasse-controller-manager: $(ENMASSE_CONTROLLER_MANAGER_IMAGE)" >> "$@"
 	echo "iot-auth-service: $(IOT_AUTH_SERVICE_IMAGE)" >> "$@"
 	echo "iot-device-registry: $(IOT_DEVICE_REGISTRY_IMAGE)" >> "$@"
 	echo "iot-gc: $(IOT_GC_IMAGE)" >> "$@"

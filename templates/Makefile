@@ -10,6 +10,7 @@ PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 IOT_MODULES=\
 	iot/api \
 	iot/common \
+	iot/operator \
 
 MODULES=\
 	$(IOT_MODULES) \

@@ -6,11 +6,18 @@ metadata:
   name: enmasse.io:enmasse-controller-manager
 rules:
   - apiGroups: [ "" ]
-    resources: [ "configmaps", "secrets", "pods" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
-  - apiGroups: [ "enmasse.io" ]
-    resources: [ "addressspaces", "addresses" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+    resources: [ "configmaps", "secrets", "pods", "services", "persistentvolumeclaims" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+  - apiGroups: [ "route.openshift.io" ]
+    resources: [ "routes" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "admin.enmasse.io" ]
     resources: [ "authenticationservice" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+  - apiGroups: [ "iot.enmasse.io" ]
+    resources: [ "iotconfigs", "iotconfigs/finalizers" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+    

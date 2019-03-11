@@ -6,11 +6,15 @@
 package iotconfig
 
 import (
+	"context"
+
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
+	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
@@ -96,4 +100,29 @@ func AppendHonoAdapterEnvs(container *corev1.Container, username string, passwor
 		{Name: "HONO_TENANT_USERNAME", Value: username},
 		{Name: "HONO_TENANT_PASSWORD", Value: password},
 	}...)
+}
+
+func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+
+	rc := &recon.ReconcileContext{}
+
+	rc.ProcessSimple(func() error {
+		return r.processConfigMap(ctx, "qdr-proxy-configurator", config, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			configMap.Data["qdrouterd.conf"] = `
+router {
+  mode: standalone
+  id: Router.Proxy
+}
+
+listener {
+  host: localhost
+  port: 5672
+  saslMechanisms: ANONYMOUS
+}
+`
+			return nil
+		})
+	})
+
+	return rc.Result()
 }

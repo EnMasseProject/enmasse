@@ -176,6 +176,12 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		}
 		return nil
 	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processQdrProxyConfig(ctx, config)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processOperator(ctx, config)
+	})
 	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
 	})
@@ -275,7 +281,7 @@ func (r *ReconcileIoTConfig) processService(ctx context.Context, name string, co
 	return nil
 }
 
-func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, service *corev1.ConfigMap) error) error {
+func (r *ReconcileIoTConfig) processConfigMap(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, manipulator func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error) error {
 
 	cm := corev1.ConfigMap{
 		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
