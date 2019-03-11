@@ -81,7 +81,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 		container.VolumeMounts[0].Name = "conf"
 		container.VolumeMounts[0].MountPath = "/etc/config"
-		container.VolumeMounts[0].ReadOnly = false
+		container.VolumeMounts[0].ReadOnly = true
 
 		container.VolumeMounts[1].Name = "tls"
 		container.VolumeMounts[1].MountPath = "/etc/tls"

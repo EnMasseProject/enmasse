@@ -105,7 +105,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 
 		container.VolumeMounts[0].Name = "conf"
 		container.VolumeMounts[0].MountPath = "/etc/config"
-		container.VolumeMounts[0].ReadOnly = false
+		container.VolumeMounts[0].ReadOnly = true
 
 		container.VolumeMounts[1].Name = "tls"
 		container.VolumeMounts[1].MountPath = "/etc/tls"
