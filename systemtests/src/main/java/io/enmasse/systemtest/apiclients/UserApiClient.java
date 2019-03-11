@@ -6,10 +6,11 @@ package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.User;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.User;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -89,15 +90,7 @@ public class UserApiClient extends ApiClient {
     }
 
     public JsonObject createUser(String addressSpace, UserCredentials credentials) throws Exception {
-        User user = new User()
-                .setUserCredentials(credentials)
-                .addAuthorization(new User.AuthorizationRule()
-                        .addAddress("*")
-                        .addOperation(User.Operation.SEND)
-                        .addOperation(User.Operation.RECEIVE)
-                        .addOperation(User.Operation.VIEW))
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(User.Operation.MANAGE));
+        User user = UserUtils.createUserObject(credentials);
         return createUser(addressSpace, user, HTTP_CREATED);
     }
 
@@ -106,11 +99,11 @@ public class UserApiClient extends ApiClient {
     }
 
     public JsonObject createUser(String addressSpace, User user, int expectedCode) throws Exception {
-        return createUser(addressSpace, user.toJson(addressSpace), HTTP_CREATED);
+        return createUser(UserUtils.userToJson(addressSpace, user), expectedCode);
     }
 
-    public JsonObject createUser(String addressSpace, JsonObject userPayLoad, int expectedCode) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_USER);
+    public JsonObject createUser(JsonObject userPayLoad, int expectedCode) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_USER);
         try {
             log.info("POST-user: path {}; body {}", userPath, userPayLoad.toString());
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
@@ -138,7 +131,7 @@ public class UserApiClient extends ApiClient {
     }
 
     public void deleteUser(String addressSpace, String userName, int expectedCode) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_USER);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_USER);
         try {
             String path = userPath + "/" + String.format("%s.%s", addressSpace, userName);
             log.info("DELETE-user: path '{}'", path);
@@ -166,10 +159,10 @@ public class UserApiClient extends ApiClient {
     }
 
     public JsonObject updateUser(String addressSpace, User user, int expectedCode) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_USER);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_USER);
         try {
-            String path = userPath + "/" + String.format("%s.%s", addressSpace, user.getUsername());
-            JsonObject payload = user.toJson(addressSpace);
+            String path = userPath + "/" + String.format("%s.%s", addressSpace, user.getSpec().getUsername());
+            JsonObject payload = UserUtils.userToJson(addressSpace, user);
             log.info("PUT-user: path '{}', data: {}", path, payload.toString());
             CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
             return doRequestNTimes(initRetry, () -> {
@@ -181,7 +174,7 @@ public class UserApiClient extends ApiClient {
                                 .sendJsonObject(payload, ar -> responseHandler(ar,
                                         responsePromise,
                                         expectedCode,
-                                        String.format("Error: update user '%s'", user.getUsername())));
+                                        String.format("Error: update user '%s'", user.getSpec().getUsername())));
                         return responsePromise.get(2, TimeUnit.MINUTES);
                     },
                     Optional.of(() -> kubernetes.getRestEndpoint()),

@@ -19,11 +19,16 @@ import io.enmasse.systemtest.resources.CliOutputData;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -166,15 +171,14 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             //===========================
 
             UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
-            User testUser = new User().setUserCredentials(cred).addAuthorization(
-                    new User.AuthorizationRule()
-                            .addAddress("*")
-                            .addOperation(User.Operation.SEND)
-                            .addOperation(User.Operation.RECEIVE));
+            User testUser = UserUtils.createUserObject(cred, Collections.singletonList(
+                    new UserAuthorizationBuilder()
+                            .withAddresses("*")
+                            .withOperations(Operation.send, Operation.recv).build()));
 
             //create user
-            assertThat(KubeCMDClient.createCR(namespace, testUser.toCRDJson(brokered.getMetadata().getName()).toString()).getRetCode(), is(true));
-            assertThat(KubeCMDClient.createCR(namespace, testUser.toCRDJson(standard.getMetadata().getName()).toString()).getRetCode(), is(true));
+            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
+            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(standard.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
 
             data = new CliOutputData(KubeCMDClient.getUser(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.USER);

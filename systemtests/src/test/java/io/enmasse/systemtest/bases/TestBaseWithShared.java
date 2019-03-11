@@ -15,6 +15,9 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -243,12 +246,10 @@ public abstract class TestBaseWithShared extends TestBase {
         users.forEach((user) -> {
             try {
                 createUser(sharedAddressSpace,
-                        new User().setUserCredentials(user)
-                                .addAuthorization(
-                                        new User.AuthorizationRule()
-                                                .addAddress(String.format("%s.%s.%s", destNamePrefix, customerIndex, sufix))
-                                                .addOperation(User.Operation.SEND)
-                                                .addOperation(User.Operation.RECEIVE)));
+                        UserUtils.createUserObject(user, Collections.singletonList(
+                                new UserAuthorizationBuilder()
+                                        .withAddresses(String.format("%s.%s.%s", destNamePrefix, customerIndex, sufix))
+                                        .withOperations(Operation.send, Operation.recv).build())));
                 AmqpClient queueClient = amqpClientFactory.createQueueClient();
                 queueClient.getConnectOptions().setCredentials(user);
                 clients.add(queueClient);

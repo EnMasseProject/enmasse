@@ -29,12 +29,13 @@ import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
-import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.vertx.core.http.HttpMethod;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.*;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.proton.sasl.SaslSystemException;
@@ -52,14 +53,12 @@ import javax.jms.Session;
 import javax.security.sasl.AuthenticationException;
 import java.io.File;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
@@ -140,7 +139,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
         ArrayList<AddressSpace> spaces = new ArrayList<>();
         for (AddressSpace addressSpace : addressSpaces) {
             if (!AddressSpaceUtils.existAddressSpace(addressApiClient, addressSpace.getMetadata().getName())) {
@@ -165,7 +164,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void createAddressSpace(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
         if (!AddressSpaceUtils.existAddressSpace(apiClient, addressSpace.getMetadata().getName())) {
             log.info("Address space '{}' doesn't exist and will be created.", addressSpace);
             apiClient.createAddressSpace(addressSpace);
@@ -224,7 +223,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         if (AddressSpaceUtils.existAddressSpace(addressApiClient, addressSpace.getMetadata().getName())) {
             log.info("Address space '{}' exists and will be updated.", addressSpace);
             final String currentResourceVersion = addressApiClient.getAddressSpace(addressSpace.getMetadata().getName()).getJsonObject("metadata").getString("resourceVersion");
@@ -391,53 +390,40 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected JsonObject createUser(AddressSpace addressSpace, User user) throws Exception {
         log.info("User {} in address space {} will be created", user, addressSpace.getMetadata().getName());
-        if (!userExist(addressSpace, user.getUsername())) {
+        if (!userExist(addressSpace, user.getSpec().getUsername())) {
             return getUserApiClient().createUser(addressSpace.getMetadata().getName(), user);
         }
         return new JsonObject();
     }
 
     protected JsonObject createUserFederated(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
-        User user = new User()
-                .setUserCredentials(credentials)
-                .setType(User.Type.FEDERATED)
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(User.Operation.MANAGE));
+        User user = UserUtils.createUserObject(UserAuthenticationType.federated, credentials);
         return createUserFederated(addressSpace, user);
     }
 
     protected JsonObject createUserFederated(AddressSpace addressSpace, User user) throws Exception {
-        log.info("Federated user {} in address space {} will be created", user.getUsername(), addressSpace.getMetadata().getName());
-        if (!userExist(addressSpace, user.getUsername())) {
-            KubeCMDClient.createOcUser(user.getUsername());
-            String userID = KubeCMDClient.getOpenshiftUserId(user.getUsername());
+        log.info("Federated user {} in address space {} will be created", user.getSpec().getUsername(), addressSpace.getMetadata().getName());
+        if (!userExist(addressSpace, user.getSpec().getUsername())) {
+            KubeCMDClient.createOcUser(user.getSpec().getUsername());
+            String userID = KubeCMDClient.getOpenshiftUserId(user.getSpec().getUsername());
             return getUserApiClient().createUser(
                     addressSpace.getMetadata().getName(),
-                    user.toJson(addressSpace.getMetadata().getName(), user.getUsername(), user.getUsername(), userID),
+                    UserUtils.userToJson(addressSpace.getMetadata().getName(), user.getSpec().getUsername(), user.getSpec().getUsername(), userID, user),
                     HTTP_CREATED);
         }
         return new JsonObject();
     }
 
     protected JsonObject createUserServiceAccount(AddressSpace addressSpace, UserCredentials credentials, String namespace) throws Exception {
-        User user = new User()
-                .setUserCredentials(credentials)
-                .setType(User.Type.SERVICEACCOUNT)
-                .addAuthorization(new User.AuthorizationRule()
-                        .addAddress("*")
-                        .addOperation(User.Operation.SEND)
-                        .addOperation(User.Operation.RECEIVE)
-                        .addOperation(User.Operation.VIEW))
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(User.Operation.MANAGE));
+        User user = UserUtils.createUserObject(UserAuthenticationType.serviceaccount, credentials);
         return createUserServiceaccount(addressSpace, user, namespace);
     }
 
     protected JsonObject createUserServiceaccount(AddressSpace addressSpace, User user, String namespace) throws Exception {
-        log.info("ServiceAccount user {} in address space {} will be created", user.getUsername(), addressSpace.getMetadata().getName());
-        if (!userExist(addressSpace, user.getUsername())) {
-            String serviceaccountName = kubernetes.createServiceAccount(user.getUsername(), namespace);
-            user.setUsername(serviceaccountName);
+        log.info("ServiceAccount user {} in address space {} will be created", user.getSpec().getUsername(), addressSpace.getMetadata().getName());
+        if (!userExist(addressSpace, user.getSpec().getUsername())) {
+            String serviceaccountName = kubernetes.createServiceAccount(user.getSpec().getUsername(), namespace);
+            user = new DoneableUser(user).editSpec().withUsername(serviceaccountName).endSpec().done();
             return getUserApiClient().createUser(addressSpace.getMetadata().getName(), user);
         }
         return new JsonObject();
@@ -928,43 +914,38 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * create users and groups for wildcard authz tests
      */
-    protected List<User> createUsersWildcard(AddressSpace addressSpace, String operation) throws
+    protected List<User> createUsersWildcard(AddressSpace addressSpace, Operation operation) throws
             Exception {
         List<User> users = new ArrayList<>();
-        users.add(new User()
-                .setUsername("user1")
-                .setPassword("password")
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(operation)
-                        .addAddress("*")));
+        users.add(UserUtils.createUserObject("user1", "password",
+                Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("*")
+                        .withOperations(operation)
+                        .build())));
 
-        users.add(new User()
-                .setUsername("user2")
-                .setPassword("password")
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(operation)
-                        .addAddress("queue/*")));
+        users.add(UserUtils.createUserObject("user2", "password",
+                Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("queue/*")
+                        .withOperations(operation)
+                        .build())));
 
-        users.add(new User()
-                .setUsername("user3")
-                .setPassword("password")
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(operation)
-                        .addAddress("topic/*")));
+        users.add(UserUtils.createUserObject("user3", "password",
+                Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("topic/*")
+                        .withOperations(operation)
+                        .build())));
 
-        users.add(new User()
-                .setUsername("user4")
-                .setPassword("password")
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(operation)
-                        .addAddress("queueA*")));
+        users.add(UserUtils.createUserObject("user4", "password",
+                Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("queueA*")
+                        .withOperations(operation)
+                        .build())));
 
-        users.add(new User()
-                .setUsername("user5")
-                .setPassword("password")
-                .addAuthorization(new User.AuthorizationRule()
-                        .addOperation(operation)
-                        .addAddress("topicA*")));
+        users.add(UserUtils.createUserObject("user5", "password",
+                Collections.singletonList(new UserAuthorizationBuilder()
+                        .withAddresses("topicA*")
+                        .withOperations(operation)
+                        .build())));
 
         for (User user : users) {
             createUser(addressSpace, user);

@@ -9,7 +9,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.slf4j.Logger;
@@ -22,7 +22,7 @@ public class SeleniumManagement {
     private static Logger log = CustomLogger.getLogger();
 
     public static void deployFirefoxApp() throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy firefox deployment");
         try {
             SystemtestsKubernetesApps.deployFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
@@ -35,7 +35,7 @@ public class SeleniumManagement {
     }
 
     public static void deployChromeApp() throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.CREATE_SELENIUM_CONTAINER);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_SELENIUM_CONTAINER);
         log.info("Deploy chrome deployment");
         try {
             SystemtestsKubernetesApps.deployChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
@@ -48,13 +48,13 @@ public class SeleniumManagement {
     }
 
     public static void removeFirefoxApp() throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_SELENIUM_CONTAINER);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_SELENIUM_CONTAINER);
         SystemtestsKubernetesApps.deleteFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void removeChromeApp() throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_SELENIUM_CONTAINER);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_SELENIUM_CONTAINER);
         SystemtestsKubernetesApps.deleteChromeSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
         TimeMeasuringSystem.stopOperation(operationID);
     }

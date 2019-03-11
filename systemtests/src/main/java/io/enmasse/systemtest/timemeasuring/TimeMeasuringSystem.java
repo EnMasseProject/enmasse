@@ -45,9 +45,9 @@ public class TimeMeasuringSystem {
         return instance;
     }
 
-    private String createOperationsID(Operation operation) {
+    private String createOperationsID(SystemtestsOperation operation) {
         String id = operation.toString();
-        if (!operation.equals(Operation.TEST_EXECUTION)) {
+        if (!operation.equals(SystemtestsOperation.TEST_EXECUTION)) {
             id = String.format("%s-%s", id, UUID.randomUUID().toString().split("-")[0]);
         }
         return id;
@@ -69,7 +69,7 @@ public class TimeMeasuringSystem {
         }
     }
 
-    private String setStartTime(Operation operation) {
+    private String setStartTime(SystemtestsOperation operation) {
         String id = createOperationsID(operation);
         try {
             addRecord(id, new MeasureRecord(System.currentTimeMillis()));
@@ -81,8 +81,8 @@ public class TimeMeasuringSystem {
     }
 
     private void setEndTime(String id) {
-        if (id.equals(Operation.TEST_EXECUTION.toString())) {
-            id = createOperationsID(Operation.TEST_EXECUTION);
+        if (id.equals(SystemtestsOperation.TEST_EXECUTION.toString())) {
+            id = createOperationsID(SystemtestsOperation.TEST_EXECUTION);
         }
         try {
             measuringMap.get(testClass).get(testName).get(id).setEndTime(System.currentTimeMillis());
@@ -136,7 +136,7 @@ public class TimeMeasuringSystem {
 
     private Map<String, Long> getSumDuration() {
         Map<String, Long> sumData = new LinkedHashMap<>();
-        Arrays.stream(Operation.values()).forEach(value -> sumData.put(value.toString(), (long) 0));
+        Arrays.stream(SystemtestsOperation.values()).forEach(value -> sumData.put(value.toString(), (long) 0));
 
         measuringMap.forEach((testClassID, testClassRecords) -> testClassRecords.forEach((testID, testRecord) -> {
             testRecord.forEach((operationID, record) -> {
@@ -194,7 +194,7 @@ public class TimeMeasuringSystem {
         TimeMeasuringSystem.getInstance().setTestClass(testClass);
     }
 
-    public static String startOperation(Operation operation) {
+    public static String startOperation(SystemtestsOperation operation) {
         return TimeMeasuringSystem.getInstance().setStartTime(operation);
     }
 
@@ -202,7 +202,7 @@ public class TimeMeasuringSystem {
         TimeMeasuringSystem.getInstance().setEndTime(operationId);
     }
 
-    public static void stopOperation(Operation operationId) {
+    public static void stopOperation(SystemtestsOperation operationId) {
         TimeMeasuringSystem.stopOperation(operationId.toString());
     }
 

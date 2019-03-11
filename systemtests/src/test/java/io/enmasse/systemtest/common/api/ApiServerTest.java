@@ -24,6 +24,8 @@ import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -363,8 +365,8 @@ class ApiServerTest extends TestBase {
             userApiClient2.createUser(standard.getMetadata().getName(), cred);
 
             assertThat("Get all users does not contain 2 password users",
-                    TestUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
-                            .stream().filter(user -> user.getType().equals(User.Type.PASSWORD)).collect(Collectors.toList()).size(),
+                    UserUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
+                            .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).collect(Collectors.toList()).size(),
                     is(2));
         } finally {
             kubernetes.deleteNamespace(namespace1);

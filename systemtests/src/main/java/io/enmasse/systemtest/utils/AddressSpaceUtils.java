@@ -9,7 +9,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -230,7 +230,7 @@ public class AddressSpaceUtils {
     }
 
     public static void deleteAddressSpaceAndWait(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         deleteAddressSpace(addressApiClient, addressSpace, logCollector);
         waitForAddressSpaceDeleted(kubernetes, addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
@@ -246,7 +246,7 @@ public class AddressSpaceUtils {
     }
 
     public static void deleteAllAddressSpaces(AddressApiClient addressApiClient, GlobalLogCollector logCollector) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS_SPACE);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
         logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();

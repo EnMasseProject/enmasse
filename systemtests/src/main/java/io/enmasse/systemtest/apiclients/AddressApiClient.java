@@ -11,7 +11,6 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;

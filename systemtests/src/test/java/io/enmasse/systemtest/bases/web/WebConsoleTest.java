@@ -19,6 +19,10 @@ import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.By;
@@ -620,7 +624,11 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestCannotCreateAddresses() throws Exception {
         UserCredentials monitorUser = new UserCredentials("monitor-user" + UUID.randomUUID(), "monitorPa55");
 
-        createUser(sharedAddressSpace, new User().setUserCredentials(monitorUser).addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.VIEW)));
+        createUser(sharedAddressSpace,
+                UserUtils.createUserObject(monitorUser, Collections.singletonList(
+                        new UserAuthorizationBuilder()
+                                .withAddresses("*")
+                                .withOperations(Operation.view).build())));
 
         consoleWebPage = new ConsoleWebPage(selenium,
                 getConsoleRoute(sharedAddressSpace),
@@ -636,7 +644,10 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         Address destination = AddressUtils.createQueueAddressObject("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
         UserCredentials monitorUser = new UserCredentials("monitor-user-test-2", "monitorPa55");
 
-        createUser(sharedAddressSpace, new User().setUserCredentials(monitorUser).addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.VIEW)));
+        createUser(sharedAddressSpace, UserUtils.createUserObject(monitorUser, Collections.singletonList(
+                new UserAuthorizationBuilder()
+                        .withAddresses("*")
+                        .withOperations(Operation.view).build())));
         setAddresses(destination);
 
         consoleWebPage = new ConsoleWebPage(selenium,
@@ -653,9 +664,14 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         Address dest = AddressUtils.createQueueAddressObject("test-view-queue", getDefaultPlan(AddressType.QUEUE));
         UserCredentials viewUser = new UserCredentials("view-user-addresses", "viewPa55");
 
-        createUser(sharedAddressSpace, new User().setUserCredentials(viewUser)
-                .addAuthorization(new User.AuthorizationRule().addOperation(User.Operation.VIEW))
-                .addAuthorization(new User.AuthorizationRule().addAddress("*").addOperation(User.Operation.SEND)));
+        createUser(sharedAddressSpace, UserUtils.createUserObject(viewUser, Arrays.asList(
+                new UserAuthorizationBuilder()
+                        .withAddresses("*")
+                        .withOperations(Operation.view).build(),
+                new UserAuthorizationBuilder()
+                        .withAddresses("*")
+                        .withOperations(Operation.send)
+                        .build())));
 
         setAddresses(dest);
 
@@ -680,17 +696,17 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         List<Address> addresses = getAddressesWildcard();
         setAddresses(addresses.toArray(new Address[0]));
 
-        List<User> users = createUsersWildcard(sharedAddressSpace, "view");
+        List<User> users = createUsersWildcard(sharedAddressSpace, Operation.view);
 
         for (User user : users) {
             consoleWebPage = new ConsoleWebPage(selenium,
-                    getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace, user.getUserCredentials());
+                    getConsoleRoute(sharedAddressSpace), addressApiClient, sharedAddressSpace, UserUtils.getCredentialsFromUser(user));
             consoleWebPage.openWebConsolePage();
             consoleWebPage.openAddressesPageWebConsole();
 
             assertViewOnlyUsersAddresses(String.format("Console failed, user %s see not only his addresses", user),
-                    user.getUsername().replace("user-", ""), consoleWebPage.getAddressItems());
-            removeUser(sharedAddressSpace, user.getUsername());
+                    user.getSpec().getUsername().replace("user-", ""), consoleWebPage.getAddressItems());
+            removeUser(sharedAddressSpace, user.getSpec().getUsername());
         }
     }
 

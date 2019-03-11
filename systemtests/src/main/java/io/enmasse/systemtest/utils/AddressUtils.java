@@ -13,7 +13,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.DoneableAddress;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.timemeasuring.Operation;
+import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -168,14 +168,14 @@ public class AddressUtils {
     }
 
     public static void delete(AddressApiClient apiClient, AddressSpace addressSpace, Address... destinations) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(Operation.DELETE_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
         apiClient.deleteAddresses(addressSpace, destinations);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int expectedCode, Address... addresses) throws Exception {
         log.info("Addresses {} in address space {} will be created", addresses, addressSpace.getMetadata().getName());
-        String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? Operation.CREATE_ADDRESS : Operation.DELETE_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
         apiClient.setAddresses(addressSpace, expectedCode, addresses);
         if (wait) {
             if (addressSpace.getSpec().getType().equals("standard")) {
@@ -194,7 +194,7 @@ public class AddressUtils {
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Address... destinations) throws Exception {
         log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getMetadata().getName());
-        String operationID = TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
         apiClient.appendAddresses(addressSpace, destinations);
         if (wait) {
             if (addressSpace.getSpec().getType().toString().equals("standard")) {
@@ -210,7 +210,7 @@ public class AddressUtils {
 
     public static void replaceAddress(AddressApiClient addressApiClient, AddressSpace addressSpace, Address destination, boolean wait, TimeoutBudget timeoutBudget) throws Exception {
         log.info("Address {} in address space {} will be replaced", destination, addressSpace.getMetadata().getName());
-        String operationID = TimeMeasuringSystem.startOperation(Operation.UPDATE_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
         addressApiClient.replaceAddress(addressSpace.getMetadata().getName(), destination, 200);
         if (wait) {
             TestUtils.waitForDestinationsReady(addressApiClient, addressSpace, timeoutBudget, destination);
@@ -221,7 +221,7 @@ public class AddressUtils {
 
     public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int batchSize, io.enmasse.address.model.Address... destinations) throws Exception {
         log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getMetadata().getName());
-        String operationID = TimeMeasuringSystem.startOperation(Operation.APPEND_ADDRESS);
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
         apiClient.appendAddresses(addressSpace, batchSize, destinations);
         if (wait) {
             if (addressSpace.getSpec().getType().toString().equals("standard")) {
