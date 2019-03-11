@@ -71,6 +71,11 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			{Name: "SPRING_PROFILES_ACTIVE", Value: "authentication-impl"},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
+
+			{Name: "HONO_AUTH_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+		}
+		if err := AppendTrustStores(config, container, []string{"HONO_AUTH_AMQP_TRUST_STORE_PATH"}); err != nil {
+			return err
 		}
 
 		// volume mounts
@@ -79,7 +84,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			container.VolumeMounts = make([]corev1.VolumeMount, 2)
 		}
 
-		container.VolumeMounts[0].Name = "conf"
+		container.VolumeMounts[0].Name = "config"
 		container.VolumeMounts[0].MountPath = "/etc/config"
 		container.VolumeMounts[0].ReadOnly = true
 
@@ -98,8 +103,13 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "conf", nameAuthService+"-config")
-	install.ApplySecretVolume(deployment, "tls", "iot-auth-service-tls")
+	install.ApplyConfigMapVolume(deployment, "config", nameAuthService+"-config")
+
+	// inter service secrets
+
+	if err := ApplyInterServiceForDeployment(config, deployment, nameAuthService+"-tls"); err != nil {
+		return err
+	}
 
 	// return
 
@@ -123,8 +133,9 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceService(config *iotv1alpha1.IoT
 		service.Annotations = make(map[string]string)
 	}
 
-	// FIXME: remove OpenShift specific feature
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = nameAuthService + "-tls"
+	if err := ApplyInterServiceForService(config, service, nameAuthService+"-tls"); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -153,7 +164,6 @@ hono:
       keyPath: /etc/tls/tls.key
       certPath: /etc/tls/tls.crt
       keyFormat: PEM
-      trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
       trustStoreFormat: PEM
     svc:
       permissionsPath: file:///etc/config/permissions.json

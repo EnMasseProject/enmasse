@@ -202,3 +202,42 @@ func ApplyHttpProbe(probe *corev1.Probe, initialDelaySeconds int32, path string,
 
 	return probe
 }
+
+func ApplyVolumeMountWithError(container *corev1.Container, name string, mutator func(mount *corev1.VolumeMount) error) error {
+
+	if container.VolumeMounts == nil {
+		container.VolumeMounts = make([]corev1.VolumeMount, 0)
+	}
+
+	for i, v := range container.VolumeMounts {
+		if v.Name == name {
+			return mutator(&container.VolumeMounts[i])
+		}
+	}
+
+	v := &corev1.VolumeMount{
+		Name: name,
+	}
+
+	err := mutator(v)
+	if err == nil {
+		container.VolumeMounts = append(container.VolumeMounts, *v)
+	}
+
+	return err
+}
+
+func ApplyVolumeMount(container *corev1.Container, name string, mutator func(mount *corev1.VolumeMount)) {
+	// call "with error", and eat up the error
+	_ = ApplyVolumeMountWithError(container, name, func(mount *corev1.VolumeMount) error {
+		mutator(mount)
+		return nil
+	})
+}
+
+func AppendVolumeMountSimple(container *corev1.Container, name string, path string, readOnly bool) {
+	ApplyVolumeMount(container, name, func(mount *corev1.VolumeMount) {
+		mount.MountPath = path
+		mount.ReadOnly = readOnly
+	})
+}

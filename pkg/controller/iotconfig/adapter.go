@@ -32,7 +32,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 
 		container.VolumeMounts[0].Name = "qdr-tmp-certs"
 		container.VolumeMounts[0].MountPath = "/var/qdr-certs"
-		container.VolumeMounts[0].ReadOnly = true
+		container.VolumeMounts[0].ReadOnly = false
 
 		return nil
 	})

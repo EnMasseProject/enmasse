@@ -92,10 +92,18 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 		AppendHonoAdapterEnvs(container, "mqtt-adapter@HONO", "mqtt-secret")
 
+		if err := AppendTrustStores(config, container, []string{
+			"HONO_CREDENTIAL_TRUST_STORE_PATH",
+			"HONO_REGISTRATION_TRUST_STORE_PATH",
+			"HONO_TENANT_TRUST_STORE_PATH",
+		}); err != nil {
+			return err
+		}
+
 		// volume mounts
 
-		if len(container.VolumeMounts) != 3 {
-			container.VolumeMounts = make([]corev1.VolumeMount, 3)
+		if len(container.VolumeMounts) != 2 {
+			container.VolumeMounts = make([]corev1.VolumeMount, 2)
 		}
 
 		container.VolumeMounts[0].Name = "config"
@@ -105,10 +113,6 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 		container.VolumeMounts[1].Name = "tls"
 		container.VolumeMounts[1].MountPath = "/etc/tls"
 		container.VolumeMounts[1].ReadOnly = true
-
-		container.VolumeMounts[2].Name = "secrets"
-		container.VolumeMounts[2].MountPath = "/etc/secrets"
-		container.VolumeMounts[2].ReadOnly = true
 
 		// return
 
@@ -128,8 +132,12 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 	// volumes
 
 	install.ApplyConfigMapVolume(deployment, "config", nameMqttAdapter+"-config")
-	install.ApplySecretVolume(deployment, "tls", nameMqttAdapter+"-tls")
-	install.ApplySecretVolume(deployment, "secrets", nameMqttAdapter+"-secrets")
+
+	// inter service secrets
+
+	if err := ApplyInterServiceForDeployment(config, deployment, nameMqttAdapter+"-tls"); err != nil {
+		return err
+	}
 
 	// return
 
@@ -157,8 +165,9 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterService(config *iotv1alpha1.IoT
 		service.Annotations = make(map[string]string)
 	}
 
-	// FIXME: remove OpenShift specific feature
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = nameMqttAdapter + "-tls"
+	if err := ApplyInterServiceForService(config, service, nameMqttAdapter+"-tls"); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -188,15 +197,12 @@ hono:
     keyFormat: PEM
   registration:
     port: 5671
-    trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
   credentials:
     port: 5671
-    trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
   tenant:
     port: 5671
-    trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
 `
 

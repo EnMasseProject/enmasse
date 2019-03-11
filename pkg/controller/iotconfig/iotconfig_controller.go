@@ -167,6 +167,16 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
+		if config.Status.AuthenticationServicePSK == nil {
+			s, err := util.GeneratePassword(128)
+			if err != nil {
+				return err
+			}
+			config.Status.AuthenticationServicePSK = &s
+		}
+		return nil
+	})
+	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
@@ -183,6 +193,23 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processMqttAdapter(ctx, config)
+	})
+
+	return r.updateStatus(ctx, config, rc)
+}
+
+func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
+
+	config.Status.Initialized = rc.Error() != nil
+
+	if config.Status.Initialized {
+		config.Status.State = iotv1alpha1.ConfigStateRunning
+	} else {
+		config.Status.State = iotv1alpha1.ConfigStateFailed
+	}
+
+	rc.ProcessSimple(func() error {
+		return r.client.Update(ctx, config)
 	})
 
 	return rc.Result()

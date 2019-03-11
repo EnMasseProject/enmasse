@@ -34,3 +34,11 @@ func (config *IoTConfig) GetImageOverrides() map[string]v1beta1.ImageOverride {
 func (spec *IoTConfigSpec) GetImageOverrides() map[string]v1beta1.ImageOverride {
 	return spec.ImageOverrides
 }
+
+func (spec *IoTConfigSpec) HasNoInterServiceConfig() bool {
+	if spec.InterServiceCertificates == nil {
+		return true
+	}
+
+	return spec.InterServiceCertificates.ServiceCAStrategy == nil && spec.InterServiceCertificates.SecretCertificatesStrategy == nil
+}

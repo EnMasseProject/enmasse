@@ -97,11 +97,24 @@ type IoTConfig struct {
 }
 
 type IoTConfigSpec struct {
-	Adapters []AdapterSpec `json:"adapters,omitempty"`
-
 	EnableDefaultRoutes *bool `json:"enableDefaultRoutes,omitempty"`
+	UseServiceCA        *bool `json:"useServiceCA,omitempty"`
 
 	ImageOverrides map[string]v1beta1.ImageOverride `json:"imageOverrides,omitempty"`
+
+	InterServiceCertificates *InterServiceCertificates `json:"interServiceCertificates,omitempty"`
+}
+
+type InterServiceCertificates struct {
+	SecretCertificatesStrategy *SecretCertificatesStrategy `json:"secretCertificatesStrategy,omitempty"`
+	ServiceCAStrategy          *ServiceCAStrategy          `json:"serviceCAStrategy,omitempty"`
+}
+
+type ServiceCAStrategy struct {
+}
+
+type SecretCertificatesStrategy struct {
+	SecretName string `json:"secretName"`
 }
 
 type AdapterSpec struct {
@@ -112,11 +125,14 @@ type AdapterSpec struct {
 type IoTConfigStatus struct {
 	Initialized bool   `json:"initialized"`
 	State       string `json:"state"`
+
+	AuthenticationServicePSK *string `json:"authenticationServicePSK"`
 }
 
 const (
 	ConfigStateWrongName = "WrongName"
 	ConfigStateRunning   = "Running"
+	ConfigStateFailed    = "Failed"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

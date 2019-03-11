@@ -70,27 +70,30 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "SPRING_PROFILES_ACTIVE", Value: "prod"},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
+
 			{Name: "ENMASSE_IOT_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+
 			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: "false"},
+		}
+
+		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_TENANT_ENDPOINT_AMQP_TRUST_STORE_PATH"}); err != nil {
+			return err
 		}
 
 		// volume mounts
 
-		if len(container.VolumeMounts) != 3 {
-			container.VolumeMounts = make([]corev1.VolumeMount, 3)
+		if len(container.VolumeMounts) != 2 {
+			container.VolumeMounts = make([]corev1.VolumeMount, 2)
 		}
 
-		container.VolumeMounts[0].Name = "conf"
+		container.VolumeMounts[0].Name = "config"
 		container.VolumeMounts[0].MountPath = "/etc/config"
 		container.VolumeMounts[0].ReadOnly = true
 
 		container.VolumeMounts[1].Name = "tls"
 		container.VolumeMounts[1].MountPath = "/etc/tls"
 		container.VolumeMounts[1].ReadOnly = true
-
-		container.VolumeMounts[2].Name = "tls-auth-service"
-		container.VolumeMounts[2].MountPath = "/etc/tls-auth-service"
-		container.VolumeMounts[2].ReadOnly = true
 
 		// return
 
@@ -103,9 +106,13 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "conf", nameTenantService+"-config")
-	install.ApplySecretVolume(deployment, "tls", nameTenantService+"-tls")
-	install.ApplySecretVolume(deployment, "tls-auth-service", "iot-auth-service-tls")
+	install.ApplyConfigMapVolume(deployment, "config", nameTenantService+"-config")
+
+	// inter service secrets
+
+	if err := ApplyInterServiceForDeployment(config, deployment, nameTenantService+"-tls"); err != nil {
+		return err
+	}
 
 	// return
 
@@ -129,8 +136,9 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceService(config *iotv1alpha1.I
 		service.Annotations = make(map[string]string)
 	}
 
-	// FIXME: remove OpenShift specific feature
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = nameTenantService + "-tls"
+	if err := ApplyInterServiceForService(config, service, nameTenantService+"-tls"); err != nil {
+		return err
+	}
 
 	return nil
 }

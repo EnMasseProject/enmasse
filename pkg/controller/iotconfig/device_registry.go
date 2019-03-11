@@ -91,19 +91,26 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
-			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
 
+			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+
+			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 			{Name: "HONO_REGISTRY_SVC_SAVE_TO_FILE", Value: "true"},
 			{Name: "HONO_REGISTRY_SVC_MAX_DEVICES_PER_TENANT", Value: "100000"},
 		}
 
-		// volume mounts
-
-		if len(container.VolumeMounts) != 4 {
-			container.VolumeMounts = make([]corev1.VolumeMount, 4)
+		if err := AppendTrustStores(config, container, []string{"HONO_AUTH_TRUST_STORE_PATH"}); err != nil {
+			return err
 		}
 
-		container.VolumeMounts[0].Name = "conf"
+		// volume mounts
+
+		if len(container.VolumeMounts) != 3 {
+			container.VolumeMounts = make([]corev1.VolumeMount, 3)
+		}
+
+		container.VolumeMounts[0].Name = "config"
 		container.VolumeMounts[0].MountPath = "/etc/config"
 		container.VolumeMounts[0].ReadOnly = true
 
@@ -111,13 +118,9 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 		container.VolumeMounts[1].MountPath = "/etc/tls"
 		container.VolumeMounts[1].ReadOnly = true
 
-		container.VolumeMounts[2].Name = "tls-auth-service"
-		container.VolumeMounts[2].MountPath = "/etc/tls-auth-service"
-		container.VolumeMounts[2].ReadOnly = true
-
-		container.VolumeMounts[3].Name = "registry"
-		container.VolumeMounts[3].MountPath = "/var/lib/hono/device-registry"
-		container.VolumeMounts[3].ReadOnly = false
+		container.VolumeMounts[2].Name = "registry"
+		container.VolumeMounts[2].MountPath = "/var/lib/hono/device-registry"
+		container.VolumeMounts[2].ReadOnly = false
 
 		// return
 
@@ -130,10 +133,14 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 
 	// volumes
 
-	install.ApplyConfigMapVolume(deployment, "conf", nameDeviceRegistry+"-config")
-	install.ApplySecretVolume(deployment, "tls", nameDeviceRegistry+"-tls")
-	install.ApplySecretVolume(deployment, "tls-auth-service", "iot-auth-service-tls")
+	install.ApplyConfigMapVolume(deployment, "config", nameDeviceRegistry+"-config")
 	install.ApplyPersistentVolume(deployment, "registry", nameDeviceRegistry+"-pvc")
+
+	// inter service secrets
+
+	if err := ApplyInterServiceForDeployment(config, deployment, nameDeviceRegistry+"-tls"); err != nil {
+		return err
+	}
 
 	// return
 
@@ -168,8 +175,9 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryService(config *iotv1alpha1.
 		service.Annotations = make(map[string]string)
 	}
 
-	// FIXME: remove OpenShift specific feature
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = nameDeviceRegistry + "-tls"
+	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry+"-tls"); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -199,9 +207,6 @@ hono:
     keyFormat: PEM
     trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
-    name: 'Hono Device Registry'
-    validation:
-      certPath: /etc/tls-auth-service/tls.crt
   registry:
     amqp:
       bindAddress: 0.0.0.0
@@ -248,7 +253,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryRoute(config *iotv1alpha1.Io
 	// Port
 
 	route.Spec.Port = &routev1.RoutePort{
-		TargetPort: intstr.FromString("http"),
+		TargetPort: intstr.FromString("https"),
 	}
 
 	// Path
