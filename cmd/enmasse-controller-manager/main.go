@@ -11,6 +11,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/enmasseproject/enmasse/pkg/util"
+
 	"github.com/openshift/api"
 
 	"github.com/enmasseproject/enmasse/version"
@@ -34,6 +36,7 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
 	log.Info(fmt.Sprintf("EnMasse Version: %v", version.Version))
+	log.Info(fmt.Sprintf("OpenShift?: %v", util.IsOpenshift()))
 }
 
 func main() {

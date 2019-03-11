@@ -22,7 +22,7 @@ var (
 
 func loadImageMapFrom(fileName string) (map[string]string, error) {
 
-	var data map[string]string
+	var data = make(map[string]string)
 
 	file, err := os.Open(fileName)
 	if err != nil {

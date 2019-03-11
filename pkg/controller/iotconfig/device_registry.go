@@ -26,7 +26,6 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
-const appDeviceRegistry = "iot-registry"
 const nameDeviceRegistry = "iot-device-registry"
 const routeDeviceRegistry = "device-registry"
 
@@ -62,7 +61,7 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", appDeviceRegistry, deployment.Name)
+	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	deployment.Spec.Replicas = nil
 
@@ -143,7 +142,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", appDeviceRegistry, service.Name)
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	if len(service.Spec.Ports) != 2 {
 		service.Spec.Ports = make([]corev1.ServicePort, 2)
@@ -177,7 +176,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryService(config *iotv1alpha1.
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
-	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", appDeviceRegistry, configMap.Name)
+	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)
@@ -232,7 +231,7 @@ hono:
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryPersistentVolumeClaim(config *iotv1alpha1.IoTConfig, pvc *corev1.PersistentVolumeClaim) error {
 
-	install.ApplyDefaultLabels(&pvc.ObjectMeta, "iot", appDeviceRegistry, pvc.Name)
+	install.ApplyDefaultLabels(&pvc.ObjectMeta, "iot", pvc.Name)
 
 	pvc.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 	pvc.Spec.Resources.Requests = corev1.ResourceList{
@@ -244,7 +243,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryPersistentVolumeClaim(config
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
 
-	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", appDeviceRegistry, route.Name)
+	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
 	// Port
 

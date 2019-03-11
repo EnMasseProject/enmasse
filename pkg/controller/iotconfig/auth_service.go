@@ -22,7 +22,6 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
-const appAuthService = "iot-core"
 const nameAuthService = "iot-auth-service"
 
 func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
@@ -44,7 +43,7 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 
 func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", appAuthService, deployment.Name)
+	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	deployment.Spec.Replicas = nil
 
@@ -109,7 +108,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 func (r *ReconcileIoTConfig) reconcileAuthServiceService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", appAuthService, service.Name)
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	if len(service.Spec.Ports) != 1 {
 		service.Spec.Ports = make([]corev1.ServicePort, 1)
@@ -132,7 +131,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceService(config *iotv1alpha1.IoT
 
 func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
-	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", appAuthService, configMap.Name)
+	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)

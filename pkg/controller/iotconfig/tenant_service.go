@@ -22,7 +22,6 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
-const appTenantService = "iot-registry"
 const nameTenantService = "iot-tenant-service"
 
 func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
@@ -44,7 +43,7 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 
 func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", appTenantService, deployment.Name)
+	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	deployment.Spec.Replicas = nil
 
@@ -115,7 +114,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 func (r *ReconcileIoTConfig) reconcileTenantServiceService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", appTenantService, service.Name)
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	if len(service.Spec.Ports) != 1 {
 		service.Spec.Ports = make([]corev1.ServicePort, 1)
@@ -138,7 +137,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceService(config *iotv1alpha1.I
 
 func (r *ReconcileIoTConfig) reconcileTenantServiceConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
-	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", appTenantService, configMap.Name)
+	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)

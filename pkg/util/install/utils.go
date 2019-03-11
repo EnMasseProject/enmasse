@@ -15,42 +15,42 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
-func createDefaultLabels(labels map[string]string, component string, app string, name string) map[string]string {
+func createDefaultLabels(labels map[string]string, component string, name string) map[string]string {
 
 	if labels == nil {
 		labels = make(map[string]string)
 	}
 
 	labels["component"] = component
-	labels["app"] = app
+	labels["app"] = "enmasse"
 	labels["name"] = name
 
 	return labels
 }
 
 // Apply standard set of labels
-func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, app string, name string) {
-	meta.Labels = createDefaultLabels(meta.Labels, component, app, name)
+func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, name string) {
+	meta.Labels = createDefaultLabels(meta.Labels, component, name)
 }
 
 // Apply some default service values
-func ApplyServiceDefaults(service *corev1.Service, component string, app string, name string) {
+func ApplyServiceDefaults(service *corev1.Service, component string, name string) {
 
-	ApplyDefaultLabels(&service.ObjectMeta, component, app, name)
-	service.Spec.Selector = createDefaultLabels(nil, component, app, name)
+	ApplyDefaultLabels(&service.ObjectMeta, component, name)
+	service.Spec.Selector = createDefaultLabels(nil, component, name)
 
 }
 
 // Apply some default deployment values
-func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, app string, name string) {
+func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, name string) {
 
-	ApplyDefaultLabels(&deployment.ObjectMeta, component, app, name)
+	ApplyDefaultLabels(&deployment.ObjectMeta, component, name)
 
 	deployment.Spec.Selector = &v1.LabelSelector{
-		MatchLabels: createDefaultLabels(nil, component, app, name),
+		MatchLabels: createDefaultLabels(nil, component, name),
 	}
 
-	deployment.Spec.Template.ObjectMeta.Labels = createDefaultLabels(deployment.Spec.Template.ObjectMeta.Labels, component, app, name)
+	deployment.Spec.Template.ObjectMeta.Labels = createDefaultLabels(deployment.Spec.Template.ObjectMeta.Labels, component, name)
 
 }
 

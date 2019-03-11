@@ -21,7 +21,7 @@ func (r *ReconcileIoTConfig) processCollector(ctx context.Context, config *iotv1
 
 func (r *ReconcileIoTConfig) reconcileCollectorDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", "iot-core", deployment.Name)
+	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	deployment.Spec.Replicas = nil
 

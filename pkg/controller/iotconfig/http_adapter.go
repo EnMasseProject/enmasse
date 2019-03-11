@@ -26,7 +26,6 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
-const appHttpAdapter = "iot-http-adapter"
 const nameHttpAdapter = "iot-http-adapter"
 const routeHttpAdapter = "iot-http-adapter"
 
@@ -58,7 +57,7 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 
 func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
-	install.ApplyDeploymentDefaults(deployment, "iot", appHttpAdapter, deployment.Name)
+	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	deployment.Spec.Replicas = nil
 
@@ -139,7 +138,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", appHttpAdapter, service.Name)
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	if len(service.Spec.Ports) != 1 {
 		service.Spec.Ports = make([]corev1.ServicePort, 1)
@@ -166,7 +165,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoT
 
 func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
-	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", appHttpAdapter, configMap.Name)
+	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)
@@ -206,7 +205,7 @@ hono:
 
 func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
 
-	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", appHttpAdapter, route.Name)
+	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
 	// Port
 
