@@ -447,8 +447,6 @@ public class SerializationTest {
                 .build();
         assertEquals(3, plan.getAddressPlans().size());
         assertEquals("test-plan", plan.getMetadata().getName());
-        assertNull(plan.getAddressPlans());
-        assertNull(plan.getAddressSpaceType());
     }
 
     @Test
@@ -469,8 +467,6 @@ public class SerializationTest {
                 .build();
         assertEquals("test-plan", plan.getMetadata().getName());
         assertEquals(14, plan.getSpec().getResources().get("broker"));
-        assertNull(plan.getResources());
-        assertNull(plan.getAddressType());
     }
 
     /*
