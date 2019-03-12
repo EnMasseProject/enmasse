@@ -1,6 +1,7 @@
 # Gradle stuff
 .gradle
 **/build/
+!vendor/**/build/
 
 # IntelliJ IDEA specific
 .idea/
