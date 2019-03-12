@@ -203,7 +203,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
 
-	config.Status.Initialized = rc.Error() != nil
+	config.Status.Initialized = rc.Error() == nil
 
 	if config.Status.Initialized {
 		config.Status.State = iotv1alpha1.ConfigStateRunning
