@@ -6,7 +6,7 @@ package io.enmasse.systemtest.selenium.page;
 
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.AddressSpacePlan;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
@@ -243,7 +243,7 @@ public class OpenshiftWebPage implements IWebPage {
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString())) {
             createAddressSpaceBrokered(addressSpace.getMetadata().getName(), projectName);
         } else {
-            createAddressSpaceStandard(addressSpace.getMetadata().getName(), projectName, AddressSpacePlan.STANDARD_UNLIMITED);
+            createAddressSpaceStandard(addressSpace.getMetadata().getName(), projectName, AddressSpacePlans.STANDARD_UNLIMITED);
         }
         try {
             selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");

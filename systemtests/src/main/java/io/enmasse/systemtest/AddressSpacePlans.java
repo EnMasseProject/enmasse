@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest;
 
-public interface AddressSpacePlan {
+public interface AddressSpacePlans {
     String BROKERED = "brokered-single-broker";
     String STANDARD_SMALL = "standard-small";
     String STANDARD_MEDIUM = "standard-medium";

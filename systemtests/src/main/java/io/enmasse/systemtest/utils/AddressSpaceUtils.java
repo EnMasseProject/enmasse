@@ -107,7 +107,7 @@ public class AddressSpaceUtils {
                 .endMetadata()
                 .withNewSpec()
                 .withType(type.toString())
-                .withPlan(type.equals(AddressSpaceType.BROKERED) ? AddressSpacePlan.BROKERED : AddressSpacePlan.STANDARD_UNLIMITED_WITH_MQTT)
+                .withPlan(type.equals(AddressSpaceType.BROKERED) ? AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
                 .withNewAuthenticationService()
                 .withType(auth)
                 .endAuthenticationService()

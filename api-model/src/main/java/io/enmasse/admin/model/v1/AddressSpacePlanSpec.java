@@ -81,6 +81,6 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
     }
 
     public List<String> getAddressPlans() {
-        return Collections.unmodifiableList(addressPlans);
+        return addressPlans;
     }
 }

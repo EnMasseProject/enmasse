@@ -7,15 +7,16 @@ package io.enmasse.systemtest.marathon;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
-import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
-import io.enmasse.systemtest.resources.AddressSpaceResource;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,23 +49,23 @@ class PlansMarathonTest extends MarathonTestBase {
     @Test
     void testHighLoadAddresses() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.001), new AddressResource("router", 0.0));
-        AddressPlanDefinition xxsQueuePlan = new AddressPlanDefinition("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
+        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
+        AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 10.0),
-                new AddressSpaceResource("router", 2.0),
-                new AddressSpaceResource("aggregate", 12.0));
-        List<AddressPlanDefinition> addressPlans = Collections.singletonList(xxsQueuePlan);
-        AddressSpacePlanDefinition manyAddressesPlan = new AddressSpacePlanDefinition("many-brokers-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 10.0),
+                new ResourceAllowance("router", 2.0),
+                new ResourceAllowance("aggregate", 12.0));
+        List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
+        AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
-                manyAddressesPlan.getName(), AuthenticationServiceType.STANDARD);
+                manyAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
@@ -74,7 +75,7 @@ class PlansMarathonTest extends MarathonTestBase {
         int destCount = 3900;
         int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createQueueAddressObject("xxs-queue-" + i, xxsQueuePlan.getName()));
+            dest.add(AddressUtils.createQueueAddressObject("xxs-queue-" + i, xxsQueuePlan.getMetadata().getName()));
         }
         setAddresses(manyAddressesSpace, dest.toArray(new Address[0]));
 
@@ -102,23 +103,23 @@ class PlansMarathonTest extends MarathonTestBase {
     @Test
     void testHighLoadAddressesInBatches() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.001), new AddressResource("router", 0.0));
-        AddressPlanDefinition xxsQueuePlan = new AddressPlanDefinition("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
+        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
+        AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 10.0),
-                new AddressSpaceResource("router", 2.0),
-                new AddressSpaceResource("aggregate", 12.0));
-        List<AddressPlanDefinition> addressPlans = Collections.singletonList(xxsQueuePlan);
-        AddressSpacePlanDefinition manyAddressesPlan = new AddressSpacePlanDefinition("many-brokers-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 10.0),
+                new ResourceAllowance("router", 2.0),
+                new ResourceAllowance("aggregate", 12.0));
+        List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
+        AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
-                manyAddressesPlan.getName(), AuthenticationServiceType.STANDARD);
+                manyAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
@@ -128,7 +129,7 @@ class PlansMarathonTest extends MarathonTestBase {
         int destCount = 3900;
         int toDeleteCount = 2000;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createQueueAddressObject("xxs-queue-" + i, xxsQueuePlan.getName()));
+            dest.add(AddressUtils.createQueueAddressObject("xxs-queue-" + i, xxsQueuePlan.getMetadata().getName()));
         }
 
         appendAddresses(manyAddressesSpace, true, 10, dest.toArray(new Address[0]));

@@ -5,12 +5,12 @@
 package io.enmasse.systemtest.bases.infra;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.PlansProvider;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.InfraConfigDefinition;
 import io.enmasse.systemtest.resources.InfraSpecComponent;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -43,7 +43,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
     protected InfraConfigDefinition testInfra;
-    protected AddressPlanDefinition exampleAddressPlan;
+    protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
 
     @BeforeEach

@@ -7,9 +7,9 @@ package io.enmasse.systemtest.utils;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
 import io.enmasse.systemtest.resources.AddressSpaceTypeData;
 import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
@@ -559,14 +559,14 @@ public class TestUtils {
      * @param dest       destination which will be modified
      * @param plan       definition of AddressPlan
      */
-    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Address dest, AddressPlanDefinition plan) {
+    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Address dest, AddressPlan plan) {
         String mapKey = "config.json";
         ConfigMap destConfigMap = kubernetes.getConfigMap(addrSpace.getMetadata().getNamespace(), dest.getSpec().getAddress());
 
         JsonObject data = new JsonObject(destConfigMap.getData().get(mapKey));
         log.info(data.toString());
         data.getJsonObject("spec").remove("plan");
-        data.getJsonObject("spec").put("plan", plan.getName());
+        data.getJsonObject("spec").put("plan", plan.getMetadata().getName());
 
         Map<String, String> modifiedData = new LinkedHashMap<>();
         modifiedData.put(mapKey, data.toString());

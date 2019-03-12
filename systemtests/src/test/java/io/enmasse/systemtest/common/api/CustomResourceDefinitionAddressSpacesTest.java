@@ -63,17 +63,17 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     @Test
     void testReplaceAddressSpace() throws Exception {
         AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
-        standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlan.STANDARD_SMALL).endSpec().done();
+        standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_SMALL).endSpec().done();
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         addToAddressSpacess(standard);
         waitForAddressSpaceReady(standard);
         waitForAddressSpacePlanApplied(standard);
 
-        standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlan.STANDARD_UNLIMITED).endSpec().done();
+        standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
         updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         waitForAddressSpaceReady(standard);
 
-        assertThat(getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlan.STANDARD_UNLIMITED));
+        assertThat(getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
     }
 
     @Test

@@ -6,6 +6,9 @@ package io.enmasse.systemtest.standard.infra;
 
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.TimeoutBudget;
@@ -14,6 +17,7 @@ import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -45,28 +49,28 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                         new InfraResource("memory", "512Mi")))), environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
 
-        exampleAddressPlan = new AddressPlanDefinition("example-queue-plan", AddressType.TOPIC, Arrays.asList(
-                new AddressResource("broker", 1.0),
-                new AddressResource("router", 1.0)));
+        exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan", AddressType.TOPIC, Arrays.asList(
+                new ResourceRequest("broker", 1.0),
+                new ResourceRequest("router", 1.0)));
 
         plansProvider.createAddressPlan(exampleAddressPlan);
 
-        AddressSpacePlanDefinition exampleSpacePlan = new AddressSpacePlanDefinition("example-space-plan",
+        AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan",
                 testInfra.getName(),
                 AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 3.0),
-                        new AddressSpaceResource("router", 3.0),
-                        new AddressSpaceResource("aggregate", 5.0)),
+                        new ResourceAllowance("broker", 3.0),
+                        new ResourceAllowance("router", 3.0),
+                        new ResourceAllowance("aggregate", 5.0)),
                 Arrays.asList(exampleAddressPlan));
 
         plansProvider.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.STANDARD,
-                exampleSpacePlan.getName(), AuthenticationServiceType.STANDARD);
+                exampleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(exampleAddressSpace);
 
-        setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getName()));
+        setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
 
         assertInfra("512Mi", Optional.of("1Gi"), 2, "256Mi", "512Mi");
 
@@ -97,16 +101,16 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                         new InfraResource("memory", adminMemory)))), environment.enmasseVersion());
         plansProvider.createInfraConfig(infra);
 
-        AddressSpacePlanDefinition exampleSpacePlan = new AddressSpacePlanDefinition("example-space-plan-2",
+        AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan-2",
                 infra.getName(), AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 3.0),
-                        new AddressSpaceResource("router", 3.0),
-                        new AddressSpaceResource("aggregate", 5.0)),
+                        new ResourceAllowance("broker", 3.0),
+                        new ResourceAllowance("router", 3.0),
+                        new ResourceAllowance("aggregate", 5.0)),
                 Arrays.asList(exampleAddressPlan));
         plansProvider.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getName()).endSpec().done();
+        exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(

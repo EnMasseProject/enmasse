@@ -8,6 +8,10 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
@@ -16,15 +20,13 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.mqtt.MqttUtils;
-import io.enmasse.systemtest.resources.*;
+import io.enmasse.systemtest.resources.PlanData;
+import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.AnycastTest;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.systemtest.utils.*;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -70,17 +72,17 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testRestApiGetSchema() throws Exception {
-        AddressPlanDefinition queuePlan = new AddressPlanDefinition("test-schema-rest-api-addr-plan", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.6), new AddressResource("router", 0.0)));
+        AddressPlan queuePlan = PlanUtils.createAddressPlanObject("test-schema-rest-api-addr-plan", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0.0)));
         plansProvider.createAddressPlan(queuePlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 2.0),
-                new AddressSpaceResource("router", 1.0),
-                new AddressSpaceResource("aggregate", 2.0));
-        List<AddressPlanDefinition> addressPlans = Collections.singletonList(queuePlan);
-        AddressSpacePlanDefinition addressSpacePlan = new AddressSpacePlanDefinition("schema-rest-api-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 2.0),
+                new ResourceAllowance("router", 1.0),
+                new ResourceAllowance("aggregate", 2.0));
+        List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
+        AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("schema-rest-api-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
@@ -278,7 +280,7 @@ class ApiServerTest extends TestBase {
 
     @Test
     void testCreateAddressResource() throws Exception {
-        AddressSpace addrSpace = AddressSpaceUtils.createAddressSpaceObject("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_UNLIMITED);
+        AddressSpace addrSpace = AddressSpaceUtils.createAddressSpaceObject("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
         createAddressSpace(addrSpace);
 
         final Set<String> names = new LinkedHashSet<>();
@@ -332,7 +334,7 @@ class ApiServerTest extends TestBase {
             AddressApiClient nameSpaceClient2 = new AddressApiClient(kubernetes, namespace2);
 
             AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("brokered", namespace1, AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-            AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard", namespace2, AddressSpaceType.STANDARD, AddressSpacePlan.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
+            AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard", namespace2, AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
 
             createAddressSpace(brokered, nameSpaceClient1);
             createAddressSpace(standard, nameSpaceClient2);

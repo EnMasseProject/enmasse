@@ -8,20 +8,21 @@ package io.enmasse.systemtest.bases.web;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
-import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
-import io.enmasse.systemtest.resources.AddressSpaceResource;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -62,32 +63,32 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
      */
     protected void doTestCreateAddressPlan() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue1 = Arrays.asList(new AddressResource("broker", 0.15), new AddressResource("router", 0.0));
-        List<AddressResource> addressResourcesTopic2 = Arrays.asList(
-                new AddressResource("broker", 0.3),
-                new AddressResource("router", 0.2));
-        List<AddressResource> addressResourcesQueue3 = Arrays.asList(new AddressResource("broker", 0.25), new AddressResource("router", 0.0));
-        AddressPlanDefinition consoleQueuePlan1 = new AddressPlanDefinition("console-queue-1", AddressType.QUEUE, addressResourcesQueue1);
-        AddressPlanDefinition consoleTopicPlan2 = new AddressPlanDefinition("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
-        AddressPlanDefinition consoleQueuePlan3 = new AddressPlanDefinition("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
+        List<ResourceRequest> addressResourcesQueue1 = Arrays.asList(new ResourceRequest("broker", 0.15), new ResourceRequest("router", 0.0));
+        List<ResourceRequest> addressResourcesTopic2 = Arrays.asList(
+                new ResourceRequest("broker", 0.3),
+                new ResourceRequest("router", 0.2));
+        List<ResourceRequest> addressResourcesQueue3 = Arrays.asList(new ResourceRequest("broker", 0.25), new ResourceRequest("router", 0.0));
+        AddressPlan consoleQueuePlan1 = PlanUtils.createAddressPlanObject("console-queue-1", AddressType.QUEUE, addressResourcesQueue1);
+        AddressPlan consoleTopicPlan2 = PlanUtils.createAddressPlanObject("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
+        AddressPlan consoleQueuePlan3 = PlanUtils.createAddressPlanObject("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
 
         plansProvider.createAddressPlan(consoleQueuePlan1);
         plansProvider.createAddressPlan(consoleTopicPlan2);
         plansProvider.createAddressPlan(consoleQueuePlan3);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 3.0),
-                new AddressSpaceResource("router", 5.0),
-                new AddressSpaceResource("aggregate", 8.0));
-        List<AddressPlanDefinition> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
-        AddressSpacePlanDefinition consolePlan = new AddressSpacePlanDefinition("console-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 3.0),
+                new ResourceAllowance("router", 5.0),
+                new ResourceAllowance("aggregate", 8.0));
+        List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
+        AddressSpacePlan consolePlan = PlanUtils.createAddressSpacePlanObject("console-plan",
                 "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
         AddressSpace consoleAddrSpace = AddressSpaceUtils.createAddressSpaceObject("console-plan-instance", AddressSpaceType.STANDARD,
-                consolePlan.getName(), AuthenticationServiceType.STANDARD);
+                consolePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(consoleAddrSpace);
 
         //create new user
@@ -97,9 +98,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), addressApiClient, consoleAddrSpace, user);
         consoleWebPage.openWebConsolePage();
-        Address q1 = AddressUtils.createQueueAddressObject("new-queue-instance-1", consoleQueuePlan1.getName());
-        Address t2 = AddressUtils.createTopicAddressObject("new-topic-instance-2", consoleTopicPlan2.getName());
-        Address q3 = AddressUtils.createQueueAddressObject("new-queue-instance-3", consoleQueuePlan3.getName());
+        Address q1 = AddressUtils.createQueueAddressObject("new-queue-instance-1", consoleQueuePlan1.getMetadata().getName());
+        Address t2 = AddressUtils.createTopicAddressObject("new-topic-instance-2", consoleTopicPlan2.getMetadata().getName());
+        Address q3 = AddressUtils.createQueueAddressObject("new-queue-instance-3", consoleQueuePlan3.getMetadata().getName());
         consoleWebPage.createAddressesWebConsole(q1, t2, q3);
 
         String assertMessage = "Address plan wasn't set properly";

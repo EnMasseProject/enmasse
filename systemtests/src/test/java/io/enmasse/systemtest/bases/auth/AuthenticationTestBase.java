@@ -7,7 +7,7 @@ package io.enmasse.systemtest.bases.auth;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.systemtest.AddressSpacePlan;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.UserCredentials;
@@ -59,7 +59,7 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
-        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlan.STANDARD_SMALL : AddressSpacePlan.BROKERED;
+        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED;
         AddressSpace s3standard = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s3", type, plan, AuthenticationServiceType.NONE);
         AddressSpace s4standard = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s4", type, plan, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(s3standard, s4standard);
@@ -74,7 +74,7 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
-        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlan.STANDARD_SMALL : AddressSpacePlan.BROKERED;
+        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED;
         AddressSpace s1brokered = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s1", type, plan, AuthenticationServiceType.STANDARD);
         AddressSpace s2brokered = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s2", type, plan, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(s1brokered, s2brokered);

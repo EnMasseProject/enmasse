@@ -11,6 +11,7 @@ import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserCrd;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -31,16 +32,16 @@ public class UserApiClient extends ApiClient {
     private final int initRetry = 10;
     private final String userPath;
 
-    private static final String USERS_PATH = "/apis/user.enmasse.io/v1beta1/messagingusers";
+    private static final String USERS_PATH = "/apis/user.enmasse.io/" + UserCrd.VERSION + "/messagingusers";
 
     public UserApiClient(Kubernetes kubernetes) throws MalformedURLException {
-        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/v1beta1");
-        this.userPath = String.format("/apis/user.enmasse.io/v1beta1/namespaces/%s/messagingusers", kubernetes.getNamespace());
+        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/" + UserCrd.VERSION);
+        this.userPath = String.format("/apis/user.enmasse.io/%s/namespaces/%s/messagingusers", UserCrd.VERSION, kubernetes.getNamespace());
     }
 
     public UserApiClient(Kubernetes kubernetes, String namespace) throws MalformedURLException {
-        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/v1beta1");
-        this.userPath = String.format("/apis/user.enmasse.io/v1beta1/namespaces/%s/messagingusers", namespace);
+        super(kubernetes, kubernetes::getRestEndpoint, "user.enmasse.io/" + UserCrd.VERSION);
+        this.userPath = String.format("/apis/user.enmasse.io/%s/namespaces/%s/messagingusers", UserCrd.VERSION, namespace);
     }
 
     public JsonObject getUser(String addressSpace, String userName) throws Exception {
