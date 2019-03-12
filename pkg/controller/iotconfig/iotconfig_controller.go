@@ -179,9 +179,6 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processQdrProxyConfig(ctx, config)
 	})
-	rc.Process(func() (reconcile.Result, error) {
-		return r.processOperator(ctx, config)
-	})
 	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
 	})
