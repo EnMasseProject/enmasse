@@ -107,7 +107,7 @@ public class GlobalLogCollector {
     public void collectRouterState(String operation) {
         log.info("Collecting router state in namespace {}", namespace);
         long timestamp = System.currentTimeMillis();
-        kubernetes.listPods(Collections.singletonMap("capability", "router")).forEach(pod -> {
+        kubernetes.listPods(Collections.singletonMap("capability", "router")).stream().filter(pod -> pod.getStatus().getPhase().equals("Running")).forEach(pod -> {
             collectRouterInfo(pod, "." + operation + ".autolinks." + timestamp, "qdmanage", "QUERY", "--type=autoLink");
             collectRouterInfo(pod, "." + operation + ".links." + timestamp, "qdmanage", "QUERY", "--type=link");
             collectRouterInfo(pod, "." + operation + ".connections." + timestamp, "qdmanage", "QUERY", "--type=connection");
