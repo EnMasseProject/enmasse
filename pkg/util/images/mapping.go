@@ -47,21 +47,30 @@ func loadImageMapFrom(fileName string) (map[string]string, error) {
 const defaultImageMapFileName = "/etc/operatorImageMap.yaml"
 
 func init() {
+	defaultPullPolicy = corev1.PullPolicy(os.Getenv("ENMASSE_DEFAULT_PULL_POLICY"))
+}
+
+func lazyLoadImageMap() {
+	if imageMap != nil {
+		return
+	}
+
 	fileName := os.Getenv("ENMASSE_IMAGE_MAP_FILE")
 	if fileName == "" {
 		fileName = defaultImageMapFileName
 	}
-	if fileName != "" {
-		var err error
-		imageMap, err = loadImageMapFrom(fileName)
-		if err != nil {
-			panic(err)
-		}
+
+	var err error
+	imageMap, err = loadImageMapFrom(fileName)
+	if err != nil {
+		panic(err)
 	}
-	defaultPullPolicy = corev1.PullPolicy(os.Getenv("ENMASSE_DEFAULT_PULL_POLICY"))
+
 }
 
 func GetImage(name string) (string, error) {
+	lazyLoadImageMap()
+
 	if imageMap == nil {
 		return "", fmt.Errorf("'%s' not found or 'ENMASSE_IMAGE_MAP_FILE' not set to a readable file, unable to lookup image names", defaultImageMapFileName)
 	}

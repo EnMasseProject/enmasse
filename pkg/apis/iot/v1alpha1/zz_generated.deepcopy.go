@@ -194,11 +194,6 @@ func (in *IoTConfigSpec) DeepCopyInto(out *IoTConfigSpec) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.UseServiceCA != nil {
-		in, out := &in.UseServiceCA, &out.UseServiceCA
-		*out = new(bool)
-		**out = **in
-	}
 	if in.ImageOverrides != nil {
 		in, out := &in.ImageOverrides, &out.ImageOverrides
 		*out = make(map[string]v1beta1.ImageOverride, len(*in))

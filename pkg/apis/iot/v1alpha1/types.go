@@ -98,7 +98,6 @@ type IoTConfig struct {
 
 type IoTConfigSpec struct {
 	EnableDefaultRoutes *bool `json:"enableDefaultRoutes,omitempty"`
-	UseServiceCA        *bool `json:"useServiceCA,omitempty"`
 
 	ImageOverrides map[string]v1beta1.ImageOverride `json:"imageOverrides,omitempty"`
 
