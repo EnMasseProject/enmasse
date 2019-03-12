@@ -8,6 +8,7 @@ TEST_PROFILE=$2
 TESTCASE=$3
 failure=0
 
+BASE_DIR="${CURDIR}/../../"
 API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
 API_TOKEN=$(kubectl describe secret $(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
 
@@ -27,7 +28,6 @@ export KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
 kubectl create namespace ${KUBERNETES_NAMESPACE}
 kubectl config set-context $(kubectl config current-context) --namespace=${KUBERNETES_NAMESPACE}
 
-
 mkdir -p api-server-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
@@ -40,12 +40,20 @@ mkdir -p standard-authservice-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
+"${BASE_DIR}/iot/examples/k8s-tls/create"
+NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="travis-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
+
 sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
 kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse
 kubectl create -f ${ENMASSE_DIR}/install/components/none-authservice
 kubectl create -f ${ENMASSE_DIR}/install/components/standard-authservice
 kubectl create -f ${ENMASSE_DIR}/install/components/example-plans
 kubectl create -f ${ENMASSE_DIR}/install/components/example-roles
+
+kubectl create -f ${ENMASSE_DIR}/install/components/enmasse-controller-manager
+kubectl create -f ${ENMASSE_DIR}/install/components/iot/api
+kubectl create -f ${ENMASSE_DIR}/install/components/iot/common
+kubectl create -f ${ENMASSE_DIR}/install/components/iot/operator
 
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
