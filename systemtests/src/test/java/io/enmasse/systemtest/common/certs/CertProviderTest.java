@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
@@ -35,6 +36,7 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
@@ -126,6 +128,7 @@ class CertProviderTest extends TestBase {
     }
 
     @Test
+    @Disabled("Disabled due to #2427")
     void testConsoleSelfSignedTrustEndpointCert() throws Exception {
         createTestEnv(new CertSpecBuilder()
                 .withProvider(CertProvider.selfsigned.name())
@@ -144,6 +147,7 @@ class CertProviderTest extends TestBase {
     }
 
     @Test
+    @Disabled("Disabled due to #2427")
     void testConsoleSelfSignedTrustCaCert() throws Exception {
         createTestEnv(new CertSpecBuilder()
                 .withProvider(CertProvider.selfsigned.name())
@@ -203,6 +207,7 @@ class CertProviderTest extends TestBase {
     }
 
     @Test
+    @Disabled("Disabled due to #2427")
     void testConsoleCertBundleTrustEndpointCert() throws Exception {
         CertBundle certBundle = createCertBundle();
 
@@ -223,6 +228,7 @@ class CertProviderTest extends TestBase {
     }
 
     @Test
+    @Disabled("Disabled due to #2427")
     void testConsoleCertBundleTrustCaCert() throws Exception {
         CertBundle certBundle = createCertBundle();
 
