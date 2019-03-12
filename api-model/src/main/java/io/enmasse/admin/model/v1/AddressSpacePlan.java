@@ -41,7 +41,7 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
     private List<String> addressPlans = new LinkedList<>();
 
     public AddressSpacePlan() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA1);
+        super(KIND, AdminCrd.API_VERSION_V1BETA2);
     }
 
     public void setResources(List<ResourceAllowance> resources) {

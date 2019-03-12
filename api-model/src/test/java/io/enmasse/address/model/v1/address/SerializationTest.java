@@ -17,14 +17,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
+import io.enmasse.admin.model.v1.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
@@ -39,13 +37,6 @@ import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.Phase;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
-import io.enmasse.admin.model.v1.BrokeredInfraConfig;
-import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 
 // TODO: Add more tests of invalid input to deserialization
@@ -440,6 +431,46 @@ public class SerializationTest {
         assertEquals(2, plan.getAddressPlans().size());
         assertEquals("plan1", plan.getMetadata().getName());
         assertEquals("desc", plan.getShortDescription());
+    }
+
+    @Test
+    void testAddressSpacePlanBuilder() {
+        AddressSpacePlan plan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("test-plan")
+                .withAnnotations(Collections.singletonMap("test-key", "test-value"))
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType("standard")
+                .withAddressPlans("a", "b", "c")
+                .endSpec()
+                .build();
+        assertEquals(3, plan.getAddressPlans().size());
+        assertEquals("test-plan", plan.getMetadata().getName());
+        assertNull(plan.getAddressPlans());
+        assertNull(plan.getAddressSpaceType());
+    }
+
+    @Test
+    void testAddressPlanBuilder() {
+        LinkedHashMap<String, Double> res = new LinkedHashMap<>();
+        res.put("router", 2.0);
+        res.put("broker", 14.0);
+        AddressPlan plan = new AddressPlanBuilder()
+                .withNewMetadata()
+                .withName("test-plan")
+                .withAnnotations(Collections.singletonMap("test-key", "test-value"))
+                .endMetadata()
+                .withNewSpec()
+                .withShortDescription("kornys")
+                .withAddressType("topic")
+                .withResources(res)
+                .endSpec()
+                .build();
+        assertEquals("test-plan", plan.getMetadata().getName());
+        assertEquals(14, plan.getSpec().getResources().get("broker"));
+        assertNull(plan.getResources());
+        assertNull(plan.getAddressType());
     }
 
     /*
