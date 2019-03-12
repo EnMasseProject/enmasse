@@ -34,13 +34,6 @@ function generateTOC() {
     return;
   }
 
-  // For search, we send the toc precomputed from server-side.
-  // TODO: Ideally, this should always be precomputed for all pages, but then
-  // we need to do HTML parsing on the server-side.
-  if (location.pathname === '/search') {
-    return;
-  }
-
   var nav = $('#nav');
   if (nav.length === 0) {
     return;
@@ -64,6 +57,7 @@ function generateTOC() {
   if (toc_items.length <= 1) {
     return;
   }
+
   var dl1 = $('<dl/>');
   var dl2 = $('<dl/>');
 
@@ -155,16 +149,8 @@ function setupDropdownPlayground() {
     button.removeClass('active');
     div.hide();
   });
+  button.show();
   $('#menu').css('min-width', '+=60');
-
-  // Hide inline playground if we click somewhere on the page.
-  // This is needed in mobile devices, where the "Play" button
-  // is not clickable once the playground opens up.
-  $("#page").click(function() {
-    if (button.hasClass('active')) {
-      button.click();
-    }
-  });
 }
 
 function setupInlinePlayground() {
@@ -340,28 +326,6 @@ function addPermalinks() {
     var el = $(this);
     // Add the anchor to the "dt" element.
     addPermalink(el, el.find("> dt").first());
-  });
-}
-
-$(".js-expandAll").click(function() {
-  if ($(this).hasClass("collapsed")) {
-    toggleExamples('toggle');
-    $(this).text("(Collapse All)");
-  } else {
-    toggleExamples('toggleVisible');
-    $(this).text("(Expand All)");
-  }
-  $(this).toggleClass("collapsed")
-});
-
-function toggleExamples(className) {
-  // We need to explicitly iterate through divs starting with "example_"
-  // to avoid toggling Overview and Index collapsibles.
-  $("[id^='example_']").each(function() {
-    // Check for state and click it only if required.
-    if ($(this).hasClass(className)) {
-      $(this).find('.toggleButton').first().click();
-    }
   });
 }
 

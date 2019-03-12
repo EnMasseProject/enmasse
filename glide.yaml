@@ -2,20 +2,32 @@ package: github.com/enmasseproject/enmasse
 import:
   - package: k8s.io/client-go
     version: ^9
+  - package: github.com/openshift/client-go
+    version: release-3.11
+  - package: github.com/openshift/api
+    version: release-3.11
   - package: go.uber.org/multierr
     version: ^1.1
   - package: go.uber.org/atomic
     version: ^1
   - package: github.com/google/uuid
     version: ^1.1
+  - package: gopkg.in/yaml.v2
+    version: ^2.2
 
   - package: k8s.io/code-generator
-    version: kubernetes-1.12.3
+    version: kubernetes-1.12.5
+  - package: k8s.io/apimachinery
+    version: kubernetes-1.12.5
+  - package: k8s.io/api
+    version: kubernetes-1.12.5
   - package: k8s.io/gengo
+    version: 7a1b7fb0289f3b6f206589cdcfcad73009b6e840
   - package: github.com/spf13/pflag
-    version: ^1.0
+    version: ~1.0
   - package: golang.org/x/tools
+    version: release-branch.go1.10
   - package: sigs.k8s.io/controller-runtime
     version: 0.1.9
   - package: github.com/operator-framework/operator-sdk
-    version: ^0.3
+    version: ~0.3

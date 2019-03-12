@@ -44,13 +44,13 @@ print in Gopkg.toml file format.
 
 func printDepsFunc(cmd *cobra.Command, args []string) {
 	if len(args) != 0 {
-		log.Fatalf("Command %s doesn't accept any arguments", cmd.CommandPath())
+		log.Fatal("print-deps command does not take any arguments")
 	}
 	if asFile {
 		scaffold.PrintDepsAsFile()
 	} else {
 		if err := scaffold.PrintDeps(); err != nil {
-			log.Fatalf("Print deps failed: (%v)", err)
+			log.Fatalf("print deps: (%v)", err)
 		}
 	}
 }

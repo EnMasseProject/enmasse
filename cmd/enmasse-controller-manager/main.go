@@ -11,6 +11,10 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/enmasseproject/enmasse/pkg/util"
+
+	"github.com/openshift/api"
+
 	"github.com/enmasseproject/enmasse/version"
 
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
@@ -32,6 +36,7 @@ func printVersion() {
 	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
 	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
 	log.Info(fmt.Sprintf("EnMasse Version: %v", version.Version))
+	log.Info(fmt.Sprintf("OpenShift?: %v", util.IsOpenshift()))
 }
 
 func main() {
@@ -39,6 +44,9 @@ func main() {
 
 	development := os.Getenv("DEVELOPMENT") == "true"
 	logf.SetLogger(logf.ZapLogger(development))
+	namespace := os.Getenv("NAMESPACE")
+
+	log.Info("Watching on namespace", "namespace", namespace)
 
 	printVersion()
 
@@ -48,7 +56,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	mgr, err := manager.New(cfg, manager.Options{})
+	mgr, err := manager.New(cfg, manager.Options{Namespace: namespace})
 	if err != nil {
 		log.Error(err, "Failed to create manager")
 		os.Exit(1)
@@ -58,8 +66,13 @@ func main() {
 
 	// register APIs
 
+	if err := api.Install(scheme.Scheme); err != nil {
+		log.Error(err, "Failed to register OpenShift schema")
+		os.Exit(1)
+	}
+
 	if err := enmassescheme.AddToScheme(scheme.Scheme); err != nil {
-		log.Error(err, "Failed to register schema")
+		log.Error(err, "Failed to register EnMasse schema")
 		os.Exit(1)
 	}
 

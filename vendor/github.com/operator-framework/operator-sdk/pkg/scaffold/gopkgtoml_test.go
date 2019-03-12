@@ -24,12 +24,12 @@ func TestGopkgtoml(t *testing.T) {
 	s, buf := setupScaffoldAndWriter()
 	err := s.Execute(appConfig, &GopkgToml{})
 	if err != nil {
-		t.Fatalf("Failed to execute the scaffold: (%v)", err)
+		t.Fatalf("failed to execute the scaffold: (%v)", err)
 	}
 
 	if gopkgtomlExp != buf.String() {
 		diffs := diffutil.Diff(gopkgtomlExp, buf.String())
-		t.Fatalf("Expected vs actual differs.\n%v", diffs)
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
 
@@ -71,10 +71,6 @@ required = [
   revision = "d082d5923d3cc0bfbb066ee5fbdea3d0ca79acf8"
 
 [[override]]
-  name = "github.com/coreos/prometheus-operator"
-  version = "=v0.26.0"
-
-[[override]]
   name = "sigs.k8s.io/controller-runtime"
   version = "=v0.1.8"
 
@@ -82,7 +78,7 @@ required = [
   name = "github.com/operator-framework/operator-sdk"
   # The version rule is used for a specific release and the master branch for in between releases.
   # branch = "master" #osdk_branch_annotation
-  version = "=v0.4.0" #osdk_version_annotation
+  version = "=v0.3.0" #osdk_version_annotation
 
 [prune]
   go-tests = true

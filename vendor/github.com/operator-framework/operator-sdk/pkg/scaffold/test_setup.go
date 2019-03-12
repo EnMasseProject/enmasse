@@ -44,7 +44,7 @@ var (
 func mustGetImportPath() string {
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Failed to get working directory: (%v)", err)
+		log.Fatalf("mustGetImportPath: (%v)", err)
 	}
 	return filepath.Join(wd, appRepo)
 }

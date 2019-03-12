@@ -25,7 +25,7 @@ func makeUint64(v uint64) *uint64 {
 }
 
 func TestNewSystemCpufreq(t *testing.T) {
-	fs, err := NewFS("fixtures")
+	fs, err := NewFS(sysTestFixtures)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestNewSystemCpufreq(t *testing.T) {
 			ScalingMaximumFrequency:  makeUint64(2400000),
 			AvailableGovernors:       "performance powersave",
 			Driver:                   "intel_pstate",
-			Govenor:                  "powersave",
+			Governor:                 "powersave",
 			RelatedCpus:              "0",
 			SetSpeed:                 "<unsupported>",
 		},
@@ -64,7 +64,7 @@ func TestNewSystemCpufreq(t *testing.T) {
 			ScalingMaximumFrequency:  makeUint64(3300000),
 			AvailableGovernors:       "performance powersave",
 			Driver:                   "intel_pstate",
-			Govenor:                  "powersave",
+			Governor:                 "powersave",
 			RelatedCpus:              "1",
 			SetSpeed:                 "<unsupported>",
 		},

@@ -28,12 +28,12 @@ func TestTypes(t *testing.T) {
 	s, buf := setupScaffoldAndWriter()
 	err = s.Execute(appConfig, &Types{Resource: r})
 	if err != nil {
-		t.Fatalf("Failed to execute the scaffold: (%v)", err)
+		t.Fatalf("failed to execute the scaffold: (%v)", err)
 	}
 
 	if typesExp != buf.String() {
 		diffs := diffutil.Diff(typesExp, buf.String())
-		t.Fatalf("Expected vs actual differs.\n%v", diffs)
+		t.Fatalf("expected vs actual differs.\n%v", diffs)
 	}
 }
 

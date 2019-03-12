@@ -9,6 +9,7 @@ ARG version
 ARG commit
 ENV VERSION=${version} COMMIT=${commit}
 
+ADD build/operatorImageMap.yaml /etc/operatorImageMap.yaml
 ADD build/enmasse-controller-manager /
 
 ENTRYPOINT /enmasse-controller-manager

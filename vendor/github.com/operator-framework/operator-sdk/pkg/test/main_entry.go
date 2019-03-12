@@ -54,10 +54,10 @@ func MainEntry(m *testing.M) {
 	// go test always runs from the test directory; change to project root
 	err := os.Chdir(*projRoot)
 	if err != nil {
-		log.Fatalf("Failed to change directory to project root: %v", err)
+		log.Fatalf("failed to change directory to project root: %v", err)
 	}
 	if err := setup(kubeconfigPath, namespacedManPath, *localOperator); err != nil {
-		log.Fatalf("Failed to set up framework: %v", err)
+		log.Fatalf("failed to set up framework: %v", err)
 	}
 	// setup local operator command, but don't start it yet
 	var localCmd *exec.Cmd
@@ -75,7 +75,7 @@ func MainEntry(m *testing.M) {
 			<-c
 			err := localCmd.Process.Signal(os.Interrupt)
 			if err != nil {
-				log.Fatalf("Failed to terminate the operator: (%v)", err)
+				log.Fatalf("failed to terminate the operator: (%v)", err)
 			}
 			os.Exit(0)
 		}()
@@ -97,18 +97,18 @@ func MainEntry(m *testing.M) {
 		if *localOperator {
 			err := localCmd.Start()
 			if err != nil {
-				log.Fatalf("Failed to run operator locally: (%v)", err)
+				log.Fatalf("failed to run operator locally: (%v)", err)
 			}
-			log.Info("Started local operator")
+			log.Info("started local operator")
 		}
 		exitCode := m.Run()
 		if *localOperator {
 			err := localCmd.Process.Kill()
 			if err != nil {
-				log.Warn("Failed to stop local operator process")
+				log.Warn("failed to stop local operator process")
 			}
-			log.Infof("Local operator stdout: %s", string(localCmdOutBuf.Bytes()))
-			log.Infof("Local operator stderr: %s", string(localCmdErrBuf.Bytes()))
+			log.Infof("local operator stdout: %s", string(localCmdOutBuf.Bytes()))
+			log.Infof("local operator stderr: %s", string(localCmdErrBuf.Bytes()))
 		}
 		ctx.CleanupNoT()
 		os.Exit(exitCode)
@@ -117,11 +117,11 @@ func MainEntry(m *testing.M) {
 	if *kubeconfigPath != "incluster" {
 		globalYAML, err := ioutil.ReadFile(*globalManPath)
 		if err != nil {
-			log.Fatalf("Failed to read global resource manifest: %v", err)
+			log.Fatalf("failed to read global resource manifest: %v", err)
 		}
 		err = ctx.createFromYAML(globalYAML, true, &CleanupOptions{TestContext: ctx})
 		if err != nil {
-			log.Fatalf("Failed to create resource(s) in global resource manifest: %v", err)
+			log.Fatalf("failed to create resource(s) in global resource manifest: %v", err)
 		}
 	}
 }

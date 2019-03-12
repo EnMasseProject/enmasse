@@ -20,8 +20,7 @@ const (
 	KubeConfigEnvVar = "KUBECONFIG"
 
 	// WatchNamespaceEnvVar is the constant for env variable WATCH_NAMESPACE
-	// which is the namespace where the watch activity happens.
-	// this value is empty if the operator is running with clusterScope.
+	// which is the namespace that the pod is currently running in.
 	WatchNamespaceEnvVar = "WATCH_NAMESPACE"
 
 	// OperatorNameEnvVar is the constant for env variable OPERATOR_NAME

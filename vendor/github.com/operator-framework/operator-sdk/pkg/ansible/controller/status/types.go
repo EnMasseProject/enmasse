@@ -78,9 +78,7 @@ func NewAnsibleResultFromMap(sm map[string]interface{}) *AnsibleResult {
 	}
 	if v, ok := sm["completion"]; ok {
 		s := v.(string)
-		if err := a.TimeOfCompletion.UnmarshalJSON([]byte(s)); err != nil {
-			log.Error(err, "Failed to unmarshal time of completion for ansible result")
-		}
+		a.TimeOfCompletion.UnmarshalJSON([]byte(s))
 	}
 	return a
 }
@@ -134,7 +132,7 @@ func createConditionFromMap(cm map[string]interface{}) Condition {
 	if ok {
 		t, err := time.Parse("2006-01-02T15:04:05Z", ltts)
 		if err != nil {
-			log.Info("Unable to parse time for status condition", "Time", ltts)
+			log.Info("unable to parse time for status condition", "Time", ltts)
 		} else {
 			ltt = metav1.NewTime(t)
 		}
@@ -171,7 +169,7 @@ func CreateFromMap(statusMap map[string]interface{}) Status {
 	for _, ci := range conditionsInterface {
 		cm, ok := ci.(map[string]interface{})
 		if !ok {
-			log.Info("Unknown condition, removing condition", "ConditionInterface", ci)
+			log.Info("unknown condition, removing condition", "ConditionInterface", ci)
 			continue
 		}
 		conditions = append(conditions, createConditionFromMap(cm))
@@ -188,11 +186,9 @@ func CreateFromMap(statusMap map[string]interface{}) Status {
 func (status *Status) GetJSONMap() map[string]interface{} {
 	b, err := json.Marshal(status)
 	if err != nil {
-		log.Error(err, "Unable to marshal json")
+		log.Error(err, "unable to marshal json")
 		return status.CustomStatus
 	}
-	if err := json.Unmarshal(b, &status.CustomStatus); err != nil {
-		log.Error(err, "Unable to unmarshal json")
-	}
+	json.Unmarshal(b, &status.CustomStatus)
 	return status.CustomStatus
 }

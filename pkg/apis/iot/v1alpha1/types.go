@@ -6,8 +6,8 @@
 package v1alpha1
 
 import (
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
-	"k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -97,16 +97,23 @@ type IoTConfig struct {
 }
 
 type IoTConfigSpec struct {
-	Adapters               []AdapterSpec   `json:"adapters,omitempty"`
-	DefaultImageProperties ImageProperties `json:"defaultImageProperties,omitempty"`
+	EnableDefaultRoutes *bool `json:"enableDefaultRoutes,omitempty"`
+
+	ImageOverrides map[string]v1beta1.ImageOverride `json:"imageOverrides,omitempty"`
+
+	InterServiceCertificates *InterServiceCertificates `json:"interServiceCertificates,omitempty"`
 }
 
-type ImageProperties struct {
-	Repository     *string `json:"repository,omitempty"`
-	UseImageStream *bool   `json:"useImageStream,omitempty"`
+type InterServiceCertificates struct {
+	SecretCertificatesStrategy *SecretCertificatesStrategy `json:"secretCertificatesStrategy,omitempty"`
+	ServiceCAStrategy          *ServiceCAStrategy          `json:"serviceCAStrategy,omitempty"`
+}
 
-	Tag        string         `json:"tag,omitempty"`
-	PullPolicy *v1.PullPolicy `json:"PullPolicy,omitempty"`
+type ServiceCAStrategy struct {
+}
+
+type SecretCertificatesStrategy struct {
+	SecretName string `json:"secretName"`
 }
 
 type AdapterSpec struct {
@@ -117,11 +124,14 @@ type AdapterSpec struct {
 type IoTConfigStatus struct {
 	Initialized bool   `json:"initialized"`
 	State       string `json:"state"`
+
+	AuthenticationServicePSK *string `json:"authenticationServicePSK"`
 }
 
 const (
 	ConfigStateWrongName = "WrongName"
 	ConfigStateRunning   = "Running"
+	ConfigStateFailed    = "Failed"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

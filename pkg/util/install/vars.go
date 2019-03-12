@@ -8,6 +8,8 @@ package install
 import (
 	"os"
 
+	"github.com/enmasseproject/enmasse/pkg/util"
+
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/enmasseproject/enmasse/version"
@@ -30,7 +32,7 @@ func init() {
 		defaultTag = version.Version
 	}
 
-	defaultUseImageStreams = os.Getenv("ENMASSE_DEFAULT_USE_IMAGE_STREAMS") == "true"
+	defaultUseImageStreams = util.GetBooleanEnv("ENMASSE_DEFAULT_USE_IMAGE_STREAMS")
 
 	defaultRepository = os.Getenv("ENMASSE_DEFAULT_REPOSITORY")
 	if defaultRepository == "" {

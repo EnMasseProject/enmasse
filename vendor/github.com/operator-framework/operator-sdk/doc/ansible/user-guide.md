@@ -106,14 +106,14 @@ An example Watches file:
 - version: v1alpha1
   group: bar.example.com
   kind: Bar
-  playbook: /opt/ansible/playbook.yml
+  playbook: /opt/ansible/playbook.yaml
 
 # More complex example for our Baz kind
 # Here we will disable requeuing and be managing the CR status in the playbook
 - version: v1alpha1
   group: baz.example.com
   kind: Baz
-  playbook: /opt/ansible/baz.yml
+  playbook: /opt/ansible/baz.yaml
   reconcilePeriod: 0
   manageStatus: false
 ```
@@ -149,7 +149,7 @@ should go.
 - version: v1alpha1
   group: cache.example.com
   kind: Memcached
-  role: /opt/ansible/roles/memcached
+  role: /opt/ansible/roles/Memcached
 ```
 
 **Playbook**
@@ -167,7 +167,7 @@ Playbook
 ## Building the Memcached Ansible Role
 
 The first thing to do is to modify the generated Ansible role under
-`roles/memcached`. This Ansible Role controls the logic that is executed when a
+`roles/Memcached`. This Ansible Role controls the logic that is executed when a
 resource is modified.
 
 ### Define the Memcached spec
@@ -183,7 +183,7 @@ It is recommended that you perform some type validation in Ansible on the
 variables to ensure that your application is receiving expected input.
 
 First, set a default in case the user doesn't set the `spec` field by modifying
-`roles/memcached/defaults/main.yml`:
+`roles/Memcached/defaults/main.yml`:
 ```yaml
 size: 1
 ```
@@ -192,13 +192,13 @@ size: 1
 
 Now that we have the spec defined, we can define what Ansible is actually
 executed on resource changes. Since this is an Ansible Role, the default
-behavior will be to execute the tasks in `roles/memcached/tasks/main.yml`. We
+behavior will be to execute the tasks in `roles/Memcached/tasks/main.yml`. We
 want Ansible to create a deployment if it does not exist which runs the
 `memcached:1.4.36-alpine` image. Ansible 2.5+ supports the [k8s Ansible
 Module](https://docs.ansible.com/ansible/2.6/modules/k8s_module.html) which we
 will leverage to control the deployment definition.
 
-Modify `roles/memcached/tasks/main.yml` to look like the following:
+Modify `roles/Memcached/tasks/main.yml` to look like the following:
 ```yaml
 ---
 - name: start memcached

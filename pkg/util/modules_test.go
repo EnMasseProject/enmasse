@@ -31,7 +31,7 @@ func TestEnabled(t *testing.T) {
 	// CONTROLLER_DISABLE_ALL = true
 
 	for _, data := range envs {
-		env := MockEnvironmentProvider{environment: data.vars}
+		env := MockEnvironmentProvider{Environment: data.vars}
 		if ret := isModuleEnabled(env, data.module); ret != data.result {
 			t.Errorf("Expected module %s to be state = %t, but was %t", data.module, data.result, ret)
 		}
@@ -40,11 +40,11 @@ func TestEnabled(t *testing.T) {
 
 func TestSimpleExample(t *testing.T) {
 
-	env1 := MockEnvironmentProvider{environment: map[string]string{
+	env1 := MockEnvironmentProvider{Environment: map[string]string{
 		"CONTROLLER_ENABLE_IOT": "false",
 	}}
 
-	env2 := MockEnvironmentProvider{environment: map[string]string{
+	env2 := MockEnvironmentProvider{Environment: map[string]string{
 		"CONTROLLER_ENABLE_IOT":  "true",
 		"CONTROLLER_DISABLE_ALL": "true",
 	}}

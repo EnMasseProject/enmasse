@@ -23,13 +23,8 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/operator-framework/operator-sdk/internal/util/fileutil"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
-
-var log = logf.Log.WithName("kubeconfig")
 
 // kubectl, as of 1.10.5, only does basic auth if the username is present in
 // the URL. The python client used by ansible, as of 6.0.0, only does basic
@@ -85,9 +80,7 @@ func Create(ownerRef metav1.OwnerReference, proxyURL string, namespace string) (
 	var parsed bytes.Buffer
 
 	t := template.Must(template.New("kubeconfig").Parse(kubeConfigTemplate))
-	if err := t.Execute(&parsed, v); err != nil {
-		return nil, err
-	}
+	t.Execute(&parsed, v)
 
 	file, err := ioutil.TempFile("", "kubeconfig")
 	if err != nil {
@@ -96,11 +89,7 @@ func Create(ownerRef metav1.OwnerReference, proxyURL string, namespace string) (
 	// multiple calls to close file will not hurt anything,
 	// but we don't want to lose the error because we are
 	// writing to the file, so we will call close twice.
-	defer func() {
-		if err := file.Close(); err != nil && !fileutil.IsClosedError(err) {
-			log.Error(err, "Failed to close generated kubeconfig file")
-		}
-	}()
+	defer file.Close()
 
 	if _, err := file.WriteString(parsed.String()); err != nil {
 		return nil, err
