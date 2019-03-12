@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -e
+
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$SCRIPTDIR/common"
+
+OUTDIR="$SCRIPTDIR/build"
+
+: ${NAMESPACE:=enmasse-infra}
+: ${PREFIX:=}
+
+function deleteSecret () {
+  kubectl -n "$NAMESPACE" delete secret "$1" --ignore-not-found=true
+}
+
+for i in ${IOT_SERVICES}; do
+  deleteSecret "${PREFIX}${i}-tls"
+done
+
+deleteSecret "${PREFIX}iot-service-ca"

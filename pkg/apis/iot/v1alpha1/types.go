@@ -113,7 +113,9 @@ type ServiceCAStrategy struct {
 }
 
 type SecretCertificatesStrategy struct {
-	SecretName string `json:"secretName"`
+	CASecretName string `json:"caSecretName"`
+
+	ServiceSecretNames map[string]string `json:"serviceSecretNames"`
 }
 
 type AdapterSpec struct {

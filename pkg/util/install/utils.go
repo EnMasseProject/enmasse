@@ -153,6 +153,24 @@ func ApplyVolumeWithError(deployment *appsv1.Deployment, name string, mutator fu
 	return err
 }
 
+func DropVolume(deployment *appsv1.Deployment, name string) {
+	if deployment.Spec.Template.Spec.Volumes == nil {
+		return
+	}
+
+	// removing an entry from an array in go is tricky ...
+
+	for i := len(deployment.Spec.Template.Spec.Volumes) - 1; i >= 0; i-- {
+		v := deployment.Spec.Template.Spec.Volumes[i]
+		if v.Name == name {
+			deployment.Spec.Template.Spec.Volumes = append(
+				deployment.Spec.Template.Spec.Volumes[:i],
+				deployment.Spec.Template.Spec.Volumes[i+1:]...,
+			)
+		}
+	}
+}
+
 func SetContainerImage(container *corev1.Container, imageName string, overrides v1beta1.ImageOverridesProvider) error {
 
 	resolved, err := images.GetImage(imageName)
@@ -240,4 +258,21 @@ func AppendVolumeMountSimple(container *corev1.Container, name string, path stri
 		mount.MountPath = path
 		mount.ReadOnly = readOnly
 	})
+}
+
+func DropVolumeMount(container *corev1.Container, name string) {
+	if container.VolumeMounts == nil {
+		return
+	}
+
+	// removing an entry from an array in go is tricky ...
+
+	for i := len(container.VolumeMounts) - 1; i >= 0; i-- {
+		v := container.VolumeMounts[i]
+		if v.Name == name {
+			container.VolumeMounts = append(
+				container.VolumeMounts[:i], container.VolumeMounts[i+1:]...,
+			)
+		}
+	}
 }
