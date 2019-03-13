@@ -56,7 +56,7 @@ function waitingContainersReady {
 TIMEOUT=600
 NOW=$(date +%s)
 END=$(($NOW + $TIMEOUT))
-info "Waiting until ${END}"
+info "Waiting until ${END} ($(date -d @${END}))"
 while true
 do
     NOW=$(date +%s)
