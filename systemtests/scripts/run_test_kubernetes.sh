@@ -41,7 +41,7 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standar
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
 "${BASE_DIR}/iot/examples/k8s-tls/create"
-NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="travis-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
+NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
 
 sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
 kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse
@@ -71,13 +71,20 @@ fi
 
 wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
+echo "Running test profile: ${TEST_PROFILE}"
 #execute test
-if [[ "${TEST_PROFILE}" = "smoke" ]]; then
+case "${TEST_PROFILE}" in
+"smoke")
     run_test "**.SmokeTest" systemtests-shared-brokered || failure=$(($failure + 1))
     run_test "**.SmokeTest" systemtests-shared-standard || failure=$(($failure + 1))
-else
+    ;;
+"smoke-iot")
+    run_test systemtests-smoke-iot || failure=$(($failure + 1))
+    ;;
+*)
     run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
-fi
+    ;;
+esac
 
 kubectl get events --all-namespaces
 

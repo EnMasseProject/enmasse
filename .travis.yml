@@ -25,19 +25,6 @@ go:
   - "1.10.x"
 jobs:
   include:
-    - stage: test
-      dist: xenial
-      install: true
-      before_install:
-        - sudo pip install requests[security] ansible
-        - gem install asciidoctor
-        - gimme 1.10.5
-        - source ~/.gimme/envs/go1.10.5.env
-        - go version
-      script:
-        - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
-        - "./.travis/build-only.sh"
-        - "./.travis/test-iot.sh"
     - stage: build
       before_install:
         - pip install --user requests[security] ansible
@@ -72,6 +59,19 @@ jobs:
           on:
             tags: true
             repo: EnMasseProject/enmasse
+    # we keep the "build" stage name in order to run in parallel
+    - dist: xenial
+      install: true
+      before_install:
+        - sudo pip install requests[security] ansible
+        - gem install asciidoctor
+        - gimme 1.10.5
+        - source ~/.gimme/envs/go1.10.5.env
+        - go version
+      script:
+        - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
+        - "./.travis/build-only.sh"
+        - "./.travis/test-iot.sh"
 
 env:
   global:

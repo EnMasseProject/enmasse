@@ -213,6 +213,22 @@
             </properties>
         </profile>
         <profile>
+            <id>systemtests-shared-iot</id>
+            <properties>
+                <tags>shared-iot</tags>
+                <skip.tests>false</skip.tests>
+                <skip.tags>marathon</skip.tags>
+            </properties>
+        </profile>
+        <profile>
+            <id>systemtests-smoke-iot</id>
+            <properties>
+                <tags>shared-iot &amp; smoke</tags>
+                <skip.tests>false</skip.tests>
+                <skip.tags>marathon</skip.tags>
+            </properties>
+        </profile>
+        <profile>
             <id>systemtests-marathon</id>
             <properties>
                 <tags>marathon</tags>
