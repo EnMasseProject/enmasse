@@ -6,15 +6,12 @@ package io.enmasse.systemtest.brokered.infra;
 
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.DoneableAddressSpace;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.ResourceAllowance;
-import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
@@ -34,12 +31,11 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     @Test
     void testCreateInfra() throws Exception {
-        testInfra = new InfraConfigDefinition("test-infra-1", AddressSpaceType.BROKERED, Arrays.asList(
-                new BrokerInfraSpec(Arrays.asList(
-                        new InfraResource("memory", "512Mi"),
-                        new InfraResource("storage", "1Gi"))),
-                new AdminInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "512Mi")))), environment.enmasseVersion());
+        testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
+                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi"),
+                PlanUtils.createBrokeredAdminResourceObject("512Mi"),
+                environment.enmasseVersion());
+
         plansProvider.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan", AddressType.TOPIC,
@@ -48,7 +44,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
         plansProvider.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan",
-                testInfra.getName(),
+                testInfra.getMetadata().getName(),
                 AddressSpaceType.BROKERED,
                 Collections.singletonList(new ResourceAllowance("broker", 3.0)),
                 Collections.singletonList(exampleAddressPlan));
@@ -79,16 +75,15 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
-        InfraConfigDefinition infra = new InfraConfigDefinition("test-infra-2", AddressSpaceType.BROKERED, Arrays.asList(
-                new BrokerInfraSpec(Arrays.asList(
-                        new InfraResource("memory", brokerMemory),
-                        new InfraResource("storage", brokerStorage)), updatePersistentVolumeClaim),
-                new AdminInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", adminMemory)))), environment.enmasseVersion());
+        BrokeredInfraConfig infra = PlanUtils.createBrokeredInfraConfigObject("test-infra-2",
+                PlanUtils.createBrokeredBrokerResourceObject(brokerMemory, brokerStorage, updatePersistentVolumeClaim),
+                PlanUtils.createBrokeredAdminResourceObject(adminMemory),
+                environment.enmasseVersion());
+
         plansProvider.createInfraConfig(infra);
 
         AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan-2",
-                infra.getName(), AddressSpaceType.BROKERED,
+                infra.getMetadata().getName(), AddressSpaceType.BROKERED,
                 Collections.singletonList(new ResourceAllowance("broker", 3.0)),
                 Collections.singletonList(exampleAddressPlan));
 
@@ -98,33 +93,30 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
         replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
-                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim != null && updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(), adminMemory),
+                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(), adminMemory),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     @Test
     void testReadInfra() throws Exception {
-        testInfra = new InfraConfigDefinition("test-infra-1", AddressSpaceType.BROKERED, Arrays.asList(
-                new BrokerInfraSpec(Arrays.asList(
-                        new InfraResource("memory", "512Mi"),
-                        new InfraResource("storage", "1Gi"))),
-                new AdminInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "512Mi")))), environment.enmasseVersion());
+        testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
+                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi"),
+                PlanUtils.createBrokeredAdminResourceObject("512Mi"),
+                environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
 
-        InfraConfigDefinition actualInfra = plansProvider.getBrokeredInfraConfig(testInfra.getName());
+        BrokeredInfraConfig actualInfra = plansProvider.getBrokeredInfraConfig(testInfra.getMetadata().getName());
 
-        assertEquals(testInfra.getName(), actualInfra.getName());
-        assertEquals(testInfra.getType(), actualInfra.getType());
+        assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 
-        AdminInfraSpec expectedAdmin = (AdminInfraSpec) getInfraComponent(testInfra, InfraSpecComponent.ADMIN_INFRA_RESOURCE);
-        AdminInfraSpec actualAdmin = (AdminInfraSpec) getInfraComponent(actualInfra, InfraSpecComponent.ADMIN_INFRA_RESOURCE);
-        assertEquals(expectedAdmin.getRequiredValueFromResource("memory"), actualAdmin.getRequiredValueFromResource("memory"));
+        BrokeredInfraConfigSpecAdmin expectedAdmin = ((BrokeredInfraConfig) testInfra).getSpec().getAdmin();
+        BrokeredInfraConfigSpecAdmin actualAdmin = actualInfra.getSpec().getAdmin();
+        assertEquals(expectedAdmin.getResources().getMemory(), actualAdmin.getResources().getMemory());
 
-        BrokerInfraSpec expectedBroker = (BrokerInfraSpec) getInfraComponent(testInfra, InfraSpecComponent.BROKER_INFRA_RESOURCE);
-        BrokerInfraSpec actualBroker = (BrokerInfraSpec) getInfraComponent(actualInfra, InfraSpecComponent.BROKER_INFRA_RESOURCE);
-        assertEquals(expectedBroker.getRequiredValueFromResource("memory"), actualBroker.getRequiredValueFromResource("memory"));
-        assertEquals(expectedBroker.getRequiredValueFromResource("storage"), actualBroker.getRequiredValueFromResource("storage"));
+        BrokeredInfraConfigSpecBroker expectedBroker = ((BrokeredInfraConfig) testInfra).getSpec().getBroker();
+        BrokeredInfraConfigSpecBroker actualBroker = actualInfra.getSpec().getBroker();
+        assertEquals(expectedBroker.getResources().getMemory(), actualBroker.getResources().getMemory());
+        assertEquals(expectedBroker.getResources().getStorage(), actualBroker.getResources().getStorage());
         assertEquals(expectedBroker.getAddressFullPolicy(), actualBroker.getAddressFullPolicy());
         assertEquals(expectedBroker.getStorageClassName(), actualBroker.getStorageClassName());
 

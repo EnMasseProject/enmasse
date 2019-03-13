@@ -4,10 +4,8 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.apiclients.AdminApiClient;
-import io.enmasse.systemtest.resources.InfraConfigDefinition;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -17,7 +15,7 @@ public class PlansProvider {
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
-    private ArrayList<InfraConfigDefinition> infraConfigs;
+    private ArrayList<InfraConfig> infraConfigs;
     private final AdminApiClient adminApiClient;
 
     public PlansProvider(Kubernetes kubernetes) {
@@ -39,7 +37,7 @@ public class PlansProvider {
             adminApiClient.deleteAddressPlan(addressPlan);
         }
 
-        for (InfraConfigDefinition infraConfigDefinition : infraConfigs) {
+        for (InfraConfig infraConfigDefinition : infraConfigs) {
             adminApiClient.deleteInfraConfig(infraConfigDefinition);
         }
 
@@ -103,11 +101,19 @@ public class PlansProvider {
     // Infra configs
     //------------------------------------------------------------------------------------------------
 
-    public void createInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
+    public BrokeredInfraConfig getBrokeredInfraConfig(String config) throws Exception {
+        return (BrokeredInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.BROKERED, config);
+    }
+
+    public StandardInfraConfig getStandardInfraConfig(String config) throws Exception {
+        return (StandardInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.STANDARD, config);
+    }
+
+    public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         createInfraConfig(infraConfigDefinition, false);
     }
 
-    public void createInfraConfig(InfraConfigDefinition infraConfigDefinition, boolean replaceExisting) throws Exception {
+    public void createInfraConfig(InfraConfig infraConfigDefinition, boolean replaceExisting) throws Exception {
         if (replaceExisting) {
             adminApiClient.replaceInfraConfig(infraConfigDefinition);
         } else {
@@ -116,16 +122,8 @@ public class PlansProvider {
         infraConfigs.add(infraConfigDefinition);
     }
 
-    public void removeInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
+    public void removeInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         adminApiClient.deleteInfraConfig(infraConfigDefinition);
-        infraConfigs.removeIf(infraId -> infraId.getName().equals(infraConfigDefinition.getName()));
-    }
-
-    public InfraConfigDefinition getBrokeredInfraConfig(String config) throws Exception {
-        return adminApiClient.getInfraConfig(AddressSpaceType.BROKERED, config);
-    }
-
-    public InfraConfigDefinition getStandardInfraConfig(String config) throws Exception {
-        return adminApiClient.getInfraConfig(AddressSpaceType.STANDARD, config);
+        infraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
     }
 }

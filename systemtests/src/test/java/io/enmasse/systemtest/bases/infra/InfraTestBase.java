@@ -6,13 +6,12 @@ package io.enmasse.systemtest.bases.infra;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.PlansProvider;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.resources.InfraConfigDefinition;
-import io.enmasse.systemtest.resources.InfraSpecComponent;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -42,7 +41,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
 
     protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
 
-    protected InfraConfigDefinition testInfra;
+    protected InfraConfig testInfra;
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
 
@@ -121,10 +120,6 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
                 .filter(pvc -> pvc.getMetadata().getName().equals(brokerVolumeClaimName))
                 .findFirst().get();
         return brokerVolumeClaim;
-    }
-
-    protected InfraSpecComponent getInfraComponent(InfraConfigDefinition infra, String type) {
-        return infra.getAddressResources().stream().filter(isc -> isc.getType().equals(type)).findFirst().get();
     }
 
     protected Boolean volumeResizingSupported() throws Exception {

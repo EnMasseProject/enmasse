@@ -7,10 +7,10 @@ package io.enmasse.systemtest.apiclients;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AdminCrd;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.resources.InfraConfigDefinition;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -73,23 +73,23 @@ public class AdminApiClient extends ApiClient {
         deleteResource("address-plan", addressPlansPath, addressPlan.getMetadata().getName());
     }
 
-    public void createInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
-        createResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.toJson());
+    public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
+        createResource("infra-config", getInfraApiPath(infraConfigDefinition), PlanUtils.infraToJson(infraConfigDefinition));
     }
 
-    public void replaceInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
-        replaceResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getName(), infraConfigDefinition.toJson());
+    public void replaceInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
+        replaceResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getMetadata().getName(), PlanUtils.infraToJson(infraConfigDefinition));
     }
 
-    public void deleteInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
-        deleteResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getName());
+    public void deleteInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
+        deleteResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getMetadata().getName());
     }
 
-    public InfraConfigDefinition getInfraConfig(AddressSpaceType type, String config) throws Exception {
-        return InfraConfigDefinition.fromJson(getResource("infra-config", type.equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath, config));
+    public InfraConfig getInfraConfig(AddressSpaceType type, String config) throws Exception {
+        return PlanUtils.jsonToInfra(getResource("infra-config", type.equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath, config));
     }
 
-    private String getInfraApiPath(InfraConfigDefinition config) {
-        return config.getType().equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath;
+    private String getInfraApiPath(InfraConfig config) {
+        return config.getKind().equals("StandardInfraConfig") ? standardInfraconfigPath : brokeredInfraconfigPath;
     }
 }

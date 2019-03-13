@@ -5,17 +5,12 @@
 package io.enmasse.systemtest.common.plans;
 
 import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.ResourceAllowance;
-import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
@@ -37,7 +32,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.isolated;
-import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -64,14 +58,11 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {
-        InfraConfigDefinition infra = new InfraConfigDefinition("kornys", AddressSpaceType.STANDARD, Arrays.asList(
-                new BrokerInfraSpec(Arrays.asList(
-                        new InfraResource("memory", "750Mi"),
-                        new InfraResource("storage", "2Gi"))),
-                new AdminInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "1Gi"))),
-                new RouterInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "1Gi")), 300, 1)), environment.enmasseVersion());
+        StandardInfraConfig infra = PlanUtils.createStandardInfraConfigObject("kornys",
+                PlanUtils.createStandardBrokerResourceObject("750Mi", "2Gi"),
+                PlanUtils.createStandardAdminResourceObject("1Gi"),
+                PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1),
+                environment.enmasseVersion());
 
         plansProvider.createInfraConfig(infra);
 
@@ -91,7 +82,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new ResourceAllowance("aggregate", 10.0));
         List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
 
-        AddressSpacePlan weakSpacePlan = PlanUtils.createAddressSpacePlanObject("weak-plan", infra.getName(), AddressSpaceType.STANDARD, resources, addressPlans);
+        AddressSpacePlan weakSpacePlan = PlanUtils.createAddressSpacePlanObject("weak-plan", infra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
@@ -316,65 +307,6 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         }
 
         assertCanConnect(manyAddressesSpace, cred, dest.subList(toDeleteCount, destCount));
-    }
-
-    @Test
-    @Tag(nonPR)
-    @Disabled("test disabled as per-address limit enforcement has been removed")
-    void testGlobalSizeLimitations() throws Exception {
-        UserCredentials user = new UserCredentials("test", "test");
-        String messageContent = String.join("", Collections.nCopies(1024, "F"));
-
-        //redefine global max size for queue
-        ResourceDefinition limitedResource = new ResourceDefinition(
-                "broker",
-                "queue-persisted",
-                Collections.singletonList(
-                        new ResourceParameter("GLOBAL_MAX_SIZE", "1Mb")
-                ));
-        //plansProvider.replaceResourceDefinitionConfig(limitedResource);
-
-        //define address plans
-        AddressPlan queuePlan = PlanUtils.createAddressPlanObject("limited-queue", AddressType.QUEUE,
-                Arrays.asList(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.0))); //should reserve 100Kb
-
-        plansProvider.createAddressPlan(queuePlan);
-
-        //define and create address space plan
-        List<ResourceAllowance> resources = Arrays.asList(
-                new ResourceAllowance("broker", 1.0),
-                new ResourceAllowance("router", 1.0),
-                new ResourceAllowance("aggregate", 2.0));
-
-        AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject(
-                "limited-space",
-                "default",
-                AddressSpaceType.STANDARD,
-                resources,
-                Collections.singletonList(queuePlan));
-        plansProvider.createAddressSpacePlan(addressSpacePlan);
-
-        //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("global-size-limited-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
-        createAddressSpace(addressSpace);
-        createUser(addressSpace, user);
-
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", queuePlan.getMetadata().getName());
-        Address queue2 = AddressUtils.createQueueAddressObject("test-queue2", queuePlan.getMetadata().getName());
-        Address queue3 = AddressUtils.createQueueAddressObject("test-queue3", queuePlan.getMetadata().getName());
-        setAddresses(addressSpace, queue, queue2, queue3);
-
-        assertAll(
-                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue.getSpec().getAddress(), messageContent, 100, false),
-                        "Client does not fail"),
-                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue2.getSpec().getAddress(), messageContent, 100, false),
-                        "Client does not fail"),
-                () -> assertTrue(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue3.getSpec().getAddress(), messageContent, 50, false),
-                        "Client fails"));
     }
 
     @Test
