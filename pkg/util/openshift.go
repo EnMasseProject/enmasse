@@ -1,12 +1,11 @@
 package util
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-
-	"k8s.io/apimachinery/pkg/api/errors"
 
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -49,20 +48,10 @@ func detectOpenshift() bool {
 		return false
 	}
 
-	_, err = routeClient.RESTClient().Get().DoRaw()
-	if err == nil {
-		log.Info("Rest call succeeded")
-		return true
-	}
+	body, err := routeClient.RESTClient().Get().DoRaw()
 
-	se, ok := err.(*errors.StatusError)
-	if !ok {
-		log.Info("Result is not a StatusError")
-		return false
-	}
+	log.Info(fmt.Sprintf("Request error: %v", err))
+	log.V(2).Info(fmt.Sprintf("Body: %v", string(body)))
 
-	code := se.ErrStatus.Code
-	log.Info("OpenShift detect", "code", code)
-	return true
-
+	return err == nil
 }
