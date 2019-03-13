@@ -8,6 +8,7 @@ package io.enmasse.systemtest.bases;
 import com.google.common.collect.Ordering;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.Schema;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
@@ -25,7 +26,6 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -482,8 +482,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return schema object
      * @throws Exception
      */
-    protected Future<SchemaData> getSchema() throws Exception {
-        return TestUtils.getSchema(addressApiClient);
+    protected Future<Schema> getSchema() throws Exception {
+        return AddressSpaceUtils.getSchema(addressApiClient);
     }
 
     protected void scaleKeycloak(int numReplicas) throws Exception {

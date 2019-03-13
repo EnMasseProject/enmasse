@@ -4,15 +4,14 @@
  */
 package io.enmasse.systemtest.common.api;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
@@ -20,8 +19,6 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.mqtt.MqttUtils;
-import io.enmasse.systemtest.resources.PlanData;
-import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -86,27 +83,27 @@ class ApiServerTest extends TestBase {
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
-        Future<SchemaData> data = getSchema();
-        SchemaData schemaData = data.get(20, TimeUnit.SECONDS);
+        Future<Schema> data = getSchema();
+        Schema schemaData = data.get(20, TimeUnit.SECONDS);
         log.info("Check if schema object is not null");
         assertThat(schemaData.getAddressSpaceTypes().size(), not(0));
 
         log.info("Check if the 'standard' address space type is found");
-        assertThat(schemaData.getAddressSpaceType("standard"), notNullValue());
+        assertThat(schemaData.findAddressSpaceType("standard"), notNullValue());
 
         log.info("Check if the 'standard' address space has plans");
-        assertThat(schemaData.getAddressSpaceType("standard").getPlans(), notNullValue());
+        assertThat(schemaData.findAddressSpaceType("standard").get().getPlans(), notNullValue());
 
         log.info("Check if schema object contains new address space plan");
-        assertTrue(schemaData.getAddressSpaceType("standard").getPlans()
+        assertTrue(schemaData.findAddressSpaceType("standard").get().getPlans()
                 .stream()
-                .map(PlanData::getName)
+                .map(plan -> plan.getMetadata().getName())
                 .collect(Collectors.toList()).contains("schema-rest-api-plan"));
 
         log.info("Check if schema contains new address plans");
-        assertTrue(schemaData.getAddressSpaceType("standard").getAddressType("queue").getPlans().stream()
-                .filter(s -> s.getName().equals("test-schema-rest-api-addr-plan"))
-                .map(PlanData::getName)
+        assertTrue(schemaData.findAddressSpaceType("standard").get().findAddressType("queue").get().getPlans().stream()
+                .filter(s -> s.getMetadata().getName().equals("test-schema-rest-api-addr-plan"))
+                .map(plan -> plan.getMetadata().getName())
                 .collect(Collectors.toList())
                 .contains("test-schema-rest-api-addr-plan"));
     }

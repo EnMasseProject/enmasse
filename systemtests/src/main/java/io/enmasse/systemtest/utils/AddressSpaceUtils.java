@@ -330,4 +330,12 @@ public class AddressSpaceUtils {
     private static EndpointStatus getEndpointByServiceName(String serviceName, List<EndpointStatus> endpoints) {
         return endpoints.stream().filter(endpointStatus -> endpointStatus.getServiceHost().startsWith(serviceName)).findAny().get();
     }
+
+    public static Future<Schema> getSchema(AddressApiClient apiClient) throws Exception {
+        JsonObject response = apiClient.getSchema();
+        CompletableFuture<Schema> schema = new CompletableFuture<>();
+        log.info("Got Schema object: {}", response.toString());
+        schema.complete(new ObjectMapper().readValue(response.toString(), Schema.class));
+        return schema;
+    }
 }

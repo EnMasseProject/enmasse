@@ -10,8 +10,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.resources.AddressSpaceTypeData;
-import io.enmasse.systemtest.resources.SchemaData;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -34,7 +32,9 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -302,16 +302,6 @@ public class TestUtils {
     }
 
     /**
-     * get schema object by REST API
-     */
-    public static Future<SchemaData> getSchema(AddressApiClient apiClient) throws Exception {
-        JsonObject response = apiClient.getSchema();
-        CompletableFuture<SchemaData> schema = new CompletableFuture<>();
-        schema.complete(getSchemaObject(response));
-        return schema;
-    }
-
-    /**
      * Check if isReady attribute is set to true
      *
      * @param address JsonObject with address
@@ -347,23 +337,6 @@ public class TestUtils {
             }
         }
         return isReady;
-    }
-
-    /**
-     * Create object of SchemaData class from JsonObject
-     *
-     * @param schemaList
-     * @return
-     */
-    private static SchemaData getSchemaObject(JsonObject schemaList) {
-        log.info("Got Schema object: {}", schemaList.toString());
-        List<AddressSpaceTypeData> data = new ArrayList<>();
-        JsonArray items = schemaList.getJsonArray("items");
-        for (int i = 0; i < items.size(); i++) {
-            data.add(new AddressSpaceTypeData(items.getJsonObject(i)));
-        }
-
-        return new SchemaData(data);
     }
 
     interface AddressListMatcher {
