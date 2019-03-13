@@ -62,7 +62,7 @@ do
     NOW=$(date +%s)
     if [[ ${NOW} -gt ${END} ]]; then
         err "Timed out waiting for nodes to come up!"
-        pods=`${CMD} get pods -n ${NAMESPACE}`
+        pods=$(${CMD} describe pods -n ${NAMESPACE} ; ${CMD} get pods -n ${NAMESPACE})
         err_and_exit "PODS: ${pods}"
     fi
     num_running=`${CMD} get pods -n ${NAMESPACE}| grep -v deploy | grep -c Running`
