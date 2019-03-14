@@ -4,6 +4,10 @@
  */
 package io.enmasse.iot.model.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -18,16 +22,20 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-public class IoTProjectSpec {
+//FIXME: implement missing fields and remove ignore annotation
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class IoTProjectStatus {
 
-    private DownstreamStrategy downstreamStrategy;
+    @JsonProperty("isReady")
+    private boolean ready = false;
 
-    public DownstreamStrategy getDownstreamStrategy() {
-        return this.downstreamStrategy;
-    }
+	public boolean isReady() {
+		return ready;
+	}
 
-    public void setDownstreamStrategy(final DownstreamStrategy downstreamStrategy) {
-        this.downstreamStrategy = downstreamStrategy;
-    }
+	public void setReady(boolean ready) {
+		this.ready = ready;
+	}
 
 }
