@@ -5,8 +5,18 @@
 package io.enmasse.iot.model.v1;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+
+import java.io.IOException;
+import java.net.URL;
+import java.nio.ByteBuffer;
 
 import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class IoTProjectTest {
 
@@ -19,7 +29,7 @@ public class IoTProjectTest {
 				.withNewSpec()
 				.withNewDownstreamStrategy()
 				.withNewExternalStrategy()
-				.withCertificate("a".getBytes())
+				.withCertificate(ByteBuffer.wrap("a".getBytes()))
 				.withHost("host")
 				.withPassword("pwd")
 				.withUsername("username")
@@ -31,12 +41,33 @@ public class IoTProjectTest {
 				.build();
 
 		assertEquals("proj", project.getMetadata().getName());
-		assertEquals("a".getBytes(), project.getSpec().getDownstreamStrategy().getExternalStrategy().getCertificate());
+		assertArrayEquals("a".getBytes(), project.getSpec().getDownstreamStrategy().getExternalStrategy().getCertificate().array());
 		assertEquals("host", project.getSpec().getDownstreamStrategy().getExternalStrategy().getHost());
 		assertEquals("pwd", project.getSpec().getDownstreamStrategy().getExternalStrategy().getPassword());
 		assertEquals("username", project.getSpec().getDownstreamStrategy().getExternalStrategy().getUsername());
 		assertEquals(1234, project.getSpec().getDownstreamStrategy().getExternalStrategy().getPort());
 		assertEquals(true, project.getSpec().getDownstreamStrategy().getExternalStrategy().isTls());
 	}
+
+
+    @Test
+    public void testParse() throws IOException {
+        final ObjectMapper mapper = new ObjectMapper();
+
+        final URL url = IoTProjectTest.class.getResource("resources/external-project.json");
+        final IoTProject value = mapper.readValue(url, IoTProject.class);
+
+        assertThat(value, notNullValue());
+
+        assertThat(value.getMetadata(), notNullValue());
+        assertThat(value.getMetadata().getName(), is("iot"));
+
+        assertThat(value.getSpec(), notNullValue());
+
+        assertThat(value.getSpec().getDownstreamStrategy(), notNullValue());
+        assertThat(value.getSpec().getDownstreamStrategy().getExternalStrategy(), notNullValue());
+        assertThat(value.getSpec().getDownstreamStrategy().getExternalStrategy().getCertificate(), notNullValue());
+        assertThat(value.getSpec().getDownstreamStrategy().getExternalStrategy().getCertificate().remaining(), is(1220));
+    }
 
 }

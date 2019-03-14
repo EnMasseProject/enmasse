@@ -7,6 +7,8 @@ package io.enmasse.iot.model.v1;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import java.nio.ByteBuffer;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -39,7 +41,7 @@ public class ExternalDownstreamStrategy {
 
     private boolean tls;
 
-    private byte[] certificate;
+    private ByteBuffer certificate;
 
     public String getHost() {
         return this.host;
@@ -81,11 +83,11 @@ public class ExternalDownstreamStrategy {
         this.tls = tls;
     }
 
-    public byte[] getCertificate() {
+    public ByteBuffer getCertificate() {
         return this.certificate;
     }
 
-    public void setCertificate(final byte[] certificate) {
+    public void setCertificate(final ByteBuffer certificate) {
         this.certificate = certificate;
     }
 
