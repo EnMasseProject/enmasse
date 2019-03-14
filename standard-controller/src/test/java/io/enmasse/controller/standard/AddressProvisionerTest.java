@@ -348,13 +348,18 @@ public class AddressProvisionerTest {
 
         Set<Address> addresses = new HashSet<>();
         Address q1 = createQueue("q1", "xlarge-queue");
+        Address a1 = createAddress("a1", "anycast", "small-anycast");
         addresses.add(q1);
+        addresses.add(a1);
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         assertNotEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
-        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
+        assertNotEquals(a1.getPlan(), a1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        @SuppressWarnings("unused")
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(a1, q1), Sets.newSet(a1, q1));
 
         assertEquals(q1.getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(a1.getPlan(), a1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     @Test

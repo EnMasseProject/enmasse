@@ -21,6 +21,7 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.Vertx;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -153,6 +154,28 @@ public class AddressControllerTest {
 
         assertFalse(pending.getStatus().isReady());
         assertFalse(pending.getStatus().getMessages().isEmpty());
+    }
+
+    @Test
+    public void testChangedPlanIsReplaced() throws Exception {
+        Address a = new Address.Builder()
+                .setName("a1")
+                .setAddress("a1")
+                .setAddressSpace("myspace")
+                .setNamespace("ns")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active))
+                .build();
+
+        assertNotEquals(a.getPlan(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        controller.onUpdate(Arrays.asList(a));
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi).replaceAddress(captor.capture());
+        Address captured = captor.getValue();
+        assertEquals(captured.getPlan(), captured.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertEquals(a.getPlan(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+
     }
 
     @Test
