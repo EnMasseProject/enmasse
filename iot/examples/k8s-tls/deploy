@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -e
+
+SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$SCRIPTDIR/common"
+
+OUTDIR="$SCRIPTDIR/build"
+
+: ${NAMESPACE:=enmasse-infra}
+: ${PREFIX:=}
+
+$SCRIPTDIR/undeploy
+
+for i in ${IOT_SERVICES}; do
+  kubectl -n "$NAMESPACE" create secret tls "${PREFIX}${i}-tls" --key="$OUTDIR/${i}-key.pem" --cert="$OUTDIR/${i}-fullchain.pem"
+done
+
+kubectl -n "$NAMESPACE" create secret generic "${PREFIX}iot-service-ca" --from-file=service-ca.crt="$OUTDIR/trusted-certs.pem"

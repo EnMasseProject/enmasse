@@ -34,7 +34,7 @@ func ApplyInterServiceForDeployment(config *iotv1alpha1.IoTConfig, deployment *a
 	if cfg.ServiceCAStrategy != nil {
 		return applyInterServiceForDeploymentServiceCa(deployment, secretName)
 	} else if cfg.SecretCertificatesStrategy != nil {
-		return applyInterServiceForDeploymentSecretCertificates(deployment, cfg.SecretCertificatesStrategy)
+		return applyInterServiceForDeploymentSecretCertificates(deployment, cfg.SecretCertificatesStrategy, secretName)
 	}
 
 	return fmt.Errorf("unknown inter service certificates configuration")
@@ -100,6 +100,7 @@ func applyInterServiceForServiceServiceCa(service *corev1.Service, secretName st
 
 func applyInterServiceForDeploymentServiceCa(deployment *appsv1.Deployment, secretName string) error {
 	install.ApplySecretVolume(deployment, "tls", secretName)
+	install.DropVolume(deployment, "tls-service-ca")
 	return nil
 }
 
@@ -108,6 +109,8 @@ func appendTrustStoresForServiceCa(container *corev1.Container, env []string) er
 	for _, e := range env {
 		container.Env = append(container.Env, corev1.EnvVar{Name: e, Value: "/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt"})
 	}
+
+	install.DropVolumeMount(container, "tls-service-ca")
 
 	return nil
 }
@@ -123,19 +126,29 @@ func applyInterServiceForServiceSecretCertificates(service *corev1.Service, _ *i
 	return nil
 }
 
-func applyInterServiceForDeploymentSecretCertificates(deployment *appsv1.Deployment, cfg *iotv1alpha1.SecretCertificatesStrategy) error {
-	if cfg.SecretName == "" {
-		return fmt.Errorf("inter service secret name must not be empty")
+func applyInterServiceForDeploymentSecretCertificates(deployment *appsv1.Deployment, cfg *iotv1alpha1.SecretCertificatesStrategy, secretName string) error {
+	if cfg.CASecretName == "" {
+		return fmt.Errorf("inter service secret CA name must not be empty")
 	}
-	install.ApplySecretVolume(deployment, "tls", cfg.SecretName)
+	install.ApplySecretVolume(deployment, "tls-service-ca", cfg.CASecretName)
+
+	mappedSecretName := cfg.ServiceSecretNames[secretName]
+	if mappedSecretName == "" {
+		return fmt.Errorf("secret name %s mapped to an empty secret name", secretName)
+	}
+
+	install.ApplySecretVolume(deployment, "tls", mappedSecretName)
+
 	return nil
 }
 
 func appendTrustStoresForSecretCertificates(container *corev1.Container, env []string) error {
 
 	for _, e := range env {
-		container.Env = append(container.Env, corev1.EnvVar{Name: e, Value: "/etc/tls/tls.crt"})
+		container.Env = append(container.Env, corev1.EnvVar{Name: e, Value: "/etc/tls-service-ca/service-ca.crt"})
 	}
+
+	install.AppendVolumeMountSimple(container, "tls-service-ca", "/etc/tls-service-ca", true)
 
 	return nil
 }

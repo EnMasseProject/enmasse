@@ -77,23 +77,14 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: "false"},
 		}
 
-		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_TENANT_ENDPOINT_AMQP_TRUST_STORE_PATH"}); err != nil {
+		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_AUTH_TRUST_STORE_PATH"}); err != nil {
 			return err
 		}
 
 		// volume mounts
 
-		if len(container.VolumeMounts) != 2 {
-			container.VolumeMounts = make([]corev1.VolumeMount, 2)
-		}
-
-		container.VolumeMounts[0].Name = "config"
-		container.VolumeMounts[0].MountPath = "/etc/config"
-		container.VolumeMounts[0].ReadOnly = true
-
-		container.VolumeMounts[1].Name = "tls"
-		container.VolumeMounts[1].MountPath = "/etc/tls"
-		container.VolumeMounts[1].ReadOnly = true
+		install.AppendVolumeMountSimple(container, "config", "/etc/config", true)
+		install.AppendVolumeMountSimple(container, "tls", "/etc/tls", true)
 
 		// return
 

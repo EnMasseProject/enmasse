@@ -106,21 +106,9 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 
 		// volume mounts
 
-		if len(container.VolumeMounts) != 3 {
-			container.VolumeMounts = make([]corev1.VolumeMount, 3)
-		}
-
-		container.VolumeMounts[0].Name = "config"
-		container.VolumeMounts[0].MountPath = "/etc/config"
-		container.VolumeMounts[0].ReadOnly = true
-
-		container.VolumeMounts[1].Name = "tls"
-		container.VolumeMounts[1].MountPath = "/etc/tls"
-		container.VolumeMounts[1].ReadOnly = true
-
-		container.VolumeMounts[2].Name = "registry"
-		container.VolumeMounts[2].MountPath = "/var/lib/hono/device-registry"
-		container.VolumeMounts[2].ReadOnly = false
+		install.AppendVolumeMountSimple(container, "config", "/etc/config", true)
+		install.AppendVolumeMountSimple(container, "tls", "/etc/tls", true)
+		install.AppendVolumeMountSimple(container, "registry", "/var/lib/hono/device-registry", false)
 
 		// return
 
