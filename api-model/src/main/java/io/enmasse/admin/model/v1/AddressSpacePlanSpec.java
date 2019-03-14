@@ -24,7 +24,7 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
     private String shortDescription;
     private String addressSpaceType;
     private Map<String, Double> resourceLimits = new HashMap<>();
-    private List<String> addressPlans;
+    private List<String> addressPlans = new ArrayList<>();
 
     public String getShortDescription() {
         return shortDescription;
@@ -81,6 +81,6 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
     }
 
     public List<String> getAddressPlans() {
-        return addressPlans;
+        return Collections.unmodifiableList(addressPlans);
     }
 }
