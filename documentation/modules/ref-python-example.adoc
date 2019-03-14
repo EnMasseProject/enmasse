@@ -39,7 +39,7 @@ Container(HelloWorld("amqps://_messaging-route-hostname_:443", "myqueue")).run()
 
 == Known issue with creating a subscriber on a hierarchical topic
 
-A known issue exists where creating a subscriber on a hierarchical topic in {ProductName} causes the {BrokerName} to instead create it as a competing consumer (handling the address like a queue rather than a topic).
+A known issue exists where creating a subscriber on a hierarchical topic in {ProductName} causes the broker to instead create it as a competing consumer (handling the address like a queue rather than a topic).
 
 The workaround for this issue involves setting the capability topic in the source.
 
