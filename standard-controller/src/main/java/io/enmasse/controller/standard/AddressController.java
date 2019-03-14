@@ -95,7 +95,8 @@ public class AddressController implements Watcher<Address> {
                 .collect(Collectors.toMap(a -> a.getSpec().getAddress(),
                                           a -> new ProvisionState(a.getStatus(),
                                                                   a.getAnnotation(AnnotationKeys.BROKER_ID),
-                                                                  a.getAnnotation(AnnotationKeys.CLUSTER_ID))));
+                                                                  a.getAnnotation(AnnotationKeys.CLUSTER_ID),
+                                                                  a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
 
@@ -161,7 +162,8 @@ public class AddressController implements Watcher<Address> {
             ProvisionState previous = previousStatus.get(address.getSpec().getAddress());
             ProvisionState current = new ProvisionState(address.getStatus(),
                     address.getAnnotation(AnnotationKeys.BROKER_ID),
-                    address.getAnnotation(AnnotationKeys.CLUSTER_ID));
+                    address.getAnnotation(AnnotationKeys.CLUSTER_ID),
+                    address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
             if (!current.equals(previous)) {
                 try {
                     addressApi.replaceAddress(address);
@@ -463,11 +465,13 @@ public class AddressController implements Watcher<Address> {
         private final Status status;
         private final String brokerId;
         private final String clusterId;
+        private final String plan;
 
-        public ProvisionState(Status status, String brokerId, String clusterId) {
+        public ProvisionState(Status status, String brokerId, String clusterId, String plan) {
             this.status = new Status(status);
             this.brokerId = brokerId;
             this.clusterId = clusterId;
+            this.plan = plan;
         }
 
         @Override
@@ -477,12 +481,13 @@ public class AddressController implements Watcher<Address> {
             ProvisionState that = (ProvisionState) o;
             return Objects.equals(status, that.status) &&
                     Objects.equals(brokerId, that.brokerId) &&
-                    Objects.equals(clusterId, that.clusterId);
+                    Objects.equals(clusterId, that.clusterId) &&
+                    Objects.equals(plan, that.plan);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(status, brokerId, clusterId);
+            return Objects.hash(status, brokerId, clusterId, plan);
         }
 
         @Override
@@ -491,6 +496,7 @@ public class AddressController implements Watcher<Address> {
                     "status=" + status +
                     ", brokerId='" + brokerId + '\'' +
                     ", clusterId='" + clusterId + '\'' +
+                    ", plan='" + plan + '\'' +
                     '}';
         }
     }
