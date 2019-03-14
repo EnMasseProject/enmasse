@@ -4,11 +4,12 @@
  */
 package io.enmasse.iot.model.v1;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -20,35 +21,92 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class IoTProjectTest {
 
-	@Test
-	void testCreate() {
-		IoTProject project = new IoTProjectBuilder()
-				.withNewMetadata()
-				.withName("proj")
-				.endMetadata()
-				.withNewSpec()
-				.withNewDownstreamStrategy()
-				.withNewExternalStrategy()
-				.withCertificate(ByteBuffer.wrap("a".getBytes()))
-				.withHost("host")
-				.withPassword("pwd")
-				.withUsername("username")
-				.withPort(1234)
-				.withTls(true)
-				.endExternalStrategy()
-				.endDownstreamStrategy()
-				.endSpec()
-				.build();
+    @Test
+    void testCreateExternal() {
+        IoTProject project = new IoTProjectBuilder()
+                .withNewMetadata()
+                .withName("proj")
+                .endMetadata()
+                .withNewSpec()
+                .withNewDownstreamStrategy()
+                .withNewExternalStrategy()
+                .withCertificate(ByteBuffer.wrap("a".getBytes()))
+                .withHost("host")
+                .withPassword("pwd")
+                .withUsername("username")
+                .withPort(1234)
+                .withTls(true)
+                .endExternalStrategy()
+                .endDownstreamStrategy()
+                .endSpec()
+                .build();
 
-		assertEquals("proj", project.getMetadata().getName());
-		assertArrayEquals("a".getBytes(), project.getSpec().getDownstreamStrategy().getExternalStrategy().getCertificate().array());
-		assertEquals("host", project.getSpec().getDownstreamStrategy().getExternalStrategy().getHost());
-		assertEquals("pwd", project.getSpec().getDownstreamStrategy().getExternalStrategy().getPassword());
-		assertEquals("username", project.getSpec().getDownstreamStrategy().getExternalStrategy().getUsername());
-		assertEquals(1234, project.getSpec().getDownstreamStrategy().getExternalStrategy().getPort());
-		assertEquals(true, project.getSpec().getDownstreamStrategy().getExternalStrategy().isTls());
-	}
+        assertEquals("proj", project.getMetadata().getName());
+        assertArrayEquals("a".getBytes(), project.getSpec().getDownstreamStrategy().getExternalStrategy().getCertificate().array());
+        assertEquals("host", project.getSpec().getDownstreamStrategy().getExternalStrategy().getHost());
+        assertEquals("pwd", project.getSpec().getDownstreamStrategy().getExternalStrategy().getPassword());
+        assertEquals("username", project.getSpec().getDownstreamStrategy().getExternalStrategy().getUsername());
+        assertEquals(1234, project.getSpec().getDownstreamStrategy().getExternalStrategy().getPort());
+        assertEquals(true, project.getSpec().getDownstreamStrategy().getExternalStrategy().isTls());
+        assertNull(project.getSpec().getDownstreamStrategy().getProvidedStrategy());
+        assertNull(project.getSpec().getDownstreamStrategy().getManagedStrategy());
+    }
 
+    @Test
+    void testCreateManaged() {
+        IoTProject project = new IoTProjectBuilder()
+                .withNewMetadata()
+                .withName("proj")
+                .endMetadata()
+                .withNewSpec()
+                .withNewDownstreamStrategy()
+                .withNewManagedStrategy()
+                .withAddressSpaceName("managed")
+                .endManagedStrategy()
+                .endDownstreamStrategy()
+                .endSpec()
+                .build();
+
+        assertEquals("proj", project.getMetadata().getName());
+        assertEquals("managed", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpaceName());
+        assertNull(project.getSpec().getDownstreamStrategy().getProvidedStrategy());
+        assertNull(project.getSpec().getDownstreamStrategy().getExternalStrategy());
+    }
+
+    @Test
+    public void testCreateProvided() {
+        IoTProject project = new IoTProjectBuilder()
+                .withNewMetadata()
+                .withName("proj")
+                .endMetadata()
+                .withNewSpec()
+                .withNewDownstreamStrategy()
+                .withNewProvidedStrategy()
+                .withAddressSpaceName("provided")
+                .withNamespace("namespace")
+                .withEndpointMode(EndpointMode.external)
+                .withEndpointName("provided-route")
+                .withPortName("portname")
+                .withTls(true)
+                .withUsername("user")
+                .withPassword("pwd")
+                .endProvidedStrategy()
+                .endDownstreamStrategy()
+                .endSpec()
+                .build();
+
+        assertEquals("proj", project.getMetadata().getName());
+        assertEquals("provided", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getAddressSpaceName());
+        assertEquals("namespace", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getNamespace());
+        assertEquals(EndpointMode.external, project.getSpec().getDownstreamStrategy().getProvidedStrategy().getEndpointMode());
+        assertEquals("provided-route", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getEndpointName());
+        assertEquals("portname", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getPortName());
+        assertEquals(true, project.getSpec().getDownstreamStrategy().getProvidedStrategy().isTls());
+        assertEquals("user", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getUsername());
+        assertEquals("pwd", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getPassword());
+        assertNull(project.getSpec().getDownstreamStrategy().getManagedStrategy());
+        assertNull(project.getSpec().getDownstreamStrategy().getExternalStrategy());
+    }
 
     @Test
     public void testParse() throws IOException {

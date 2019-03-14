@@ -4,6 +4,8 @@
  */
 package io.enmasse.iot.model.v1;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -22,12 +24,22 @@ public class IoTProjectSpec {
 
     private DownstreamStrategy downstreamStrategy;
 
+    private ObjectNode configuration;
+
     public DownstreamStrategy getDownstreamStrategy() {
         return this.downstreamStrategy;
     }
 
     public void setDownstreamStrategy(final DownstreamStrategy downstreamStrategy) {
         this.downstreamStrategy = downstreamStrategy;
+    }
+
+    public ObjectNode getConfiguration() {
+        return configuration;
+    }
+
+    public void setConfiguration(final ObjectNode configuration) {
+        this.configuration = configuration;
     }
 
 }
