@@ -8,7 +8,7 @@ package io.enmasse.systemtest.iot;
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
 
-import java.io.IOException;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,6 +23,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 
 @Tag(sharedIot)
 @Tag(smoke)
@@ -48,27 +49,14 @@ public class SimpleK8sDeployTest {
 
     private Kubernetes client = Kubernetes.getInstance();
 
-    private static void execute(final String [] command ) throws InterruptedException, IOException {
-        Process p =  new ProcessBuilder(command)
-                .inheritIO()
-                .start();
-
-        final int rc = p.waitFor();
-        if ( rc != 0) {
-            throw new RuntimeException(String.format("Failed to run: %s -> %s", command, rc));
-        }
-    }
-
     @BeforeAll
     protected static void setup () throws Exception {
-        execute(new String[] {
-                "kubectl", "-n", NAMESPACE, "create", "--validate=false", "-f", "templates/iot/k8s-systemtests-config.json"
-        });
+        KubeCMDClient.createFromFile(NAMESPACE, Paths.get("templates/iot/k8s-systemtests-config.json"));
     }
 
     @AfterAll
     protected static void cleanup() throws Exception {
-        execute(new String [] {"kubectl", "-n", NAMESPACE, "delete", "iotconfig", "default"});
+        KubeCMDClient.deleteIoTConfig(NAMESPACE, "default");
     }
 
     @Test
