@@ -6,6 +6,8 @@
 package v1alpha1
 
 import (
+	"encoding/json"
+
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +32,8 @@ func (project *IoTProject) TenantName() string {
 
 type IoTProjectSpec struct {
 	DownstreamStrategy DownstreamStrategy `json:"downstreamStrategy"`
+
+	Configuration json.RawMessage `json:"configuration,omitempty"`
 }
 
 type IoTProjectStatus struct {
