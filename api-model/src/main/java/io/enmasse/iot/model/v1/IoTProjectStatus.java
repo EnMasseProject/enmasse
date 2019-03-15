@@ -30,12 +30,12 @@ public class IoTProjectStatus {
     @JsonProperty("isReady")
     private boolean ready = false;
 
-	public boolean isReady() {
-		return ready;
-	}
+    public boolean isReady() {
+        return ready;
+    }
 
-	public void setReady(boolean ready) {
-		this.ready = ready;
-	}
+    public void setReady(boolean ready) {
+        this.ready = ready;
+    }
 
 }

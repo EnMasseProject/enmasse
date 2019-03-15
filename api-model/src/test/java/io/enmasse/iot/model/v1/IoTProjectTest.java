@@ -48,7 +48,6 @@ public class IoTProjectTest {
         assertEquals("username", project.getSpec().getDownstreamStrategy().getExternalStrategy().getUsername());
         assertEquals(1234, project.getSpec().getDownstreamStrategy().getExternalStrategy().getPort());
         assertEquals(true, project.getSpec().getDownstreamStrategy().getExternalStrategy().isTls());
-        assertNull(project.getSpec().getDownstreamStrategy().getProvidedStrategy());
         assertNull(project.getSpec().getDownstreamStrategy().getManagedStrategy());
     }
 
@@ -69,42 +68,6 @@ public class IoTProjectTest {
 
         assertEquals("proj", project.getMetadata().getName());
         assertEquals("managed", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpaceName());
-        assertNull(project.getSpec().getDownstreamStrategy().getProvidedStrategy());
-        assertNull(project.getSpec().getDownstreamStrategy().getExternalStrategy());
-    }
-
-    @Test
-    public void testCreateProvided() {
-        IoTProject project = new IoTProjectBuilder()
-                .withNewMetadata()
-                .withName("proj")
-                .endMetadata()
-                .withNewSpec()
-                .withNewDownstreamStrategy()
-                .withNewProvidedStrategy()
-                .withAddressSpaceName("provided")
-                .withNamespace("namespace")
-                .withEndpointMode(EndpointMode.external)
-                .withEndpointName("provided-route")
-                .withPortName("portname")
-                .withTls(true)
-                .withUsername("user")
-                .withPassword("pwd")
-                .endProvidedStrategy()
-                .endDownstreamStrategy()
-                .endSpec()
-                .build();
-
-        assertEquals("proj", project.getMetadata().getName());
-        assertEquals("provided", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getAddressSpaceName());
-        assertEquals("namespace", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getNamespace());
-        assertEquals(EndpointMode.external, project.getSpec().getDownstreamStrategy().getProvidedStrategy().getEndpointMode());
-        assertEquals("provided-route", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getEndpointName());
-        assertEquals("portname", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getPortName());
-        assertEquals(true, project.getSpec().getDownstreamStrategy().getProvidedStrategy().isTls());
-        assertEquals("user", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getUsername());
-        assertEquals("pwd", project.getSpec().getDownstreamStrategy().getProvidedStrategy().getPassword());
-        assertNull(project.getSpec().getDownstreamStrategy().getManagedStrategy());
         assertNull(project.getSpec().getDownstreamStrategy().getExternalStrategy());
     }
 

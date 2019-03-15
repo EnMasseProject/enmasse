@@ -24,7 +24,6 @@ import io.sundr.builder.annotations.Inline;
 public class DownstreamStrategy {
 
     private ExternalDownstreamStrategy externalStrategy;
-    private ProvidedDownstreamStrategy providedStrategy;
     private ManagedDownstreamStrategy managedStrategy;
 
     public ExternalDownstreamStrategy getExternalStrategy() {
@@ -35,15 +34,7 @@ public class DownstreamStrategy {
         this.externalStrategy = externalStrategy;
     }
 
-    public ProvidedDownstreamStrategy getProvidedStrategy() {
-		return providedStrategy;
-	}
-
-	public void setProvidedStrategy(ProvidedDownstreamStrategy providedStrategy) {
-		this.providedStrategy = providedStrategy;
-	}
-
-	public ManagedDownstreamStrategy getManagedStrategy() {
+    public ManagedDownstreamStrategy getManagedStrategy() {
         return managedStrategy;
     }
 
