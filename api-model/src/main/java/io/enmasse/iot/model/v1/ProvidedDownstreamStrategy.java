@@ -28,8 +28,8 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(NON_NULL)
 public class ProvidedDownstreamStrategy {
 
-	private String namespace;
-	private String addressSpaceName;
+    private String namespace;
+    private String addressSpaceName;
 
     private String username;
     private String password;
@@ -39,53 +39,68 @@ public class ProvidedDownstreamStrategy {
     private String portName;
     private boolean tls;
 
-	public String getNamespace() {
-		return namespace;
-	}
-	public void setNamespace(String namespace) {
-		this.namespace = namespace;
-	}
-	public String getAddressSpaceName() {
-		return addressSpaceName;
-	}
-	public void setAddressSpaceName(String addressSpaceName) {
-		this.addressSpaceName = addressSpaceName;
-	}
-	public String getUsername() {
-		return username;
-	}
-	public void setUsername(String username) {
-		this.username = username;
-	}
-	public String getPassword() {
-		return password;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	public EndpointMode getEndpointMode() {
-		return endpointMode;
-	}
-	public void setEndpointMode(EndpointMode endpointMode) {
-		this.endpointMode = endpointMode;
-	}
-	public String getEndpointName() {
-		return endpointName;
-	}
-	public void setEndpointName(String endpointName) {
-		this.endpointName = endpointName;
-	}
-	public String getPortName() {
-		return portName;
-	}
-	public void setPortName(String portName) {
-		this.portName = portName;
-	}
-	public boolean isTls() {
-		return tls;
-	}
-	public void setTls(boolean tls) {
-		this.tls = tls;
-	}
+    public String getNamespace() {
+        return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
+    public String getAddressSpaceName() {
+        return addressSpaceName;
+    }
+
+    public void setAddressSpaceName(String addressSpaceName) {
+        this.addressSpaceName = addressSpaceName;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public EndpointMode getEndpointMode() {
+        return endpointMode;
+    }
+
+    public void setEndpointMode(EndpointMode endpointMode) {
+        this.endpointMode = endpointMode;
+    }
+
+    public String getEndpointName() {
+        return endpointName;
+    }
+
+    public void setEndpointName(String endpointName) {
+        this.endpointName = endpointName;
+    }
+
+    public String getPortName() {
+        return portName;
+    }
+
+    public void setPortName(String portName) {
+        this.portName = portName;
+    }
+
+    public boolean isTls() {
+        return tls;
+    }
+
+    public void setTls(boolean tls) {
+        this.tls = tls;
+    }
 
 }
