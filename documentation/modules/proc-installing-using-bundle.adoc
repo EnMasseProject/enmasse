@@ -72,9 +72,9 @@ endif::[]
 {cmdcli} apply -f install/components/example-plans
 ----
 
-. (Optional) Install example authentication service:
+. (Optional) Install the `standard` authentication service:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f install/components/example-authservice
+{cmdcli} apply -f install/components/example-authservices/standard-authservice.yaml
 ----
