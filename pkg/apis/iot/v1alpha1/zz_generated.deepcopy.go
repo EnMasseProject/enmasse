@@ -10,6 +10,8 @@
 package v1alpha1
 
 import (
+	json "encoding/json"
+
 	v1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 )
@@ -305,6 +307,11 @@ func (in *IoTProjectList) DeepCopyObject() runtime.Object {
 func (in *IoTProjectSpec) DeepCopyInto(out *IoTProjectSpec) {
 	*out = *in
 	in.DownstreamStrategy.DeepCopyInto(&out.DownstreamStrategy)
+	if in.Configuration != nil {
+		in, out := &in.Configuration, &out.Configuration
+		*out = make(json.RawMessage, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
