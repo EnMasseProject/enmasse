@@ -31,7 +31,7 @@ public class NetworkPolicyController implements Controller {
     }
 
     @Override
-    public AddressSpace handle(AddressSpace addressSpace) throws Exception {
+    public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
         NetworkPolicy networkPolicy = null;
         InfraConfig infraConfig = parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace);
         if (infraConfig != null) {

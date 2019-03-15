@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -8,6 +8,7 @@
 package versioned
 
 import (
+	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/user/v1beta1"
@@ -18,6 +19,9 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
+	AdminV1beta1() adminv1beta1.AdminV1beta1Interface
+	// Deprecated: please explicitly pick a version if possible.
+	Admin() adminv1beta1.AdminV1beta1Interface
 	EnmasseV1beta1() enmassev1beta1.EnmasseV1beta1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Enmasse() enmassev1beta1.EnmasseV1beta1Interface
@@ -33,9 +37,21 @@ type Interface interface {
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
+	adminV1beta1   *adminv1beta1.AdminV1beta1Client
 	enmasseV1beta1 *enmassev1beta1.EnmasseV1beta1Client
 	iotV1alpha1    *iotv1alpha1.IotV1alpha1Client
 	userV1beta1    *userv1beta1.UserV1beta1Client
+}
+
+// AdminV1beta1 retrieves the AdminV1beta1Client
+func (c *Clientset) AdminV1beta1() adminv1beta1.AdminV1beta1Interface {
+	return c.adminV1beta1
+}
+
+// Deprecated: Admin retrieves the default version of AdminClient.
+// Please explicitly pick a version.
+func (c *Clientset) Admin() adminv1beta1.AdminV1beta1Interface {
+	return c.adminV1beta1
 }
 
 // EnmasseV1beta1 retrieves the EnmasseV1beta1Client
@@ -87,6 +103,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
+	cs.adminV1beta1, err = adminv1beta1.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.enmasseV1beta1, err = enmassev1beta1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -111,6 +131,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
+	cs.adminV1beta1 = adminv1beta1.NewForConfigOrDie(c)
 	cs.enmasseV1beta1 = enmassev1beta1.NewForConfigOrDie(c)
 	cs.iotV1alpha1 = iotv1alpha1.NewForConfigOrDie(c)
 	cs.userV1beta1 = userv1beta1.NewForConfigOrDie(c)
@@ -122,6 +143,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
+	cs.adminV1beta1 = adminv1beta1.New(c)
 	cs.enmasseV1beta1 = enmassev1beta1.New(c)
 	cs.iotV1alpha1 = iotv1alpha1.New(c)
 	cs.userV1beta1 = userv1beta1.New(c)

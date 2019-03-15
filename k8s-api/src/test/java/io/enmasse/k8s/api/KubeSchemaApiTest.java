@@ -9,7 +9,6 @@ import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,29 +21,29 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 public class KubeSchemaApiTest {
 
-    private AddressSpacePlanApi addressSpacePlanApi;
-    private AddressPlanApi addressPlanApi;
-    private StandardInfraConfigApi standardInfraConfigApi;
-    private BrokeredInfraConfigApi brokeredInfraConfigApi;
+    private CrdApi<AddressSpacePlan> addressSpacePlanApi;
+    private CrdApi<AddressPlan> addressPlanApi;
+    private CrdApi<StandardInfraConfig> standardInfraConfigApi;
+    private CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi;
+    private CrdApi<AuthenticationService> authenticationServiceApi;
 
     @BeforeEach
     public void setup() {
-        addressSpacePlanApi = mock(AddressSpacePlanApi.class);
-        addressPlanApi = mock(AddressPlanApi.class);
-        standardInfraConfigApi = mock(StandardInfraConfigApi.class);
-        brokeredInfraConfigApi = mock(BrokeredInfraConfigApi.class);
+        addressSpacePlanApi = mock(CrdApi.class);
+        addressPlanApi = mock(CrdApi.class);
+        standardInfraConfigApi = mock(CrdApi.class);
+        brokeredInfraConfigApi = mock(CrdApi.class);
+        authenticationServiceApi = mock(CrdApi.class);
     }
 
     @Test
     public void testSchemaAssemble() {
-        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, Clock.systemUTC(), false);
+        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), false);
 
         List<AddressSpacePlan> addressSpacePlans = Arrays.asList(
                 new AddressSpacePlanBuilder()
@@ -110,7 +109,14 @@ public class KubeSchemaApiTest {
                         .endMetadata()
                         .build());
 
-        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs);
+        List<AuthenticationService> authenticationServices = Arrays.asList(
+                new AuthenticationServiceBuilder()
+                        .withNewMetadata()
+                        .withName("standard")
+                        .endMetadata()
+                        .build());
+
+        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs, authenticationServices);
 
         assertTrue(schema.findAddressSpaceType("standard").isPresent());
         assertTrue(schema.findAddressSpaceType("brokered").isPresent());
@@ -143,24 +149,27 @@ public class KubeSchemaApiTest {
 
     @Test
     public void testWatchCreated() throws Exception {
-        AddressSpacePlanApi addressSpacePlanApi = mock(AddressSpacePlanApi.class);
-        AddressPlanApi addressPlanApi = mock(AddressPlanApi.class);
-        StandardInfraConfigApi standardInfraConfigApi = mock(StandardInfraConfigApi.class);
-        BrokeredInfraConfigApi brokeredInfraConfigApi = mock(BrokeredInfraConfigApi.class);
+        CrdApi<AddressSpacePlan> addressSpacePlanApi = mock(CrdApi.class);
+        CrdApi<AddressPlan> addressPlanApi = mock(CrdApi.class);
+        CrdApi<StandardInfraConfig> standardInfraConfigApi = mock(CrdApi.class);
+        CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi = mock(CrdApi.class);
+        CrdApi<AuthenticationService> authenticationServiceApi = mock(CrdApi.class);
 
         Watch mockWatch = mock(Watch.class);
 
-        when(addressSpacePlanApi.watchAddressSpacePlans(any(), any())).thenReturn(mockWatch);
-        when(addressPlanApi.watchAddressPlans(any(), any())).thenReturn(mockWatch);
-        when(brokeredInfraConfigApi.watchBrokeredInfraConfigs(any(), any())).thenReturn(mockWatch);
-        when(standardInfraConfigApi.watchStandardInfraConfigs(any(), any())).thenReturn(mockWatch);
+        when(addressSpacePlanApi.watchResources(any(), any())).thenReturn(mockWatch);
+        when(addressPlanApi.watchResources(any(), any())).thenReturn(mockWatch);
+        when(brokeredInfraConfigApi.watchResources(any(), any())).thenReturn(mockWatch);
+        when(standardInfraConfigApi.watchResources(any(), any())).thenReturn(mockWatch);
+        when(authenticationServiceApi.watchResources(any(), any())).thenReturn(mockWatch);
 
-        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, Clock.systemUTC(), true);
+        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), true);
 
         schemaApi.watchSchema(items -> { }, Duration.ofSeconds(5));
-        verify(addressSpacePlanApi).watchAddressSpacePlans(any(), eq(Duration.ofSeconds(5)));
-        verify(addressPlanApi).watchAddressPlans(any(), eq(Duration.ofSeconds(5)));
-        verify(standardInfraConfigApi).watchStandardInfraConfigs(any(), eq(Duration.ofSeconds(5)));
-        verify(brokeredInfraConfigApi).watchBrokeredInfraConfigs(any(), eq(Duration.ofSeconds(5)));
+        verify(addressSpacePlanApi).watchResources(any(), eq(Duration.ofSeconds(5)));
+        verify(addressPlanApi).watchResources(any(), eq(Duration.ofSeconds(5)));
+        verify(standardInfraConfigApi).watchResources(any(), eq(Duration.ofSeconds(5)));
+        verify(brokeredInfraConfigApi).watchResources(any(), eq(Duration.ofSeconds(5)));
+        verify(authenticationServiceApi).watchResources(any(), eq(Duration.ofSeconds(5)));
     }
 }

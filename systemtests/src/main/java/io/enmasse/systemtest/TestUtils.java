@@ -861,10 +861,11 @@ public class TestUtils {
                         .getString("type").toUpperCase());
         String plan = addressSpaceJson.getJsonObject("spec").getString("plan");
 
-        AuthService authService = AuthService.valueOf(
-                addressSpaceJson.getJsonObject("spec")
-                        .getJsonObject("authenticationService")
-                        .getString("type").toUpperCase());
+        JsonObject spec = addressSpaceJson.getJsonObject("spec");
+        JsonObject authenticationService = spec.getJsonObject("authenticationService");
+        AuthService authService = new AuthService();
+        authService.setName(authenticationService.getString("name"));
+        authService.setType(authenticationService.getString("type"));
 
         List<AddressSpaceEndpoint> endpoints = new ArrayList<>();
         JsonArray endpointsJson = addressSpaceJson.getJsonObject("spec").getJsonArray("endpoints");

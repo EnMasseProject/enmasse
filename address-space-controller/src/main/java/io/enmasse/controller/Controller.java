@@ -6,6 +6,9 @@ package io.enmasse.controller;
 
 import io.enmasse.address.model.AddressSpace;
 
+import java.util.List;
+
 public interface Controller {
-    AddressSpace handle(AddressSpace addressSpace) throws Exception;
+    default AddressSpace reconcile(AddressSpace addressSpace) throws Exception { return addressSpace; }
+    default void reconcileAll(List<AddressSpace> addressSpaces) throws Exception { }
 }

@@ -20,8 +20,7 @@ import io.sundr.builder.annotations.Inline;
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
         refs= {
-                @BuildableReference(AbstractHasMetadataWithAdditionalProperties.class),
-                @BuildableReference(AbstractHasMetadata.class)
+                @BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)
         },
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )

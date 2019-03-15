@@ -36,7 +36,7 @@ public class EndpointController implements Controller {
     }
 
     @Override
-    public AddressSpace handle(AddressSpace addressSpace) {
+    public AddressSpace reconcile(AddressSpace addressSpace) {
         updateEndpoints(addressSpace);
         updateCaCert(addressSpace);
         return addressSpace;

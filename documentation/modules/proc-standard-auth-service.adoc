@@ -7,14 +7,21 @@
 
 .Procedure
 
-. (Optional) If you want to deploy to a namespace other than `{ProductNamespace}` you must run the following command:
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service admin
 +
-[options="nowrap",subs="+quotes,attributes"]
+[subs="attributes",options="nowrap"]
 ----
-sed -i 's/{ProductNamespace}/_my-namespace_/' install/components/standard-authservice/\*RoleBinding*.yaml
+{cmdcli} login -u admin
 ----
 
-
+. Select namespace where {ProductName} is installed:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 . Create a certificate to use with the `standard` authentication service. For testing purposes, you can create a self-signed certificate:
 +
@@ -30,12 +37,41 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standar
 ----
 {cmdcli} create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 ----
+
+. Create an `AuthenticationService` definition:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard-authservice
+spec:
+  type: standard
+  standard:
+    certificateSecret:
+      name: standard-authservice-cert
+----
 endif::[]
 
-. Create the `standard` authentication service:
+ifeval::["{cmdcli}" == "oc"]
+. Create an `AuthenticationService` definition:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard-authservice
+spec:
+  type: standard
+----
+endif::[]
+
+. Deploy the authentication service:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f ./install/components/standard-authservice
+{cmdcli} create -f standard-authservice.yaml
 ----
 

@@ -84,6 +84,10 @@ public final class KubeUtil {
         return routeName + "-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
     }
 
+    public static String getAddressSpaceRealmName(AddressSpace addressSpace) {
+        return KubeUtil.sanitizeName(addressSpace.getMetadata().getNamespace() + "-" + addressSpace.getMetadata().getName());
+    }
+
     public static void validateName(String name) {
         if (name == null) {
             return;

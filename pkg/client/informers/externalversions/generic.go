@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -10,7 +10,8 @@ package externalversions
 import (
 	"fmt"
 
-	v1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	v1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	v1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -43,10 +44,14 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=enmasse.io, Version=v1beta1
-	case v1beta1.SchemeGroupVersion.WithResource("addresses"):
+	// Group=admin.enmasse.io, Version=v1beta1
+	case v1beta1.SchemeGroupVersion.WithResource("authenticationservices"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta1().AuthenticationServices().Informer()}, nil
+
+		// Group=enmasse.io, Version=v1beta1
+	case enmassev1beta1.SchemeGroupVersion.WithResource("addresses"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().Addresses().Informer()}, nil
-	case v1beta1.SchemeGroupVersion.WithResource("addressspaces"):
+	case enmassev1beta1.SchemeGroupVersion.WithResource("addressspaces"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AddressSpaces().Informer()}, nil
 
 		// Group=iot.enmasse.io, Version=v1alpha1

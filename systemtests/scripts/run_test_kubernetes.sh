@@ -42,10 +42,31 @@ kubectl create secret tls standard-authservice-cert --cert=standard-authservice-
 
 sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
 kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse
-kubectl create -f ${ENMASSE_DIR}/install/components/none-authservice
-kubectl create -f ${ENMASSE_DIR}/install/components/standard-authservice
 kubectl create -f ${ENMASSE_DIR}/install/components/example-plans
 kubectl create -f ${ENMASSE_DIR}/install/components/example-roles
+cat <<EOF | kubectl create -f -
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard-authservice
+spec:
+  type: standard
+  standard:
+    certificateSecret:
+      name: standard-authservice-cert
+EOF
+
+cat <<EOF | kubectl create -f -
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: none-authservice
+spec:
+  type: none
+  none:
+    certificateSecret:
+      name: none-authservice-cert
+EOF
 
 
 if [ "$DEPLOY_IOT" = "true" ]; then
@@ -55,7 +76,6 @@ if [ "$DEPLOY_IOT" = "true" ]; then
     NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
 
     kubectl create -f ${ENMASSE_DIR}/install/components/iot/api
-    kubectl create -f ${ENMASSE_DIR}/install/components/enmasse-controller-manager
     kubectl create -f ${ENMASSE_DIR}/install/components/iot/common
     kubectl create -f ${ENMASSE_DIR}/install/components/iot/operator
 else

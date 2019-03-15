@@ -7,12 +7,12 @@ package io.enmasse.api.server;
 
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
-import io.enmasse.api.v1.http.HostResolver;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
+import io.enmasse.user.api.UserApiWithFallback;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
@@ -34,8 +34,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -71,19 +69,11 @@ public class ApiServer extends AbstractVerticle {
 
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client,
-                options.getStandardAuthserviceConfigName(),
-                options.getStandardAuthserviceCredentialsSecretName(),
-                options.getStandardAuthserviceCertSecretName());
+        AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
+
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client, authenticationServiceRegistry);
         Clock clock = Clock.systemUTC();
-        UserApi userApi = null;
-        if (keycloakFactory.isKeycloakAvailable()) {
-            log.info("Using Keycloak for User API");
-            userApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
-        } else {
-            log.info("Using Null for User API");
-            userApi = new NullUserApi();
-        }
+        UserApi userApi = new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout()), new NullUserApi());
 
         String clientCa;
         String requestHeaderClientCa;
@@ -98,19 +88,8 @@ public class ApiServer extends AbstractVerticle {
         }
 
         Metrics metrics = new Metrics();
-        HostResolver hostResolver = new HostResolver() {
-            @Override
-            public boolean isHostResolveable(String hostname) {
-                try {
-                    InetAddress.getByName(hostname);
-                } catch (UnknownHostException e) {
-                    return false;
-                }
-                return true;
-            }
-        };
 
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock, hostResolver);
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry);
 
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {

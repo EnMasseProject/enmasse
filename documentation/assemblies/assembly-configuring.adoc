@@ -15,3 +15,11 @@ include::../modules/proc-create-address-plans-cli.adoc[leveloffset=+1]
 include::../assemblies/assembly-infrastructure-configuration.adoc[leveloffset=+1]
 
 include::../modules/proc-applying-infra-config.adoc[leveloffset=+1]
+
+include::../modules/con-authentication-services.adoc[leveloffset=+1]
+
+include::../modules/proc-standard-auth-service.adoc[leveloffset=+1]
+
+include::../modules/proc-none-auth-service.adoc[leveloffset=+1]
+
+include::../modules/con-external-authentication-service-api.adoc[leveloffset=+1]

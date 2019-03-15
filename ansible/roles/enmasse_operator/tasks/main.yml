@@ -1,0 +1,3 @@
+---
+- name: Apply the EnMasse Operator
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/enmasse-operator

@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: enmasse
+  name: enmasse.io:enmasse-operator
+rules:
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+  - apiGroups: [ "" ]
+    resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+  - apiGroups: [ "", "route.openshift.io" ]
+    resources: [ "routes", "routes/custom-host", "routes/status"]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "admin.enmasse.io" ]
+    resources: [ "authenticationservices", "authenticationservices/finalizers" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch" ]

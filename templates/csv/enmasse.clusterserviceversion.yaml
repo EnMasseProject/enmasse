@@ -86,7 +86,7 @@ spec:
       - serviceAccountName: address-space-controller
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs" ]
+          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "pods" ]
@@ -112,7 +112,7 @@ spec:
       - serviceAccountName: address-space-admin
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs" ]
+          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "pods", "secrets" ]
@@ -138,7 +138,7 @@ spec:
           resources: [ "configmaps" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs" ]
+          resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices" ]
           verbs: [ "get", "list", "watch" ]
       clusterPermissions:
       - serviceAccountName: api-server
@@ -474,6 +474,38 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:label'
   customresourcedefinitions:
     owned:
+      - group: admin.enmasse.io
+        version: v1alpha1
+        kind: AuthenticationService
+        name: authenticationservices.admin.enmasse.io
+        displayName: Authentication Service
+        description: Authentication service configuration available to address spaces.
+        specDescriptors:
+          - description: The hostname of the authentication service.
+            displayName: Hostname
+            path: host
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The port of the authentication service
+            displayName: Port
+            path: port
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The realm to use for the authentication service.
+            displayName: Realm
+            path: realm
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The secret containing the CA certificate of the authentication service.
+            displayName: CA Secret Name
+            path: caCertSecretName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The secret containing the client certificate to use for authenticating to the authentication service.
+            displayName: Client Secret Name
+            path: clientCertSecretName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
         version: v1beta1
         kind: StandardInfraConfig

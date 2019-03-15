@@ -10,6 +10,7 @@ import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -30,13 +31,15 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Schema {
     private List<@Valid AddressSpaceType> addressSpaceTypes = new ArrayList<>();
+    private List<io.enmasse.admin.model.v1.AuthenticationService> authenticationServices = new ArrayList<>();
     private String creationTimestamp;
 
     public Schema() {
     }
 
-    public Schema(List<AddressSpaceType> addressSpaceTypes, String creationTimestamp) {
+    public Schema(List<AddressSpaceType> addressSpaceTypes, List<io.enmasse.admin.model.v1.AuthenticationService> authenticationServices, String creationTimestamp) {
         this.addressSpaceTypes = addressSpaceTypes;
+        this.authenticationServices = authenticationServices;
         this.creationTimestamp = creationTimestamp;
     }
 
@@ -48,10 +51,27 @@ public class Schema {
         return Collections.unmodifiableList(addressSpaceTypes);
     }
 
+    public List<io.enmasse.admin.model.v1.AuthenticationService> getAuthenticationServices() {
+        return Collections.unmodifiableList(authenticationServices);
+    }
+
+    public void setAuthenticationServices(List<io.enmasse.admin.model.v1.AuthenticationService> authenticationServices) {
+        this.authenticationServices = authenticationServices;
+    }
+
     public Optional<AddressSpaceType> findAddressSpaceType(String name) {
         for (AddressSpaceType type : addressSpaceTypes) {
             if (type.getName().equals(name)) {
-                return Optional.ofNullable(type);
+                return Optional.of(type);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public Optional<io.enmasse.admin.model.v1.AuthenticationService> findAuthenticationService(String name) {
+        for (AuthenticationService authenticationService : authenticationServices) {
+            if (authenticationService.getMetadata().getName().equals(name)) {
+                return Optional.of(authenticationService);
             }
         }
         return Optional.empty();
@@ -63,5 +83,15 @@ public class Schema {
 
     public String getCreationTimestamp() {
         return creationTimestamp;
+    }
+
+    public List<AuthenticationService> findAuthenticationServiceType(io.enmasse.admin.model.v1.AuthenticationServiceType type) {
+        List<AuthenticationService> authenticationServiceList = new ArrayList<>();
+        for (AuthenticationService authenticationService : authenticationServices) {
+            if (authenticationService.getSpec().getType().equals(type)) {
+                authenticationServiceList.add(authenticationService);
+            }
+        }
+        return authenticationServiceList;
     }
 }

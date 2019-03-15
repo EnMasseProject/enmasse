@@ -34,6 +34,10 @@ public enum AuthenticationServiceType {
         }
     }
 
+    public io.enmasse.admin.model.v1.AuthenticationServiceType toAdminType() {
+        return io.enmasse.admin.model.v1.AuthenticationServiceType.valueOf(name().toLowerCase());
+    }
+
     public Map<String, Class<?>> getDetailsFields() {
         return Collections.unmodifiableMap(detailsFields);
     }

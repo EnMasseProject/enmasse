@@ -106,9 +106,9 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 
 		// volume mounts
 
-		install.AppendVolumeMountSimple(container, "config", "/etc/config", true)
-		install.AppendVolumeMountSimple(container, "tls", "/etc/tls", true)
-		install.AppendVolumeMountSimple(container, "registry", "/var/lib/hono/device-registry", false)
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
+		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
+		install.ApplyVolumeMountSimple(container, "registry", "/var/lib/hono/device-registry", false)
 
 		// return
 

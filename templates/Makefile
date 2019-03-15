@@ -14,19 +14,18 @@ IOT_MODULES=\
 
 MODULES=\
 	$(IOT_MODULES) \
-	enmasse-controller-manager \
+	enmasse-operator \
 	crds \
 	address-space-controller \
 	example-roles \
 	example-plans \
+	example-authservices \
 	api-server \
 	api-service \
 	grafana \
-	none-authservice \
 	prometheus \
 	service-broker \
 	cluster-service-broker \
-	standard-authservice \
 	alertmanager \
 	kube-state-metrics \
 	service-monitors \
@@ -65,7 +64,7 @@ ansible_install: component_install
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
-	for i in crds address-space-controller api-server api-service; do \
+	for i in crds address-space-controller api-server api-service enmasse-operator; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 	for i in `find $(ENMASSE_BUNDLE) -name "*.yaml"`; do \
@@ -87,7 +86,7 @@ $(MONITORING_BUNDLE): replace_images
 IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/iot
 $(IOT_BUNDLE): replace_images
 	mkdir -p $(IOT_BUNDLE)
-	for i in $(IOT_MODULES) enmasse-controller-manager; do \
+	for i in $(IOT_MODULES); do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
 	done
 	for i in `find $(IOT_BUNDLE) -name "*.yaml"`; do \

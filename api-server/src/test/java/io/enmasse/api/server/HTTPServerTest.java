@@ -8,9 +8,12 @@ package io.enmasse.api.server;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
@@ -38,6 +41,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Clock;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
@@ -99,7 +103,20 @@ public class HTTPServerTest {
         options.setVersion("1.0");
         options.setCertDir("/doesnotexist");
 
-        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC(), host -> true,0, 0);
+        AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        AuthenticationService authenticationService = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .endMetadata()
+                .withNewStatus()
+                .withHost("example")
+                .withPort(5671)
+                .endStatus()
+                .build();
+        when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
+        when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
+
+        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC(), authenticationServiceRegistry,0, 0);
         vertx.deployVerticle(this.server, context.succeeding(arg -> context.completeNow()));
     }
 

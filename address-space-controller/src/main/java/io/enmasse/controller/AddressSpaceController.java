@@ -5,24 +5,22 @@
 
 package io.enmasse.controller;
 
-import java.io.*;
-import java.time.Clock;
-import java.time.Duration;
-import java.util.*;
-
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
 import io.enmasse.controller.auth.*;
-import io.enmasse.controller.common.*;
+import io.enmasse.controller.common.Kubernetes;
+import io.enmasse.controller.common.KubernetesHelper;
+import io.enmasse.controller.keycloak.Keycloak;
+import io.enmasse.controller.keycloak.KubeUserLookupApi;
+import io.enmasse.controller.keycloak.RealmController;
+import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
-import io.enmasse.k8s.api.*;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
+import io.enmasse.user.api.UserApiWithFallback;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import okhttp3.HttpUrl;
@@ -31,6 +29,12 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.time.Clock;
+import java.time.Duration;
 
 public class AddressSpaceController {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
@@ -86,33 +90,25 @@ public class AddressSpaceController {
                 : new LogEventLogger();
 
         CertManager certManager = OpenSSLCertManager.create(controllerClient);
-        AuthenticationServiceResolverFactory resolverFactory = createResolverFactory(options);
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
+        AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
 
-        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, resolverFactory, isOpenShift);
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, isOpenShift);
 
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient,
-                options.getStandardAuthserviceConfigName(),
-                options.getStandardAuthserviceCredentialsSecretName(),
-                options.getStandardAuthserviceCertSecretName());
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient, authenticationServiceRegistry);
         Clock clock = Clock.systemUTC();
-        UserApi userApi = null;
-        if (keycloakFactory.isKeycloakAvailable()) {
-            log.info("Using Keycloak for User API");
-            userApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
-        } else {
-            log.info("Using Null for User API");
-            userApi = new NullUserApi();
-        }
+        UserApi userApi = new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO), new NullUserApi());
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
+        controllerChain.addController(new RealmController(new Keycloak(keycloakFactory), new KubeUserLookupApi(controllerClient, isOpenShift), userApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
         controllerChain.addController(authController);
+        controllerChain.addController(new DeleteController(kubernetes));
         controllerChain.start();
 
         metricsServer = new HTTPServer(8080, metrics);
@@ -143,28 +139,11 @@ public class AddressSpaceController {
 
     private void configureDefaultResources(NamespacedOpenShiftClient client, File resourcesDir) {
         String namespace = client.getNamespace();
-        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "brokeredinfraconfigs"),
-                client.customResources(AdminCrd.brokeredInfraConfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class, DoneableBrokeredInfraConfig.class).inNamespace(namespace),
-                BrokeredInfraConfig.class,
-                Comparator.comparing(BrokeredInfraConfig::getVersion));
-
-        KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "standardinfraconfigs"),
-                client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace),
-                StandardInfraConfig.class,
-                Comparator.comparing(StandardInfraConfig::getVersion));
 
         KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "configmaps"),
                 client.configMaps().inNamespace(namespace),
                 ConfigMap.class,
                 (c1, c2) -> c1.getData().equals(c2.getData()) ? 0 : -1);
-
-        KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressplans"),
-                client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace),
-                AddressPlan.class);
-
-        KubeResourceApplier.createIfNoneExists(new File(resourcesDir, "addressspaceplans"),
-                client.customResources(AdminCrd.addressSpacePlans(), AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class).inNamespace(namespace),
-                AddressSpacePlan.class);
     }
 
     private CertProviderFactory createCertProviderFactory(AddressSpaceControllerOptions options, CertManager certManager) {
@@ -192,46 +171,6 @@ public class AddressSpaceController {
                 }
             }
         };
-    }
-
-    private AuthenticationServiceResolverFactory createResolverFactory(AddressSpaceControllerOptions options) {
-
-        return type -> {
-            AuthenticationServiceResolver resolver = createAuthServiceResolver(type, options);
-            if (resolver == null) {
-                throw new IllegalArgumentException("Unsupported resolver of type " + type);
-            }
-            return resolver;
-        };
-    }
-
-    private AuthenticationServiceResolver createAuthServiceResolver(AuthenticationServiceType type, AddressSpaceControllerOptions options) {
-        AuthenticationServiceResolver resolver = null;
-        switch (type) {
-            case NONE:
-                resolver = new NoneAuthenticationServiceResolver("none-authservice", 5671);
-                break;
-            case STANDARD:
-                resolver = options.getStandardAuthService().map(authService -> {
-                    ConfigMap config = controllerClient.configMaps().withName(authService.getConfigMap()).get();
-                    if (config != null) {
-                        return new StandardAuthenticationServiceResolver(
-                                config.getData().get("hostname"),
-                                Integer.parseInt(config.getData().get("port")),
-                                config.getData().get("oauthUrl"),
-                                config.getData().get("caSecretName"));
-                    } else {
-                        log.warn("Skipping standard authentication service: configmap {} not found", authService.getConfigMap());
-                        return null;
-                    }
-                }).orElse(null);
-                break;
-            case EXTERNAL:
-                resolver = new ExternalAuthenticationServiceResolver();
-                break;
-        }
-
-        return resolver;
     }
 
     public static void main(String args[]) {

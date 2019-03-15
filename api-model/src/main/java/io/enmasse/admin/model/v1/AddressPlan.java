@@ -23,12 +23,12 @@ import java.util.Objects;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        refs= {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @DefaultCustomResource
 @SuppressWarnings("serial")
-public class AddressPlan extends AbstractHasMetadata<AddressPlan> implements io.enmasse.admin.model.AddressPlan {
+public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<AddressPlan> implements io.enmasse.admin.model.AddressPlan {
 
     public static final String KIND = "AddressPlan";
 
@@ -38,8 +38,6 @@ public class AddressPlan extends AbstractHasMetadata<AddressPlan> implements io.
     private String shortDescription;
     private String addressType;
     private List<ResourceRequest> requiredResources;
-
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     public AddressPlan() {
         super(KIND, AdminCrd.API_VERSION_V1BETA2);
@@ -65,20 +63,6 @@ public class AddressPlan extends AbstractHasMetadata<AddressPlan> implements io.
                 "metadata='" + getMetadata() + '\'' +
                 ", spec ='" + spec + '\'' +
                 '}';
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    public void setAdditionalProperties(Map<String, Object> additionalProperties) {
-        this.additionalProperties = additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 
     public void setSpec(AddressPlanSpec spec) {

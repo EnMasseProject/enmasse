@@ -11,7 +11,7 @@ supporting the {KubePlatform} client.
 
 include::../modules/proc-creating-project.adoc[leveloffset=+1]
 
-include::assembly-deploying-auth-services.adoc[leveloffset=+1]
+include::../modules/proc-deploying-example-authservice.adoc[leveloffset=+1]
 
 include::../modules/proc-deploying-address-space-controller.adoc[leveloffset=+1]
 

@@ -18,6 +18,11 @@ public class TestUserApi implements UserApi {
     public boolean throwException = false;
 
     @Override
+    public boolean isAvailable() {
+        return true;
+    }
+
+    @Override
     public Optional<User> getUserWithName(String realm, String name) {
         if (throwException) {
             throw new RuntimeException("exception");
