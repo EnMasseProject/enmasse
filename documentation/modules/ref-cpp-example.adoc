@@ -73,6 +73,26 @@ int main(int argc, char **argv) {
 
 == Known issue with creating a subscriber on a hierarchical topic
 
-A known issue exists where creating a subscriber on a hierarchical topic in {ProductName} causes the broker to instead create it as a competing consumer (handling the address like a queue rather than a topic). The workaround involves setting the capability topic in the source. For more detailed information about how to add this capability, see link:https://github.com/ssorj/messaging-examples/tree/master/qpid-proton-cpp/auto-create[Add auto-create examples for {cpp}^].
+A known issue exists where creating a subscriber on a hierarchical topic in {ProductName} causes the broker to instead create it as a competing consumer (handling the address like a queue rather than a topic).
+
+The workaround involves setting the capability `"topic"` in the source.
+
+.Procedure
+
+. In the `topic_receive.cpp` file, edit the code so that it is similar to what is shown in this example:
+
+[source,cpp,options="nowrap",subs="+quotes,attributes"]
+----
+void on_container_start(proton::container& cont) override {
+        proton::connection conn = cont.connect(conn_url_);
+        proton::receiver_options opts {};
+        proton::source_options sopts {};
+
+        sopts.capabilities(std::vector<proton::symbol> { "topic" });
+        opts.source(sopts);
+
+        conn.open_receiver(address_, opts);
+    }
+----
 
 
