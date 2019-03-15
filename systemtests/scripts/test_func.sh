@@ -60,7 +60,10 @@ function wait_until_enmasse_up() {
     NAMESPACE=${2:-KUBERNETES_NAMESPACE}
     UPGRADE=${3:-false}
 
-    expected_pods=8
+    expected_pods=6
+    if [ "$DEPLOY_IOT" = "true" ]; then
+        expected_pods=$(($expected_pods + 2))
+    fi
     if [[ "$CLUSTER_TYPE" == "kubernetes" ]]; then
         expected_pods=$(($expected_pods - 1))
     fi

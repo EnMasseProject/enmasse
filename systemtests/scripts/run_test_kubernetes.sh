@@ -40,9 +40,6 @@ mkdir -p standard-authservice-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/tls.key
 kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
 
-"${BASE_DIR}/iot/examples/k8s-tls/create"
-NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
-
 sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
 kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse
 kubectl create -f ${ENMASSE_DIR}/install/components/none-authservice
@@ -50,10 +47,20 @@ kubectl create -f ${ENMASSE_DIR}/install/components/standard-authservice
 kubectl create -f ${ENMASSE_DIR}/install/components/example-plans
 kubectl create -f ${ENMASSE_DIR}/install/components/example-roles
 
-kubectl create -f ${ENMASSE_DIR}/install/components/enmasse-controller-manager
-kubectl create -f ${ENMASSE_DIR}/install/components/iot/api
-kubectl create -f ${ENMASSE_DIR}/install/components/iot/common
-kubectl create -f ${ENMASSE_DIR}/install/components/iot/operator
+
+if [ "$DEPLOY_IOT" = "true" ]; then
+    echo "Deploying IoT components"
+
+    "${BASE_DIR}/iot/examples/k8s-tls/create"
+    NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
+
+    kubectl create -f ${ENMASSE_DIR}/install/components/iot/api
+    kubectl create -f ${ENMASSE_DIR}/install/components/enmasse-controller-manager
+    kubectl create -f ${ENMASSE_DIR}/install/components/iot/common
+    kubectl create -f ${ENMASSE_DIR}/install/components/iot/operator
+else
+    echo "Not deploying IoT components"
+fi
 
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
