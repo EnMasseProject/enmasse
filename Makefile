@@ -19,7 +19,7 @@ ASCIIDOCTOR_EXTRA_FLAGS = --failure-level WARN
 ASCIIDOCTOR_FLAGS       = -v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTOR_EXTRA_FLAGS)
 
 ifeq ($(SKIP_TESTS),true)
-	MAVEN_ARGS="-DskipTests"
+	MAVEN_ARGS=-DskipTests -Dmaven.test.skip=true
 endif
 ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"

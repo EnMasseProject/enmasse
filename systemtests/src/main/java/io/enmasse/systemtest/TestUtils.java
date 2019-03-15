@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest;
 
+import static java.lang.Boolean.TRUE;
+
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -163,13 +165,28 @@ public class TestUtils {
     private static int numReady(List<Pod> pods) {
         int numReady = 0;
         for (Pod pod : pods) {
-            if ("Running".equals(pod.getStatus().getPhase())) {
+            if (podReady(pod)) {
                 numReady++;
             } else {
-                log.info("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus().getPhase());
+                final int c = pod.getStatus().getContainerStatuses().size();
+                final long r = pod.getStatus().getContainerStatuses().stream().map(ContainerStatus::getReady).filter(TRUE::equals).count();
+                log.info("POD {} in status : {} {}/{}", pod.getMetadata().getName(), pod.getStatus().getPhase(), r, c);
             }
         }
         return numReady;
+    }
+
+    private static boolean podReady(final Pod pod) {
+        if (!pod.getStatus().getPhase().equals("Running")) {
+            return false;
+        }
+
+        for ( final ContainerStatus c : pod.getStatus().getContainerStatuses() ) {
+            if (!Boolean.TRUE.equals(c.getReady())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -793,8 +810,6 @@ public class TestUtils {
      */
     private static User convertJsonToUser(JsonObject userJson) {
         log.info("Got User object: {}", userJson.toString());
-        String name = userJson.getJsonObject("metadata").getString("name");
-        String namespace = userJson.getJsonObject("metadata").getString("namespace");
         JsonObject spec = userJson.getJsonObject("spec");
 
         String username = spec.getString("username");

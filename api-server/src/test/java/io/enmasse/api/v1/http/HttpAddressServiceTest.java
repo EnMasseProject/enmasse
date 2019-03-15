@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
 import io.enmasse.address.model.*;
-import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -40,7 +39,6 @@ public class HttpAddressServiceTest {
     private final AddressSpaceApi addressSpaceApi = new TestAddressSpaceApi();
     private final HttpAddressService addressService = new HttpAddressService(addressSpaceApi, new TestSchemaProvider(), Clock.systemUTC());
     private final SecurityContext securityContext = mock(SecurityContext.class);
-    private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private AddressSpace addressSpace;
     private AddressApi addressApi;
     private Address address1;

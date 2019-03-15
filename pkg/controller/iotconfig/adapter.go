@@ -108,6 +108,11 @@ func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *
 
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, "qdr-proxy-configurator", config, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+
+			if configMap.Data == nil {
+				configMap.Data = make(map[string]string)
+			}
+
 			configMap.Data["qdrouterd.conf"] = `
 router {
   mode: standalone

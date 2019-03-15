@@ -1,0 +1,21 @@
+{
+  "apiVersion": "iot.enmasse.io/v1alpha1",
+  "kind": "IoTConfig",
+  "metadata": {
+    "name": "default"
+  },
+  "spec": {
+    "interServiceCertificates": {
+      "secretCertificatesStrategy": {
+        "caSecretName": "systemtests-iot-service-ca",
+        "serviceSecretNames": {
+          "iot-auth-service-tls": "systemtests-iot-auth-service-tls",
+          "iot-tenant-service-tls": "systemtests-iot-tenant-service-tls",
+          "iot-device-registry-tls": "systemtests-iot-device-registry-tls",
+          "iot-http-adapter-tls": "systemtests-iot-http-adapter-tls",
+          "iot-mqtt-adapter-tls": "systemtests-iot-mqtt-adapter-tls"
+        }
+      }
+    }
+  }
+}

@@ -22,10 +22,7 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
-import io.enmasse.address.model.AddressSpace;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

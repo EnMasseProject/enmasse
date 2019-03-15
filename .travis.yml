@@ -59,12 +59,20 @@ jobs:
           on:
             tags: true
             repo: EnMasseProject/enmasse
-    - before_install:
-        - curl -L https://github.com/openshift/source-to-image/releases/download/v1.1.13/source-to-image-v1.1.13-b54d75d3-linux-amd64.tar.gz --output s2i.tar.gz
-        - tar xzf s2i.tar.gz
+    # we keep the "build" stage name in order to run in parallel
+    - dist: xenial
       install: true
+      before_install:
+        - sudo pip install requests[security] ansible
+        - gem install asciidoctor
+        - gimme 1.10.5
+        - source ~/.gimme/envs/go1.10.5.env
+        - go version
       script:
-        - ./s2i build . fabric8/s2i-java:3.0-java11 iot-tenant-service -e MAVEN_ARGS_APPEND="-pl io.enmasse:iot-tenant-service --also-make" -e ARTIFACT_DIR="iot/iot-tenant-service/target"
+        - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
+        - "./.travis/build-only.sh"
+        - "./.travis/test-iot.sh"
+
 env:
   global:
     - BRANCH=${TRAVIS_BRANCH}

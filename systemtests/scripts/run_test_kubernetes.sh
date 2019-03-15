@@ -8,6 +8,7 @@ TEST_PROFILE=$2
 TESTCASE=$3
 failure=0
 
+BASE_DIR="${CURDIR}/../../"
 API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
 API_TOKEN=$(kubectl describe secret $(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
 
@@ -26,7 +27,6 @@ export KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
 
 kubectl create namespace ${KUBERNETES_NAMESPACE}
 kubectl config set-context $(kubectl config current-context) --namespace=${KUBERNETES_NAMESPACE}
-
 
 mkdir -p api-server-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
@@ -47,6 +47,21 @@ kubectl create -f ${ENMASSE_DIR}/install/components/standard-authservice
 kubectl create -f ${ENMASSE_DIR}/install/components/example-plans
 kubectl create -f ${ENMASSE_DIR}/install/components/example-roles
 
+
+if [ "$DEPLOY_IOT" = "true" ]; then
+    echo "Deploying IoT components"
+
+    "${BASE_DIR}/iot/examples/k8s-tls/create"
+    NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
+
+    kubectl create -f ${ENMASSE_DIR}/install/components/iot/api
+    kubectl create -f ${ENMASSE_DIR}/install/components/enmasse-controller-manager
+    kubectl create -f ${ENMASSE_DIR}/install/components/iot/common
+    kubectl create -f ${ENMASSE_DIR}/install/components/iot/operator
+else
+    echo "Not deploying IoT components"
+fi
+
 #environment info
 LOG_DIR="${ARTIFACTS_DIR}/kubernetes-info/"
 mkdir -p ${LOG_DIR}
@@ -63,13 +78,20 @@ fi
 
 wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
+echo "Running test profile: ${TEST_PROFILE}"
 #execute test
-if [[ "${TEST_PROFILE}" = "smoke" ]]; then
+case "${TEST_PROFILE}" in
+"smoke")
     run_test "**.SmokeTest" systemtests-shared-brokered || failure=$(($failure + 1))
     run_test "**.SmokeTest" systemtests-shared-standard || failure=$(($failure + 1))
-else
+    ;;
+"smoke-iot")
+    run_test systemtests-smoke-iot || failure=$(($failure + 1))
+    ;;
+*)
     run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
-fi
+    ;;
+esac
 
 kubectl get events --all-namespaces
 

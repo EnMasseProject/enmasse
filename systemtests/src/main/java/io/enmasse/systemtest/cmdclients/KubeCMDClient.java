@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
@@ -244,5 +245,16 @@ public class KubeCMDClient extends CmdClient {
     public static ExecutionResultData getEvents(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "events", "-n", namespace);
         return execute(command, ONE_MINUTE_TIMEOUT, false);
+    }
+
+    public static ExecutionResultData deleteIoTConfig(String namespace, String name) {
+        List<String> ressourcesCmd = getRessourcesCmd("delete", "iotconfig", namespace, name, Optional.empty());
+        return execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData createFromFile(String namespace, Path path) {
+        Objects.requireNonNull(namespace);
+        Objects.requireNonNull(path);
+        return execute(Arrays.asList("kubectl", "-n", namespace, "create", "--validate=false", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
     }
 }
