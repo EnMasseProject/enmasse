@@ -7,9 +7,25 @@ package io.enmasse.iot.model.v1;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import java.nio.ByteBuffer;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.Inline;
+
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+                )
+        )
 //FIXME: implement missing fields and remove ignore annotation
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
@@ -25,7 +41,7 @@ public class ExternalDownstreamStrategy {
 
     private boolean tls;
 
-    private byte[] certificate;
+    private ByteBuffer certificate;
 
     public String getHost() {
         return this.host;
@@ -67,11 +83,11 @@ public class ExternalDownstreamStrategy {
         this.tls = tls;
     }
 
-    public byte[] getCertificate() {
+    public ByteBuffer getCertificate() {
         return this.certificate;
     }
 
-    public void setCertificate(final byte[] certificate) {
+    public void setCertificate(final ByteBuffer certificate) {
         this.certificate = certificate;
     }
 

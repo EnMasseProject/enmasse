@@ -31,6 +31,7 @@ public class IoTProject extends AbstractHasMetadata<IoTProject> {
     public static final String KIND = "IoTProject";
 
     private IoTProjectSpec spec;
+    private IoTProjectStatus status;
 
     public IoTProject() {
         super(KIND, IoTCrd.API_VERSION);
@@ -42,6 +43,14 @@ public class IoTProject extends AbstractHasMetadata<IoTProject> {
 
     public IoTProjectSpec getSpec() {
         return this.spec;
+    }
+
+    public IoTProjectStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(IoTProjectStatus status) {
+        this.status = status;
     }
 
 }
