@@ -13,6 +13,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/enmasseproject/enmasse/version"
+
+	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
 var (
@@ -25,6 +27,8 @@ var (
 	// The default pull policy, might be empty
 	defaultPullPolicy corev1.PullPolicy
 )
+
+var log = logf.Log.WithName("install")
 
 func init() {
 	defaultTag = os.Getenv("ENMASSE_DEFAULT_TAG")

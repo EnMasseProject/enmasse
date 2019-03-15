@@ -74,9 +74,12 @@ spec:
     secretCertificatesStrategy:
       caSecretName: foo-iot-service-ca
       serviceSecretNames:
-        iot-auth-service-tls: foo-iot-auth-service-tls
-        iot-device-registry-tls: foo-iot-device-registry-tls
-        iot-http-adapter-tls: foo-iot-http-adapter-tls
-        iot-mqtt-adapter-tls: foo-iot-mqtt-adapter-tls
-        iot-tenant-service-tls: foo-iot-tenant-service-tls
+        iot-auth-service: foo-iot-auth-service-tls
+        iot-device-registry: foo-iot-device-registry-tls
+        iot-tenant-service: foo-iot-tenant-service-tls
+  adapters:
+    http:
+      endpointTlsSecretName: foo-iot-http-adapter-tls
+    mqtt:
+      endpointTlsSecretName: foo-iot-mqtt-adapter-tls
 ~~~

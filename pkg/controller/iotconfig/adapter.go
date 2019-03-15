@@ -7,6 +7,9 @@ package iotconfig
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/enmasseproject/enmasse/pkg/util"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -130,4 +133,93 @@ listener {
 	})
 
 	return rc.Result()
+}
+
+func hasEndpointKeyAndCert(endpoint *iotv1alpha1.AdapterEndpointConfig) bool {
+	return endpoint != nil &&
+		endpoint.KeyCertificateStrategy != nil &&
+		endpoint.KeyCertificateStrategy.Key != nil &&
+		endpoint.KeyCertificateStrategy.Certificate != nil
+}
+
+func applyAdapterEndpointDeployment(endpoint *iotv1alpha1.AdapterEndpointConfig, deployment *appsv1.Deployment, endpointSecretName string) error {
+	if endpoint != nil && endpoint.SecretNameStrategy != nil {
+
+		// use provided secret
+
+		install.ApplySecretVolume(deployment, "tls", endpoint.SecretNameStrategy.TlsSecretName)
+
+	} else if endpoint != nil && endpoint.KeyCertificateStrategy != nil {
+
+		install.ApplySecretVolume(deployment, "tls", endpointSecretName+"-"+endpoint.KeyCertificateStrategy.HashString())
+
+	} else {
+
+		// use service CA as fallback
+
+		if !util.IsOpenshift() {
+			return fmt.Errorf("not running in OpenShift, unable to use service CA, you need to provide a protocol adapter endpoint key/certificate")
+		}
+
+		install.ApplySecretVolume(deployment, "tls", endpointSecretName+"-tls")
+	}
+
+	return nil
+}
+
+func applyAdapterEndpointService(endpoint *iotv1alpha1.AdapterEndpointConfig, service *corev1.Service, endpointSecretName string) error {
+
+	if service.Annotations != nil {
+		delete(service.Annotations, "service.alpha.openshift.io/serving-cert-secret-name")
+	}
+
+	if endpoint != nil && endpoint.SecretNameStrategy != nil {
+
+		// use provided secret
+
+	} else if endpoint != nil && endpoint.KeyCertificateStrategy != nil {
+
+		// use provided key/cert
+
+	} else {
+
+		if !util.IsOpenshift() {
+			return fmt.Errorf("not running in OpenShift, unable to use service CA, you need to provide a protocol adapter endpoint key/certificate")
+		}
+
+		// use service CA as fallback
+
+		if service.Annotations == nil {
+			service.Annotations = make(map[string]string)
+		}
+
+		service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = endpointSecretName + "-tls"
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.Context, config *iotv1alpha1.IoTConfig, endpoint *iotv1alpha1.AdapterEndpointConfig, adapterName string) error {
+
+	if !hasEndpointKeyAndCert(endpoint) {
+
+		// cleanup previous secrets
+		return r.cleanupSecrets(ctx, config, adapterName)
+
+	}
+
+	kc := endpoint.KeyCertificateStrategy
+	name := adapterName + "-" + kc.HashString()
+	return r.processSecret(ctx, name, config, func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error {
+
+		// cleanup previous secrets
+		if err := r.cleanupSecrets(ctx, config, adapterName); err != nil {
+			return err
+		}
+
+		install.ApplyDefaultLabels(&secret.ObjectMeta, "iot", adapterName+"tls")
+		install.ApplyTlsSecret(secret, kc.Key, kc.Certificate)
+		return nil
+	})
+
 }

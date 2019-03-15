@@ -101,7 +101,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameTenantService+"-tls"); err != nil {
+	if err := ApplyInterServiceForDeployment(config, deployment, nameTenantService); err != nil {
 		return err
 	}
 
@@ -127,7 +127,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceService(config *iotv1alpha1.I
 		service.Annotations = make(map[string]string)
 	}
 
-	if err := ApplyInterServiceForService(config, service, nameTenantService+"-tls"); err != nil {
+	if err := ApplyInterServiceForService(config, service, nameTenantService); err != nil {
 		return err
 	}
 

@@ -52,6 +52,11 @@ func newReconciler(mgr manager.Manager, configName string, configNamespace strin
 	}
 }
 
+type watching struct {
+	obj       runtime.Object
+	openshift bool
+}
+
 func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 
 	// Create a new controller
@@ -66,51 +71,31 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 		return err
 	}
 
-	// watch for generated Deployment resources
-	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &iotv1alpha1.IoTConfig{},
-		IsController: true,
-	})
-	if err != nil {
-		return err
-	}
+	// watch owned objects
 
-	// watch for generated Service resources
-	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &iotv1alpha1.IoTConfig{},
-		IsController: true,
-	})
-	if err != nil {
-		return err
-	}
+	for _, w := range []watching{
+		{&appsv1.Deployment{}, false},
+		{&corev1.Service{}, false},
+		{&corev1.ConfigMap{}, false},
+		{&corev1.Secret{}, false},
+		{&corev1.PersistentVolumeClaim{}, false},
 
-	// watch for generated ConfigMap resources
-	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &iotv1alpha1.IoTConfig{},
-		IsController: true,
-	})
-	if err != nil {
-		return err
-	}
+		{&routev1.Route{}, true},
+	} {
 
-	// watch for generated PVC resources
-	err = c.Watch(&source.Kind{Type: &corev1.PersistentVolumeClaim{}}, &handler.EnqueueRequestForOwner{
-		OwnerType:    &iotv1alpha1.IoTConfig{},
-		IsController: true,
-	})
-	if err != nil {
-		return err
-	}
+		if w.openshift && !util.IsOpenshift() {
+			// requires openshift, but we don't have it
+			continue
+		}
 
-	if util.IsOpenshift() {
-		// watch for generated Route resources
-		err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestForOwner{
+		err = c.Watch(&source.Kind{Type: w.obj}, &handler.EnqueueRequestForOwner{
 			OwnerType:    &iotv1alpha1.IoTConfig{},
 			IsController: true,
 		})
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return nil
@@ -203,6 +188,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
 
+	// we are initialized when there is no error
 	config.Status.Initialized = rc.Error() == nil
 
 	if config.Status.Initialized {
@@ -211,9 +197,13 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alph
 		config.Status.State = iotv1alpha1.ConfigStateFailed
 	}
 
+	// do a status update
+
 	rc.ProcessSimple(func() error {
 		return r.client.Update(ctx, config)
 	})
+
+	// return result ... including status update
 
 	return rc.Result()
 }

@@ -86,8 +86,13 @@ In Hono project run
   This is an example using NodePort, so you need to know your cluster IP and use in the command
 
   ```
-  mosquitto_pub -h ${cluster.ip} -p 31883 -u 'sensor1@myapp.iot' -P hono-secret -t telemetry -m '{"temp": 5}'
+  mosquitto_pub -h $(oc get route iot-mqtt-adapter --template='{{.spec.host}}') -p 443 -u 'sensor1@myapp.iot' -P hono-secret -t telemetry -m '{"temp": 5}' -i 4711 --cafile /etc/pki/tls/certs/ca-bundle.crt
   ```
+
+  **Note:** You might need to change the `-cafile` parameter to match the certificate you used for the MQTT endpoint. The value `/etc/pki/tls/certs/ca-bundle.crt` points to the system wide
+            trusted CA list on a standard RHEL/CentOS machine and will only work when you use a proper (not self-signed) certificate, like from Let's Encrypt.
+
+  **Note:** For this to work you will need a Mosquitto CLI version which supports TLS SNI.
 
   In the future, we'll provide a proper examples based on the Openshift route with TLS and remove NodePort.
 
