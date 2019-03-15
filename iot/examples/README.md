@@ -18,6 +18,7 @@
   oc apply -f templates/build/enmasse-latest/install/components/enmasse-controller-manager
   
   oc apply -f templates/build/enmasse-latest/install/preview-bundles/iot
+  oc apply -f iot/examples/iot-config.yaml
   ```
 
 * Wait for the EnMasse installation to succeed. The following command should show all pods to be ready:
