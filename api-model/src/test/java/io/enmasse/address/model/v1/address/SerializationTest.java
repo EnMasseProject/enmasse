@@ -22,6 +22,7 @@ import java.util.*;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.enmasse.admin.model.v1.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
@@ -321,9 +322,9 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getAdditionalProperties().get("displayName"), is("MySpace"));
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
         assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
-        assertThat(addressSpacePlan.getResources().size(), is(2));
-        assertThat(addressSpacePlan.getResources().get(0).getName(), is("router"));
-        assertThat(addressSpacePlan.getResources().get(1).getName(), is("broker"));
+        assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
+        assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
+        assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
         assertThat(addressSpacePlan.getMetadata().getAnnotations().size(), is(1));
         assertThat(addressSpacePlan.getAnnotation("mykey"), is("myvalue"));
     }
@@ -385,9 +386,9 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
         assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
-        assertThat(addressSpacePlan.getResources().size(), is(2));
-        assertThat(addressSpacePlan.getResources().get(0).getName(), is("router"));
-        assertThat(addressSpacePlan.getResources().get(1).getName(), is("broker"));
+        assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
+        assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
+        assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
     }
 
     @Test
@@ -434,7 +435,7 @@ public class SerializationTest {
     }
 
     @Test
-    void testAddressSpacePlanBuilder() {
+    void testAddressSpacePlanBuilder() throws IOException {
         AddressSpacePlan plan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName("test-plan")
@@ -443,14 +444,23 @@ public class SerializationTest {
                 .withNewSpec()
                 .withAddressSpaceType("standard")
                 .withAddressPlans("a", "b", "c")
+                .withResourceLimits(Map.of("router", 1.0))
+                .withShortDescription("myplan")
                 .endSpec()
                 .build();
         assertEquals(3, plan.getAddressPlans().size());
         assertEquals("test-plan", plan.getMetadata().getName());
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(plan);
+        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressSpacePlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"labels\":{},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"myplan\",\"addressSpaceType\":\"standard\",\"addressPlans\":[\"a\",\"b\",\"c\"],\"resourceLimits\":{\"router\":1.0}}}";
+        assertEquals(expected, serialized);
+        System.out.println(serialized);
+        AddressSpacePlan deserialized = mapper.readValue(serialized, AddressSpacePlan.class);
+        assertEquals(plan, deserialized);
     }
 
     @Test
-    void testAddressPlanBuilder() {
+    void testAddressPlanBuilder() throws IOException {
         LinkedHashMap<String, Double> res = new LinkedHashMap<>();
         res.put("router", 2.0);
         res.put("broker", 14.0);
@@ -467,6 +477,14 @@ public class SerializationTest {
                 .build();
         assertEquals("test-plan", plan.getMetadata().getName());
         assertEquals(14, plan.getSpec().getResources().get("broker"));
+
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(plan);
+        System.out.println(serialized);
+        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressPlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"labels\":{},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"kornys\",\"addressType\":\"topic\",\"resources\":{\"broker\":14.0,\"router\":2.0}}}";
+        assertEquals(expected, serialized);
+        AddressPlan deserialized = mapper.readValue(serialized, AddressPlan.class);
+        assertEquals(plan, deserialized);
     }
 
     /*
