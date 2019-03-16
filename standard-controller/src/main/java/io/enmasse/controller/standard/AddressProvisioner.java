@@ -447,7 +447,11 @@ public class AddressProvisioner {
             String resourceName = entry.getKey();
             if ("router".equals(resourceName)) {
                 int totalNeeded = sumNeeded(entry.getValue());
-                router.setNewReplicas(Math.max(totalNeeded, router.getInfraConfig() != null ? router.getInfraConfig().getSpec().getRouter().getMinReplicas() : 0));
+                int infraConfigMin = Optional.ofNullable(router.getInfraConfig())
+                        .flatMap(infraConfig -> Optional.ofNullable(router.getInfraConfig().getSpec().getRouter()))
+                        .flatMap(routerSpec -> Optional.ofNullable(routerSpec.getMinReplicas()))
+                        .orElse(1);
+                router.setNewReplicas(Math.max(totalNeeded, infraConfigMin));
             } else if ("broker".equals(resourceName)) {
                 // Provision pooled broker
                 int needPooled = sumNeededMatching(entry.getValue(), pooledPattern);

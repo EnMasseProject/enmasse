@@ -9,10 +9,10 @@ metadata:
     categories: "Streaming & Messaging"
     certified: "false"
     description: EnMasse provides a self-service messaging platform with a uniform interface to manage different messaging infrastructure.
-    containerImage: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
+    containerImage: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
     createdAt: 2019-02-19T00:00:00Z
     support: EnMasse
-    alm-examples: '[{"apiVersion":"admin.enmasse.io/v1beta1","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"storage":"5Gi"},"addressFullPolicy":"DROP"},"router":{"linkCapacity":50}}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"spec":{"addressType":"queue","shortDescription":"Small Queue","resources":{"router":0.01,"broker":0.1}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressSpacePlan","metadata":{"name":"standard-small"},"spec":{"addressSpaceType":"standard","infraConfigRef":"my-standard-infra","shortDescription":"Small Address Space Plan","resourceLimits":{"router":1,"broker":2,"aggregate":2},"addressPlans":["small-standard-queue"]}]'
+    alm-examples: '[{"apiVersion":"admin.enmasse.io/v1beta1","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"1Gi","storage":"5Gi"},"addressFullPolicy":"BLOCK"},"router":{"linkCapacity":50,"resources":{"memory":"512Mi"}}}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"spec":{"addressType":"queue","shortDescription":"Small Queue","resources":{"router":0.01,"broker":0.1}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressSpacePlan","metadata":{"name":"standard-small"},"spec":{"addressSpaceType":"standard","infraConfigRef":"my-standard-infra","shortDescription":"Small Address Space Plan","resourceLimits":{"router":1,"broker":2,"aggregate":2},"addressPlans":["small-standard-queue"]}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"AuthenticationService","metadata":{"name":"none-authservice"},"spec":{"type":"none"}}]'
 spec:
   maturity: beta
   displayName: EnMasse
@@ -22,11 +22,11 @@ spec:
 
     ### Supported features
 
-    * ** Built-in authentication and authorization ** - Use the built-in or plug in your own authentication service for authentication and authorization of messaging clients.
+    * **Built-in authentication and authorization** - Use the built-in or plug in your own authentication service for authentication and authorization of messaging clients.
 
-    * ** Self-service messaging for applications ** - The service admin deploys and manages the messaging infrastructure, while applications can request messaging resources without caring about the messaging infrastructure.
+    * **Self-service messaging for applications** - The service admin deploys and manages the messaging infrastructure, while applications can request messaging resources without caring about the messaging infrastructure.
 
-    * ** Supports a wide variety of messaging patterns ** - Choose between JMS-style messaging with strict guarantees, or messaging that supports a larger number of connections and higher throughput.
+    * **Supports a wide variety of messaging patterns** - Choose between JMS-style messaging with strict guarantees, or messaging that supports a larger number of connections and higher throughput.
 
     ### Documentation
     
@@ -35,6 +35,7 @@ spec:
     ### Getting help
 
     * [EnMasse mailing list](https://www.redhat.com/mailman/listinfo/enmasse)
+
     * [#enmasse IRC channel on Freenode](https://webchat.freenode.net/?randomnick=1&channels=enmasse&uio=d4)
 
     ### Contributing
@@ -42,8 +43,10 @@ spec:
     If you've got some great ideas and use cases for EnMasse, we would love to hear them!
 
     * Raise issues on [GitHub](https://github.com/EnMasseProject/enmasse/issues).
+
     * Read the [Hacking guide](https://github.com/EnMasseProject/enmasse/blob/master/HACKING.md) for details on how to build EnMasse.
-    * Fix issues by opening Pull Requests
+
+    * Fix issues and open Pull Requests
 
     ### License
 
@@ -65,7 +68,7 @@ spec:
       app: enmasse
   links:
   - name: Documentation
-    url: http://enmasse.io/documentation
+    url: https://enmasse.io/documentation
   - name: GitHub
     url: https://github.com/EnMasseProject/enmasse
 
@@ -83,6 +86,20 @@ spec:
     strategy: deployment
     spec:
       permissions:
+      - serviceAccountName: enmasse-operator
+        rules:
+        - apiGroups: [ "apps" ]
+          resources: [ "deployments" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+        - apiGroups: [ "" ]
+          resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+        - apiGroups: [ "", "route.openshift.io" ]
+          resources: [ "routes", "routes/custom-host", "routes/status"]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "admin.enmasse.io" ]
+          resources: [ "authenticationservices", "authenticationservices/finalizers" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch" ]
       - serviceAccountName: address-space-controller
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
@@ -141,6 +158,21 @@ spec:
           resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices" ]
           verbs: [ "get", "list", "watch" ]
       clusterPermissions:
+      - serviceAccountName: standard-authservice
+        rules:
+        - apiGroups: [ "authentication.k8s.io" ]
+          resources: [ "tokenreviews" ]
+          verbs: [ "create" ]
+      - serviceAccountName: address-space-controller
+        rules:
+        - apiGroups: [ "", "user.openshift.io" ]
+          resources: [ "users" ]
+          verbs: [ "get" ]
+      - serviceAccountName: enmasse-operator
+        rules:
+        - apiGroups: [ "oauth.openshift.io" ]
+          resources: [ "oauthclients" ]
+          verbs: [ "create", "get", "list", "watch" ]
       - serviceAccountName: api-server
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -180,7 +212,7 @@ spec:
               containers:
               - env:
                 - name: JAVA_OPTS
-                  value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+                  value: -verbose:gc -Xlog:gc*
                 - name: CERT_DIR
                   value: /api-server-cert
                 - name: ENABLE_RBAC
@@ -252,7 +284,7 @@ spec:
               containers:
               - env:
                 - name: JAVA_OPTS
-                  value: -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+                  value: -verbose:gc -Xlog:gc*
                 - name: CERT_DIR
                   value: /api-server-cert
                 - name: ENABLE_RBAC
@@ -298,6 +330,54 @@ spec:
                   name: apiservice-cert
                   readOnly: true
               serviceAccountName: api-server
+      - name: enmasse-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: enmasse
+              name: enmasse-operator
+          template:
+            metadata:
+              labels:
+                app: enmasse
+                name: enmasse-operator
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                    - weight: 1
+                      preference:
+                        matchExpressions:
+                          - key: node-role.enmasse.io/operator-infra
+                            operator: In
+                            values:
+                              - "true"
+              serviceAccountName: enmasse-operator
+              containers:
+              - name: controller
+                image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
+                imagePullPolicy: ${IMAGE_PULL_POLICY}
+                env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: OPERATOR_NAME
+                  value: "enmasse-operator"
+                - name: ENMASSE_DEFAULT_PULL_POLICY
+                  value: "${IMAGE_PULL_POLICY}"
+                - name: CONTROLLER_DISABLE_ALL
+                  value: "true"
+                - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
+                  value: "true"
+                resources:
+                  limits:
+                    memory: 128Mi
       - name: address-space-controller
         spec:
           replicas: 1
@@ -475,35 +555,15 @@ spec:
   customresourcedefinitions:
     owned:
       - group: admin.enmasse.io
-        version: v1alpha1
+        version: v1beta1
         kind: AuthenticationService
         name: authenticationservices.admin.enmasse.io
         displayName: Authentication Service
         description: Authentication service configuration available to address spaces.
         specDescriptors:
-          - description: The hostname of the authentication service.
-            displayName: Hostname
-            path: host
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-          - description: The port of the authentication service
-            displayName: Port
-            path: port
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-          - description: The realm to use for the authentication service.
-            displayName: Realm
-            path: realm
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-          - description: The secret containing the CA certificate of the authentication service.
-            displayName: CA Secret Name
-            path: caCertSecretName
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-          - description: The secret containing the client certificate to use for authenticating to the authentication service.
-            displayName: Client Secret Name
-            path: clientCertSecretName
+          - description: The type of authentication service
+            displayName: Type
+            path: type
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
