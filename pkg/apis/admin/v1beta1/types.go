@@ -54,6 +54,7 @@ type AuthenticationServiceSpecStandard struct {
 	RouteName          *string                                      `json:"routeName,omitempty"`
 	Image              *enmassev1beta1.ImageOverride                `json:"image,omitempty"`
 	InitImage          *enmassev1beta1.ImageOverride                `json:"initImage,omitempty"`
+	JvmOptions         *string                                      `json:"jvmOptions,omitempty"`
 	Resources          *corev1.ResourceRequirements                 `json:"resources,omitempty"`
 	Storage            *AuthenticationServiceSpecStandardStorage    `json:"storage,omitempty"`
 	Datasource         *AuthenticationServiceSpecStandardDatasource `json:"datasource,omitempty"`

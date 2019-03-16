@@ -213,6 +213,11 @@ func (in *AuthenticationServiceSpecStandard) DeepCopyInto(out *AuthenticationSer
 		*out = new(enmassev1beta1.ImageOverride)
 		**out = **in
 	}
+	if in.JvmOptions != nil {
+		in, out := &in.JvmOptions, &out.JvmOptions
+		*out = new(string)
+		**out = **in
+	}
 	if in.Resources != nil {
 		in, out := &in.Resources, &out.Resources
 		*out = new(v1.ResourceRequirements)
