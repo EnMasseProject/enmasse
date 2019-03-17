@@ -5,20 +5,34 @@
 package authenticationservice
 
 import (
+	"context"
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func applyNoneAuthServiceDefaults(authservice *adminv1beta1.AuthenticationService) error {
+func applyNoneAuthServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, authservice *adminv1beta1.AuthenticationService) error {
 	if authservice.Spec.None == nil {
 		authservice.Spec.None = &adminv1beta1.AuthenticationServiceSpecNone{}
 	}
 	if authservice.Spec.None.CertificateSecret == nil {
+		secretName := "none-authservice-cert"
 		authservice.Spec.None.CertificateSecret = &corev1.SecretReference{
-			Name: "none-authservice-cert",
+			Name: secretName,
+		}
+		if !util.IsOpenshift() {
+			err := CreateAuthserviceSecret(ctx, client, scheme, secretName, authservice, func(secret *corev1.Secret) error {
+				cn := util.ServiceToCommonName(authservice.Namespace, authservice.Name)
+				return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

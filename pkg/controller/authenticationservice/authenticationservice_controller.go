@@ -149,7 +149,7 @@ func (r *ReconcileAuthenticationService) Reconcile(request reconcile.Request) (r
 
 func (r *ReconcileAuthenticationService) reconcileNoneAuthService(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
 
-	err := applyNoneAuthServiceDefaults(authservice)
+	err := applyNoneAuthServiceDefaults(ctx, r.client, r.scheme, authservice)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
