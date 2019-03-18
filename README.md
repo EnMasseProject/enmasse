@@ -10,6 +10,8 @@ EnMasse is an open source messaging platform, with focus on scalability and perf
 
 ---- 
 
+![EnMasse Intro 1](https://raw.githubusercontent.com/enmasseproject/enmasse/master/documentation/_images/enmasse-intro-1.gif)
+
 ## To start using EnMasse
 
 See our documentation on [enmasse.io].
