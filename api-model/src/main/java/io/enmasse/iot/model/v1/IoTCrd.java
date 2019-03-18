@@ -23,6 +23,7 @@ public class IoTCrd {
     public static void registerCustomCrds() {
         KubernetesDeserializer.registerCustomKind(API_VERSION, IoTProject.KIND, IoTProject.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, IoTProjectList.KIND, IoTProjectList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, IoTConfig.KIND, IoTConfig.class);
     }
 
     public static CustomResourceDefinition project() {
