@@ -100,6 +100,17 @@ public class AddressSpaceUtils {
         return createAddressSpaceObject(name, null, type, plan, authService);
     }
 
+    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan, AuthenticationServiceType authServiceType, String authServiceName) {
+        return createAddressSpaceResource(name, type, authServiceType)
+                .editSpec()
+                .withPlan(plan)
+                .editAuthenticationService()
+                .withName(authServiceName)
+                .endAuthenticationService()
+                .endSpec()
+                .done();
+    }
+
     private static DoneableAddressSpace createAddressSpaceResource(String name, AddressSpaceType type, AuthenticationServiceType auth) {
         return new DoneableAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -110,6 +121,7 @@ public class AddressSpaceUtils {
                 .withPlan(type.equals(AddressSpaceType.BROKERED) ? AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
                 .withNewAuthenticationService()
                 .withType(auth)
+                .withName(auth.equals(AuthenticationServiceType.STANDARD) ? "standard-authservice" : "none-authservice")
                 .endAuthenticationService()
                 .endSpec()
                 .build());

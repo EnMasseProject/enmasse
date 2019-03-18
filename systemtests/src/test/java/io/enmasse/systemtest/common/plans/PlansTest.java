@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.common.plans;
 
 import io.enmasse.address.model.*;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
