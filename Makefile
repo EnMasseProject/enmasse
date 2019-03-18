@@ -1,7 +1,6 @@
 TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(TOPDIR)/Makefile.env.mk
 
-BUILD_DIRS       = none-authservice
 DOCKER_DIRS      = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin router router-metrics mqtt-gateway mqtt-lwt service-broker iot/iot-tenant-service iot/iot-auth-service iot/iot-device-registry iot/iot-http-adapter iot/iot-mqtt-adapter
 FULL_BUILD       = true
 
@@ -11,7 +10,6 @@ GO_DIRS          = \
 	iot/iot-gc \
 
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
-BUILD_TARGETS    = init build test package $(DOCKER_TARGETS) coverage
 INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
 
@@ -93,10 +91,6 @@ java_coverage:
 	mvn test -Pcoverage -B $(MAVEN_ARGS)
 	mvn jacoco:report-aggregate
 
-$(BUILD_TARGETS): $(BUILD_DIRS)
-$(BUILD_DIRS):
-	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
-
 $(DOCKER_TARGETS): $(DOCKER_DIRS) $(GO_DIRS)
 $(DOCKER_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
@@ -133,4 +127,4 @@ docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
 .PHONY: test_go_vet test_go_plain
-.PHONY: all $(BUILD_TARGETS) $(GO_DIRS) $(DOCKER_TARGETS) $(BUILD_DIRS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
