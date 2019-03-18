@@ -22,22 +22,16 @@ import java.util.*;
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AddressSpaceList;
-import io.enmasse.address.model.AddressSpaceSchema;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.Phase;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 
 // TODO: Add more tests of invalid input to deserialization
@@ -1034,5 +1028,77 @@ public class SerializationTest {
         assertThat(value.getStatus().isReady(), is(false));
         assertThat(value.getStatus().getPhase(), is(Phase.Configuring));
 
+    }
+
+    @Test
+    public void testSerializeAddressSpaceSchema() throws IOException {
+        AuthenticationService authService = new AuthenticationServiceBuilder()
+                        .editOrNewMetadata()
+                        .withName("auth1")
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(io.enmasse.admin.model.v1.AuthenticationServiceType.none)
+                        .endSpec()
+                        .build();
+
+        AddressPlan addressPlan = new AddressPlanBuilder()
+                .editOrNewMetadata()
+                .withName("small-queue")
+                .endMetadata()
+                .editOrNewSpec()
+                .withAddressType("queue")
+                .withShortDescription("my plan")
+                .addToResources("broker", 0.5)
+                .endSpec()
+                .build();
+
+        AddressType addressType = new AddressType();
+        addressType.setName("queue");
+        addressType.setDescription("my queue");
+        addressType.setPlans(Collections.singletonList(addressPlan));
+
+
+        AddressSpacePlan addressSpacePlan = new AddressSpacePlanBuilder()
+                .editOrNewMetadata()
+                .withName("small")
+                .endMetadata()
+                .editOrNewSpec()
+                .withInfraConfigRef("infra")
+                .addToAddressPlans("small-queue")
+                .withAddressSpaceType("type1")
+                .addToResourceLimits("broker", 1.0)
+                .endSpec()
+                .build();
+
+        EndpointSpec endpointSpec = new EndpointSpecBuilder()
+                .withName("messaging")
+                .withService("messaging")
+                .build();
+
+        BrokeredInfraConfig infraConfig = new BrokeredInfraConfigBuilder()
+                .editOrNewMetadata()
+                .withName("infra")
+                .endMetadata()
+                .editOrNewSpec()
+                .withVersion("1.0")
+                .endSpec()
+                .build();
+
+        AddressSpaceType addressSpaceType = new AddressSpaceType(
+                "type1",
+                "awesometype",
+                Collections.singletonList(addressSpacePlan),
+                Collections.singletonList(addressType),
+                Collections.singletonList(endpointSpec),
+                Collections.singletonList(infraConfig));
+
+        AddressSpaceSchema schema = AddressSpaceSchema.fromAddressSpaceType("0", addressSpaceType, Collections.singletonList(authService));
+
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(schema);
+        System.out.println(serialized);
+
+        AddressSpaceSchema deserialized = mapper.readValue(serialized, AddressSpaceSchema.class);
+        assertEquals(deserialized, schema);
     }
 }

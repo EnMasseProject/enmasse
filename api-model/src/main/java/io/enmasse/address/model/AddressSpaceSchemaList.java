@@ -27,7 +27,7 @@ public class AddressSpaceSchemaList extends AbstractList<AddressSpaceSchema> {
 
         final AddressSpaceSchemaList list = new AddressSpaceSchemaList();
         final List<AddressSpaceSchema> items = schema.getAddressSpaceTypes().stream()
-                .map(type -> AddressSpaceSchema.fromAddressSpaceType(schema.getCreationTimestamp(), type))
+                .map(type -> AddressSpaceSchema.fromAddressSpaceType(schema.getCreationTimestamp(), type, schema.getAuthenticationServices()))
                 .collect(Collectors.toList());
 
         list.setItems(items);

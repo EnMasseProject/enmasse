@@ -343,11 +343,11 @@ public class AddressSpaceUtils {
         return endpoints.stream().filter(endpointStatus -> endpointStatus.getServiceHost().startsWith(serviceName)).findAny().get();
     }
 
-    public static Future<Schema> getSchema(AddressApiClient apiClient) throws Exception {
+    public static Future<AddressSpaceSchemaList> getSchema(AddressApiClient apiClient) throws Exception {
         JsonObject response = apiClient.getSchema();
-        CompletableFuture<Schema> schema = new CompletableFuture<>();
+        CompletableFuture<AddressSpaceSchemaList> schema = new CompletableFuture<>();
         log.info("Got Schema object: {}", response.toString());
-        schema.complete(new ObjectMapper().readValue(response.toString(), Schema.class));
+        schema.complete(new ObjectMapper().readValue(response.toString(), AddressSpaceSchemaList.class));
         return schema;
     }
 }

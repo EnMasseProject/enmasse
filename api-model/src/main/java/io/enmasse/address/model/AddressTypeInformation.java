@@ -6,6 +6,7 @@ package io.enmasse.address.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -35,7 +36,7 @@ public class AddressTypeInformation {
     private String name;
     private String description;
 
-    private List<@Valid NamedDescription> plans = new ArrayList<>();
+    private List<@Valid AddressPlanDescription> plans = new ArrayList<>();
 
     public String getName() {
         return name;
@@ -53,12 +54,27 @@ public class AddressTypeInformation {
         this.description = description;
     }
 
-    public void setPlans(final List<NamedDescription> plans) {
+    public void setPlans(final List<AddressPlanDescription> plans) {
         this.plans = plans;
     }
 
-    public List<NamedDescription> getPlans() {
+    public List<AddressPlanDescription> getPlans() {
         return plans;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressTypeInformation that = (AddressTypeInformation) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(plans, that.plans);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, description, plans);
     }
 
     public static AddressTypeInformation fromAddressType(final AddressType addressType) {
@@ -70,7 +86,7 @@ public class AddressTypeInformation {
                 .withName(addressType.getName())
                 .withDescription(addressType.getDescription())
                 .withPlans(addressType.getPlans().stream()
-                        .map(plan -> new NamedDescription(plan.getMetadata().getName(), plan.getShortDescription()))
+                        .map(plan -> new AddressPlanDescription(plan.getMetadata().getName(), plan.getShortDescription(), plan.getResources()))
                         .collect(Collectors.toList()))
                 .build();
     }

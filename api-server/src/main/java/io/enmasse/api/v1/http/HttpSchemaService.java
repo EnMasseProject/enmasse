@@ -53,7 +53,7 @@ public class HttpSchemaService {
             if (type == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpaceSchema", addressSpaceType)).build();
             } else {
-                return Response.ok(fromAddressSpaceType(schema.getCreationTimestamp(), type)).build();
+                return Response.ok(fromAddressSpaceType(schema.getCreationTimestamp(), type, schema.getAuthenticationServices())).build();
             }
         } catch (Exception e) {
             log.warn("Exception handling GET schema", e);
