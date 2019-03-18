@@ -27,6 +27,7 @@ import javax.ws.rs.core.UriInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
@@ -227,13 +228,40 @@ public class HttpAddressSpaceServiceTest {
     }
 
     @Test
-    public void testCreateUnresolvableAuthenticationService() {
+    public void testCreateUnresolvableDefaultAuthenticationService() {
         when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.empty());
         UriInfo mockUriInfo = mock(UriInfo.class);
         Response response = invoke(() -> addressSpaceService.createAddressSpace(securityContext, mockUriInfo, a1.getMetadata().getNamespace(), a1));
         assertThat(response.getStatus(), is(500));
         Status body = (Status) response.getEntity();
         assertTrue(body.getMessage().contains("no authentication services found"));
+    }
+
+    @Test
+    public void testCreateUnresolvableAuthenticationService() {
+        when(authenticationServiceRegistry.findAuthenticationServiceByName(any())).thenReturn(Optional.empty());
+        UriInfo mockUriInfo = mock(UriInfo.class);
+        AddressSpace space = new AddressSpaceBuilder()
+
+                .withNewMetadata()
+                .withNamespace("myns")
+                .withName("a1")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .editOrNewAuthenticationService()
+                .withName("unknown")
+                .endAuthenticationService()
+                .endSpec()
+
+                .build();
+
+        Response response = invoke(() -> addressSpaceService.createAddressSpace(securityContext, mockUriInfo, space.getMetadata().getNamespace(), space));
+        assertThat(response.getStatus(), is(400));
+        Status body = (Status) response.getEntity();
+        assertTrue(body.getMessage().contains("Unable to find authentication service"));
     }
 
     @Test

@@ -204,6 +204,8 @@ public class HttpAddressSpaceService {
 
             if (addressSpace.getSpec().getAuthenticationService() == null) {
                 addressSpace.getSpec().setAuthenticationService(resolveDefaultAuthService());
+            } else {
+                validateAuthenticationService(addressSpace.getSpec().getAuthenticationService());
             }
         } else {
             validateChanges(existing, addressSpace);
@@ -238,6 +240,17 @@ public class HttpAddressSpaceService {
 
         return addressSpace;
     }
+
+    private void validateAuthenticationService(AuthenticationService authenticationService) {
+        String name = authenticationService.getName();
+        if (name == null) {
+            name = authenticationService.getType().getName();
+        }
+        if (authenticationServiceRegistry.findAuthenticationServiceByName(name).isEmpty()) {
+            throw new BadRequestException("Unable to find authentication service '" + name + "'");
+        }
+    }
+
     private AuthenticationService resolveDefaultAuthService() {
         io.enmasse.admin.model.v1.AuthenticationService defaultAuthService = authenticationServiceRegistry.resolveDefaultAuthenticationService().orElseThrow(
                 () -> new InternalServerErrorException("No authentication service specified, and unable to resolve default: no authentication services found"));
