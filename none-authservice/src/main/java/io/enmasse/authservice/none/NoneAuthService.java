@@ -10,6 +10,8 @@ import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.Collections;
@@ -17,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class NoneAuthService {
+    private static final Logger log = LoggerFactory.getLogger(NoneAuthService.class);
     private static final Symbol AUTHENTICATED_IDENTITY = Symbol.getSymbol("authenticated-identity");
     private static final Symbol GROUPS = Symbol.getSymbol("groups");
 
@@ -36,7 +39,9 @@ public class NoneAuthService {
         ProtonServer server = ProtonServer.create(vertx, options);
         server.connectHandler(NoneAuthService::connectHandler);
         server.saslAuthenticatorFactory(NoneAuthServiceAuthenticator::new);
-        server.listen(listenPort);
+        server.listen(listenPort, result -> {
+            log.info("Listening on {}", listenPort);
+        });
     }
 
     private static void connectHandler(ProtonConnection protonConnection) {
