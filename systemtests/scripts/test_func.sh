@@ -390,9 +390,8 @@ function is_upgraded() {
     TAG=${TAG:-"latest"}
 
     IMAGE_TAG=$(echo $IMAGE | cut -f 2 -d ':')
-    TEMPLATES=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/templates/* | grep "image")
-    DEPLOYMENTS=$(cat ${CURDIR}/../../templates/build/enmasse-${TAG}/install/components/*/*-Deployment* | grep "image")
-    if [[ "${TEMPLATES}" == *"${IMAGE}"* ]] || [[ "${DEPLOYMENTS}" == *"${IMAGE}"* ]] ; then
+    TEMPLATES=$(find ${CURDIR}/../../templates/build/enmasse-${TAG} -name '*.yaml' -exec cat {} \; | grep "image")
+    if [[ "${TEMPLATES}" == *"${IMAGE}"* ]]; then
         echo "true"
     else
         if [[ "${IMAGE_TAG}" == "${TAG}" ]]; then
