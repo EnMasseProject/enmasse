@@ -2133,7 +2133,8 @@
                 "displayName",
                 "resourceLimits",
                 "addressSpaceType",
-                "addressPlans"
+                "addressPlans",
+                "infraConfigRef"
             ],
             "properties": {
                 "displayName": {
@@ -2149,6 +2150,9 @@
                     "type": "string"
                 },
                 "addressSpaceType": {
+                    "type": "string"
+                },
+                "infraConfigRef": {
                     "type": "string"
                 },
                 "resourceLimits": {

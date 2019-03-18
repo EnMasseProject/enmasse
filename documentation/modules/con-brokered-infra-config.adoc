@@ -6,8 +6,8 @@
 = Brokered infrastructure configuration
 
 `BrokeredInfraConfig` resources are used to configure infrastructure deployed by `brokered` address
-spaces. The brokered infrastructure configuration is referenced by address space plans using a `enmasse.io/defined-by`
-annotation. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans].
+spaces. The brokered infrastructure configuration is referenced by address space plans in their
+`spec.infraConfigRef` field. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans].
 
 [source,yaml,options="nowrap",subs="attributes"]
 ----

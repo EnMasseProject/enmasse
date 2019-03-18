@@ -7,10 +7,9 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
-import io.enmasse.admin.model.v1.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
-import io.enmasse.config.AnnotationKeys;
+import io.enmasse.admin.model.v1.*;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,9 +90,9 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
-        String definedBy = addressSpacePlan.getMetadata().getAnnotations().get(AnnotationKeys.DEFINED_BY);
-        if (!infraTemplateNames.contains(definedBy)) {
-            String error = "Error validating address space plan " + addressSpacePlan.getMetadata().getName() + ": missing infra config definition " + definedBy + ", found: " + infraTemplateNames;
+        String infraConfigRef = addressSpacePlan.getInfraConfigRef();
+        if (!infraTemplateNames.contains(infraConfigRef)) {
+            String error = "Error validating address space plan " + addressSpacePlan.getMetadata().getName() + ": missing infra config definition " + infraConfigRef + ", found: " + infraTemplateNames;
             log.warn(error);
             throw new SchemaValidationException(error);
         }

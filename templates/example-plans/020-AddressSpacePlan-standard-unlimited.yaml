@@ -4,11 +4,10 @@ metadata:
   name: standard-unlimited
   labels:
     app: enmasse
-  annotations:
-    enmasse.io/defined-by: default
 spec:
   displayName: Unlimited
   displayOrder: 0
+  infraConfigRef: default
   shortDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis.
   longDescription: Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows an unlimited number of routers and brokers, and is suitable for applications where you do not want to impose any restrictions.
   addressSpaceType: standard
