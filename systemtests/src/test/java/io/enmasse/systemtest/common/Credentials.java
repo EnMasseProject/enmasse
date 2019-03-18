@@ -22,7 +22,7 @@ public final class Credentials {
         return System.getenv().getOrDefault("SYSTEMTESTS_CREDENTIALS_PASSWORD", "pepik");
     }
 
-    public static UserCredentials userCredentials () {
+    public static UserCredentials userCredentials() {
         return new UserCredentials(user(), password());
     }
 }

@@ -3,7 +3,7 @@ def lib
 pipeline {
     agent {
         node {
-            label 'enmasse-jdk11'
+            label 'enmasse'
         }
     }
     parameters {
@@ -11,7 +11,7 @@ pipeline {
         string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
     }
     options {
-        timeout(time: 8, unit: 'HOURS')
+        timeout(time: 10, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {

@@ -5,13 +5,14 @@
 
 package io.enmasse.systemtest.standard.mqtt;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
 import io.enmasse.systemtest.mqtt.MqttMessageArrivedCallback;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ public class SessionTest extends TestBaseWithShared implements ITestBaseStandard
      */
     @Test
     public void previousPersistentSessionDiscarded() throws Exception {
-        Destination dest = Destination.topic(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address dest = AddressUtils.createTopicAddressObject(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
         setAddresses(dest);
 
         IMqttClient publisher = mqttClientFactory.build().clientId(PUBLISHER_ID).create();

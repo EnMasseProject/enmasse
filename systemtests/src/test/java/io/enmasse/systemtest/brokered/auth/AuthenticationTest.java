@@ -4,9 +4,14 @@
  */
 package io.enmasse.systemtest.brokered.auth;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -23,7 +28,7 @@ class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrok
     @Test
     void testStandardAuthenticationServiceRestartBrokered() throws Exception {
         log.info("testStandardAuthenticationServiceRestartBrokered");
-        AddressSpace addressSpace = new AddressSpace("keycloak-restart-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("keycloak-restart-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
 
         UserCredentials credentials = new UserCredentials("pavel", "novak");

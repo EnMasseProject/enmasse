@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
@@ -31,21 +32,21 @@ public class ArtemisManagement extends BrokerManagement {
     }
 
     @Override
-    public List<String> getQueueNames(AmqpClient queueClient, Destination replyQueue, String topic) throws Exception {
+    public List<String> getQueueNames(AmqpClient queueClient, Address replyQueue, String topic) throws Exception {
         Message requestMessage = Message.Factory.create();
         Map<String, Object> appProperties = new HashMap<>();
         appProperties.put(resourceProperty, "address." + topic);
         appProperties.put(operationProperty, "getQueueNames");
         requestMessage.setAddress(managementAddress);
         requestMessage.setApplicationProperties(new ApplicationProperties(appProperties));
-        requestMessage.setReplyTo(replyQueue.getAddress());
+        requestMessage.setReplyTo(replyQueue.getSpec().getAddress());
         requestMessage.setBody(new AmqpValue("[]"));
 
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
         assertThat(String.format("Sender failed, expected %d messages", 1), sent.get(30, TimeUnit.SECONDS), is(1));
         log.info("request sent");
 
-        Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
+        Future<List<Message>> received = queueClient.recvMessages(replyQueue.getSpec().getAddress(), 1);
         assertThat(String.format("Receiver failed, expected %d messages", 1),
                 received.get(30, TimeUnit.SECONDS).size(), is(1));
 
@@ -60,14 +61,14 @@ public class ArtemisManagement extends BrokerManagement {
     }
 
     @Override
-    public int getSubscriberCount(AmqpClient queueClient, Destination replyQueue, String queue) throws Exception {
+    public int getSubscriberCount(AmqpClient queueClient, Address replyQueue, String queue) throws Exception {
         Message requestMessage = Message.Factory.create();
         Map<String, Object> appProperties = new HashMap<>();
         appProperties.put(resourceProperty, "queue." + queue);
         appProperties.put(operationProperty, "getConsumerCount");
         requestMessage.setAddress(managementAddress);
         requestMessage.setApplicationProperties(new ApplicationProperties(appProperties));
-        requestMessage.setReplyTo(replyQueue.getAddress());
+        requestMessage.setReplyTo(replyQueue.getSpec().getAddress());
         requestMessage.setBody(new AmqpValue("[]"));
 
         Future<Integer> sent = queueClient.sendMessages(managementAddress, requestMessage);
@@ -75,7 +76,7 @@ public class ArtemisManagement extends BrokerManagement {
                 sent.get(30, TimeUnit.SECONDS), is(1));
         log.info("request sent");
 
-        Future<List<Message>> received = queueClient.recvMessages(replyQueue.getAddress(), 1);
+        Future<List<Message>> received = queueClient.recvMessages(replyQueue.getSpec().getAddress(), 1);
         assertThat(String.format("Receiver failed, expected %d messages", 1),
                 received.get(30, TimeUnit.SECONDS).size(), is(1));
 

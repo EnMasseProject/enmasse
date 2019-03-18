@@ -4,12 +4,16 @@
  */
 package io.enmasse.systemtest.brokered;
 
-import io.enmasse.systemtest.Destination;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.JmsProvider;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -50,7 +54,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     }
 
     private void doTopicWildcardTest(String plan) throws Exception {
-        Destination t0 = Destination.topic("topic", plan);
+        Address t0 = AddressUtils.createTopicAddressObject("topic", plan);
         setAddresses(t0);
 
         AmqpClient amqpClient = amqpClientFactory.createTopicClient();
@@ -59,18 +63,18 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
         Future<List<org.apache.qpid.proton.message.Message>> recvResults = amqpClient.recvMessages("topic/#", msgs.size() * 3);
 
-        amqpClient.sendMessages(t0.getAddress() + "/foo", msgs);
-        amqpClient.sendMessages(t0.getAddress() + "/bar", msgs);
-        amqpClient.sendMessages(t0.getAddress() + "/baz/foobar", msgs);
+        amqpClient.sendMessages(t0.getSpec().getAddress() + "/foo", msgs);
+        amqpClient.sendMessages(t0.getSpec().getAddress() + "/bar", msgs);
+        amqpClient.sendMessages(t0.getSpec().getAddress() + "/baz/foobar", msgs);
 
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 3));
 
         recvResults = amqpClient.recvMessages("topic/world/+", msgs.size() * 2);
 
-        amqpClient.sendMessages(t0.getAddress() + "/world/africa", msgs);
-        amqpClient.sendMessages(t0.getAddress() + "/world/europe", msgs);
-        amqpClient.sendMessages(t0.getAddress() + "/world/asia/maldives", msgs);
+        amqpClient.sendMessages(t0.getSpec().getAddress() + "/world/africa", msgs);
+        amqpClient.sendMessages(t0.getSpec().getAddress() + "/world/europe", msgs);
+        amqpClient.sendMessages(t0.getSpec().getAddress() + "/world/asia/maldives", msgs);
 
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
@@ -79,22 +83,22 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Destination t1 = Destination.topic("topic1", getDefaultPlan(AddressType.TOPIC));
-        Destination t2 = Destination.topic("topic2", getDefaultPlan(AddressType.TOPIC));
+        Address t1 = AddressUtils.createTopicAddressObject("topic1", getDefaultPlan(AddressType.TOPIC));
+        Address t2 = AddressUtils.createTopicAddressObject("topic2", getDefaultPlan(AddressType.TOPIC));
 
         runRestApiTest(sharedAddressSpace, t1, t2);
     }
 
     @Test
     void testMessageSubscription(JmsProvider jmsProvider) throws Exception {
-        Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getAddress());
+        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getSpec().getAddress());
 
         MessageConsumer subscriber1 = session.createConsumer(testTopic);
         MessageProducer messageProducer = session.createProducer(testTopic);
@@ -126,14 +130,14 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
-        Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getAddress());
+        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getSpec().getAddress());
 
         String sub1ID = "sub1DurSub";
         String sub2ID = "sub2DurSub";
@@ -188,14 +192,14 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
-        Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
-        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getAddress());
+        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getSpec().getAddress());
 
         String sub1ID = "sub1DurSubTrans";
         String sub2ID = "sub2DurSubTrans";
@@ -231,7 +235,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
-        Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         Context context1 = jmsProvider.createContextForShared(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials, addressTopic);
@@ -244,7 +248,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         Session session = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getAddress());
+        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getSpec().getAddress());
 
         String subID = "sharedConsumerDurable123";
 
@@ -280,7 +284,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
-        Destination addressTopic = Destination.topic("jmsTopic", getDefaultPlan(AddressType.TOPIC));
+        Address addressTopic = AddressUtils.createTopicAddressObject("jmsTopic", getDefaultPlan(AddressType.TOPIC));
         setAddresses(addressTopic);
 
         Context context1 = jmsProvider.createContextForShared(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials, addressTopic);
@@ -293,7 +297,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
         Session session = connection1.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Session session2 = connection2.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getAddress());
+        Topic testTopic = (Topic) jmsProvider.getDestination(addressTopic.getSpec().getAddress());
         String subID = "sharedConsumerNonDurable123";
         MessageConsumer subscriber1 = session.createSharedConsumer(testTopic, subID);
         MessageConsumer subscriber2 = session2.createSharedConsumer(testTopic, subID);

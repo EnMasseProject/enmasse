@@ -33,7 +33,7 @@ public class Environment {
     private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
     private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
     private final String enmasseVersion = System.getProperty("enmasse.version");
-    private final String kubernetesDomain = System.getenv().getOrDefault(domain, ".nip.io");
+    private final String kubernetesDomain = System.getenv().getOrDefault(domain, "nip.io");
 
     private Environment() {
         String debugFormat = "{}:{}";

@@ -4,10 +4,15 @@
  */
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.ability.ITestBaseWithoutMqtt;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -28,13 +33,13 @@ class WithoutMqttTest extends TestBase implements ITestBaseWithoutMqtt {
 
     @BeforeEach
     void setupSpace() throws Exception {
-        addressSpace = new AddressSpace("withoutmqtt", AddressSpaceType.STANDARD, getAddressSpacePlan(),
-                AuthService.STANDARD);
+        addressSpace = AddressSpaceUtils.createAddressSpaceObject("withoutmqtt", AddressSpaceType.STANDARD, getAddressSpacePlan(),
+                AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
         defaultCredentials.setUsername("test");
         defaultCredentials.setPassword("test");
         createUser(addressSpace, defaultCredentials);
-        setAddresses(addressSpace, Destination.anycast("a1"));
+        setAddresses(addressSpace, AddressUtils.createAnycastAddressObject("a1"));
     }
 
     @Test

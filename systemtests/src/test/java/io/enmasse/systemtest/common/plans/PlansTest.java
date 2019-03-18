@@ -4,16 +4,23 @@
  */
 package io.enmasse.systemtest.common.plans;
 
+import io.enmasse.address.model.*;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.admin.model.v1.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.enmasse.systemtest.resources.*;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.PlanUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.*;
@@ -26,7 +33,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.isolated;
-import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,58 +59,53 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {
-        InfraConfigDefinition infra = new InfraConfigDefinition("kornys", AddressSpaceType.STANDARD, Arrays.asList(
-                new BrokerInfraSpec(Arrays.asList(
-                        new InfraResource("memory", "750Mi"),
-                        new InfraResource("storage", "2Gi"))),
-                new AdminInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "1Gi"))),
-                new RouterInfraSpec(Collections.singletonList(
-                        new InfraResource("memory", "1Gi")), 300, 1)), environment.enmasseVersion());
+        StandardInfraConfig infra = PlanUtils.createStandardInfraConfigObject("kornys",
+                PlanUtils.createStandardBrokerResourceObject("750Mi", "2Gi"),
+                PlanUtils.createStandardAdminResourceObject("1Gi"),
+                PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1),
+                environment.enmasseVersion());
 
         plansProvider.createInfraConfig(infra);
 
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0.0));
-        List<AddressResource> addressResourcesTopic = Arrays.asList(
-                new AddressResource("broker", 1.0),
-                new AddressResource("router", 1.0));
-        AddressPlanDefinition weakQueuePlan = new AddressPlanDefinition("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
-        AddressPlanDefinition weakTopicPlan = new AddressPlanDefinition("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
+        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0.0));
+        List<ResourceRequest> addressResourcesTopic = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0));
+        AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
+        AddressPlan weakTopicPlan = PlanUtils.createAddressPlanObject("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
 
         plansProvider.createAddressPlan(weakQueuePlan);
         plansProvider.createAddressPlan(weakTopicPlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 9.0),
-                new AddressSpaceResource("router", 5.0),
-                new AddressSpaceResource("aggregate", 10.0));
-        List<AddressPlanDefinition> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
-        AddressSpacePlanDefinition weakSpacePlan = new AddressSpacePlanDefinition("weak-plan",
-                infra.getName(), AddressSpaceType.STANDARD, resources, addressPlans);
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 9.0),
+                new ResourceAllowance("router", 5.0),
+                new ResourceAllowance("aggregate", 10.0));
+        List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
+
+        AddressSpacePlan weakSpacePlan = PlanUtils.createAddressSpacePlanObject("weak-plan", infra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace weakAddressSpace = new AddressSpace("weak-address-space", AddressSpaceType.STANDARD,
-                weakSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace weakAddressSpace = AddressSpaceUtils.createAddressSpaceObject("weak-address-space", AddressSpaceType.STANDARD,
+                weakSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(weakAddressSpace);
 
         //deploy destinations
-        Destination weakQueueDest = Destination.queue("weak-queue", weakQueuePlan.getName());
-        Destination weakTopicDest = Destination.topic("weak-topic", weakTopicPlan.getName());
+        Address weakQueueDest = AddressUtils.createQueueAddressObject("weak-queue", weakQueuePlan.getMetadata().getName());
+        Address weakTopicDest = AddressUtils.createTopicAddressObject("weak-topic", weakTopicPlan.getMetadata().getName());
         setAddresses(weakAddressSpace, weakQueueDest, weakTopicDest);
 
         //get destinations
-        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getName()));
-        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getName()));
+        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getMetadata().getName()));
+        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getMetadata().getName()));
 
         String assertMessage = "Queue plan wasn't set properly";
         assertAll("Both destination should contain right addressPlan",
-                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                        weakQueuePlan.getName(), assertMessage),
-                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getPlan(),
-                        weakTopicPlan.getName(), assertMessage));
+                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
+                        weakQueuePlan.getMetadata().getName(), assertMessage),
+                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
+                        weakTopicPlan.getMetadata().getName(), assertMessage));
 
         //simple send/receive
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
@@ -122,22 +123,22 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testQuotaLimitsPooled() throws Exception {
         //define and create address plans
-        AddressPlanDefinition queuePlan = new AddressPlanDefinition("queue-pooled-test1", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.6), new AddressResource("router", 0.0)));
+        AddressPlan queuePlan = PlanUtils.createAddressPlanObject("queue-pooled-test1", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0.0)));
 
-        AddressPlanDefinition queuePlan2 = new AddressPlanDefinition("queue-pooled-test2", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.1), new AddressResource("router", 0.0)));
+        AddressPlan queuePlan2 = PlanUtils.createAddressPlanObject("queue-pooled-test2", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.0)));
 
-        AddressPlanDefinition queuePlan3 = new AddressPlanDefinition("queue-pooled-test3", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.049), new AddressResource("router", 0.0)));
+        AddressPlan queuePlan3 = PlanUtils.createAddressPlanObject("queue-pooled-test3", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 0.049), new ResourceRequest("router", 0.0)));
 
-        AddressPlanDefinition topicPlan = new AddressPlanDefinition("topic-pooled-test1", AddressType.TOPIC,
+        AddressPlan topicPlan = PlanUtils.createAddressPlanObject("topic-pooled-test1", AddressType.TOPIC,
                 Arrays.asList(
-                        new AddressResource("broker", 0.4),
-                        new AddressResource("router", 0.2)));
+                        new ResourceRequest("broker", 0.4),
+                        new ResourceRequest("router", 0.2)));
 
-        AddressPlanDefinition anycastPlan = new AddressPlanDefinition("anycast-test1", AddressType.ANYCAST,
-                Collections.singletonList(new AddressResource("router", 0.3)));
+        AddressPlan anycastPlan = PlanUtils.createAddressPlanObject("anycast-test1", AddressType.ANYCAST,
+                Collections.singletonList(new ResourceRequest("router", 0.3)));
 
         plansProvider.createAddressPlan(queuePlan);
         plansProvider.createAddressPlan(queuePlan2);
@@ -146,18 +147,18 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         plansProvider.createAddressPlan(anycastPlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 2.0),
-                new AddressSpaceResource("router", 1.0),
-                new AddressSpaceResource("aggregate", 2.0));
-        List<AddressPlanDefinition> addressPlans = Arrays.asList(queuePlan, queuePlan2, queuePlan3, topicPlan, anycastPlan);
-        AddressSpacePlanDefinition addressSpacePlan = new AddressSpacePlanDefinition("quota-limits-pooled-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 2.0),
+                new ResourceAllowance("router", 1.0),
+                new ResourceAllowance("aggregate", 2.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, queuePlan3, topicPlan, anycastPlan);
+        AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("quota-limits-pooled-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("test-pooled-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
+                addressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
@@ -165,78 +166,78 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         //check router limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.anycast("a1", anycastPlan.getName()),
-                        Destination.anycast("a2", anycastPlan.getName()),
-                        Destination.anycast("a3", anycastPlan.getName())
+                        AddressUtils.createAnycastAddressObject("a1", anycastPlan.getMetadata().getName()),
+                        AddressUtils.createAnycastAddressObject("a2", anycastPlan.getMetadata().getName()),
+                        AddressUtils.createAnycastAddressObject("a3", anycastPlan.getMetadata().getName())
                 ),
                 Collections.singletonList(
-                        Destination.anycast("a4", anycastPlan.getName())
+                        AddressUtils.createAnycastAddressObject("a4", anycastPlan.getMetadata().getName())
                 ), user);
 
         //check broker limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.queue("q1", queuePlan.getName()),
-                        Destination.queue("q2", queuePlan.getName())
+                        AddressUtils.createQueueAddressObject("q1", queuePlan.getMetadata().getName()),
+                        AddressUtils.createQueueAddressObject("q2", queuePlan.getMetadata().getName())
                 ),
                 Collections.singletonList(
-                        Destination.queue("q3", queuePlan.getName())
+                        AddressUtils.createQueueAddressObject("q3", queuePlan.getMetadata().getName())
                 ), user);
 
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.queue("q1", queuePlan.getName()), // 0.6
-                        Destination.queue("q2", queuePlan.getName()), // 0.6
-                        Destination.queue("q3", queuePlan2.getName()), // 0.1
-                        Destination.queue("q4", queuePlan2.getName()), // 0.1
-                        Destination.queue("q5", queuePlan2.getName()), // 0.1
-                        Destination.queue("q6", queuePlan2.getName()), // 0.1
-                        Destination.queue("q7", queuePlan3.getName()), // 0.049
-                        Destination.queue("q8", queuePlan3.getName()), // 0.049
-                        Destination.queue("q9", queuePlan3.getName()), // 0.049
-                        Destination.queue("q10", queuePlan3.getName()), // 0.049
-                        Destination.queue("q11", queuePlan3.getName()), // 0.049
-                        Destination.queue("q12", queuePlan3.getName()) // 0.049
+                        AddressUtils.createQueueAddressObject("q1", queuePlan.getMetadata().getName()), // 0.6
+                        AddressUtils.createQueueAddressObject("q2", queuePlan.getMetadata().getName()), // 0.6
+                        AddressUtils.createQueueAddressObject("q3", queuePlan2.getMetadata().getName()), // 0.1
+                        AddressUtils.createQueueAddressObject("q4", queuePlan2.getMetadata().getName()), // 0.1
+                        AddressUtils.createQueueAddressObject("q5", queuePlan2.getMetadata().getName()), // 0.1
+                        AddressUtils.createQueueAddressObject("q6", queuePlan2.getMetadata().getName()), // 0.1
+                        AddressUtils.createQueueAddressObject("q7", queuePlan3.getMetadata().getName()), // 0.049
+                        AddressUtils.createQueueAddressObject("q8", queuePlan3.getMetadata().getName()), // 0.049
+                        AddressUtils.createQueueAddressObject("q9", queuePlan3.getMetadata().getName()), // 0.049
+                        AddressUtils.createQueueAddressObject("q10", queuePlan3.getMetadata().getName()), // 0.049
+                        AddressUtils.createQueueAddressObject("q11", queuePlan3.getMetadata().getName()), // 0.049
+                        AddressUtils.createQueueAddressObject("q12", queuePlan3.getMetadata().getName()) // 0.049
                 ), Collections.emptyList(), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.topic("t1", topicPlan.getName()),
-                        Destination.topic("t2", topicPlan.getName())
+                        AddressUtils.createTopicAddressObject("t1", topicPlan.getMetadata().getName()),
+                        AddressUtils.createTopicAddressObject("t2", topicPlan.getMetadata().getName())
                 ),
                 Collections.singletonList(
-                        Destination.topic("t3", topicPlan.getName())
+                        AddressUtils.createTopicAddressObject("t3", topicPlan.getMetadata().getName())
                 ), user);
     }
 
     @Test
     void testQuotaLimitsSharded() throws Exception {
         //define and create address plans
-        AddressPlanDefinition queuePlan = new AddressPlanDefinition("queue-sharded-test1", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0.0)));
+        AddressPlan queuePlan = PlanUtils.createAddressPlanObject("queue-sharded-test1", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0.0)));
 
-        AddressPlanDefinition topicPlan = new AddressPlanDefinition("topic-sharded-test2", AddressType.TOPIC,
+        AddressPlan topicPlan = PlanUtils.createAddressPlanObject("topic-sharded-test2", AddressType.TOPIC,
                 Arrays.asList(
-                        new AddressResource("broker", 1.0),
-                        new AddressResource("router", 0.01)));
+                        new ResourceRequest("broker", 1.0),
+                        new ResourceRequest("router", 0.01)));
 
         plansProvider.createAddressPlan(queuePlan);
         plansProvider.createAddressPlan(topicPlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 2.0),
-                new AddressSpaceResource("router", 2.0),
-                new AddressSpaceResource("aggregate", 3.0));
-        List<AddressPlanDefinition> addressPlans = Arrays.asList(queuePlan, topicPlan);
-        AddressSpacePlanDefinition addressSpacePlan = new AddressSpacePlanDefinition("quota-limits-sharded-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 2.0),
+                new ResourceAllowance("router", 2.0),
+                new ResourceAllowance("aggregate", 3.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan);
+        AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("quota-limits-sharded-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
+                addressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
@@ -244,65 +245,65 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         //check broker limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.queue("q1", queuePlan.getName()),
-                        Destination.queue("q2", queuePlan.getName())
+                        AddressUtils.createQueueAddressObject("q1", queuePlan.getMetadata().getName()),
+                        AddressUtils.createQueueAddressObject("q2", queuePlan.getMetadata().getName())
                 ),
                 Collections.singletonList(
-                        Destination.queue("q3", queuePlan.getName())
+                        AddressUtils.createQueueAddressObject("q3", queuePlan.getMetadata().getName())
                 ), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        Destination.topic("t1", topicPlan.getName()),
-                        Destination.topic("t2", topicPlan.getName())
+                        AddressUtils.createTopicAddressObject("t1", topicPlan.getMetadata().getName()),
+                        AddressUtils.createTopicAddressObject("t2", topicPlan.getMetadata().getName())
                 ),
                 Collections.singletonList(
-                        Destination.topic("t3", topicPlan.getName())
+                        AddressUtils.createTopicAddressObject("t3", topicPlan.getMetadata().getName())
                 ), user);
     }
 
     @Test
     void testScalePooledBrokers() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueue = Arrays.asList(new AddressResource("broker", 0.99), new AddressResource("router", 0.0));
-        AddressPlanDefinition xlQueuePlan = new AddressPlanDefinition("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
+        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
+        AddressPlan xlQueuePlan = PlanUtils.createAddressPlanObject("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
         plansProvider.createAddressPlan(xlQueuePlan);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 10.0),
-                new AddressSpaceResource("router", 2.0),
-                new AddressSpaceResource("aggregate", 12.0));
-        List<AddressPlanDefinition> addressPlans = Collections.singletonList(xlQueuePlan);
-        AddressSpacePlanDefinition manyAddressesPlan = new AddressSpacePlanDefinition("many-brokers-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 10.0),
+                new ResourceAllowance("router", 2.0),
+                new ResourceAllowance("aggregate", 12.0));
+        List<AddressPlan> addressPlans = Collections.singletonList(xlQueuePlan);
+        AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
-        AddressSpace manyAddressesSpace = new AddressSpace("many-addresses-standard", AddressSpaceType.STANDARD,
-                manyAddressesPlan.getName(), AuthService.STANDARD);
+        AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
+                manyAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
         createUser(manyAddressesSpace, cred);
 
-        ArrayList<Destination> dest = new ArrayList<>();
+        ArrayList<Address> dest = new ArrayList<>();
         int destCount = 4;
         int toDeleteCount = 2;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.queue("xl-queue-" + i, xlQueuePlan.getName()));
+            dest.add(AddressUtils.createQueueAddressObject("xl-queue-" + i, xlQueuePlan.getMetadata().getName()));
         }
 
-        setAddresses(manyAddressesSpace, dest.toArray(new Destination[0]));
-        for (Destination destination : dest) {
+        setAddresses(manyAddressesSpace, dest.toArray(new Address[0]));
+        for (Address destination : dest) {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
         assertCanConnect(manyAddressesSpace, cred, dest);
 
-        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Destination[0]));
-        for (Destination destination : dest.subList(toDeleteCount, destCount)) {
+        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Address[0]));
+        for (Address destination : dest.subList(toDeleteCount, destCount)) {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
@@ -310,96 +311,37 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     }
 
     @Test
-    @Tag(nonPR)
-    @Disabled("test disabled as per-address limit enforcement has been removed")
-    void testGlobalSizeLimitations() throws Exception {
-        UserCredentials user = new UserCredentials("test", "test");
-        String messageContent = String.join("", Collections.nCopies(1024, "F"));
-
-        //redefine global max size for queue
-        ResourceDefinition limitedResource = new ResourceDefinition(
-                "broker",
-                "queue-persisted",
-                Collections.singletonList(
-                        new ResourceParameter("GLOBAL_MAX_SIZE", "1Mb")
-                ));
-        //plansProvider.replaceResourceDefinitionConfig(limitedResource);
-
-        //define address plans
-        AddressPlanDefinition queuePlan = new AddressPlanDefinition("limited-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.1), new AddressResource("router", 0.0))); //should reserve 100Kb
-
-        plansProvider.createAddressPlan(queuePlan);
-
-        //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 1.0),
-                new AddressSpaceResource("router", 1.0),
-                new AddressSpaceResource("aggregate", 2.0));
-
-        AddressSpacePlanDefinition addressSpacePlan = new AddressSpacePlanDefinition(
-                "limited-space",
-                "default",
-                AddressSpaceType.STANDARD,
-                resources,
-                Collections.singletonList(queuePlan));
-        plansProvider.createAddressSpacePlan(addressSpacePlan);
-
-        //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("global-size-limited-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getName(), AuthService.STANDARD);
-        createAddressSpace(addressSpace);
-        createUser(addressSpace, user);
-
-        Destination queue = Destination.queue("test-queue", queuePlan.getName());
-        Destination queue2 = Destination.queue("test-queue2", queuePlan.getName());
-        Destination queue3 = Destination.queue("test-queue3", queuePlan.getName());
-        setAddresses(addressSpace, queue, queue2, queue3);
-
-        assertAll(
-                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue.getAddress(), messageContent, 100, false),
-                        "Client does not fail"),
-                () -> assertFalse(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue2.getAddress(), messageContent, 100, false),
-                        "Client does not fail"),
-                () -> assertTrue(sendMessage(addressSpace, new RheaClientSender(), user,
-                        queue3.getAddress(), messageContent, 50, false),
-                        "Client fails"));
-    }
-
-    @Test
     void testMessagePersistenceAfterAutoScale() throws Exception {
         //define and create address plans
-        List<AddressResource> addressResourcesQueueAlpha = Arrays.asList(new AddressResource("broker", 0.3), new AddressResource("router", 0));
-        List<AddressResource> addressResourcesQueueBeta = Arrays.asList(new AddressResource("broker", 0.6), new AddressResource("router", 0));
+        List<ResourceRequest> addressResourcesQueueAlpha = Arrays.asList(new ResourceRequest("broker", 0.3), new ResourceRequest("router", 0));
+        List<ResourceRequest> addressResourcesQueueBeta = Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0));
 
-        AddressPlanDefinition queuePlanAlpha = new AddressPlanDefinition("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
+        AddressPlan queuePlanAlpha = PlanUtils.createAddressPlanObject("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
         plansProvider.createAddressPlan(queuePlanAlpha);
-        AddressPlanDefinition queuePlanBeta = new AddressPlanDefinition("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
+        AddressPlan queuePlanBeta = PlanUtils.createAddressPlanObject("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
         plansProvider.createAddressPlan(queuePlanBeta);
 
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 3.0),
-                new AddressSpaceResource("router", 5.0),
-                new AddressSpaceResource("aggregate", 5.0));
-        List<AddressPlanDefinition> addressPlans = Arrays.asList(queuePlanAlpha, queuePlanBeta);
-        AddressSpacePlanDefinition scaleSpacePlan = new AddressSpacePlanDefinition("scale-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 3.0),
+                new ResourceAllowance("router", 5.0),
+                new ResourceAllowance("aggregate", 5.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlanAlpha, queuePlanBeta);
+        AddressSpacePlan scaleSpacePlan = PlanUtils.createAddressSpacePlanObject("scale-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace messagePersistAddressSpace = new AddressSpace("persist-messages-space-standard", AddressSpaceType.STANDARD,
-                scaleSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
+                scaleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(messagePersistAddressSpace);
 
         //deploy destinations
-        Destination queue1 = Destination.queue("queue1-beta", queuePlanBeta.getName());
-        Destination queue2 = Destination.queue("queue2-beta", queuePlanBeta.getName());
-        Destination queue3 = Destination.queue("queue3-alpha", queuePlanAlpha.getName());
-        Destination queue4 = Destination.queue("queue4-alpha", queuePlanAlpha.getName());
+        Address queue1 = AddressUtils.createQueueAddressObject("queue1-beta", queuePlanBeta.getMetadata().getName());
+        Address queue2 = AddressUtils.createQueueAddressObject("queue2-beta", queuePlanBeta.getMetadata().getName());
+        Address queue3 = AddressUtils.createQueueAddressObject("queue3-alpha", queuePlanAlpha.getMetadata().getName());
+        Address queue4 = AddressUtils.createQueueAddressObject("queue4-alpha", queuePlanAlpha.getMetadata().getName());
 
         setAddresses(messagePersistAddressSpace, queue1, queue2);
         appendAddresses(messagePersistAddressSpace, queue3, queue4);
@@ -412,10 +354,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         queueClient.getConnectOptions().setCredentials(user);
 
         List<String> msgs = TestUtils.generateMessages(1000);
-        Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getAddress(), msgs);
-        Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getAddress(), msgs);
-        Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getAddress(), msgs);
-        Future<Integer> sendResult4 = queueClient.sendMessages(queue4.getAddress(), msgs);
+        Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getSpec().getAddress(), msgs);
+        Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getSpec().getAddress(), msgs);
+        Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getSpec().getAddress(), msgs);
+        Future<Integer> sendResult4 = queueClient.sendMessages(queue4.getSpec().getAddress(), msgs);
         assertAll("All senders should send all messages",
                 () -> assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size())),
                 () -> assertThat("Incorrect count of messages sent", sendResult2.get(1, TimeUnit.MINUTES), is(msgs.size())),
@@ -433,8 +375,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 addressNames.size(), is(2));
 
         //receive messages from remaining addresses
-        Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getAddress(), msgs.size());
-        Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getAddress(), msgs.size());
+        Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getSpec().getAddress(), msgs.size());
+        Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getSpec().getAddress(), msgs.size());
         assertThat("Incorrect count of messages received", recvResult3.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
@@ -442,32 +384,32 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     @Disabled("test disabled due to issue: #1136")
     void testMessagePersistenceAfterChangePlan() throws Exception {
-        List<AddressResource> addressResourcesQueueDistributed = Arrays.asList(new AddressResource("broker", 2.0), new AddressResource("router", 0));
-        List<AddressResource> addressResourcesSharded = Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0));
+        List<ResourceRequest> addressResourcesQueueDistributed = Arrays.asList(new ResourceRequest("broker", 2.0), new ResourceRequest("router", 0));
+        List<ResourceRequest> addressResourcesSharded = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0));
 
-        AddressPlanDefinition queuePlanDistributed = new AddressPlanDefinition("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
+        AddressPlan queuePlanDistributed = PlanUtils.createAddressPlanObject("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
         plansProvider.createAddressPlan(queuePlanDistributed);
 
-        AddressPlanDefinition queuePlanSharded = new AddressPlanDefinition("sharded-standard-queue", AddressType.QUEUE, addressResourcesSharded);
+        AddressPlan queuePlanSharded = PlanUtils.createAddressPlanObject("sharded-standard-queue", AddressType.QUEUE, addressResourcesSharded);
         plansProvider.createAddressPlan(queuePlanSharded);
 
         //define and create address space plan
-        List<AddressSpaceResource> resources = Arrays.asList(
-                new AddressSpaceResource("broker", 5.0),
-                new AddressSpaceResource("router", 5.0),
-                new AddressSpaceResource("aggregate", 5.0));
-        List<AddressPlanDefinition> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
-        AddressSpacePlanDefinition scaleSpacePlan = new AddressSpacePlanDefinition("scale-plan",
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 5.0),
+                new ResourceAllowance("router", 5.0),
+                new ResourceAllowance("aggregate", 5.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
+        AddressSpacePlan scaleSpacePlan = PlanUtils.createAddressSpacePlanObject("scale-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace messagePersistAddressSpace = new AddressSpace("persist-messages-space-standard", AddressSpaceType.STANDARD,
-                scaleSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
+                scaleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(messagePersistAddressSpace);
 
         //deploy destinations
-        Destination queue = Destination.queue("distributed-queue", queuePlanDistributed.getName());
+        Address queue = AddressUtils.createQueueAddressObject("distributed-queue", queuePlanDistributed.getMetadata().getName());
         setAddresses(messagePersistAddressSpace, queue);
 
         //pod should have 2 replicas
@@ -481,7 +423,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         queueClient.getConnectOptions().setCredentials(user);
 
         List<String> msgs = TestUtils.generateMessages(100_000);
-        Future<Integer> sendResult1 = queueClient.sendMessages(queue.getAddress(), msgs);
+        Future<Integer> sendResult1 = queueClient.sendMessages(queue.getSpec().getAddress(), msgs);
         assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         //replace original plan in address by another
@@ -489,8 +431,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         assertEquals(getAddressesObjects(
                 messagePersistAddressSpace,
-                Optional.of(queue.getName())).get(10, TimeUnit.SECONDS).get(0).getPlan(),
-                queuePlanSharded.getName(),
+                Optional.of(queue.getMetadata().getName())).get(10, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
+                queuePlanSharded.getMetadata().getName(),
                 "New plan wasn't set correctly");
 
         //wait until address will be scaled down to 1 pod
@@ -501,31 +443,31 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
 
         //receive messages
-        Future<List<Message>> recvResult = queueClient.recvMessages(queue.getAddress(), msgs.size());
+        Future<List<Message>> recvResult = queueClient.recvMessages(queue.getSpec().getAddress(), msgs.size());
         assertThat("Incorrect count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     @Test
     void testReplaceAddressSpacePlanStandard() throws Exception {
         //define and create address plans
-        AddressPlanDefinition beforeQueuePlan = new AddressPlanDefinition("before-small-sharded-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0.0)));
+        AddressPlan beforeQueuePlan = PlanUtils.createAddressPlanObject("before-small-sharded-queue", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0.0)));
 
-        AddressPlanDefinition beforeTopicPlan = new AddressPlanDefinition("before-small-sharded-topic", AddressType.TOPIC,
+        AddressPlan beforeTopicPlan = PlanUtils.createAddressPlanObject("before-small-sharded-topic", AddressType.TOPIC,
                 Arrays.asList(
-                        new AddressResource("broker", 1.0),
-                        new AddressResource("router", 0.01)));
+                        new ResourceRequest("broker", 1.0),
+                        new ResourceRequest("router", 0.01)));
 
-        AddressPlanDefinition afterQueuePlan = new AddressPlanDefinition("after-large-sharded-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 1.5), new AddressResource("router", 0.0)));
+        AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("after-large-sharded-queue", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.5), new ResourceRequest("router", 0.0)));
 
-        AddressPlanDefinition afterTopicPlan = new AddressPlanDefinition("after-large-sharded-topic", AddressType.TOPIC,
+        AddressPlan afterTopicPlan = PlanUtils.createAddressPlanObject("after-large-sharded-topic", AddressType.TOPIC,
                 Arrays.asList(
-                        new AddressResource("broker", 1.5),
-                        new AddressResource("router", 0.01)));
+                        new ResourceRequest("broker", 1.5),
+                        new ResourceRequest("router", 0.01)));
 
-        AddressPlanDefinition pooledQueuePlan = new AddressPlanDefinition("after-pooled-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.44), new AddressResource("router", 0.0)));
+        AddressPlan pooledQueuePlan = PlanUtils.createAddressPlanObject("after-pooled-queue", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 0.44), new ResourceRequest("router", 0.0)));
 
         plansProvider.createAddressPlan(beforeQueuePlan);
         plansProvider.createAddressPlan(beforeTopicPlan);
@@ -535,28 +477,28 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         //define and create address space plans
 
-        AddressSpacePlanDefinition beforeAddressSpacePlan = new AddressSpacePlanDefinition("before-update-standard-plan",
+        AddressSpacePlan beforeAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("before-update-standard-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 5.0),
-                        new AddressSpaceResource("router", 5.0),
-                        new AddressSpaceResource("aggregate", 10.0)),
+                        new ResourceAllowance("broker", 5.0),
+                        new ResourceAllowance("router", 5.0),
+                        new ResourceAllowance("aggregate", 10.0)),
                 Arrays.asList(beforeQueuePlan, beforeTopicPlan));
 
-        AddressSpacePlanDefinition afterAddressSpacePlan = new AddressSpacePlanDefinition("after-update-standard-plan",
+        AddressSpacePlan afterAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-standard-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 5.0),
-                        new AddressSpaceResource("router", 5.0),
-                        new AddressSpaceResource("aggregate", 10.0)),
+                        new ResourceAllowance("broker", 5.0),
+                        new ResourceAllowance("router", 5.0),
+                        new ResourceAllowance("aggregate", 10.0)),
                 Arrays.asList(afterQueuePlan, afterTopicPlan));
 
-        AddressSpacePlanDefinition pooledAddressSpacePlan = new AddressSpacePlanDefinition("after-update-standard-pooled-plan",
+        AddressSpacePlan pooledAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-standard-pooled-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 10.0),
-                        new AddressSpaceResource("router", 10.0),
-                        new AddressSpaceResource("aggregate", 10.0)),
+                        new ResourceAllowance("broker", 10.0),
+                        new ResourceAllowance("router", 10.0),
+                        new ResourceAllowance("aggregate", 10.0)),
                 Collections.singletonList(pooledQueuePlan));
 
 
@@ -565,34 +507,34 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         plansProvider.createAddressSpacePlan(pooledAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.STANDARD,
-                beforeAddressSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
+                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
-        Destination queue = Destination.queue("test-queue", beforeQueuePlan.getName());
-        Destination topic = Destination.topic("test-topic", beforeTopicPlan.getName());
+        Address queue = AddressUtils.createQueueAddressObject("test-queue", beforeQueuePlan.getMetadata().getName());
+        Address topic = AddressUtils.createTopicAddressObject("test-topic", beforeTopicPlan.getMetadata().getName());
 
         setAddresses(addressSpace, queue, topic);
 
         sendDurableMessages(addressSpace, queue, user, 16);
 
-        addressSpace.setPlan(afterAddressSpacePlan.getName());
+        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace);
 
         receiveDurableMessages(addressSpace, queue, user, 16);
 
-        Destination afterQueue = Destination.queue("test-queue-2", afterQueuePlan.getName());
+        Address afterQueue = AddressUtils.createQueueAddressObject("test-queue-2", afterQueuePlan.getMetadata().getName());
         appendAddresses(addressSpace, afterQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic));
 
-        addressSpace.setPlan(pooledAddressSpacePlan.getName());
+        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace);
 
-        Destination pooledQueue = Destination.queue("test-queue-3", pooledQueuePlan.getName());
+        Address pooledQueue = AddressUtils.createQueueAddressObject("test-queue-3", pooledQueuePlan.getMetadata().getName());
         appendAddresses(addressSpace, pooledQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(queue, topic, afterQueue, pooledQueue));
@@ -601,50 +543,50 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testReplaceAddressSpacePlanBrokered() throws Exception {
         //define and create address plans
-        AddressPlanDefinition beforeQueuePlan = new AddressPlanDefinition("small-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.4)));
+        AddressPlan beforeQueuePlan = PlanUtils.createAddressPlanObject("small-queue", AddressType.QUEUE,
+                Collections.singletonList(new ResourceRequest("broker", 0.4)));
 
-        AddressPlanDefinition afterQueuePlan = new AddressPlanDefinition("bigger-queue", AddressType.QUEUE,
-                Collections.singletonList(new AddressResource("broker", 0.7)));
+        AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
+                Collections.singletonList(new ResourceRequest("broker", 0.7)));
 
         plansProvider.createAddressPlan(beforeQueuePlan);
         plansProvider.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
-        AddressSpacePlanDefinition beforeAddressSpacePlan = new AddressSpacePlanDefinition("before-update-brokered-plan",
+        AddressSpacePlan beforeAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("before-update-brokered-plan",
                 "default", AddressSpaceType.BROKERED,
-                Collections.singletonList(new AddressSpaceResource("broker", 5.0)),
+                Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(beforeQueuePlan));
 
-        AddressSpacePlanDefinition afterAddressSpacePlan = new AddressSpacePlanDefinition("after-update-standard-plan",
+        AddressSpacePlan afterAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-standard-plan",
                 "default", AddressSpaceType.BROKERED,
-                Collections.singletonList(new AddressSpaceResource("broker", 5.0)),
+                Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(afterQueuePlan));
 
         plansProvider.createAddressSpacePlan(beforeAddressSpacePlan);
         plansProvider.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.BROKERED,
-                beforeAddressSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.BROKERED,
+                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
-        Destination queue = Destination.queue("test-queue", beforeQueuePlan.getName());
+        Address queue = AddressUtils.createQueueAddressObject("test-queue", beforeQueuePlan.getMetadata().getName());
 
         setAddresses(addressSpace, queue);
 
         sendDurableMessages(addressSpace, queue, user, 16);
 
-        addressSpace.setPlan(afterAddressSpacePlan.getName());
+        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace);
 
         receiveDurableMessages(addressSpace, queue, user, 16);
 
-        Destination afterQueue = Destination.queue("test-queue-2", afterQueuePlan.getName());
+        Address afterQueue = AddressUtils.createQueueAddressObject("test-queue-2", afterQueuePlan.getMetadata().getName());
         appendAddresses(addressSpace, afterQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue));
@@ -653,31 +595,31 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testCannotReplaceAddressSpacePlanStandard() throws Exception {
         //define and create address plans
-        AddressPlanDefinition afterQueuePlan = new AddressPlanDefinition("after-small-sharded-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 1.0), new AddressResource("router", 0)));
+        AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("after-small-sharded-queue", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0)));
 
-        AddressPlanDefinition beforeQueuePlan = new AddressPlanDefinition("before-large-sharded-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 2.0), new AddressResource("router", 0)));
+        AddressPlan beforeQueuePlan = PlanUtils.createAddressPlanObject("before-large-sharded-queue", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 2.0), new ResourceRequest("router", 0)));
 
         plansProvider.createAddressPlan(beforeQueuePlan);
         plansProvider.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
-        AddressSpacePlanDefinition beforeAddressSpacePlan = new AddressSpacePlanDefinition("before-update-standard-plan",
+        AddressSpacePlan beforeAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("before-update-standard-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 5.0),
-                        new AddressSpaceResource("router", 2.0),
-                        new AddressSpaceResource("aggregate", 7.0)),
+                        new ResourceAllowance("broker", 5.0),
+                        new ResourceAllowance("router", 2.0),
+                        new ResourceAllowance("aggregate", 7.0)),
                 Collections.singletonList(beforeQueuePlan));
 
-        AddressSpacePlanDefinition afterAddressSpacePlan = new AddressSpacePlanDefinition("after-update-standard-plan",
+        AddressSpacePlan afterAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-standard-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 2.0),
-                        new AddressSpaceResource("router", 2.0),
-                        new AddressSpaceResource("aggregate", 4.0)),
+                        new ResourceAllowance("broker", 2.0),
+                        new ResourceAllowance("router", 2.0),
+                        new ResourceAllowance("aggregate", 4.0)),
                 Collections.singletonList(afterQueuePlan));
 
 
@@ -685,77 +627,77 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         plansProvider.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = new AddressSpace("test-sharded-space", AddressSpaceType.STANDARD,
-                beforeAddressSpacePlan.getName(), AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
+                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
 
-        List<Destination> queues = Arrays.asList(
-                Destination.queue("test-queue-1", beforeQueuePlan.getName()),
-                Destination.queue("test-queue-2", beforeQueuePlan.getName())
+        List<Address> queues = Arrays.asList(
+                AddressUtils.createQueueAddressObject("test-queue-1", beforeQueuePlan.getMetadata().getName()),
+                AddressUtils.createQueueAddressObject("test-queue-2", beforeQueuePlan.getMetadata().getName())
         );
 
 
-        setAddresses(addressSpace, queues.toArray(new Destination[0]));
+        setAddresses(addressSpace, queues.toArray(new Address[0]));
         assertCanConnect(addressSpace, user, queues);
 
-        addressSpace.setPlan(afterAddressSpacePlan.getName());
+        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace, false);
 
-        JsonObject data = addressApiClient.getAddressSpace(addressSpace.getName());
-        assertEquals(beforeAddressSpacePlan.getName(),
+        JsonObject data = addressApiClient.getAddressSpace(addressSpace.getMetadata().getName());
+        assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
                 data.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan"));
         assertEquals(String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
-                afterQueuePlan.getName(), environment.namespace(), addressSpace.getName()),
+                afterQueuePlan.getMetadata().getName(), environment.namespace(), addressSpace.getMetadata().getName()),
                 data.getJsonObject("status").getJsonArray("messages").getString(0));
     }
 
     @Test
     void testSwitchQueuePlan() throws Exception {
-        AddressPlanDefinition beforeQueuePlan = new AddressPlanDefinition("small-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.2), new AddressResource("router", 0.0)));
+        AddressPlan beforeQueuePlan = PlanUtils.createAddressPlanObject("small-queue", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 0.2), new ResourceRequest("router", 0.0)));
 
-        AddressPlanDefinition afterQueuePlan = new AddressPlanDefinition("bigger-queue", AddressType.QUEUE,
-                Arrays.asList(new AddressResource("broker", 0.8), new AddressResource("router", 0.0)));
+        AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 0.8), new ResourceRequest("router", 0.0)));
 
         plansProvider.createAddressPlan(beforeQueuePlan);
         plansProvider.createAddressPlan(afterQueuePlan);
 
-        AddressSpacePlanDefinition addressPlan = new AddressSpacePlanDefinition("address-switch-address-plan",
+        AddressSpacePlan addressPlan = PlanUtils.createAddressSpacePlanObject("address-switch-address-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
                 Arrays.asList(
-                        new AddressSpaceResource("broker", 5.0),
-                        new AddressSpaceResource("router", 5.0),
-                        new AddressSpaceResource("aggregate", 10.0)),
+                        new ResourceAllowance("broker", 5.0),
+                        new ResourceAllowance("router", 5.0),
+                        new ResourceAllowance("aggregate", 10.0)),
                 Arrays.asList(beforeQueuePlan, afterQueuePlan));
 
         plansProvider.createAddressSpacePlan(addressPlan);
 
-        AddressSpace addressSpace = new AddressSpace("test-pooled-space", AddressSpaceType.STANDARD,
-                addressPlan.getName(), AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
+                addressPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
         createAddressSpace(addressSpace);
         UserCredentials cred = new UserCredentials("test-user", "test-password");
         createUser(addressSpace, cred);
 
-        List<Destination> queues = IntStream.range(0, 8).boxed().map(i ->
-                Destination.queue("queue-" + i, beforeQueuePlan.getName()))
+        List<Address> queues = IntStream.range(0, 8).boxed().map(i ->
+                AddressUtils.createQueueAddressObject("queue-" + i, beforeQueuePlan.getMetadata().getName()))
                 .collect(Collectors.toList());
-        setAddresses(addressSpace, queues.toArray(new Destination[0]));
+        setAddresses(addressSpace, queues.toArray(new Address[0]));
 
         assertThat("Failed there are no 2 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(2));
 
-        for (Destination queue : queues) {
+        for (Address queue : queues) {
             sendDurableMessages(addressSpace, queue, cred, 400);
         }
 
-        Destination queueAfter = Destination.queue("queue-1", afterQueuePlan.getName());
+        Address queueAfter = AddressUtils.createQueueAddressObject("queue-1", afterQueuePlan.getMetadata().getName());
         replaceAddress(addressSpace, queueAfter);
 
         assertThat("Failed there are no 3 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(3));
 
-        for (Destination queue : queues) {
+        for (Address queue : queues) {
             receiveDurableMessages(addressSpace, queue, cred, 400);
         }
     }
@@ -764,24 +706,24 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     // Help methods
     //------------------------------------------------------------------------------------------------
 
-    private void checkLimits(AddressSpace addressSpace, List<Destination> allowedDest, List<Destination> notAllowedDest, UserCredentials credentials)
+    private void checkLimits(AddressSpace addressSpace, List<Address> allowedDest, List<Address> notAllowedDest, UserCredentials credentials)
             throws Exception {
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
-                Arrays.toString(allowedDest.stream().map(Destination::getName).toArray(String[]::new)),
-                Arrays.toString(notAllowedDest.stream().map(Destination::getName).toArray(String[]::new)));
+                Arrays.toString(allowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)),
+                Arrays.toString(notAllowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)));
 
-        setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Destination[0]));
+        setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Address[0]));
         List<Future<List<Address>>> getAddresses = new ArrayList<>();
-        for (Destination dest : allowedDest) {
-            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getName())));
+        for (Address dest : allowedDest) {
+            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
         }
 
         for (Future<List<Address>> getAddress : getAddresses) {
             Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
-            log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
-            String assertMessage = String.format("Address from allowed %s is not ready", address.getName());
-            assertEquals("Active", address.getPhase(), assertMessage);
+            log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+            String assertMessage = String.format("Address from allowed %s is not ready", address.getMetadata().getName());
+            assertEquals(Phase.Active, address.getStatus().getPhase(), assertMessage);
         }
 
         assertCanConnect(addressSpace, credentials, allowedDest);
@@ -789,23 +731,23 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         getAddresses.clear();
         if (notAllowedDest.size() > 0) {
             try {
-                appendAddresses(addressSpace, new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Destination[0]));
+                appendAddresses(addressSpace, new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Address[0]));
             } catch (IllegalStateException ex) {
                 if (!ex.getMessage().contains("addresses are not matched")) {
                     throw ex;
                 }
             }
 
-            for (Destination dest : notAllowedDest) {
-                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getName())));
+            for (Address dest : notAllowedDest) {
+                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
             }
 
             for (Future<List<Address>> getAddress : getAddresses) {
                 Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
-                log.info("Address {} with plan {} is in phase {}", address.getName(), address.getPlan(), address.getPhase());
-                String assertMessage = String.format("Address from notAllowed %s is ready", address.getName());
-                assertEquals("Pending", address.getPhase(), assertMessage);
-                assertTrue(address.getStatusMessages().contains("Quota exceeded"), "No status message is present");
+                log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
+                String assertMessage = String.format("Address from notAllowed %s is ready", address.getMetadata().getName());
+                assertEquals(Phase.Pending, address.getStatus().getPhase(), assertMessage);
+                assertTrue(address.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
             }
         }
 
@@ -813,13 +755,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 
-        for (Destination dest : allowedDest) {
+        for (Address dest : allowedDest) {
             AddressWebItem item = (AddressWebItem) selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
             assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Ready", item.getStatus(), is(AddressStatus.READY));
         }
 
-        for (Destination dest : notAllowedDest) {
+        for (Address dest : notAllowedDest) {
             AddressWebItem item = (AddressWebItem) selenium.waitUntilItemPresent(25, () -> page.getAddressItem(dest));
             assertNotNull(item, String.format("Address '%s' is not visible in console", dest));
             assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));

@@ -5,6 +5,10 @@
 
 package io.enmasse.systemtest.common.api;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -12,11 +16,19 @@ import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.resources.CliOutputData;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -35,13 +47,13 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testAddressSpaceCreateViaCmdRemoveViaApi() throws Exception {
-        AddressSpace brokered = new AddressSpace("crd-addressspaces-test-foo", AddressSpaceType.BROKERED, AuthService.STANDARD);
-        JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foo", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
         createCR(addressSpacePayloadJson.toString());
         waitForAddressSpaceReady(brokered);
 
         deleteAddressSpace(brokered);
-        TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getName());
+        TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
             return allAddresses.getStdOut() + allAddresses.getStdErr();
@@ -50,32 +62,32 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testReplaceAddressSpace() throws Exception {
-        AddressSpace standard = new AddressSpace("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AuthService.STANDARD);
-        standard.setPlan(AddressSpacePlan.STANDARD_SMALL);
-        createCR(standard.toJson(addressApiClient.getApiVersion()).toString());
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_SMALL).endSpec().done();
+        createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         addToAddressSpacess(standard);
         waitForAddressSpaceReady(standard);
         waitForAddressSpacePlanApplied(standard);
 
-        standard.setPlan(AddressSpacePlan.STANDARD_UNLIMITED);
-        updateCR(standard.toJson(addressApiClient.getApiVersion()).toString());
+        standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
+        updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         waitForAddressSpaceReady(standard);
 
-        assertThat(getAddressSpace(standard.getName()).getPlan(), is(AddressSpacePlan.STANDARD_UNLIMITED));
+        assertThat(getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
     }
 
     @Test
     void testAddressSpaceCreateViaApiRemoveViaCmd() throws Exception {
-        AddressSpace brokered = new AddressSpace("crd-addressspaces-test-bar", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-bar", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
         createAddressSpace(brokered);
 
-        ExecutionResultData addressSpaces = KubeCMDClient.getAddressSpace(environment.namespace(), brokered.getName());
+        ExecutionResultData addressSpaces = KubeCMDClient.getAddressSpace(environment.namespace(), brokered.getMetadata().getName());
         String output = addressSpaces.getStdOut();
-        assertTrue(output.contains(brokered.getName()),
+        assertTrue(output.contains(brokered.getMetadata().getName()),
                 String.format("Get all addressspaces should contains '%s'; but contains only: %s",
-                        brokered.getName(), output));
+                        brokered.getMetadata().getName(), output));
 
-        KubeCMDClient.deleteAddressSpace(environment.namespace(), brokered.getName());
+        KubeCMDClient.deleteAddressSpace(environment.namespace(), brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
             return allAddresses.getStdErr();
@@ -88,8 +100,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
         UserCredentials user = Credentials.userCredentials();
         try {
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
-            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthService.STANDARD);
-            JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
+            AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+            JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
@@ -97,7 +109,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             waitForAddressSpaceReady(brokered, apiClient);
 
             deleteAddressSpace(brokered, apiClient);
-            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getName());
+            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
@@ -119,28 +131,28 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             // AddressSpace part
             //===========================
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
-            AddressSpace brokered = new AddressSpace("crd-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
-            AddressSpace standard = new AddressSpace("crd-standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
+            AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+            AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
-            createCR(namespace, brokered.toJson(apiClient.getApiVersion()).toString());
-            createCR(namespace, standard.toJson(apiClient.getApiVersion()).toString());
+            createCR(namespace, AddressSpaceUtils.addressSpaceToJson(brokered).toString());
+            createCR(namespace, AddressSpaceUtils.addressSpaceToJson(standard).toString());
 
             ExecutionResultData result = KubeCMDClient.getAddressSpace(namespace, Optional.of("wide"));
-            assertTrue(result.getStdOut().contains(brokered.getName()));
-            assertTrue(result.getStdOut().contains(standard.getName()));
+            assertTrue(result.getStdOut().contains(brokered.getMetadata().getName()));
+            assertTrue(result.getStdOut().contains(standard.getMetadata().getName()));
 
             waitForAddressSpaceReady(brokered, apiClient);
 
             CliOutputData data = new CliOutputData(KubeCMDClient.getAddressSpace(namespace, Optional.of("wide")).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
-            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady());
-            if (((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady()) {
-                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getName())).getStatus(),
+            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady());
+            if (((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady()) {
+                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus(),
                         containsString(""));
             } else {
-                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getName())).getStatus(),
+                assertThat(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).getStatus(),
                         containsString("Following deployments and statefulsets are not ready"));
             }
 
@@ -148,9 +160,9 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
             data = new CliOutputData(KubeCMDClient.getAddressSpace(namespace, Optional.of("wide")).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
-            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getName())).isReady());
-            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getName())).isReady());
-            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getName()))
+            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(brokered.getMetadata().getName())).isReady());
+            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName())).isReady());
+            assertTrue(((CliOutputData.AddressSpaceRow) data.getData(standard.getMetadata().getName()))
                     .getStatus().isEmpty());
 
 
@@ -159,47 +171,46 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             //===========================
 
             UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
-            User testUser = new User().setUserCredentials(cred).addAuthorization(
-                    new User.AuthorizationRule()
-                            .addAddress("*")
-                            .addOperation(User.Operation.SEND)
-                            .addOperation(User.Operation.RECEIVE));
+            User testUser = UserUtils.createUserObject(cred, Collections.singletonList(
+                    new UserAuthorizationBuilder()
+                            .withAddresses("*")
+                            .withOperations(Operation.send, Operation.recv).build()));
 
             //create user
-            assertThat(KubeCMDClient.createCR(namespace, testUser.toCRDJson(brokered.getName()).toString()).getRetCode(), is(true));
-            assertThat(KubeCMDClient.createCR(namespace, testUser.toCRDJson(standard.getName()).toString()).getRetCode(), is(true));
+            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
+            assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(standard.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));
 
             data = new CliOutputData(KubeCMDClient.getUser(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.USER);
-            assertEquals(((CliOutputData.UserRow) data.getData(String.format("%s.%s", brokered.getName(),
+            assertEquals(((CliOutputData.UserRow) data.getData(String.format("%s.%s", brokered.getMetadata().getName(),
                     cred.getUsername()))).getUsername(), cred.getUsername());
-            assertEquals(data.getData(String.format("%s.%s", standard.getName(),
+            assertEquals(data.getData(String.format("%s.%s", standard.getMetadata().getName(),
                     cred.getUsername())).getType(), "password");
-            assertEquals(data.getData(String.format("%s.%s", standard.getName(),
+            assertEquals(data.getData(String.format("%s.%s", standard.getMetadata().getName(),
                     user.getUsername())).getType(), "federated");
 
             //===========================
             // Address part
             //===========================
 
-            Destination queue = new Destination("queue", null, brokered.getName(), "queue",
-                    Destination.QUEUE, DestinationPlan.BROKERED_QUEUE);
-            Destination topicBrokered = new Destination("topic", null, brokered.getName(), "topic",
-                    Destination.TOPIC, DestinationPlan.BROKERED_TOPIC);
-            Destination topicStandard = new Destination("topic", null, standard.getName(), "topic",
-                    Destination.TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
-            Destination anycast = new Destination("anycast", null, standard.getName(), "anycast",
-                    Destination.ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST);
+            Address queue = AddressUtils.createAddressObject("queue", null, brokered.getMetadata().getName(), "queue",
+                    AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
+            Address topicBrokered = AddressUtils.createAddressObject("topic", null, brokered.getMetadata().getName(), "topic",
+                    AddressType.TOPIC.toString(), DestinationPlan.BROKERED_TOPIC);
+            Address topicStandard = AddressUtils.createAddressObject("topic", null, standard.getMetadata().getName(), "topic",
+                    AddressType.TOPIC.toString(), DestinationPlan.STANDARD_LARGE_TOPIC);
+            Address anycast = AddressUtils.createAddressObject("anycast", null, standard.getMetadata().getName(), "anycast",
+                    AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_SMALL_ANYCAST);
 
-            assertTrue(KubeCMDClient.createCR(namespace, queue.toYaml(addressApiClient.getApiVersion())).getRetCode());
-            assertTrue(KubeCMDClient.createCR(namespace, topicBrokered.toYaml(addressApiClient.getApiVersion())).getRetCode());
-            assertTrue(KubeCMDClient.createCR(namespace, topicStandard.toYaml(addressApiClient.getApiVersion())).getRetCode());
-            assertTrue(KubeCMDClient.createCR(namespace, anycast.toYaml(addressApiClient.getApiVersion())).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(queue)).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(topicBrokered)).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(topicStandard)).getRetCode());
+            assertTrue(KubeCMDClient.createCR(namespace, AddressUtils.addressToYaml(anycast)).getRetCode());
 
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
 
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getMetadata().getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
 
             TestUtils.waitForDestinationsReady(apiClient, brokered, new TimeoutBudget(5, TimeUnit.MINUTES), queue, topicBrokered);
@@ -207,8 +218,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
 
-            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
+            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getMetadata().getName(), queue.getSpec().getAddress()))).isReady());
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getMetadata().getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
 
             TestUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
@@ -216,22 +227,22 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
 
-            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getName(), queue.getAddress()))).isReady());
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getPlan(),
+            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", brokered.getMetadata().getName(), queue.getSpec().getAddress()))).isReady());
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getMetadata().getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
-            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), anycast.getAddress()))).getPhase(),
+            assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getMetadata().getName(), anycast.getSpec().getAddress()))).getPhase(),
                     "Active");
-            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getName(), topicStandard.getAddress()))).getStatus().isEmpty());
+            assertTrue(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getMetadata().getName(), topicStandard.getSpec().getAddress()))).getStatus().isEmpty());
 
             //===========================
             // Clean part
             //===========================
 
-            KubeCMDClient.deleteAddressSpace(namespace, brokered.getName());
-            KubeCMDClient.deleteAddressSpace(namespace, standard.getName());
+            KubeCMDClient.deleteAddressSpace(namespace, brokered.getMetadata().getName());
+            KubeCMDClient.deleteAddressSpace(namespace, standard.getMetadata().getName());
 
-            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getName());
-            TestUtils.waitForNamespaceDeleted(kubernetes, standard.getName());
+            TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
+            TestUtils.waitForNamespaceDeleted(kubernetes, standard.getMetadata().getName());
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
@@ -247,8 +258,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     void testCannotCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
         UserCredentials user = Credentials.userCredentials();
         try {
-            AddressSpace brokered = new AddressSpace("crd-addressspaces-test-barr", AddressSpaceType.BROKERED, AuthService.STANDARD);
-            JsonObject addressSpacePayloadJson = brokered.toJson(addressApiClient.getApiVersion());
+            AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-barr", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+            JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             assertThat(KubeCMDClient.createCR(addressSpacePayloadJson.toString()).getRetCode(), is(false));

@@ -6,10 +6,17 @@ package io.enmasse.systemtest.selenium.page;
 
 
 import com.paulhammant.ngwebdriver.ByAngular;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -272,11 +279,11 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * get specific address
      */
-    public AddressWebItem getAddressItem(Destination destination) {
+    public AddressWebItem getAddressItem(Address destination) {
         AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
         for (AddressWebItem item : addressWebItems) {
-            if (item.getName().equals(destination.getAddress()))
+            if (item.getName().equals(destination.getSpec().getAddress()))
                 returnedElement = item;
         }
         return returnedElement;
@@ -347,8 +354,8 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * get the radio button for the destination
      */
-    public WebElement getRadioButtonForAddressType(Destination destination) throws Exception {
-        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getType().toLowerCase())));
+    public WebElement getRadioButtonForAddressType(Address destination) throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getType().toLowerCase())));
     }
 
     /**
@@ -388,7 +395,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (defaultAddressSpace.getAuthService().equals(AuthService.STANDARD)) {
+        if (defaultAddressSpace.getSpec().getAuthenticationService().getType().equals(AuthenticationServiceType.STANDARD)) {
             if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), clickOnOpenshift, viaOpenShift))
                 throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
         }
@@ -627,8 +634,8 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * create multiple addresses
      */
-    public void createAddressesWebConsole(Destination... destinations) throws Exception {
-        for (Destination dest : destinations) {
+    public void createAddressesWebConsole(Address... destinations) throws Exception {
+        for (Address dest : destinations) {
             createAddressWebConsole(dest, false, true);
         }
     }
@@ -636,15 +643,15 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * create specific address
      */
-    public void createAddressWebConsole(Destination destination) throws Exception {
+    public void createAddressWebConsole(Address destination) throws Exception {
         createAddressWebConsole(destination, true, true);
     }
 
-    public void createAddressWebConsole(Destination destination, boolean waitForReady) throws Exception {
+    public void createAddressWebConsole(Address destination, boolean waitForReady) throws Exception {
         createAddressWebConsole(destination, true, waitForReady);
     }
 
-    public void createAddressWebConsole(Destination destination, boolean openConsolePage, boolean waitForReady) throws Exception {
+    public void createAddressWebConsole(Address destination, boolean openConsolePage, boolean waitForReady) throws Exception {
         log.info("Create address using web console");
 
         if (openConsolePage)
@@ -657,25 +664,25 @@ public class ConsoleWebPage implements IWebPage {
         clickOnCreateButton();
 
         //fill address name
-        selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))), destination.getAddress());
+        selenium.fillInputItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("new-name"))), destination.getSpec().getAddress());
 
         //select address type
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getType()))), "Radio button " + destination.getType());
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getType()))), "Radio button " + destination.getSpec().getType());
 
         //if address type is subscription, fill in the topic dropdown box
-        if (destination.getType().equals(AddressType.SUBSCRIPTION.toString())) {
+        if (destination.getSpec().getType().equals(AddressType.SUBSCRIPTION.toString())) {
             log.info("Selecting topic to attach subscription to");
             WebElement topicDropDown = getSubscriptionComboBox();
             selenium.clickOnItem(topicDropDown);
             Select combobox = new Select(topicDropDown);
-            combobox.selectByVisibleText(destination.getTopic());
+            combobox.selectByVisibleText(destination.getSpec().getTopic());
         }
 
         WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
         selenium.clickOnItem(nextButton);
 
         //select address plan
-        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getPlan()))), "Radio button " + destination.getPlan());
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id(destination.getSpec().getPlan()))), "Radio button " + destination.getSpec().getPlan());
 
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
@@ -692,8 +699,8 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * delete multiple addresses
      */
-    public void deleteAddressesWebConsole(Destination... destinations) throws Exception {
-        for (Destination dest : destinations) {
+    public void deleteAddressesWebConsole(Address... destinations) throws Exception {
+        for (Address dest : destinations) {
             deleteAddressWebConsole(dest, false);
         }
     }
@@ -701,11 +708,11 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * delete specific address
      */
-    public void deleteAddressWebConsole(Destination destination) throws Exception {
+    public void deleteAddressWebConsole(Address destination) throws Exception {
         deleteAddressWebConsole(destination, true);
     }
 
-    public void deleteAddressWebConsole(Destination destination, boolean openConsolePage) throws Exception {
+    public void deleteAddressWebConsole(Address destination, boolean openConsolePage) throws Exception {
         log.info("Remove address using web console");
 
         if (openConsolePage)
@@ -717,7 +724,7 @@ public class ConsoleWebPage implements IWebPage {
         AddressWebItem addressItem = (AddressWebItem) selenium.waitUntilItemPresent(10, () -> getAddressItem(destination));
 
         //click on check box
-        selenium.clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getAddress());
+        selenium.clickOnItem(addressItem.getCheckBox(), "check box: " + destination.getSpec().getAddress());
 
         //click on delete
         clickOnRemoveButton();

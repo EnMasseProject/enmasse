@@ -4,9 +4,15 @@
  */
 package io.enmasse.systemtest.common;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,10 +33,10 @@ class CommonTest extends TestBase {
 
     @Test
     void testAccessLogs() throws Exception {
-        AddressSpace standard = new AddressSpace("standard-addr-space-logs", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard-addr-space-logs", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
         createAddressSpace(standard);
 
-        Destination dest = Destination.queue("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address dest = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(standard, dest);
 
         kubernetes.listPods().forEach(pod -> {
@@ -50,17 +56,17 @@ class CommonTest extends TestBase {
         labels.add(new Label("name", "address-space-controller"));
 
         UserCredentials user = new UserCredentials("frantisek", "dobrota");
-        AddressSpace standard = new AddressSpace("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthService.STANDARD);
-        AddressSpace brokered = new AddressSpace("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(standard, brokered);
         createUser(brokered, user);
         createUser(standard, user);
 
-        List<Destination> brokeredAddresses = getAllBrokeredAddresses();
-        List<Destination> standardAddresses = getAllStandardAddresses();
+        List<Address> brokeredAddresses = getAllBrokeredAddresses();
+        List<Address> standardAddresses = getAllStandardAddresses();
 
-        setAddresses(brokered, brokeredAddresses.toArray(new Destination[0]));
-        setAddresses(standard, standardAddresses.toArray(new Destination[0]));
+        setAddresses(brokered, brokeredAddresses.toArray(new Address[0]));
+        setAddresses(standard, standardAddresses.toArray(new Address[0]));
 
         assertCanConnect(brokered, user, brokeredAddresses);
         assertCanConnect(standard, user, standardAddresses);
@@ -86,7 +92,7 @@ class CommonTest extends TestBase {
         Thread.sleep(180_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
         TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(10, TimeUnit.MINUTES),
-                standardAddresses.toArray(new Destination[0]));
+                standardAddresses.toArray(new Address[0]));
         assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
 
         //TODO: Uncomment when #2127 will be fixedy
@@ -98,10 +104,10 @@ class CommonTest extends TestBase {
 
     @Test
     void testMonitoringTools() throws Exception {
-        AddressSpace standard = new AddressSpace("standard-addr-space-monitor", AddressSpaceType.STANDARD, AuthService.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard-addr-space-monitor", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
         createAddressSpace(standard);
         createUser(standard, new UserCredentials("jenda", "cenda"));
-        setAddresses(standard, getAllStandardAddresses().toArray(new Destination[0]));
+        setAddresses(standard, getAllStandardAddresses().toArray(new Address[0]));
 
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
@@ -112,12 +118,12 @@ class CommonTest extends TestBase {
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
-                                   List<Destination> brAddresses, List<Destination> stAddresses) throws Exception {
+                                   List<Address> brAddresses, List<Address> stAddresses) throws Exception {
         log.info("Check if system works");
         assertCanConnect(standard, existingUser, stAddresses);
         assertCanConnect(brokered, existingUser, brAddresses);
-        getAddressSpace(brokered.getName());
-        getAddressSpace(standard.getName());
+        getAddressSpace(brokered.getMetadata().getName());
+        getAddressSpace(standard.getMetadata().getName());
         createUser(brokered, new UserCredentials("jenda", "cenda"));
         createUser(standard, new UserCredentials("jura", "fura"));
     }
@@ -139,6 +145,5 @@ class CommonTest extends TestBase {
             return labelValue;
         }
     }
-
 }
 

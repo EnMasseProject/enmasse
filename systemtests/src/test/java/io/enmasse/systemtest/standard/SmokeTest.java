@@ -4,13 +4,14 @@
  */
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.Destination;
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.DestinationPlan;
-import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -44,11 +45,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(smoke)
 class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private Destination queue = Destination.queue("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE);
-    private Destination topic = Destination.topic("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC);
-    private Destination mqttTopic = Destination.topic("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC);
-    private Destination anycast = Destination.anycast("smokeanycast");
-    private Destination multicast = Destination.multicast("smokemulticast");
+    private Address queue = AddressUtils.createQueueAddressObject("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE);
+    private Address topic = AddressUtils.createTopicAddressObject("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC);
+    private Address mqttTopic = AddressUtils.createTopicAddressObject("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC);
+    private Address anycast = AddressUtils.createAnycastAddressObject("smokeanycast");
+    private Address multicast = AddressUtils.createMulticastAddressObject("smokemulticast");
 
     @BeforeEach
     void createAddresses() throws Exception {
@@ -76,17 +77,17 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
         List<String> msgs = TestUtils.generateMessages(1000);
 
         List<Future<List<Message>>> recvResults = Arrays.asList(
-                client.recvMessages(topic.getAddress(), msgs.size()),
-                client.recvMessages(topic.getAddress(), msgs.size()),
-                client.recvMessages(topic.getAddress(), msgs.size()),
-                client.recvMessages(topic.getAddress(), msgs.size()),
-                client.recvMessages(topic.getAddress(), msgs.size()),
-                client.recvMessages(topic.getAddress(), msgs.size()));
+                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
+                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
+                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
+                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
+                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
+                client.recvMessages(topic.getSpec().getAddress(), msgs.size()));
 
         Thread.sleep(60_000);
 
         assertThat("Wrong count of messages sent",
-                client.sendMessages(topic.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+                client.sendMessages(topic.getSpec().getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         assertAll("Every subscriber should receive all messages",
                 () -> assertThat("Wrong count of messages received: receiver0",
@@ -111,8 +112,8 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
         IMqttClient client = mqttClientFactory.create();
         client.connect();
 
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, mqttTopic.getAddress(), messages.size(), 1);
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, mqttTopic.getAddress(), messages);
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, mqttTopic.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, mqttTopic.getSpec().getAddress(), messages);
 
         int numberSent = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
         assertThat("Wrong count of messages sent", numberSent, is(messages.size()));
@@ -129,8 +130,8 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
-        Future<List<Message>> recvResult = client.recvMessages(anycast.getAddress(), msgs.size());
-        Future<Integer> sendResult = client.sendMessages(anycast.getAddress(), msgs);
+        Future<List<Message>> recvResult = client.recvMessages(anycast.getSpec().getAddress(), msgs.size());
+        Future<Integer> sendResult = client.sendMessages(anycast.getSpec().getAddress(), msgs);
 
         assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
         assertThat("Wrong count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
@@ -141,14 +142,14 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
         List<String> msgs = Collections.singletonList("foo");
 
         List<Future<List<Message>>> recvResults = Arrays.asList(
-                client.recvMessages(multicast.getAddress(), msgs.size()),
-                client.recvMessages(multicast.getAddress(), msgs.size()),
-                client.recvMessages(multicast.getAddress(), msgs.size()));
+                client.recvMessages(multicast.getSpec().getAddress(), msgs.size()),
+                client.recvMessages(multicast.getSpec().getAddress(), msgs.size()),
+                client.recvMessages(multicast.getSpec().getAddress(), msgs.size()));
 
         Thread.sleep(60_000);
 
         assertThat("Wrong count of messages sent",
-                client.sendMessages(multicast.getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+                client.sendMessages(multicast.getSpec().getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         assertAll("All receivers should receive all messages",
                 () -> assertTrue(recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size(),

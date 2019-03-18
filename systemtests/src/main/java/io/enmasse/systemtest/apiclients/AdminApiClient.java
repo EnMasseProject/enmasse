@@ -4,15 +4,16 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import org.slf4j.Logger;
-
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AdminCrd;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
-import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
-import io.enmasse.systemtest.resources.InfraConfigDefinition;
+import io.enmasse.systemtest.utils.PlanUtils;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
 
 public class AdminApiClient extends ApiClient {
     protected static Logger log = CustomLogger.getLogger();
@@ -22,11 +23,11 @@ public class AdminApiClient extends ApiClient {
     private final String standardInfraconfigPath;
 
     public AdminApiClient(Kubernetes kubernetes) {
-        super(kubernetes, kubernetes::getMasterEndpoint, "admin.enmasse.io/v1beta1");
-        this.addressSpacePlansPath = String.format("/apis/admin.enmasse.io/v1beta1/namespaces/%s/addressspaceplans", kubernetes.getNamespace());
-        this.addressPlansPath = String.format("/apis/admin.enmasse.io/v1beta1/namespaces/%s/addressplans", kubernetes.getNamespace());
-        this.brokeredInfraconfigPath = String.format("/apis/admin.enmasse.io/v1beta1/namespaces/%s/brokeredinfraconfigs", kubernetes.getNamespace());
-        this.standardInfraconfigPath = String.format("/apis/admin.enmasse.io/v1beta1/namespaces/%s/standardinfraconfigs", kubernetes.getNamespace());
+        super(kubernetes, kubernetes::getMasterEndpoint, "admin.enmasse.io/" + AdminCrd.VERSION_V1BETA2);
+        this.addressSpacePlansPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/addressspaceplans", AdminCrd.VERSION_V1BETA2, kubernetes.getNamespace());
+        this.addressPlansPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/addressplans", AdminCrd.VERSION_V1BETA2, kubernetes.getNamespace());
+        this.brokeredInfraconfigPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/brokeredinfraconfigs", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
+        this.standardInfraconfigPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/standardinfraconfigs", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
     }
 
     public void close() {
@@ -39,56 +40,56 @@ public class AdminApiClient extends ApiClient {
         return "AdminApi";
     }
 
-    public AddressSpacePlanDefinition getAddressSpacePlan(String name) throws Exception {
+    public AddressSpacePlan getAddressSpacePlan(String name) throws Exception {
         JsonObject spacePlan = getResource("address-space-plan", addressSpacePlansPath, name);
-        return AddressSpacePlanDefinition.fromJson(spacePlan, this);
+        return PlanUtils.jsonToAddressSpacePlan(spacePlan);
     }
 
-    public void createAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan) throws Exception {
-        createResource("address-space-plan", addressSpacePlansPath, addressSpacePlan.toJson());
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+        createResource("address-space-plan", addressSpacePlansPath, PlanUtils.addressSpacePlanToJson(addressSpacePlan));
     }
 
-    public void replaceAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan) throws Exception {
-        replaceResource("address-space-plan", addressSpacePlansPath, addressSpacePlan.getName(), addressSpacePlan.toJson());
+    public void replaceAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+        replaceResource("address-space-plan", addressSpacePlansPath, addressSpacePlan.getMetadata().getName(), PlanUtils.addressSpacePlanToJson(addressSpacePlan));
     }
 
-    public void deleteAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan) throws Exception {
-        deleteResource("address-space-plan", addressSpacePlansPath, addressSpacePlan.getName());
+    public void deleteAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+        deleteResource("address-space-plan", addressSpacePlansPath, addressSpacePlan.getMetadata().getName());
     }
 
-    public AddressPlanDefinition getAddressPlan(String name) throws Exception {
-        return AddressPlanDefinition.fromJson(getResource("address-plan", addressPlansPath, name));
+    public AddressPlan getAddressPlan(String name) throws Exception {
+        return PlanUtils.jsonToAddressPlan(getResource("address-plan", addressPlansPath, name));
     }
 
-    public void createAddressPlan(AddressPlanDefinition addressPlan) throws Exception {
-        createResource("address-plan", addressPlansPath, addressPlan.toJson());
+    public void createAddressPlan(AddressPlan addressPlan) throws Exception {
+        createResource("address-plan", addressPlansPath, PlanUtils.addressPlanToJson(addressPlan));
     }
 
-    public void replaceAddressPlan(AddressPlanDefinition addressPlan) throws Exception {
-        replaceResource("address-plan", addressPlansPath, addressPlan.getName(), addressPlan.toJson());
+    public void replaceAddressPlan(AddressPlan addressPlan) throws Exception {
+        replaceResource("address-plan", addressPlansPath, addressPlan.getMetadata().getName(), PlanUtils.addressPlanToJson(addressPlan));
     }
 
-    public void deleteAddressPlan(AddressPlanDefinition addressPlan) throws Exception {
-        deleteResource("address-plan", addressPlansPath, addressPlan.getName());
+    public void deleteAddressPlan(AddressPlan addressPlan) throws Exception {
+        deleteResource("address-plan", addressPlansPath, addressPlan.getMetadata().getName());
     }
 
-    public void createInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
-        createResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.toJson());
+    public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
+        createResource("infra-config", getInfraApiPath(infraConfigDefinition), PlanUtils.infraToJson(infraConfigDefinition));
     }
 
-    public void replaceInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
-        replaceResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getName(), infraConfigDefinition.toJson());
+    public void replaceInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
+        replaceResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getMetadata().getName(), PlanUtils.infraToJson(infraConfigDefinition));
     }
 
-    public void deleteInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
-        deleteResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getName());
+    public void deleteInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
+        deleteResource("infra-config", getInfraApiPath(infraConfigDefinition), infraConfigDefinition.getMetadata().getName());
     }
 
-    public InfraConfigDefinition getInfraConfig(AddressSpaceType type, String config) throws Exception {
-        return InfraConfigDefinition.fromJson(getResource("infra-config", type.equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath, config));
+    public InfraConfig getInfraConfig(AddressSpaceType type, String config) throws Exception {
+        return PlanUtils.jsonToInfra(getResource("infra-config", type.equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath, config));
     }
 
-    private String getInfraApiPath(InfraConfigDefinition config) {
-        return config.getType().equals(AddressSpaceType.STANDARD) ? standardInfraconfigPath : brokeredInfraconfigPath;
+    private String getInfraApiPath(InfraConfig config) {
+        return config.getKind().equals("StandardInfraConfig") ? standardInfraconfigPath : brokeredInfraconfigPath;
     }
 }

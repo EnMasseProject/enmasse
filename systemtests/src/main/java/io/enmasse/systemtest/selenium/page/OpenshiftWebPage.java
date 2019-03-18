@@ -5,11 +5,16 @@
 package io.enmasse.systemtest.selenium.page;
 
 
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.enmasse.systemtest.selenium.resources.ProvisionedServiceItem;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -235,10 +240,10 @@ public class OpenshiftWebPage implements IWebPage {
     public String provisionAddressSpaceViaSC(AddressSpace addressSpace, String projectName) throws Exception {
         log.info("Service for addressSpace {} will be provisioned", addressSpace);
         openOpenshiftPage();
-        if (addressSpace.getType() == AddressSpaceType.BROKERED) {
-            createAddressSpaceBrokered(addressSpace.getName(), projectName);
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString())) {
+            createAddressSpaceBrokered(addressSpace.getMetadata().getName(), projectName);
         } else {
-            createAddressSpaceStandard(addressSpace.getName(), projectName, AddressSpacePlan.STANDARD_UNLIMITED);
+            createAddressSpaceStandard(addressSpace.getMetadata().getName(), projectName, AddressSpacePlans.STANDARD_UNLIMITED);
         }
         try {
             selenium.clickOnItem(getModalWindow().findElement(By.cssSelector(String.format("a[ng-href='project/%s']", projectName))), "Project overview");
@@ -248,7 +253,7 @@ public class OpenshiftWebPage implements IWebPage {
         waitForRedirectToService();
         String serviceId = getProvisionedServiceItem().getId();
         waitUntilServiceIsReady();
-        addressSpace.setInfraUuid(TestUtils.getAddressSpaceObject(addressApiClient, addressSpace.getName()).getInfraUuid());
+        addressSpace = AddressSpaceUtils.getAddressSpaceObject(addressApiClient, addressSpace.getMetadata().getName());
         return serviceId;
     }
 

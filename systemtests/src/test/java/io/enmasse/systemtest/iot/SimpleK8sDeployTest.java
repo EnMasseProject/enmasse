@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -21,7 +22,6 @@ import org.junit.jupiter.api.Test;
 
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.TestUtils;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 

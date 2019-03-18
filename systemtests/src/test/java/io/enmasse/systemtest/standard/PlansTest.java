@@ -4,12 +4,18 @@
  */
 package io.enmasse.systemtest.standard;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
+import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.PlansProvider;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
-import io.enmasse.systemtest.resources.AddressResource;
-import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -44,31 +50,31 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")
     void testAppendAddressPlan() throws Exception {
-        List<AddressResource> addressResources = Collections.singletonList(new AddressResource("broker", 0.1));
+        List<ResourceRequest> addressResources = Collections.singletonList(new ResourceRequest("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
-        AddressPlanDefinition weakQueuePlan = new AddressPlanDefinition(weakQueuePlanName, AddressType.QUEUE, addressResources);
+        AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject(weakQueuePlanName, AddressType.QUEUE, addressResources);
         plansProvider.createAddressPlan(weakQueuePlan);
 
-        AddressSpacePlanDefinition standardPlan = plansProvider.getAddressSpacePlan("standard");
+        AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlan("standard");
         plansProvider.createAddressPlan(weakQueuePlan);
-        standardPlan.getAddressPlans().add(weakQueuePlan);
+        standardPlan = new DoneableAddressSpacePlan(standardPlan).addNewAddressPlan(weakQueuePlanName).done();
         plansProvider.removeAddressSpacePlan(standardPlan);
 
-        ArrayList<Destination> dest = new ArrayList<>();
+        ArrayList<Address> dest = new ArrayList<>();
         int destCount = 20;
         for (int i = 0; i < destCount; i++) {
-            dest.add(Destination.queue("weak-queue-" + i, weakQueuePlan.getName()));
+            dest.add(AddressUtils.createQueueAddressObject("weak-queue-" + i, weakQueuePlan.getMetadata().getName()));
         }
-        setAddresses(dest.toArray(new Destination[0]));
+        setAddresses(dest.toArray(new Address[0]));
 
-        double requiredCredit = weakQueuePlan.getRequiredCreditFromResource("broker");
+        double requiredCredit = PlanUtils.getRequiredCreditFromAddressResource("broker", weakQueuePlan);
         int replicasCount = (int) (destCount * requiredCredit);
         waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
         Future<List<Address>> standardAddresses = getAddressesObjects(Optional.empty()); //get all addresses
         for (int i = 0; i < destCount; i++) {
             assertThat("Queue plan wasn't set properly",
-                    standardAddresses.get(20, TimeUnit.SECONDS).get(i).getPlan(), is(weakQueuePlan.getName()));
+                    standardAddresses.get(20, TimeUnit.SECONDS).get(i).getSpec().getPlan(), is(weakQueuePlan.getMetadata().getName()));
         }
     }
 

@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.selenium;
 
-import io.enmasse.systemtest.TestUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.WebDriver;

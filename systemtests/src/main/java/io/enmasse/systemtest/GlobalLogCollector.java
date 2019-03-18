@@ -4,6 +4,13 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.slf4j.Logger;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -12,18 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.fabric8.kubernetes.api.model.Pod;
+import java.util.*;
 
 public class GlobalLogCollector {
     private final static Logger log = CustomLogger.getLogger();
@@ -39,9 +35,9 @@ public class GlobalLogCollector {
     }
 
 
-    public synchronized void startCollecting(AddressSpace addressSpace) {
-        log.info("Start collecting logs for address space {}", addressSpace);
-        collectorMap.put(addressSpace.getInfraUuid(), new LogCollector(kubernetes, new File(logDir, addressSpace.getInfraUuid()), addressSpace.getInfraUuid()));
+    public synchronized void startCollecting(AddressSpace addressSpace) throws Exception {
+        log.info("Start collecting logs for address space {}", addressSpace.getMetadata().getName());
+        collectorMap.put(AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), new LogCollector(kubernetes, new File(logDir, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)), AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace)));
     }
 
     public synchronized void stopCollecting(String namespace) throws Exception {
@@ -118,7 +114,7 @@ public class GlobalLogCollector {
         });
     }
 
-    private void collectRouterInfo(Pod pod, String filesuffix, String command, String ... args) {
+    private void collectRouterInfo(Pod pod, String filesuffix, String command, String... args) {
         List<String> allArgs = new ArrayList<>();
         allArgs.add(command);
         allArgs.add("--sasl-mechanisms=EXTERNAL");
@@ -161,6 +157,7 @@ public class GlobalLogCollector {
 
     /**
      * Create a new path inside the log directory, and ensure that the parent directory exists.
+     *
      * @param other the path segment, relative to the log directory.
      * @return The full path.
      * @throws IOException In case of any IO error

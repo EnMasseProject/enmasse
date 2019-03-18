@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;

@@ -4,8 +4,16 @@
  */
 package io.enmasse.systemtest.bases.auth;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 
 import java.util.ArrayList;
@@ -20,40 +28,40 @@ public abstract class AuthenticationTestBase extends TestBase {
     protected static final String mqttAddress = "t1";
     protected static final String anonymousUser = "anonymous";
     protected static final String anonymousPswd = "anonymous";
-    protected final List<Destination> amqpAddressList = Arrays.asList(
-            Destination.queue("auth-queue", getDefaultPlan(AddressType.QUEUE)),
-            Destination.topic("auth-topic", getDefaultPlan(AddressType.TOPIC)),
-            Destination.anycast("auth-anycast"),
-            Destination.multicast("auth-multicast"));
+    protected final List<Address> amqpAddressList = Arrays.asList(
+            AddressUtils.createQueueAddressObject("auth-queue", getDefaultPlan(AddressType.QUEUE)),
+            AddressUtils.createTopicAddressObject("auth-topic", getDefaultPlan(AddressType.TOPIC)),
+            AddressUtils.createAnycastAddressObject("auth-anycast"),
+            AddressUtils.createMulticastAddressObject("auth-multicast"));
 
     @Override
     protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
         super.createAddressSpace(addressSpace);
-        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
-        if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
+        List<Address> brokeredAddressList = new ArrayList<>(amqpAddressList);
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString())) {
             brokeredAddressList = amqpAddressList.subList(0, 2);
         }
-        setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
+        setAddresses(addressSpace, brokeredAddressList.toArray(new Address[0]));
         //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
     }
 
     @Override
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         super.createAddressSpaceList(addressSpaces);
-        List<Destination> brokeredAddressList = new ArrayList<>(amqpAddressList);
+        List<Address> brokeredAddressList = new ArrayList<>(amqpAddressList);
         for (AddressSpace addressSpace : addressSpaces) {
-            if (addressSpace.getType().equals(AddressSpaceType.BROKERED)) {
+            if (addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString())) {
                 brokeredAddressList = amqpAddressList.subList(0, 2);
             }
-            setAddresses(addressSpace, brokeredAddressList.toArray(new Destination[0]));
+            setAddresses(addressSpace, brokeredAddressList.toArray(new Address[0]));
             //        setAddresses(name, Destination.queue(amqpAddress)); //, Destination.topic(mqttAddress)); #TODO! for MQTT
         }
     }
 
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
-        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlan.STANDARD_SMALL : AddressSpacePlan.BROKERED;
-        AddressSpace s3standard = new AddressSpace(type.toString().toLowerCase() + "-s3", type, plan, AuthService.NONE);
-        AddressSpace s4standard = new AddressSpace(type.toString().toLowerCase() + "-s4", type, plan, AuthService.STANDARD);
+        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED;
+        AddressSpace s3standard = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s3", type, plan, AuthenticationServiceType.NONE);
+        AddressSpace s4standard = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s4", type, plan, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(s3standard, s4standard);
 
         assertCanConnect(s3standard, new UserCredentials(emptyUser, emptyPassword), amqpAddressList);
@@ -66,9 +74,9 @@ public abstract class AuthenticationTestBase extends TestBase {
     }
 
     protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
-        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlan.STANDARD_SMALL : AddressSpacePlan.BROKERED;
-        AddressSpace s1brokered = new AddressSpace(type.toString().toLowerCase() + "-s1", type, plan, AuthService.STANDARD);
-        AddressSpace s2brokered = new AddressSpace(type.toString().toLowerCase() + "-s2", type, plan, AuthService.STANDARD);
+        String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED;
+        AddressSpace s1brokered = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s1", type, plan, AuthenticationServiceType.STANDARD);
+        AddressSpace s2brokered = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s2", type, plan, AuthenticationServiceType.STANDARD);
         createAddressSpaceList(s1brokered, s2brokered);
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials

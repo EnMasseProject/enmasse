@@ -4,6 +4,9 @@
  */
 package io.enmasse.systemtest.common.catalog;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.MsgCliApiClient;
@@ -16,6 +19,8 @@ import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,7 +51,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     private UserCredentials ocTestUser = Credentials.userCredentials();
 
     private String getUserProjectName(AddressSpace addressSpace) {
-        return String.format("%s-%s", "service", addressSpace.getName());
+        return String.format("%s-%s", "service", addressSpace.getMetadata().getName());
     }
 
     @BeforeEach
@@ -77,7 +82,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvisionAddressSpaceBrokered() throws Exception {
-        AddressSpace brokered = new AddressSpace("addr-space-brokered", AddressSpaceType.BROKERED);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("addr-space-brokered", AddressSpaceType.BROKERED);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
@@ -89,7 +94,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvisionAddressSpaceStandard() throws Exception {
-        AddressSpace standard = new AddressSpace("addr-space-standard", AddressSpaceType.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-standard", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(standard);
         provisionedServices.put(namespace, standard);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
@@ -101,7 +106,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateDeleteBindings() throws Exception {
-        AddressSpace brokered = new AddressSpace("test-binding-space", AddressSpaceType.BROKERED);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("test-binding-space", AddressSpaceType.BROKERED);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
@@ -118,9 +123,9 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.BROKERED_QUEUE);
-        Destination topic = Destination.topic("test-topic", DestinationPlan.BROKERED_TOPIC);
-        AddressSpace brokered = new AddressSpace("test-messaging-space", AddressSpaceType.BROKERED, AuthService.STANDARD);
+        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
+        Address topic = AddressUtils.createTopicAddressObject("test-topic", DestinationPlan.BROKERED_TOPIC);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("test-messaging-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
         String namespace = getUserProjectName(brokered);
         provisionedServices.put(namespace, brokered);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
@@ -150,8 +155,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        AddressSpace addressSpace = new AddressSpace("test-cert-space", AddressSpaceType.STANDARD);
+        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-cert-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
@@ -172,14 +177,14 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
                 .setCredentials(credentials.getCredentials())
                 .setCert(credentials.getMessagingCert());
 
-        Future<Integer> results = client.sendMessages(queue.getAddress(), Arrays.asList("pepa", "jouda"));
+        Future<Integer> results = client.sendMessages(queue.getSpec().getAddress(), Arrays.asList("pepa", "jouda"));
         assertThat(results.get(30, TimeUnit.SECONDS), is(2));
     }
 
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testLoginWithOpensShiftCredentials() throws Exception {
-        AddressSpace brokeredSpace = new AddressSpace("login-via-oc-brokered", AddressSpaceType.BROKERED);
+        AddressSpace brokeredSpace = AddressSpaceUtils.createAddressSpaceObject("login-via-oc-brokered", AddressSpaceType.BROKERED);
         String namespace = getUserProjectName(brokeredSpace);
 
         //provision via oc web ui and wait until ready
@@ -197,8 +202,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testSendReceiveInsideCluster() throws Exception {
-        Destination queue = Destination.queue("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        AddressSpace addressSpace = new AddressSpace("cluster-messaging-space", AddressSpaceType.STANDARD);
+        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("cluster-messaging-space", AddressSpaceType.STANDARD);
         String namespace = getUserProjectName(addressSpace);
         provisionedServices.put(namespace, addressSpace);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);
@@ -222,7 +227,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
             ClientArgumentMap arguments = new ClientArgumentMap();
             arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
-            arguments.put(ClientArgument.ADDRESS, queue.getAddress());
+            arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
             arguments.put(ClientArgument.COUNT, "10");
             arguments.put(ClientArgument.CONN_RECONNECT, "false");
             arguments.put(ClientArgument.USERNAME, credentials.getUsername());
@@ -244,7 +249,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     @Test
     void testConsoleErrorOnDeleteAddressSpace() throws Exception {
-        AddressSpace addressSpace = new AddressSpace("test-addr-space", AuthService.STANDARD);
+        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-addr-space", AuthenticationServiceType.STANDARD);
 
         String namespace = getUserProjectName(addressSpace);
 
@@ -256,7 +261,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
         consolePage.login(ocTestUser, true);
-        consolePage.createAddressWebConsole(Destination.queue("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE),
+        consolePage.createAddressWebConsole(AddressUtils.createQueueAddressObject("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE),
                 false, true);
 
         deleteAddressSpaceCreatedBySC(namespace, addressSpace);

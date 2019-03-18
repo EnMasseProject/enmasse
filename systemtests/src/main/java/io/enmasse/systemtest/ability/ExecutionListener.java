@@ -4,9 +4,13 @@
  */
 package io.enmasse.systemtest.ability;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.GlobalLogCollector;
+import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
@@ -27,10 +31,10 @@ public class ExecutionListener implements TestExecutionListener {
                 AddressApiClient apiClient = new AddressApiClient(kube);
                 GlobalLogCollector logCollector = new GlobalLogCollector(kube, new File(env.testLogDir()));
                 try {
-                    TestUtils.getAddressSpacesObjects(apiClient).forEach((addrSpace) -> {
+                    AddressSpaceUtils.getAddressSpacesObjects(apiClient).forEach((addrSpace) -> {
                         log.info("address space '{}' will be removed", addrSpace);
                         try {
-                            TestUtils.deleteAddressSpaceAndWait(apiClient, kube, addrSpace, logCollector);
+                            AddressSpaceUtils.deleteAddressSpaceAndWait(apiClient, kube, addrSpace, logCollector);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

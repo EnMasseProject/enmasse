@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.timemeasuring;
 
-public enum Operation {
+public enum SystemtestsOperation {
     TEST_EXECUTION,
     CREATE_ADDRESS_SPACE,
     CREATE_USER,

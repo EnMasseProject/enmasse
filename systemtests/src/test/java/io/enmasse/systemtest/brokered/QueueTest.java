@@ -4,14 +4,15 @@
  */
 package io.enmasse.systemtest.brokered;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Destination;
 import io.enmasse.systemtest.JmsProvider;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.utils.AddressUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Matchers;
@@ -49,7 +50,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Tag(nonPR)
     void testMessageGroup() throws Exception {
-        Destination dest = Destination.queue("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
+        Address dest = AddressUtils.createQueueAddressObject("messageGroupQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient(sharedAddressSpace);
@@ -60,18 +61,18 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
         List<Message> listOfMessages = new ArrayList<>();
         for (int i = 0; i < msgsCount; i++) {
             Message msg = Message.Factory.create();
-            msg.setAddress(dest.getAddress());
-            msg.setBody(new AmqpValue(dest.getAddress()));
+            msg.setAddress(dest.getSpec().getAddress());
+            msg.setBody(new AmqpValue(dest.getSpec().getAddress()));
             msg.setSubject("subject");
             msg.setGroupId(((i + 1) % 4 != 0) ? "group A" : "group B");
             listOfMessages.add(msg);
         }
 
-        Future<List<Message>> receivedGroupA = client.recvMessages(dest.getAddress(), msgCountGroupA);
-        Future<List<Message>> receivedGroupB = client.recvMessages(dest.getAddress(), msgCountGroupB);
+        Future<List<Message>> receivedGroupA = client.recvMessages(dest.getSpec().getAddress(), msgCountGroupA);
+        Future<List<Message>> receivedGroupB = client.recvMessages(dest.getSpec().getAddress(), msgCountGroupB);
         Thread.sleep(2000);
 
-        Future<Integer> sent = client.sendMessages(dest.getAddress(),
+        Future<Integer> sent = client.sendMessages(dest.getSpec().getAddress(),
                 listOfMessages.toArray(new Message[0]));
 
         assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
@@ -94,22 +95,22 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Destination q1 = Destination.queue("queue1", getDefaultPlan(AddressType.QUEUE));
-        Destination q2 = Destination.queue("queue2", getDefaultPlan(AddressType.QUEUE));
+        Address q1 = AddressUtils.createQueueAddressObject("queue1", getDefaultPlan(AddressType.QUEUE));
+        Address q2 = AddressUtils.createQueueAddressObject("queue2", getDefaultPlan(AddressType.QUEUE));
 
         runRestApiTest(sharedAddressSpace, q1, q2);
     }
 
     @Test
     void testTransactionCommitReject(JmsProvider jmsProvider) throws Exception {
-        Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
-        Queue testQueue = (Queue) jmsProvider.getDestination(addressQueue.getAddress());
+        Queue testQueue = (Queue) jmsProvider.getDestination(addressQueue.getSpec().getAddress());
 
         MessageProducer sender = session.createProducer(testQueue);
         MessageConsumer receiver = session.createConsumer(testQueue);
@@ -171,14 +172,14 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     void testLoadMessages(JmsProvider jmsProvider) throws Exception {
-        Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue testQueue = (Queue) jmsProvider.getDestination(addressQueue.getAddress());
+        Queue testQueue = (Queue) jmsProvider.getDestination(addressQueue.getSpec().getAddress());
 
         MessageProducer sender = session.createProducer(testQueue);
         MessageConsumer receiver = session.createConsumer(testQueue);
@@ -215,7 +216,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
     @Test
     @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
-        Destination addressQueue = Destination.queue("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,

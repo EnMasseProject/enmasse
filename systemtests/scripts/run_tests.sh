@@ -6,4 +6,5 @@ if [[ -n "$TESTCASE" ]]; then
     EXTRA_ARGS="-Dtest=$TESTCASE"
 fi
 
-mvn test -P${PROFILE} -Djava.net.preferIPv4Stack=true -Djansi.force=true -Dstyle.color=always ${EXTRA_ARGS}
+cd .. && mvn test -pl systemtests -P${PROFILE} -am -Djava.net.preferIPv4Stack=true -Djansi.force=true -DfailIfNoTests=false -Dstyle.color=always ${EXTRA_ARGS}
+cd systemtests

@@ -4,10 +4,8 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.apiclients.AdminApiClient;
-import io.enmasse.systemtest.resources.AddressPlanDefinition;
-import io.enmasse.systemtest.resources.AddressSpacePlanDefinition;
-import io.enmasse.systemtest.resources.InfraConfigDefinition;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -15,9 +13,9 @@ import java.util.ArrayList;
 public class PlansProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private ArrayList<AddressPlanDefinition> addressPlans;
-    private ArrayList<AddressSpacePlanDefinition> addressSpacePlans;
-    private ArrayList<InfraConfigDefinition> infraConfigs;
+    private ArrayList<AddressPlan> addressPlans;
+    private ArrayList<AddressSpacePlan> addressSpacePlans;
+    private ArrayList<InfraConfig> infraConfigs;
     private final AdminApiClient adminApiClient;
 
     public PlansProvider(Kubernetes kubernetes) {
@@ -31,15 +29,15 @@ public class PlansProvider {
     }
 
     public void tearDown() throws Exception {
-        for (AddressSpacePlanDefinition addressSpacePlan : addressSpacePlans) {
+        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
             adminApiClient.deleteAddressSpacePlan(addressSpacePlan);
         }
 
-        for (AddressPlanDefinition addressPlan : addressPlans) {
+        for (AddressPlan addressPlan : addressPlans) {
             adminApiClient.deleteAddressPlan(addressPlan);
         }
 
-        for (InfraConfigDefinition infraConfigDefinition : infraConfigs) {
+        for (InfraConfig infraConfigDefinition : infraConfigs) {
             adminApiClient.deleteInfraConfig(infraConfigDefinition);
         }
 
@@ -51,11 +49,11 @@ public class PlansProvider {
     // Address plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressPlan(AddressPlanDefinition addressPlan) throws Exception {
+    public void createAddressPlan(AddressPlan addressPlan) throws Exception {
         createAddressPlan(addressPlan, false);
     }
 
-    public void createAddressPlan(AddressPlanDefinition addressPlan, boolean replaceExisting) throws Exception {
+    public void createAddressPlan(AddressPlan addressPlan, boolean replaceExisting) throws Exception {
         if (replaceExisting) {
             adminApiClient.replaceAddressPlan(addressPlan);
         } else {
@@ -64,12 +62,12 @@ public class PlansProvider {
         addressPlans.add(addressPlan);
     }
 
-    public void removeAddressPlan(AddressPlanDefinition addressPlan) throws Exception {
+    public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
         adminApiClient.deleteAddressPlan(addressPlan);
-        addressPlans.removeIf(addressPlanIter -> addressPlanIter.getName().equals(addressPlan.getName()));
+        addressPlans.removeIf(addressPlanIter -> addressPlanIter.getMetadata().getName().equals(addressPlan.getMetadata().getName()));
     }
 
-    public void replaceAddressPlan(AddressPlanDefinition plan) throws Exception {
+    public void replaceAddressPlan(AddressPlan plan) throws Exception {
         adminApiClient.replaceAddressPlan(plan);
     }
 
@@ -77,11 +75,11 @@ public class PlansProvider {
     // Address space plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan) throws Exception {
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         createAddressSpacePlan(addressSpacePlan, false);
     }
 
-    public void createAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan, boolean replaceExisting) throws Exception {
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean replaceExisting) throws Exception {
         if (replaceExisting) {
             adminApiClient.replaceAddressSpacePlan(addressSpacePlan);
         } else {
@@ -90,12 +88,12 @@ public class PlansProvider {
         addressSpacePlans.add(addressSpacePlan);
     }
 
-    public void removeAddressSpacePlan(AddressSpacePlanDefinition addressSpacePlan) throws Exception {
+    public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         adminApiClient.deleteAddressSpacePlan(addressSpacePlan);
-        addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getName().equals(addressSpacePlan.getName()));
+        addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getMetadata().getName().equals(addressSpacePlan.getMetadata().getName()));
     }
 
-    public AddressSpacePlanDefinition getAddressSpacePlan(String config) throws Exception {
+    public AddressSpacePlan getAddressSpacePlan(String config) throws Exception {
         return adminApiClient.getAddressSpacePlan(config);
     }
 
@@ -103,11 +101,19 @@ public class PlansProvider {
     // Infra configs
     //------------------------------------------------------------------------------------------------
 
-    public void createInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
+    public BrokeredInfraConfig getBrokeredInfraConfig(String config) throws Exception {
+        return (BrokeredInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.BROKERED, config);
+    }
+
+    public StandardInfraConfig getStandardInfraConfig(String config) throws Exception {
+        return (StandardInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.STANDARD, config);
+    }
+
+    public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         createInfraConfig(infraConfigDefinition, false);
     }
 
-    public void createInfraConfig(InfraConfigDefinition infraConfigDefinition, boolean replaceExisting) throws Exception {
+    public void createInfraConfig(InfraConfig infraConfigDefinition, boolean replaceExisting) throws Exception {
         if (replaceExisting) {
             adminApiClient.replaceInfraConfig(infraConfigDefinition);
         } else {
@@ -116,16 +122,8 @@ public class PlansProvider {
         infraConfigs.add(infraConfigDefinition);
     }
 
-    public void removeInfraConfig(InfraConfigDefinition infraConfigDefinition) throws Exception {
+    public void removeInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         adminApiClient.deleteInfraConfig(infraConfigDefinition);
-        addressSpacePlans.removeIf(infraId -> infraId.getName().equals(infraConfigDefinition.getName()));
-    }
-
-    public InfraConfigDefinition getBrokeredInfraConfig(String config) throws Exception {
-        return adminApiClient.getInfraConfig(AddressSpaceType.BROKERED, config);
-    }
-
-    public InfraConfigDefinition getStandardInfraConfig(String config) throws Exception {
-        return adminApiClient.getInfraConfig(AddressSpaceType.STANDARD, config);
+        infraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
     }
 }

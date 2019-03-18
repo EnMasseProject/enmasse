@@ -4,12 +4,11 @@
  */
 package io.enmasse.systemtest;
 
-import java.util.Arrays;
-
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.executor.Executor;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import org.slf4j.Logger;
+
+import java.util.Arrays;
 
 public class Minikube extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
@@ -22,9 +21,9 @@ public class Minikube extends Kubernetes {
         try {
             Executor executor = new Executor(false);
             int returnCode = executor.execute(Arrays.asList(cmd), 10000);
-            if(returnCode == 0) {
+            if (returnCode == 0) {
                 return executor.getStdOut();
-            }else {
+            } else {
                 throw new RuntimeException(executor.getStdErr());
             }
         } catch (Exception e) {

@@ -5,7 +5,10 @@
 
 package io.enmasse.systemtest.mqtt;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
@@ -94,10 +97,10 @@ public class MqttClientFactory {
 
         Endpoint mqttEndpoint;
 
-        mqttEndpoint = addressSpace.getEndpointByServiceName("mqtt");
+        mqttEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
         if (mqttEndpoint == null) {
-            String externalEndpointName = TestUtils.getExternalEndpointName(addressSpace, "mqtt");
-            mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + addressSpace.getInfraUuid());
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
+            mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         }
         SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
         sslContext.init(null, new X509TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
