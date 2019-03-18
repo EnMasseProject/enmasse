@@ -52,6 +52,7 @@ import io.enmasse.address.model.ExposeSpecBuilder;
 import io.enmasse.address.model.ExposeType;
 import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CertProvider;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.Endpoint;
@@ -76,13 +77,6 @@ import io.vertx.ext.web.client.WebClientOptions;
 
 @Tag(isolated)
 class CertProviderTest extends TestBase {
-
-    public enum CertProvider {
-        certBundle,
-        selfsigned,
-        openshift,
-        wildcard
-    }
 
     private static Logger log = CustomLogger.getLogger();
     private static String ENDPOINT_PREFIX = "test-endpoint-";
@@ -282,26 +276,27 @@ class CertProviderTest extends TestBase {
                 try {
                     log.info("Making request to openshift app {}", request);
                     JsonObject response = client.test(request);
-                    if(response.containsKey("error")) {
-                        fail("Error testing openshift provider "+response.getString("error"));
-                    }else {
-                        testSucceeded=true;
+                    if (response.containsKey("error")) {
+                        fail("Error testing openshift provider " + response.getString("error"));
+                    } else {
+                        testSucceeded = true;
                         return;
                     }
-                }catch(Exception e) {
+                } catch (Exception e) {
                     lastException = e;
                 }
                 log.debug("next iteration, remaining time: {}", timeout.timeLeft());
                 Thread.sleep(5000);
             }
             log.error("Timeout expired");
-            if(lastException!=null) {
+            if (lastException != null) {
                 throw lastException;
             }
 
-        }finally {
-            if(!testSucceeded) {
-                logCollector.collectLogsOfPodsByLabels(Collections.singletonMap("app", SystemtestsKubernetesApps.OCP_ENMASSE_APP));
+        } finally {
+            if (!testSucceeded) {
+                logCollector.collectLogsOfPodsByLabels(
+                        Collections.singletonMap("app", SystemtestsKubernetesApps.OCP_ENMASSE_APP));
             }
             SystemtestsKubernetesApps.deleteOcpEnmasseApp(environment.namespace(), kubernetes);
         }
@@ -322,7 +317,7 @@ class CertProviderTest extends TestBase {
         user = new UserCredentials("user1", "password1");
         createUser(addressSpace, user);
 
-        if(createAddresses) {
+        if (createAddresses) {
             queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
             topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
             setAddresses(addressSpace, queue, topic);
@@ -350,9 +345,8 @@ class CertProviderTest extends TestBase {
     private void testConsole(WebClient webClient) throws Exception {
         Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
-        webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true)
-        .send(ar->{
-            log.info("get console "+ar.toString());
+        webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true).send(ar -> {
+            log.info("get console " + ar.toString());
             if (ar.succeeded()) {
                 promise.complete(Optional.empty());
             } else {
@@ -362,7 +356,7 @@ class CertProviderTest extends TestBase {
         });
 
         Optional<Throwable> optError = promise.get();
-        if(optError.isPresent()) {
+        if (optError.isPresent()) {
             fail(optError.get());
         }
     }
