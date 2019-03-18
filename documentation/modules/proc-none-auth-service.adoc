@@ -22,39 +22,6 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} project _{ProductNamespace}_
 ----
 endif::[]
-ifeval::["{cmdcli}" == "kubectl"]
-. Create a certificate to use with the `none` authentication service. For testing purposes, you can create a self-signed certificate:
-+
-[options="nowrap",subs="+quotes,attributes"]
-----
-mkdir -p none-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=none-authservice._{ProductNamespace}_.svc.cluster.local" -out none-authservice-cert/tls.crt -keyout none-authservice-cert/tls.key
-----
-
-. Create a secret with the `none` authentication service certificate:
-+
-[options="nowrap",subs="attributes"]
-----
-{cmdcli} create secret tls none-authservice-cert --cert=none-authservice-cert/tls.crt --key=none-authservice-cert/tls.key
-----
-
-. Create an `AuthenticationService` definition:
-+
-[source,yaml,options="nowrap"]
-----
-apiVersion: admin.enmasse.io/v1beta1
-kind: AuthenticationService
-metadata:
-  name: none-authservice
-spec:
-  type: none
-  none:
-    certificateSecret:
-      name: none-authservice-cert
-----
-endif::[]
-
-ifeval::["{cmdcli}" == "oc"]
 . Create an `AuthenticationService` definition:
 +
 [source,yaml,options="nowrap"]
@@ -66,7 +33,6 @@ metadata:
 spec:
   type: none
 ----
-endif::[]
 
 . Deploy the authentication service:
 +

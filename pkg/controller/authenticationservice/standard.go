@@ -13,14 +13,10 @@ import (
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	resource "k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, authservice *adminv1beta1.AuthenticationService) error {
@@ -48,11 +44,6 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 		authservice.Spec.Standard.Storage.DeleteClaim = new(bool)
 		*authservice.Spec.Standard.Storage.DeleteClaim = true
 	}
-	if authservice.Spec.Standard.CertificateSecret == nil {
-		authservice.Spec.Standard.CertificateSecret = &corev1.SecretReference{
-			Name: "standard-authservice-cert",
-		}
-	}
 	if authservice.Spec.Standard.Resources == nil {
 		authservice.Spec.Standard.Resources = &corev1.ResourceRequirements{
 			Requests: map[corev1.ResourceName]resource.Quantity{"memory": *resource.NewQuantity(2*1000*1000*1000, resource.DecimalSI)},
@@ -69,11 +60,7 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 		authservice.Spec.Standard.CredentialsSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
-		secret := &corev1.Secret{}
-		err := client.Get(ctx, types.NamespacedName{Namespace: authservice.Namespace, Name: secretName}, secret)
-		if err != nil && errors.IsNotFound(err) {
-			secret.ObjectMeta = metav1.ObjectMeta{Namespace: authservice.Namespace, Name: secretName}
-			install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", secretName)
+		err := CreateAuthserviceSecret(ctx, client, scheme, secretName, authservice, func(secret *corev1.Secret) error {
 			secret.StringData = make(map[string]string)
 			secret.StringData["admin.username"] = "admin"
 			adminPassword, err := util.GeneratePassword(32)
@@ -81,15 +68,27 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 				return err
 			}
 			secret.StringData["admin.password"] = adminPassword
-			if err := controllerutil.SetControllerReference(authservice, secret, scheme); err != nil {
-				return err
-			}
-			err = client.Create(ctx, secret)
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	if authservice.Spec.Standard.CertificateSecret == nil {
+		secretName := "standard-authservice-cert"
+		authservice.Spec.Standard.CertificateSecret = &corev1.SecretReference{
+			Name: secretName,
+		}
+
+		if !util.IsOpenshift() {
+			err := CreateAuthserviceSecret(ctx, client, scheme, secretName, authservice, func(secret *corev1.Secret) error {
+				cn := util.ServiceToCommonName(authservice.Namespace, *authservice.Spec.Standard.ServiceName)
+				return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
+			})
 			if err != nil {
 				return err
 			}
 		}
-		return err
 	}
 	return nil
 }

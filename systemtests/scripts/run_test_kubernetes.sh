@@ -51,9 +51,6 @@ metadata:
   name: standard-authservice
 spec:
   type: standard
-  standard:
-    certificateSecret:
-      name: standard-authservice-cert
 EOF
 
 cat <<EOF | kubectl create -f -
@@ -63,9 +60,6 @@ metadata:
   name: none-authservice
 spec:
   type: none
-  none:
-    certificateSecret:
-      name: none-authservice-cert
 EOF
 
 
