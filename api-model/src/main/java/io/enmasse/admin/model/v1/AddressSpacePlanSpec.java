@@ -18,13 +18,14 @@ import java.util.*;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"displayName", "shortDescription", "addressSpaceType", "addressPlans", "resourceLimits"})
+@JsonPropertyOrder({"displayName", "shortDescription", "infraConfigRef", "addressSpaceType", "addressPlans", "resourceLimits"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
     private String shortDescription;
     private String addressSpaceType;
     private Map<String, Double> resourceLimits = new HashMap<>();
     private List<String> addressPlans = new ArrayList<>();
+    private String infraConfigRef;
 
     public String getShortDescription() {
         return shortDescription;
@@ -58,12 +59,13 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
         return Objects.equals(shortDescription, that.shortDescription) &&
                 Objects.equals(addressSpaceType, that.addressSpaceType) &&
                 Objects.equals(addressPlans, that.addressPlans) &&
-                Objects.equals(resourceLimits, that.resourceLimits);
+                Objects.equals(resourceLimits, that.resourceLimits) &&
+                Objects.equals(infraConfigRef, that.infraConfigRef);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(shortDescription, addressSpaceType, resourceLimits, addressPlans);
+        return Objects.hash(shortDescription, addressSpaceType, resourceLimits, addressPlans, infraConfigRef);
     }
 
     @Override
@@ -73,6 +75,7 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
                 ", addressSpaceType='" + addressSpaceType + '\'' +
                 ", resourceLimits=" + resourceLimits +
                 ", addressPlans=" + addressPlans +
+                ", infraConfigRef=" + infraConfigRef +
                 '}';
     }
 
@@ -82,5 +85,13 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
 
     public List<String> getAddressPlans() {
         return Collections.unmodifiableList(addressPlans);
+    }
+
+    public String getInfraConfigRef() {
+        return infraConfigRef;
+    }
+
+    public void setInfraConfigRef(String infraConfigRef) {
+        this.infraConfigRef = infraConfigRef;
     }
 }

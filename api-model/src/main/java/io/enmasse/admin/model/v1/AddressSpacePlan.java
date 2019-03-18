@@ -4,23 +4,16 @@
  */
 package io.enmasse.admin.model.v1;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
+
+import java.util.*;
 
 @Buildable(
         editableEnabled = false,
@@ -117,6 +110,16 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
             return spec.getAddressSpaceType();
         } else {
             return addressSpaceType;
+        }
+    }
+
+    @JsonIgnore
+    @Override
+    public String getInfraConfigRef() {
+        if (spec != null) {
+            return spec.getInfraConfigRef();
+        } else {
+            return getAnnotation(AnnotationKeys.DEFINED_BY);
         }
     }
 

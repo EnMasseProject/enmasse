@@ -12,7 +12,7 @@ metadata:
     containerImage: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
     createdAt: 2019-02-19T00:00:00Z
     support: EnMasse
-    alm-examples: '[{"apiVersion":"admin.enmasse.io/v1beta1","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"storage":"5Gi"},"addressFullPolicy":"DROP"},"router":{"linkCapacity":50}}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"spec":{"addressType":"queue","shortDescription":"Small Queue","resources":{"router":0.01,"broker":0.1}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressSpacePlan","metadata":{"name":"standard-small","annotations":{"enmasse.io/defined-by":"my-standard-infra"}},"addressSpaceType":"standard","shortDescription":"Small Address Space Plan","resourceLimits":{"router":1,"broker":2,"aggregate":2},"addressPlans":["small-standard-queue"]}]'
+    alm-examples: '[{"apiVersion":"admin.enmasse.io/v1beta1","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"storage":"5Gi"},"addressFullPolicy":"DROP"},"router":{"linkCapacity":50}}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"spec":{"addressType":"queue","shortDescription":"Small Queue","resources":{"router":0.01,"broker":0.1}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressSpacePlan","metadata":{"name":"standard-small"},"spec":{"addressSpaceType":"standard","infraConfigRef":"my-standard-infra","shortDescription":"Small Address Space Plan","resourceLimits":{"router":1,"broker":2,"aggregate":2},"addressPlans":["small-standard-queue"]}]'
 spec:
   maturity: beta
   displayName: EnMasse
@@ -595,6 +595,11 @@ spec:
           - description: The name to be displayed in the console UI.
             displayName: Display Name
             path: displayName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The reference to the infrastructure config used by this plan.
+            displayName: InfraConfig Reference
+            path: infraConfigRef
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
           - description: The description to be shown in the console UI.

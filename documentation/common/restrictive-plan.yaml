@@ -4,11 +4,10 @@ metadata:
   name: restrictive-plan
   labels:
     app: enmasse
-  annotations:
-    enmasse.io/defined-by: default
 spec:
   displayName: Restrictive Plan
   displayOrder: 0
+  infraConfigRef: default
   shortDescription: A plan with restrictive quotas
   longDescription: A plan with restrictive quotas for the standard address space
   addressSpaceType: standard

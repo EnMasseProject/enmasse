@@ -36,9 +36,7 @@ public class AddressSpaceResolver {
     public InfraConfig getInfraConfig(String typeName, String planName) {
         AddressSpaceType type = getType(typeName);
         AddressSpacePlan plan = getPlan(type, planName);
-        String infraConfigName = Optional.ofNullable(plan.getMetadata().getAnnotations())
-                .map(a -> a.get(AnnotationKeys.DEFINED_BY))
-                .orElse(null);
+        String infraConfigName = plan.getInfraConfigRef();
 
         return type.getInfraConfigs().stream()
                 .filter(c -> c.getMetadata().getName().equals(infraConfigName))

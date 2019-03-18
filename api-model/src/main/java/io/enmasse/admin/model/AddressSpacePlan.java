@@ -14,4 +14,5 @@ public interface AddressSpacePlan extends HasMetadata {
     List<String> getAddressPlans();
     String getShortDescription();
     String getAddressSpaceType();
+    String getInfraConfigRef();
 }
