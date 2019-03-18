@@ -113,8 +113,8 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		if authservice.Spec.Standard.JvmOptions != nil {
 			jvmOptions += " " + *authservice.Spec.Standard.JvmOptions
 		} else if qty, ok := authservice.Spec.Standard.Resources.Requests["memory"]; ok {
-			maxHeap := qty.ScaledValue(resource.Mega)
-			jvmOptions += fmt.Sprintf(" -Xms%dm -Xmx%dm", maxHeap/2, maxHeap/2)
+			containerMemoryRequest := qty.ScaledValue(resource.Mega)
+			jvmOptions += fmt.Sprintf(" -Xms%dm -Xmx%dm", containerMemoryRequest/2, containerMemoryRequest/2)
 		}
 		install.ApplyEnvSimple(container, "JAVA_OPTS", jvmOptions)
 		install.ApplyEnvSecret(container, "KEYCLOAK_USER", "admin.username", authservice.Spec.Standard.CredentialsSecret.Name)
