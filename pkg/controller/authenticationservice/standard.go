@@ -6,6 +6,7 @@ package authenticationservice
 
 import (
 	"context"
+	"fmt"
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -46,8 +47,8 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 	}
 	if authservice.Spec.Standard.Resources == nil {
 		authservice.Spec.Standard.Resources = &corev1.ResourceRequirements{
-			Requests: map[corev1.ResourceName]resource.Quantity{"memory": *resource.NewQuantity(2*1000*1000*1000, resource.DecimalSI)},
-			Limits:   map[corev1.ResourceName]resource.Quantity{"memory": *resource.NewQuantity(2*1000*1000*1000, resource.DecimalSI)},
+			Requests: map[corev1.ResourceName]resource.Quantity{"memory": *resource.NewScaledQuantity(2, resource.Giga)},
+			Limits:   map[corev1.ResourceName]resource.Quantity{"memory": *resource.NewScaledQuantity(2, resource.Giga)},
 		}
 	}
 	if authservice.Spec.Standard.Datasource == nil {
@@ -110,6 +111,9 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		jvmOptions := "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Duser.timezone=UTC"
 		if authservice.Spec.Standard.JvmOptions != nil {
 			jvmOptions += " " + *authservice.Spec.Standard.JvmOptions
+		} else if qty, ok := authservice.Spec.Standard.Resources.Requests["memory"]; ok {
+			containerMemoryRequest := qty.ScaledValue(resource.Mega)
+			jvmOptions += fmt.Sprintf(" -Xms%dm -Xmx%dm", containerMemoryRequest/2, containerMemoryRequest/2)
 		}
 		install.ApplyEnvSimple(container, "JAVA_OPTS", jvmOptions)
 		install.ApplyEnvSecret(container, "KEYCLOAK_USER", "admin.username", authservice.Spec.Standard.CredentialsSecret.Name)
