@@ -8,11 +8,16 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import io.enmasse.common.model.AbstractHasMetadata;
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * A class containing a name and optional description.
@@ -21,7 +26,7 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
@@ -29,18 +34,20 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class NamedDescription {
+public class AddressPlanDescription extends AbstractWithAdditionalProperties {
 
     @NotNull
     private String name;
     private String description;
+    private Map<String, Double> resources = new HashMap<>();
 
-    public NamedDescription() {
+    public AddressPlanDescription() {
     }
 
-    public NamedDescription(final String name, final String description) {
+    public AddressPlanDescription(final String name, final String description, Map<String, Double> resources) {
         this.name = name;
         this.description = description;
+        this.resources = new HashMap<>(resources);
     }
 
     public String getName() {
@@ -60,12 +67,35 @@ public class NamedDescription {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressPlanDescription that = (AddressPlanDescription) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(resources, that.resources);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, description, resources);
+    }
+
+    @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("{");
         sb.append("name=").append(this.name);
         sb.append(",");
         sb.append("description=").append(this.description);
+        sb.append("resources=").append(this.resources);
         return sb.append("}").toString();
     }
 
+    public Map<String, Double> getResources() {
+        return Collections.unmodifiableMap(resources);
+    }
+
+    public void setResources(Map<String, Double> resources) {
+        this.resources = new HashMap<>(resources);
+    }
 }

@@ -83,29 +83,44 @@ class ApiServerTest extends TestBase {
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         plansProvider.createAddressSpacePlan(addressSpacePlan);
 
-        Future<Schema> data = getSchema();
-        Schema schemaData = data.get(20, TimeUnit.SECONDS);
+        Future<AddressSpaceSchemaList> data = getSchema();
+        AddressSpaceSchemaList schemaData = data.get(20, TimeUnit.SECONDS);
         log.info("Check if schema object is not null");
-        assertThat(schemaData.getAddressSpaceTypes().size(), not(0));
+        assertThat(schemaData.getItems().size(), not(0));
 
         log.info("Check if the 'standard' address space type is found");
-        assertThat(schemaData.findAddressSpaceType("standard"), notNullValue());
+        AddressSpaceSchema standardSchema = findTypeWithName(schemaData, "standard");
+        assertNotNull(standardSchema);
 
         log.info("Check if the 'standard' address space has plans");
-        assertThat(schemaData.findAddressSpaceType("standard").get().getPlans(), notNullValue());
+        assertThat(standardSchema.getSpec().getPlans(), notNullValue());
 
         log.info("Check if schema object contains new address space plan");
-        assertTrue(schemaData.findAddressSpaceType("standard").get().getPlans()
+        assertTrue(standardSchema.getSpec().getPlans()
                 .stream()
-                .map(plan -> plan.getMetadata().getName())
+                .map(AddressSpacePlanDescription::getName)
                 .collect(Collectors.toList()).contains("schema-rest-api-plan"));
 
+        AddressTypeInformation addressType = standardSchema.getSpec().getAddressTypes().stream()
+                .filter(type -> "queue".equals(type.getName()))
+                .findFirst().orElse(null);
+        assertNotNull(addressType);
+
         log.info("Check if schema contains new address plans");
-        assertTrue(schemaData.findAddressSpaceType("standard").get().findAddressType("queue").get().getPlans().stream()
-                .filter(s -> s.getMetadata().getName().equals("test-schema-rest-api-addr-plan"))
-                .map(plan -> plan.getMetadata().getName())
+        assertTrue(addressType.getPlans().stream()
+                .filter(s -> s.getName().equals("test-schema-rest-api-addr-plan"))
+                .map(AddressPlanDescription::getName)
                 .collect(Collectors.toList())
                 .contains("test-schema-rest-api-addr-plan"));
+    }
+
+    private AddressSpaceSchema findTypeWithName(AddressSpaceSchemaList schemaData, String name) {
+        for (AddressSpaceSchema schema : schemaData.getItems()) {
+            if (schema.getMetadata().getName().equals(name)) {
+                return schema;
+            }
+        }
+        return null;
     }
 
     @Test

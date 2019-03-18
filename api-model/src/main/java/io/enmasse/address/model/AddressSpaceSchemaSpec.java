@@ -6,6 +6,7 @@ package io.enmasse.address.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -15,6 +16,7 @@ import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
+import io.sundr.shaded.org.apache.velocity.util.ArrayListWrapper;
 
 @Buildable(
         editableEnabled = false,
@@ -28,7 +30,8 @@ import io.sundr.builder.annotations.Inline;
 public class AddressSpaceSchemaSpec {
     private String description;
     private List<@Valid AddressTypeInformation> addressTypes = new ArrayList<>();
-    private List<@Valid NamedDescription> plans = new ArrayList<>();
+    private List<@Valid AddressSpacePlanDescription> plans = new ArrayList<>();
+    private List<@Valid String> authenticationServices = new ArrayList<>();
 
     public String getDescription() {
         return this.description;
@@ -46,29 +49,36 @@ public class AddressSpaceSchemaSpec {
         this.addressTypes = addressTypes;
     }
 
-    public List<NamedDescription> getPlans() {
+    public List<AddressSpacePlanDescription> getPlans() {
         return this.plans;
     }
 
-    public void setPlans(final List<NamedDescription> plans) {
+    public void setPlans(final List<AddressSpacePlanDescription> plans) {
         this.plans = plans;
     }
 
-    public static AddressSpaceSchemaSpec fromAddressSpaceType(final AddressSpaceType type ) {
-        if ( type == null ) {
-            return null;
-        }
+    public List<String> getAuthenticationServices() {
+        return authenticationServices;
+    }
 
-        return new AddressSpaceSchemaSpecBuilder()
-                .withDescription(type.getDescription())
-                .withAddressTypes(type.getAddressTypes().stream()
-                        .map(addressType -> AddressTypeInformation.fromAddressType(addressType))
-                        .collect(Collectors.toList())
-                        )
-                .withPlans(type.getPlans().stream()
-                        .map(plan -> new NamedDescription(plan.getMetadata().getName(), plan.getShortDescription()))
-                        .collect(Collectors.toList()))
-                .build();
+    public void setAuthenticationServices(List<String> authenticationServices) {
+        this.authenticationServices = authenticationServices;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSchemaSpec that = (AddressSpaceSchemaSpec) o;
+        return Objects.equals(description, that.description) &&
+                Objects.equals(addressTypes, that.addressTypes) &&
+                Objects.equals(plans, that.plans) &&
+                Objects.equals(authenticationServices, that.authenticationServices);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(description, addressTypes, plans, authenticationServices);
     }
 
     @Override
@@ -79,6 +89,7 @@ public class AddressSpaceSchemaSpec {
         sb.append("plans=").append(this.plans);
         sb.append(",");
         sb.append("addressTypes=").append(this.addressTypes);
+        sb.append("authenticationServices=").append(this.authenticationServices);
         return sb.append("}").toString();
     }
 }

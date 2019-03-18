@@ -8,6 +8,7 @@ package io.enmasse.systemtest.bases;
 import com.google.common.collect.Ordering;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.address.model.Schema;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
@@ -482,7 +483,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @return schema object
      * @throws Exception
      */
-    protected Future<Schema> getSchema() throws Exception {
+    protected Future<AddressSpaceSchemaList> getSchema() throws Exception {
         return AddressSpaceUtils.getSchema(addressApiClient);
     }
 

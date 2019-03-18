@@ -7,12 +7,17 @@ package io.enmasse.address.model;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Buildable(
         editableEnabled = false,
@@ -46,7 +51,7 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
         return this.spec;
     }
 
-    public static AddressSpaceSchema fromAddressSpaceType(final String creationTimestamp, final AddressSpaceType addressSpaceType) {
+    public static AddressSpaceSchema fromAddressSpaceType(final String creationTimestamp, final AddressSpaceType addressSpaceType, final List<AuthenticationService> authenticationServiceList) {
         if (addressSpaceType == null) {
             return null;
         }
@@ -57,9 +62,33 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
                 .withCreationTimestamp(creationTimestamp)
                 .endMetadata()
 
-                .withSpec(AddressSpaceSchemaSpec.fromAddressSpaceType(addressSpaceType))
-
+                .editOrNewSpec()
+                .withDescription(addressSpaceType.getDescription())
+                .withAddressTypes(addressSpaceType.getAddressTypes().stream()
+                        .map(AddressTypeInformation::fromAddressType)
+                        .collect(Collectors.toList()))
+                .withPlans(addressSpaceType.getPlans().stream()
+                        .map(plan -> new AddressSpacePlanDescription(plan.getMetadata().getName(), plan.getShortDescription(), plan.getResourceLimits()))
+                        .collect(Collectors.toList()))
+                .withAuthenticationServices(authenticationServiceList.stream()
+                        .map(authenticationService -> authenticationService.getMetadata().getName())
+                        .collect(Collectors.toList()))
+                .endSpec()
                 .build();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSchema that = (AddressSpaceSchema) o;
+        return Objects.equals(spec, that.spec) &&
+                Objects.equals(getMetadata(), that.getMetadata());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(spec, getMetadata());
     }
 
     @Override
