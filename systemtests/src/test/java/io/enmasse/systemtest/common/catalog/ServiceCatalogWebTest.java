@@ -94,7 +94,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @Test
     @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
     void testProvisionAddressSpaceStandard() throws Exception {
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-standard", AddressSpaceType.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-standard", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL);
         String namespace = getUserProjectName(standard);
         provisionedServices.put(namespace, standard);
         OpenshiftWebPage ocPage = new OpenshiftWebPage(selenium, addressApiClient, getOCConsoleRoute(), ocTestUser);

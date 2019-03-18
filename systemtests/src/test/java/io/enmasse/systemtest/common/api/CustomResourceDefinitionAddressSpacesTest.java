@@ -62,7 +62,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     @Test
     void testReplaceAddressSpace() throws Exception {
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_SMALL).endSpec().done();
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         addToAddressSpacess(standard);
@@ -132,7 +132,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             //===========================
             AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
             AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-            AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+            AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-standard", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);

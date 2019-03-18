@@ -7,10 +7,7 @@ package io.enmasse.systemtest.common.api;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.DestinationPlan;
-import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
@@ -47,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class UserApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("user-api-address-space-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-    private AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("user-api-address-space-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+    private AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("user-api-address-space-standard", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
 
     @BeforeEach
     void deployAddressSpaces() throws Exception {
