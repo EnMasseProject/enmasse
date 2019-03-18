@@ -23,7 +23,7 @@ ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
 endif
 
-all: init build_java docker_build templates
+all: build_java docker_build templates
 
 test: test_go
 
