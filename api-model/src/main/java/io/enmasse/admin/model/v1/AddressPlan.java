@@ -5,9 +5,8 @@
 
 package io.enmasse.admin.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import io.enmasse.common.model.AbstractHasMetadata;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -74,6 +73,7 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     }
 
     @Override
+    @JsonIgnore
     public String getShortDescription() {
         if (spec != null) {
             return spec.getShortDescription();
@@ -83,6 +83,7 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     }
 
     @Override
+    @JsonIgnore
     public String getAddressType() {
         if (spec != null) {
             return spec.getAddressType();
@@ -92,30 +93,35 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     }
 
     @Override
+    @JsonIgnore
     public Map<String, Double> getResources() {
         if (spec != null) {
             return spec.getResources();
         } else {
             Map<String, Double> returnedResources = new HashMap<>();
-            for (ResourceRequest resourceRequest : getRequiredResources()) {
+            for (ResourceRequest resourceRequest : requiredResources) {
                 returnedResources.put(resourceRequest.getName(), resourceRequest.getCredit());
             }
             return returnedResources;
         }
     }
 
+    @JsonIgnore
+    public List<ResourceRequest> getRequiredResources() {
+        return requiredResources;
+    }
+
+    @JsonProperty("shortDescription")
     public void setShortDescription(String shortDescription) {
         this.shortDescription = shortDescription;
     }
 
+    @JsonProperty("addressType")
     public void setAddressType(String addressType) {
         this.addressType = addressType;
     }
 
-    List<ResourceRequest> getRequiredResources() {
-        return requiredResources;
-    }
-
+    @JsonProperty("requiredResources")
     public void setRequiredResources(List<ResourceRequest> requiredResources) {
         this.requiredResources = requiredResources;
     }

@@ -17,14 +17,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 
 import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.enmasse.admin.model.v1.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
@@ -39,13 +38,6 @@ import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.AddressSpaceSchema;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.address.model.Phase;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
-import io.enmasse.admin.model.v1.BrokeredInfraConfig;
-import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilder;
 
 // TODO: Add more tests of invalid input to deserialization
@@ -330,9 +322,9 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getAdditionalProperties().get("displayName"), is("MySpace"));
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
         assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
-        assertThat(addressSpacePlan.getResources().size(), is(2));
-        assertThat(addressSpacePlan.getResources().get(0).getName(), is("router"));
-        assertThat(addressSpacePlan.getResources().get(1).getName(), is("broker"));
+        assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
+        assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
+        assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
         assertThat(addressSpacePlan.getMetadata().getAnnotations().size(), is(1));
         assertThat(addressSpacePlan.getAnnotation("mykey"), is("myvalue"));
     }
@@ -394,9 +386,9 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
         assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
-        assertThat(addressSpacePlan.getResources().size(), is(2));
-        assertThat(addressSpacePlan.getResources().get(0).getName(), is("router"));
-        assertThat(addressSpacePlan.getResources().get(1).getName(), is("broker"));
+        assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
+        assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
+        assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
     }
 
     @Test
@@ -440,6 +432,59 @@ public class SerializationTest {
         assertEquals(2, plan.getAddressPlans().size());
         assertEquals("plan1", plan.getMetadata().getName());
         assertEquals("desc", plan.getShortDescription());
+    }
+
+    @Test
+    void testAddressSpacePlanBuilder() throws IOException {
+        AddressSpacePlan plan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("test-plan")
+                .withAnnotations(Collections.singletonMap("test-key", "test-value"))
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType("standard")
+                .withAddressPlans("a", "b", "c")
+                .withResourceLimits(Map.of("router", 1.0))
+                .withShortDescription("myplan")
+                .endSpec()
+                .build();
+        assertEquals(3, plan.getAddressPlans().size());
+        assertEquals("test-plan", plan.getMetadata().getName());
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(plan);
+        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressSpacePlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"labels\":{},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"myplan\",\"addressSpaceType\":\"standard\",\"addressPlans\":[\"a\",\"b\",\"c\"],\"resourceLimits\":{\"router\":1.0}}}";
+        assertEquals(expected, serialized);
+        System.out.println(serialized);
+        AddressSpacePlan deserialized = mapper.readValue(serialized, AddressSpacePlan.class);
+        assertEquals(plan, deserialized);
+    }
+
+    @Test
+    void testAddressPlanBuilder() throws IOException {
+        LinkedHashMap<String, Double> res = new LinkedHashMap<>();
+        res.put("router", 2.0);
+        res.put("broker", 14.0);
+        AddressPlan plan = new AddressPlanBuilder()
+                .withNewMetadata()
+                .withName("test-plan")
+                .withAnnotations(Collections.singletonMap("test-key", "test-value"))
+                .endMetadata()
+                .withNewSpec()
+                .withShortDescription("kornys")
+                .withAddressType("topic")
+                .withResources(res)
+                .endSpec()
+                .build();
+        assertEquals("test-plan", plan.getMetadata().getName());
+        assertEquals(14, plan.getSpec().getResources().get("broker"));
+
+        ObjectMapper mapper = new ObjectMapper();
+        String serialized = mapper.writeValueAsString(plan);
+        System.out.println(serialized);
+        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressPlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"labels\":{},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"kornys\",\"addressType\":\"topic\",\"resources\":{\"broker\":14.0,\"router\":2.0}}}";
+        assertEquals(expected, serialized);
+        AddressPlan deserialized = mapper.readValue(serialized, AddressPlan.class);
+        assertEquals(plan, deserialized);
     }
 
     /*

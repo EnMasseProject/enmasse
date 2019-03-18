@@ -13,6 +13,8 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -41,64 +43,15 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
     private List<String> addressPlans = new LinkedList<>();
 
     public AddressSpacePlan() {
-        super(KIND, AdminCrd.API_VERSION_V1BETA1);
+        super(KIND, AdminCrd.API_VERSION_V1BETA2);
     }
 
-    public void setResources(List<ResourceAllowance> resources) {
-        this.resources = resources;
-    }
-    
-    public List<ResourceAllowance> getResources() {
-        return resources;
+    public void setSpec(AddressSpacePlanSpec spec) {
+        this.spec = spec;
     }
 
-    public void setAddressPlans(List<String> addressPlans) {
-        this.addressPlans = addressPlans;
-    }
-
-    @Override
-    public Map<String, Double> getResourceLimits() {
-        if (spec != null) {
-            return spec.getResourceLimits();
-        } else {
-            Map<String, Double> resourceLimits = new HashMap<>();
-            for (ResourceAllowance allowance : resources) {
-                resourceLimits.put(allowance.getName(), allowance.getMax());
-            }
-            return resourceLimits;
-        }
-    }
-
-    public List<String> getAddressPlans() {
-        if (spec != null) {
-            return spec.getAddressPlans();
-        } else {
-            return addressPlans;
-        }
-    }
-
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
-    }
-    
-    public String getShortDescription() {
-        if (spec != null) {
-            return spec.getShortDescription();
-        } else {
-            return shortDescription;
-        }
-    }
-
-    public void setAddressSpaceType(String addressSpaceType) {
-        this.addressSpaceType = addressSpaceType;
-    }
-    
-    public String getAddressSpaceType() {
-        if (spec != null) {
-            return spec.getAddressSpaceType();
-        } else {
-            return addressSpaceType;
-        }
+    public AddressSpacePlanSpec getSpec() {
+        return spec;
     }
 
     @Override
@@ -123,11 +76,73 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
                 '}';
     }
 
-    public void setSpec(AddressSpacePlanSpec spec) {
-        this.spec = spec;
+    @JsonIgnore
+    @Override
+    public Map<String, Double> getResourceLimits() {
+        if (spec != null) {
+            return spec.getResourceLimits();
+        } else {
+            Map<String, Double> resourceLimits = new HashMap<>();
+            for (ResourceAllowance allowance : resources) {
+                resourceLimits.put(allowance.getName(), allowance.getMax());
+            }
+            return resourceLimits;
+        }
     }
 
-    public AddressSpacePlanSpec getSpec() {
-        return spec;
+    @JsonIgnore
+    @Override
+    public List<String> getAddressPlans() {
+        if (spec != null) {
+            return spec.getAddressPlans();
+        } else {
+            return addressPlans;
+        }
     }
+
+    @JsonIgnore
+    @Override
+    public String getShortDescription() {
+        if (spec != null) {
+            return spec.getShortDescription();
+        } else {
+            return shortDescription;
+        }
+    }
+
+    @JsonIgnore
+    @Override
+    public String getAddressSpaceType() {
+        if (spec != null) {
+            return spec.getAddressSpaceType();
+        } else {
+            return addressSpaceType;
+        }
+    }
+
+    @JsonIgnore
+    public List<ResourceAllowance> getResources() {
+        return resources;
+    }
+
+    @JsonProperty("resources")
+    public void setResources(List<ResourceAllowance> resources) {
+        this.resources = resources;
+    }
+
+    @JsonProperty("addressPlans")
+    public void setAddressPlans(List<String> addressPlans) {
+        this.addressPlans = addressPlans;
+    }
+
+    @JsonProperty("shortDescription")
+    public void setShortDescription(String shortDescription) {
+        this.shortDescription = shortDescription;
+    }
+
+    @JsonProperty("addressSpaceType")
+    public void setAddressSpaceType(String addressSpaceType) {
+        this.addressSpaceType = addressSpaceType;
+    }
+
 }
