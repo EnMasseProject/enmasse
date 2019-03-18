@@ -147,8 +147,8 @@ public class AddressSpaceUtils {
         return addressSpace != null && addressSpace.getStatus().isReady();
     }
 
-    public static boolean matchAddressSpacePlan(JsonObject data, AddressSpace addressSpace) {
-        return data != null && data.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan").equals(addressSpace.getSpec().getPlan());
+    public static boolean matchAddressSpacePlan(AddressSpace received, AddressSpace expected) {
+        return received != null && received.getMetadata().getAnnotations().get("enmasse.io/applied-plan").equals(expected.getSpec().getPlan());
     }
 
     public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
@@ -173,21 +173,23 @@ public class AddressSpaceUtils {
     }
 
     public static void waitForAddressSpacePlanApplied(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
-        JsonObject addressSpaceObject = null;
+        AddressSpace addressSpaceObject = null;
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
 
         boolean isPlanApplied = false;
         while (budget.timeLeft() >= 0 && !isPlanApplied) {
-            addressSpaceObject = apiClient.getAddressSpace(addressSpace.getMetadata().getName());
+            addressSpaceObject = AddressSpaceUtils.jsonToAdressSpace(apiClient.getAddressSpace(addressSpace.getMetadata().getName()));
             isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
             if (!isPlanApplied) {
                 Thread.sleep(1000);
             }
-            log.info("Waiting until Address space plan will be applied: '{}'", addressSpace.getSpec().getPlan());
+            log.info("Waiting until Address space plan will be applied: '{}', current: {}",
+                    addressSpace.getSpec().getPlan(),
+                    addressSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
         }
         isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
         if (!isPlanApplied) {
-            String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan") : "";
+            String jsonStatus = addressSpaceObject != null ? addressSpaceObject.getMetadata().getAnnotations().get("enmasse.io/applied-plan") : "";
             throw new IllegalStateException("Address Space " + addressSpace + " contains wrong plan: " + jsonStatus);
         }
         log.info("Address plan {} successfully applied", addressSpace.getSpec().getPlan());

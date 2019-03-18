@@ -248,15 +248,8 @@ class ApiServerTest extends TestBase {
         Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
         assertEquals(addressSpace.getMetadata().getName(), dest3AddressObj.getSpec().getAddressSpace(), "Addressspace name is empty");
 
-        logWithSeparator(log, "Check behavior when addressSpace is set to another existing address space");
-        Address dest4 = AddressUtils.createAddressObject(null, null, addressSpace2.getMetadata().getName(),
-                "test-rest-api-queue4", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
-
-        Throwable exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_INTERNAL_ERROR, dest4));
-        assertThat("Exception does not contain correct information", exception.getMessage(), containsString("does not match address space"));
-
         Address destWithoutAddress = AddressUtils.createQueueAddressObject(null, DestinationPlan.BROKERED_QUEUE);
-        exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress));
+        Throwable exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress));
         JsonObject serverResponse = new JsonObject(exception.getCause().getMessage());
         assertEquals("spec.address: must not be null", serverResponse.getString("message"),
                 "Incorrect response from server on missing address!");
@@ -423,7 +416,7 @@ class ApiServerTest extends TestBase {
 
         assertCanConnect(addressspace, cred, Collections.singletonList(dest));
 
-        replaceAddressSpace(addressspace);
+        replaceAddressSpace(AddressSpaceUtils.createAddressSpaceObject("test-replace-address-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
 
         assertCanConnect(addressspace, cred, Collections.singletonList(dest));
 

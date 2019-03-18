@@ -626,7 +626,7 @@ public class TestUtils {
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final AddressApiClient client, final String name, final String currentResourceVersion) throws Exception {
-        waitForChangedResourceVersion(budget, currentResourceVersion, () -> client.getAddressSpace(name).getJsonObject("metadata").getString("resourceVersion"));
+        waitForChangedResourceVersion(budget, currentResourceVersion, () -> AddressSpaceUtils.jsonToAdressSpace(client.getAddressSpace(name)).getMetadata().getResourceVersion());
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
