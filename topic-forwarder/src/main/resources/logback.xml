@@ -8,10 +8,8 @@
     </encoder>
   </appender>
 
-  <root level="info">
+  <root level="${LOG_LEVEL}">
     <appender-ref ref="STDOUT" />
   </root>
-
-  <logger name="io.enmasse" level="DEBUG"/>
 
 </configuration>
