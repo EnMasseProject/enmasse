@@ -1,7 +1,7 @@
 TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(TOPDIR)/Makefile.env.mk
 
-DOCKER_DIRS      = agent topic-forwarder artemis broker-plugin api-server address-space-controller standard-controller keycloak-plugin router router-metrics mqtt-gateway mqtt-lwt service-broker iot/iot-tenant-service iot/iot-auth-service iot/iot-device-registry iot/iot-http-adapter iot/iot-mqtt-adapter
+DOCKER_DIRS      = agent topic-forwarder artemis broker-plugin api-server address-space-controller none-authservice standard-controller keycloak-plugin router router-metrics mqtt-gateway mqtt-lwt service-broker iot/iot-tenant-service iot/iot-auth-service iot/iot-device-registry iot/iot-http-adapter iot/iot-mqtt-adapter
 FULL_BUILD       = true
 
 GO_DIRS          = \
