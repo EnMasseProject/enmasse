@@ -178,7 +178,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             AddressSpaceUtils.waitForAddressSpaceReady(apiClient, addressSpace);
             log.info("Address space '" + addressSpace + "' already exists.");
         }
-        AddressSpaceUtils.syncAddressSpaceObject(addressSpace, addressApiClient);
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace, apiClient);
         logCollector.startCollecting(addressSpace);
         log.info("Address space is ready for use - {}", addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
@@ -227,7 +227,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         if (AddressSpaceUtils.existAddressSpace(addressApiClient, addressSpace.getMetadata().getName())) {
             log.info("Address space '{}' exists and will be updated.", addressSpace);
-            final String currentResourceVersion = addressApiClient.getAddressSpace(addressSpace.getMetadata().getName()).getJsonObject("metadata").getString("resourceVersion");
+            final String currentResourceVersion = AddressSpaceUtils.jsonToAdressSpace(addressApiClient.getAddressSpace(addressSpace.getMetadata().getName())).getMetadata().getResourceVersion();
             addressApiClient.replaceAddressSpace(addressSpace);
             TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressApiClient, addressSpace.getMetadata().getName(), currentResourceVersion);
             if (waitForPlanApplied) {

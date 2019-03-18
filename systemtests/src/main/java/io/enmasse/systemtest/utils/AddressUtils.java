@@ -156,6 +156,9 @@ public class AddressUtils {
     }
 
     public static String generateAddressMetadataName(String addressSpace, Address address) {
+        if (address.getMetadata().getName() == null) {
+            return null;
+        }
         return address.getMetadata().getName().startsWith(addressSpace) ? address.getMetadata().getName() : String.format("%s.%s", addressSpace, sanitizeAddress(address.getMetadata().getName()));
     }
 

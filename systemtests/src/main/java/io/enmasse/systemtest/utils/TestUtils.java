@@ -352,19 +352,19 @@ public class TestUtils {
      * @param destinations variable count of destinations
      * @throws Exception IllegalStateException if destinations are not ready within timeout
      */
-    public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, io.enmasse.address.model.Address... destinations) throws Exception {
+    public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
         waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isAddressReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForDestinationPlanApplied(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, io.enmasse.address.model.Address... destinations) throws Exception {
+    public static void waitForDestinationPlanApplied(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_PLAN_CHANGE);
         waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isPlanSynced, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForBrokersDrained(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, io.enmasse.address.model.Address... destinations) throws Exception {
+    public static void waitForBrokersDrained(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_BROKER_DRAINED);
         waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::areBrokersDrained, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
@@ -390,9 +390,9 @@ public class TestUtils {
         }
     }
 
-    private static Map<String, JsonObject> checkAddressesMatching(JsonObject addressList, Predicate<JsonObject> predicate, io.enmasse.address.model.Address... destinations) {
+    private static Map<String, JsonObject> checkAddressesMatching(JsonObject addressList, Predicate<JsonObject> predicate, Address... destinations) {
         Map<String, JsonObject> notMatchingAddresses = new HashMap<>();
-        for (io.enmasse.address.model.Address destination : destinations) {
+        for (Address destination : destinations) {
             JsonObject addressObject = lookupAddress(addressList, destination.getSpec().getAddress());
             if (addressObject == null) {
                 notMatchingAddresses.put(destination.getSpec().getAddress(), null);
@@ -626,7 +626,7 @@ public class TestUtils {
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final AddressApiClient client, final String name, final String currentResourceVersion) throws Exception {
-        waitForChangedResourceVersion(budget, currentResourceVersion, () -> client.getAddressSpace(name).getJsonObject("metadata").getString("resourceVersion"));
+        waitForChangedResourceVersion(budget, currentResourceVersion, () -> AddressSpaceUtils.jsonToAdressSpace(client.getAddressSpace(name)).getMetadata().getResourceVersion());
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
