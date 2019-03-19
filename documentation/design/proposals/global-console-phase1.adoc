@@ -147,6 +147,10 @@ In both case, the Operator will push the clientid/clientsecret information to a 
 
 (Note when a new address space is created and its addressspace specific console is created, the operator will need to update the oauthclient to add the console's route into the redirect-urls.  This will allow the Global Console and Addressspace Console to share the same SSO session).
 
+== Diagram
+
+image:images/global-console-high-level-flow.png[]
+
 == Testing
 
 New Global Console tests will need to be added.
