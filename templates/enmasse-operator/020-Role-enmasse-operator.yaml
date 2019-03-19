@@ -7,10 +7,10 @@ metadata:
 rules:
   - apiGroups: [ "apps" ]
     resources: [ "deployments" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "" ]
     resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "", "route.openshift.io" ]
     resources: [ "routes", "routes/custom-host", "routes/status"]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
