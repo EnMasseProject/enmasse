@@ -139,7 +139,7 @@ The Operator will use the information in the Console CR to create and keep synch
 - configmap instance 
 - deployment 
 
-On OpenShift, for the oauthclient, if the `oauthSecretRef` references an oauthclient instance that does not exist, the operator will create it. If it already exists, it will simply use it.  The Operator will ensure that the oauthclient's redirect urls are synchronized with the routes that exist to the service at that moment.
+On OpenShift, for the oauthclient, if the `oauthSecretRef` references an oauthclient instance that does not exist, the operator will create it. If it already exists, it will simply use it.  The Operator will ensure that the oauthclient's redirect urls are synchronized with the routes that exist to the service at that moment.  Note that we require a fully fledged oauthclient rather than https://docs.openshift.com/container-platform/3.11/architecture/additional_concepts/authentication.html#service-accounts-as-oauth-clients[utilizing an service account as oauthclient]. This is becasuse the service account form restricts the the authorized user to operations within the service account's own namespace. 
 
 On kubernetes, the user must create the secret instance and reference it from `oauthSecretRef`.  If this is not done, the Operator will have no effect.
 
