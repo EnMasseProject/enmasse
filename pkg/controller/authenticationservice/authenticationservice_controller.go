@@ -230,10 +230,15 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 		status.CaCertSecret = authservice.Spec.Standard.CertificateSecret
 		return nil
 	})
-
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
+	result, err = r.removeKeycloakController(ctx, authservice)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	requeue = requeue || result.Requeue
 
 	return reconcile.Result{Requeue: requeue}, nil
 }
@@ -447,6 +452,28 @@ func (r *ReconcileAuthenticationService) reconcileStandardOauthClient(ctx contex
 			authservice.Annotations["enmasse.io/identity-provider-client-id"] = oauth.Name
 			authservice.Annotations["enmasse.io/identity-provider-client-secret"] = oauth.Secret
 		}
+	}
+	return reconcile.Result{}, nil
+}
+
+/*
+ * This function removes the keycloak controller if it exists. This process is no longer needed if this
+ * operator is running.
+ */
+func (r *ReconcileAuthenticationService) removeKeycloakController(ctx context.Context, authservice *adminv1beta1.AuthenticationService) (reconcile.Result, error) {
+	dep := &appsv1.Deployment{}
+	name := types.NamespacedName{Namespace: authservice.Namespace, Name: "keycloak-controller"}
+	err := r.client.Get(ctx, name, dep)
+	if err != nil {
+		if k8errors.IsNotFound(err) {
+			return reconcile.Result{}, nil
+		} else {
+			return reconcile.Result{Requeue: true}, err
+		}
+	}
+	err = r.client.Delete(ctx, dep)
+	if err != nil {
+		return reconcile.Result{Requeue: true}, err
 	}
 	return reconcile.Result{}, nil
 }
