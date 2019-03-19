@@ -45,6 +45,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         AuthenticationService authService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService())
                 .orElseThrow(() -> new IllegalArgumentException("Unable to find authentication service " + addressSpace.getSpec().getAuthenticationService()));
 
+        if (authService.getStatus() == null) {
+            throw new IllegalArgumentException("Authentication service '" + authService.getMetadata().getName() + "' is not yet deployed");
+        }
+
 
         Optional<String> kcIdpHint = getKcIdpHint(infraConfig, addressSpace, authService);
 
