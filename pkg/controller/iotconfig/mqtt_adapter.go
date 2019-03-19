@@ -95,7 +95,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 			{Name: "HONO_MQTT_NATIVE_TLS_REQUIRED", Value: "false"},
 		}
 
-		AppendHonoAdapterEnvs(container, "mqtt-adapter@HONO", "mqtt-secret")
+		AppendHonoAdapterEnvs(container, "mqtt-adapter@HONO", config.Status.Adapters["mqtt"].InterServicePassword)
 
 		if err := AppendTrustStores(config, container, []string{
 			"HONO_CREDENTIALS_TRUST_STORE_PATH",
