@@ -539,17 +539,15 @@ public abstract class Kubernetes {
                     @Override
                     public void onFailure(Throwable throwable, Response response) {
                         data.completeExceptionally(throwable);
-
                     }
-
                     @Override
                     public void onClose(int i, String s) {
                         data.complete(baos.toString());
                     }
                 }).exec(command)) {
-            return data.get(1, TimeUnit.MINUTES);
+            return data.get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
-            log.warn("Exception running command {} on pod: {}", command, e.getMessage());
+            log.warn("Exception running command {} on pod: {} with exception {}", command, pod.getMetadata().getName(), e);
             return "";
         }
     }
