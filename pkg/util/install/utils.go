@@ -37,7 +37,7 @@ func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, name string) {
 func ApplyServiceDefaults(service *corev1.Service, component string, name string) {
 
 	ApplyDefaultLabels(&service.ObjectMeta, component, name)
-	if service.Spec.Selector == nil {
+	if service.CreationTimestamp.IsZero() {
 		service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 	}
 
@@ -48,7 +48,7 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 
 	ApplyDefaultLabels(&deployment.ObjectMeta, component, name)
 
-	if deployment.Spec.Selector == nil {
+	if deployment.CreationTimestamp.IsZero() {
 		deployment.Spec.Selector = &v1.LabelSelector{
 			MatchLabels: CreateDefaultLabels(nil, component, name),
 		}
