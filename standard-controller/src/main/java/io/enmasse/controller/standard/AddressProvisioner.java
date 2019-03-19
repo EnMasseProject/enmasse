@@ -328,7 +328,7 @@ public class AddressProvisioner {
 
                     updateBrokerStatus(address, Collections.singletonList(brokerStatus));
 
-                    brokers.sort(Comparator.comparingDouble(BrokerInfo::getCredit));
+                    brokers.sort(Comparator.comparing(BrokerInfo::getBrokerId));
 
                     for (BrokerInfo brokerInfo : brokers) {
                         if (brokerInfo.getCredit() + resourceRequest.getCredit() < 1) {
@@ -510,7 +510,7 @@ public class AddressProvisioner {
             }
         }
 
-        brokers.sort(Comparator.comparingDouble(BrokerInfo::getCredit));
+        brokers.sort(Comparator.comparing(BrokerInfo::getBrokerId));
 
         for (BrokerInfo brokerInfo : brokers) {
             if (brokerInfo.getCredit() + credit < 1) {
