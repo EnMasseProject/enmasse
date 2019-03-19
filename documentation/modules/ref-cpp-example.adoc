@@ -79,7 +79,7 @@ The workaround involves setting the capability `"topic"` in the source.
 
 .Procedure
 
-. In the `topic_receive.cpp` file, edit the code so that it is similar to what is shown in this example:
+* In the `topic_receive.cpp` file, edit the code so that it is similar to what is shown in this example:
 
 [source,cpp,options="nowrap",subs="+quotes,attributes"]
 ----

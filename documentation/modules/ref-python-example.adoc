@@ -45,7 +45,7 @@ The workaround for this issue involves setting the capability `"topic"` in the s
 
 .Procedure
 
-. In the `simple_recv.py` file, add the following lines:
+. In the `simple_recv.py` file, modify the `from proton.reactor import Container` to add the `ReceiverOption`:
 
 [source,python,options="nowrap",subs="+quotes,attributes"]
 ----
@@ -59,6 +59,6 @@ class CapabilityOptions(ReceiverOption):
 [source,python,options="nowrap",subs="+quotes,attributes"]
 ----
 def on_start(self, event):
-        event.container.create_receiver(self.url, options=CapabilityOptions())
+        event.container.create_receiver(conn, self.address, options=CapabilityOptions())
 ----
 
