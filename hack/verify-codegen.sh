@@ -33,4 +33,5 @@ if diff -Nur "$SCRIPTPATH/.." "$TMPPROJ"; then
     echo "No changes detected in generated code"
 else
     echo "Generated code is out of date. Run hack/update-codegen.sh and commit the changes."
+    exit 1 # must failed the build
 fi

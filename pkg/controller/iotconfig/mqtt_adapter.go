@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"fmt"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -42,7 +43,7 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, r.reconcileMqttAdapterConfigMap)
 	})
-	if config.WantDefaultRoutes() {
+	if config.WantDefaultRoutes(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig) {
 		rc.ProcessSimple(func() error {
 			return r.processRoute(ctx, routeMqttAdapter, config, r.reconcileMqttAdapterRoute)
 		})
@@ -51,6 +52,9 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeMqttAdapter}})
 		}
 	}
+	rc.ProcessSimple(func() error {
+		return r.reconcileEndpointKeyCertificateSecret(ctx, config, config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, nameMqttAdapter)
+	})
 
 	return rc.Result()
 }
@@ -59,7 +63,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	deployment.Spec.Replicas = nil
+	applyDefaultDeploymentConfig(deployment, config.Spec.AdaptersConfig.MqttAdapterConfig.ServiceConfig)
 
 	err := install.ApplyContainerWithError(deployment, "mqtt-adapter", func(container *corev1.Container) error {
 		if err := install.SetContainerImage(container, "iot-mqtt-adapter", config); err != nil {
@@ -127,7 +131,13 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameMqttAdapter+"-tls"); err != nil {
+	if err := ApplyInterServiceForDeployment(config, deployment, ""); err != nil {
+		return err
+	}
+
+	// endpoint key/cert
+
+	if err := applyAdapterEndpointDeployment(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, deployment, nameMqttAdapter); err != nil {
 		return err
 	}
 
@@ -157,7 +167,11 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterService(config *iotv1alpha1.IoT
 		service.Annotations = make(map[string]string)
 	}
 
-	if err := ApplyInterServiceForService(config, service, nameMqttAdapter+"-tls"); err != nil {
+	if err := ApplyInterServiceForService(config, service, ""); err != nil {
+		return err
+	}
+
+	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, service, nameMqttAdapter); err != nil {
 		return err
 	}
 
@@ -221,7 +235,17 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterRoute(config *iotv1alpha1.IoTCo
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
+	if config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig != nil &&
+		config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig.HasCustomCertificate() {
+
+		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+
+	} else {
+
+		return fmt.Errorf("reencrypt routes are not supported to MQTT")
+
+	}
 
 	// Service
 

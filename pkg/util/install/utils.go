@@ -402,3 +402,11 @@ func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey st
 		}
 	})
 }
+
+func ApplyTlsSecret(secret *corev1.Secret, key []byte, certificate []byte) {
+	secret.Type = corev1.SecretTypeTLS
+	secret.Data = map[string][]byte{
+		"tls.key": key,
+		"tls.crt": certificate,
+	}
+}

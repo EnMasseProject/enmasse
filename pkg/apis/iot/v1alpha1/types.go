@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
-	"github.com/enmasseproject/enmasse/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -22,12 +21,6 @@ type IoTProject struct {
 
 	Spec   IoTProjectSpec   `json:"spec"`
 	Status IoTProjectStatus `json:"status"`
-}
-
-// Get the IoT tenant name from an IoT project.
-// This is not in any way encoded
-func (project *IoTProject) TenantName() string {
-	return util.TenantName(project.Namespace, project.Name)
 }
 
 type IoTProjectSpec struct {
@@ -106,6 +99,8 @@ type IoTConfigSpec struct {
 	ImageOverrides map[string]v1beta1.ImageOverride `json:"imageOverrides,omitempty"`
 
 	InterServiceCertificates *InterServiceCertificates `json:"interServiceCertificates,omitempty"`
+
+	AdaptersConfig AdaptersConfig `json:"adapters"`
 }
 
 type InterServiceCertificates struct {
@@ -122,9 +117,38 @@ type SecretCertificatesStrategy struct {
 	ServiceSecretNames map[string]string `json:"serviceSecretNames"`
 }
 
-type AdapterSpec struct {
-	AdapterType string `json:"type"`
-	Replicas    int    `json:"replicas"`
+type AdaptersConfig struct {
+	HttpAdapterConfig HttpAdapterConfig `json:"http,omitempty"`
+	MqttAdapterConfig MqttAdapterConfig `json:"mqtt,omitempty"`
+}
+
+type ServiceConfig struct {
+	Replicas *int32 `json:"replicas,omitempty"`
+}
+
+type AdapterEndpointConfig struct {
+	EnableDefaultRoute     *bool                   `json:"enableDefaultRoute,omitempty"`
+	SecretNameStrategy     *SecretNameStrategy     `json:"secretNameStrategy,omitempty"`
+	KeyCertificateStrategy *KeyCertificateStrategy `json:"keyCertificateStrategy,omitempty"`
+}
+
+type KeyCertificateStrategy struct {
+	Key         []byte `json:"key,omitempty"`
+	Certificate []byte `json:"certificate,omitempty"`
+}
+
+type SecretNameStrategy struct {
+	TlsSecretName string `json:"secretName,omitempty"`
+}
+
+type HttpAdapterConfig struct {
+	ServiceConfig  `json:",inline"`
+	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+}
+
+type MqttAdapterConfig struct {
+	ServiceConfig  `json:",inline"`
+	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
 }
 
 type IoTConfigStatus struct {

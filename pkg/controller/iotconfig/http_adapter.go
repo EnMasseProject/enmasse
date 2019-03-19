@@ -42,7 +42,7 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, r.reconcileHttpAdapterConfigMap)
 	})
-	if config.WantDefaultRoutes() {
+	if config.WantDefaultRoutes(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig) {
 		rc.ProcessSimple(func() error {
 			return r.processRoute(ctx, routeHttpAdapter, config, r.reconcileHttpAdapterRoute)
 		})
@@ -51,6 +51,9 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeHttpAdapter}})
 		}
 	}
+	rc.ProcessSimple(func() error {
+		return r.reconcileEndpointKeyCertificateSecret(ctx, config, config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, nameHttpAdapter)
+	})
 
 	return rc.Result()
 }
@@ -59,7 +62,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	deployment.Spec.Replicas = nil
+	applyDefaultDeploymentConfig(deployment, config.Spec.AdaptersConfig.HttpAdapterConfig.ServiceConfig)
 
 	err := install.ApplyContainerWithError(deployment, "http-adapter", func(container *corev1.Container) error {
 		if err := install.SetContainerImage(container, "iot-http-adapter", config); err != nil {
@@ -127,7 +130,13 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameHttpAdapter+"-tls"); err != nil {
+	if err := ApplyInterServiceForDeployment(config, deployment, ""); err != nil {
+		return err
+	}
+
+	// endpoint key/cert
+
+	if err := applyAdapterEndpointDeployment(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, deployment, nameHttpAdapter); err != nil {
 		return err
 	}
 
@@ -157,7 +166,11 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoT
 		service.Annotations = make(map[string]string)
 	}
 
-	if err := ApplyInterServiceForService(config, service, nameHttpAdapter+"-tls"); err != nil {
+	if err := ApplyInterServiceForService(config, service, ""); err != nil {
+		return err
+	}
+
+	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, service, nameHttpAdapter); err != nil {
 		return err
 	}
 
@@ -221,8 +234,18 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTCo
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
-	route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+	if config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig != nil &&
+		config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig.HasCustomCertificate() {
+
+		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+
+	} else {
+
+		route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+
+	}
 
 	// Service
 

@@ -46,7 +46,7 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, r.reconcileDeviceRegistryPersistentVolumeClaim)
 	})
 
-	if config.WantDefaultRoutes() {
+	if config.WantDefaultRoutes(nil) {
 		rc.ProcessSimple(func() error {
 			return r.processRoute(ctx, routeDeviceRegistry, config, r.reconcileDeviceRegistryRoute)
 		})
@@ -126,7 +126,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameDeviceRegistry+"-tls"); err != nil {
+	if err := ApplyInterServiceForDeployment(config, deployment, nameDeviceRegistry); err != nil {
 		return err
 	}
 
@@ -163,7 +163,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryService(config *iotv1alpha1.
 		service.Annotations = make(map[string]string)
 	}
 
-	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry+"-tls"); err != nil {
+	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry); err != nil {
 		return err
 	}
 

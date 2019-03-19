@@ -18,12 +18,15 @@ import (
 
 // for deployment
 
-func ApplyInterServiceForDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, secretName string) error {
+// Apply the inter-service certificate configuration for the deployment.
+// If the "serviceName" is empty, then the service does not want to expose an internal service and does not
+// receive any key/cert for doing so.
+func ApplyInterServiceForDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, serviceName string) error {
 
 	if config.Spec.HasNoInterServiceConfig() {
 		// no explicit configuration
 		if util.IsOpenshift() {
-			return applyInterServiceForDeploymentServiceCa(deployment, secretName)
+			return applyInterServiceForDeploymentServiceCa(deployment, serviceName)
 		} else {
 			return fmt.Errorf("no inter service certificate configuration, but we need an explicit one")
 		}
@@ -32,9 +35,9 @@ func ApplyInterServiceForDeployment(config *iotv1alpha1.IoTConfig, deployment *a
 	cfg := config.Spec.InterServiceCertificates
 
 	if cfg.ServiceCAStrategy != nil {
-		return applyInterServiceForDeploymentServiceCa(deployment, secretName)
+		return applyInterServiceForDeploymentServiceCa(deployment, serviceName)
 	} else if cfg.SecretCertificatesStrategy != nil {
-		return applyInterServiceForDeploymentSecretCertificates(deployment, cfg.SecretCertificatesStrategy, secretName)
+		return applyInterServiceForDeploymentSecretCertificates(deployment, cfg.SecretCertificatesStrategy, serviceName)
 	}
 
 	return fmt.Errorf("unknown inter service certificates configuration")
@@ -42,12 +45,15 @@ func ApplyInterServiceForDeployment(config *iotv1alpha1.IoTConfig, deployment *a
 
 // for service
 
-func ApplyInterServiceForService(config *iotv1alpha1.IoTConfig, service *corev1.Service, secretName string) error {
+// Apply the inter-service certificate configuration for the service.
+// If the "serviceName" is empty, then the service does not want to expose an internal service and does not
+// receive any key/cert for doing so.
+func ApplyInterServiceForService(config *iotv1alpha1.IoTConfig, service *corev1.Service, serviceName string) error {
 
 	if config.Spec.HasNoInterServiceConfig() {
 		// no explicit configuration
 		if util.IsOpenshift() {
-			return applyInterServiceForServiceServiceCa(service, secretName)
+			return applyInterServiceForServiceServiceCa(service, serviceName)
 		} else {
 			return fmt.Errorf("no inter service certificate configuration, but we need an explicit one")
 		}
@@ -56,9 +62,9 @@ func ApplyInterServiceForService(config *iotv1alpha1.IoTConfig, service *corev1.
 	cfg := config.Spec.InterServiceCertificates
 
 	if cfg.ServiceCAStrategy != nil {
-		return applyInterServiceForServiceServiceCa(service, secretName)
+		return applyInterServiceForServiceServiceCa(service, serviceName)
 	} else if cfg.SecretCertificatesStrategy != nil {
-		return applyInterServiceForServiceSecretCertificates(service, cfg.SecretCertificatesStrategy)
+		return applyInterServiceForServiceSecretCertificates(service, cfg.SecretCertificatesStrategy, serviceName)
 	}
 
 	return fmt.Errorf("unknown inter service certificates configuration")
@@ -88,19 +94,29 @@ func AppendTrustStores(config *iotv1alpha1.IoTConfig, container *corev1.Containe
 
 // service CA
 
-func applyInterServiceForServiceServiceCa(service *corev1.Service, secretName string) error {
+func applyInterServiceForServiceServiceCa(service *corev1.Service, serviceName string) error {
+
+	if serviceName == "" {
+		return nil
+	}
+
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
 	}
 
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = secretName
+	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = serviceName + "-tls"
 
 	return nil
 }
 
-func applyInterServiceForDeploymentServiceCa(deployment *appsv1.Deployment, secretName string) error {
-	install.ApplySecretVolume(deployment, "tls", secretName)
+func applyInterServiceForDeploymentServiceCa(deployment *appsv1.Deployment, serviceName string) error {
+
 	install.DropVolume(deployment, "tls-service-ca")
+
+	if serviceName != "" {
+		install.ApplySecretVolume(deployment, "tls", serviceName+"-tls")
+	}
+
 	return nil
 }
 
@@ -117,7 +133,7 @@ func appendTrustStoresForServiceCa(container *corev1.Container, env []string) er
 
 // secret certificates
 
-func applyInterServiceForServiceSecretCertificates(service *corev1.Service, _ *iotv1alpha1.SecretCertificatesStrategy) error {
+func applyInterServiceForServiceSecretCertificates(service *corev1.Service, _ *iotv1alpha1.SecretCertificatesStrategy, _ string) error {
 
 	if service.Annotations != nil {
 		delete(service.Annotations, "service.alpha.openshift.io/serving-cert-secret-name")
@@ -126,18 +142,21 @@ func applyInterServiceForServiceSecretCertificates(service *corev1.Service, _ *i
 	return nil
 }
 
-func applyInterServiceForDeploymentSecretCertificates(deployment *appsv1.Deployment, cfg *iotv1alpha1.SecretCertificatesStrategy, secretName string) error {
+func applyInterServiceForDeploymentSecretCertificates(deployment *appsv1.Deployment, cfg *iotv1alpha1.SecretCertificatesStrategy, serviceName string) error {
 	if cfg.CASecretName == "" {
 		return fmt.Errorf("inter service secret CA name must not be empty")
 	}
 	install.ApplySecretVolume(deployment, "tls-service-ca", cfg.CASecretName)
 
-	mappedSecretName := cfg.ServiceSecretNames[secretName]
-	if mappedSecretName == "" {
-		return fmt.Errorf("secret name %s mapped to an empty secret name", secretName)
-	}
+	if serviceName != "" {
+		mappedSecretName := cfg.ServiceSecretNames[serviceName]
+		if mappedSecretName == "" {
+			return fmt.Errorf("secret name %s mapped to an empty secret name", serviceName)
+		}
 
-	install.ApplySecretVolume(deployment, "tls", mappedSecretName)
+		install.ApplySecretVolume(deployment, "tls", mappedSecretName)
+
+	}
 
 	return nil
 }

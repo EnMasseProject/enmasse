@@ -6,6 +6,10 @@
 package v1alpha1
 
 import (
+	"crypto/md5"
+	"encoding/pem"
+	"fmt"
+
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 )
@@ -13,7 +17,18 @@ import (
 var _ v1beta1.ImageOverridesProvider = &IoTConfig{}
 var _ v1beta1.ImageOverridesProvider = &IoTConfigSpec{}
 
-func (config *IoTConfig) WantDefaultRoutes() bool {
+// Get the IoT tenant name from an IoT project.
+// This is not in any way encoded
+func (project *IoTProject) TenantName() string {
+	return util.TenantName(project.Namespace, project.Name)
+}
+
+func (config *IoTConfig) WantDefaultRoutes(adapter *AdapterEndpointConfig) bool {
+
+	if adapter != nil && adapter.EnableDefaultRoute != nil {
+		return *adapter.EnableDefaultRoute
+	}
+
 	return config.Spec.WantDefaultRoutes()
 }
 
@@ -41,4 +56,16 @@ func (spec *IoTConfigSpec) HasNoInterServiceConfig() bool {
 	}
 
 	return spec.InterServiceCertificates.ServiceCAStrategy == nil && spec.InterServiceCertificates.SecretCertificatesStrategy == nil
+}
+
+func (k *KeyCertificateStrategy) HashString() string {
+	p, _ := pem.Decode(k.Key)
+	// we are using an MD5 fingerprint here, since this is only a name
+	return fmt.Sprintf("%x", md5.Sum(p.Bytes))
+}
+
+// Evaluates if the adapter endpoint uses a custom certificate setup
+func (a *AdapterEndpointConfig) HasCustomCertificate() bool {
+	return a.KeyCertificateStrategy != nil ||
+		a.SecretNameStrategy != nil
 }
