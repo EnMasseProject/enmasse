@@ -4,6 +4,7 @@
  */
 package io.enmasse.authservice.none;
 
+import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.proton.ProtonConnection;
@@ -39,21 +40,38 @@ public class NoneAuthService {
         ProtonServer server = ProtonServer.create(vertx, options);
         server.connectHandler(NoneAuthService::connectHandler);
         server.saslAuthenticatorFactory(NoneAuthServiceAuthenticator::new);
-        server.listen(listenPort, result -> {
-            log.info("Listening on {}", listenPort);
+        server.listen(listenPort, "0.0.0.0", result -> {
+            if (result.succeeded()) {
+                log.info("Listening on {}", listenPort);
+            } else {
+                log.error("Error listening on {}", listenPort, result.cause());
+            }
         });
     }
 
-    private static void connectHandler(ProtonConnection protonConnection) {
-        protonConnection.setContainer("none-authservice");
-        protonConnection.openHandler(result -> {
-            ProtonConnection connection = result.result();
+    private static void connectHandler(ProtonConnection connection) {
+        connection.setContainer("none-authservice");
+        connection.openHandler(conn -> {
             Map<Symbol, Object> properties = new HashMap<>();
+
             properties.put(AUTHENTICATED_IDENTITY, Collections.singletonMap("sub", "anonymous"));
             properties.put(GROUPS, Collections.singletonList("manage"));
+
             connection.setProperties(properties);
-            protonConnection.open();
-            protonConnection.close();
+            log.info("Set properties");
+            connection.open();
+            log.info("Sent open");
+            connection.close();
+            log.info("Sent close");
+
+        }).closeHandler(conn -> {
+            log.info("Received close - disconnecting");
+            connection.close();
+            connection.disconnect();
+        }).disconnectHandler(protonConnection -> {
+            log.info("Disconnecting");
+            connection.disconnect();
         });
+        log.info("connectHandler");
     }
 }
