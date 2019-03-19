@@ -15,9 +15,9 @@ In the long term, the Global Console will also present key statistics about each
 
 There will be a Global Console UI served from a new Global Console Server component serving the static content.
 
-Authentication will be delegated to OAuth2. In OpenShift this will be automatically configured at deployment to use the built OAuth infrastructure. On Kubernettes, the user will need to integrate their Kubernettes with a OAUTH provider.
+Authentication will be delegated to OAuth2. In OpenShift this will be automatically configured at deployment to use the built OAuth infrastructure. On kubernetes, the user will need to integrate their kubernetes with a OAUTH provider.
 
-The UI will use the Kubernettes API to list and control the resources that it needs to expose for Management. This part of the UI will be extensible so that the ability to control other resources can be enabled. In the first the phase the two resource types exposed for management will be EnMasse's standard addressspace and brokered addressspace. The UI will send the Bearer token in order that the server side may authorise the requests.
+The UI will use the kubernetes API to list and control the resources that it needs to expose for Management. This part of the UI will be extensible so that the ability to control other resources can be enabled. In the first the phase the two resource types exposed for management will be EnMasse's standard addressspace and brokered addressspace. The UI will send the Bearer token in order that the server side may authorise the requests.
 
 Initially the UI will periodically poll the API for the list of resources (standard addressspace and brokered addressspace). Later this will evolve to utilise watch for a more responsive UI with fewer overheads.
 
@@ -29,7 +29,7 @@ The mast head of the application will present a summary of the number of resourc
 
 There are no new authorisation requirements. Existing RBAC controls on managed resources will be sufficient to protect access.
 
-The Global Console will use PatternFly 4. The Global Console Server will be implemented in Go. This will be responsible for serving the static content and a API endpoint returning the URLs for OAUTH redirect and the Kubernettes API endpoint.
+The Global Console will use PatternFly 4. The Global Console Server will be implemented in Go. This will be responsible for serving the static content and a API endpoint returning the URLs for OAUTH redirect and the kubernetes API endpoint.
 
 The Global Console will be installed by the EnMasse Operator.
 
@@ -67,11 +67,11 @@ If we took this option, all the OAuth2 responsibilties would be delegated to it.
 
 Let's use oauth-proxy.  With the implict workflow, thee could be difficulties guarding the access token especially where there are touch points with ReactJS which is unfamilar to us.  There's less code to write too.
 
-==== Exposing the Kubernettes API server
+==== Exposing the kubernetes API server
 
-The HTML/JS applications need to be able to interact with the Kubernettes API server for the purpose of listing, create, updating, and deleting managed resources such as addressspaces.
+The HTML/JS applications need to be able to interact with the kubernetes API server for the purpose of listing, create, updating, and deleting managed resources such as addressspaces.
 
-Out of the box, a HTML/JS application cannot communicate with the Kubernetes API server ownin to the default CORS restrictions.  These restrictions can be relaxed within Kubernettes/Openshift deployment, but this is not an acceptable design.
+Out of the box, a HTML/JS application cannot communicate with the Kubernetes API server ownin to the default CORS restrictions.  These restrictions can be relaxed within kubernetes/Openshift deployment, but this is not an acceptable design.
 
 The alternative is to proxy the api-server.  The proxy needs to be capable of forwarding the request, along with the OAuth access token (expressed as a Authorization header carrying a Bearer + token).
 
@@ -79,15 +79,15 @@ I've looked at two ways of achieving the proxy.
 
 ===== Apache HTTPD
 
-We can employ mod_proxy and mod_ssl together to form a secure tunnel through to the Kubernettes API server.  In this scheme,  the application's content would be served by HTTPD.  In addition, HTTPD would be configured to expose location `/api` as a proxy for the Kubernettes API server. 
+We can employ mod_proxy and mod_ssl together to form a secure tunnel through to the kubernetes API server.  In this scheme,  the application's content would be served by HTTPD.  In addition, HTTPD would be configured to expose location `/api` as a proxy for the kubernetes API server. 
 
-When the HTML/JS application needs to interact with the Kubernettes API server it would generate a request to `document.location.orgin + "/api/...".  For this scheme to work, the HTML/JS would need to be in possesion of the access token.  This implies that we've taken the OAuth2 implict grant option.
+When the HTML/JS application needs to interact with the kubernetes API server it would generate a request to `document.location.orgin + "/api/...".  For this scheme to work, the HTML/JS would need to be in possesion of the access token.  This implies that we've taken the OAuth2 implict grant option.
 
 ===== Openshift oauth-proxy
 
-Openshift oauth-proxy provides a reverse proxy mechansim with the ability to inject the token obtained during the OAuth2 authentication into the proxied requests.  We can use the reverse proxy feature to proxy the Kubernettes API server.  In addition it would be tasked with serving the static content.
+Openshift oauth-proxy provides a reverse proxy mechansim with the ability to inject the token obtained during the OAuth2 authentication into the proxied requests.  We can use the reverse proxy feature to proxy the kubernetes API server.  In addition it would be tasked with serving the static content.
 
-This approach works with one wrinkle.  Oauth-proxy supports flag `--pass-access-token=true` which instructs it to pass the access token to the proxied server (the 'upstream' its parlance), however it passes it using a custom header 'X-Forwarded-Access-Token' which is not understood by the Kubernettes API server.
+This approach works with one wrinkle.  Oauth-proxy supports flag `--pass-access-token=true` which instructs it to pass the access token to the proxied server (the 'upstream' its parlance), however it passes it using a custom header 'X-Forwarded-Access-Token' which is not understood by the kubernetes API server.
 
 It is possible to workaround this problem either by using a Apache HTTPD sidecar that simply rewrites the request header (SetEnvIf/RequestHeader directives).  The HTTPD instance would be private to the pod (i.e. listen to localhost only).
 
@@ -105,13 +105,13 @@ I'm still thinking oauth-proxy.   I'd need to contant the Oauth-proxy team let t
 
 ==== Operator integration
 
-The operator will be responsibilty for the installation of the global console and the creation of the resources it needs.  Its behaviour needs to be different depending on whether Openshift or a Kubernettes platform is in use.
+The operator will be responsibilty for the installation of the global console and the creation of the resources it needs.  Its behaviour needs to be different depending on whether Openshift or a kubernetes platform is in use.
 
 ===== Console CRD
 
 There will be a Console CRD.  When an instance of this CRD exists, the operator will trigger the installation of the global console.   It is antipicated that a cluster will have at most one instance of the console deployed.  What should happen if a second instance of the CRD is created? (Probably just log a warning and ignore it).
 
-On Openshift an instance of the Console CRD will be created automatically, thus bootstraping the install of the console on that platform.  On Kubernettes, the user will create the CR by hand to install the console.
+On Openshift an instance of the Console CRD will be created automatically, thus bootstraping the install of the console on that platform.  On kubernetes, the user will create the CR by hand to install the console.
 
 If the CRe is removed, the Console will be undeployed by the operator.  On Openshift it won't be recreated automatically (might need state.  where would we keep it??).
 
@@ -120,13 +120,13 @@ If the CRe is removed, the Console will be undeployed by the operator.  On Opens
 The CRD will encapsulate the following:
 
 - oauthDiscoverURL - a URL referencing an OAuth discovery metadat https://tools.ietf.org/id/draft-ietf-oauth-discovery-08.html.  Discovery metadata is becoming increasing common, but we'd allow the url to be a data-url so a user could construct their own discover document if need be.
-- oauthSecretRef - a path referencing either Kubernettes secret instance or OpenShift openauthclient instance
+- oauthSecretRef - a path referencing either kubernetes secret instance or OpenShift openauthclient instance
 - scope - oauth scope
 
 
-On OpenShift `oauthDiscoverURL` would be optional.  The platform default https://openshift.default.svc/.well-known/oauth-authorization-server  would be used if not specified (see https://docs.openshift.com/container-platform/3.11/architecture/additional_concepts/authentication.html#oauth-server-metadata).  On Kubernettes it would be mandatory.
+On OpenShift `oauthDiscoverURL` would be optional.  The platform default https://openshift.default.svc/.well-known/oauth-authorization-server  would be used if not specified (see https://docs.openshift.com/container-platform/3.11/architecture/additional_concepts/authentication.html#oauth-server-metadata).  On kubernetes it would be mandatory.
 
-On OpenShift `oauthSecretRef` will reference an oauthclient object (cluster wide).  On kubernettes, it will reference a namespaced secret.  The operator will use this reference to retrieve the OAuth2 client id and client secret.
+On OpenShift `oauthSecretRef` will reference an oauthclient object (cluster wide).  On kubernetes, it will reference a namespaced secret.  The operator will use this reference to retrieve the OAuth2 client id and client secret.
 
 ===== Resources controlled by the Operator
 
@@ -141,7 +141,7 @@ The Operator will use the information in the Console CR to create and keep synch
 
 On OpenShift, for the oauthclient, if the `oauthSecretRef` references an oauthclient instance that does not exist, the operator will create it. If it already exists, it will simply use it.  The Operator will ensure that the oauthclient's redirect urls are synchronized with the routes that exist to the service at that moment.
 
-On Kubernettes, the user must create the secret instance and reference it from `oauthSecretRef`.  If this is not done, the Operator will have no effect.
+On kubernetes, the user must create the secret instance and reference it from `oauthSecretRef`.  If this is not done, the Operator will have no effect.
 
 In both case, the Operator will push the clientid/clientsecret information to a configmap instance.  The deployment will mount the configmap as a volume allowing it to populate environment variables which can be passed to the server component(oauth-proxy).
 
