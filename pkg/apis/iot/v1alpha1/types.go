@@ -155,7 +155,12 @@ type IoTConfigStatus struct {
 	Initialized bool   `json:"initialized"`
 	State       string `json:"state"`
 
-	AuthenticationServicePSK *string `json:"authenticationServicePSK"`
+	AuthenticationServicePSK *string                  `json:"authenticationServicePSK"`
+	Adapters                 map[string]AdapterStatus `json:"adapters,omitempty"`
+}
+
+type AdapterStatus struct {
+	InterServicePassword string `json:"interServicePassword"`
 }
 
 const (

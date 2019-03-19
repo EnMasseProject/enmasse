@@ -94,7 +94,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 			{Name: "HONO_HTTP_NATIVE_TLS_REQUIRED", Value: "false"},
 		}
 
-		AppendHonoAdapterEnvs(container, "http-adapter@HONO", "http-secret")
+		AppendHonoAdapterEnvs(container, "http-adapter@HONO", config.Status.Adapters["http"].InterServicePassword)
 
 		if err := AppendTrustStores(config, container, []string{
 			"HONO_CREDENTIALS_TRUST_STORE_PATH",

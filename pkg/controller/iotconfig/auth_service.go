@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"encoding/json"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -135,6 +136,19 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.I
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
+	// JSON encode passwords
+
+	httpPassword, err := json.Marshal(config.Status.Adapters["http"].InterServicePassword)
+	if err != nil {
+		return err
+	}
+	mqttPassword, err := json.Marshal(config.Status.Adapters["mqtt"].InterServicePassword)
+	if err != nil {
+		return err
+	}
+
+	// create config map data
+
 	if configMap.Data == nil {
 		configMap.Data = make(map[string]string)
 	}
@@ -193,26 +207,21 @@ hono:
 				"activities":["READ","WRITE"]
 			},
 			{
-				"operation":"tenant/*:*",
+				"operation":"tenant:get",
 				"activities":["EXECUTE"]
 			}
 		]
 	},
 	"users":{
-		"amqp-adapter@HONO":{
-			"mechanism":"PLAIN",
-			"password":"amqp-secret",
-			"authorities":["hono-component","protocol-adapter"]
-		},
 		"http-adapter@HONO":{
 			"mechanism":"PLAIN",
-			"password":"http-secret",
-			"authorities":["hono-component","protocol-adapter"]
+			"password":` + string(httpPassword) + `,
+			"authorities":["protocol-adapter"]
 		},
 		"mqtt-adapter@HONO":{
 			"mechanism":"PLAIN",
-			"password":"mqtt-secret",
-			"authorities":["hono-component","protocol-adapter"]
+			"password":` + string(mqttPassword) + `,
+			"authorities":["protocol-adapter"]
 		},
 		"device-registry":{
 			"mechanism":"EXTERNAL",

@@ -149,14 +149,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		if config.Status.AuthenticationServicePSK == nil {
-			s, err := util.GeneratePassword(128)
-			if err != nil {
-				return err
-			}
-			config.Status.AuthenticationServicePSK = &s
-		}
-		return nil
+		return r.processGeneratedCredentials(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processQdrProxyConfig(ctx, config)
@@ -357,6 +350,33 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 		log.Error(err, "Failed calling CreateOrUpdate")
 		return err
 	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, config *iotv1alpha1.IoTConfig) error {
+
+	// generate auth service PSK
+
+	if config.Status.AuthenticationServicePSK == nil {
+		s, err := util.GeneratePassword(128)
+		if err != nil {
+			return err
+		}
+		config.Status.AuthenticationServicePSK = &s
+	}
+
+	// ensure we have all adapter status entries we want
+
+	config.Status.Adapters = ensureAdapterStatus(config.Status.Adapters, "mqtt", "http")
+
+	// generate adapter users
+
+	if err := ensureAdapterAuthCredentials(config.Status.Adapters); err != nil {
+		return err
+	}
+
+	// return
 
 	return nil
 }
