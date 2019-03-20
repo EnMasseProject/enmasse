@@ -386,7 +386,7 @@ function get_oc_args() {
 }
 
 function is_upgraded() {
-    IMAGE=$1
+    IMAGE=${1}
     TAG=${TAG:-"latest"}
 
     IMAGE_TAG=$(echo $IMAGE | cut -f 2 -d ':')
@@ -394,10 +394,15 @@ function is_upgraded() {
     if [[ "${TEMPLATES}" == *"${IMAGE}"* ]]; then
         echo "true"
     else
-        if [[ "${IMAGE_TAG}" == "${TAG}" ]]; then
+        OPERATOR_TEMPLATES=$(cat ${CURDIR}/../../enmasse-controller-manager/build/operatorImageMap.yaml)
+        if [[ "${OPERATOR_TEMPLATES}" == *"${IMAGE}"* ]]; then
             echo "true"
         else
-            echo "false"
+            if [[ "${IMAGE_TAG}" == "${TAG}" ]]; then
+                echo "true"
+            else
+                echo "false"
+            fi
         fi
     fi
 }
