@@ -579,14 +579,19 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {
+        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
+        String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
+        log.info(consoleRoute);
+        return consoleRoute;
+    }
+
+    protected Endpoint getConsoleEndpoint(AddressSpace addressSpace) {
         Endpoint consoleEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "console");
         if (consoleEndpoint == null) {
             String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "console");
             consoleEndpoint = kubernetes.getExternalEndpoint(externalEndpointName);
         }
-        String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
-        log.info(consoleRoute);
-        return consoleRoute;
+        return consoleEndpoint;
     }
 
     /**

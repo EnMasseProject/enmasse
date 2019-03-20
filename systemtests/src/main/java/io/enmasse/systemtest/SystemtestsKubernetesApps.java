@@ -22,6 +22,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CHROME = "selenium-chrome";
     public static final String SELENIUM_PROJECT = "selenium";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
+    public static final String OPENSHIFT_CERT_VALIDATOR = "openshift-cert-validator";
 
     public static void deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(MESSAGING_CLIENTS, 4242));
@@ -35,6 +36,24 @@ public class SystemtestsKubernetesApps {
             kubeClient.deleteDeployment(namespace, MESSAGING_CLIENTS);
             kubeClient.deleteService(namespace, MESSAGING_CLIENTS);
             kubeClient.deleteIngress(namespace, MESSAGING_CLIENTS);
+        }
+    }
+
+    public static void deployOpenshiftCertValidator(String namespace, Kubernetes kubeClient) throws Exception {
+        if (!kubeClient.namespaceExists(namespace)) {
+            kubeClient.createNamespace(namespace);
+        }
+        kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(OPENSHIFT_CERT_VALIDATOR, 8080));
+        kubeClient.createDeploymentFromResource(namespace, getOpenshiftCertValidatorDeploymentResource());
+        kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(OPENSHIFT_CERT_VALIDATOR, 8080));
+        Thread.sleep(5000);
+    }
+
+    public static void deleteOpenshiftCertValidator(String namespace, Kubernetes kubeClient) {
+        if (kubeClient.deploymentExists(namespace, OPENSHIFT_CERT_VALIDATOR)) {
+            kubeClient.deleteDeployment(namespace, OPENSHIFT_CERT_VALIDATOR);
+            kubeClient.deleteService(namespace, OPENSHIFT_CERT_VALIDATOR);
+            kubeClient.deleteIngress(namespace, OPENSHIFT_CERT_VALIDATOR);
         }
     }
 
@@ -89,6 +108,10 @@ public class SystemtestsKubernetesApps {
 
     public static Endpoint getChromeSeleniumAppEndpoint(Kubernetes kubeClient) {
         return new Endpoint(kubeClient.getIngressHost(SELENIUM_PROJECT, SELENIUM_CHROME), 80);
+    }
+
+    public static Endpoint getOpenshiftCertValidatorEndpoint(String namespace, Kubernetes kubeClient) {
+        return new Endpoint(kubeClient.getIngressHost(namespace, OPENSHIFT_CERT_VALIDATOR), 80);
     }
 
     private static Deployment getSeleniumNodeDeploymentResource(String appName, String imageName) {
@@ -233,6 +256,41 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .addToData("rhea.html", htmlContent)
                 .addToData("rhea.js", jsContent)
+                .build();
+    }
+
+    private static Deployment getOpenshiftCertValidatorDeploymentResource() {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(OPENSHIFT_CERT_VALIDATOR)
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", OPENSHIFT_CERT_VALIDATOR)
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", OPENSHIFT_CERT_VALIDATOR)
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(OPENSHIFT_CERT_VALIDATOR)
+                .withImage("famargon/openshift-cert-validator:latest")
+                .addNewPort()
+                .withContainerPort(8080)
+                .endPort()
+                .withNewLivenessProbe()
+                .withNewTcpSocket()
+                .withNewPort(8080)
+                .endTcpSocket()
+                .withInitialDelaySeconds(10)
+                .withPeriodSeconds(5)
+                .endLivenessProbe()
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
                 .build();
     }
 }
