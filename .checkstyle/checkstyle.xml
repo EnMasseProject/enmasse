@@ -10,7 +10,13 @@
         <property name="fileExtensions" value="java"/>
     </module>
     <module name="SuppressionFilter">
-      <property name="file" value="${checkstyle.suppressions.file}" />
+        <property name="file" value="${checkstyle.suppressions.file}" />
+    </module>
+    <module name="TreeWalker">
+        <module name="FallThrough">
+            <property name="reliefPattern" value="FALL-THROUGH"/>
+        </module>
+        <module name="StringLiteralEquality"/>
     </module>
 </module>
 
