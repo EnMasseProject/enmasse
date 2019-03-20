@@ -24,4 +24,7 @@ So, for example:
 
 * `a/+/b` matches `a/foo/b` and `a/bar/b`, but would not match `a/foo/bar`
 
+== Known issue with creating a subscriber on a hierarchical topic
+
+A known issue exists where creating a subscriber on a hierarchical topic in {ProductName} causes the broker to instead create it as a competing consumer (handling the address like a queue rather than a topic). For more information about the specific workaround for your client, see the applicable client example section in link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#assembly-connecting-applications-messaging[Connecting applications to {ProductName}].
 
