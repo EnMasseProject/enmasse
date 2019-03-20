@@ -1,13 +1,34 @@
 TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(TOPDIR)/Makefile.env.mk
 
-DOCKER_DIRS      = agent topic-forwarder artemis broker-plugin api-server address-space-controller none-authservice standard-controller keycloak-plugin router router-metrics mqtt-gateway mqtt-lwt service-broker iot/iot-tenant-service iot/iot-auth-service iot/iot-device-registry iot/iot-http-adapter iot/iot-mqtt-adapter
-FULL_BUILD       = true
-
-GO_DIRS          = \
+GO_DIRS = \
 	enmasse-controller-manager \
 	iot/qdr-proxy-configurator \
 	iot/iot-gc \
+
+DOCKER_DIRS = \
+	agent \
+	topic-forwarder \
+	artemis \
+	broker-plugin \
+	api-server \
+	address-space-controller \
+	none-authservice \
+	standard-controller \
+	keycloak-plugin \
+	router \
+	router-metrics \
+	mqtt-gateway \
+	mqtt-lwt \
+	service-broker \
+	iot/iot-tenant-service \
+	iot/iot-auth-service \
+	iot/iot-device-registry \
+	iot/iot-http-adapter \
+	iot/iot-mqtt-adapter \
+
+FULL_BUILD       = true
+
 
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
 INSTALLDIR       = $(CURDIR)/templates/install
@@ -23,14 +44,7 @@ ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
 endif
 
-all: build_java docker_build templates
-
-test: test_go
-
-ifeq ($(SKIP_TESTS),true)
-else
-all: test_go
-endif
+all: build_java build_go docker_build templates
 
 templates: docu_html
 	$(MAKE) -C templates
@@ -38,10 +52,16 @@ templates: docu_html
 build_java:
 	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
 
-build_go: $(GO_DIRS)
-	for i in $?; do $(MAKE) -C $$i build; done
+build_go: $(GO_DIRS) test_go
 
+$(GO_DIRS):
+	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
+
+ifeq ($(SKIP_TESTS),true)
+test_go:
+else
 test_go: test_go_vet test_go_run
+endif
 
 test_go_vet:
 	cd $(GOPRJ) && go tool vet cmd pkg
@@ -63,8 +83,6 @@ buildpush:
 	$(MAKE)
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
-
-$(GO_DIRS): $(GOPRJ)
 
 $(GOPRJ):
 	mkdir -p $(dir $(GOPRJ))
@@ -95,9 +113,6 @@ $(DOCKER_TARGETS): $(DOCKER_DIRS) $(GO_DIRS)
 $(DOCKER_DIRS):
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
-$(GO_DIRS): $(GOPRJ)
-	$(MAKE) -C $@ $(MAKECMDGOALS)
-
 systemtests:
 	make -C systemtests
 
@@ -126,5 +141,5 @@ docu_check:
 docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
-.PHONY: test_go_vet test_go_plain
+.PHONY: test_go_vet test_go_plain build_go
 .PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
