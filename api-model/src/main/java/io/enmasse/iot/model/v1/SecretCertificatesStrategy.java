@@ -4,6 +4,9 @@
  */
 package io.enmasse.iot.model.v1;
 
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -20,26 +23,27 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DownstreamStrategy {
+public class SecretCertificatesStrategy {
 
-    private ExternalDownstreamStrategy externalStrategy;
-    private ManagedDownstreamStrategy managedStrategy;
+    private String caSecretName;
+    private Map<String, String> serviceSecretNames;
 
-    public ExternalDownstreamStrategy getExternalStrategy() {
-        return this.externalStrategy;
+    public String getCaSecretName() {
+        return caSecretName;
     }
 
-    public void setExternalStrategy(final ExternalDownstreamStrategy externalStrategy) {
-        this.externalStrategy = externalStrategy;
+    public void setCaSecretName(String caSecretName) {
+        this.caSecretName = caSecretName;
     }
 
-    public ManagedDownstreamStrategy getManagedStrategy() {
-        return managedStrategy;
+    public Map<String, String> getServiceSecretNames() {
+        return serviceSecretNames;
     }
 
-    public void setManagedStrategy(ManagedDownstreamStrategy managedStrategy) {
-        this.managedStrategy = managedStrategy;
+    public void setServiceSecretNames(Map<String, String> serviceSecretNames) {
+        this.serviceSecretNames = serviceSecretNames;
     }
 
 }

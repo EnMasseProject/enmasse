@@ -4,8 +4,6 @@
  */
 package io.enmasse.iot.model.v1;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -24,17 +22,26 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(NON_NULL)
-public class ManagedDownstreamStrategy {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class InterServiceCertificates {
 
-    private String addressSpaceName;
+    private SecretCertificatesStrategy secretCertificatesStrategy;
+    private ServiceCAStrategy serviceCAStrategy;
 
-    public String getAddressSpaceName() {
-        return addressSpaceName;
+    public SecretCertificatesStrategy getSecretCertificatesStrategy() {
+        return secretCertificatesStrategy;
     }
 
-    public void setAddressSpaceName(String addressSpaceName) {
-        this.addressSpaceName = addressSpaceName;
+    public void setSecretCertificatesStrategy(SecretCertificatesStrategy secretCertificatesStrategy) {
+        this.secretCertificatesStrategy = secretCertificatesStrategy;
+    }
+
+    public ServiceCAStrategy getServiceCAStrategy() {
+        return serviceCAStrategy;
+    }
+
+    public void setServiceCAStrategy(ServiceCAStrategy serviceCAStrategy) {
+        this.serviceCAStrategy = serviceCAStrategy;
     }
 
 }

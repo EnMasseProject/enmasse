@@ -4,8 +4,6 @@
  */
 package io.enmasse.iot.model.v1;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -24,17 +22,35 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(NON_NULL)
-public class ManagedDownstreamStrategy {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class IoTConfigStatus {
 
-    private String addressSpaceName;
+    private boolean initialized = false;
+    private String state;
+    private String authenticationServicePSK;
 
-    public String getAddressSpaceName() {
-        return addressSpaceName;
+    public boolean isInitialized() {
+        return initialized;
     }
 
-    public void setAddressSpaceName(String addressSpaceName) {
-        this.addressSpaceName = addressSpaceName;
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public String getAuthenticationServicePSK() {
+        return authenticationServicePSK;
+    }
+
+    public void setAuthenticationServicePSK(String authenticationServicePSK) {
+        this.authenticationServicePSK = authenticationServicePSK;
     }
 
 }

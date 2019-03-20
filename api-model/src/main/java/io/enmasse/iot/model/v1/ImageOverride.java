@@ -4,6 +4,7 @@
  */
 package io.enmasse.iot.model.v1;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -20,26 +21,27 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class DownstreamStrategy {
+public class ImageOverride {
 
-    private ExternalDownstreamStrategy externalStrategy;
-    private ManagedDownstreamStrategy managedStrategy;
+    private String name;
+    private String imagePullPolicy;
 
-    public ExternalDownstreamStrategy getExternalStrategy() {
-        return this.externalStrategy;
+    public String getName() {
+        return name;
     }
 
-    public void setExternalStrategy(final ExternalDownstreamStrategy externalStrategy) {
-        this.externalStrategy = externalStrategy;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public ManagedDownstreamStrategy getManagedStrategy() {
-        return managedStrategy;
+    public String getImagePullPolicy() {
+        return imagePullPolicy;
     }
 
-    public void setManagedStrategy(ManagedDownstreamStrategy managedStrategy) {
-        this.managedStrategy = managedStrategy;
+    public void setImagePullPolicy(String imagePullPolicy) {
+        this.imagePullPolicy = imagePullPolicy;
     }
 
 }

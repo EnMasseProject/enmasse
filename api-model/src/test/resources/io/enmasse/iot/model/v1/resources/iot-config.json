@@ -1,0 +1,34 @@
+{
+	"apiVersion": "iot.enmasse.io/v1alpha1",
+	"kind": "IoTConfig",
+	"metadata": {
+		"name": "default"
+	},
+	"spec": {
+		"enableDefaultRoutes": true,
+		"imageOverrides": {
+			"image1": {
+				"name": "image1-name",
+				"imagePullPolicy": "Always"
+			},
+			"image2": {
+				"name": "image2-name",
+				"imagePullPolicy": "Always"
+			}
+		},
+		"interServiceCertificates": {
+			"secretCertificatesStrategy": {
+				"caSecretName": "ca-name",
+				"serviceSecretNames": {
+					"secret1": "value1",
+					"secret2": "value2"
+				}
+			}
+		}
+	},
+	"status": {
+		"initialized": true,
+		"state": "ok",
+		"authenticationServicePSK": "psk"
+	}
+}
