@@ -17,16 +17,16 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 
-public class OcpEnmasseAppApiClient extends ApiClient {
+public class OpenshiftCertValidatorApiClient extends ApiClient {
 
 
-    public OcpEnmasseAppApiClient(Kubernetes kubernetes, Endpoint endpoint) {
+    public OpenshiftCertValidatorApiClient(Kubernetes kubernetes, Endpoint endpoint) {
         super(kubernetes, () -> endpoint, "");
     }
 
     @Override
     protected String apiClientName() {
-        return "OCP enmasse app";
+        return "openshift-cert-validator";
     }
 
     @Override
@@ -43,7 +43,7 @@ public class OcpEnmasseAppApiClient extends ApiClient {
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
                 .sendJson(request,
-                        ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error testing ocp-enmasse-app"));
+                        ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error testing openshift-cert-validator"));
         return responsePromise.get(150000, TimeUnit.SECONDS);
 
     }

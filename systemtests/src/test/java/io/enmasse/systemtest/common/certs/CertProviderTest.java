@@ -52,6 +52,7 @@ import io.enmasse.address.model.ExposeSpecBuilder;
 import io.enmasse.address.model.ExposeType;
 import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CertProvider;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
@@ -62,7 +63,7 @@ import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.VertxFactory;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.apiclients.OcpEnmasseAppApiClient;
+import io.enmasse.systemtest.apiclients.OpenshiftCertValidatorApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.common.api.ApiServerTest;
 import io.enmasse.systemtest.executor.Executor;
@@ -251,8 +252,8 @@ class CertProviderTest extends TestBase {
                 false);
         boolean testSucceeded = false;
         try {
-            SystemtestsKubernetesApps.deployOcpEnmasseApp(environment.namespace(), kubernetes);
-            OcpEnmasseAppApiClient client = new OcpEnmasseAppApiClient(kubernetes, SystemtestsKubernetesApps.getOcpEnmasseAppEndpoint(environment.namespace(), kubernetes));
+            SystemtestsKubernetesApps.deployOpenshiftCertValidator(environment.namespace(), kubernetes);
+            OpenshiftCertValidatorApiClient client = new OpenshiftCertValidatorApiClient(kubernetes, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(environment.namespace(), kubernetes));
 
             JsonObject request = new JsonObject();
             request.put("username", user.getUsername());
@@ -274,7 +275,7 @@ class CertProviderTest extends TestBase {
             Exception lastException = null;
             while (!timeout.timeoutExpired()) {
                 try {
-                    log.info("Making request to openshift app {}", request);
+                    log.info("Making request to openshift-cert-validator {}", request);
                     JsonObject response = client.test(request);
                     if (response.containsKey("error")) {
                         fail("Error testing openshift provider " + response.getString("error"));
@@ -296,9 +297,9 @@ class CertProviderTest extends TestBase {
         } finally {
             if (!testSucceeded) {
                 logCollector.collectLogsOfPodsByLabels(
-                        Collections.singletonMap("app", SystemtestsKubernetesApps.OCP_ENMASSE_APP));
+                        Collections.singletonMap("app", SystemtestsKubernetesApps.OPENSHIFT_CERT_VALIDATOR));
             }
-            SystemtestsKubernetesApps.deleteOcpEnmasseApp(environment.namespace(), kubernetes);
+            SystemtestsKubernetesApps.deleteOpenshiftCertValidator(environment.namespace(), kubernetes);
         }
     }
 
