@@ -14,7 +14,6 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -119,12 +118,15 @@ public class PlanUtils {
                 .build();
     }
 
-    public static BrokeredInfraConfigSpecAdmin createBrokeredAdminResourceObject(String memory) {
-        return new BrokeredInfraConfigSpecAdminBuilder()
+    public static BrokeredInfraConfigSpecAdmin createBrokeredAdminResourceObject(String memory, PodTemplateSpec podTemplateSpec) {
+        BrokeredInfraConfigSpecAdminBuilder builder = new BrokeredInfraConfigSpecAdminBuilder()
                 .withNewResources()
                 .withMemory(memory)
-                .endResources()
-                .build();
+                .endResources();
+        if (podTemplateSpec != null) {
+            builder.withPodTemplate(podTemplateSpec);
+        }
+        return builder.build();
     }
 
 
@@ -145,14 +147,17 @@ public class PlanUtils {
                 .build();
     }
 
-    public static StandardInfraConfigSpecBroker createStandardBrokerResourceObject(String memory, String storage) {
-        return new StandardInfraConfigSpecBrokerBuilder()
+    public static StandardInfraConfigSpecBroker createStandardBrokerResourceObject(String memory, String storage, PodTemplateSpec templateSpec) {
+        StandardInfraConfigSpecBrokerBuilder builder = new StandardInfraConfigSpecBrokerBuilder()
                 .withAddressFullPolicy("FAIL")
                 .withNewResources()
                 .withMemory(memory)
                 .withStorage(storage)
-                .endResources()
-                .build();
+                .endResources();
+        if (templateSpec != null) {
+            builder.withPodTemplate(templateSpec);
+        }
+        return builder.build();
     }
 
     public static StandardInfraConfigSpecBroker createStandardBrokerResourceObject(String memory, String storage, boolean updatePersistentVolumeClaim) {
@@ -167,20 +172,26 @@ public class PlanUtils {
     }
 
 
-    public static StandardInfraConfigSpecAdmin createStandardAdminResourceObject(String memory) {
-        return new StandardInfraConfigSpecAdminBuilder()
+    public static StandardInfraConfigSpecAdmin createStandardAdminResourceObject(String memory, PodTemplateSpec templateSpec) {
+        StandardInfraConfigSpecAdminBuilder builder = new StandardInfraConfigSpecAdminBuilder()
                 .withNewResources()
                 .withMemory(memory)
-                .endResources()
-                .build();
+                .endResources();
+        if (templateSpec != null) {
+            builder.withPodTemplate(templateSpec);
+        }
+        return builder.build();
     }
 
-    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory) {
-        return new StandardInfraConfigSpecRouterBuilder()
+    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, PodTemplateSpec templateSpec) {
+        StandardInfraConfigSpecRouterBuilder builder = new StandardInfraConfigSpecRouterBuilder()
                 .withNewResources()
                 .withMemory(memory)
-                .endResources()
-                .build();
+                .endResources();
+        if (templateSpec != null) {
+            builder.withPodTemplate(templateSpec);
+        }
+        return builder.build();
     }
 
     public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, int linkCapacity) {

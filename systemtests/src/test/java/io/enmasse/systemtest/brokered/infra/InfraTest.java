@@ -15,10 +15,7 @@ import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
-import io.fabric8.kubernetes.api.model.NodeSelectorRequirementBuilder;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.PreferredSchedulingTermBuilder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -34,27 +31,11 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     @Test
     void testCreateInfra() throws Exception {
-        PodTemplateSpec templateSpec = new PodTemplateSpecBuilder()
-                    .editOrNewMetadata()
-                    .addToLabels("mylabel", "systemtests")
-                    .endMetadata()
-                    .editOrNewSpec()
-                    .editOrNewAffinity()
-                    .editOrNewNodeAffinity()
-                    .addToPreferredDuringSchedulingIgnoredDuringExecution(new PreferredSchedulingTermBuilder()
-                            .withNewPreference()
-                            .addToMatchExpressions(new NodeSelectorRequirementBuilder()
-                                    .addToValues("myspecialnode")
-                                    .build())
-                            .endPreference()
-                            .build())
-                    .endNodeAffinity()
-                    .endAffinity()
-                    .endSpec()
-                    .build();
+        PodTemplateSpec brokerTemplateSpec = createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
         testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
-                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", templateSpec),
-                PlanUtils.createBrokeredAdminResourceObject("512Mi"),
+                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", brokerTemplateSpec),
+                PlanUtils.createBrokeredAdminResourceObject("512Mi", adminTemplateSpec),
                 environment.enmasseVersion());
 
         plansProvider.createInfraConfig(testInfra);
@@ -78,7 +59,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
 
-        assertInfra("512Mi", "1Gi", templateSpec, "512Mi", null);
+        assertInfra("512Mi", "1Gi", brokerTemplateSpec, "512Mi", adminTemplateSpec);
     }
 
     @Test
@@ -98,7 +79,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         BrokeredInfraConfig infra = PlanUtils.createBrokeredInfraConfigObject("test-infra-2",
                 PlanUtils.createBrokeredBrokerResourceObject(brokerMemory, brokerStorage, updatePersistentVolumeClaim),
-                PlanUtils.createBrokeredAdminResourceObject(adminMemory),
+                PlanUtils.createBrokeredAdminResourceObject(adminMemory, null),
                 environment.enmasseVersion());
 
         plansProvider.createInfraConfig(infra);
@@ -122,7 +103,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
     void testReadInfra() throws Exception {
         testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
                 PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", null),
-                PlanUtils.createBrokeredAdminResourceObject("512Mi"),
+                PlanUtils.createBrokeredAdminResourceObject("512Mi", null),
                 environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
 
