@@ -27,12 +27,15 @@ function waitingContainersReady {
     pods_id=$($CMD get pods -n ${NAMESPACE} | awk 'NR >1 {print $1}')
     for pod_id in ${pods_id}
     do
-        ready=$($CMD get -o json pod -n ${NAMESPACE}  ${pod_id} -o jsonpath={.status.containerStatuses[0].ready})
+        ready=$($CMD get -o json pod -n ${NAMESPACE} ${pod_id} -o jsonpath={.status.containerStatuses[0].ready})
         if [[ "${UPGRADED}" == "true" ]]; then
             image=$($CMD get pod ${pod_id} -o jsonpath={.spec.containers[*].image})
             initImage=$($CMD get pod ${pod_id} -o jsonpath={.spec.initContainers[*].image})
             imageUpgraded=$(is_upgraded ${image})
             initImageUpgraded=$(is_upgraded ${initImage})
+            echo "-----------------------------------------------------"
+            echo "image upgraded: ${imageUpgraded}"
+            echo "init image upgraded: ${initImageUpgraded}"
             if [[ "${imageUpgraded}" == "true" ]] && [[ "${initImageUpgraded}" == "true" ]]; then
                 info "Pod ${pod_id} is upgraded to ${image}, initImage: ${initImage}"
             else
@@ -67,6 +70,7 @@ do
     fi
     num_running=`${CMD} get pods -n ${NAMESPACE}| grep -v deploy | grep -c Running`
     if [[ "$num_running" -eq "$EXPECTED_PODS" ]]; then
+        echo "==================================================================================="
         waitingContainersReady ${NAMESPACE}
         if [[ $? -gt 0 ]]
         then
