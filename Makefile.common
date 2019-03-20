@@ -5,6 +5,9 @@ MOCHA_FILE      ?= build/test-results/test/TEST-$(PROJECT_NAME).xml
 SKIP_TESTS      ?= false
 UNAME_S := $(shell uname -s)
 LN=ln
+BUILD_GOOS=linux
+BUILD_GOARCH=amd64
+
 
 ifeq ($(UNAME_S),Darwin)
 	LN = gln
