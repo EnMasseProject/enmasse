@@ -250,10 +250,11 @@ class CertProviderTest extends TestBase {
                 .withProvider(CertProvider.openshift.name())
                 .build(),
                 false);
+        String appNamespace = "certificate-validator-ns";
         boolean testSucceeded = false;
         try {
-            SystemtestsKubernetesApps.deployOpenshiftCertValidator(environment.namespace(), kubernetes);
-            OpenshiftCertValidatorApiClient client = new OpenshiftCertValidatorApiClient(kubernetes, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(environment.namespace(), kubernetes));
+            SystemtestsKubernetesApps.deployOpenshiftCertValidator(appNamespace, kubernetes);
+            OpenshiftCertValidatorApiClient client = new OpenshiftCertValidatorApiClient(kubernetes, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, kubernetes));
 
             JsonObject request = new JsonObject();
             request.put("username", user.getUsername());
@@ -293,13 +294,12 @@ class CertProviderTest extends TestBase {
             if (lastException != null) {
                 throw lastException;
             }
-
         } finally {
             if (!testSucceeded) {
-                logCollector.collectLogsOfPodsByLabels(
+                logCollector.collectLogsOfPodsByLabels(appNamespace,
                         Collections.singletonMap("app", SystemtestsKubernetesApps.OPENSHIFT_CERT_VALIDATOR));
             }
-            SystemtestsKubernetesApps.deleteOpenshiftCertValidator(environment.namespace(), kubernetes);
+            SystemtestsKubernetesApps.deleteOpenshiftCertValidator(appNamespace, kubernetes);
         }
     }
 

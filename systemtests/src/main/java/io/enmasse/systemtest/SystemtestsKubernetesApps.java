@@ -40,6 +40,9 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployOpenshiftCertValidator(String namespace, Kubernetes kubeClient) throws Exception {
+        if (!kubeClient.namespaceExists(namespace)) {
+            kubeClient.createNamespace(namespace);
+        }
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(OPENSHIFT_CERT_VALIDATOR, 8080));
         kubeClient.createDeploymentFromResource(namespace, getOpenshiftCertValidatorDeploymentResource());
         kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(OPENSHIFT_CERT_VALIDATOR, 8080));

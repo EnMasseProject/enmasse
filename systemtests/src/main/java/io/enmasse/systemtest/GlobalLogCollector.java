@@ -88,7 +88,7 @@ public class GlobalLogCollector {
         });
     }
 
-    public void collectLogsOfPodsByLabels(Map<String, String> labels) {
+    public void collectLogsOfPodsByLabels(String namespace, Map<String, String> labels) {
         log.info("Store logs from all pods in namespace '{}' matching labels {}", namespace, labels);
         kubernetes.getLogsByLables(namespace, labels).forEach((podName, podLogs) -> {
             try {
