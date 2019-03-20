@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -66,8 +65,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
 
-        assertInfra("512Mi", Optional.of("1Gi"), 1, "256Mi", "512Mi");
-
+        assertInfra("512Mi", "1Gi", 1, "256Mi", "512Mi");
     }
 
     @Test
@@ -107,7 +105,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory,
-                        updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(),
+                        updatePersistentVolumeClaim ? brokerStorage : null,
                         routerReplicas,
                         routerMemory,
                         adminMemory),
@@ -147,7 +145,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
     }
 
-    private boolean assertInfra(String brokerMemory, Optional<String> brokerStorage, int routerReplicas, String routermemory, String adminMemory) {
+    private boolean assertInfra(String brokerMemory, String brokerStorage, int routerReplicas, String routermemory, String adminMemory) {
         log.info("Checking router infra");
         List<Pod> routerPods = TestUtils.listRouterPods(kubernetes, exampleAddressSpace);
         assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
@@ -163,8 +161,8 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
             assertEquals(routermemory, resources.getRequests().get("memory").getAmount(),
                     "Router memory requests incorrect");
         }
-        assertAdminConsole(adminMemory);
-        assertBroker(brokerMemory, brokerStorage);
+        assertAdminConsole(adminMemory, null);
+        assertBroker(brokerMemory, brokerStorage, null);
         return true;
     }
 

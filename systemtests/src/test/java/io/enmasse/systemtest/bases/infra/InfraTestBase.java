@@ -13,10 +13,7 @@ import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +22,7 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -55,7 +53,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
         plansProvider.tearDown();
     }
 
-    protected void assertBroker(String brokerMemory, Optional<String> brokerStorage) {
+    protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec) {
         log.info("Checking broker infra");
         List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);
         assertEquals(1, brokerPods.size());
@@ -68,14 +66,46 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
                 .get().get("memory").getAmount();
         assertEquals(brokerMemory, actualBrokerMemory, "Broker memory limit incorrect");
 
-        if (brokerStorage.isPresent()) {
+        if (brokerStorage != null) {
             PersistentVolumeClaim brokerVolumeClaim = getBrokerPVCData(broker);
-            assertEquals(brokerStorage.get(), brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(),
+            assertEquals(brokerStorage, brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(),
                     "Broker data storage request incorrect");
+        }
+
+        if (templateSpec != null) {
+            assertTemplateSpec(broker, templateSpec);
         }
     }
 
-    protected void assertAdminConsole(String adminMemory) {
+    protected void assertTemplateSpec(Pod pod, PodTemplateSpec templateSpec) {
+        if (templateSpec.getMetadata().getLabels() != null) {
+            for (Map.Entry<String, String> labelPair : templateSpec.getMetadata().getLabels().entrySet()) {
+                assertEquals(labelPair.getValue(), pod.getMetadata().getLabels().get(labelPair.getKey()), "Labels do not match");
+            }
+        }
+
+        if (templateSpec.getSpec().getAffinity() != null) {
+            assertEquals(templateSpec.getSpec().getAffinity(), pod.getSpec().getAffinity(), "Affinity rules do not match");
+        }
+
+        if (templateSpec.getSpec().getPriorityClassName() != null) {
+            assertEquals(templateSpec.getSpec().getPriorityClassName(), pod.getSpec().getPriorityClassName(), "Priority class names do not match");
+        }
+
+        if (templateSpec.getSpec().getTolerations() != null) {
+            assertEquals(templateSpec.getSpec().getTolerations(), pod.getSpec().getTolerations(), "List of tolerations does not match");
+        }
+
+        for (Container expectedContainer : templateSpec.getSpec().getContainers()) {
+            for (Container actualContainer : pod.getSpec().getContainers()) {
+                if (expectedContainer.getName().equals(actualContainer.getName())) {
+                    assertEquals(expectedContainer.getResources(), actualContainer.getResources());
+                }
+            }
+        }
+    }
+
+    protected void assertAdminConsole(String adminMemory, PodTemplateSpec templateSpec) {
         log.info("Checking admin console infra");
         List<Pod> adminPods = TestUtils.listAdminConsolePods(kubernetes, exampleAddressSpace);
         assertEquals(1, adminPods.size());
@@ -88,6 +118,10 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
                     "Admin console memory limit incorrect");
             assertEquals(adminMemory, requirements.getRequests().get("memory").getAmount(),
                     "Admin console memory requests incorrect");
+        }
+
+        if (templateSpec != null) {
+            assertTemplateSpec(adminPods.get(0), templateSpec);
         }
     }
 

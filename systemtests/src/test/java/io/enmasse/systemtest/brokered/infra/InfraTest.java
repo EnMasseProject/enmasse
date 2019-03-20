@@ -15,12 +15,15 @@ import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import io.fabric8.kubernetes.api.model.NodeSelectorRequirementBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.PreferredSchedulingTermBuilder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -31,8 +34,26 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     @Test
     void testCreateInfra() throws Exception {
+        PodTemplateSpec templateSpec = new PodTemplateSpecBuilder()
+                    .editOrNewMetadata()
+                    .addToLabels("mylabel", "systemtests")
+                    .endMetadata()
+                    .editOrNewSpec()
+                    .editOrNewAffinity()
+                    .editOrNewNodeAffinity()
+                    .addToPreferredDuringSchedulingIgnoredDuringExecution(new PreferredSchedulingTermBuilder()
+                            .withNewPreference()
+                            .addToMatchExpressions(new NodeSelectorRequirementBuilder()
+                                    .addToValues("myspecialnode")
+                                    .build())
+                            .endPreference()
+                            .build())
+                    .endNodeAffinity()
+                    .endAffinity()
+                    .endSpec()
+                    .build();
         testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
-                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi"),
+                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", templateSpec),
                 PlanUtils.createBrokeredAdminResourceObject("512Mi"),
                 environment.enmasseVersion());
 
@@ -57,7 +78,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
 
-        assertInfra("512Mi", Optional.of("1Gi"), "512Mi");
+        assertInfra("512Mi", "1Gi", templateSpec, "512Mi", null);
     }
 
     @Test
@@ -93,14 +114,14 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
         replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
-                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(), adminMemory),
+                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     @Test
     void testReadInfra() throws Exception {
         testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
-                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi"),
+                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", null),
                 PlanUtils.createBrokeredAdminResourceObject("512Mi"),
                 environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
@@ -122,9 +143,9 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     }
 
-    private boolean assertInfra(String brokerMemory, Optional<String> brokerStorage, String adminMemory) {
-        assertAdminConsole(adminMemory);
-        assertBroker(brokerMemory, brokerStorage);
+    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
+        assertAdminConsole(adminMemory, adminTemplateSpec);
+        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec);
         return true;
     }
 

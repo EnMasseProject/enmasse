@@ -9,6 +9,7 @@ import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
+import io.fabric8.kubernetes.api.model.*;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
@@ -93,14 +94,18 @@ public class PlanUtils {
                 .build();
     }
 
-    public static BrokeredInfraConfigSpecBroker createBrokeredBrokerResourceObject(String memory, String storage) {
-        return new BrokeredInfraConfigSpecBrokerBuilder()
+    public static BrokeredInfraConfigSpecBroker createBrokeredBrokerResourceObject(String memory, String storage, PodTemplateSpec templateSpec) {
+        BrokeredInfraConfigSpecBrokerBuilder builder = new BrokeredInfraConfigSpecBrokerBuilder()
                 .withAddressFullPolicy("FAIL")
                 .withNewResources()
                 .withMemory(memory)
                 .withStorage(storage)
-                .endResources()
-                .build();
+                .endResources();
+
+        if (templateSpec != null) {
+            builder.withPodTemplate(templateSpec);
+        }
+        return builder.build();
     }
 
     public static BrokeredInfraConfigSpecBroker createBrokeredBrokerResourceObject(String memory, String storage, boolean updatePersistentVolumeClaim) {
