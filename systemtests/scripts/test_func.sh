@@ -389,7 +389,7 @@ function is_upgraded() {
     IMAGE=${1}
     TAG=${TAG:-"latest"}
 
-    IMAGE_TAG=$(echo $IMAGE | cut -f 2 -d ':')
+    IMAGE_TAG=${IMAGE##*:}
     TEMPLATES=$(find ${CURDIR}/../../templates/build/enmasse-${TAG} -name '*.yaml' -exec cat {} \; | grep "image")
     if [[ "${TEMPLATES}" == *"${IMAGE}"* ]]; then
         echo "true"
