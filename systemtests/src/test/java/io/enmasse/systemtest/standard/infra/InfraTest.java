@@ -39,7 +39,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
         testInfra = PlanUtils.createStandardInfraConfigObject("test-infra-1",
                 PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi"),
                 PlanUtils.createStandardAdminResourceObject("512Mi"),
-                PlanUtils.createStandardRouterResourceObject("512Mi"),
+                PlanUtils.createStandardRouterResourceObject("256Mi"),
                 environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
 
@@ -56,7 +56,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
                         new ResourceAllowance("aggregate", 5.0)),
-                Arrays.asList(exampleAddressPlan));
+                Collections.singletonList(exampleAddressPlan));
 
         plansProvider.createAddressSpacePlan(exampleSpacePlan);
 
@@ -66,7 +66,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
 
-        assertInfra("512Mi", Optional.of("1Gi"), 2, "256Mi", "512Mi");
+        assertInfra("512Mi", Optional.of("1Gi"), 1, "256Mi", "512Mi");
 
     }
 

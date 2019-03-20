@@ -217,6 +217,15 @@ public class KubeCMDClient extends CmdClient {
         return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
+    public static ExecutionResultData runOnPod(String namespace, String podName, Optional<String> container, String... args) {
+        List<String> runCmd = new ArrayList<>();
+        String[] base = container.map(s -> new String[]{CMD, "exec", podName, "-n", namespace, "--container", s, "--"})
+                .orElseGet(() -> new String[]{CMD, "exec", podName, "-n", namespace, "--"});
+        Collections.addAll(runCmd, base);
+        Collections.addAll(runCmd, args);
+        return execute(runCmd, DEFAULT_SYNC_TIMEOUT, false);
+    }
+
     public static ExecutionResultData runQDstat(String podName, String... args) {
         List<String> runCmd = new ArrayList<>();
         String[] base = new String[]{CMD, "exec", podName, "--", "qdstat"};
