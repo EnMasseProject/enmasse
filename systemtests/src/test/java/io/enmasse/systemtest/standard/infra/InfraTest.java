@@ -36,9 +36,9 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
     @Test
     void testCreateInfra() throws Exception {
-        PodTemplateSpec brokerTemplateSpec = createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
-        PodTemplateSpec adminTemplateSpec = createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
-        PodTemplateSpec routerTemplateSpec = createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
+        PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
         testInfra = PlanUtils.createStandardInfraConfigObject("test-infra-1",
                 PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi", brokerTemplateSpec),
                 PlanUtils.createStandardAdminResourceObject("512Mi", adminTemplateSpec),

@@ -31,8 +31,8 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     @Test
     void testCreateInfra() throws Exception {
-        PodTemplateSpec brokerTemplateSpec = createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
-        PodTemplateSpec adminTemplateSpec = createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
         testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
                 PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", brokerTemplateSpec),
                 PlanUtils.createBrokeredAdminResourceObject("512Mi", adminTemplateSpec),

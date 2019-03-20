@@ -105,50 +105,6 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
         }
     }
 
-    protected PodTemplateSpec createTemplateSpec(Map<String, String> labels, String nodeAffinityValue, String tolerationKey) {
-        PodTemplateSpecBuilder builder = new PodTemplateSpecBuilder();
-        if (labels != null) {
-            builder.editOrNewMetadata()
-                    .withLabels(labels)
-                    .endMetadata();
-        }
-
-        if (nodeAffinityValue != null) {
-            builder.editOrNewSpec()
-                    .editOrNewAffinity()
-                    .editOrNewNodeAffinity()
-                    .addToPreferredDuringSchedulingIgnoredDuringExecution(new PreferredSchedulingTermBuilder()
-                            .withNewPreference()
-                            .addToMatchExpressions(new NodeSelectorRequirementBuilder()
-                                    .addToValues(nodeAffinityValue)
-                                    .build())
-                            .endPreference()
-                            .build())
-                    .endNodeAffinity()
-                    .endAffinity()
-                    .endSpec();
-        }
-
-        if (tolerationKey != null) {
-            builder.editOrNewSpec()
-                    .addNewToleration()
-                    .withKey(tolerationKey)
-                    .withOperator("Exists")
-                    .withEffect("NoSchedule")
-                    .endToleration()
-                    .endSpec();
-        }
-
-        /* TODO: Not always supported by cluster
-        if (priorityClassName != null) {
-            builder.editOrNewSpec()
-                    .withPriorityClassName(priorityClassName)
-                    .endSpec();
-        }*/
-
-        return builder.build();
-    }
-
     protected void assertAdminConsole(String adminMemory, PodTemplateSpec templateSpec) {
         log.info("Checking admin console infra");
         List<Pod> adminPods = TestUtils.listAdminConsolePods(kubernetes, exampleAddressSpace);
