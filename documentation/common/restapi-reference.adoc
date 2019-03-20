@@ -1410,6 +1410,8 @@ __optional__|< <<_io_k8s_api_networking_v1_networkpolicyingressrule,io.k8s.api.n
 [options="header", cols=".^3a,.^4a"]
 |===
 |Name|Schema
+|**pod** +
+__optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1beta1_brokeredinfraconfigspecadmin_resources,resources>>
 |===
@@ -1433,6 +1435,8 @@ __optional__|string
 |Name|Schema
 |**addressFullPolicy** +
 __optional__|enum (PAGE, BLOCK, FAIL)
+|**pod** +
+__optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1beta1_brokeredinfraconfigspecbroker_resources,resources>>
 |**storageClassName** +
@@ -1451,6 +1455,45 @@ __optional__|boolean
 __optional__|string
 |**storage** +
 __optional__|string
+|===
+
+
+[[_io_enmasse_admin_v1beta1_infraconfigpodspec]]
+=== io.enmasse.admin.v1beta1.InfraConfigPodSpec
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**metadata** +
+__optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec_metadata,metadata>>
+|**spec** +
+__optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec_spec,spec>>
+|===
+
+[[_io_enmasse_admin_v1beta1_infraconfigpodspec_metadata]]
+**metadata**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**labels** +
+__optional__|object
+|===
+
+[[_io_enmasse_admin_v1beta1_infraconfigpodspec_spec]]
+**spec**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**affinity** +
+__optional__|object
+|**priorityClassName** +
+__optional__|string
+|**resources** +
+__optional__|object
+|**tolerations** +
+__optional__|object
 |===
 
 
@@ -1523,6 +1566,8 @@ __optional__|< <<_io_k8s_api_networking_v1_networkpolicyingressrule,io.k8s.api.n
 [options="header", cols=".^3a,.^4a"]
 |===
 |Name|Schema
+|**pod** +
+__optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecadmin_resources,resources>>
 |===
@@ -1546,6 +1591,8 @@ __optional__|string
 |Name|Schema
 |**addressFullPolicy** +
 __optional__|enum (PAGE, BLOCK, FAIL)
+|**pod** +
+__optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecbroker_resources,resources>>
 |**storageClassName** +
@@ -1577,6 +1624,8 @@ __optional__|string
 __optional__|integer
 |**minReplicas** +
 __optional__|integer
+|**pod** +
+__optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter_resources,resources>>
 |===
