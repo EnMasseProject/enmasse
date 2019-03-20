@@ -4,9 +4,16 @@
  */
 package io.enmasse.address.model;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import io.enmasse.config.AnnotationKeys;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 
 /**
  * Various static utilities that don't belong in a specific place
@@ -87,6 +94,69 @@ public final class KubeUtil {
     public static String getAddressSpaceRealmName(AddressSpace addressSpace) {
         return KubeUtil.sanitizeName(addressSpace.getMetadata().getNamespace() + "-" + addressSpace.getMetadata().getName());
     }
+
+    public static String getAdminDeploymentName(AddressSpace addressSpace) {
+        return "admin." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
+    public static String getAgentDeploymentName(AddressSpace addressSpace) {
+        return "agent." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
+    public static String getRouterSetName(AddressSpace addressSpace) {
+        return "router." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
+    public static String getBrokeredBrokerSetName(AddressSpace addressSpace) {
+        return "broker." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+    }
+
+    public static <T extends HasMetadata> T lookupResource(String kind, String name, List<HasMetadata> items) {
+        for (HasMetadata item : items) {
+            if (item != null && item.getKind().equals(kind) && item.getMetadata().getName().equals(name)) {
+                return (T) item;
+            }
+        }
+        throw new IllegalStateException("Unable to find resource of kind '" + kind + "' and name '" + name + "'");
+    }
+
+
+    public static void applyPodTemplate(PodTemplateSpec actual, PodTemplateSpec desired) {
+        if (desired.getMetadata() != null && desired.getMetadata().getLabels() != null) {
+            Map<String, String> labels = new HashMap<>(desired.getMetadata().getLabels());
+            labels.putAll(actual.getMetadata().getLabels());
+            actual.getMetadata().setLabels(labels);
+        }
+
+        if (desired.getSpec() != null) {
+
+            PodSpec podSpec = desired.getSpec();
+            PodSpec actualPodSpec = actual.getSpec();
+
+            if (podSpec.getPriorityClassName() != null) {
+                actualPodSpec.setPriorityClassName(podSpec.getPriorityClassName());
+            }
+
+            if (podSpec.getAffinity() != null) {
+                actualPodSpec.setAffinity(podSpec.getAffinity());
+            }
+
+            if (podSpec.getTolerations() != null) {
+                actualPodSpec.setTolerations(podSpec.getTolerations());
+            }
+
+            for (Container desiredContainer : podSpec.getContainers()) {
+                for (Container actualContainer : actualPodSpec.getContainers()) {
+                    if (actualContainer.getName().equals(desiredContainer.getName())) {
+                        if (desiredContainer.getResources() != null) {
+                            actualContainer.setResources(desiredContainer.getResources());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     public static void validateName(String name) {
         if (name == null) {
