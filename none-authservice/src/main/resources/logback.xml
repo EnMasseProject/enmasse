@@ -8,7 +8,7 @@
     </encoder>
   </appender>
 
-  <root level="${LOG_LEVEL}">
+  <root level="${LOG_LEVEL:-info}">
     <appender-ref ref="STDOUT" />
   </root>
 

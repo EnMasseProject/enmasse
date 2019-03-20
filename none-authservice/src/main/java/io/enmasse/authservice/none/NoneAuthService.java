@@ -4,7 +4,6 @@
  */
 package io.enmasse.authservice.none;
 
-import io.vertx.core.Context;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.PemKeyCertOptions;
 import io.vertx.proton.ProtonConnection;
@@ -58,20 +57,14 @@ public class NoneAuthService {
             properties.put(GROUPS, Collections.singletonList("manage"));
 
             connection.setProperties(properties);
-            log.info("Set properties");
             connection.open();
-            log.info("Sent open");
             connection.close();
-            log.info("Sent close");
 
         }).closeHandler(conn -> {
-            log.info("Received close - disconnecting");
             connection.close();
             connection.disconnect();
         }).disconnectHandler(protonConnection -> {
-            log.info("Disconnecting");
             connection.disconnect();
         });
-        log.info("connectHandler");
     }
 }
