@@ -61,13 +61,22 @@ public class SeleniumManagement {
 
     public static void restartSeleniumApp() throws Exception {
         List<String> beforeRestart = Kubernetes.getInstance().listPods(SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
-        SystemtestsKubernetesApps.deleteSeleniumPod(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
-        TestUtils.waitUntilCondition("Selenium pods ready", () -> {
-                    List<String> current = TestUtils.listReadyPods(Kubernetes.getInstance(), SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
-                    current.removeAll(beforeRestart);
-                    log.info("Following pods are in ready state {}", current);
-                    return current.size() == beforeRestart.size();
-                },
-                new TimeoutBudget(1, TimeUnit.MINUTES));
+        int attempts = 5;
+        for (int i = 1; i <= attempts; i++) {
+            SystemtestsKubernetesApps.deleteSeleniumPod(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
+            try {
+                TestUtils.waitUntilCondition("Selenium pods ready", () -> {
+                            List<String> current = TestUtils.listReadyPods(Kubernetes.getInstance(),
+                                    SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
+                            current.removeAll(beforeRestart);
+                            log.info("Following pods are in ready state {}", current);
+                            return current.size() == beforeRestart.size();
+                        },
+                        new TimeoutBudget(1, TimeUnit.MINUTES));
+                break;
+            } catch (Exception ex) {
+                log.warn("Selenium application was not redeployed correctly, try it again {}/{}", i, attempts);
+            }
+        }
     }
 }

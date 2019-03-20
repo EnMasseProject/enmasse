@@ -224,8 +224,8 @@ public class SystemtestsKubernetesApps {
     private static ConfigMap getRheaConfigMap() throws Exception {
         File rheaHtml = new File("src/main/resources/rhea.html");
         File rheaJs = new File("client_executable/rhea/dist/rhea.js");
-        String htmlContent = new String(Files.readAllBytes(rheaHtml.toPath()), Charset.forName("UTF-8"));
-        String jsContent = new String(Files.readAllBytes(rheaJs.toPath()), Charset.forName("UTF-8"));
+        String htmlContent = Files.readString(rheaHtml.toPath());
+        String jsContent = Files.readString(rheaJs.toPath());
 
         return new ConfigMapBuilder()
                 .withNewMetadata()
