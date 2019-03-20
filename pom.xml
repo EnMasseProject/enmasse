@@ -115,6 +115,7 @@
         <module>discovery-lib</module>
         <module>topic-forwarder</module>
         <module>mqtt-gateway</module>
+        <module>none-authservice</module>
         <module>mqtt-lwt</module>
         <module>standard-controller</module>
         <module>address-space-controller</module>
