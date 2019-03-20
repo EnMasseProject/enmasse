@@ -104,7 +104,7 @@ public final class KubeUtil {
     }
 
     public static String getRouterSetName(AddressSpace addressSpace) {
-        return "router." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        return "qdrouterd." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
     }
 
     public static String getBrokeredBrokerSetName(AddressSpace addressSpace) {
@@ -124,7 +124,9 @@ public final class KubeUtil {
     public static void applyPodTemplate(PodTemplateSpec actual, PodTemplateSpec desired) {
         if (desired.getMetadata() != null && desired.getMetadata().getLabels() != null) {
             Map<String, String> labels = new HashMap<>(desired.getMetadata().getLabels());
-            labels.putAll(actual.getMetadata().getLabels());
+            if (actual.getMetadata().getLabels() != null) {
+                labels.putAll(actual.getMetadata().getLabels());
+            }
             actual.getMetadata().setLabels(labels);
         }
 

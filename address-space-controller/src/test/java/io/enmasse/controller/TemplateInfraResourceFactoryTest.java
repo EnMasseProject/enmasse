@@ -11,10 +11,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import io.enmasse.admin.model.v1.*;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -28,8 +33,6 @@ import io.enmasse.address.model.EndpointSpecBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.k8s.util.JULInitializingTest;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 
@@ -55,6 +58,9 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .withNewMetadata()
                 .withName("standard")
                 .endMetadata()
+                .withNewSpec()
+                .withType(AuthenticationServiceType.none)
+                .endSpec()
                 .withNewStatus()
                 .withHost("example")
                 .withPort(5671)
@@ -73,7 +79,6 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
     }
 
     @Test
-    @Disabled("This only works when templates are processed locally. Which is broken due to: fabric8io/kubernetes-client#916")
     public void testGenerateStandard() {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -99,6 +104,8 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
 
                 .build();
 
+        PodTemplateSpec routerTemplateSpec = createTemplateSpec(Collections.singletonMap("mylabel", "router"), "myrnode", "myrkey", "myrClass");
+        PodTemplateSpec adminTemplateSpec = createTemplateSpec(Collections.singletonMap("mylabel", "broker"), "mybnode", "mybkey", "mybClass");
         StandardInfraConfig infraConfig = new StandardInfraConfigBuilder()
                 .withNewMetadata()
                 .withName("test")
@@ -108,6 +115,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .withVersion("master")
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
                         .withNewResources("2Mi")
+                        .withPodTemplate(adminTemplateSpec)
                         .build())
                 .withBroker(new StandardInfraConfigSpecBrokerBuilder()
                         .withNewResources("2Mi", "1Gi")
@@ -116,13 +124,92 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .withRouter(new StandardInfraConfigSpecRouterBuilder()
                         .withNewResources("2Mi")
                         .withLinkCapacity(22)
+                        .withPodTemplate(routerTemplateSpec)
                         .build())
                 .endSpec()
                 .build();
         List<HasMetadata> items = resourceFactory.createInfraResources(addressSpace, infraConfig);
-        assertEquals(1, items.size());
+        assertEquals(3, items.size());
         ConfigMap map = findItem(ConfigMap.class, "ConfigMap", "mymap", items);
         assertEquals("FAIL", map.getData().get("key"));
+
+        StatefulSet routerSet = findItem(StatefulSet.class, "StatefulSet", "qdrouterd.1234", items);
+        assertTemplateSpec(routerSet.getSpec().getTemplate(), routerTemplateSpec);
+
+        Deployment adminDeployment = findItem(Deployment.class, "Deployment", "admin.1234", items);
+        assertTemplateSpec(adminDeployment.getSpec().getTemplate(), adminTemplateSpec);
+    }
+
+    public static PodTemplateSpec createTemplateSpec(Map<String, String> labels, String nodeAffinityValue, String tolerationKey, String priorityClassName) {
+        PodTemplateSpecBuilder builder = new PodTemplateSpecBuilder();
+        if (labels != null) {
+            builder.editOrNewMetadata()
+                    .withLabels(labels)
+                    .endMetadata();
+        }
+
+        if (nodeAffinityValue != null) {
+            builder.editOrNewSpec()
+                    .editOrNewAffinity()
+                    .editOrNewNodeAffinity()
+                    .addToPreferredDuringSchedulingIgnoredDuringExecution(new PreferredSchedulingTermBuilder()
+                            .withNewPreference()
+                            .addToMatchExpressions(new NodeSelectorRequirementBuilder()
+                                    .addToValues(nodeAffinityValue)
+                                    .build())
+                            .endPreference()
+                            .build())
+                    .endNodeAffinity()
+                    .endAffinity()
+                    .endSpec();
+        }
+
+        if (tolerationKey != null) {
+            builder.editOrNewSpec()
+                    .addNewToleration()
+                    .withKey(tolerationKey)
+                    .withOperator("Exists")
+                    .withEffect("NoSchedule")
+                    .endToleration()
+                    .endSpec();
+        }
+
+        if (priorityClassName != null) {
+            builder.editOrNewSpec()
+                    .withPriorityClassName(priorityClassName)
+                    .endSpec();
+        }
+
+        return builder.build();
+    }
+
+
+    private void assertTemplateSpec(PodTemplateSpec pod, PodTemplateSpec templateSpec) {
+        if (templateSpec.getMetadata().getLabels() != null) {
+            for (Map.Entry<String, String> labelPair : templateSpec.getMetadata().getLabels().entrySet()) {
+                assertEquals(labelPair.getValue(), pod.getMetadata().getLabels().get(labelPair.getKey()), "Labels do not match");
+            }
+        }
+
+        if (templateSpec.getSpec().getAffinity() != null) {
+            assertEquals(templateSpec.getSpec().getAffinity(), pod.getSpec().getAffinity(), "Affinity rules do not match");
+        }
+
+        if (templateSpec.getSpec().getPriorityClassName() != null) {
+            assertEquals(templateSpec.getSpec().getPriorityClassName(), pod.getSpec().getPriorityClassName(), "Priority class names do not match");
+        }
+
+        if (templateSpec.getSpec().getTolerations() != null) {
+            assertEquals(templateSpec.getSpec().getTolerations(), pod.getSpec().getTolerations(), "List of tolerations does not match");
+        }
+
+        for (Container expectedContainer : templateSpec.getSpec().getContainers()) {
+            for (Container actualContainer : pod.getSpec().getContainers()) {
+                if (expectedContainer.getName().equals(actualContainer.getName())) {
+                    assertEquals(expectedContainer.getResources(), actualContainer.getResources());
+                }
+            }
+        }
     }
 
     private <T> T findItem(Class<T> clazz, String kind, String name, List<HasMetadata> items) {
