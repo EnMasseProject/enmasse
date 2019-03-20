@@ -64,6 +64,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .withNewStatus()
                 .withHost("example")
                 .withPort(5671)
+                .withCaCertSecret(new SecretReferenceBuilder().withName("certs").build())
                 .endStatus()
                 .build();
         when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
