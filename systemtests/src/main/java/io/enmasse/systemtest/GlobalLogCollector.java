@@ -126,7 +126,11 @@ public class GlobalLogCollector {
         allArgs.add("127.0.0.1:55671");
         allArgs.addAll(Arrays.asList(args));
 
-        String output = kubernetes.runOnPod(pod, "router", allArgs.toArray(new String[0]));
+        String output = KubeCMDClient.runOnPod(
+                pod.getMetadata().getNamespace(),
+                pod.getMetadata().getName(),
+                Optional.of("router"),
+                allArgs.toArray(new String[0])).getStdOut();
         try {
             Path routerAutoLinks = resolveLogFile(pod.getMetadata().getName() + filesuffix);
             log.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
@@ -146,7 +150,11 @@ public class GlobalLogCollector {
     }
 
     private void collectJmap(Pod pod) {
-        kubernetes.runOnPod(pod, "api-server", "jmap", "-dump:live,format=b,file=/tmp/dump.bin", "1");
+        KubeCMDClient.runOnPod(
+                pod.getMetadata().getNamespace(),
+                pod.getMetadata().getName(),
+                Optional.empty(),
+                "api-server", "jmap", "-dump:live,format=b,file=/tmp/dump.bin", "1");
         try {
             Path jmapLog = resolveLogFile(pod.getMetadata().getName() + ".dump." + Instant.now().toString().replace(":", "_") + ".bin");
             KubeCMDClient.copyPodContent(pod.getMetadata().getName(), "/tmp/dump.bin", jmapLog.toAbsolutePath().toString());
