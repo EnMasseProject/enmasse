@@ -24,7 +24,6 @@ import io.sundr.builder.annotations.Inline;
                                 value = "done"))
 @DefaultCustomResource
 @SuppressWarnings("serial")
-//FIXME: implement missing fields and remove ignore annotation
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IoTProject extends AbstractHasMetadata<IoTProject> {
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.iot.model.v1;
@@ -24,7 +24,6 @@ import io.sundr.builder.annotations.Inline;
                         value = "done"))
 @DefaultCustomResource
 @SuppressWarnings("serial")
-//FIXME: implement missing fields and remove ignore annotation
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class IoTConfig extends AbstractHasMetadata<IoTConfig> {
 
