@@ -17,6 +17,16 @@ spec:
         app: enmasse
         name: enmasse-operator
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: node-role.enmasse.io/operator-infra
+                    operator: In
+                    values:
+                      - "true"
       serviceAccountName: enmasse-operator
       containers:
       - name: controller
