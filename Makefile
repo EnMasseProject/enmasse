@@ -54,7 +54,7 @@ build_java:
 
 build_go: $(GO_DIRS) test_go
 
-$(GO_DIRS):
+$(GO_DIRS): $(GOPRJ)
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
 ifeq ($(SKIP_TESTS),true)
