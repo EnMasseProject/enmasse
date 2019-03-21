@@ -9,7 +9,7 @@ ARG commit
 ENV ARTEMIS_HOME=/opt/apache-artemis HOME=/run/artemis/split-1/ PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
 ADD ./build/apache-artemis-bin.tar.gz /opt
-RUN mv /opt/apache-artemis-2.6.4 $ARTEMIS_HOME
+RUN mv /opt/apache-artemis-2.7.0 $ARTEMIS_HOME
 ADD ./build/artemis-image-${maven_version}.tar.gz /
 
 RUN chgrp -R 0 $ARTEMIS_HOME && \
