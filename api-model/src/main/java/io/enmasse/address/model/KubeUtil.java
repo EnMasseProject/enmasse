@@ -104,7 +104,7 @@ public final class KubeUtil {
     }
 
     public static String getRouterSetName(AddressSpace addressSpace) {
-        return "qdrouterd." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        return "qdrouterd-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
     }
 
     public static String getBrokeredBrokerSetName(AddressSpace addressSpace) {
