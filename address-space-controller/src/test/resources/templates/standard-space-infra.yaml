@@ -26,7 +26,7 @@ objects:
   - kind: "StatefulSet"
     apiVersion: "apps/v1"
     metadata:
-      name: "qdrouterd.1234"
+      name: "qdrouterd-1234"
     spec:
       replicas: 1
       template:

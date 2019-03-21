@@ -134,7 +134,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
         ConfigMap map = findItem(ConfigMap.class, "ConfigMap", "mymap", items);
         assertEquals("FAIL", map.getData().get("key"));
 
-        StatefulSet routerSet = findItem(StatefulSet.class, "StatefulSet", "qdrouterd.1234", items);
+        StatefulSet routerSet = findItem(StatefulSet.class, "StatefulSet", "qdrouterd-1234", items);
         assertTemplateSpec(routerSet.getSpec().getTemplate(), routerTemplateSpec);
 
         Deployment adminDeployment = findItem(Deployment.class, "Deployment", "admin.1234", items);
