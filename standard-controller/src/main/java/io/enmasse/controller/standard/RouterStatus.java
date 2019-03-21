@@ -61,11 +61,13 @@ class RouterStatus {
         int ok = 0;
 
         for (List<String> linkRoute : linkRoutes) {
-            String prefix = linkRoute.get(0);
+            if (linkRoute.size() > 0) {
+                String prefix = linkRoute.get(0);
 
-            // Pooled topics have active link routes
-            if (prefix.equals(address.getSpec().getAddress())) {
-                ok++;
+                // Pooled topics have active link routes
+                if (prefix.equals(address.getSpec().getAddress())) {
+                    ok++;
+                }
             }
         }
 
@@ -83,12 +85,14 @@ class RouterStatus {
         for (RouterStatus routerStatus : routerStatusList) {
 
             for (List<String> autoLink : routerStatus.autoLinks) {
-                String addr = autoLink.get(0);
-                String dir = autoLink.get(2);
-                String operStatus = autoLink.get(3);
+                if (autoLink.size() > 3) {
+                    String addr = autoLink.get(0);
+                    String dir = autoLink.get(2);
+                    String operStatus = autoLink.get(3);
 
-                if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
-                    active.add(dir);
+                    if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
+                        active.add(dir);
+                    }
                 }
             }
         }
@@ -108,14 +112,16 @@ class RouterStatus {
         for (RouterStatus routerStatus : routerStatusList) {
 
             for (List<String> linkRoute : routerStatus.linkRoutes) {
-                String addr = linkRoute.get(0);
-                @SuppressWarnings("unused")
-                String containerId = linkRoute.get(1);
-                String dir = linkRoute.get(2);
-                String operStatus = linkRoute.get(3);
+                if (linkRoute.size() > 3) {
+                    String addr = linkRoute.get(0);
+                    @SuppressWarnings("unused")
+                    String containerId = linkRoute.get(1);
+                    String dir = linkRoute.get(2);
+                    String operStatus = linkRoute.get(3);
 
-                if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
-                    active.add(dir);
+                    if (addr.equals(address.getSpec().getAddress()) && operStatus.equals("active")) {
+                        active.add(dir);
+                    }
                 }
             }
         }
