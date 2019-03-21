@@ -10,11 +10,15 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
+
+import java.util.List;
 
 /**
  * An endpoint
@@ -23,7 +27,7 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
@@ -31,13 +35,15 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class EndpointSpec {
+public class EndpointSpec extends AbstractWithAdditionalProperties {
     private String name;
     private String service;
     @Valid
     private ExposeSpec expose;
     @Valid
     private CertSpec cert;
+    @Valid
+    private List<ExportSpec> exports;
 
     public EndpointSpec() {
     }
@@ -96,12 +102,21 @@ public class EndpointSpec {
         return cert;
     }
 
+    public List<ExportSpec> getExports() {
+        return exports;
+    }
+
+    public void setExports(List<ExportSpec> exports) {
+        this.exports = exports;
+    }
+
     @Override
     public String toString() {
         return new StringBuilder()
                 .append("{name=").append(name).append(",")
                 .append("expose=").append(expose).append(",")
                 .append("service=").append(service).append(",")
+                .append("exports=").append(exports).append(",")
                 .append("cert=").append(cert).append("}")
                 .toString();
     }

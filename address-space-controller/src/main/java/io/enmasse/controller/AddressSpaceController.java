@@ -107,6 +107,7 @@ public class AddressSpaceController {
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
+        controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);
         controllerChain.addController(new DeleteController(kubernetes));
         controllerChain.start();
