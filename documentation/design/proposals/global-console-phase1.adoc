@@ -161,3 +161,23 @@ From the persepctive of the user, the console experience should be seemless, so 
 
 The authorisation model behind the console is now openshift based.  Docs will need to be updated here too.
 
+
+
+
+===========
+
+
+
+On Kubernetes, need OpenID connect rather than OAuth, so need to use pusher oauth-proxy rather than OpenShift oauth-proxy.
+Need two enmasse containers:
+
+1) init container with static content  
+2) side car with the HTTPD
+
+Deploy the above together with either
+- openshift oauth-proxy (openshift)
+- pusher oauth-proxy (kubernetes).
+
+Above need different command line arguments.
+
+
