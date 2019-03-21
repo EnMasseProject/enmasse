@@ -3,7 +3,7 @@ include ../Makefile.common
 CMD=enmasse-controller-manager
 
 build/$(CMD):
-	cd $(GOPRJ)/cmd/$(@F) && go build -o $(abspath $@) .
+	cd $(GOPRJ)/cmd/$(@F) && GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build -o $(abspath $@) .
 
 build: build/operatorImageMap.yaml build/$(CMD)
 
