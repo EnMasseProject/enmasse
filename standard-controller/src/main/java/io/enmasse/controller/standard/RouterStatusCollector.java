@@ -88,7 +88,10 @@ class RouterStatusCollector {
     private static List<String> filterOnAttribute(List<List<String>> list, int attrNum) {
         List<String> filtered = new ArrayList<>();
         for (List<String> entry : list) {
-            filtered.add(entry.get(attrNum));
+            String filteredValue = entry.get(attrNum);
+            if (filteredValue != null) {
+                filtered.add(filteredValue);
+            }
         }
         return filtered;
     }
@@ -107,10 +110,19 @@ class RouterStatusCollector {
 
         Message response = client.request(message, 10, TimeUnit.SECONDS);
         AmqpValue value = (AmqpValue) response.getBody();
+        if (value == null) {
+            throw new IllegalArgumentException("Unexpected null body");
+        }
         Map<?,?> values = (Map<?,?>) value.getValue();
+        if (values == null) {
+            throw new IllegalArgumentException("Unexpected null body value");
+        }
 
         @SuppressWarnings("unchecked")
         List<List<String>> results = (List<List<String>>) values.get("results");
+        if (results == null) {
+            throw new IllegalArgumentException("Unexpected null results list");
+        }
         return results;
     }
 }
