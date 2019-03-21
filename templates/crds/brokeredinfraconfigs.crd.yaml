@@ -54,7 +54,7 @@ spec:
                         affinity:
                           type: object
                         tolerations:
-                          type: object
+                          type: array
                         priorityClassName:
                           type: string
                         resources:
@@ -81,7 +81,7 @@ spec:
                         affinity:
                           type: object
                         tolerations:
-                          type: object
+                          type: array
                         priorityClassName:
                           type: string
                         resources:

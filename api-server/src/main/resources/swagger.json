@@ -2051,7 +2051,7 @@
                             "type": "object"
                         },
                         "tolerations": {
-                            "type": "object"
+                            "type": "array"
                         },
                         "priorityClassName": {
                             "type": "string"
