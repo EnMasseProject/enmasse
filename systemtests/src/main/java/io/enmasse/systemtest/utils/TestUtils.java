@@ -19,7 +19,6 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -606,7 +605,7 @@ public class TestUtils {
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
             Thread.sleep(2000);
         }
-        Assertions.fail(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
+        throw new IllegalStateException(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
     public static void waitUntilCondition(final String forWhat, final BooleanSupplier condition, final TimeoutBudget budget) throws Exception {
@@ -622,7 +621,7 @@ public class TestUtils {
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
             Thread.sleep(2000);
         }
-        Assertions.fail("Failed to wait for: " + forWhat);
+        throw new IllegalStateException("Failed to wait for: " + forWhat);
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final AddressApiClient client, final String name, final String currentResourceVersion) throws Exception {
