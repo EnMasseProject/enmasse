@@ -39,16 +39,14 @@ func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(
 		mgr,
 		util.GetEnvOrDefault("ENMASSE_IOT_CONFIG_NAME", "default"),
-		util.GetEnvOrDefault("ENMASSE_IOT_CONFIG_NAMESPACE", "enmasse-infra"),
 	))
 }
 
-func newReconciler(mgr manager.Manager, configName string, configNamespace string) *ReconcileIoTConfig {
+func newReconciler(mgr manager.Manager, configName string) *ReconcileIoTConfig {
 	return &ReconcileIoTConfig{
-		client:          mgr.GetClient(),
-		scheme:          mgr.GetScheme(),
-		configName:      configName,
-		configNamespace: configNamespace,
+		client:     mgr.GetClient(),
+		scheme:     mgr.GetScheme(),
+		configName: configName,
 	}
 }
 
@@ -111,9 +109,8 @@ type ReconcileIoTConfig struct {
 	scheme *runtime.Scheme
 
 	// The name of the configuration we are watching
-	// we are watching only one config, in one namespace
-	configName      string
-	configNamespace string
+	// we are watching only one config, in our own namespace
+	configName string
 }
 
 // Reconcile
@@ -145,7 +142,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	if config.Name != r.configName || config.Namespace != r.configNamespace {
+	if config.Name != r.configName {
 		return r.failWrongConfigName(ctx, config)
 	}
 
