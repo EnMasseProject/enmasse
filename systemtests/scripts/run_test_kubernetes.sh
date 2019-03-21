@@ -57,6 +57,7 @@ EOF
 
 if [ "$DEPLOY_IOT" = "true" ]; then
     echo "Deploying IoT components"
+    sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*/*.yaml
 
     "${BASE_DIR}/iot/examples/k8s-tls/create"
     NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
