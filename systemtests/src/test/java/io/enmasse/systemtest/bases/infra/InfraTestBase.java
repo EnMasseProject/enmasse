@@ -28,6 +28,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class InfraTestBase extends TestBase implements ITestBase {
 
@@ -93,7 +94,16 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
         }
 
         if (templateSpec.getSpec().getTolerations() != null) {
-            assertEquals(templateSpec.getSpec().getTolerations(), pod.getSpec().getTolerations(), "List of tolerations does not match");
+            for (Toleration expected : templateSpec.getSpec().getTolerations()) {
+                boolean found = false;
+                for (Toleration actual : pod.getSpec().getTolerations()) {
+                    if (actual.equals(expected)) {
+                        found = true;
+                        break;
+                    }
+                }
+                assertTrue(found, "Did not find expected toleration " + expected);
+            }
         }
 
         for (Container expectedContainer : templateSpec.getSpec().getContainers()) {
