@@ -7,7 +7,8 @@ FROM centos:7
 
 ARG version
 ARG commit
-ENV VERSION=${version} COMMIT=${commit} ENMASSE_IMAGE_MAP_FILE=/etc/operatorImageMap.yaml
+ARG maven_version
+ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit} ENMASSE_IMAGE_MAP_FILE=/etc/operatorImageMap.yaml
 
 ADD build/operatorImageMap.yaml /etc/operatorImageMap.yaml
 ADD build/enmasse-controller-manager /

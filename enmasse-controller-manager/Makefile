@@ -1,14 +1,7 @@
-include ../Makefile.common
-
 CMD=enmasse-controller-manager
-
-build/$(CMD):
-	cd $(GOPRJ)/cmd/$(@F) && GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build -o $(abspath $@) .
+include ../Makefile.go.mk
 
 build: build/operatorImageMap.yaml build/$(CMD)
-
-package:
-	@echo "Nothing to package"
 
 build/operatorImageMap.yaml:
 	echo "" > "$@"
@@ -24,6 +17,4 @@ build/operatorImageMap.yaml:
 	echo "keycloak: $(KEYCLOAK_IMAGE)" >> "$@"
 	echo "keycloak-plugin: $(KEYCLOAK_PLUGIN_IMAGE)" >> "$@"
 
-test:
-
-.PHONY: build/$(CMD) build/operatorImageMap.yaml
+.PHONY: build/operatorImageMap.yaml
