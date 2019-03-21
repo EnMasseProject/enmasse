@@ -17,3 +17,6 @@ rules:
   - apiGroups: [ "admin.enmasse.io" ]
     resources: [ "authenticationservices", "authenticationservices/finalizers" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+  - apiGroups: [ "iot.enmasse.io" ]
+    resources: [ "iotconfigs", "iotconfigs/finalizers" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
