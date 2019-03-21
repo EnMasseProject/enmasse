@@ -7,6 +7,8 @@ package io.enmasse.systemtest;
 
 import org.slf4j.Logger;
 
+import java.nio.file.Paths;
+
 public class Environment {
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
@@ -19,9 +21,10 @@ public class Environment {
     public static final String namespaceEnv = "KUBERNETES_NAMESPACE";
     public static final String urlEnv = "KUBERNETES_API_URL";
     public static final String tokenEnv = "KUBERNETES_API_TOKEN";
-    public static final String upgradeEnv = "SYSTEMTESTS_UPGRADED";
     public static final String enmasseVersionProp = "enmasse.version";
     public static final String domain = "KUBERNETES_DOMAIN";
+    public static final String upgradeTemplatesEnv = "UPGRADE_TEMPLATES";
+    public static final String downgradeTemplatesEnv = "DOWNGRADE_TEMPLATES";
 
     private final String token = System.getenv(tokenEnv);
     private final String url = System.getenv(urlEnv);
@@ -30,10 +33,13 @@ public class Environment {
     private final String keycloakAdminUser = System.getenv().getOrDefault(keycloakAdminUserEnv, "admin");
     private final String keycloakAdminPassword = System.getenv(keycloakAdminPasswordEnv);
     private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
-    private final boolean upgrade = Boolean.parseBoolean(System.getenv().getOrDefault(upgradeEnv, "false"));
     private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
-    private final String enmasseVersion = System.getProperty("enmasse.version");
+    private final String enmasseVersion = System.getProperty(enmasseVersionProp);
     private final String kubernetesDomain = System.getenv().getOrDefault(domain, "nip.io");
+    private final String upgradeTemplates = System.getenv().getOrDefault(upgradeTemplatesEnv,
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
+    private final String downgradeTemplates = System.getenv().getOrDefault(downgradeTemplatesEnv,
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.2").toString());
 
     private Environment() {
         String debugFormat = "{}:{}";
@@ -44,7 +50,6 @@ public class Environment {
         log.info(debugFormat, namespaceEnv, namespace);
         log.info(debugFormat, urlEnv, url);
         log.info(debugFormat, tokenEnv, token);
-        log.info(debugFormat, upgradeEnv, upgrade);
         log.info(debugFormat, enmasseVersionProp, enmasseVersion);
     }
 
@@ -111,10 +116,6 @@ public class Environment {
         return storeScreenshots;
     }
 
-    public boolean isUpgraded() {
-        return upgrade;
-    }
-
     public String getGetOcpVersion() {
         return ocpVersion;
     }
@@ -125,5 +126,13 @@ public class Environment {
 
     public String kubernetesDomain() {
         return kubernetesDomain;
+    }
+
+    public String getUpgradeTemplates() {
+        return upgradeTemplates;
+    }
+
+    public String getDowngradeTemplates() {
+        return downgradeTemplates;
     }
 }

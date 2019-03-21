@@ -133,7 +133,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.UPGRADE_FROM, false, false, false)
+                        lib.installEnmasse(env.UPGRADE_FROM, false, false, false, false)
                     }
                 }
             }
@@ -144,87 +144,14 @@ pipeline {
             }
             environment {
                 USE_DUMMY_ADDRESS = true
-                SKIP_CLEANUP = true
-                SYSTEMTESTS_UPGRADED = false
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', 'upgrade.**')
-                    }
-                }
-            }
-        }
-        stage('[upgrade] upgrade enmasse') {
-            when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
-            }
-            environment {
-                TAG = "${BUILD_TAG}"
+                UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
+                DOWNGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh "git checkout ${sha1}"
-                        sh "make imageenv"
-                        lib.installEnmasse(env.TAG, true, true, true)
-                    }
-                }
-            }
-        }
-        stage('[upgrade] run systemtests after upgrade') {
-            when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
-            }
-            environment {
-                USE_DUMMY_ADDRESS = true
-                SKIP_CLEANUP = true
-                SYSTEMTESTS_UPGRADED = true
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', 'upgrade.**')
-                    }
-                }
-            }
-        }
-        stage('[upgrade] download released version again') {
-            when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
-            }
-            steps {
-                sh "sh ./systemtests/scripts/download_released_enmasse.sh ${env.UPGRADE_FROM}"
-            }
-        }
-        stage('[upgrade] downgrade enmasse') {
-            when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
-            }
-            environment {
-                TAG = "${env.UPGRADE_FROM}"
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        sh "git checkout tags/${env.UPGRADE_FROM}"
-                        lib.installEnmasse(env.UPGRADE_FROM, true, true, false)
-                    }
-                }
-            }
-        }
-        stage('[upgrade] run systemtests after downgrade') {
-            when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
-            }
-            environment {
-                USE_DUMMY_ADDRESS = true
-                SKIP_CLEANUP = false
-                SYSTEMTESTS_UPGRADED = true
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
+                        sh "make templates || true"
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', 'upgrade.**')
                     }
                 }
