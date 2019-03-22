@@ -709,3 +709,9 @@ spec:
             path: resources.router
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
+      - group: iot.enmasse.io
+        version: v1alpha1
+        kind: IotConfig
+        name: iotconfigs.iot.enmasse.io
+        displayName: IoT Config
+        description: IoT Infrastructure Configuration
