@@ -79,7 +79,11 @@ spec:
         iot-tenant-service: foo-iot-tenant-service-tls
   adapters:
     http:
-      endpointTlsSecretName: foo-iot-http-adapter-tls
+      endpoint:
+        secretNameStrategy:
+          secretName: foo-iot-http-adapter-tls
     mqtt:
-      endpointTlsSecretName: foo-iot-mqtt-adapter-tls
+      endpoint:
+        secretNameStrategy:
+          secretName: foo-iot-mqtt-adapter-tls
 ~~~
