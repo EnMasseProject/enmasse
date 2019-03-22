@@ -121,7 +121,7 @@ public class AddressController implements Watcher<Address> {
 
         long calculatedUsage = System.nanoTime();
         Set<Address> pendingAddresses = filterBy(addressSet, address -> address.getStatus().getPhase().equals(Pending) ||
-                    AddressProvisioner.hasPlansChanged(address));
+                    AddressProvisioner.hasPlansChanged(addressResolver, address));
 
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 

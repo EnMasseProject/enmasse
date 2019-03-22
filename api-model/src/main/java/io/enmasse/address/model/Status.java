@@ -11,6 +11,7 @@ import javax.validation.Valid;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -24,7 +25,7 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
@@ -32,13 +33,14 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Status {
+public class Status extends AbstractWithAdditionalProperties {
 
     @JsonProperty("isReady")
     private boolean ready = false;
     private Phase phase = Phase.Pending;
     private List<String> messages = new ArrayList<>();
     private List<@Valid BrokerStatus> brokerStatuses = new ArrayList<>();
+    private AddressPlanStatus planStatus;
 
     public Status() {
     }
@@ -117,12 +119,13 @@ public class Status {
         return ready == status.ready &&
                 phase == status.phase &&
                 Objects.equals(messages, status.messages) &&
-                Objects.equals(brokerStatuses, status.brokerStatuses);
+                Objects.equals(brokerStatuses, status.brokerStatuses) &&
+                Objects.equals(planStatus, status.planStatus);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, phase, messages, brokerStatuses);
+        return Objects.hash(ready, phase, messages, brokerStatuses, planStatus);
     }
 
 
@@ -133,11 +136,20 @@ public class Status {
                 .append(",").append("phase=").append(phase)
                 .append(",").append("messages=").append(messages)
                 .append(",").append("brokerStatuses=").append(brokerStatuses)
+                .append(",").append("planStatus=").append(planStatus)
                 .append("}")
                 .toString();
     }
 
     public void addAllBrokerStatuses(List<BrokerStatus> toAdd) {
         brokerStatuses.addAll(toAdd);
+    }
+
+    public AddressPlanStatus getPlanStatus() {
+        return planStatus;
+    }
+
+    public void setPlanStatus(AddressPlanStatus planStatus) {
+        this.planStatus = planStatus;
     }
 }

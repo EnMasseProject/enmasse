@@ -157,7 +157,9 @@ public class AddressProvisioner {
                 Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address, all);
                 if (neededMap != null) {
                     newUsageMap = neededMap;
+                    AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
                     address.getStatus().setPhase(Phase.Configuring);
+                    address.getStatus().setPlanStatus(AddressPlanStatus.fromAddressPlan(addressPlan));
                     address.putAnnotation(AnnotationKeys.APPLIED_PLAN, address.getSpec().getPlan());
                 } else {
                     if (previousBrokerId != null) {
@@ -275,8 +277,7 @@ public class AddressProvisioner {
     }
 
     private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address, Set<Address> addressSet) {
-        AddressType addressType = addressResolver.getType(address);
-        AddressPlan addressPlan = addressResolver.getPlan(addressType, address.getSpec().getPlan());
+        AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
 
         Map<String, Map<String, UsageInfo>> needed = copyUsageMap(usage);
 
@@ -308,7 +309,7 @@ public class AddressProvisioner {
                         }
                     }
                 } else {
-                    if (hasPlansChanged(address)) {
+                    if (hasPlansChanged(addressPlan, address)) {
                         address.removeAnnotation(AnnotationKeys.CLUSTER_ID);
                         address.removeAnnotation(AnnotationKeys.BROKER_ID);
                     }
@@ -365,8 +366,14 @@ public class AddressProvisioner {
         return needed;
     }
 
-    static boolean hasPlansChanged(Address address) {
-        return !address.getSpec().getPlan().equals(address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+    static boolean hasPlansChanged(AddressResolver addressResolver, Address address) {
+        AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
+        return hasPlansChanged(addressPlan, address);
+    }
+
+    static boolean hasPlansChanged(AddressPlan addressPlan, Address address) {
+        return !AddressPlanStatus.fromAddressPlan(addressPlan).equals(address.getStatus().getPlanStatus()) ||
+                !address.getSpec().getPlan().equals(address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     static int sumTotalNeeded(Map<String, Map<String, UsageInfo>> usageMap) {

@@ -44,22 +44,28 @@ public class AddressProvisionerTest {
         kubernetes = mock(Kubernetes.class);
     }
 
-    private AddressProvisioner createProvisioner() {
-        StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
-        AddressResolver resolver = new AddressResolver(standardControllerSchema.getType());
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(standardControllerSchema.getSchema());
+    private class ProvisionerTestFixture {
+        StandardControllerSchema standardControllerSchema;
+        AddressResolver resolver;
+        AddressSpaceResolver addressSpaceResolver;
         EventLogger logger = mock(EventLogger.class);
+        AddressProvisioner addressProvisioner;
 
-        return new AddressProvisioner(addressSpaceResolver, resolver, standardControllerSchema.getPlan(), generator, kubernetes, logger, "1234", idGenerator);
-    }
+        public ProvisionerTestFixture() {
+            standardControllerSchema = new StandardControllerSchema();
+            resolver = new AddressResolver(standardControllerSchema.getType());
+            addressSpaceResolver = new AddressSpaceResolver(standardControllerSchema.getSchema());
+            logger = mock(EventLogger.class);
+            addressProvisioner = new AddressProvisioner(addressSpaceResolver, resolver, standardControllerSchema.getPlan(), generator, kubernetes, logger, "1234", idGenerator);
+        }
 
-    private AddressProvisioner createProvisioner(List<ResourceAllowance> resourceAllowances) {
-        StandardControllerSchema standardControllerSchema = new StandardControllerSchema(resourceAllowances);
-        AddressResolver resolver = new AddressResolver(standardControllerSchema.getType());
-        AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(standardControllerSchema.getSchema());
-        EventLogger logger = mock(EventLogger.class);
-
-        return new AddressProvisioner(addressSpaceResolver, resolver, standardControllerSchema.getPlan(), generator, kubernetes, logger, "1234", idGenerator);
+        public ProvisionerTestFixture(List<ResourceAllowance> resourceAllowances) {
+            standardControllerSchema = new StandardControllerSchema(resourceAllowances);
+            resolver = new AddressResolver(standardControllerSchema.getType());
+            addressSpaceResolver = new AddressSpaceResolver(standardControllerSchema.getSchema());
+            logger = mock(EventLogger.class);
+            addressProvisioner = new AddressProvisioner(addressSpaceResolver, resolver, standardControllerSchema.getPlan(), generator, kubernetes, logger, "1234", idGenerator);
+        }
     }
 
     @Test
@@ -78,7 +84,7 @@ public class AddressProvisionerTest {
                 .endSpec()
 
                 .build());
-        AddressProvisioner provisioner = createProvisioner();
+        AddressProvisioner provisioner = new ProvisionerTestFixture().addressProvisioner;
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         assertThat(usageMap.size(), is(1));
@@ -153,7 +159,7 @@ public class AddressProvisionerTest {
             annotations.put(AnnotationKeys.BROKER_ID, "broker-1234-1-0");
         }));
 
-        AddressProvisioner provisioner = createProvisioner();
+        AddressProvisioner provisioner = new ProvisionerTestFixture().addressProvisioner;
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address largeQueue = createQueue("q4", "xlarge-queue");
@@ -177,7 +183,7 @@ public class AddressProvisionerTest {
         }
 
 
-        AddressProvisioner provisioner = createProvisioner();
+        AddressProvisioner provisioner = new ProvisionerTestFixture().addressProvisioner;
 
         Map<String, Map<String, UsageInfo>> usageMap = new HashMap<>();
         Map<String, Map<String, UsageInfo>> provisionMap = provisioner.checkQuota(usageMap, new LinkedHashSet<>(addresses.values()), new LinkedHashSet<>(addresses.values()));
@@ -199,7 +205,7 @@ public class AddressProvisionerTest {
         addresses.add(createAddress("q1", "queue", "small-queue", annotations -> {annotations.put(AnnotationKeys.BROKER_ID, "broker-1234-0");}));
 
 
-        AddressProvisioner provisioner = createProvisioner();
+        AddressProvisioner provisioner = new ProvisionerTestFixture().addressProvisioner;
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = createAddress("q2", "queue", "small-queue");
@@ -228,7 +234,7 @@ public class AddressProvisionerTest {
         addresses.add(createAddress("q2", "queue", "small-queue", annotations -> annotations.put(AnnotationKeys.CLUSTER_ID, "broker-1234-0")));
         id = 1;
 
-        AddressProvisioner provisioner = createProvisioner();
+        AddressProvisioner provisioner = new ProvisionerTestFixture().addressProvisioner;
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address queue = createAddress("q3", "queue", "small-queue");
@@ -248,10 +254,10 @@ public class AddressProvisionerTest {
 
     @Test
     public void testProvisionColocated() {
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 2)));
+                new ResourceAllowance("aggregate", 2))).addressProvisioner;
 
         Set<Address> addressSet = Sets.newSet(
                 createQueue("q9", "pooled-queue-tiny"),
@@ -356,10 +362,10 @@ public class AddressProvisionerTest {
         Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
 
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 3),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 4)));
+                new ResourceAllowance("aggregate", 4))).addressProvisioner;
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         Address q1 = createQueue("q1", "xlarge-queue");
@@ -384,10 +390,10 @@ public class AddressProvisionerTest {
     @Test
     public void testUpgradeFromNoAppliedPlan() throws Exception {
 
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 3),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 4)));
+                new ResourceAllowance("aggregate", 4))).addressProvisioner;
 
         Set<Address> addresses = new HashSet<>();
         Address q1 = createQueue("q1", "xlarge-queue");
@@ -408,10 +414,10 @@ public class AddressProvisionerTest {
     @Test
     public void testSwitchShardedAddressPlan() throws Exception {
 
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 3),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 4)));
+                new ResourceAllowance("aggregate", 4))).addressProvisioner;
 
         Address q1 = createQueue("q1", "large-queue");
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
@@ -436,10 +442,10 @@ public class AddressProvisionerTest {
     @Test
     public void testSwitchPooledToShardedQuotaCheck() throws Exception {
 
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 1),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 4)));
+                new ResourceAllowance("aggregate", 4))).addressProvisioner;
 
         Address q1 = createQueue("q1", "small-queue");
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
@@ -465,10 +471,10 @@ public class AddressProvisionerTest {
     @Test
     public void testSwitchShardedToShardedQuotaCheck() throws Exception {
 
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 4)));
+                new ResourceAllowance("aggregate", 4))).addressProvisioner;
 
         Address q1 = createQueue("q1", "large-queue");
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Collections.emptySet());
@@ -496,10 +502,11 @@ public class AddressProvisionerTest {
         final Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
 
-        final AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        ProvisionerTestFixture fixture = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 3),
                 new ResourceAllowance("router", 1),
                 new ResourceAllowance("aggregate", 4)));
+        AddressProvisioner provisioner = fixture.addressProvisioner;
         final Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
 
         final String manualClusterId = "foobar";
@@ -508,6 +515,7 @@ public class AddressProvisionerTest {
             annotations.put(AnnotationKeys.CLUSTER_ID, manualClusterId);
             annotations.put(AnnotationKeys.APPLIED_PLAN, "xlarge-queue");
         });
+        q.getStatus().setPlanStatus(AddressPlanStatus.fromAddressPlan(fixture.standardControllerSchema.getType().findAddressType("queue").get().findAddressPlan("xlarge-queue").get()));
 
         final Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, singleton(q), singleton(q));
 
@@ -532,10 +540,10 @@ public class AddressProvisionerTest {
         }
 
 
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 0),
                 new ResourceAllowance("router", 100000),
-                new ResourceAllowance("aggregate", 100000)));
+                new ResourceAllowance("aggregate", 100000))).addressProvisioner;
 
         Map<String, Map<String, UsageInfo>> usageMap = new HashMap<>();
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, addresses, addresses);
@@ -548,10 +556,10 @@ public class AddressProvisionerTest {
 
     @Test
     public void testDurableSubscriptionsColocated() {
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 3)));
+                new ResourceAllowance("aggregate", 3))).addressProvisioner;
 
         Set<Address> addressSet = Sets.newSet(
                 createAddress("t1", "topic", "small-topic"),
@@ -575,10 +583,10 @@ public class AddressProvisionerTest {
 
     @Test
     public void testDurableSubscriptionsColocatedStaysOnTopicBroker() {
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 3)));
+                new ResourceAllowance("aggregate", 3))).addressProvisioner;
 
         Set<Address> addressSet = Sets.newSet(
                 createAddress("t1", "topic", "small-topic"),
@@ -623,10 +631,10 @@ public class AddressProvisionerTest {
 
     @Test
     public void testDurableSubscriptionsSharded() throws Exception {
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 3)));
+                new ResourceAllowance("aggregate", 3))).addressProvisioner;
 
         Address t1 = createAddress("t1", "topic", "xlarge-topic");
         Address t2 = createAddress("t2", "topic", "xlarge-topic");
@@ -657,10 +665,10 @@ public class AddressProvisionerTest {
 
     @Test
     public void testLargeSubscription() throws Exception {
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 3)));
+                new ResourceAllowance("aggregate", 3))).addressProvisioner;
 
         Address t1 = createAddress("t1", "topic", "xlarge-topic");
         Address s1 = createSubscription("s1", "t1", "large-subscription");
@@ -687,10 +695,10 @@ public class AddressProvisionerTest {
 
     @Test
     public void testDurableSubscriptionsShardedStaysOnTopicBroker() {
-        AddressProvisioner provisioner = createProvisioner(Arrays.asList(
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
-                new ResourceAllowance("aggregate", 3)));
+                new ResourceAllowance("aggregate", 3))).addressProvisioner;
 
         Address t1 = createAddress("t1", "topic", "small-topic");
         Address t2 = createAddress("t2", "topic", "small-topic");
