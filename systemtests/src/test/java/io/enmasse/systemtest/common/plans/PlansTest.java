@@ -60,8 +60,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testCreateAddressSpacePlan() throws Exception {
         StandardInfraConfig infra = PlanUtils.createStandardInfraConfigObject("kornys",
-                PlanUtils.createStandardBrokerResourceObject("750Mi", "2Gi"),
-                PlanUtils.createStandardAdminResourceObject("1Gi"),
+                PlanUtils.createStandardBrokerResourceObject("750Mi", "2Gi", null),
+                PlanUtils.createStandardAdminResourceObject("1Gi", null),
                 PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1),
                 environment.enmasseVersion());
 

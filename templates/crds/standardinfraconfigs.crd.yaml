@@ -45,9 +45,48 @@ spec:
                   properties:
                     memory:
                       type: string
+                podTemplate:
+                  type: object
+                  properties:
+                    metadata:
+                      type: object
+                      properties:
+                        labels:
+                          type: object
+                    spec:
+                      type: object
+                      properties:
+                        affinity:
+                          type: object
+                        tolerations:
+                          type: array
+                        priorityClassName:
+                          type: string
+                        resources:
+                          type: object
+
             broker:
               type: object
               properties:
+                podTemplate:
+                  type: object
+                  properties:
+                    metadata:
+                      type: object
+                      properties:
+                        labels:
+                          type: object
+                    spec:
+                      type: object
+                      properties:
+                        affinity:
+                          type: object
+                        tolerations:
+                          type: array
+                        priorityClassName:
+                          type: string
+                        resources:
+                          type: object
                 resources:
                   type: object
                   properties:
@@ -69,6 +108,25 @@ spec:
             router:
               type: object
               properties:
+                podTemplate:
+                  type: object
+                  properties:
+                    metadata:
+                      type: object
+                      properties:
+                        labels:
+                          type: object
+                    spec:
+                      type: object
+                      properties:
+                        affinity:
+                          type: object
+                        tolerations:
+                          type: array
+                        priorityClassName:
+                          type: string
+                        resources:
+                          type: object
                 resources:
                   type: object
                   properties:

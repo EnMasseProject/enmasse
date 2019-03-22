@@ -10,32 +10,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs = {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity", "handshakeTimeout"})
+@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity", "handshakeTimeout", "podTemplate"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecRouterResources resources;
     private Integer minReplicas;
     private Integer linkCapacity;
     private Integer handshakeTimeout;
-
-    public StandardInfraConfigSpecRouter() {
-    }
-
-    public StandardInfraConfigSpecRouter(final StandardInfraConfigSpecRouterResources resources, final Integer minReplicas, final Integer linkCapacity, final Integer handshakeTimeout) {
-        setResources(resources);
-        setMinReplicas(minReplicas);
-        setLinkCapacity(linkCapacity);
-        setHandshakeTimeout(handshakeTimeout);
-    }
+    private PodTemplateSpec podTemplate;
 
     public void setResources(StandardInfraConfigSpecRouterResources resources) {
         this.resources = resources;
@@ -69,6 +63,14 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         this.handshakeTimeout = handshakeTimeout;
     }
 
+    public PodTemplateSpec getPodTemplate() {
+        return podTemplate;
+    }
+
+    public void setPodTemplate(PodTemplateSpec podTemplate) {
+        this.podTemplate = podTemplate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -77,12 +79,13 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         return Objects.equals(resources, that.resources) &&
                 Objects.equals(minReplicas, that.minReplicas) &&
                 Objects.equals(handshakeTimeout, that.handshakeTimeout) &&
-                Objects.equals(linkCapacity, that.linkCapacity);
+                Objects.equals(linkCapacity, that.linkCapacity) &&
+                Objects.equals(podTemplate, that.podTemplate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, linkCapacity, minReplicas, handshakeTimeout);
+        return Objects.hash(resources, linkCapacity, minReplicas, handshakeTimeout, podTemplate);
     }
 
     @Override
@@ -92,6 +95,7 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
                 ", minReplicas=" + minReplicas +
                 ", linkCapacity=" + linkCapacity +
                 ", handshakeTimeout=" + handshakeTimeout +
+                ", podTemplate=" + podTemplate +
                 '}';
     }
 }

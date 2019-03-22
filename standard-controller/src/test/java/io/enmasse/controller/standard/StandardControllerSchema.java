@@ -8,11 +8,12 @@ import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class StandardControllerSchema implements SchemaProvider {
 
@@ -174,6 +175,7 @@ public class StandardControllerSchema implements SchemaProvider {
                                     .withAddressFullPolicy("FAIL")
                                     .withStorageClassName("mysc")
                                     .withUpdatePersistentVolumeClaim(false)
+                                    .withPodTemplate(createTemplateSpec(Collections.singletonMap("key", "value"), "myaff", "mykey", "prioclass"))
                                     .endBroker()
                                 .withNewRouter()
                                     .withNewResources("512Mi")
@@ -189,6 +191,50 @@ public class StandardControllerSchema implements SchemaProvider {
                 .withAddressSpaceTypes(type)
                 .build();
     }
+
+    public static PodTemplateSpec createTemplateSpec(Map<String, String> labels, String nodeAffinityValue, String tolerationKey, String priorityClassName) {
+        PodTemplateSpecBuilder builder = new PodTemplateSpecBuilder();
+        if (labels != null) {
+            builder.editOrNewMetadata()
+                    .withLabels(labels)
+                    .endMetadata();
+        }
+
+        if (nodeAffinityValue != null) {
+            builder.editOrNewSpec()
+                    .editOrNewAffinity()
+                    .editOrNewNodeAffinity()
+                    .addToPreferredDuringSchedulingIgnoredDuringExecution(new PreferredSchedulingTermBuilder()
+                            .withNewPreference()
+                            .addToMatchExpressions(new NodeSelectorRequirementBuilder()
+                                    .addToValues(nodeAffinityValue)
+                                    .build())
+                            .endPreference()
+                            .build())
+                    .endNodeAffinity()
+                    .endAffinity()
+                    .endSpec();
+        }
+
+        if (tolerationKey != null) {
+            builder.editOrNewSpec()
+                    .addNewToleration()
+                    .withKey(tolerationKey)
+                    .withOperator("Exists")
+                    .withEffect("NoSchedule")
+                    .endToleration()
+                    .endSpec();
+        }
+
+        if (priorityClassName != null) {
+            builder.editOrNewSpec()
+                    .withPriorityClassName(priorityClassName)
+                    .endSpec();
+        }
+
+        return builder.build();
+    }
+
 
     public AddressSpacePlan getPlan() {
         return plan;

@@ -15,12 +15,12 @@ import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -31,9 +31,11 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     @Test
     void testCreateInfra() throws Exception {
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
         testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
-                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi"),
-                PlanUtils.createBrokeredAdminResourceObject("512Mi"),
+                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", brokerTemplateSpec),
+                PlanUtils.createBrokeredAdminResourceObject("512Mi", adminTemplateSpec),
                 environment.enmasseVersion());
 
         plansProvider.createInfraConfig(testInfra);
@@ -57,7 +59,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
 
-        assertInfra("512Mi", Optional.of("1Gi"), "512Mi");
+        assertInfra("512Mi", "1Gi", brokerTemplateSpec, "512Mi", adminTemplateSpec);
     }
 
     @Test
@@ -77,7 +79,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         BrokeredInfraConfig infra = PlanUtils.createBrokeredInfraConfigObject("test-infra-2",
                 PlanUtils.createBrokeredBrokerResourceObject(brokerMemory, brokerStorage, updatePersistentVolumeClaim),
-                PlanUtils.createBrokeredAdminResourceObject(adminMemory),
+                PlanUtils.createBrokeredAdminResourceObject(adminMemory, null),
                 environment.enmasseVersion());
 
         plansProvider.createInfraConfig(infra);
@@ -93,15 +95,15 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
         replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
-                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(), adminMemory),
+                () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     @Test
     void testReadInfra() throws Exception {
         testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
-                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi"),
-                PlanUtils.createBrokeredAdminResourceObject("512Mi"),
+                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", null),
+                PlanUtils.createBrokeredAdminResourceObject("512Mi", null),
                 environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
 
@@ -122,9 +124,9 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     }
 
-    private boolean assertInfra(String brokerMemory, Optional<String> brokerStorage, String adminMemory) {
-        assertAdminConsole(adminMemory);
-        assertBroker(brokerMemory, brokerStorage);
+    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
+        assertAdminConsole(adminMemory, adminTemplateSpec);
+        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec);
         return true;
     }
 

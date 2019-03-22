@@ -10,16 +10,21 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {
+                @BuildableReference(AbstractWithAdditionalProperties.class)
+        },
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim"})
+@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim", "podTemplate"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalProperties {
     private BrokeredInfraConfigSpecBrokerResources resources;
@@ -27,13 +32,7 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
     private String globalMaxSize;
     private String storageClassName;
     private Boolean updatePersistentVolumeClaim;
-
-    public BrokeredInfraConfigSpecBroker() {
-    }
-
-    public BrokeredInfraConfigSpecBroker(final BrokeredInfraConfigSpecBrokerResources resources) {
-        setResources(resources);
-    }
+    private PodTemplateSpec podTemplate;
 
     @Override
     public boolean equals(Object o) {
@@ -44,12 +43,13 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 Objects.equals(addressFullPolicy, that.addressFullPolicy) &&
                 Objects.equals(globalMaxSize, that.globalMaxSize) &&
                 Objects.equals(storageClassName, that.storageClassName) &&
-                Objects.equals(updatePersistentVolumeClaim, that.updatePersistentVolumeClaim);
+                Objects.equals(updatePersistentVolumeClaim, that.updatePersistentVolumeClaim) &&
+                Objects.equals(podTemplate, that.podTemplate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim);
+        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate);
     }
 
     @Override
@@ -59,7 +59,8 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 ", addressFullPolicy='" + addressFullPolicy + '\'' +
                 ", globalMaxSize='" + globalMaxSize + '\'' +
                 ", storageClassName='" + storageClassName + '\'' +
-                ", updatePersistentVolumeClaim=" + updatePersistentVolumeClaim +
+                ", updatePersistentVolumeClaim='" + updatePersistentVolumeClaim + '\'' +
+                ", podTemplate='" + podTemplate + '\'' +
                 '}';
     }
 
@@ -110,5 +111,13 @@ public class BrokeredInfraConfigSpecBroker extends AbstractWithAdditionalPropert
 
     public Boolean getUpdatePersistentVolumeClaim() {
         return updatePersistentVolumeClaim;
+    }
+
+    public PodTemplateSpec getPodTemplate() {
+        return podTemplate;
+    }
+
+    public void setPodTemplate(PodTemplateSpec podTemplate) {
+        this.podTemplate = podTemplate;
     }
 }

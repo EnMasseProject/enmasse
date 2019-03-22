@@ -1893,6 +1893,9 @@
         "io.enmasse.admin.v1beta1.BrokeredInfraConfigSpecAdmin": {
             "type": "object",
             "properties": {
+                "podTemplate": {
+                  "$ref": "#/definitions/io.enmasse.admin.v1beta1.InfraConfigPodSpec"
+                },
                 "resources": {
                     "type": "object",
                     "properties": {
@@ -1906,6 +1909,9 @@
         "io.enmasse.admin.v1beta1.BrokeredInfraConfigSpecBroker": {
             "type": "object",
             "properties": {
+                "podTemplate": {
+                  "$ref": "#/definitions/io.enmasse.admin.v1beta1.InfraConfigPodSpec"
+                },
                 "resources": {
                     "type": "object",
                     "properties": {
@@ -2030,6 +2036,9 @@
         "io.enmasse.admin.v1beta1.StandardInfraConfigSpecAdmin": {
             "type": "object",
             "properties": {
+                "podTemplate": {
+                  "$ref": "#/definitions/io.enmasse.admin.v1beta1.InfraConfigPodSpec"
+                },
                 "resources": {
                     "type": "object",
                     "properties": {
@@ -2040,9 +2049,42 @@
                 }
             }
         },
+        "io.enmasse.admin.v1beta1.InfraConfigPodSpec": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "type": "object",
+                    "properties": {
+                        "labels": {
+                            "type": "object"
+                        }
+                    }
+                },
+                "spec": {
+                    "type": "object",
+                    "properties": {
+                        "resources": {
+                            "type": "object"
+                        },
+                        "affinity": {
+                            "type": "object"
+                        },
+                        "tolerations": {
+                            "type": "array"
+                        },
+                        "priorityClassName": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "io.enmasse.admin.v1beta1.StandardInfraConfigSpecBroker": {
             "type": "object",
             "properties": {
+                "podTemplate": {
+                  "$ref": "#/definitions/io.enmasse.admin.v1beta1.InfraConfigPodSpec"
+                },
                 "resources": {
                     "type": "object",
                     "properties": {
@@ -2073,6 +2115,9 @@
         "io.enmasse.admin.v1beta1.StandardInfraConfigSpecRouter": {
             "type": "object",
             "properties": {
+                "podTemplate": {
+                  "$ref": "#/definitions/io.enmasse.admin.v1beta1.InfraConfigPodSpec"
+                },
                 "resources": {
                     "type": "object",
                     "properties": {

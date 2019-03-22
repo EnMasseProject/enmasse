@@ -15,14 +15,17 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.*;
+
+import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
+import static io.enmasse.address.model.KubeUtil.lookupResource;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final String KC_IDP_HINT_NONE = "none";
@@ -198,6 +201,20 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
 
+        if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
+            PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getAdmin().getPodTemplate();
+            Deployment adminDeployment = lookupResource("Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
+            PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
+            applyPodTemplate(actualPodTemplate, podTemplate);
+        }
+
+        if (standardInfraConfig.getSpec().getRouter() != null && standardInfraConfig.getSpec().getRouter().getPodTemplate() != null) {
+            PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getRouter().getPodTemplate();
+            StatefulSet routerSet = lookupResource("StatefulSet", KubeUtil.getRouterSetName(addressSpace), items);
+            PodTemplateSpec actualPodTemplate = routerSet.getSpec().getTemplate();
+            applyPodTemplate(actualPodTemplate, podTemplate);
+        }
+
         if (Boolean.parseBoolean(getAnnotation(infraAnnotations, AnnotationKeys.WITH_MQTT, "false"))) {
             String mqttTemplateName = getAnnotation(infraAnnotations, AnnotationKeys.MQTT_TEMPLATE_NAME, "standard-space-infra-mqtt");
             items.addAll(createStandardInfraMqtt(addressSpace, mqttTemplateName));
@@ -209,7 +226,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             return items;
         }
     }
-
 
     private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {
         return Optional.ofNullable(annotations)
@@ -245,12 +261,29 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
         }
 
+        List<HasMetadata> items;
         String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
         if (brokeredInfraConfig.getSpec().getBroker() != null) {
-            return applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameters).getItems());
+            items = applyStorageClassName(brokeredInfraConfig.getSpec().getBroker().getStorageClassName(), kubernetes.processTemplate(templateName, parameters).getItems());
         } else {
-            return kubernetes.processTemplate(templateName, parameters).getItems();
+            items = kubernetes.processTemplate(templateName, parameters).getItems();
         }
+
+        if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
+            PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getAdmin().getPodTemplate();
+            Deployment adminDeployment = lookupResource("Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
+            PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
+            applyPodTemplate(actualPodTemplate, podTemplate);
+        }
+
+        if (brokeredInfraConfig.getSpec().getBroker() != null && brokeredInfraConfig.getSpec().getBroker().getPodTemplate() != null) {
+            PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getBroker().getPodTemplate();
+            Deployment brokerDeployment = lookupResource("Deployment", KubeUtil.getBrokeredBrokerSetName(addressSpace), items);
+            PodTemplateSpec actualPodTemplate = brokerDeployment.getSpec().getTemplate();
+            applyPodTemplate(actualPodTemplate, podTemplate);
+        }
+
+        return items;
     }
 
     private List<HasMetadata> applyStorageClassName(String storageClassName, List<HasMetadata> items) {

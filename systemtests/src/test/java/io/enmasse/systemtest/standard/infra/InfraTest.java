@@ -18,6 +18,7 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -36,10 +36,13 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
     @Test
     void testCreateInfra() throws Exception {
+        PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
+        PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
+        PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
         testInfra = PlanUtils.createStandardInfraConfigObject("test-infra-1",
-                PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi"),
-                PlanUtils.createStandardAdminResourceObject("512Mi"),
-                PlanUtils.createStandardRouterResourceObject("256Mi"),
+                PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi", brokerTemplateSpec),
+                PlanUtils.createStandardAdminResourceObject("512Mi", adminTemplateSpec),
+                PlanUtils.createStandardRouterResourceObject("256Mi", routerTemplateSpec),
                 environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
 
@@ -66,8 +69,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
 
-        assertInfra("512Mi", Optional.of("1Gi"), 1, "256Mi", "512Mi");
-
+        assertInfra("512Mi", "1Gi", brokerTemplateSpec, 1, "256Mi", routerTemplateSpec, "512Mi", adminTemplateSpec);
     }
 
     @Test
@@ -87,7 +89,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         InfraConfig infra = PlanUtils.createStandardInfraConfigObject("test-infra-2",
                 PlanUtils.createStandardBrokerResourceObject(brokerMemory, brokerStorage, updatePersistentVolumeClaim),
-                PlanUtils.createStandardAdminResourceObject(adminMemory),
+                PlanUtils.createStandardAdminResourceObject(adminMemory, null),
                 PlanUtils.createStandardRouterResourceObject(routerMemory, 200, routerReplicas),
                 environment.enmasseVersion());
 
@@ -107,10 +109,13 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory,
-                        updatePersistentVolumeClaim ? Optional.of(brokerStorage) : Optional.empty(),
+                        updatePersistentVolumeClaim ? brokerStorage : null,
+                        null,
                         routerReplicas,
                         routerMemory,
-                        adminMemory),
+                        null,
+                        adminMemory,
+                        null),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
 
     }
@@ -118,8 +123,8 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
     @Test
     void testReadInfra() throws Exception {
         testInfra = PlanUtils.createStandardInfraConfigObject("test-infra-1",
-                PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi"),
-                PlanUtils.createStandardAdminResourceObject("512Mi"),
+                PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi", null),
+                PlanUtils.createStandardAdminResourceObject("512Mi", null),
                 PlanUtils.createStandardRouterResourceObject("256Mi", 200, 2),
                 environment.enmasseVersion());
         plansProvider.createInfraConfig(testInfra);
@@ -147,7 +152,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
     }
 
-    private boolean assertInfra(String brokerMemory, Optional<String> brokerStorage, int routerReplicas, String routermemory, String adminMemory) {
+    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {
         log.info("Checking router infra");
         List<Pod> routerPods = TestUtils.listRouterPods(kubernetes, exampleAddressSpace);
         assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
@@ -162,9 +167,12 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                     "Router memory limit incorrect");
             assertEquals(routermemory, resources.getRequests().get("memory").getAmount(),
                     "Router memory requests incorrect");
+            if (routerTemplateSpec != null) {
+                assertTemplateSpec(router, routerTemplateSpec);
+            }
         }
-        assertAdminConsole(adminMemory);
-        assertBroker(brokerMemory, brokerStorage);
+        assertAdminConsole(adminMemory, adminTemplateSpec);
+        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec);
         return true;
     }
 

@@ -9,6 +9,33 @@ objects:
       name: "mymap"
     data:
       key: "${BROKER_ADDRESS_FULL_POLICY}"
+  - kind: "Deployment"
+    apiVersion: "apps/v1"
+    metadata:
+      name: "admin.1234"
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            component: "admin"
+        spec:
+          containers:
+            - name: admin
+
+  - kind: "StatefulSet"
+    apiVersion: "apps/v1"
+    metadata:
+      name: "qdrouterd-1234"
+    spec:
+      replicas: 1
+      template:
+        metadata:
+          labels:
+            component: "router"
+        spec:
+          containers:
+            - name: router
 parameters:
   - name: "BROKER_ADDRESS_FULL_POLICY"
     description: "desc"
