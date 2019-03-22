@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-managing-addresses.adoc
+// assembly-using-console.adoc
 
 [id='create-address-console-{context}']
 = Creating addresses using the {ProductName} Console

@@ -1,14 +1,17 @@
 // This assembly is included in the following assemblies:
 //
-// 
+// assembly-tenant-guide.adoc
+// master.adoc
 
 :parent-context: {context}
 [id='assembly-using-console-{context}']
 = Using the {ProductName} Console
 
-You can use the {ProductName} Console to perform tasks such as creating an address and viewing message and connection statistics.
+You can use the {ProductName} Console to perform tasks such as creating and deleting an address space, creating an address, and viewing message and connection statistics.
 
 include::../modules/proc-logging-in-console.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-space-console.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-console.adoc[leveloffset=+1]
 

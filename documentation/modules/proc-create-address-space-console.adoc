@@ -1,0 +1,16 @@
+// Module included in the following assemblies:
+//
+// assembly-using-console.adoc
+
+[id='create-address-space-console-{context}']
+= Creating an address space using the {ProductName} Console
+
+You can create a new address space using the {ProductName} Console.
+
+.Procedure
+
+. Log in to the {ProductName} Console. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ProductName} Console].
+
+
+
+
