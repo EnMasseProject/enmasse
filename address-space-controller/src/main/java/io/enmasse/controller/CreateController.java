@@ -55,15 +55,26 @@ public class CreateController implements Controller {
         this.addressSpaceApi = addressSpaceApi;
     }
 
-    private static List<EndpointSpec> validateEndpoints(AddressSpaceResolver addressSpaceResolver, AddressSpace addressSpace) {
+    private List<EndpointSpec> validateEndpoints(AddressSpaceResolver addressSpaceResolver, AddressSpace addressSpace) {
         // Set default endpoints from type
         AddressSpaceType addressSpaceType = addressSpaceResolver.getType(addressSpace.getSpec().getType());
+        AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getSpec().getPlan());
+        InfraConfig infraConfig = addressSpaceType.findInfraConfig(addressSpacePlan.getInfraConfigRef()).orElse(null);
+        List<EndpointSpec> defaultEndpoints = new ArrayList<>(addressSpaceType.getAvailableEndpoints());
+
+        if (infraConfig != null && infraConfig.getMetadata().getAnnotations() != null) {
+            String withMqtt = infraConfig.getMetadata().getAnnotations().get(AnnotationKeys.WITH_MQTT);
+            if (withMqtt != null && "true".equals(withMqtt)) {
+                defaultEndpoints.removeIf(spec -> "mqtt".equals(spec.getService()));
+            }
+        }
+
         if (addressSpace.getSpec().getEndpoints().isEmpty()) {
-            return addressSpaceType.getAvailableEndpoints();
+            return defaultEndpoints;
         } else {
             // Validate endpoints;
             List<EndpointSpec> endpoints = addressSpace.getSpec().getEndpoints();
-            Set<String> services = addressSpaceType.getAvailableEndpoints().stream()
+            Set<String> services = defaultEndpoints.stream()
                     .map(EndpointSpec::getService)
                     .collect(Collectors.toSet());
             Set<String> actualServices = endpoints.stream()
@@ -71,9 +82,14 @@ public class CreateController implements Controller {
                     .collect(Collectors.toSet());
 
             services.removeAll(actualServices);
-            if (!services.isEmpty()) {
-                log.warn("Endpoint list is missing reference to services: {}", services);
-                throw new IllegalArgumentException("Endpoint list is missing reference to services: " + services);
+
+            // Add default endpoints not specified by user
+            for (String service : services) {
+                for (EndpointSpec endpointSpec : defaultEndpoints) {
+                    if (service.equals(endpointSpec.getService())) {
+                        endpoints.add(endpointSpec);
+                    }
+                }
             }
             return endpoints;
         }
