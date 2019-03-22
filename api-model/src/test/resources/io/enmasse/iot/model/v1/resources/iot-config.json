@@ -24,6 +24,15 @@
 					"secret2": "value2"
 				}
 			}
+		},
+		"adapters": {
+			"http": {
+				"endpoint": {
+					"secretNameStrategy": {
+						"secretName": "http-secret"
+					}
+				}
+			}
 		}
 	},
 	"status": {
