@@ -60,20 +60,34 @@ public class SimpleK8sDeployTest {
         secrets.put("iot-auth-service", "systemtests-iot-auth-service-tls");
         secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
         secrets.put("iot-device-registry", "systemtests-iot-device-registry-tls");
-        secrets.put("iot-http-adapter", "systemtests-iot-http-adapter-tls");
-        secrets.put("iot-mqtt-adapter", "systemtests-iot-mqtt-adapter-tls");
 
         IoTConfig config = new IoTConfigBuilder()
+
                 .withNewMetadata()
                 .withName("default")
                 .endMetadata()
+
                 .withNewSpec()
+
                 .withNewInterServiceCertificates()
                 .withNewSecretCertificatesStrategy()
                 .withCaSecretName("systemtests-iot-service-ca")
                 .withServiceSecretNames(secrets)
                 .endSecretCertificatesStrategy()
                 .endInterServiceCertificates()
+
+                .withNewAdapters()
+
+                .withNewHttp()
+                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-http-adapter-tls").endEndpoint()
+                .endHttp()
+
+                .withNewMqtt()
+                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-mqtt-adapter-tls").endEndpoint()
+                .endMqtt()
+
+                .endAdapters()
+
                 .endSpec()
                 .build();
 
