@@ -318,7 +318,7 @@ public class TestUtils {
         boolean isReady = false;
         JsonObject annotations = address.getJsonObject("metadata").getJsonObject("annotations");
         if (annotations != null) {
-            String appliedPlan = annotations.getString("enmasse.io/applied-plan");
+            String appliedPlan = address.getJsonObject("status").getJsonObject("planStatus").getString("name");
             String actualPlan = address.getJsonObject("spec").getString("plan");
             isReady = actualPlan.equals(appliedPlan);
         }

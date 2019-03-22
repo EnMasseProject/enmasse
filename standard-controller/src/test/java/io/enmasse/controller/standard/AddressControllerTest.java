@@ -5,12 +5,7 @@
 
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.BrokerState;
-import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.address.model.Phase;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.EventLogger;
@@ -41,6 +36,7 @@ public class AddressControllerTest {
     private BrokerSetGenerator mockGenerator;
     private int id = 0;
     private BrokerIdGenerator idGenerator = () -> String.valueOf(id++);
+    private StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -50,7 +46,6 @@ public class AddressControllerTest {
         mockApi = mock(AddressApi.class);
         mockClient = mock(OpenShiftClient.class);
         EventLogger eventLogger = mock(EventLogger.class);
-        StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
         when(mockHelper.getRouterCluster()).thenReturn(new RouterCluster("qdrouterd", 1, null));
         StandardControllerOptions options = new StandardControllerOptions();
         options.setAddressSpace("me1");
@@ -83,6 +78,10 @@ public class AddressControllerTest {
                 .withNewStatus()
                 .withReady(true)
                 .withPhase(Phase.Active)
+                .withPlanStatus(AddressPlanStatus.fromAddressPlan(standardControllerSchema.getType().findAddressType("queue").get().findAddressPlan("small-queue").get()))
+                .editOrNewPlanStatus()
+                .withName("small-queue")
+                .endPlanStatus()
                 .endStatus()
 
                 .build();
@@ -106,6 +105,8 @@ public class AddressControllerTest {
                 .withNewStatus()
                 .withReady(false)
                 .withPhase(Phase.Terminating)
+                .withPlanStatus(AddressPlanStatus.fromAddressPlan(standardControllerSchema.getType().findAddressType("queue").get().findAddressPlan("small-queue").get()))
+
                 .endStatus()
 
                 .build();

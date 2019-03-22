@@ -24,13 +24,22 @@ public class AddressResolver {
         return getType(address).findAddressPlan(address.getSpec().getPlan());
     }
 
+    public AddressPlan getDesiredPlan(Address address) {
+        return getType(address)
+                .findAddressPlan(address.getSpec().getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getSpec().getPlan() + " for address type " + address.getSpec().getType()));
+    }
+
     public AddressPlan getPlan(AddressType addressType, String plan) {
         return addressType.findAddressPlan(plan).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + plan + " for address type " + addressType.getName()));
     }
 
     public AddressPlan getPlan(AddressType addressType, Address address) {
-        return addressType.findAddressPlan(address.getAnnotation(AnnotationKeys.APPLIED_PLAN))
-                .orElse(addressType.findAddressPlan(address.getSpec().getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getSpec().getPlan() + " for address type " + address.getSpec().getType())));
+        Optional<AddressPlan> found = Optional.empty();
+        if (address.getStatus().getPlanStatus() != null) {
+            found = addressType.findAddressPlan(address.getStatus().getPlanStatus().getName());
+        }
+        return found.orElse(addressType.findAddressPlan(address.getAnnotation(AnnotationKeys.APPLIED_PLAN))
+                .orElse(addressType.findAddressPlan(address.getSpec().getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getSpec().getPlan() + " for address type " + address.getSpec().getType()))));
     }
 
     public AddressType getType(Address address) {
