@@ -1,5 +1,12 @@
 ## 0.27.0
-* Upgrade to Artemis 2.6.4
+* Support for deploying via Operator Lifecycle Manager 
+* Experimental support for integrated IoT service based on Eclipse Hono
+* Support for creating authentication services via CRDs
+* Support for affinity, tolerations and priority classes for messaging infrastructure
+* Support for exporting endpoint info to configmap, secret or service
+* Support for PATCH operation for AddressSpace, Address and MessagingUser resources 
+* Upgrade to Apache ActiveMQ Artemis 2.7.0
+* Upgrade to Keycloak 4.8.3
 
 ## 0.26.3
 * Fixes an issue where the storage class name would not get set for persistent volume claims in the standard address space.
