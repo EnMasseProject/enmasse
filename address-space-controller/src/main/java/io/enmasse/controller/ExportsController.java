@@ -11,10 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ExportsController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(ExportsController.class.getName());
@@ -63,7 +60,7 @@ public class ExportsController implements Controller {
     }
 
     private void exportAsSecret(String name, EndpointStatus endpointStatus, AddressSpace addressSpace) {
-        Map<String, String> exportMap = buildExportMap(endpointStatus);
+        Map<String, String> exportMap = buildExportMap(addressSpace.getStatus(), endpointStatus);
         Secret secret = new SecretBuilder()
                 .editOrNewMetadata()
                 .withName(name)
@@ -92,7 +89,7 @@ public class ExportsController implements Controller {
     }
 
     private void exportAsConfigMap(String name, EndpointStatus endpointStatus, AddressSpace addressSpace) {
-        Map<String, String> exportMap = buildExportMap(endpointStatus);
+        Map<String, String> exportMap = buildExportMap(addressSpace.getStatus(), endpointStatus);
         ConfigMap configMap = new ConfigMapBuilder()
                 .editOrNewMetadata()
                 .withName(name)
@@ -141,22 +138,28 @@ public class ExportsController implements Controller {
         Service existing = client.services().inNamespace(addressSpace.getMetadata().getNamespace()).withName(name).get();
         if (existing != null &&
                 (!endpointStatus.getServiceHost().equals(existing.getSpec().getExternalName())
-                        || !ServiceHelper.toServicePortList(endpointStatus.getServicePorts()).equals(existing.getSpec().getPorts()))) {
+                        || !endpointStatus.getServicePorts().equals(ServiceHelper.fromServicePortList(existing.getSpec().getPorts())))) {
             client.services().inNamespace(addressSpace.getMetadata().getNamespace()).withName(name).replace(service);
         } else {
             client.services().inNamespace(addressSpace.getMetadata().getNamespace()).withName(name).createOrReplace(service);
         }
     }
 
-    private static Map<String, String> buildExportMap(EndpointStatus endpointStatus) {
+    private static Map<String, String> buildExportMap(AddressSpaceStatus addressSpaceStatus, EndpointStatus endpointStatus) {
         Map<String, String> map = new HashMap<>();
         map.put("service.host", endpointStatus.getServiceHost());
         for (Map.Entry<String, Integer> portEntry : endpointStatus.getServicePorts().entrySet()) {
             map.put("service.port." + portEntry.getKey(), String.valueOf(portEntry.getValue()));
         }
-        map.put("external.host", endpointStatus.getExternalHost());
+        if (endpointStatus.getExternalHost() != null) {
+            map.put("external.host", endpointStatus.getExternalHost());
+        }
         for (Map.Entry<String, Integer> portEntry : endpointStatus.getExternalPorts().entrySet()) {
             map.put("external.port." + portEntry.getKey(), String.valueOf(portEntry.getValue()));
+        }
+
+        if (addressSpaceStatus.getCaCert() != null) {
+            map.put("ca.crt", addressSpaceStatus.getCaCert());
         }
         return map;
     }

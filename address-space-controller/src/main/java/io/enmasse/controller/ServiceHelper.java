@@ -30,6 +30,14 @@ public class ServiceHelper {
        return servicePorts;
    }
 
+   public static Map<String, Integer> fromServicePortList(List<ServicePort> servicePorts) {
+       Map<String, Integer> servicePortMap = new HashMap<>();
+       for (ServicePort servicePort : servicePorts) {
+           servicePortMap.put(servicePort.getName(), servicePort.getPort());
+       }
+       return servicePortMap;
+   }
+
     public static List<ServicePort> toServicePortList(Map<String, Integer> servicePorts) {
        List<ServicePort> servicePortList = new ArrayList<>();
        for (Map.Entry<String, Integer> entry : servicePorts.entrySet()) {

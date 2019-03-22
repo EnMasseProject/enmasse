@@ -62,6 +62,7 @@ public class ExportsControllerTest extends JULInitializingTest {
         assertEquals("443", data.get("external.port.amqps"));
         assertEquals("messaging.svc", data.get("service.host"));
         assertEquals("messaging.example.com", data.get("external.host"));
+        assertEquals("mycert", data.get("ca.crt"));
 
         addressSpace.getStatus().getEndpointStatuses().get(0).setServiceHost("messaging2.svc");
         controller.reconcile(addressSpace);
@@ -90,6 +91,7 @@ public class ExportsControllerTest extends JULInitializingTest {
         assertEquals("443", data.get("external.port.amqps"));
         assertEquals("messaging.svc", data.get("service.host"));
         assertEquals("messaging.example.com", data.get("external.host"));
+        assertEquals("mycert", data.get("ca.crt"));
 
         addressSpace.getStatus().getEndpointStatuses().get(0).setServiceHost("messaging2.svc");
         controller.reconcile(addressSpace);
@@ -153,6 +155,7 @@ public class ExportsControllerTest extends JULInitializingTest {
                         .addToServicePorts("amqps", 5671)
                         .addToExternalPorts("amqps", 443)
                         .build())
+                .withCaCert("mycert")
 
                 .endStatus()
 
