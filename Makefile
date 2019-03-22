@@ -54,6 +54,9 @@ build_java:
 
 build_go: $(GO_DIRS) test_go
 
+imageenv:
+	@echo $(IMAGE_ENV) > imageenv.txt
+
 $(GO_DIRS): $(GOPRJ)
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)
 
@@ -141,5 +144,5 @@ docu_check:
 docu_clean: docu_htmlclean
 	rm scripts/swagger2markup.jar
 
-.PHONY: test_go_vet test_go_plain build_go
+.PHONY: test_go_vet test_go_plain build_go imageenv
 .PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
