@@ -19,6 +19,11 @@ spec:
         provider: certBundle
         tlsKey: ZXhhbXBsZSAtbgo=
         tlsCert: ZXhhbXBsZSAtbgo=
+      export: <7>
+        - kind: ConfigMap
+          name: myconfig
+        - kind: Service
+          name: myservice
     - name: mqtt
       service: mqtt
       expose:

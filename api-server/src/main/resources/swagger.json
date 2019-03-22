@@ -1372,6 +1372,25 @@
                                     }
                                 }
                             },
+                            "exports": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {
+                                            "type": "string",
+                                            "enum": [
+                                                "ConfigMap",
+                                                "Secret",
+                                                "Service"
+                                            ]
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            },
                             "expose": {
                                 "type": "object",
                                 "properties": {
