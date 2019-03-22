@@ -147,6 +147,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh "git checkout ${sha1}"
+                        sh "make imageenv"
                         lib.installEnmasse(env.TAG, true, true, true)
                     }
                 }
