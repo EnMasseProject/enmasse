@@ -45,31 +45,6 @@ public class EndpointSpec extends AbstractWithAdditionalProperties {
     @Valid
     private List<ExportSpec> exports;
 
-    public EndpointSpec() {
-    }
-
-    public EndpointSpec(String name, String service, ExposeSpec expose, CertSpec cert) {
-        this.name = name;
-        this.service = service;
-        this.expose = expose;
-        this.cert = cert;
-    }
-
-    @JsonCreator
-    public EndpointSpec(
-                    @JsonProperty("name") final String name,
-                    @JsonProperty("service") final String service,
-                    @JsonProperty("servicePort") final String servicePort) {
-        this.name = name;
-        this.service = service;
-        this.expose = new ExposeSpecBuilder()
-                        .withRouteServicePort(servicePort)
-                        .withType(ExposeType.route)
-                        .withRouteTlsTermination(TlsTermination.passthrough)
-                        .build();
-    }
-
-
     public void setName(String name) {
         this.name = name;
     }

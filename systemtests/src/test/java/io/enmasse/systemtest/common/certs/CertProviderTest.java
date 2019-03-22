@@ -30,6 +30,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import io.enmasse.address.model.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -42,15 +43,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.CertSpecBuilder;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.ExposeSpecBuilder;
-import io.enmasse.address.model.ExposeType;
-import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CertProvider;
@@ -326,14 +318,17 @@ class CertProviderTest extends TestBase {
     }
 
     private EndpointSpec createEndpointSpec(String service, String servicePort, CertSpec endpointCert) {
-        return new EndpointSpec(ENDPOINT_PREFIX + service,
-                service,
+        return new EndpointSpecBuilder()
+                .withName(ENDPOINT_PREFIX + service)
+                .withService(service)
+                .withExpose(
                 new ExposeSpecBuilder()
                 .withRouteServicePort(servicePort)
                 .withType(ExposeType.route)
                 .withRouteTlsTermination(TlsTermination.passthrough)
-                .build(),
-                endpointCert);
+                .build())
+                .withCert(endpointCert)
+                .build();
     }
 
     private void testCertProvider(AmqpClient amqpClient, IMqttClient mqttClient) throws Exception {
