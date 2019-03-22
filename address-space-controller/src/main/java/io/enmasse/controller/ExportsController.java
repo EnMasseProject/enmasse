@@ -28,33 +28,37 @@ public class ExportsController implements Controller {
 
     @Override
     public AddressSpace reconcile(AddressSpace addressSpace) {
-        Map<String, List<ExportSpec>> exportsMap = new HashMap<>();
-        for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
-            if (endpointSpec.getExports() != null) {
-                exportsMap.put(endpointSpec.getName(), endpointSpec.getExports());
+        try {
+            Map<String, List<ExportSpec>> exportsMap = new HashMap<>();
+            for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
+                if (endpointSpec.getExports() != null) {
+                    exportsMap.put(endpointSpec.getName(), endpointSpec.getExports());
+                }
             }
-        }
 
-        for (EndpointStatus endpointStatus : addressSpace.getStatus().getEndpointStatuses()) {
-            List<ExportSpec> exports = exportsMap.get(endpointStatus.getName());
-            if (exports != null) {
-                for (ExportSpec export : exports) {
-                    switch (export.getKind()) {
-                        case Secret:
-                            exportAsSecret(export.getName(), endpointStatus, addressSpace);
-                            break;
-                        case ConfigMap:
-                            exportAsConfigMap(export.getName(), endpointStatus, addressSpace);
-                            break;
-                        case Service:
-                            exportAsService(export.getName(), endpointStatus, addressSpace);
-                            break;
-                        default:
-                            log.info("Unknown export kind {} for address space {}, ignoring", export.getKind(), addressSpace.getMetadata().getName());
-                            break;
+            for (EndpointStatus endpointStatus : addressSpace.getStatus().getEndpointStatuses()) {
+                List<ExportSpec> exports = exportsMap.get(endpointStatus.getName());
+                if (exports != null) {
+                    for (ExportSpec export : exports) {
+                        switch (export.getKind()) {
+                            case Secret:
+                                exportAsSecret(export.getName(), endpointStatus, addressSpace);
+                                break;
+                            case ConfigMap:
+                                exportAsConfigMap(export.getName(), endpointStatus, addressSpace);
+                                break;
+                            case Service:
+                                exportAsService(export.getName(), endpointStatus, addressSpace);
+                                break;
+                            default:
+                                log.info("Unknown export kind {} for address space {}, ignoring", export.getKind(), addressSpace.getMetadata().getName());
+                                break;
+                        }
                     }
                 }
             }
+        } catch (Exception e) {
+            log.warn("Error exporting endpoints for address space {}", addressSpace.getMetadata().getName(), e);
         }
         return addressSpace;
     }
