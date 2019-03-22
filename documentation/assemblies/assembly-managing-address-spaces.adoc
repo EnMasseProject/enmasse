@@ -27,6 +27,8 @@ include::../modules/ref-address-space-example.adoc[leveloffset=+1]
 
 include::../modules/ref-address-space-example-auth-service.adoc[leveloffset=+1]
 
+include::../modules/ref-address-space-example-exports.adoc[leveloffset=+1]
+
 include::../modules/ref-example-address-space-output.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
