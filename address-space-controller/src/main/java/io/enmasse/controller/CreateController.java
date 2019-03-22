@@ -77,7 +77,7 @@ public class CreateController implements Controller {
             return defaultEndpoints;
         } else {
             // Validate endpoints;
-            List<EndpointSpec> endpoints = addressSpace.getSpec().getEndpoints();
+            List<EndpointSpec> endpoints = new ArrayList<>(addressSpace.getSpec().getEndpoints());
             Set<String> services = defaultEndpoints.stream()
                     .map(EndpointSpec::getService)
                     .collect(Collectors.toSet());
