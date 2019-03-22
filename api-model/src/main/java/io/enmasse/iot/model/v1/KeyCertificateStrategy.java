@@ -2,7 +2,10 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.iot.model.v1;
+
+import java.nio.ByteBuffer;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -21,34 +24,23 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IoTConfigStatus {
+public class KeyCertificateStrategy {
 
-    private boolean initialized = false;
-    private String state;
-    private String authenticationServicePSK;
+    private ByteBuffer key;
+    private ByteBuffer certificate;
 
-    public boolean isInitialized() {
-        return initialized;
+    public ByteBuffer getKey() {
+        return key;
+    }
+    public void setKey(ByteBuffer key) {
+        this.key = key;
     }
 
-    public void setInitialized(boolean initialized) {
-        this.initialized = initialized;
+    public ByteBuffer getCertificate() {
+        return certificate;
     }
-
-    public String getState() {
-        return state;
-    }
-
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    public String getAuthenticationServicePSK() {
-        return authenticationServicePSK;
-    }
-
-    public void setAuthenticationServicePSK(String authenticationServicePSK) {
-        this.authenticationServicePSK = authenticationServicePSK;
+    public void setCertificate(ByteBuffer certificate) {
+        this.certificate = certificate;
     }
 
 }

@@ -2,6 +2,7 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -21,34 +22,20 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IoTConfigStatus {
+public class SecretNameStrategy {
+    private String secretName;
 
-    private boolean initialized = false;
-    private String state;
-    private String authenticationServicePSK;
-
-    public boolean isInitialized() {
-        return initialized;
+    public SecretNameStrategy() {
     }
 
-    public void setInitialized(boolean initialized) {
-        this.initialized = initialized;
+    public SecretNameStrategy(String secretName) {
+        this.secretName = secretName;
     }
 
-    public String getState() {
-        return state;
+    public String getSecretName() {
+        return secretName;
     }
-
-    public void setState(String state) {
-        this.state = state;
+    public void setSecretName(String secretName) {
+        this.secretName = secretName;
     }
-
-    public String getAuthenticationServicePSK() {
-        return authenticationServicePSK;
-    }
-
-    public void setAuthenticationServicePSK(String authenticationServicePSK) {
-        this.authenticationServicePSK = authenticationServicePSK;
-    }
-
 }

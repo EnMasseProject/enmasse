@@ -4,9 +4,5 @@
  */
 package io.enmasse.iot.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceCAStrategy {
-
 }

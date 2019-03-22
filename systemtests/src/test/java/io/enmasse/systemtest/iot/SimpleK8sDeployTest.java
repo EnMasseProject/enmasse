@@ -8,8 +8,8 @@ package io.enmasse.systemtest.iot;
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
 
-import java.io.File;
-import java.nio.file.Paths;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -52,43 +52,56 @@ public class SimpleK8sDeployTest {
         IOT_LABELS.put("component", "iot");
     }
 
-    private static File configTempFile;
     private Kubernetes client = Kubernetes.getInstance();
 
     @BeforeAll
     protected static void setup () throws Exception {
         Map<String, String> secrets = new HashMap<>();
-        secrets.put("iot-auth-service-tls", "systemtests-iot-auth-service-tls");
-        secrets.put("iot-tenant-service-tls", "systemtests-iot-tenant-service-tls");
-        secrets.put("iot-device-registry-tls", "systemtests-iot-device-registry-tls");
-        secrets.put("iot-http-adapter-tls", "systemtests-iot-http-adapter-tls");
-        secrets.put("iot-mqtt-adapter-tls", "systemtests-iot-mqtt-adapter-tls");
+        secrets.put("iot-auth-service", "systemtests-iot-auth-service-tls");
+        secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
+        secrets.put("iot-device-registry", "systemtests-iot-device-registry-tls");
 
         IoTConfig config = new IoTConfigBuilder()
+
                 .withNewMetadata()
                 .withName("default")
                 .endMetadata()
+
                 .withNewSpec()
+
                 .withNewInterServiceCertificates()
                 .withNewSecretCertificatesStrategy()
                 .withCaSecretName("systemtests-iot-service-ca")
                 .withServiceSecretNames(secrets)
                 .endSecretCertificatesStrategy()
                 .endInterServiceCertificates()
+
+                .withNewAdapters()
+
+                .withNewHttp()
+                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-http-adapter-tls").endEndpoint()
+                .endHttp()
+
+                .withNewMqtt()
+                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-mqtt-adapter-tls").endEndpoint()
+                .endMqtt()
+
+                .endAdapters()
+
                 .endSpec()
                 .build();
 
-        configTempFile = File.createTempFile("iot-config", "json");
-        new ObjectMapper().writeValue(configTempFile, config);
-
-        KubeCMDClient.createFromFile(NAMESPACE, Paths.get(configTempFile.toURI()));
+        final Path configTempFile = Files.createTempFile("iot-config", "json");
+        try {
+            Files.write(configTempFile, new ObjectMapper().writeValueAsBytes(config));
+            KubeCMDClient.createFromFile(NAMESPACE, configTempFile);
+        } finally {
+            Files.deleteIfExists(configTempFile);
+        }
     }
 
     @AfterAll
     protected static void cleanup() throws Exception {
-        if(configTempFile!=null && configTempFile.exists()) {
-            configTempFile.delete();
-        }
         KubeCMDClient.deleteIoTConfig(NAMESPACE, "default");
     }
 

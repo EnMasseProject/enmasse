@@ -93,7 +93,7 @@ case "${TEST_PROFILE}" in
     run_test "**.SmokeTest" systemtests-shared-standard || failure=$(($failure + 1))
     ;;
 "smoke-iot")
-    run_test systemtests-smoke-iot || failure=$(($failure + 1))
+    run_test "" systemtests-smoke-iot || failure=$(($failure + 1))
     ;;
 *)
     run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
