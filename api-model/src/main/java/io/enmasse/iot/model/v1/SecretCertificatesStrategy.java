@@ -6,7 +6,6 @@ package io.enmasse.iot.model.v1;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -23,7 +22,6 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SecretCertificatesStrategy {
 

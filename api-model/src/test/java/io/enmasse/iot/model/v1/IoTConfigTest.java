@@ -61,7 +61,7 @@ public class IoTConfigTest {
     public void testParse() throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
 
-        final URL url = IoTProjectTest.class.getResource("resources/iot-config.json");
+        final URL url = IoTConfigTest.class.getResource("resources/iot-config.json");
         final IoTConfig value = mapper.readValue(url, IoTConfig.class);
 
         assertThat(value, notNullValue());

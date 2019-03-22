@@ -6,7 +6,6 @@ package io.enmasse.iot.model.v1;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -23,13 +22,13 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IoTConfigSpec {
 
     private Boolean enableDefaultRoutes;
     private Map<String, ImageOverride> imageOverrides;
     private InterServiceCertificates interServiceCertificates;
+    private AdaptersConfig adapters;
 
     public Boolean getEnableDefaultRoutes() {
         return enableDefaultRoutes;
@@ -53,6 +52,14 @@ public class IoTConfigSpec {
 
     public void setInterServiceCertificates(InterServiceCertificates interServiceCertificates) {
         this.interServiceCertificates = interServiceCertificates;
+    }
+
+    public void setAdapters(AdaptersConfig adapters) {
+        this.adapters = adapters;
+    }
+
+    public AdaptersConfig getAdapters() {
+        return adapters;
     }
 
 }

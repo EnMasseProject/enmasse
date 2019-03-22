@@ -2,6 +2,7 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -21,34 +22,21 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IoTConfigStatus {
+public class AdaptersConfig {
+    private AdapterConfig http;
+    private AdapterConfig mqtt;
 
-    private boolean initialized = false;
-    private String state;
-    private String authenticationServicePSK;
-
-    public boolean isInitialized() {
-        return initialized;
+    public AdapterConfig getHttp() {
+        return http;
+    }
+    public void setHttp(AdapterConfig http) {
+        this.http = http;
     }
 
-    public void setInitialized(boolean initialized) {
-        this.initialized = initialized;
+    public AdapterConfig getMqtt() {
+        return mqtt;
     }
-
-    public String getState() {
-        return state;
+    public void setMqtt(AdapterConfig mqtt) {
+        this.mqtt = mqtt;
     }
-
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    public String getAuthenticationServicePSK() {
-        return authenticationServicePSK;
-    }
-
-    public void setAuthenticationServicePSK(String authenticationServicePSK) {
-        this.authenticationServicePSK = authenticationServicePSK;
-    }
-
 }

@@ -4,8 +4,6 @@
  */
 package io.enmasse.iot.model.v1;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -24,7 +22,6 @@ import io.sundr.builder.annotations.Inline;
                         value = "done"))
 @DefaultCustomResource
 @SuppressWarnings("serial")
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class IoTConfig extends AbstractHasMetadata<IoTConfig> {
 
     public static final String KIND = "IoTConfig";
