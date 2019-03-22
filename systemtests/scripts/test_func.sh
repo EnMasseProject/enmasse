@@ -390,7 +390,7 @@ function is_upgraded() {
     TAG=${TAG:-"latest"}
 
     IMAGE_TAG=${IMAGE##*:}
-    TEMPLATES=$(find ${CURDIR}/../../imageenv.txt)
+    TEMPLATES=$(cat ${CURDIR}/../../imageenv.txt)
     if [[ "${TEMPLATES}" == *"${IMAGE}"* ]]; then
         echo "true"
     else
