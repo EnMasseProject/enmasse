@@ -30,6 +30,19 @@ spec:
       memory: 256Mi
     linkCapcity: 1000
     minReplicas: 1
+    podTemplate:
+      spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+              matchExpressions:
+              - key: e2e-az-EastWest
+                operator: In
+                values:
+                - e2e-az-East
+                - e2e-az-West
 ----
 
 The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
@@ -41,4 +54,14 @@ The `broker` object specifies the settings you can configure for the `broker` co
 the `.broker.resources.storage` setting does not configure the existing broker storage size.
 
 The `router` object specifies the settings you can configure for the `router` components.
+
+For `admin`, `broker` and `router` you can configure `podTemplate` settings like `metadata.labels`,
+`spec.priorityClassName`, `spec.tolerations` and `spec.affinity`.
+
+ifeval::["{cmdcli}" == "oc"]
+See link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority], link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations], and link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity] for more information.
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+See link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority], link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations], and link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity] for more information.
+endif::[]
 

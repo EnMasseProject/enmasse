@@ -20,11 +20,18 @@ spec:
   admin:
     resources:
       memory: 256Mi
+    podTemplate:
+      metadata:
+        labels:
+          key: value
   broker:
     resources:
       memory: 2Gi
       storage: 100Gi
     addressFullPolicy: PAGE
+    podTemplate:
+      spec:
+        priorityClassName: messaging
 ----
 
 The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
@@ -34,4 +41,14 @@ The `admin` object specifies the settings you can configure for the `admin` comp
 
 The `broker` object specifies the settings you can configure for the `broker` components. Changing
 the `.broker.resources.storage` setting does not configure the existing broker storage size.
+
+For both `admin` and `broker` you can configure `podTemplate` settings like `metadata.labels`,
+`spec.priorityClassName`, `spec.tolerations` and `spec.affinity`.
+
+ifeval::["{cmdcli}" == "oc"]
+See link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority], link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations], and link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity] for more information.
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+See link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority], link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations], and link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity] for more information.
+endif::[]
 
