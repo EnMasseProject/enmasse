@@ -17,7 +17,6 @@ DOCKER_DIRS = \
 	standard-controller \
 	keycloak-plugin \
 	router \
-	router-metrics \
 	mqtt-gateway \
 	mqtt-lwt \
 	service-broker \
