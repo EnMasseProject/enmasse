@@ -3,11 +3,6 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-    agent {
-        node {
-            label 'enmasse'
-        }
-    }
     environment {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
@@ -18,10 +13,16 @@ pipeline {
     parameters {
         string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
         string(name: 'REGISTRY_AGE', defaultValue: '20', description: 'registry older then REGISTRY_AGE (in hours) will be removed')
+        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
     }
     options {
         timeout(time: 1, unit: 'HOURS')
         ansiColor('xterm')
+    }
+    agent {
+        node {
+            label "${env.AGENT_LABEL}"
+        }
     }
     stages {
         stage('wait for agent ready') {

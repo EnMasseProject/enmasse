@@ -3,10 +3,8 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-    agent {
-        node {
-            label 'enmasse'
-        }
+    parameters {
+        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
     }
     options {
         timeout(time: 20, unit: 'HOURS')
@@ -18,6 +16,11 @@ pipeline {
 
         TAG = 'latest'
         OPENSHIFT_PROJECT = "enmasse-infra"
+    }
+    agent {
+        node {
+            label "${env.AGENT_LABEL}"
+        }
     }
     stages {
         stage('wait for agent ready') {

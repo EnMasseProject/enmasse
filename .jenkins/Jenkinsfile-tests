@@ -3,15 +3,11 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-    agent {
-        node {
-            label 'enmasse'
-        }
-    }
     parameters {
         string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
         string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
         string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
+        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
     }
     options {
         timeout(time: 5, unit: 'HOURS')
@@ -30,6 +26,11 @@ pipeline {
         DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
         TAG = "${params.BUILD_TAG}"
         USE_DUMMY_ADDRESS = true
+    }
+    agent {
+        node {
+            label "${env.AGENT_LABEL}"
+        }
     }
     stages {
         stage('wait for agent ready') {

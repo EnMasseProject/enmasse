@@ -3,16 +3,12 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-    agent {
-        node {
-            label 'enmasse'
-        }
-    }
     parameters {
         string(name: 'TEST_CASE', defaultValue: 'common.upgrade.**', description: 'maven parameter for executing specific tests')
         string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
         string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
         string(name: 'START_VERSION', defaultValue: '0.26.2', description: 'Version of enmasse which will be upgraded')
+        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
     }
     options {
         timeout(time: 1, unit: 'HOURS')
@@ -24,6 +20,11 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         OPENSHIFT_PROJECT = "enmasse-infra"
+    }
+    agent {
+        node {
+            label "${env.AGENT_LABEL}"
+        }
     }
     stages {
         stage('wait for agent ready') {
