@@ -116,7 +116,7 @@ function MockBroker (name) {
         getQueueNames : function () {
             return self.list_queues().map(function (a) { return a.name; });
         },
-        createQueue : function (address, routingType, name, filter, durable, maxConsumers, purgeOnNoConsumers, autoCreateAddress) {
+        createQueue : function (address, routingType, name, filter, durable, maxConsumers, purgeOnNoConsumers, exclusive, lastValue, consumersBeforeDispatch, delayBeforeDispatch, autoCreateAddress) {
             if (self.objects.some(function (o) { return o.type === 'queue' && o.name === name})) {
                 throw new Error('queue ' + name + ' already exists!');
             } else {

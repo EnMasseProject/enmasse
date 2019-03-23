@@ -174,19 +174,58 @@ Artemis.prototype._request = function (resource, operation, parameters) {
 
 // No response requested
 Artemis.prototype._create_temp_response_queue = function (name) {
-    var request = this._create_request_message('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, false/*durable*/,
-         1/*max consumers*/, true/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
+    var request = this._create_request_message('broker', 'createQueue',
+                                               [
+                                                   name/*address*/,
+                                                   'ANYCAST',
+                                                   name/*queue name*/,
+                                                   null/*filter*/,
+                                                   false/*durable*/,
+                                                   1/*max consumers*/,
+                                                   true/*purgeOnNoConsumers*/,
+                                                   false /*exclusive*/,
+                                                   false/*lastValue*/,
+                                                   0/*consumersBeforeDispatch*/,
+                                                   -1/*delayBeforeDispatch*/,
+                                                   true/*autoCreateAddress*/
+                                               ]);
     this._send_request(request);
 }
 
 Artemis.prototype.createSubscription = function (name, address, shared) {
-    return this._request('broker', 'createQueue', [address, 'MULTICAST', name/*queue name*/, null/*filter*/, true/*durable*/,
-                                                   shared ? -1 : 1/*max consumers*/, false/*purgeOnNoConsumers*/, false/*autoCreateAddress*/]);
+    return this._request('broker', 'createQueue', 
+                         [
+                             address,
+                             'MULTICAST',
+                             name/*queue name*/,
+                             null/*filter*/,
+                             true/*durable*/,
+                             shared ? -1 : 1/*max consumers*/,
+                             false/*purgeOnNoConsumers*/,
+                             false /*exclusive*/,
+                             false/*lastValue*/,
+                             0/*consumersBeforeDispatch*/,
+                             -1/*delayBeforeDispatch*/,
+                             false/*autoCreateAddress*/
+                         ]);
 }
 
 Artemis.prototype.createQueue = function (name) {
-    return this._request('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, true/*durable*/,
-                                                   -1/*max consumers*/, false/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
+    return this._request('broker', 'createQueue', 
+                         [
+                             name/*address*/,
+                             'ANYCAST',
+                             name/*queue name*/,
+                             null/*filter*/,
+                             true/*durable*/,
+                             -1/*max consumers*/,
+                             false/*purgeOnNoConsumers*/,
+                             false /*exclusive*/,
+                             false/*lastValue*/,
+                             0/*consumersBeforeDispatch*/,
+                             -1/*delayBeforeDispatch*/,
+                             true/*autoCreateAddress*/
+                         ]); 
 }
 
 Artemis.prototype.destroyQueue = function (name) {
