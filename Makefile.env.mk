@@ -36,7 +36,7 @@ PROMETHEUS_IMAGE ?= "prom/prometheus:v2.4.3"
 ALERTMANAGER_IMAGE ?= "prom/alertmanager:v0.15.2"
 GRAFANA_IMAGE ?= "grafana/grafana:5.3.1"
 KUBE_STATE_METRICS_IMAGE ?= "quay.io/coreos/kube-state-metrics:v1.4.0"
-QDROUTERD_BASE_IMAGE ?= "enmasseproject/qdrouterd-base:1.5-DISPATCH-1273"
+QDROUTERD_BASE_IMAGE ?= "enmasseproject/qdrouterd-base:1.6.0-rc1"
 OAUTH_PROXY_IMAGE ?= "openshift/oauth-proxy:latest"
 
 ENMASSE_CONTROLLER_MANAGER_IMAGE   ?= "$(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/enmasse-controller-manager:$(IMAGE_VERSION)"
