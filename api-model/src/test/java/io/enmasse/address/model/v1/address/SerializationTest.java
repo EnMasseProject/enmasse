@@ -248,32 +248,6 @@ public class SerializationTest {
     }
 
     @Test
-    public void testDeserializeAddressSpaceCompat() throws IOException {
-        String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
-                "\"kind\":\"AddressSpace\"," +
-                "\"metadata\":{" +
-                "  \"name\":\"myspace\"" +
-                "}," +
-                "\"spec\":{" +
-                "  \"type\": \"standard\"," +
-                "  \"plan\": \"unlimited-standard\"," +
-                " \"endpoints\":[" +
-                "   {\"name\":\"messaging\",\"service\":\"messaging\",\"servicePort\":\"amqps\"}" +
-                "  ]" +
-                "}}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        AddressSpace addressSpace = mapper.readValue(json, AddressSpace.class);
-        assertThat(addressSpace.getSpec().getEndpoints().size(), is(1));
-        assertNotNull(addressSpace.getSpec().getEndpoints().get(0).getExpose());
-        assertThat(addressSpace.getSpec().getEndpoints().get(0).getName(), is("messaging"));
-        assertThat(addressSpace.getSpec().getEndpoints().get(0).getExpose().getType(), is(route));
-        assertThat(addressSpace.getSpec().getEndpoints().get(0).getExpose().getRouteTlsTermination(), is(passthrough));
-        assertThat(addressSpace.getSpec().getEndpoints().get(0).getExpose().getRouteServicePort(), is("amqps"));
-    }
-
-    @Test
     public void testDeserializeAddressSpaceMissingDefaults() throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         String serialized = "{\"kind\": \"AddressSpace\", \"apiVersion\": \"v1beta1\"}";
