@@ -66,14 +66,14 @@ objects:
 
       sslProfile {
         name: auth_service_ssl
-        certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
+        caCertFile: /etc/qpid-dispatch/authservice-ca/tls.crt
       }
 
       authServicePlugin {
         name: auth_service
         authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
-        saslInitHostname: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-        authSslProfile: auth_service_ssl
+        realm: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+        sslProfile: auth_service_ssl
       }
 
       listener {
@@ -122,7 +122,7 @@ objects:
       sslProfile {
         name: ssl_details
         certFile: /etc/qpid-dispatch/ssl/tls.crt
-        keyFile: /etc/qpid-dispatch/ssl/tls.key
+        privateKeyFile: /etc/qpid-dispatch/ssl/tls.key
       }
 
       listener {
@@ -139,8 +139,8 @@ objects:
       sslProfile {
         name: inter_router_tls
         certFile: /etc/enmasse-certs/tls.crt
-        keyFile: /etc/enmasse-certs/tls.key
-        certDb: /etc/enmasse-certs/ca.crt
+        privateKeyFile: /etc/enmasse-certs/tls.key
+        caCertFile: /etc/enmasse-certs/ca.crt
       }
 
       listener {
@@ -166,7 +166,7 @@ objects:
         host: ragent-${INFRA_UUID}
         port: 5671
         sslProfile: inter_router_tls
-        verifyHostName: no
+        verifyHostname: no
       }
 
       linkRoute {
