@@ -703,7 +703,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected void waitForDestinationsReady(AddressSpace addressSpace, Address... destinations) throws Exception {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        TestUtils.waitForDestinationsReady(addressApiClient, addressSpace, budget, destinations);
+        AddressUtils.waitForDestinationsReady(addressApiClient, addressSpace, budget, destinations);
     }
 
     /**

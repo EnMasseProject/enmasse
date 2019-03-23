@@ -241,7 +241,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
 
         // Ensure there are no brokers in Draining state
-        TestUtils.waitForBrokersDrained(addressApiClient, getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
+        AddressUtils.waitForBrokersDrained(addressApiClient, getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
 
         // Ensure send and receive works after all brokers are drained
         assertThat("Wrong count of messages sent", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));

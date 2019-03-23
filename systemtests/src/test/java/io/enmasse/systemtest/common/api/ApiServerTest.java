@@ -321,7 +321,7 @@ public class ApiServerTest extends TestBase {
         assertThat(allNames.size(), is(3));
         assertThat(allNames, is(names));
 
-        TestUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
+        AddressUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
 
     @Test

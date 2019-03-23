@@ -166,7 +166,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
-        arguments.put(ClientArgument.ADDRESS, TestUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
+        arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
         arguments.put(ClientArgument.TIMEOUT, "100");
@@ -336,7 +336,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
-        arguments.put(ClientArgument.ADDRESS, TestUtils.getTopicPrefix(hasTopicPrefix) + topic.getSpec().getAddress());
+        arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + topic.getSpec().getAddress());
         arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
         arguments.put(ClientArgument.MSG_PROPERTY, "number~12.65");
         arguments.put(ClientArgument.MSG_PROPERTY, "a~true");
