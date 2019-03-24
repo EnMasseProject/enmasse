@@ -3,12 +3,12 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-    parameters {
-        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
-        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
-        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
-        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-    }
+//    parameters {
+//        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
+//        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
+//        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
+//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
+//    }
     options {
         timeout(time: 5, unit: 'HOURS')
         ansiColor('xterm')

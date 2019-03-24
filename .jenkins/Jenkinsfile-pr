@@ -1,13 +1,13 @@
 #!/usr/bin/env groovy
 def lib
 pipeline {
-    parameters {
-        //execute all tests as default for each new Pull request
-        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
-        string(name: 'TEST_PROFILE', defaultValue: 'systemtests-pr', description: 'maven profile for tests')
-        string(name: 'UPGRADE_FROM', defaultValue: '0.26.2', description: 'base version which is upgraded')
-        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-    }
+//    parameters {
+//        //execute all tests as default for each new Pull request
+//        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
+//        string(name: 'TEST_PROFILE', defaultValue: 'systemtests-pr', description: 'maven profile for tests')
+//        string(name: 'UPGRADE_FROM', defaultValue: '0.26.2', description: 'base version which is upgraded')
+//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
+//    }
     options {
         timeout(time: 10, unit: 'HOURS')
         ansiColor('xterm')

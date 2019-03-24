@@ -3,9 +3,9 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-    parameters {
-        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-    }
+//    parameters {
+//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
+//    }
     options {
         timeout(time: 20, unit: 'HOURS')
         ansiColor('xterm')

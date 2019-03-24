@@ -10,11 +10,11 @@ pipeline {
         UPGRADE_JOB_NAME = 'enmasse-master-upgrade'
         MAILING_LIST = credentials('MAILING_LIST')
     }
-    parameters {
-        string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
-        string(name: 'REGISTRY_AGE', defaultValue: '20', description: 'registry older then REGISTRY_AGE (in hours) will be removed')
-        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-    }
+//    parameters {
+//        string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
+//        string(name: 'REGISTRY_AGE', defaultValue: '20', description: 'registry older then REGISTRY_AGE (in hours) will be removed')
+//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
+//    }
     options {
         timeout(time: 1, unit: 'HOURS')
         ansiColor('xterm')
