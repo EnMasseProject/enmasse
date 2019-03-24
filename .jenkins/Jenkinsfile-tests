@@ -29,7 +29,7 @@ pipeline {
     }
     agent {
         node {
-            label "${env.AGENT_LABEL}"
+            label "${params.AGENT_LABEL}"
         }
     }
     stages {
