@@ -63,7 +63,6 @@ kill -9 ${STATS_PID}
 #stop docker logging
 info "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
 kill -9 ${LOGS_PID}
-categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 print_images
 
 if [[ ${failure} -gt 0 ]]; then

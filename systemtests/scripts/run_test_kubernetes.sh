@@ -106,7 +106,6 @@ if [[ -z "$DISABLE_LOG_SYNC" ]]; then
     #stop docker logging
     echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
     kill ${LOGS_PID} || true
-    categorize_docker_logs "${DOCKER_LOG_DIR}" || true
 fi
 
 #environment info
