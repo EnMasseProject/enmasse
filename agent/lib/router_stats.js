@@ -224,7 +224,7 @@ function is_role_normal (c) {
     return c.role === 'normal';
 }
 
-var internal_identifiers = ['standard-controller', 'agent', 'ragent', 'qdconfigd', 'subserv', 'lwt-service', 'router-metrics'];
+var internal_identifiers = ['standard-controller', 'agent', 'ragent', 'qdconfigd', 'subserv', 'lwt-service'];
 
 function is_internal_identifier (s) {
     return internal_identifiers.indexOf(s) >= 0;

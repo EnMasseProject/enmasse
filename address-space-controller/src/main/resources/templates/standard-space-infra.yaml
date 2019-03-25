@@ -66,14 +66,14 @@ objects:
 
       sslProfile {
         name: auth_service_ssl
-        certDb: /etc/qpid-dispatch/authservice-ca/tls.crt
+        caCertFile: /etc/qpid-dispatch/authservice-ca/tls.crt
       }
 
       authServicePlugin {
         name: auth_service
         authService: ${AUTHENTICATION_SERVICE_HOST}:${AUTHENTICATION_SERVICE_PORT}
-        saslInitHostname: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-        authSslProfile: auth_service_ssl
+        realm: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+        sslProfile: auth_service_ssl
       }
 
       listener {
@@ -102,6 +102,14 @@ objects:
       }
 
       listener {
+        host: 127.0.0.1
+        port: 8080
+        authenticatePeer: no
+        metrics: true
+        http: true
+      }
+
+      listener {
         host: 0.0.0.0
         port: 8443
         saslPlugin: auth_service
@@ -114,7 +122,7 @@ objects:
       sslProfile {
         name: ssl_details
         certFile: /etc/qpid-dispatch/ssl/tls.crt
-        keyFile: /etc/qpid-dispatch/ssl/tls.key
+        privateKeyFile: /etc/qpid-dispatch/ssl/tls.key
       }
 
       listener {
@@ -131,8 +139,8 @@ objects:
       sslProfile {
         name: inter_router_tls
         certFile: /etc/enmasse-certs/tls.crt
-        keyFile: /etc/enmasse-certs/tls.key
-        certDb: /etc/enmasse-certs/ca.crt
+        privateKeyFile: /etc/enmasse-certs/tls.key
+        caCertFile: /etc/enmasse-certs/ca.crt
       }
 
       listener {
@@ -158,7 +166,7 @@ objects:
         host: ragent-${INFRA_UUID}
         port: 5671
         sslProfile: inter_router_tls
-        verifyHostName: no
+        verifyHostname: no
       }
 
       linkRoute {
@@ -270,6 +278,9 @@ objects:
           - containerPort: 5671
             name: amqps
             protocol: TCP
+          - containerPort: 8080
+            name: http
+            protocol: TCP
           - containerPort: 8443
             name: https
             protocol: TCP
@@ -294,33 +305,6 @@ objects:
             readOnly: true
           - mountPath: /etc/qpid-dispatch/config
             name: qdrouterd-config
-        - env:
-          - name: ROUTER_HOST
-            value: 127.0.0.1
-          - name: ROUTER_PORT
-            value: '55671'
-          - name: CERT_DIR
-            value: /etc/enmasse-certs
-          image: ${env.ROUTER_METRICS_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
-          livenessProbe:
-            initialDelaySeconds: 60
-            tcpSocket:
-              port: routermetrics
-          name: metrics
-          ports:
-          - containerPort: 8080
-            name: routermetrics
-            protocol: TCP
-          resources:
-            limits:
-              memory: 32Mi
-            requests:
-              memory: 32Mi
-          volumeMounts:
-          - mountPath: /etc/enmasse-certs
-            name: router-internal-cert
-            readOnly: true
         volumes:
         - name: ssl-certs
           secret:
