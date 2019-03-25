@@ -12,7 +12,7 @@ build: build/$(CMD)
 build_go: build
 
 package:
-	@echo "Nothing to package"
+	$(IMAGE_ENV) mvn package -DskipTests $(MAVEN_ARGS)
 
 test:
 
