@@ -10,6 +10,6 @@ ARG maven_version
 ARG commit
 ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
 
-ADD build/iot-gc /
+ADD target/iot-gc-${MAVEN_VERSION}-dist.tar.gz /
 
 ENTRYPOINT /iot-gc

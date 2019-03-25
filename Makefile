@@ -48,6 +48,12 @@ all: build_java build_go docker_build templates
 templates: docu_html
 	$(MAKE) -C templates
 
+deploy: build_java build_go
+	$(IMAGE_ENV) mvn -Prelease deploy $(MAVEN_ARGS)
+	for mod in $(GO_DIRS); do \
+		make -C $$mod deploy; \
+	done
+
 build_java:
 	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
 

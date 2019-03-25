@@ -10,6 +10,6 @@ ARG maven_version
 ARG commit
 ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
 
-ADD build/qdr-proxy-configurator /
+ADD target/qdr-proxy-configurator-${MAVEN_VERSION}-dist.tar.gz /
 
 ENTRYPOINT /qdr-proxy-configurator
