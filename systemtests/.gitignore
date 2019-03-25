@@ -12,3 +12,6 @@
 # IntelliJ IDEA specific
 .idea/
 *.iml
+
+# Test requirement specific
+client_executable
