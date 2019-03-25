@@ -85,7 +85,7 @@ function listener_compare(a, b) {
 }
 
 function same_listener_definition(a, b) {
-    return a.host === b.host && a.port === b.port && a.sslProfile === b.sslProfile && a.saslMechanisms === b.saslMechanisms && a.authenticatePeer === b.authenticatePeer;
+    return a.host === b.host && a.port === b.port && a.authenticatePeer === b.authenticatePeer && a.metrics === b.metrics && a.healthz === b.healthz && a.http === b.http && a.websockets === b.websockets && a.httpRootDir === b.httpRootDir;
 }
 
 function listener_describe (a) {
@@ -387,7 +387,7 @@ function desired_address_config(high_level_address_definitions) {
             config.add_address({prefix:def.address, distribution:'multicast', waypoint:false});
         }
     }
-    config.add_listener({host:'0.0.0.0', port: '56711', sslProfile: 'inter_router_tls', saslMechanisms: 'EXTERNAL', authenticatePeer: true})
+    config.add_listener({host:'0.0.0.0', port: '8080', authenticatePeer: false, metrics: true, healthz: true, http: true, websockets: false, httpRootDir: 'invalid'})
     sort_config(config);
     log.debug('mapped %j => %j', high_level_address_definitions, config);
     return config;
