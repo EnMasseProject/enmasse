@@ -29,11 +29,11 @@ public class IoTConfigSpec {
     private Map<String, ImageOverride> imageOverrides;
     private InterServiceCertificates interServiceCertificates;
     private AdaptersConfig adapters;
+    private ServicesConfig services;
 
     public Boolean getEnableDefaultRoutes() {
         return enableDefaultRoutes;
     }
-
     public void setEnableDefaultRoutes(Boolean enableDefaultRoutes) {
         this.enableDefaultRoutes = enableDefaultRoutes;
     }
@@ -41,7 +41,6 @@ public class IoTConfigSpec {
     public Map<String, ImageOverride> getImageOverrides() {
         return imageOverrides;
     }
-
     public void setImageOverrides(Map<String, ImageOverride> imageOverrides) {
         this.imageOverrides = imageOverrides;
     }
@@ -49,7 +48,6 @@ public class IoTConfigSpec {
     public InterServiceCertificates getInterServiceCertificates() {
         return interServiceCertificates;
     }
-
     public void setInterServiceCertificates(InterServiceCertificates interServiceCertificates) {
         this.interServiceCertificates = interServiceCertificates;
     }
@@ -57,9 +55,15 @@ public class IoTConfigSpec {
     public void setAdapters(AdaptersConfig adapters) {
         this.adapters = adapters;
     }
-
     public AdaptersConfig getAdapters() {
         return adapters;
+    }
+
+    public ServicesConfig getServices() {
+        return services;
+    }
+    public void setServices(ServicesConfig services) {
+        this.services = services;
     }
 
 }

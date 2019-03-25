@@ -18,27 +18,15 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
-                value = "done"
-                )
-        )
+                value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AdapterConfig extends ServiceConfig {
+public class CollectorConfig {
+    private ContainerConfig container;
 
-    private EndpointConfig endpoint;
-    private CommonAdapterContainers containers;
-
-    public EndpointConfig getEndpoint() {
-        return endpoint;
+    public ContainerConfig getContainer() {
+        return container;
     }
-    public void setEndpoint(EndpointConfig endpoint) {
-        this.endpoint = endpoint;
+    public void setContainer(ContainerConfig container) {
+        this.container = container;
     }
-
-    public CommonAdapterContainers getContainers() {
-        return containers;
-    }
-    public void setContainers(CommonAdapterContainers containers) {
-        this.containers = containers;
-    }
-
 }

@@ -22,23 +22,30 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AdapterConfig extends ServiceConfig {
+public class CommonAdapterContainers {
 
-    private EndpointConfig endpoint;
-    private CommonAdapterContainers containers;
+    private ContainerConfig adapter;
+    private ContainerConfig proxy;
+    private ContainerConfig proxyConfigurator;
 
-    public EndpointConfig getEndpoint() {
-        return endpoint;
+    public ContainerConfig getAdapter() {
+        return adapter;
     }
-    public void setEndpoint(EndpointConfig endpoint) {
-        this.endpoint = endpoint;
-    }
-
-    public CommonAdapterContainers getContainers() {
-        return containers;
-    }
-    public void setContainers(CommonAdapterContainers containers) {
-        this.containers = containers;
+    public void setAdapter(ContainerConfig adapter) {
+        this.adapter = adapter;
     }
 
+    public ContainerConfig getProxy() {
+        return proxy;
+    }
+    public void setProxy(ContainerConfig proxy) {
+        this.proxy = proxy;
+    }
+
+    public ContainerConfig getProxyConfigurator() {
+        return proxyConfigurator;
+    }
+    public void setProxyConfigurator(ContainerConfig proxyConfigurator) {
+        this.proxyConfigurator = proxyConfigurator;
+    }
 }

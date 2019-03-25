@@ -5,6 +5,8 @@
 
 package io.enmasse.iot.model.v1;
 
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -21,24 +23,23 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AdapterConfig extends ServiceConfig {
+@JsonInclude(NON_NULL)
+public class FileBasedDeviceRegistry {
 
-    private EndpointConfig endpoint;
-    private CommonAdapterContainers containers;
+    private ContainerConfig container;
+    private Integer numberOfDevicesPerTenant;
 
-    public EndpointConfig getEndpoint() {
-        return endpoint;
+    public ContainerConfig getContainer() {
+        return container;
     }
-    public void setEndpoint(EndpointConfig endpoint) {
-        this.endpoint = endpoint;
-    }
-
-    public CommonAdapterContainers getContainers() {
-        return containers;
-    }
-    public void setContainers(CommonAdapterContainers containers) {
-        this.containers = containers;
+    public void setContainer(ContainerConfig container) {
+        this.container = container;
     }
 
+    public Integer getNumberOfDevicesPerTenant() {
+        return numberOfDevicesPerTenant;
+    }
+    public void setNumberOfDevicesPerTenant(Integer numberOfDevicesPerTenant) {
+        this.numberOfDevicesPerTenant = numberOfDevicesPerTenant;
+    }
 }

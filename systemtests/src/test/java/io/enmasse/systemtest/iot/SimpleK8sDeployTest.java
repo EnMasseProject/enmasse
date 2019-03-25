@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
+import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
@@ -29,6 +31,7 @@ import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Quantity;
 
 @Tag(sharedIot)
 @Tag(smoke)
@@ -61,6 +64,19 @@ public class SimpleK8sDeployTest {
         secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
         secrets.put("iot-device-registry", "systemtests-iot-device-registry-tls");
 
+        var c64 = new ContainerConfigBuilder()
+                .withNewResources().addToLimits("memory", new Quantity("64Mi")).endResources()
+                .build();
+        var c128 = new ContainerConfigBuilder()
+                .withNewResources().addToLimits("memory", new Quantity("128Mi")).endResources()
+                .build();
+
+        var commonContainers = new CommonAdapterContainersBuilder()
+                .withNewAdapterLike(c128).endAdapter()
+                .withNewProxyLike(c64).endProxy()
+                .withNewProxyConfiguratorLike(c64).endProxyConfigurator()
+                .build();
+
         IoTConfig config = new IoTConfigBuilder()
 
                 .withNewMetadata()
@@ -80,13 +96,37 @@ public class SimpleK8sDeployTest {
 
                 .withNewHttp()
                 .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-http-adapter-tls").endEndpoint()
+                .withNewContainersLike(commonContainers).endContainers()
                 .endHttp()
 
                 .withNewMqtt()
                 .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-mqtt-adapter-tls").endEndpoint()
+                .withNewContainersLike(commonContainers).endContainers()
                 .endMqtt()
 
                 .endAdapters()
+
+                .withNewServices()
+
+                .withNewAuthentication()
+                .withNewContainerLike(c128).endContainer()
+                .endAuthentication()
+
+                .withNewTenant()
+                .withNewContainerLike(c128).endContainer()
+                .endTenant()
+
+                .withNewCollector()
+                .withNewContainerLike(c64).endContainer()
+                .endCollector()
+
+                .withNewDeviceRegistry()
+                .withNewFile()
+                .withNewContainerLike(c128).endContainer()
+                .endFile()
+                .endDeviceRegistry()
+
+                .endServices()
 
                 .endSpec()
                 .build();

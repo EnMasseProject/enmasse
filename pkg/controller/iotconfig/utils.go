@@ -26,6 +26,18 @@ func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig i
 	deployment.Spec.Replicas = serviceConfig.Replicas
 }
 
+func applyContainerConfig(container *corev1.Container, config *iotv1alpha1.ContainerConfig) {
+
+	if config == nil {
+		return
+	}
+
+	if config.Resources != nil {
+		container.Resources = *config.Resources
+	}
+
+}
+
 func (r *ReconcileIoTConfig) cleanupSecrets(ctx context.Context, config *iotv1alpha1.IoTConfig, adapterName string) error {
 
 	// we need to use an unstructured list, as "SecretList" doesn't work
@@ -46,4 +58,12 @@ func (r *ReconcileIoTConfig) cleanupSecrets(ctx context.Context, config *iotv1al
 	}
 
 	return err
+}
+
+func deviceRegistryImplementation(config *iotv1alpha1.IoTConfig) DeviceRegistryImplementation {
+	if config.Spec.ServicesConfig.DeviceRegistry.File != nil {
+		return DeviceRegistryFileBased
+	}
+
+	return DeviceRegistryDefault
 }

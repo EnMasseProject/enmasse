@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -100,6 +101,7 @@ type IoTConfigSpec struct {
 
 	InterServiceCertificates *InterServiceCertificates `json:"interServiceCertificates,omitempty"`
 
+	ServicesConfig ServicesConfig `json:"services"`
 	AdaptersConfig AdaptersConfig `json:"adapters"`
 }
 
@@ -117,6 +119,13 @@ type SecretCertificatesStrategy struct {
 	ServiceSecretNames map[string]string `json:"serviceSecretNames"`
 }
 
+type ServicesConfig struct {
+	DeviceRegistry DeviceRegistryServiceConfig `json:"deviceRegistry,omitempty"`
+	Authentication AuthenticationServiceConfig `json:"authentication,omitempty"`
+	Tenant         TenantServiceConfig         `json:"tenant,omitempty"`
+	Collector      CollectorConfig             `json:"collector,omitempty"`
+}
+
 type AdaptersConfig struct {
 	HttpAdapterConfig HttpAdapterConfig `json:"http,omitempty"`
 	MqttAdapterConfig MqttAdapterConfig `json:"mqtt,omitempty"`
@@ -124,6 +133,10 @@ type AdaptersConfig struct {
 
 type ServiceConfig struct {
 	Replicas *int32 `json:"replicas,omitempty"`
+}
+
+type ContainerConfig struct {
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 type AdapterEndpointConfig struct {
@@ -141,13 +154,53 @@ type SecretNameStrategy struct {
 	TlsSecretName string `json:"secretName,omitempty"`
 }
 
+type CommonAdapterContainers struct {
+	Adapter           *ContainerConfig `json:"adapter,omitempty"`
+	Proxy             *ContainerConfig `json:"proxy,omitempty"`
+	ProxyConfigurator *ContainerConfig `json:"proxyConfigurator,omitempty"`
+}
+
+type CollectorConfig struct {
+	Container *ContainerConfig `json:"container,omitempty"`
+}
+
+type DeviceRegistryServiceConfig struct {
+	ServiceConfig `json:",inline"`
+
+	File *FileBasedDeviceRegistry `json:"file,omitempty"`
+}
+
+type FileBasedDeviceRegistry struct {
+	NumberOfDevicesPerTenant *uint32 `json:"numberOfDevicesPerTenant,omitempty"`
+
+	Container *ContainerConfig `json:"container,omitempty"`
+}
+
+type TenantServiceConfig struct {
+	ServiceConfig `json:",inline"`
+
+	Container *ContainerConfig `json:"container,omitempty"`
+}
+
+type AuthenticationServiceConfig struct {
+	ServiceConfig `json:",inline"`
+
+	Container *ContainerConfig `json:"container,omitempty"`
+}
+
 type HttpAdapterConfig struct {
-	ServiceConfig  `json:",inline"`
+	ServiceConfig `json:",inline"`
+
+	Containers CommonAdapterContainers `json:"containers,omitempty"`
+
 	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
 }
 
 type MqttAdapterConfig struct {
-	ServiceConfig  `json:",inline"`
+	ServiceConfig `json:",inline"`
+
+	Containers CommonAdapterContainers `json:"containers,omitempty"`
+
 	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
 }
 

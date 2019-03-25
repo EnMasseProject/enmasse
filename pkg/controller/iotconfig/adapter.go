@@ -20,12 +20,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, containers iotv1alpha1.CommonAdapterContainers) error {
 
 	err := install.ApplyContainerWithError(deployment, "qdr-cfg", func(container *corev1.Container) error {
+
 		if err := install.SetContainerImage(container, "qdr-proxy-configurator", config); err != nil {
 			return err
 		}
+
+		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
@@ -41,6 +44,12 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		container.VolumeMounts[0].MountPath = "/var/qdr-certs"
 		container.VolumeMounts[0].ReadOnly = false
 
+		// apply container options
+
+		applyContainerConfig(container, containers.ProxyConfigurator)
+
+		// return
+
 		return nil
 	})
 
@@ -49,11 +58,14 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 	}
 
 	err = install.ApplyContainerWithError(deployment, "qdr-proxy", func(container *corev1.Container) error {
+
 		if err := install.SetContainerImage(container, "qdrouterd-base", config); err != nil {
 			return err
 		}
 
 		container.Args = []string{"/sbin/qdrouterd", "-c", "/etc/qdr/config/qdrouterd.conf"}
+
+		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
@@ -72,6 +84,12 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		container.VolumeMounts[1].Name = "qdr-proxy-config"
 		container.VolumeMounts[1].MountPath = "/etc/qdr/config"
 		container.VolumeMounts[1].ReadOnly = true
+
+		// apply container options
+
+		applyContainerConfig(container, containers.Proxy)
+
+		// return
 
 		return nil
 	})

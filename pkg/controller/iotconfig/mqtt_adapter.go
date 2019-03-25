@@ -61,20 +61,26 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 
 func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
+	adapter := config.Spec.AdaptersConfig.MqttAdapterConfig
+
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, config.Spec.AdaptersConfig.MqttAdapterConfig.ServiceConfig)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
 
 	err := install.ApplyContainerWithError(deployment, "mqtt-adapter", func(container *corev1.Container) error {
+
 		if err := install.SetContainerImage(container, "iot-mqtt-adapter", config); err != nil {
 			return err
 		}
+
+		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
 				corev1.ResourceMemory: *resource.NewQuantity(512*1024*1024 /* 512Mi */, resource.BinarySI),
 			},
 		}
+
 		container.Ports = []corev1.ContainerPort{
 			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "mqtts", ContainerPort: 8883, Protocol: corev1.ProtocolTCP},
@@ -110,6 +116,10 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 
+		// apply container options
+
+		applyContainerConfig(container, adapter.Containers.Adapter)
+
 		// return
 
 		return nil
@@ -121,7 +131,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 	// qdr config & proxy
 
-	if err := r.addQpidProxySetup(config, deployment); err != nil {
+	if err := r.addQpidProxySetup(config, deployment, adapter.Containers); err != nil {
 		return err
 	}
 
@@ -137,7 +147,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, deployment, nameMqttAdapter); err != nil {
+	if err := applyAdapterEndpointDeployment(adapter.EndpointConfig, deployment, nameMqttAdapter); err != nil {
 		return err
 	}
 

@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"strconv"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -29,26 +30,26 @@ import (
 const nameDeviceRegistry = "iot-device-registry"
 const routeDeviceRegistry = "device-registry"
 
-func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameDeviceRegistry, config, r.reconcileDeviceRegistryDeployment)
+		return r.processDeployment(ctx, nameDeviceRegistry, config, r.reconcileFileDeviceRegistryDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameDeviceRegistry, config, r.reconcileDeviceRegistryService)
+		return r.processService(ctx, nameDeviceRegistry, config, r.reconcileFileDeviceRegistryService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, r.reconcileDeviceRegistryConfigMap)
+		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, r.reconcileFileDeviceRegistryConfigMap)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, r.reconcileDeviceRegistryPersistentVolumeClaim)
+		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, r.reconcileFileDeviceRegistryPersistentVolumeClaim)
 	})
 
 	if config.WantDefaultRoutes(nil) {
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeDeviceRegistry, config, r.reconcileDeviceRegistryRoute)
+			return r.processRoute(ctx, routeDeviceRegistry, config, r.reconcileFileDeviceRegistryRoute)
 		})
 	} else {
 		if util.IsOpenshift() {
@@ -59,22 +60,26 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	deployment.Spec.Replicas = nil
+	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
 
 	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+
 		if err := install.SetContainerImage(container, "iot-device-registry", config); err != nil {
 			return err
 		}
+
+		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
 				corev1.ResourceMemory: *resource.NewQuantity(512*1024*1024 /* 512Mi */, resource.BinarySI),
 			},
 		}
+
 		container.Ports = []corev1.ContainerPort{
 			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
@@ -97,8 +102,18 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 			{Name: "HONO_REGISTRY_SVC_SAVE_TO_FILE", Value: "true"},
-			{Name: "HONO_REGISTRY_SVC_MAX_DEVICES_PER_TENANT", Value: "100000"},
 		}
+
+		// set max devices per tenant limit
+
+		if config.Spec.ServicesConfig.DeviceRegistry.File != nil && config.Spec.ServicesConfig.DeviceRegistry.File.NumberOfDevicesPerTenant != nil {
+			v := strconv.FormatUint(uint64(*config.Spec.ServicesConfig.DeviceRegistry.File.NumberOfDevicesPerTenant), 10)
+			container.Env = append(container.Env, corev1.EnvVar{
+				Name: "HONO_REGISTRY_SVC_MAX_DEVICES_PER_TENANT", Value: v,
+			})
+		}
+
+		// append trust stores
 
 		if err := AppendTrustStores(config, container, []string{"HONO_AUTH_TRUST_STORE_PATH"}); err != nil {
 			return err
@@ -109,6 +124,12 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 		install.ApplyVolumeMountSimple(container, "registry", "/var/lib/hono/device-registry", false)
+
+		// apply container options
+
+		if config.Spec.ServicesConfig.DeviceRegistry.File != nil {
+			applyContainerConfig(container, config.Spec.ServicesConfig.DeviceRegistry.File.Container)
+		}
 
 		// return
 
@@ -135,7 +156,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryDeployment(config *iotv1alph
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileDeviceRegistryService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
 	install.ApplyServiceDefaults(service, "iot", service.Name)
 
@@ -170,7 +191,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryService(config *iotv1alpha1.
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileDeviceRegistryConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -222,7 +243,7 @@ hono:
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileDeviceRegistryPersistentVolumeClaim(config *iotv1alpha1.IoTConfig, pvc *corev1.PersistentVolumeClaim) error {
+func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryPersistentVolumeClaim(config *iotv1alpha1.IoTConfig, pvc *corev1.PersistentVolumeClaim) error {
 
 	install.ApplyDefaultLabels(&pvc.ObjectMeta, "iot", pvc.Name)
 
@@ -234,7 +255,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryPersistentVolumeClaim(config
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
