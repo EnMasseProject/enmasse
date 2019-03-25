@@ -85,7 +85,7 @@ function listener_compare(a, b) {
 }
 
 function same_listener_definition(a, b) {
-    return a.host === b.host && a.port === b.port && a.sslProfile === b.sslProfile && a.saslMechanisms === b.saslMechanisms && a.authenticatePeer === b.authenticatePeer;
+    return a.host === b.host && a.port === b.port && a.authenticatePeer === b.authenticatePeer && a.metrics === b.metrics && a.healthz === b.healthz && a.http === b.http && a.websockets === b.websockets && a.httpRootDir === b.httpRootDir;
 }
 
 function listener_describe (a) {
