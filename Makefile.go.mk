@@ -3,6 +3,9 @@ include $(TOPDIR)/Makefile.common
 
 build/$(CMD):
 	cd $(GOPRJ)/cmd/$(@F) && GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build -o $(abspath $@) .
+ifneq ($(FULL_BUILD),true)
+	mvn $(MAVEN_ARGS) package
+endif
 
 build: build/$(CMD)
 
