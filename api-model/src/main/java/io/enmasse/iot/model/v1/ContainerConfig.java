@@ -8,12 +8,15 @@ package io.enmasse.iot.model.v1;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
+        refs= {@BuildableReference(ResourceRequirements.class)},
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(
                 type = Doneable.class,
@@ -22,23 +25,13 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AdapterConfig extends ServiceConfig {
+public class ContainerConfig {
+    private ResourceRequirements resources;
 
-    private EndpointConfig endpoint;
-    private CommonAdapterContainers containers;
-
-    public EndpointConfig getEndpoint() {
-        return endpoint;
+    public ResourceRequirements getResources() {
+        return resources;
     }
-    public void setEndpoint(EndpointConfig endpoint) {
-        this.endpoint = endpoint;
+    public void setResources(ResourceRequirements resources) {
+        this.resources = resources;
     }
-
-    public CommonAdapterContainers getContainers() {
-        return containers;
-    }
-    public void setContainers(CommonAdapterContainers containers) {
-        this.containers = containers;
-    }
-
 }

@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
@@ -33,6 +34,14 @@ import (
 )
 
 var log = logf.Log.WithName("controller_iotconfig")
+
+type DeviceRegistryImplementation int
+
+const (
+	DeviceRegistryDefault = iota
+	DeviceRegistryIllegal
+	DeviceRegistryFileBased
+)
 
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
@@ -164,7 +173,12 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processTenantService(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processDeviceRegistry(ctx, config)
+		switch deviceRegistryImplementation(config) {
+		case DeviceRegistryIllegal:
+			return reconcile.Result{}, fmt.Errorf("illegal device registry configuration")
+		default:
+			return r.processFileDeviceRegistry(ctx, config)
+		}
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processHttpAdapter(ctx, config)

@@ -45,18 +45,22 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	deployment.Spec.Replicas = nil
+	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.Tenant.ServiceConfig)
 
 	err := install.ApplyContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
+
 		if err := install.SetContainerImage(container, "iot-tenant-service", config); err != nil {
 			return err
 		}
+
+		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
 			Limits: corev1.ResourceList{
 				corev1.ResourceMemory: *resource.NewQuantity(512*1024*1024 /* 512Mi */, resource.BinarySI),
 			},
 		}
+
 		container.Ports = []corev1.ContainerPort{
 			{Name: "jolokia", ContainerPort: 8778, Protocol: corev1.ProtocolTCP},
 			{Name: "amqps", ContainerPort: 5671, Protocol: corev1.ProtocolTCP},
@@ -85,6 +89,10 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
+
+		// apply container options
+
+		applyContainerConfig(container, config.Spec.ServicesConfig.Tenant.Container)
 
 		// return
 
