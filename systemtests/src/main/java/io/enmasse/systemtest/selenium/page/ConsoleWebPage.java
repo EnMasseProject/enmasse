@@ -16,6 +16,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -692,7 +693,7 @@ public class ConsoleWebPage implements IWebPage {
         assertNotNull(items, "Console failed, does not contain created address item");
 
         if (waitForReady)
-            TestUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
+            AddressUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
                     new TimeoutBudget(5, TimeUnit.MINUTES), destination);
     }
 

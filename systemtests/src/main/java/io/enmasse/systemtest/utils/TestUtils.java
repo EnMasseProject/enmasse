@@ -17,7 +17,6 @@ import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.VertxException;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
@@ -35,7 +34,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -301,126 +299,6 @@ public class TestUtils {
     }
 
     /**
-     * Check if isReady attribute is set to true
-     *
-     * @param address JsonObject with address
-     * @return
-     */
-    public static boolean isAddressReady(JsonObject address) {
-        boolean isReady = false;
-        if (address != null) {
-            isReady = address.getJsonObject("status").getBoolean("isReady");
-        }
-        return isReady;
-    }
-
-    public static boolean isPlanSynced(JsonObject address) {
-        boolean isReady = false;
-        JsonObject annotations = address.getJsonObject("metadata").getJsonObject("annotations");
-        if (annotations != null) {
-            String appliedPlan = address.getJsonObject("status").getJsonObject("planStatus").getString("name");
-            String actualPlan = address.getJsonObject("spec").getString("plan");
-            isReady = actualPlan.equals(appliedPlan);
-        }
-        return isReady;
-    }
-
-    public static boolean areBrokersDrained(JsonObject address) {
-        boolean isReady = true;
-        JsonArray brokerStatuses = address.getJsonObject("status").getJsonArray("brokerStatuses");
-        for (int i = 0; i < brokerStatuses.size(); i++) {
-            JsonObject brokerStatus = brokerStatuses.getJsonObject(i);
-            if ("Draining".equals(brokerStatus.getString("state"))) {
-                isReady = false;
-                break;
-            }
-        }
-        return isReady;
-    }
-
-    interface AddressListMatcher {
-        Map<String, JsonObject> matchAddresses(JsonObject addressList);
-    }
-
-    /**
-     * Wait until destinations isReady parameter is set to true with 1 MINUTE timeout for each destination
-     *
-     * @param apiClient    instance of AddressApiClient
-     * @param addressSpace name of addressSpace
-     * @param budget       the timeout budget for this operation
-     * @param destinations variable count of destinations
-     * @throws Exception IllegalStateException if destinations are not ready within timeout
-     */
-    public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
-        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isAddressReady, destinations));
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    public static void waitForDestinationPlanApplied(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_PLAN_CHANGE);
-        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::isPlanSynced, destinations));
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    public static void waitForBrokersDrained(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_BROKER_DRAINED);
-        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, TestUtils::areBrokersDrained, destinations));
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    private static void waitForAddressesMatched(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget timeoutBudget, int totalDestinations, AddressListMatcher addressListMatcher) throws Exception {
-        Map<String, JsonObject> notMatched = new HashMap<>();
-
-        while (timeoutBudget.timeLeft() >= 0) {
-            JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
-            notMatched = addressListMatcher.matchAddresses(addressList);
-            if (notMatched.isEmpty()) {
-                Thread.sleep(5000); //TODO: remove this sleep after fix for ready check will be available
-                break;
-            }
-            Thread.sleep(5000);
-        }
-
-        if (!notMatched.isEmpty()) {
-            JsonObject addressList = apiClient.getAddresses(addressSpace, Optional.empty());
-            notMatched = addressListMatcher.matchAddresses(addressList);
-            throw new IllegalStateException(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
-        }
-    }
-
-    private static Map<String, JsonObject> checkAddressesMatching(JsonObject addressList, Predicate<JsonObject> predicate, Address... destinations) {
-        Map<String, JsonObject> notMatchingAddresses = new HashMap<>();
-        for (Address destination : destinations) {
-            JsonObject addressObject = lookupAddress(addressList, destination.getSpec().getAddress());
-            if (addressObject == null) {
-                notMatchingAddresses.put(destination.getSpec().getAddress(), null);
-            } else if (!predicate.test(addressObject)) {
-                notMatchingAddresses.put(destination.getSpec().getAddress(), addressObject);
-            }
-        }
-        return notMatchingAddresses;
-    }
-
-    /**
-     * Get address(JsonObject) from AddressList(JsonObject) by address name
-     *
-     * @param addressList JsonObject received from AddressApiClient
-     * @param address     address name
-     * @return
-     */
-    private static JsonObject lookupAddress(JsonObject addressList, String address) {
-        JsonArray items = addressList.getJsonArray("items");
-        for (int i = 0; i < items.size(); i++) {
-            JsonObject addressObject = items.getJsonObject(i);
-            if (addressObject.getJsonObject("spec").getString("address").equals(address)) {
-                return addressObject;
-            }
-        }
-        return null;
-    }
-
-    /**
      * Generate message body with prefix
      */
     public static List<String> generateMessages(String prefix, int numMessages) {
@@ -643,9 +521,4 @@ public class TestUtils {
             }
         }, budget);
     }
-
-    public static String getTopicPrefix(boolean topicSwitch) {
-        return topicSwitch ? "topic://" : "";
-    }
-
 }

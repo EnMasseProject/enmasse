@@ -7,10 +7,8 @@ package io.enmasse.systemtest.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.DoneableAddress;
+import io.enmasse.address.model.*;
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
@@ -20,10 +18,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import java.net.HttpURLConnection;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
@@ -140,6 +135,10 @@ public class AddressUtils {
                 .done()));
     }
 
+    public static AddressList jsonToAddressList(JsonObject addressList) throws Exception {
+        return new ObjectMapper().readValue(addressList.toString(), AddressList.class);
+    }
+
     public static Address jsonToAddress(JsonObject addressJsonObject) throws Exception {
         log.info("Got address object: {}", addressJsonObject.toString());
         return new ObjectMapper().readValue(addressJsonObject.toString(), Address.class);
@@ -186,7 +185,7 @@ public class AddressUtils {
                     TestUtils.waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getSpec().getPlan()), budget);
                 }
             }
-            TestUtils.waitForDestinationsReady(apiClient, addressSpace, budget, addresses);
+            waitForDestinationsReady(apiClient, addressSpace, budget, addresses);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -205,7 +204,7 @@ public class AddressUtils {
                     TestUtils.waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getSpec().getPlan()), budget);
                 }
             }
-            TestUtils.waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -216,8 +215,8 @@ public class AddressUtils {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
         addressApiClient.replaceAddress(addressSpace.getMetadata().getName(), destination, 200);
         if (wait) {
-            TestUtils.waitForDestinationsReady(addressApiClient, addressSpace, timeoutBudget, destination);
-            TestUtils.waitForDestinationPlanApplied(addressApiClient, addressSpace, timeoutBudget, destination);
+            waitForDestinationsReady(addressApiClient, addressSpace, timeoutBudget, destination);
+            waitForDestinationPlanApplied(addressApiClient, addressSpace, timeoutBudget, destination);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -232,7 +231,7 @@ public class AddressUtils {
                     TestUtils.waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getSpec().getPlan()), budget);
                 }
             }
-            TestUtils.waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -274,6 +273,98 @@ public class AddressUtils {
     }
 
 
+    public static boolean isAddressReady(Address address) {
+        return address.getStatus().isReady();
+    }
+
+    public static boolean isPlanSynced(Address address) {
+        boolean isReady = false;
+        Map<String, String> annotations = address.getMetadata().getAnnotations();
+        if (annotations != null) {
+            String appliedPlan = address.getStatus().getPlanStatus().getName();
+            String actualPlan = address.getSpec().getPlan();
+            isReady = actualPlan.equals(appliedPlan);
+        }
+        return isReady;
+    }
+
+    public static boolean areBrokersDrained(Address address) {
+        boolean isReady = true;
+        List<BrokerStatus> brokerStatuses = address.getStatus().getBrokerStatuses();
+        for (BrokerStatus status : brokerStatuses) {
+            if (BrokerState.Draining.equals(status.getState())) {
+                isReady = false;
+                break;
+            }
+        }
+        return isReady;
+    }
+
+    interface AddressListMatcher {
+        Map<String, Address> matchAddresses(AddressList addressList);
+    }
+
+    public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
+        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void waitForDestinationPlanApplied(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_PLAN_CHANGE);
+        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::isPlanSynced, destinations));
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void waitForBrokersDrained(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_BROKER_DRAINED);
+        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::areBrokersDrained, destinations));
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    private static void waitForAddressesMatched(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget timeoutBudget, int totalDestinations, AddressListMatcher addressListMatcher) throws Exception {
+        Map<String, Address> notMatched = new HashMap<>();
+
+        while (timeoutBudget.timeLeft() >= 0) {
+            AddressList addressList = jsonToAddressList(apiClient.getAddresses(addressSpace, Optional.empty()));
+            notMatched = addressListMatcher.matchAddresses(addressList);
+            if (notMatched.isEmpty()) {
+                Thread.sleep(5000); //TODO: remove this sleep after fix for ready check will be available
+                break;
+            }
+            Thread.sleep(5000);
+        }
+
+        if (!notMatched.isEmpty()) {
+            AddressList addressList = jsonToAddressList(apiClient.getAddresses(addressSpace, Optional.empty()));
+            notMatched = addressListMatcher.matchAddresses(addressList);
+            throw new IllegalStateException(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
+        }
+    }
+
+    private static Address lookupAddress(AddressList addressList, String address) {
+        for (Address addr : addressList.getItems()) {
+            if (addr.getSpec().getAddress().equals(address)) {
+                return addr;
+            }
+        }
+        return null;
+    }
+
+    private static Map<String, Address> checkAddressesMatching(AddressList addressList, Predicate<Address> predicate, Address... destinations) {
+        Map<String, Address> notMatchingAddresses = new HashMap<>();
+        for (Address destination : destinations) {
+            Address addressObject = lookupAddress(addressList, destination.getSpec().getAddress());
+            if (addressObject == null) {
+                notMatchingAddresses.put(destination.getSpec().getAddress(), null);
+            } else if (!predicate.test(addressObject)) {
+                notMatchingAddresses.put(destination.getSpec().getAddress(), addressObject);
+            }
+        }
+        return notMatchingAddresses;
+    }
+
+
     public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace,
                                                     Optional<String> addressName, List<String> skipAddresses) throws Exception {
         JsonObject response = apiClient.getAddresses(addressSpace, addressName);
@@ -296,5 +387,9 @@ public class AddressUtils {
         CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
         listOfAddresses.complete(convertToListAddress(response, Address.class, x -> true));
         return listOfAddresses;
+    }
+
+    public static String getTopicPrefix(boolean topicSwitch) {
+        return topicSwitch ? "topic://" : "";
     }
 }

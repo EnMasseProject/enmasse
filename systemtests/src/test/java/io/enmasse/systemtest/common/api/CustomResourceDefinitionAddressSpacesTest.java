@@ -213,7 +213,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getMetadata().getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
 
-            TestUtils.waitForDestinationsReady(apiClient, brokered, new TimeoutBudget(5, TimeUnit.MINUTES), queue, topicBrokered);
+            AddressUtils.waitForDestinationsReady(apiClient, brokered, new TimeoutBudget(5, TimeUnit.MINUTES), queue, topicBrokered);
 
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);
@@ -222,7 +222,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             assertEquals(((CliOutputData.AddressRow) data.getData(String.format("%s.%s", standard.getMetadata().getName(), topicStandard.getSpec().getAddress()))).getPlan(),
                     DestinationPlan.STANDARD_LARGE_TOPIC);
 
-            TestUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
+            AddressUtils.waitForDestinationsReady(apiClient, standard, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, topicStandard);
 
             data = new CliOutputData(KubeCMDClient.getAddress(namespace).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS);

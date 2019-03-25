@@ -91,7 +91,7 @@ class CommonTest extends TestBase {
         KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
         Thread.sleep(180_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        TestUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(10, TimeUnit.MINUTES),
+        AddressUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(10, TimeUnit.MINUTES),
                 standardAddresses.toArray(new Address[0]));
         assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
 

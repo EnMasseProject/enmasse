@@ -114,7 +114,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 consoleWebPage.getAddressItem(destination).getStatus(),
                 either(is(AddressStatus.PENDING)).or(is(AddressStatus.READY)));
 
-        TestUtils.waitForDestinationsReady(addressApiClient, sharedAddressSpace,
+        AddressUtils.waitForDestinationsReady(addressApiClient, sharedAddressSpace,
                 new TimeoutBudget(5, TimeUnit.MINUTES), destination);
 
         assertEquals(AddressStatus.READY, consoleWebPage.getAddressItem(destination).getStatus(),
