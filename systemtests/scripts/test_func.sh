@@ -125,11 +125,18 @@ function teardown_test() {
 function create_address_space() {
     NAMESPACE=$1
     ADDRESS_SPACE_NAME=$2
-    ADDRESS_SPACE_DEF=$3
-    TOKEN=$(oc whoami -t)
-    URL="${KUBERNETES_API_URL}"
-    curl -k -X POST -H "content-type: application/json" --data-binary @${ADDRESS_SPACE_DEF} -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1beta1/namespaces/${NAMESPACE}/addressspaces
-    wait_until_up 2 ${NAMESPACE}-${ADDRESS_SPACE_NAME} || return 1
+    cat <<EOF | oc create -f -
+apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+    name: ${ADDRESS_SPACE_NAME}
+    namespace: ${NAMESPACE}
+spec:
+    type: brokered
+    plan: brokered-single-broker
+    authenticationService:
+        name: standard-authservice
+EOF
 }
 
 function create_address() {
@@ -140,75 +147,41 @@ function create_address() {
     TYPE=$5
     PLAN=$6
 
-    URL="${KUBERNETES_API_URL}"
-    PAYLOAD="{\"apiVersion\": \"enmasse.io/v1beta1\", \"kind\": \"AddressList\", \"metadata\": { \"name\": \"${ADDRESS_SPACE}.${NAME}\"}, \"spec\": {\"address\": \"${ADDRESS}\", \"type\": \"${TYPE}\", \"plan\": \"${PLAN}\"}}"
-    TOKEN=$(oc whoami -t)
-    curl -k -X POST -H "content-type: application/json" -d "${PAYLOAD}" -H "Authorization: Bearer ${TOKEN}" ${URL}/apis/enmasse.io/v1beta1/namespaces/${NAMESPACE}/addresses
+    cat <<EOF | oc create -f -
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+    name: $(echo ${ADDRESS_SPACE}.${NAME//_} | sed -e 's/\(.*\)/\L\1/')
+    namespace: ${NAMESPACE}
+spec:
+    address: ${ADDRESS}
+    type: ${TYPE}
+    plan: ${PLAN}
+EOF
 }
 
 function create_user() {
-    CLI_ID=$1
-    USER=$2
-    PASSWORD=$3
+    USER=$1
+    PASSWORD=$2
+    NAMESPACE=$3
     ADDRESS_SPACE_NAME=$4
-    NEW_USER_DEF=$5
 
-    info "create new user via user:password ${USER}:${PASSWORD}; ADDRESS_SPACE: '${ADDRESS_SPACE_NAME}'"
-    # get token
-    RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
-    TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
-
-    #create user
-    curl -k -X POST -H "content-type: application/json" --data-binary @${NEW_USER_DEF} -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users
-}
-
-function join_group() {
-    CLI_ID=$1
-    USER=$2
-    PASSWORD=$3
-    ADDRESS_SPACE_NAME=$4
-    USER_NAME=$5
-    GROUP_NAME=$6
-
-    info "user: '${USER_NAME}' join group '${GROUP_NAME}'"
-    # get token
-    RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
-    TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
-
-    #GET USER ID
-    info "get user id: ${USER_NAME}"
-    TCKUSERJSON=$(curl -k -X GET -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users?search=${USER_NAME})
-    TCK_USER_ID=$(echo ${TCKUSERJSON} | jq -r '.[].id')
-    info "user id: ${TCK_USER_ID}"
-
-    #GET GROUP ID
-    info "get group id: ${GROUP_NAME}"
-    KEYCLOAK_GROUPS=$(curl -k -X GET -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/groups?search=${GROUP_NAME})
-    GROUP_ID=$(echo ${KEYCLOAK_GROUPS} | jq '.[]' | jq -r "select(.name == \"${GROUP_NAME}\") | .id")
-    info "group id: ${GROUP_ID}"
-
-    #JOIN GROUP
-    $(curl -k -X PUT -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/users/${TCK_USER_ID}/groups/${GROUP_ID})
-}
-
-function create_group() {
-    CLI_ID=$1
-    USER=$2
-    PASSWORD=$3
-    ADDRESS_SPACE_NAME=$4
-    GROUP_NAME=$5
-
-    info "create new group: '${GROUP_NAME}'"
-
-    GROUP_DEF="{\"name\":\"${GROUP_NAME}\"}"
-    echo ${GROUP_DEF}
-
-    # get token
-    RESULT=$(curl -k --data "grant_type=password&client_id=${CLI_ID}&username=${USER}&password=${PASSWORD}" https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/realms/master/protocol/openid-connect/token)
-    TOKEN=`echo ${RESULT} | sed 's/.*access_token":"//g' | sed 's/".*//g'`
-
-    #create group
-    curl -k -X POST -H "content-type: application/json" -d ${GROUP_DEF} -H "Authorization: Bearer ${TOKEN}"  https://$(oc get routes -o jsonpath='{.spec.host}' keycloak)/auth/admin/realms/${ADDRESS_SPACE_NAME}/groups/
+    cat <<EOF | oc create -f -
+apiVersion: user.enmasse.io/v1beta1
+kind: MessagingUser
+metadata:
+    name: $(echo ${ADDRESS_SPACE}.${USER//_} | sed -e 's/\(.*\)/\L\1/')
+    namespace: ${NAMESPACE}
+spec:
+    username: ${USER}
+    authentication:
+      type: password
+      password: $(echo ${PASSWORD} | base64)
+    authorization:
+    - addresses: [ "*" ]
+      operations: [ "send", "recv", "view" ]
+    - operations: [ "manage" ]
+EOF
 }
 
 function get_kubernetes_info() {
@@ -268,22 +241,6 @@ function get_docker_info() {
     FILENAME_STDOUT="docker_${CONTAINER}.stdout.log"
     FILENAME_STDERR="docker_${CONTAINER}.stderr.log"
     docker logs ${CONTAINER} > ${FILENAME_STDOUT} 2> ${FILENAME_STDERR}
-}
-
-function categorize_docker_logs {
-    LOG_DIR=${1}
-    if [[ "$(ls -A ${LOG_DIR})" ]]; then
-        for x in ${LOG_DIR}/*.log; do
-            ADDR_SPACE="$(echo "${x##*/}" | sed -e 's/^[^_]\+_\([^_]\+\)_[^_]\+\.log$/\1/')";
-            if [[ ! -d "${LOG_DIR}/${ADDR_SPACE}" ]]; then
-                mkdir "${LOG_DIR}/${ADDR_SPACE}";
-            fi
-            mv "${x}" "${LOG_DIR}/${ADDR_SPACE}"
-        done
-    else
-        warn "Directory \"${LOG_DIR}\" with docker logs is empty:"
-        ls -la "${LOG_DIR}"
-    fi
 }
 
 function stop_and_check_openshift() {
