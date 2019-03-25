@@ -43,11 +43,15 @@ Create a new directory and set the `GOPATH` environment variable:
 
 *Note*: Make sure docker daemon is in running state.
 
-#### Full build, run unit tests and build docker images:
+#### Full build, run unit tests
 
     make
 
 This can be run at the top level or within each module. You can also run the 'build', 'test', and 'package' targets individually.
+
+#### Building docker images
+
+    make docker_build
 
 #### Full build and pushing docker images to a registry
 
