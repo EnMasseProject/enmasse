@@ -251,13 +251,13 @@ objects:
           image: ${env.ROUTER_IMAGE}
           imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             httpGet:
               path: /healthz
               port: http
               scheme: HTTP
           readinessProbe:
-            initialDelaySeconds: 30
+            initialDelaySeconds: 60
             httpGet:
               path: /healthz
               port: http
