@@ -43,6 +43,12 @@ metadata:
   name: standard-authservice
 spec:
   type: standard
+  standard:
+    resources:
+      requests:
+        memory: 1Gi
+      limits:
+        memory: 1Gi
 EOF
 
 cat <<EOF | kubectl create -f -
@@ -52,6 +58,12 @@ metadata:
   name: none-authservice
 spec:
   type: none
+  none:
+    resources:
+      requests:
+        memory: 128Mi
+      limits:
+        memory: 128Mi
 EOF
 
 
