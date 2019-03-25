@@ -103,14 +103,6 @@ objects:
       }
 
       listener {
-        host: 127.0.0.1
-        port: 8080
-        authenticatePeer: no
-        metrics: true
-        http: true
-      }
-
-      listener {
         host: 0.0.0.0
         port: 8443
         saslPlugin: auth_service
@@ -259,13 +251,17 @@ objects:
           image: ${env.ROUTER_IMAGE}
           imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
-            initialDelaySeconds: 60
-            tcpSocket:
-              port: amqp
+            initialDelaySeconds: 30
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
           readinessProbe:
-            initialDelaySeconds: 60
-            tcpSocket:
-              port: amqps-probe
+            initialDelaySeconds: 30
+            httpGet:
+              path: /healthz
+              port: http
+              scheme: HTTP
           name: router
           resources:
             limits:
@@ -290,9 +286,6 @@ objects:
             protocol: TCP
           - containerPort: 56671
             name: amqps-broker
-            protocol: TCP
-          - containerPort: 56711
-            name: amqps-probe
             protocol: TCP
           volumeMounts:
           - mountPath: /etc/qpid-dispatch/ssl

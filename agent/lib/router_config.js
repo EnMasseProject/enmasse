@@ -387,7 +387,7 @@ function desired_address_config(high_level_address_definitions) {
             config.add_address({prefix:def.address, distribution:'multicast', waypoint:false});
         }
     }
-    config.add_listener({host:'0.0.0.0', port: '56711', sslProfile: 'inter_router_tls', saslMechanisms: 'EXTERNAL', authenticatePeer: true})
+    config.add_listener({host:'0.0.0.0', port: '8080', authenticatePeer: false, metrics: true, healthz: true, http: true, websockets: false, httpRootDir: invalid})
     sort_config(config);
     log.debug('mapped %j => %j', high_level_address_definitions, config);
     return config;
