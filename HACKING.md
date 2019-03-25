@@ -74,18 +74,18 @@ mkdir -p api-server-cert
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.enmasse-infra.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 
-mkdir -p standard-authservice-cert
-openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=standard-authservice.enmasse-infra.svc.cluster.local" -out standard-authservice-cert/tls.crt -keyout standard-authservice-cert/
-kubectl create secret tls standard-authservice-cert --cert=standard-authservice-cert/tls.crt --key=standard-authservice-cert/tls.key
-
-kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse-with-standard-authservice
+kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse
+kubectl apply -f templates/build/enmasse-latest/install/components/example-plans
+kubectl apply -f templates/build/enmasse-latest/install/components/example-authservices
 ```
 
 #### Deploying to an OKD instance assuming already logged in with cluster-admin permissions
 
 ```
 oc new-project enmasse-infra || oc project enmasse-infra
-oc apply -f templates/build/enmasse-latest/install/bundles/enmasse-with-standard-authservice
+oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
+oc apply -f templates/build/enmasse-latest/install/components/example-plans
+oc apply -f templates/build/enmasse-latest/install/components/example-authservices
 ```
 
 #### Running smoketests against a deployed instance
