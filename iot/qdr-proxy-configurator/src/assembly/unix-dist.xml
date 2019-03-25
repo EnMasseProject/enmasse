@@ -29,7 +29,7 @@
         <file>
             <source>${project.basedir}/build/qdr-proxy-configurator</source>
             <outputDirectory>/</outputDirectory>
-            <fileMode>0744</fileMode>
+            <fileMode>0755</fileMode>
         </file>
     </files>
 </assembly>
