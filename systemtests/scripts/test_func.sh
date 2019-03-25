@@ -135,7 +135,6 @@ spec:
     type: brokered
     plan: brokered-single-broker
     authenticationService:
-        type: standard
         name: standard-authservice
 EOF
 }
