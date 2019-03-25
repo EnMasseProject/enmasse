@@ -164,7 +164,7 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 
 	telemetryName := util.AddressName(project, "telemetry")
 	eventName := util.AddressName(project, "event")
-	commandName := util.AddressName(project, "command")
+	controlName := util.AddressName(project, "control")
 
 	existing.Spec.Username = username
 	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
@@ -203,8 +203,8 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				telemetryName + "/*",
 				eventName,
 				eventName + "/*",
-				commandName,
-				commandName + "/*",
+				controlName,
+				controlName + "/*",
 			},
 			Operations: []string{
 				"send",
