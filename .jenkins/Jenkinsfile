@@ -125,6 +125,7 @@ pipeline {
                         [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                         [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.upgrade.**'],
                         [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
+                        [$class: 'StringParameterValue', name: 'START_VERSION', value: '0.26.2'],
                 ]
             }
         }
