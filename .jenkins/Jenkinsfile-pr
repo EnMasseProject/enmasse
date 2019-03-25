@@ -1,17 +1,13 @@
 #!/usr/bin/env groovy
 def lib
 pipeline {
-    agent {
-        node {
-            label 'enmasse'
-        }
-    }
-    parameters {
-        //execute all tests as default for each new Pull request
-        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
-        string(name: 'TEST_PROFILE', defaultValue: 'systemtests-pr', description: 'maven profile for tests')
-        string(name: 'UPGRADE_FROM', defaultValue: '0.26.2', description: 'base version which is upgraded')
-    }
+//    parameters {
+//        //execute all tests as default for each new Pull request
+//        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
+//        string(name: 'TEST_PROFILE', defaultValue: 'systemtests-pr', description: 'maven profile for tests')
+//        string(name: 'UPGRADE_FROM', defaultValue: '0.26.2', description: 'base version which is upgraded')
+//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
+//    }
     options {
         timeout(time: 10, unit: 'HOURS')
         ansiColor('xterm')
@@ -25,6 +21,11 @@ pipeline {
         ANSIBLE_FORCE_COLOR = true
         OPENSHIFT_PROJECT = "enmasse-infra"
         USE_DUMMY_ADDRESS = true
+    }
+    agent {
+        node {
+            label "${params.AGENT_LABEL}"
+        }
     }
     stages {
         stage('clean') {
