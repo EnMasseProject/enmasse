@@ -28,8 +28,11 @@ public class HttpMetricsService {
     @Produces({MediaType.TEXT_HTML})
     public Response getMetrics() {
         long now = System.currentTimeMillis();
-        metrics.reportMetric(new Metric("version", new MetricValue(0, now, new MetricLabel("name", "api-server"), new MetricLabel("version", version))));
-        metrics.reportMetric(new Metric("health", new MetricValue(0, now, new MetricLabel("status", "ok"), new MetricLabel("summary", "api-server is healthy"))));
+        metrics.reportMetric(new Metric(
+            "version",
+            "The version of the api-server",
+            MetricType.gauge,
+            new MetricValue(0, now, new MetricLabel("name", "api-server"), new MetricLabel("version", version))));
         return Response.ok(formatter.format(metrics.snapshot())).build();
     }
 }

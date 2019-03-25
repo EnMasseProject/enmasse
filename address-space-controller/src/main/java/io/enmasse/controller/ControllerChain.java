@@ -88,7 +88,10 @@ public class ControllerChain implements Watcher<AddressSpace> {
             return;
         }
 
+        List<AddressSpace> updatedResources = new ArrayList<>();
+
         for (AddressSpace addressSpace : resources) {
+
             try {
                 log.info("Checking address space {}:{}", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
                 addressSpace.getStatus().setReady(true);
@@ -107,44 +110,49 @@ public class ControllerChain implements Watcher<AddressSpace> {
                 eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             } catch (Exception e) {
                 log.warn("Error processing address space {}", addressSpace.getMetadata().getName(), e);
+            } finally {
+                updatedResources.add(addressSpace);
             }
         }
 
         for (Controller controller : chain) {
             try {
-                controller.reconcileAll(resources);
+                controller.reconcileAll(updatedResources);
             } catch (Exception e) {
                 log.warn("Exception in {} reconcileAll", controller, e);
             }
         }
 
         long now = System.currentTimeMillis();
-        metrics.reportMetric(new Metric("version", new MetricValue(0, now, new MetricLabel("name", "address-space-controller"), new MetricLabel("version", version))));
-        metrics.reportMetric(new Metric("health", new MetricValue(0, now, new MetricLabel("status", "ok"), new MetricLabel("summary", "address-space-controller is healthy"))));
+        metrics.reportMetric(new Metric(
+            "version",
+            "The version of the address-space-controller",
+            MetricType.gauge,
+            new MetricValue(0, now, new MetricLabel("name", "address-space-controller"), new MetricLabel("version", version))));
 
         List<MetricValue> readyValues = new ArrayList<>();
         List<MetricValue> notReadyValues = new ArrayList<>();
-        for (AddressSpace addressSpace : resources) {
+        for (AddressSpace addressSpace : updatedResources) {
             MetricLabel[] labels = new MetricLabel[]{new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
             readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, labels));
             notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, now, labels));
         }
 
         metrics.reportMetric(new Metric(
-                "address_spaces_ready_total",
-                "Total number of address spaces in ready state",
+                "address_space_status_ready",
+                "Describes whether the address space is in a ready state",
                 MetricType.gauge,
                 readyValues));
         metrics.reportMetric(new Metric(
-                "address_spaces_not_ready_total",
-                "Total number of address spaces in a not ready state",
+                "address_space_status_not_ready",
+                "Describes whether the address space is in a not_ready state",
                 MetricType.gauge,
                 notReadyValues));
         metrics.reportMetric(new Metric(
                 "address_spaces_total",
                 "Total number of address spaces",
                 MetricType.gauge,
-                new MetricValue(resources.size(), now)));
+                new MetricValue(updatedResources.size(), now)));
 
     }
 }

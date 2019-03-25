@@ -199,8 +199,7 @@ public class AddressController implements Watcher<Address> {
         long now = System.currentTimeMillis();
 
         String componentName = "standard-controller-" + options.getInfraUuid();
-        metrics.reportMetric(new Metric("version", new MetricValue(0, now, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion()))));
-        metrics.reportMetric(new Metric("health", new MetricValue(0, now, new MetricLabel("status", "ok"), new MetricLabel("summary", componentName + " is healthy"))));
+        metrics.reportMetric(new Metric("version", "The version of the standard-controller", MetricType.gauge, new MetricValue(0, now, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion()))));
 
         MetricLabel [] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
         metrics.reportMetric(new Metric("addresses_ready_total", "Total number of addresses in ready state", MetricType.gauge, new MetricValue(ready, now, metricLabels)));
