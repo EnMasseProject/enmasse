@@ -11,6 +11,9 @@ build: build/$(CMD)
 
 build_go: build
 
+deploy:
+	$(IMAGE_ENV) mvn -Prelease deploy $(MAVEN_ARGS)
+
 package:
 	$(IMAGE_ENV) mvn package -DskipTests $(MAVEN_ARGS)
 
