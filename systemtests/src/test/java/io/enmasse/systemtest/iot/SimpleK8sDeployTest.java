@@ -19,6 +19,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,6 +35,8 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
 
 @Tag(sharedIot)
+@Tag(smoke)
+@DisabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "false")
 public class SimpleK8sDeployTest {
 
     private static final String NAMESPACE = Environment.getInstance().namespace();

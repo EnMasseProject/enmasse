@@ -5,6 +5,7 @@
 package io.enmasse.systemtest;
 
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
@@ -685,4 +686,9 @@ public abstract class Kubernetes {
         return client.secrets().inNamespace(namespace).list().getItems().stream()
                 .map(sec -> sec.getMetadata().getName()).collect(Collectors.toList()).contains(secret);
     }
+
+    public CustomResourceDefinition getCRD(String name) {
+        return client.customResourceDefinitions().withName(name).get();
+    }
+
 }

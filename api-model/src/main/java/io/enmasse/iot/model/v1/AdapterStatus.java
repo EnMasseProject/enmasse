@@ -5,7 +5,6 @@
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -22,26 +21,16 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IoTProjectSpec {
+public class AdapterStatus {
 
-    private DownstreamStrategy downstreamStrategy;
+    private String interServicePassword;
 
-    private ObjectNode configuration;
-
-    public DownstreamStrategy getDownstreamStrategy() {
-        return this.downstreamStrategy;
+    public String getInterServicePassword() {
+        return interServicePassword;
     }
 
-    public void setDownstreamStrategy(final DownstreamStrategy downstreamStrategy) {
-        this.downstreamStrategy = downstreamStrategy;
-    }
-
-    public ObjectNode getConfiguration() {
-        return configuration;
-    }
-
-    public void setConfiguration(final ObjectNode configuration) {
-        this.configuration = configuration;
+    public void setInterServicePassword(String interServicePassword) {
+        this.interServicePassword = interServicePassword;
     }
 
 }

@@ -29,6 +29,7 @@ public class IoTProjectStatus {
 
     @JsonProperty("isReady")
     private boolean ready = false;
+    private ExternalDownstreamStrategy downstreamEndpoint;
 
     public boolean isReady() {
         return ready;
@@ -36,6 +37,14 @@ public class IoTProjectStatus {
 
     public void setReady(boolean ready) {
         this.ready = ready;
+    }
+
+    public ExternalDownstreamStrategy getDownstreamEndpoint() {
+        return downstreamEndpoint;
+    }
+
+    public void setDownstreamEndpoint(ExternalDownstreamStrategy downstreamEndpoint) {
+        this.downstreamEndpoint = downstreamEndpoint;
     }
 
 }

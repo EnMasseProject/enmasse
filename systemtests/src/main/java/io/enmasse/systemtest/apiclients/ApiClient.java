@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import com.google.common.net.HttpHeaders;
+import javax.ws.rs.core.HttpHeaders;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import static java.net.HttpURLConnection.HTTP_CREATED;
@@ -76,15 +77,29 @@ public abstract class ApiClient {
 
     protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, int expectedCode,
                                        String warnMessage) {
+        responseHandler(ar, promise, expectedCode, warnMessage, true);
+    }
+
+    protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, int expectedCode,
+                                       String warnMessage, boolean throwException) {
+        responseHandler(ar, promise, (responseCode)-> responseCode == expectedCode, String.valueOf(expectedCode), warnMessage, throwException);
+    }
+
+    protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, Predicate<Integer> expectedCodePredicate,
+                                       String expectedCodeOrCodes, String warnMessage, boolean throwException) {
         try {
             if (ar.succeeded()) {
                 HttpResponse<T> response = ar.result();
                 T body = response.body();
-                if (response.statusCode() != expectedCode) {
-                    log.error("expected-code: {}, response-code: {}, body: {}", expectedCode, response.statusCode(), response.body());
+                if (expectedCodePredicate.negate().test(response.statusCode())) {
+                    log.error("expected-code: {}, response-code: {}, body: {}", expectedCodeOrCodes, response.statusCode(), response.body());
                     promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
                 } else if (response.statusCode() < HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
-                    promise.completeExceptionally(new RuntimeException(body.toString()));
+                    if(throwException) {
+                        promise.completeExceptionally(new RuntimeException(body == null ? "null" : body.toString()));
+                    }else {
+                        promise.complete(ar.result().body());
+                    }
                 } else {
                     promise.complete(ar.result().body());
                 }

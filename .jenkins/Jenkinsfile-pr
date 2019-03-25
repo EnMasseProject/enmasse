@@ -240,7 +240,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.TAG, false, false, true)
+                        lib.installEnmasse(env.TAG, false, false, true, env.TEST_PROFILE == 'systemtests-shared-iot' || env.TEST_PROFILE == 'systemtests-smoke-iot')
                     }
                 }
             }

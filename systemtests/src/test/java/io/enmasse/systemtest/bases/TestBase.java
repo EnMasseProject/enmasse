@@ -9,7 +9,6 @@ import com.google.common.collect.Ordering;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSchemaList;
-import io.enmasse.address.model.Schema;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
@@ -379,6 +378,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             userApiClient = new UserApiClient(kubernetes);
         }
         return userApiClient;
+    }
+
+    protected void setUserApiClient(UserApiClient apiClient) {
+        this.userApiClient = apiClient;
     }
 
     protected JsonObject createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
