@@ -97,34 +97,42 @@ public class TestUtils {
      */
     public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, boolean readyRequired,
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        boolean done = false;
-        int actualReplicas = 0;
-        List<Pod> pods;
+
+        int actualReplicas;
+
         do {
+
+            final List<Pod> pods;
+
             if (annotationSelector.isEmpty()) {
                 pods = kubernetes.listPods(labelSelector);
             } else {
                 pods = kubernetes.listPods(labelSelector, annotationSelector);
             }
+
             if (!readyRequired) {
                 actualReplicas = pods.size();
             } else {
                 actualReplicas = numReady(pods);
             }
-            log.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}",
-                    actualReplicas, pods.size(), expectedReplicas, readyRequired);
-            if (actualReplicas != expectedReplicas) {
-                Thread.sleep(checkInterval);
-            } else if (!readyRequired || actualReplicas == pods.size()) {
-                done = true;
-            }
-        } while (!budget.timeoutExpired() && !done);
 
-        if (!done) {
-            String message = String.format("Only '%s' out of '%s' in state 'Running' before timeout %s", actualReplicas, expectedReplicas,
-                    pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.joining(",")));
-            throw new RuntimeException(message);
-        }
+            log.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}", actualReplicas, pods.size(), expectedReplicas, readyRequired);
+
+            if (budget.timeoutExpired()) {
+                // our time budged expired ... throw exception
+                String message = String.format("Only '%s' out of '%s' in state 'Running' before timeout %s", actualReplicas, expectedReplicas,
+                        pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.joining(",")));
+                throw new RuntimeException(message);
+            }
+
+            // try again next cycle
+
+            Thread.sleep(checkInterval);
+
+        } while (actualReplicas != expectedReplicas);
+
+        // finished successfully
+
     }
 
     public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
@@ -147,7 +155,7 @@ public class TestUtils {
             if ("Running".equals(pod.getStatus().getPhase())) {
                 numReady++;
             } else {
-                log.info("POD " + pod.getMetadata().getName() + " in status : " + pod.getStatus().getPhase());
+                log.info("POD {} in status : {}", pod.getMetadata().getName(), pod.getStatus().getPhase());
             }
         }
         return numReady;
