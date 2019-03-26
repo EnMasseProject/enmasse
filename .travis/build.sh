@@ -23,7 +23,7 @@ make clean
 
 time make
 
-make docu_html
+time make docker_build
 
 echo "Tagging Docker Images"
 if use_external_registry
