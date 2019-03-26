@@ -259,7 +259,7 @@ objects:
             initialDelaySeconds: 30
             httpGet:
               path: /healthz
-              port: http-liveness
+              port: local
               scheme: HTTP
           readinessProbe:
             initialDelaySeconds: 60
@@ -281,7 +281,7 @@ objects:
             name: amqps
             protocol: TCP
           - containerPort: 7777
-            name: http-liveness
+            name: local
             protocol: TCP
           - containerPort: 8080
             name: http
