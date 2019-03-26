@@ -12,10 +12,9 @@
   ```
   oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
   
-  oc apply -f templates/build/enmasse-latest/install/components/standard-authservice
+  oc apply -f templates/build/enmasse-latest/install/components/example-authservices/standard-authservice.yaml
   oc apply -f templates/build/enmasse-latest/install/components/example-roles
   oc apply -f templates/build/enmasse-latest/install/components/example-plans
-  oc apply -f templates/build/enmasse-latest/install/components/enmasse-controller-manager
   
   oc apply -f templates/build/enmasse-latest/install/preview-bundles/iot
   oc apply -f iot/examples/iot-config.yaml
@@ -29,17 +28,18 @@
 
 * Switch back to a non-admin user
 
-* Create a new project
-
-  ```
-  oc new-project my-iot-1
-  ```
-
 * Create Managed IoT Project
 
   ```
   oc new-project myapp || oc project myapp
   oc create -f iot/examples/iot-project-managed.yaml
+  ```
+
+* Wait for the resources to be ready
+
+  ```
+  oc get iotproject
+  oc get addressspace
   ```
 
 * Create Messaging Consumer User
@@ -58,9 +58,7 @@
 * Add credentials for a device
 
   ```
-  PWD_HASH=$(echo -n "hono-secret" | openssl dgst -binary -sha512 | base64 | tr -d '\n')
-  
-  curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-hash":"'$PWD_HASH'"}]}' https://$(oc get routes device-registry --template='{{ .spec.host }}')/credentials/myapp.iot
+  curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-plain":"'hono-secret'"}]}' https://$(oc get routes device-registry --template='{{ .spec.host }}')/credentials/myapp.iot
   ```
 
 * Start a telemetry consumer
