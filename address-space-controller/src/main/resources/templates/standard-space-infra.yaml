@@ -81,6 +81,11 @@ objects:
         host: 127.0.0.1
         port: 7777
         authenticatePeer: no
+        http: true
+        metrics: false
+        healthz: true
+        websockets: false
+        httpRootDir: invalid
       }
 
       listener {
@@ -251,10 +256,10 @@ objects:
           image: ${env.ROUTER_IMAGE}
           imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             httpGet:
               path: /healthz
-              port: http
+              port: http-liveness
               scheme: HTTP
           readinessProbe:
             initialDelaySeconds: 60
@@ -274,6 +279,9 @@ objects:
             protocol: TCP
           - containerPort: 5671
             name: amqps
+            protocol: TCP
+          - containerPort: 7777
+            name: http-liveness
             protocol: TCP
           - containerPort: 8080
             name: http
