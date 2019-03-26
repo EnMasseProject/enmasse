@@ -5,4 +5,13 @@ metadata:
 spec:
   downstreamStrategy:
     managedStrategy:
-      addressSpaceName: iot
+      addressSpace:
+        name: iot
+        plan: standard-unlimited
+      addresses:
+        telemetry:
+          plan: standard-small-anycast
+        event:
+          plan: standard-small-queue
+        command:
+          plan: standard-small-anycast

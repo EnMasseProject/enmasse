@@ -7,6 +7,7 @@ package iotproject
 
 import (
 	"context"
+	"fmt"
 
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -18,6 +19,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+const AddressNameTelemetry = "telemetry"
+const AddressNameEvent = "event"
+const AddressNameCommand = "control"
+
 func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (*iotv1alpha1.ExternalDownstreamStrategy, error) {
 
 	log.Info("Reconcile project with managed strategy")
@@ -27,7 +32,7 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 	// reconcile address space
 
 	addressSpace := &enmassev1beta1.AddressSpace{
-		ObjectMeta: v1.ObjectMeta{Namespace: project.Namespace, Name: strategy.AddressSpaceName},
+		ObjectMeta: v1.ObjectMeta{Namespace: project.Namespace, Name: strategy.AddressSpace.Name},
 	}
 
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func(existing runtime.Object) error {
@@ -73,7 +78,7 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 
 	adapterUserName := "adapter"
 	adapterUser := &userv1beta1.MessagingUser{
-		ObjectMeta: v1.ObjectMeta{Namespace: project.Namespace, Name: strategy.AddressSpaceName + "." + adapterUserName},
+		ObjectMeta: v1.ObjectMeta{Namespace: project.Namespace, Name: strategy.AddressSpace.Name + "." + adapterUserName},
 	}
 
 	credentials := &iotv1alpha1.Credentials{
@@ -107,7 +112,7 @@ func (r *ReconcileIoTProject) reconcileAddress(project *iotv1alpha1.IoTProject, 
 func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, addressBaseName string, plan string, typeName string) error {
 
 	addressName := util.AddressName(project, addressBaseName)
-	addressMetaName := util.EncodeAddressSpaceAsMetaName(strategy.AddressSpaceName, addressName)
+	addressMetaName := util.EncodeAddressSpaceAsMetaName(strategy.AddressSpace.Name, addressName)
 
 	log.Info("Creating/updating address", "basename", addressBaseName, "name", addressName, "metaname", addressMetaName)
 
@@ -128,14 +133,33 @@ func (r *ReconcileIoTProject) reconcileAddressSet(ctx context.Context, project *
 
 	mt := util.MultiTool{}
 
+	if strategy.Addresses.Telemetry.Plan == "" {
+		return fmt.Errorf("'addresses.telemetry.plan' must not be empty")
+	}
+	if strategy.Addresses.Event.Plan == "" {
+		return fmt.Errorf("'addresses.event.plan' must not be empty")
+	}
+	if strategy.Addresses.Command.Plan == "" {
+		return fmt.Errorf("'addresses.command.plan' must not be empty")
+	}
+
 	mt.Run(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, "telemetry", "standard-small-anycast", "anycast")
+		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameTelemetry,
+			strategy.Addresses.Telemetry.Plan,
+			StringOrDefault(strategy.Addresses.Telemetry.Type, "anycast"),
+		)
 	})
 	mt.Run(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, "event", "standard-small-queue", "queue")
+		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameEvent,
+			strategy.Addresses.Event.Plan,
+			StringOrDefault(strategy.Addresses.Event.Type, "queue"),
+		)
 	})
 	mt.Run(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, "control", "standard-small-anycast", "anycast")
+		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommand,
+			strategy.Addresses.Command.Plan,
+			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
+		)
 	})
 
 	return mt.Error
@@ -148,8 +172,12 @@ func (r *ReconcileIoTProject) reconcileAddressSpace(project *iotv1alpha1.IoTProj
 		existing.ObjectMeta.Labels = project.Labels
 	}
 
-	existing.Spec.Type = "standard"
-	existing.Spec.Plan = "standard-unlimited"
+	if strategy.AddressSpace.Plan == "" {
+		return fmt.Errorf("'addressSpace.plan' must not be empty")
+	}
+
+	existing.Spec.Type = StringOrDefault(strategy.AddressSpace.Type, "standard")
+	existing.Spec.Plan = strategy.AddressSpace.Plan
 
 	return nil
 }
@@ -162,9 +190,9 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 
 	username := credentials.Username
 
-	telemetryName := util.AddressName(project, "telemetry")
-	eventName := util.AddressName(project, "event")
-	controlName := util.AddressName(project, "control")
+	telemetryName := util.AddressName(project, AddressNameTelemetry)
+	eventName := util.AddressName(project, AddressNameEvent)
+	controlName := util.AddressName(project, AddressNameCommand)
 
 	existing.Spec.Username = username
 	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
