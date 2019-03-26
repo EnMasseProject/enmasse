@@ -25,6 +25,7 @@
   </properties>
 
   <modules>
+    <module>iot-application-base</module>
     <module>iot-auth-service</module>
     <module>iot-device-registry</module>
     <module>iot-http-adapter</module>
