@@ -67,3 +67,11 @@ func (r *ReconcileIoTProject) ensureOwnerIsSet(owner, object v1.Object) error {
 
 	return nil
 }
+
+func StringOrDefault(value string, defaultValue string) string {
+	if value == "" {
+		return defaultValue
+	} else {
+		return value
+	}
+}

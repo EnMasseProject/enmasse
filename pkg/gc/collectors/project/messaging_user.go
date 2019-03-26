@@ -83,7 +83,7 @@ func (p *projectCollector) needUser(user *userv1alpha1.MessagingUser, project *v
 		return false
 	}
 
-	if toks[0] != project.Spec.DownstreamStrategy.ManagedDownstreamStrategy.AddressSpaceName {
+	if toks[0] != project.Spec.DownstreamStrategy.ManagedDownstreamStrategy.AddressSpace.Name {
 		// address space name doesn't match user name ... as we own it, we delete it
 		return false
 	}

@@ -56,7 +56,25 @@ type ProvidedDownstreamStrategy struct {
 }
 
 type ManagedDownstreamStrategy struct {
-	AddressSpaceName string `json:"addressSpaceName"`
+	AddressSpace AddressSpaceConfig `json:"addressSpace"`
+	Addresses    AddressesConfig    `json:"addresses"`
+}
+
+type AddressSpaceConfig struct {
+	Name string `json:"name"`
+	Plan string `json:"plan"`
+	Type string `json:"type,omitempty"`
+}
+
+type AddressesConfig struct {
+	Telemetry AddressConfig `json:"telemetry"`
+	Event     AddressConfig `json:"event"`
+	Command   AddressConfig `json:"command"`
+}
+
+type AddressConfig struct {
+	Plan string `json:"plan"`
+	Type string `json:"type,omitempty"`
 }
 
 type ExternalDownstreamStrategy struct {
