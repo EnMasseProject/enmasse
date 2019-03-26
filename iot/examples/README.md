@@ -67,6 +67,9 @@ In Hono project run
 
   ```
   cd cli
+  
+  # at least once run
+  mvn package -am
 
   oc project myapp
   oc get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].cert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
@@ -77,7 +80,7 @@ In Hono project run
 * Send telemetry message using HTTP
 
   ```
-  curl --insecure -X POST -i -u sensor1@myapp.iot:hono-secret -H 'Content-Type: application/json' --data-binary '{"temp": 5}' https://$(oc get route iot-http-adapter --template='{{.spec.host}}')/telemetry
+  curl --insecure -X POST -i -u sensor1@myapp.iot:hono-secret -H 'Content-Type: application/json' --data-binary '{"temp": 5}' https://$(oc -n enmasse-infra get route iot-http-adapter --template='{{.spec.host}}')/telemetry
   ```
 
 * Send telemetry message using MQTT
@@ -85,7 +88,7 @@ In Hono project run
   This is an example using NodePort, so you need to know your cluster IP and use in the command
 
   ```
-  mosquitto_pub -h $(oc get route iot-mqtt-adapter --template='{{.spec.host}}') -p 443 -u 'sensor1@myapp.iot' -P hono-secret -t telemetry -m '{"temp": 5}' -i 4711 --cafile /etc/pki/tls/certs/ca-bundle.crt
+  mosquitto_pub -h $(oc -n enmasse-infra get route iot-mqtt-adapter --template='{{.spec.host}}') -p 443 -u 'sensor1@myapp.iot' -P hono-secret -t telemetry -m '{"temp": 5}' -i 4711 --cafile /etc/pki/tls/certs/ca-bundle.crt
   ```
 
   **Note:** You might need to change the `-cafile` parameter to match the certificate you used for the MQTT endpoint. The value `/etc/pki/tls/certs/ca-bundle.crt` points to the system wide
@@ -93,15 +96,13 @@ In Hono project run
 
   **Note:** For this to work you will need a Mosquitto CLI version which supports TLS SNI.
 
-  In the future, we'll provide a proper examples based on the Openshift route with TLS and remove NodePort.
-
 ## Work with HAT – Hono Admin Tool
 
 * Download and install `hat` from https://github.com/ctron/hat/releases
 * Create a new context:
 
   ```
-  hat context create myapp1 --default-tenant myapp.iot https://$(oc get routes device-registry --template='{{ .spec.host }}')
+  hat context create myapp1 --default-tenant myapp.iot https://$(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
   ```
 
 * Register a new device
