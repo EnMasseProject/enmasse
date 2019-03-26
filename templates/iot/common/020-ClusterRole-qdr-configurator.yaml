@@ -4,7 +4,7 @@ kind: ClusterRole
 metadata:
   name: iot-project-configurator
   labels:
-    enmasse-component: iot
+    app: enmasse
 rules:
   - apiGroups:
     - iot.enmasse.io
@@ -30,7 +30,7 @@ kind: ClusterRoleBinding
 metadata:
   name: iot-project-configurator-project
   labels:
-    enmasse-component: iot
+    app: enmasse
 roleRef:
   kind: ClusterRole
   name: iot-project-configurator
