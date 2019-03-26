@@ -43,18 +43,15 @@ ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
 endif
 
-all: build_java build_go docker_build templates
+all: build_java build_go templates
 
 templates: docu_html
 	$(MAKE) -C templates
 
 deploy: build_java build_go
 	$(IMAGE_ENV) mvn -Prelease deploy $(MAVEN_ARGS)
-	for mod in $(GO_DIRS); do \
-		make -C $$mod deploy; \
-	done
 
-build_java:
+build_java: build_go
 	$(IMAGE_ENV) mvn package -q -B $(MAVEN_ARGS)
 
 build_go: $(GO_DIRS) test_go
@@ -89,6 +86,7 @@ coverage_go:
 
 buildpush:
 	$(MAKE)
+	$(MAKE) docker_build
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
 
@@ -107,8 +105,6 @@ template_clean:
 
 clean: clean_java clean_go docu_htmlclean template_clean
 	rm -rf build
-
-docker_build: build_java build_go
 
 coverage: java_coverage
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ coverage

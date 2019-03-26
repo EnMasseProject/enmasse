@@ -71,6 +71,13 @@ pipeline {
                 }
             }
         }
+        stage('build docker image') {
+            steps {
+                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
+                    sh 'TAG=$BUILD_TAG make docker_build'
+                }
+            }
+        }
         stage('push docker image') {
             steps {
                 withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {

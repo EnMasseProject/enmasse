@@ -72,7 +72,7 @@ def waitUntilAgentReady() {
 
 def buildEnmasse() {
     sh 'make'
-    sh 'make docker_tag'
+    sh 'make docker_build docker_tag'
 }
 
 def postAction(String coresDir, String artifactDir) {
