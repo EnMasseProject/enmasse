@@ -13,7 +13,7 @@ if [ "$MODULE" != "" ]; then
     echo "Restricting build to ${MODULE}"
     pushd $MODULE
 fi
-make && make docker_tag && make docker_push
+make && make docker_build && make docker_tag && make docker_push
 if [ "$MODULE" != "" ]; then
     popd
 fi
