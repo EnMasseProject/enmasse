@@ -112,7 +112,7 @@ case "${TEST_PROFILE}" in
     ;;
 esac
 
-kubectl get events --all-namespaces
+kubectl get events --all-namespaces --sort-by lastTimestamp
 
 if [[ -z "$DISABLE_LOG_SYNC" ]]; then
     #stop docker logging
