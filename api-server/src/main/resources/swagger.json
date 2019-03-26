@@ -2070,7 +2070,10 @@
                             "type": "object"
                         },
                         "tolerations": {
-                            "type": "array"
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
                         },
                         "priorityClassName": {
                             "type": "string"
