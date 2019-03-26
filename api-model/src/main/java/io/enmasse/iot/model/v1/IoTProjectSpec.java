@@ -4,6 +4,7 @@
  */
 package io.enmasse.iot.model.v1;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -20,6 +21,7 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class IoTProjectSpec {
 
     private DownstreamStrategy downstreamStrategy;

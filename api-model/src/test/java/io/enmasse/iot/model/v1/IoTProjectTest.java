@@ -60,15 +60,43 @@ public class IoTProjectTest {
                 .withNewSpec()
                 .withNewDownstreamStrategy()
                 .withNewManagedStrategy()
-                .withAddressSpaceName("managed")
+                .withNewAddressSpace()
+                .withName("managed")
+                .withPlan("small")
+                .withType("standard")
+                .endAddressSpace()
+                .withNewAddresses()
+                .withNewTelemetry()
+                .withPlan("medium")
+                .withType("standard")
+                .endTelemetry()
+                .withNewEvent()
+                .withPlan("medium")
+                .withType("standard")
+                .endEvent()
+                .withNewCommand()
+                .withPlan("medium")
+                .withType("standard")
+                .endCommand()
+                .endAddresses()
                 .endManagedStrategy()
                 .endDownstreamStrategy()
                 .endSpec()
                 .build();
 
         assertEquals("proj", project.getMetadata().getName());
-        assertEquals("managed", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpaceName());
+        assertEquals("managed", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        assertEquals("small", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getPlan());
+        assertEquals("standard", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getType());
+        assertAddressConfig(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddresses().getTelemetry());
+        assertAddressConfig(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddresses().getEvent());
+        assertAddressConfig(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddresses().getCommand());
         assertNull(project.getSpec().getDownstreamStrategy().getExternalStrategy());
+    }
+
+    private void assertAddressConfig(AddressConfig config) {
+        assertEquals("medium", config.getPlan());
+        assertEquals("standard", config.getType());
     }
 
     @Test
