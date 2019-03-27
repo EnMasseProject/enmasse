@@ -26,6 +26,7 @@ import java.util.Objects;
 public class AddressPlanSpec extends AbstractWithAdditionalProperties {
     private String shortDescription;
     private String addressType;
+    private Integer partitions;
     private Map<String, Double> resources = new HashMap<>();
 
     public String getShortDescription() {
@@ -52,6 +53,14 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
         this.resources = new HashMap<>(resources);
     }
 
+    public Integer getPartitions() {
+        return partitions;
+    }
+
+    public void setPartitions(Integer partitions) {
+        this.partitions = partitions;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -59,12 +68,13 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
         AddressPlanSpec that = (AddressPlanSpec) o;
         return Objects.equals(shortDescription, that.shortDescription) &&
                 Objects.equals(addressType, that.addressType) &&
+                Objects.equals(partitions, that.partitions) &&
                 Objects.equals(resources, that.resources);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(shortDescription, addressType, resources);
+        return Objects.hash(shortDescription, addressType, partitions, resources);
     }
 
     @Override
@@ -72,6 +82,7 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
         return "AddressPlanSpec{" +
                 "shortDescription='" + shortDescription + '\'' +
                 ", addressType='" + addressType + '\'' +
+                ", partitions='" + partitions + '\'' +
                 ", resources=" + resources +
                 '}';
     }

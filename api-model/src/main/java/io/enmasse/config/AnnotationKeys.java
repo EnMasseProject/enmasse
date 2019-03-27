@@ -17,7 +17,6 @@ public interface AnnotationKeys {
     String CREATED_BY = "enmasse.io/created-by";
     String CREATED_BY_UID = "enmasse.io/created-by-uid";
     String DEFINED_BY = "enmasse.io/defined-by";
-    String BROKER_ID = "enmasse.io/broker-id";
     String REALM_NAME = "enmasse.io/realm-name";
     String UUID = "enmasse.io/uuid";
     String ENDPOINT = "enmasse.io/endpoint";

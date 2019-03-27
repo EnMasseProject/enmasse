@@ -93,10 +93,7 @@ public class AddressController implements Watcher<Address> {
 
         final Map<String, ProvisionState> previousStatus = addressSet.stream()
                 .collect(Collectors.toMap(a -> a.getSpec().getAddress(),
-                                          a -> new ProvisionState(a.getStatus(),
-                                                                  a.getAnnotation(AnnotationKeys.BROKER_ID),
-                                                                  a.getAnnotation(AnnotationKeys.CLUSTER_ID),
-                                                                  a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
+                                          a -> new ProvisionState(a.getStatus(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
 
@@ -160,10 +157,7 @@ public class AddressController implements Watcher<Address> {
         int staleCount = 0;
         for (Address address : addressSet) {
             ProvisionState previous = previousStatus.get(address.getSpec().getAddress());
-            ProvisionState current = new ProvisionState(address.getStatus(),
-                    address.getAnnotation(AnnotationKeys.BROKER_ID),
-                    address.getAnnotation(AnnotationKeys.CLUSTER_ID),
-                    address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+            ProvisionState current = new ProvisionState(address.getStatus(), address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
             if (!current.equals(previous)) {
                 try {
                     addressApi.replaceAddress(address);
@@ -237,7 +231,7 @@ public class AddressController implements Watcher<Address> {
                         upgradedCluster = clusterGenerator.generateCluster(cluster.getClusterId(), 1, null, null, desiredConfig);
                     } else {
                         Address address = addresses.stream()
-                                .filter(a -> cluster.getClusterId().equals(a.getAnnotation(AnnotationKeys.CLUSTER_ID)))
+                                .filter(a -> a.getStatus().getBrokerStatuses().stream().map(BrokerStatus::getClusterId).collect(Collectors.toSet()).contains(cluster.getClusterId()))
                                 .findFirst()
                                 .orElse(null);
                         if (address != null) {
@@ -267,8 +261,10 @@ public class AddressController implements Watcher<Address> {
         for (BrokerCluster cluster : clusters) {
             int numFound = 0;
             for (Address address : addressSet) {
-                String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
-                if (cluster.getClusterId().equals(clusterId)) {
+                Set<String> clusterIds = address.getStatus().getBrokerStatuses().stream()
+                        .map(BrokerStatus::getClusterId)
+                        .collect(Collectors.toSet());
+                if (clusterIds.contains(cluster.getClusterId())) {
                     numFound++;
                 }
                 for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
@@ -439,16 +435,22 @@ public class AddressController implements Watcher<Address> {
     }
 
     private int checkBrokerStatus(Address address, Map<String, Integer> clusterOk) {
-        String clusterId = address.getAnnotation(AnnotationKeys.CLUSTER_ID);
-        if (!clusterOk.containsKey(clusterId)) {
-            if (!kubernetes.isDestinationClusterReady(clusterId)) {
-                address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");
-                clusterOk.put(clusterId, 0);
-            } else {
-                clusterOk.put(clusterId, 1);
+        Set<String> clusterIds = address.getStatus().getBrokerStatuses().stream()
+                .map(BrokerStatus::getClusterId)
+                .collect(Collectors.toSet());
+        int numOk = 0;
+        for (String clusterId : clusterIds) {
+            if (!clusterOk.containsKey(clusterId)) {
+                if (!kubernetes.isDestinationClusterReady(clusterId)) {
+                    address.getStatus().setReady(false).appendMessage("Cluster " + clusterId + " is unavailable");
+                    clusterOk.put(clusterId, 0);
+                } else {
+                    clusterOk.put(clusterId, 1);
+                }
             }
+            numOk += clusterOk.get(clusterId);
         }
-        return clusterOk.get(clusterId);
+        return numOk;
     }
 
     private boolean isPooled(AddressPlan plan) {
@@ -462,14 +464,10 @@ public class AddressController implements Watcher<Address> {
 
     private class ProvisionState {
         private final Status status;
-        private final String brokerId;
-        private final String clusterId;
         private final String plan;
 
-        public ProvisionState(Status status, String brokerId, String clusterId, String plan) {
+        public ProvisionState(Status status, String plan) {
             this.status = new Status(status);
-            this.brokerId = brokerId;
-            this.clusterId = clusterId;
             this.plan = plan;
         }
 
@@ -479,22 +477,18 @@ public class AddressController implements Watcher<Address> {
             if (o == null || getClass() != o.getClass()) return false;
             ProvisionState that = (ProvisionState) o;
             return Objects.equals(status, that.status) &&
-                    Objects.equals(brokerId, that.brokerId) &&
-                    Objects.equals(clusterId, that.clusterId) &&
                     Objects.equals(plan, that.plan);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(status, brokerId, clusterId, plan);
+            return Objects.hash(status, plan);
         }
 
         @Override
         public String toString() {
             return "ProvisionState{" +
                     "status=" + status +
-                    ", brokerId='" + brokerId + '\'' +
-                    ", clusterId='" + clusterId + '\'' +
                     ", plan='" + plan + '\'' +
                     '}';
         }

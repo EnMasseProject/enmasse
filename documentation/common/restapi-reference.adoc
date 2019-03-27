@@ -1697,6 +1697,8 @@ __required__|string
 __optional__|integer
 |**longDescription** +
 __optional__|string
+|**partitions** +
+__optional__|integer
 |**resources** +
 __required__|<<_io_enmasse_admin_v1beta2_addressplanspec_resources,resources>>
 |**shortDescription** +

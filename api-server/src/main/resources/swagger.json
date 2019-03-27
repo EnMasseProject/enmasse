@@ -2339,6 +2339,9 @@
                 "addressType": {
                     "type": "string"
                 },
+                "partitions": {
+                  "type": "integer"
+                },
                 "resources": {
                     "type": "object",
                     "properties": {

@@ -4,6 +4,8 @@
  */
 package io.enmasse.controller.standard;
 
+import java.util.Objects;
+
 class UsageInfo {
     private double used;
     private int needed;
@@ -21,6 +23,20 @@ class UsageInfo {
     public void addUsed(double added) {
         this.used += added;
         needed = (int) Math.ceil(used);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UsageInfo usageInfo = (UsageInfo) o;
+        return Double.compare(usageInfo.used, used) == 0 &&
+                needed == usageInfo.needed;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(used, needed);
     }
 
     @Override

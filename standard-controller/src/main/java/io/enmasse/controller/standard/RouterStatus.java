@@ -5,6 +5,7 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.config.AnnotationKeys;
 
 import java.util.*;
@@ -138,8 +139,15 @@ class RouterStatus {
         int ok = 0;
         for (RouterStatus routerStatus : routerStatusList) {
             for (String containerId : routerStatus.connections) {
-                if (containerId.startsWith(address.getAnnotation(AnnotationKeys.CLUSTER_ID))) {
-                    ok++;
+                boolean found = false;
+                for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                    if (containerId.startsWith(brokerStatus.getClusterId())) {
+                        ok++;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
                     break;
                 }
             }

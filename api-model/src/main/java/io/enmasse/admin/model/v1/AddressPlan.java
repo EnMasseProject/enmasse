@@ -106,6 +106,20 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
         }
     }
 
+    @Override
+    @JsonIgnore
+    public int getPartitions() {
+        if (spec != null) {
+            if (spec.getPartitions() != null) {
+                return spec.getPartitions();
+            } else {
+                return 1;
+            }
+        } else {
+            return 1;
+        }
+    }
+
     @JsonIgnore
     public List<ResourceRequest> getRequiredResources() {
         return requiredResources;

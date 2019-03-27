@@ -98,6 +98,14 @@ public class StandardControllerSchema implements SchemaProvider {
                                                         new ResourceRequest("broker", 0.4)))
                                                 .build(),
                                         new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("medium-sharded-queue").build())
+                                                .withNewSpec()
+                                                    .withAddressType("queue")
+                                                    .withResources(Map.of("router", 0.2, "broker", 1.6))
+                                                    .withPartitions(2)
+                                                .endSpec()
+                                                .build(),
+                                        new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("large-queue").build())
                                                 .withAddressType("queue")
                                                 .withRequiredResources(Arrays.asList(

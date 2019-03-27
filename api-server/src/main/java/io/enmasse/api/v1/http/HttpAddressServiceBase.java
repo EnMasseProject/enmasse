@@ -200,8 +200,6 @@ public class HttpAddressServiceBase {
             throw new BadRequestException("Cannot change topic of address " + address.getMetadata().getName() + " from " + existing.getSpec().getTopic() + " to " + address.getSpec().getTopic());
         }
 
-        overrideAnnotation(existing, address, AnnotationKeys.BROKER_ID);
-        overrideAnnotation(existing, address, AnnotationKeys.CLUSTER_ID);
         overrideAnnotation(existing, address, AnnotationKeys.APPLIED_PLAN);
         overrideAnnotation(existing, address, AnnotationKeys.INFRA_UUID);
         overrideLabel(existing, address, LabelKeys.ADDRESS_SPACE); //  Aren't these labels applied to the underlying cm rather than the address?
