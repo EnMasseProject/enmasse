@@ -6,6 +6,8 @@ package io.enmasse.systemtest.cmdclients;
 
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.fabric8.kubernetes.api.model.Pod;
+
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -106,6 +108,13 @@ public class KubeCMDClient extends CmdClient {
     public static ExecutionResultData getAddress(String namespace) {
         List<String> getCmd = getRessourcesCmd("get", "addresses", namespace, Optional.of("wide"));
         return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static void dumpPodLogs (final Pod pod) {
+        // we cannot use --all-containers, since kubectl is too old
+        for ( var c : pod.getStatus().getContainerStatuses() ) {
+            execute(DEFAULT_SYNC_TIMEOUT, true, CMD, "logs", pod.getMetadata().getName(), "-c", c.getName());
+        }
     }
 
     /**

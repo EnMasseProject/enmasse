@@ -154,6 +154,7 @@ public class SimpleK8sDeployTest {
             TestUtils.waitUntilCondition("IoT Config to deploy", () -> allDeploymentsPresent(), budget);
             TestUtils.waitForNReplicas(this.client , EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
         } catch ( Exception e ) {
+            TestUtils.streamNonReadyPods(this.client, NAMESPACE).forEach(KubeCMDClient::dumpPodLogs);
             KubeCMDClient.describePods(NAMESPACE);
             throw e;
         }
