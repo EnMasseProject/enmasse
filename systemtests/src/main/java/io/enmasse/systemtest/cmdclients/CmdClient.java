@@ -10,12 +10,17 @@ import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.executor.Executor;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
 import java.util.List;
 
 public abstract class CmdClient {
     private static Logger log = CustomLogger.getLogger();
     protected static final Object lock = new Object();
     protected static final Environment env = Environment.getInstance();
+
+    protected static ExecutionResultData execute(int timeout, boolean logToOutput, String ...cmd) {
+        return execute(Arrays.asList(cmd),timeout, logToOutput);
+    }
 
     protected static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput) {
         try {

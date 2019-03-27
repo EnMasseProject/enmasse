@@ -150,8 +150,13 @@ public class SimpleK8sDeployTest {
 
         final TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
 
-        TestUtils.waitUntilCondition("IoT Config to deploy", () -> allDeploymentsPresent(), budget);
-        TestUtils.waitForNReplicas(this.client , EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+        try {
+            TestUtils.waitUntilCondition("IoT Config to deploy", () -> allDeploymentsPresent(), budget);
+            TestUtils.waitForNReplicas(this.client , EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+        } catch ( Exception e ) {
+            KubeCMDClient.describePods(NAMESPACE);
+            throw e;
+        }
     }
 
     private boolean allDeploymentsPresent () {
