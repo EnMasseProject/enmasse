@@ -8,6 +8,8 @@ TEST_PROFILE=$2
 TESTCASE=$3
 failure=0
 
+: ${KUBE_OPERATION:=create}
+
 BASE_DIR="${CURDIR}/../../"
 API_URL=$(kubectl config view --minify | grep server | cut -f 2- -d ":" | tr -d " ")
 API_TOKEN=$(kubectl describe secret $(kubectl get serviceaccount default -o jsonpath='{.secrets[0].name}') | grep -E '^token' | cut -f2 -d':' | tr -d " ")
@@ -32,10 +34,16 @@ mkdir -p api-server-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 
+if [ "$ONLY_PULL_ONCE" = "true" ]; then
+	# disable loading images always when running on travis
+	# we don't get refresh images, so we can speed this up
+	sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ${ENMASSE_DIR}/install/*/*/*.yaml
+fi
+
 sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
-kubectl create -f ${ENMASSE_DIR}/install/bundles/enmasse
-kubectl create -f ${ENMASSE_DIR}/install/components/example-plans
-kubectl create -f ${ENMASSE_DIR}/install/components/example-roles
+kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/bundles/enmasse
+kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/example-plans
+kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/example-roles
 cat <<EOF | kubectl create -f -
 apiVersion: admin.enmasse.io/v1beta1
 kind: AuthenticationService
@@ -71,12 +79,12 @@ if [ "$DEPLOY_IOT" = "true" ]; then
     echo "Deploying IoT components"
     sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*/*.yaml
 
-    "${BASE_DIR}/iot/examples/k8s-tls/create"
+    NAMESPACE="${KUBERNETES_NAMESPACE}" "${BASE_DIR}/iot/examples/k8s-tls/create"
     NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
 
-    kubectl create -f ${ENMASSE_DIR}/install/components/iot/api
-    kubectl create -f ${ENMASSE_DIR}/install/components/iot/common
-    kubectl create -f ${ENMASSE_DIR}/install/components/iot/operator
+    kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/iot/api
+    kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/iot/common
+    kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/iot/operator
 else
     echo "Not deploying IoT components"
 fi
