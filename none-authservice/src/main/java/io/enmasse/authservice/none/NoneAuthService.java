@@ -5,66 +5,41 @@
 package io.enmasse.authservice.none;
 
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonServer;
 import io.vertx.proton.ProtonServerOptions;
-import org.apache.qpid.proton.amqp.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class NoneAuthService {
     private static final Logger log = LoggerFactory.getLogger(NoneAuthService.class);
-    private static final Symbol AUTHENTICATED_IDENTITY = Symbol.getSymbol("authenticated-identity");
-    private static final Symbol GROUPS = Symbol.getSymbol("groups");
 
     public static void main(String[] args) {
         Map<String, String> env = System.getenv();
         String certDir = env.getOrDefault("CERT_DIR", "/opt/none-authservice/cert");
         int listenPort = Integer.parseInt(env.getOrDefault("LISTENPORT", "5671"));
+        int healthPort = Integer.parseInt(env.getOrDefault("HEALTHPORT", "8080"));
 
         Vertx vertx = Vertx.vertx();
 
-        ProtonServerOptions options = new ProtonServerOptions();
-        options.setSsl(true);
-        options.setPemKeyCertOptions(new PemKeyCertOptions()
-                .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
-                .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        ProtonServerOptions protonServerOptions = new ProtonServerOptions()
+                .setSsl(true)
+                .setPort(listenPort)
+                .setHost("0.0.0.0")
+                .setPemKeyCertOptions(new PemKeyCertOptions()
+                        .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                        .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        SaslServer saslServer = new SaslServer(protonServerOptions);
 
-        ProtonServer server = ProtonServer.create(vertx, options);
-        server.connectHandler(NoneAuthService::connectHandler);
-        server.saslAuthenticatorFactory(NoneAuthServiceAuthenticator::new);
-        server.listen(listenPort, "0.0.0.0", result -> {
-            if (result.succeeded()) {
-                log.info("Listening on {}", listenPort);
-            } else {
-                log.error("Error listening on {}", listenPort, result.cause());
-            }
-        });
-    }
+        HttpServerOptions httpServerOptions = new HttpServerOptions()
+                .setHost("127.0.0.1")
+                .setPort(healthPort);
+        HealthServer healthServer = new HealthServer(httpServerOptions);
 
-    private static void connectHandler(ProtonConnection connection) {
-        connection.setContainer("none-authservice");
-        connection.openHandler(conn -> {
-            Map<Symbol, Object> properties = new HashMap<>();
-
-            properties.put(AUTHENTICATED_IDENTITY, Collections.singletonMap("sub", "anonymous"));
-            properties.put(GROUPS, Collections.singletonList("manage"));
-
-            connection.setProperties(properties);
-            connection.open();
-            connection.close();
-
-        }).closeHandler(conn -> {
-            connection.close();
-            connection.disconnect();
-        }).disconnectHandler(protonConnection -> {
-            connection.disconnect();
-        });
+        vertx.deployVerticle(saslServer);
+        vertx.deployVerticle(healthServer);
     }
 }
