@@ -64,17 +64,17 @@ public class SimpleK8sDeployTest {
         secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
         secrets.put("iot-device-registry", "systemtests-iot-device-registry-tls");
 
-        var c64 = new ContainerConfigBuilder()
+        var r1 = new ContainerConfigBuilder()
                 .withNewResources().addToLimits("memory", new Quantity("64Mi")).endResources()
                 .build();
-        var c128 = new ContainerConfigBuilder()
-                .withNewResources().addToLimits("memory", new Quantity("128Mi")).endResources()
+        var r2 = new ContainerConfigBuilder()
+                .withNewResources().addToLimits("memory", new Quantity("256Mi")).endResources()
                 .build();
 
         var commonContainers = new CommonAdapterContainersBuilder()
-                .withNewAdapterLike(c128).endAdapter()
-                .withNewProxyLike(c64).endProxy()
-                .withNewProxyConfiguratorLike(c64).endProxyConfigurator()
+                .withNewAdapterLike(r2).endAdapter()
+                .withNewProxyLike(r1).endProxy()
+                .withNewProxyConfiguratorLike(r1).endProxyConfigurator()
                 .build();
 
         IoTConfig config = new IoTConfigBuilder()
@@ -109,20 +109,20 @@ public class SimpleK8sDeployTest {
                 .withNewServices()
 
                 .withNewAuthentication()
-                .withNewContainerLike(c128).endContainer()
+                .withNewContainerLike(r2).endContainer()
                 .endAuthentication()
 
                 .withNewTenant()
-                .withNewContainerLike(c128).endContainer()
+                .withNewContainerLike(r2).endContainer()
                 .endTenant()
 
                 .withNewCollector()
-                .withNewContainerLike(c64).endContainer()
+                .withNewContainerLike(r1).endContainer()
                 .endCollector()
 
                 .withNewDeviceRegistry()
                 .withNewFile()
-                .withNewContainerLike(c128).endContainer()
+                .withNewContainerLike(r2).endContainer()
                 .endFile()
                 .endDeviceRegistry()
 
