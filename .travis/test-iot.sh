@@ -5,4 +5,4 @@ source ${CURDIR}/common.sh
 
 TAG=${TAG:-latest}
 
-DEPLOY_IOT=true ONLY_PULL_ONCE=true time ./systemtests/scripts/run_test_kubernetes.sh templates/build/enmasse-${TAG} "smoke-iot"
+DEPLOY_IOT=true time ./systemtests/scripts/run_test_kubernetes.sh templates/build/enmasse-${TAG} "smoke-iot"

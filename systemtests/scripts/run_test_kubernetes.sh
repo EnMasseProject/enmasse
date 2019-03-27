@@ -34,12 +34,6 @@ mkdir -p api-server-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 
-if [ "$ONLY_PULL_ONCE" = "true" ]; then
-	# disable loading images always when running on travis
-	# we don't get refresh images, so we can speed this up
-	sed -i "s/imagePullPolicy: Always/imagePullPolicy: IfNotPresent/g" ${ENMASSE_DIR}/install/*/*/*.yaml
-fi
-
 sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
 kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/bundles/enmasse
 kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/example-plans
