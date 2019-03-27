@@ -33,3 +33,7 @@ go/
 # Documentation specific
 documentation/html
 scripts/swagger2markup.jar
+
+# Testing output
+artifacts/
+api-server-cert/
