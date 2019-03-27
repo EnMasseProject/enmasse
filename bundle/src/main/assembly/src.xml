@@ -53,6 +53,10 @@
                 <exclude>.github/**</exclude>
                 <exclude>.travis*/**</exclude>
                 <exclude>.jenkins*/**</exclude>
+
+                <!-- Golang vendor folder -->
+                <exclude>go/**</exclude>
+                <exclude>vendor/**</exclude>
             </excludes>
         </fileSet>
     </fileSets>
