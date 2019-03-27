@@ -36,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -150,15 +151,31 @@ public class TestUtils {
      * @return
      */
     private static int numReady(List<Pod> pods) {
-        int numReady = 0;
-        for (Pod pod : pods) {
-            if ("Running".equals(pod.getStatus().getPhase())) {
-                numReady++;
-            } else {
+        return (int)pods.stream().filter(pod -> isPodReady(pod, true)).count();
+    }
+
+    private static boolean isPodReady(final Pod pod, final boolean doLog) {
+
+        if (!"Running".equals(pod.getStatus().getPhase())) {
+            if (doLog) {
                 log.info("POD {} in status : {}", pod.getMetadata().getName(), pod.getStatus().getPhase());
             }
+            return false;
         }
-        return numReady;
+
+        var nonReadyContainers = pod.getStatus().getContainerStatuses().stream()
+            .filter(cs -> !Boolean.TRUE.equals(cs.getReady()))
+            .map(ContainerStatus::getName)
+            .collect(Collectors.toList());
+
+        if ( !nonReadyContainers.isEmpty()) {
+            if(doLog) {
+                log.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
+            }
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -269,6 +286,17 @@ public class TestUtils {
                 .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
                         && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Get list of all non-ready pods
+     *
+     * @param kubernetes client for manipulation with kubernetes cluster
+     * @return
+     */
+    public static Stream<Pod> streamNonReadyPods(Kubernetes kubernetes, String namespace) {
+        return kubernetes.listPods(namespace).stream()
+                .filter(pod -> !isPodReady(pod, false));
     }
 
     public static List<Pod> listBrokerPods(Kubernetes kubernetes) {
