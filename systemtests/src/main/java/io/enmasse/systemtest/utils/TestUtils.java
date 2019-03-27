@@ -151,13 +151,26 @@ public class TestUtils {
      */
     private static int numReady(List<Pod> pods) {
         int numReady = 0;
+
         for (Pod pod : pods) {
-            if ("Running".equals(pod.getStatus().getPhase())) {
-                numReady++;
-            } else {
+            if (!"Running".equals(pod.getStatus().getPhase())) {
                 log.info("POD {} in status : {}", pod.getMetadata().getName(), pod.getStatus().getPhase());
+                continue;
             }
+
+            var nonReadyContainers = pod.getStatus().getContainerStatuses().stream()
+                .filter(cs -> !Boolean.TRUE.equals(cs.getReady()))
+                .map(ContainerStatus::getName)
+                .collect(Collectors.toList());
+
+            if ( !nonReadyContainers.isEmpty()) {
+                log.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
+                continue;
+            }
+
+            numReady++;
         }
+
         return numReady;
     }
 
