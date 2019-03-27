@@ -105,6 +105,10 @@ spec:
                   type: string
                 updatePersistentVolumeClaim:
                   type: boolean
+                connectorIdleTimeout:
+                  type: integer
+                connectorWorkerThreads:
+                  type: integer
             router:
               type: object
               properties:
@@ -135,4 +139,8 @@ spec:
                 minReplicas:
                   type: integer
                 linkCapacity:
+                  type: integer
+                idleTimeout:
+                  type: integer
+                workerThreads:
                   type: integer

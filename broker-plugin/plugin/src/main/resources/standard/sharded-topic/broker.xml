@@ -137,6 +137,8 @@ under the License.
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
           <param key="containerId" value="$TOPIC_NAME-in" />
           <param key="clusterId" value="$TOPIC_NAME" />
+          <param key="idleTimeoutMs" value="$CONNECTOR_IN_IDLE_TIMEOUT_MS" />
+          <param key="nettyThreads" value="$CONNECTOR_IN_NETTY_THREADS" />
         </connector-service>
         <connector-service name="address-connector-out">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
@@ -144,6 +146,8 @@ under the License.
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
           <param key="containerId" value="$TOPIC_NAME-out" />
           <param key="clusterId" value="$TOPIC_NAME" />
+          <param key="idleTimeoutMs" value="$CONNECTOR_OUT_IDLE_TIMEOUT_MS" />
+          <param key="nettyThreads" value="$CONNECTOR_OUT_NETTY_THREADS" />
         </connector-service>
       </connector-services>
    </core>

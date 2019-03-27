@@ -179,6 +179,14 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                 parameters.put(TemplateParameter.ROUTER_HANDSHAKE_TIMEOUT, String.valueOf(standardInfraConfig.getSpec().getRouter().getHandshakeTimeout()));
             }
 
+            if (standardInfraConfig.getSpec().getRouter().getIdleTimeout() != null) {
+                parameters.put(TemplateParameter.ROUTER_IDLE_TIMEOUT, String.valueOf(standardInfraConfig.getSpec().getRouter().getIdleTimeout()));
+            }
+
+            if (standardInfraConfig.getSpec().getRouter().getWorkerThreads() != null) {
+                parameters.put(TemplateParameter.ROUTER_WORKER_THREADS, String.valueOf(standardInfraConfig.getSpec().getRouter().getWorkerThreads()));
+            }
+
         }
 
         if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getResources() != null && standardInfraConfig.getSpec().getAdmin().getResources().getMemory() != null) {

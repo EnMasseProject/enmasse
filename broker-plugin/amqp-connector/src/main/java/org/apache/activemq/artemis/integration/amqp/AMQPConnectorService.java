@@ -53,18 +53,19 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    private final ActiveMQServer server;
    private volatile RemotingConnection connection;
    private final ExecutorService closeExecutor = Executors.newSingleThreadExecutor();
-   private final ExecutorService threadPool = Executors.newFixedThreadPool(4);
+   private final ExecutorService nettyThreadPool;
    private final ScheduledExecutorService scheduledExecutorService;
    private final ProtonClientConnectionManager lifecycleHandler;
    private volatile boolean started = false;
    private final Map<String, Object> connectorConfig;
 
-   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<SubscriberInfo> subscriberInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService) {
+   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<SubscriberInfo> subscriberInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, ExecutorService nettyThreadPool, int idleTimeout) {
       this.name = connectorName;
       this.connectorConfig = connectorConfig;
       this.server = server;
       this.scheduledExecutorService = scheduledExecutorService;
-      AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.singletonMap(groupSymbol, groupId), 5000);
+      this.nettyThreadPool = nettyThreadPool;
+      AMQPClientConnectionFactory factory = new AMQPClientConnectionFactory(server, containerId, Collections.singletonMap(groupSymbol, groupId), idleTimeout);
       boolean sslEnabled = ConfigurationHelper.getBooleanProperty(TransportConstants.SSL_ENABLED_PROP_NAME, TransportConstants.DEFAULT_SSL_ENABLED, connectorConfig);
 
       ClientSASLFactory saslClientFactory = null;
@@ -104,7 +105,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       scheduledExecutorService.submit(() -> {
          ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
          ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
-         NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, threadPool, server.getScheduledPool(), protocolManager);
+         NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, nettyThreadPool, server.getScheduledPool(), protocolManager);
          connector.start();
          Connection connection = connector.createConnection();
 
@@ -129,7 +130,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
             lifecycleHandler.stop();
          }
          closeExecutor.shutdown();
-         threadPool.shutdown();
+         nettyThreadPool.shutdown();
          ActiveMQAMQPLogger.LOGGER.infov("Stopped connector {0}", name);
       });
    }

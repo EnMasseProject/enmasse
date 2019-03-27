@@ -60,8 +60,10 @@ objects:
       router {
         mode: interior
         id: ${HOSTNAME}
+        workerThreads: ${ROUTER_WORKER_THREADS}
         defaultDistribution: unavailable
         allowResumableLinkRoute: false
+        timestampsInUTC: true
       }
 
       sslProfile {
@@ -93,6 +95,7 @@ objects:
         port: 5672
         saslPlugin: auth_service
         authenticatePeer: yes
+        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
         initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
       }
@@ -104,6 +107,7 @@ objects:
         authenticatePeer: yes
         sslProfile: inter_router_tls
         saslMechanisms: EXTERNAL
+        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
       }
 
@@ -114,6 +118,7 @@ objects:
         sslProfile: ssl_details
         http: true
         authenticatePeer: yes
+        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
       }
 
@@ -130,6 +135,7 @@ objects:
         sslProfile: ssl_details
         requireSsl: true
         authenticatePeer: yes
+        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
         initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
       }
@@ -147,6 +153,7 @@ objects:
         sslProfile: inter_router_tls
         saslMechanisms: EXTERNAL
         authenticatePeer: yes
+        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
       }
 
@@ -157,6 +164,7 @@ objects:
         saslMechanisms: EXTERNAL
         role: route-container
         authenticatePeer: yes
+        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
       }
 
@@ -694,3 +702,9 @@ parameters:
 - description: Memory limits for router
   name: ROUTER_MEMORY_LIMIT
   value: 512Mi
+- description: Idle timeout for router listeners
+  name: ROUTER_IDLE_TIMEOUT
+  value: '16'
+- description: Router worker threads
+  name: ROUTER_WORKER_THREADS
+  value: '4'

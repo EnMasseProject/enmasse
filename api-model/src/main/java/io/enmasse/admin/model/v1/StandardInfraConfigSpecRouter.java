@@ -22,13 +22,15 @@ import io.sundr.builder.annotations.Inline;
         refs = {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity", "handshakeTimeout", "podTemplate"})
+@JsonPropertyOrder({"minReplicas", "resources", "linkCapacity", "handshakeTimeout", "idleTimeout", "workerThreads", "podTemplate"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecRouterResources resources;
     private Integer minReplicas;
     private Integer linkCapacity;
     private Integer handshakeTimeout;
+    private Integer idleTimeout;
+    private Integer workerThreads;
     private PodTemplateSpec podTemplate;
 
     public void setResources(StandardInfraConfigSpecRouterResources resources) {
@@ -71,6 +73,22 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         this.podTemplate = podTemplate;
     }
 
+    public Integer getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    public void setIdleTimeout(Integer idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
+
+    public Integer getWorkerThreads() {
+        return workerThreads;
+    }
+
+    public void setWorkerThreads(Integer workerThreads) {
+        this.workerThreads = workerThreads;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -79,13 +97,15 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
         return Objects.equals(resources, that.resources) &&
                 Objects.equals(minReplicas, that.minReplicas) &&
                 Objects.equals(handshakeTimeout, that.handshakeTimeout) &&
+                Objects.equals(idleTimeout, that.idleTimeout) &&
                 Objects.equals(linkCapacity, that.linkCapacity) &&
+                Objects.equals(workerThreads, that.workerThreads) &&
                 Objects.equals(podTemplate, that.podTemplate);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, linkCapacity, minReplicas, handshakeTimeout, podTemplate);
+        return Objects.hash(resources, linkCapacity, minReplicas, handshakeTimeout, idleTimeout, workerThreads, podTemplate);
     }
 
     @Override
@@ -95,6 +115,8 @@ public class StandardInfraConfigSpecRouter extends AbstractWithAdditionalPropert
                 ", minReplicas=" + minReplicas +
                 ", linkCapacity=" + linkCapacity +
                 ", handshakeTimeout=" + handshakeTimeout +
+                ", idleTimeout=" + idleTimeout +
+                ", workerThreads=" + workerThreads +
                 ", podTemplate=" + podTemplate +
                 '}';
     }

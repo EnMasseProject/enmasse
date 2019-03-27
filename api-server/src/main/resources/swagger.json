@@ -2112,6 +2112,12 @@
                 },
                 "updatePersistentVolumeClaim": {
                     "type": "boolean"
+                },
+                "connectorIdleTimeout": {
+                    "type": "integer"
+                },
+                "connectorWorkerThreads": {
+                    "type": "integer"
                 }
             }
         },
@@ -2133,6 +2139,15 @@
                     "type": "integer"
                 },
                 "linkCapacity": {
+                    "type": "integer"
+                },
+                "initialHandshakeTimeout": {
+                    "type": "integer"
+                },
+                "idleTimeout": {
+                    "type": "integer"
+                },
+                "workerThreads": {
                     "type": "integer"
                 }
             }
