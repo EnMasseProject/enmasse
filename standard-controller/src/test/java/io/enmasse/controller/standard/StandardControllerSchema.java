@@ -139,11 +139,18 @@ public class StandardControllerSchema implements SchemaProvider {
                                                         new ResourceRequest("broker", 0.2)))
                                                 .build(),
                                         new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("large-topic").build())
+                                                .withAddressType("topic")
+                                                .withRequiredResources(Arrays.asList(
+                                                        new ResourceRequest("router", 0.2),
+                                                        new ResourceRequest("broker", 1.0)))
+                                                .build(),
+                                        new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("xlarge-topic").build())
                                                 .withAddressType("topic")
                                                 .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.1),
-                                                        new ResourceRequest("broker", 1.0)))
+                                                        new ResourceRequest("router", 0.2),
+                                                        new ResourceRequest("broker", 2.0)))
                                                 .build()))
                                 .build(),
                         new AddressTypeBuilder()

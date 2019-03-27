@@ -18,6 +18,7 @@ import org.mockito.internal.util.collections.Sets;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.Phase.Active;
 import static io.enmasse.address.model.Phase.Configuring;
@@ -157,6 +158,7 @@ public class AddressProvisionerTest {
 
         AddressProvisioner provisioner = new ProvisionerTestFixture().addressProvisioner;
         Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
+        id = 2;
 
         Address largeQueue = createQueue("q4", "xlarge-queue");
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(largeQueue), Sets.newSet(largeQueue));
@@ -376,6 +378,36 @@ public class AddressProvisionerTest {
     }
 
     @Test
+    public void testProvisioningShardedTopic() throws Exception {
+        Set<Address> addresses = new HashSet<>();
+        addresses.add(createAddress("a1", "anycast", "small-anycast"));
+
+        AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
+                new ResourceAllowance("broker", 3),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4))).addressProvisioner;
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(addresses);
+
+        Address t1 = createAddress("t1", "topic", "xlarge-topic");
+        Address t2 = createAddress("t2", "topic", "large-topic");
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(t1, t2), Sets.newSet(t1, t2));
+
+        when(generator.generateCluster(eq(provisioner.getShardedClusterId(t1)), anyInt(), eq(t1), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(t1), new KubernetesList()));
+        when(generator.generateCluster(eq(provisioner.getShardedClusterId(t2)), anyInt(), eq(t2), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(t2), new KubernetesList()));
+        provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, Sets.newSet(t1, t2));
+
+        assertTrue(t1.getStatus().getMessages().isEmpty(), t1.getStatus().getMessages().toString());
+        assertThat(t1.getStatus().getPhase(), is(Phase.Configuring));
+        assertThat(t1.getStatus().getBrokerStatuses().get(0).getContainerId(), is("t1"));
+        verify(generator).generateCluster(eq(provisioner.getShardedClusterId(t1)), eq(2), eq(t1), any(), any());
+
+        assertTrue(t2.getStatus().getMessages().isEmpty(), t2.getStatus().getMessages().toString());
+        assertThat(t2.getStatus().getPhase(), is(Phase.Configuring));
+        assertThat(t2.getStatus().getBrokerStatuses().get(0).getContainerId(), is("t2"));
+        verify(generator).generateCluster(eq(provisioner.getShardedClusterId(t2)), eq(1), eq(t2), any(), any());
+    }
+
+    @Test
     public void testProvisioningSharded() throws Exception {
         Set<Address> addresses = new HashSet<>();
         addresses.add(createAddress("a1", "anycast", "small-anycast"));
@@ -390,19 +422,24 @@ public class AddressProvisionerTest {
         Address q2 = createQueue("q2", "large-queue");
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Sets.newSet(q1, q2), Sets.newSet(q1, q2));
 
-        when(generator.generateCluster(eq(provisioner.getShardedClusterId(q1)), anyInt(), eq(q1), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(q1), new KubernetesList()));
-        when(generator.generateCluster(eq(provisioner.getShardedClusterId(q2)), anyInt(), eq(q2), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(q2), new KubernetesList()));
+        when(generator.generateCluster(eq("broker-1234-0"), anyInt(), any(), any(), any())).thenReturn(new BrokerCluster("broker-1234-0", new KubernetesList()));
+        when(generator.generateCluster(eq("broker-1234-1"), anyInt(), any(), any(), any())).thenReturn(new BrokerCluster("broker-1234-1", new KubernetesList()));
+        when(generator.generateCluster(eq("broker-1234-2"), anyInt(), any(), any(), any())).thenReturn(new BrokerCluster("broker-1234-2", new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), new ArrayList<>(), neededMap, Sets.newSet(q1, q2));
 
         assertTrue(q1.getStatus().getMessages().isEmpty(), q1.getStatus().getMessages().toString());
         assertThat(q1.getStatus().getPhase(), is(Phase.Configuring));
-        assertThat(q1.getStatus().getBrokerStatuses().get(0).getContainerId(), is("q1"));
-        verify(generator).generateCluster(eq(provisioner.getShardedClusterId(q1)), eq(2), eq(q1), any(), any());
+        assertThat(q1.getStatus().getBrokerStatuses().size(), is(2));
+        assertTrue(q1.getStatus().getBrokerStatuses().stream().map(BrokerStatus::getContainerId).collect(Collectors.toSet()).contains("broker-1234-1-0"));
+        assertTrue(q1.getStatus().getBrokerStatuses().stream().map(BrokerStatus::getContainerId).collect(Collectors.toSet()).contains("broker-1234-2-0"));
+        verify(generator).generateCluster(eq("broker-1234-1"), eq(1), any(), any(), any());
+        verify(generator).generateCluster(eq("broker-1234-2"), eq(1), any(), any(), any());
 
         assertTrue(q2.getStatus().getMessages().isEmpty(), q2.getStatus().getMessages().toString());
         assertThat(q2.getStatus().getPhase(), is(Phase.Configuring));
-        assertThat(q2.getStatus().getBrokerStatuses().get(0).getContainerId(), is("q2"));
-        verify(generator).generateCluster(eq(provisioner.getShardedClusterId(q2)), eq(1), eq(q2), any(), any());
+        assertThat(q2.getStatus().getBrokerStatuses().size(), is(1));
+        assertThat(q2.getStatus().getBrokerStatuses().get(0).getContainerId(), is("broker-1234-0-0"));
+        verify(generator).generateCluster(eq("broker-1234-0"), eq(1), any(), any(), any());
     }
 
     @Test
@@ -486,8 +523,9 @@ public class AddressProvisionerTest {
         assertNotEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
+    /*
     @Test
-    public void testSwitchShardedToShardedQuotaCheck() throws Exception {
+    public void testReuseExistingBrokerWhenSharding() throws Exception {
 
         AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
                 new ResourceAllowance("broker", 2),
@@ -514,6 +552,7 @@ public class AddressProvisionerTest {
         assertThat(q1.getStatus().getPhase(), is(Configuring));
         assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
+    */
 
     @Test
     public void testScalingRouter() {
@@ -619,8 +658,8 @@ public class AddressProvisionerTest {
                 new ResourceAllowance("router", 1),
                 new ResourceAllowance("aggregate", 3))).addressProvisioner;
 
-        Address t1 = createAddress("t1", "topic", "xlarge-topic");
-        Address t2 = createAddress("t2", "topic", "xlarge-topic");
+        Address t1 = createAddress("t1", "topic", "large-topic");
+        Address t2 = createAddress("t2", "topic", "large-topic");
         Address s1 = createSubscription("s1", "t1", "small-subscription");
         Set<Address> addressSet = Sets.newSet(
                 t1,
@@ -653,7 +692,7 @@ public class AddressProvisionerTest {
                 new ResourceAllowance("router", 1),
                 new ResourceAllowance("aggregate", 3))).addressProvisioner;
 
-        Address t1 = createAddress("t1", "topic", "xlarge-topic");
+        Address t1 = createAddress("t1", "topic", "large-topic");
         Address s1 = createSubscription("s1", "t1", "large-subscription");
         Set<Address> addressSet = Sets.newSet(
                 t1,

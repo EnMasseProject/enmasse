@@ -80,14 +80,14 @@ public class AddressProvisioner {
             } else if (resourceRequest.getKey().equals("router")) {
                 addToUsage(usageMap, "all", "router", resourceRequest.getValue());
 
-            } else if (resourceRequest.getKey().equals("broker") && resourceRequest.getValue() / addressPlan.getPartitions() < 1) {
+            } else if (resourceRequest.getKey().equals("broker") && ("queue".equals(addressType.getName()) || resourceRequest.getValue() < 1)) {
                 if (address.getStatus().getBrokerStatuses().isEmpty()) {
                     log.warn("Unexpected pooled address without assigned cluster: " + address.getSpec().getAddress());
                     return;
                 }
                 for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
                     if (BrokerState.Active.equals(status.getState())) {
-                        addToUsage(usageMap, status.getClusterId(), "broker", resourceRequest.getValue() / addressPlan.getPartitions());
+                        addToUsage(usageMap, status.getClusterId(), "broker", getPartitionedCredits(resourceRequest.getValue(), addressPlan.getPartitions()));
                     }
                 }
 
@@ -238,7 +238,7 @@ public class AddressProvisioner {
             for (BrokerInfo brokerInfo : shardedBrokers) {
                 UsageInfo usageInfo = subscriptionUsage.computeIfAbsent(brokerInfo.getBrokerId(), k -> new UsageInfo());
                 if (brokerInfo.getCredit() + requestedValue <= 1) {
-                    // TODO: Remove after releasing 0.26.0
+
                     BrokerStatus newBrokerStatus = new BrokerStatus(brokerStatus.getClusterId(), brokerInfo.getBrokerId());
                     brokerStatus.setState(BrokerState.Active);
                     subscription.getStatus().setBrokerStatuses(Collections.singletonList(newBrokerStatus));
@@ -273,10 +273,11 @@ public class AddressProvisioner {
                     } else {
                         log.warn("No topic specified for subscription {}", address.getSpec().getAddress());
                     }
-                } else if (resourceRequest.getValue() / addressPlan.getPartitions() < 1) {
+                } else if ("queue".equals(address.getSpec().getType()) || resourceRequest.getValue() < 1) {
                     boolean scheduled = false;
-                    for (int retry = 0; !scheduled && retry < addressPlan.getPartitions() + 1; retry++) {
-                        scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getValue(), addressPlan.getPartitions());
+                    int partitions = getQueuePartitions(resourceRequest.getValue(), addressPlan.getPartitions());
+                    for (int retry = 0; !scheduled && retry < partitions + 1; retry++) {
+                        scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getValue(), partitions);
                         if (!scheduled) {
                             allocateBroker(resourceUsage, pooledClusterIdPrefix);
                         }
@@ -336,6 +337,14 @@ public class AddressProvisioner {
             return null;
         }
         return needed;
+    }
+
+    static double getPartitionedCredits(double credits, int partitions) {
+        return credits / getQueuePartitions(credits, partitions);
+    }
+
+    static int getQueuePartitions(double credits, int partitions) {
+        return (int)Math.max(partitions, Math.ceil(credits));
     }
 
     static boolean hasPlansChanged(AddressResolver addressResolver, Address address) {
@@ -492,7 +501,7 @@ public class AddressProvisioner {
             if (partitions <= 0) {
                 break;
             }
-            if (brokerInfo.getCredit() + partitionCredit < 1) {
+            if (brokerInfo.getCredit() + partitionCredit <= 1) {
                 BrokerStatus brokerStatus = new BrokerStatus(brokerInfo.getBrokerId(), brokerInfo.getBrokerId() + "-0");
                 brokerStatus.setState(BrokerState.Active);
                 brokerStatuses.add(brokerStatus);
