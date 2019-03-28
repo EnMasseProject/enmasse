@@ -35,7 +35,7 @@ public class NoneAuthService {
         SaslServer saslServer = new SaslServer(protonServerOptions);
 
         HttpServerOptions httpServerOptions = new HttpServerOptions()
-                .setHost("127.0.0.1")
+                .setHost("0.0.0.0")
                 .setPort(healthPort);
         HealthServer healthServer = new HealthServer(httpServerOptions);
 
