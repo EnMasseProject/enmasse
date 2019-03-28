@@ -220,6 +220,10 @@ objects:
     - name: amqps-normal
       port: 55671
       targetPort: amqps-normal
+    - name: health
+      port: 8080
+      protocol: TCP
+      targetPort: artemismetrics
     selector:
       role: broker
       infraUuid: ${INFRA_UUID}

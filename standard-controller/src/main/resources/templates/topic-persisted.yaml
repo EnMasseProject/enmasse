@@ -17,6 +17,11 @@ objects:
       infraUuid: ${INFRA_UUID}
     name: ${NAME}
   spec:
+    ports:
+    - name: health
+      port: 8080
+      protocol: TCP
+      targetPort: artemismetrics
     clusterIP: None
     selector:
       name: ${NAME}
