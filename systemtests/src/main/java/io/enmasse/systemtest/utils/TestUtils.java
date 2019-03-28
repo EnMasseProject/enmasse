@@ -7,6 +7,8 @@ package io.enmasse.systemtest.utils;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
@@ -68,17 +70,21 @@ public class TestUtils {
     public static void waitForNBrokerReplicas(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
                                               Address destination, TimeoutBudget budget, long checkInterval) throws Exception {
         Address address = AddressUtils.jsonToAddress(addressApiClient.getAddresses(addressSpace, Optional.of(destination.getMetadata().getName())));
-        String statefulsetName = address.getAnnotation("cluster_id");
         Map<String, String> labels = new HashMap<>();
         labels.put("role", "broker");
         labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        waitForNReplicas(kubernetes,
-                expectedReplicas,
-                readyRequired,
-                labels,
-                Collections.singletonMap("cluster_id", statefulsetName),
-                budget,
-                checkInterval);
+
+        for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+            if (brokerStatus.getState().equals(BrokerState.Active)) {
+                waitForNReplicas(kubernetes,
+                        expectedReplicas,
+                        readyRequired,
+                        labels,
+                        Collections.singletonMap("cluster_id", brokerStatus.getClusterId()),
+                        budget,
+                        checkInterval);
+            }
+        }
     }
 
     public static void waitForNBrokerReplicas(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, int expectedReplicas, Address destination, TimeoutBudget budget) throws Exception {
