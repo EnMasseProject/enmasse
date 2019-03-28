@@ -47,21 +47,33 @@ func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationServ
 				Name:  "LISTENPORT",
 				Value: "5671",
 			},
+			{
+				Name:  "HEALTHPORT",
+				Value: "8080",
+			},
 		}
 
 		container.LivenessProbe = &corev1.Probe{
-			InitialDelaySeconds: 60,
+			InitialDelaySeconds: 30,
 			Handler: corev1.Handler{
-				TCPSocket: &corev1.TCPSocketAction{
-					Port: intstr.FromString("amqps"),
+				HTTPGet: &corev1.HTTPGetAction{
+					Port:   intstr.FromString("http"),
+					Path:   "/healthz",
+					Scheme: "HTTP",
 				},
 			},
 		}
 
-		container.Ports = []corev1.ContainerPort{{
-			ContainerPort: 5671,
-			Name:          "amqps",
-		}}
+		container.Ports = []corev1.ContainerPort{
+			{
+				ContainerPort: 5671,
+				Name:          "amqps",
+			},
+			{
+				ContainerPort: 8080,
+				Name:          "http",
+			},
+		}
 
 		install.ApplyVolumeMountSimple(container, "none-authservice-cert", "/opt/none-authservice/cert", true)
 	})
