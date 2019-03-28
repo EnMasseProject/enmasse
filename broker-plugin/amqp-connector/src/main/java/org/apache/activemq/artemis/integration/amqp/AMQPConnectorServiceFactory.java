@@ -20,6 +20,7 @@
  */
 package org.apache.activemq.artemis.integration.amqp;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.activemq.artemis.core.persistence.StorageManager;
 import org.apache.activemq.artemis.core.postoffice.PostOffice;
 import org.apache.activemq.artemis.core.postoffice.impl.PostOfficeImpl;
@@ -28,6 +29,8 @@ import org.apache.activemq.artemis.core.server.ConnectorService;
 import org.apache.activemq.artemis.core.server.ConnectorServiceFactory;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 /**
@@ -38,6 +41,8 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
    private static final String CLUSTER = "clusterId";
    private static final String SOURCE_ADDRESS = "sourceAddress";
    private static final String CLIENT_ADDRESS = "clientAddress";
+   private static final String NETTY_THREADS = "nettyThreads";
+   private static final String IDLE_TIMEOUT = "idleTimeoutMs";
 
    private static final Set<String> requiredProperties = initializeRequiredProperties();
    private static final Set<String> allowedProperties = initializeAllowedProperties();
@@ -58,6 +63,8 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       properties.add(TransportConstants.USE_GLOBAL_WORKER_POOL_PROP_NAME);
       properties.add(TransportConstants.REMOTING_THREADS_PROPNAME);
       properties.add(TransportConstants.NETTY_CONNECT_TIMEOUT);
+      properties.add(IDLE_TIMEOUT);
+      properties.add(NETTY_THREADS);
       return properties;
    }
 
@@ -95,6 +102,9 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       Optional<String> clientAddress = Optional.ofNullable((String)configuration.get(CLIENT_ADDRESS));
       Optional<String> container = Optional.ofNullable((String)configuration.get(CONTAINER));
 
+      int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Integer::parseInt).orElse(4);
+      int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Integer::parseInt).orElse(16_000);
+
       Optional<SubscriberInfo> info = sourceAddress.flatMap(s ->
               clientAddress.flatMap(c ->
                       container.map(o -> new SubscriberInfo(o, s, c))));
@@ -104,7 +114,17 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       if (container.isPresent()) {
          containerId = container.get();
       }
-      return new AMQPConnectorService(connectorName, connectorConfig, containerId, clusterId, info, ((PostOfficeImpl)postOffice).getServer(), scheduledExecutorService);
+
+      ExecutorService nettyThreadPool = Executors.newFixedThreadPool(nettyThreads, new DefaultThreadFactory("connector-" + connectorName));
+      return new AMQPConnectorService(connectorName,
+              connectorConfig,
+              containerId,
+              clusterId,
+              info,
+              ((PostOfficeImpl)postOffice).getServer(),
+              scheduledExecutorService,
+              nettyThreadPool,
+              idleTimeout);
    }
 
    @Override

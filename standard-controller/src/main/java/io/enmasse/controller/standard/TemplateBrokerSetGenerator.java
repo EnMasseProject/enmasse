@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
 
@@ -114,6 +115,14 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
 
             if (standardInfraConfig.getSpec().getBroker().getGlobalMaxSize() != null) {
                 paramMap.put(TemplateParameter.BROKER_GLOBAL_MAX_SIZE, standardInfraConfig.getSpec().getBroker().getGlobalMaxSize());
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getConnectorIdleTimeout() != null) {
+                paramMap.put(TemplateParameter.BROKER_CONNECTOR_IDLE_TIMEOUT_MS, String.valueOf(TimeUnit.SECONDS.toMillis(standardInfraConfig.getSpec().getBroker().getConnectorIdleTimeout())));
+            }
+
+            if (standardInfraConfig.getSpec().getBroker().getConnectorWorkerThreads() != null) {
+                paramMap.put(TemplateParameter.BROKER_CONNECTOR_NETTY_THREADS, String.valueOf(standardInfraConfig.getSpec().getBroker().getConnectorWorkerThreads()));
             }
 
         }

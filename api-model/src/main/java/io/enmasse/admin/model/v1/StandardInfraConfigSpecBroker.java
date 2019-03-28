@@ -22,7 +22,7 @@ import io.sundr.builder.annotations.Inline;
         refs = {@BuildableReference(AbstractHasMetadataWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim", "podTemplate"})
+@JsonPropertyOrder({"resources", "addressFullPolicy", "globalMaxSize", "storageClassName", "updatePersistentVolumeClaim", "podTemplate", "connectorIdleTimeout", "connectorWorkerThreads"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalProperties {
     private StandardInfraConfigSpecBrokerResources resources;
@@ -31,6 +31,8 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
     private String storageClassName;
     private Boolean updatePersistentVolumeClaim;
     private PodTemplateSpec podTemplate;
+    private Integer connectorIdleTimeout;
+    private Integer connectorWorkerThreads;
 
     public void setResources(StandardInfraConfigSpecBrokerResources resources) {
         this.resources = resources;
@@ -89,6 +91,22 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
         this.podTemplate = podTemplate;
     }
 
+    public Integer getConnectorIdleTimeout() {
+        return connectorIdleTimeout;
+    }
+
+    public void setConnectorIdleTimeout(Integer connectorIdleTimeout) {
+        this.connectorIdleTimeout = connectorIdleTimeout;
+    }
+
+    public Integer getConnectorWorkerThreads() {
+        return connectorWorkerThreads;
+    }
+
+    public void setConnectorWorkerThreads(Integer connectorWorkerThreads) {
+        this.connectorWorkerThreads = connectorWorkerThreads;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -99,12 +117,14 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 Objects.equals(globalMaxSize, that.globalMaxSize) &&
                 Objects.equals(storageClassName, that.storageClassName) &&
                 Objects.equals(updatePersistentVolumeClaim, that.updatePersistentVolumeClaim) &&
-                Objects.equals(podTemplate, that.podTemplate);
+                Objects.equals(podTemplate, that.podTemplate) &&
+                Objects.equals(connectorIdleTimeout, that.connectorIdleTimeout) &&
+                Objects.equals(connectorWorkerThreads, that.connectorWorkerThreads);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate);
+        return Objects.hash(resources, addressFullPolicy, globalMaxSize, storageClassName, updatePersistentVolumeClaim, podTemplate, connectorIdleTimeout, connectorWorkerThreads);
     }
 
     @Override
@@ -116,6 +136,8 @@ public class StandardInfraConfigSpecBroker extends AbstractWithAdditionalPropert
                 ", globalMaxSize='" + globalMaxSize + '\'' +
                 ", updatePersistentVolumeClaim=" + updatePersistentVolumeClaim +
                 ", podTemplate=" + podTemplate +
+                ", connectorIdleTimeout=" + connectorIdleTimeout +
+                ", connectorWorkerThreads=" + connectorWorkerThreads +
                 '}';
     }
 }

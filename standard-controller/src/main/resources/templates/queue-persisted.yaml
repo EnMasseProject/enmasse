@@ -90,6 +90,14 @@ objects:
             value: ${CLUSTER_ID}
           - name: CERT_DIR
             value: /etc/enmasse-certs
+          - name: CONNECTOR_IN_NETTY_THREADS
+            value: ${BROKER_CONNECTOR_NETTY_THREADS}
+          - name: CONNECTOR_OUT_NETTY_THREADS
+            value: ${BROKER_CONNECTOR_NETTY_THREADS}
+          - name: CONNECTOR_IN_IDLE_TIMEOUT_MS
+            value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
+          - name: CONNECTOR_OUT_IDLE_TIMEOUT_MS
+            value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
           - name: ADDRESS_FULL_POLICY
             value: ${BROKER_ADDRESS_FULL_POLICY}
           - name: AUTHENTICATION_SERVICE_HOST
@@ -164,6 +172,14 @@ objects:
             value: ${ADDRESS}
           - name: CLUSTER_ID
             value: ${CLUSTER_ID}
+          - name: CONNECTOR_IN_NETTY_THREADS
+            value: ${BROKER_CONNECTOR_NETTY_THREADS}
+          - name: CONNECTOR_OUT_NETTY_THREADS
+            value: ${BROKER_CONNECTOR_NETTY_THREADS}
+          - name: CONNECTOR_IN_IDLE_TIMEOUT_MS
+            value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
+          - name: CONNECTOR_OUT_IDLE_TIMEOUT_MS
+            value: ${BROKER_CONNECTOR_IDLE_TIMEOUT_MS}
           - name: GLOBAL_MAX_SIZE
             value: ${BROKER_GLOBAL_MAX_SIZE}
           - name: ADDRESS_FULL_POLICY
@@ -271,3 +287,9 @@ parameters:
     a quarter of BROKER_MEMORY_LIMIT
   name: BROKER_GLOBAL_MAX_SIZE
   value: "-1"
+- name: BROKER_CONNECTOR_NETTY_THREADS
+  description: Number of threads to allocate to connectors
+  value: "4"
+- name: BROKER_CONNECTOR_IDLE_TIMEOUT_MS
+  description: Idle timeout set for connectors
+  value: "16000"

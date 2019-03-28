@@ -1591,6 +1591,10 @@ __optional__|string
 |Name|Schema
 |**addressFullPolicy** +
 __optional__|enum (PAGE, BLOCK, FAIL)
+|**connectorIdleTimeout** +
+__optional__|integer
+|**connectorWorkerThreads** +
+__optional__|integer
 |**podTemplate** +
 __optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
 |**resources** +
@@ -1620,6 +1624,10 @@ __optional__|string
 [options="header", cols=".^3a,.^4a"]
 |===
 |Name|Schema
+|**idleTimeout** +
+__optional__|integer
+|**initialHandshakeTimeout** +
+__optional__|integer
 |**linkCapacity** +
 __optional__|integer
 |**minReplicas** +
@@ -1628,6 +1636,8 @@ __optional__|integer
 __optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter_resources,resources>>
+|**workerThreads** +
+__optional__|integer
 |===
 
 [[_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter_resources]]
