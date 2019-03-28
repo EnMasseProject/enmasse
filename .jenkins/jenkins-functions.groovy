@@ -75,30 +75,32 @@ def buildEnmasse() {
     sh 'make docker_build docker_tag'
 }
 
-def postAction(String coresDir, String artifactDir) {
-    sh "sudo unlink ./go/src/github.com/enmasseproject/enmasse || true"
-    def status = currentBuild.result
-    storeArtifacts(artifactDir)
-    makeLinePlot()
-    makeStackedPlot()
-    //store test results from build and system tests
-    junit testResults: '**/target/**/TEST-*.xml', allowEmptyResults: true
-    //archive test results and openshift logs
-    archiveArtifacts '**/target/**/TEST-*.xml'
-    archiveArtifacts 'templates/build/**'
-    sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
-    sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
-    try {
-        archiveArtifacts "${artifactDir}/**"
-    } catch(all) {
-        echo "Archive failed"
-    } finally {
-        echo "Artifacts are stored"
+def postAction(String coresDir, String artifactDir, String debug) {
+    if (debug == 'false') {
+        sh "sudo unlink ./go/src/github.com/enmasseproject/enmasse || true"
+        def status = currentBuild.result
+        storeArtifacts(artifactDir)
+        makeLinePlot()
+        makeStackedPlot()
+        //store test results from build and system tests
+        junit testResults: '**/target/**/TEST-*.xml', allowEmptyResults: true
+        //archive test results and openshift logs
+        archiveArtifacts '**/target/**/TEST-*.xml'
+        archiveArtifacts 'templates/build/**'
+        sh "sudo ./systemtests/scripts/compress_core_dumps.sh ${coresDir} ${artifactDir}"
+        sh "sudo ./systemtests/scripts/wait_until_file_close.sh ${artifactDir}"
+        try {
+            archiveArtifacts "${artifactDir}/**"
+        } catch (all) {
+            echo "Archive failed"
+        } finally {
+            echo "Artifacts are stored"
+        }
+        if (status == null) {
+            currentBuild.result = 'SUCCESS'
+        }
+        sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
     }
-    if (status == null) {
-        currentBuild.result = 'SUCCESS'
-    }
-    sh "./systemtests/scripts/check_and_clear_cores.sh ${coresDir}"
 }
 
 def installEnmasse(String tag, Boolean skipDependencies, Boolean upgrade, Boolean generateTemplates) {
