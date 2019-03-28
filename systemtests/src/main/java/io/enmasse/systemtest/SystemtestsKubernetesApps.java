@@ -12,9 +12,9 @@ import io.fabric8.kubernetes.api.model.extensions.*;
 
 import java.io.File;
 import java.net.URL;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Collections;
+import java.util.Base64;
 
 public class SystemtestsKubernetesApps {
     public static final String MESSAGING_CLIENTS = "messaging-clients";
@@ -23,6 +23,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_PROJECT = "selenium";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "openshift-cert-validator";
+    public static final String POSTGRES_APP = "postgres-app";
 
     public static void deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(MESSAGING_CLIENTS, 4242));
@@ -113,6 +114,31 @@ public class SystemtestsKubernetesApps {
     public static Endpoint getOpenshiftCertValidatorEndpoint(String namespace, Kubernetes kubeClient) {
         return new Endpoint(kubeClient.getIngressHost(namespace, OPENSHIFT_CERT_VALIDATOR), 80);
     }
+
+    public static Endpoint deployPostgresDB(String namespace) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        kubeCli.createSecret(namespace, getPostgresSecret());
+        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource(POSTGRES_APP, 5432));
+        kubeCli.createPvc(namespace, getPostgresPVC());
+        kubeCli.createConfigmapFromResource(namespace, getPostgresConfigMap());
+        kubeCli.createDeploymentFromResource(namespace, getPostgresDeployment());
+        return kubeCli.getEndpoint(POSTGRES_APP, "http");
+    }
+
+    public static void deletePostgresDB(String namespace) {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        if (kubeCli.deploymentExists(namespace, POSTGRES_APP)) {
+            kubeCli.deleteService(namespace, POSTGRES_APP);
+            kubeCli.deletePvc(namespace, POSTGRES_APP);
+            kubeCli.deleteConfigmap(namespace, POSTGRES_APP);
+            kubeCli.deleteDeployment(namespace, POSTGRES_APP);
+            kubeCli.deleteSecret(namespace, POSTGRES_APP);
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////
+    // Resources
+    ////////////////////////////////////////////////////////////////////////////////////////////
 
     private static Deployment getSeleniumNodeDeploymentResource(String appName, String imageName) {
         return new DeploymentBuilder()
@@ -209,7 +235,7 @@ public class SystemtestsKubernetesApps {
                 .addToLabels("run", appName)
                 .endMetadata()
                 .withNewSpec()
-                .withSelector(Collections.singletonMap("app", appName))
+                .addToSelector("app", appName)
                 .addNewPort()
                 .withName("http")
                 .withPort(port)
@@ -291,6 +317,89 @@ public class SystemtestsKubernetesApps {
                 .endSpec()
                 .endTemplate()
                 .endSpec()
+                .build();
+    }
+
+    private static ConfigMap getPostgresConfigMap() {
+        return new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(POSTGRES_APP)
+                .addToLabels("app", POSTGRES_APP)
+                .endMetadata()
+                .addToData("POSTGRES_DB", "postgresdb")
+                .addToData("POSTGRES_USER", "darthvader")
+                .addToData("POSTGRES_PASSWORD", "anakinisdead")
+                .addToData("PGDATA", "/var/lib/postgresql/data/pgdata")
+                .build();
+    }
+
+    private static PersistentVolumeClaim getPostgresPVC() {
+        return new PersistentVolumeClaimBuilder()
+                .withNewMetadata()
+                .withName(POSTGRES_APP)
+                .addToLabels("app", POSTGRES_APP)
+                .endMetadata()
+                .withNewSpec()
+                .withAccessModes("ReadWriteMany")
+                .withNewResources()
+                .addToRequests("storage", new Quantity("5Gi"))
+                .endResources()
+                .endSpec()
+                .build();
+    }
+
+    private static Deployment getPostgresDeployment() {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(POSTGRES_APP)
+                .addToLabels("app", POSTGRES_APP)
+                .addToLabels("template", POSTGRES_APP)
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", POSTGRES_APP)
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", POSTGRES_APP)
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(POSTGRES_APP)
+                .withImage("postgres:10.4")
+                .withImagePullPolicy("IfNotPresent")
+                .addNewPort()
+                .withContainerPort(5432)
+                .endPort()
+                .withEnvFrom(new EnvFromSourceBuilder()
+                        .withNewConfigMapRef()
+                        .withName(POSTGRES_APP)
+                        .endConfigMapRef()
+                        .build())
+                .withVolumeMounts(new VolumeMountBuilder()
+                        .withMountPath("/var/lib/postgresql/data/")
+                        .withName(POSTGRES_APP).build())
+                .endContainer()
+                .addNewVolume()
+                .withName(POSTGRES_APP)
+                .withNewPersistentVolumeClaim()
+                .withClaimName(POSTGRES_APP)
+                .endPersistentVolumeClaim()
+                .endVolume()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .build();
+    }
+
+    private static Secret getPostgresSecret() {
+        return new SecretBuilder()
+                .withNewMetadata()
+                .withName(POSTGRES_APP)
+                .endMetadata()
+                .addToData("database-user", Base64.getEncoder().encodeToString("darthvader".getBytes(StandardCharsets.UTF_8)))
+                .addToData("database-password", Base64.getEncoder().encodeToString("anakinisdead".getBytes(StandardCharsets.UTF_8)))
                 .build();
     }
 }

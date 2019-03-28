@@ -41,11 +41,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     @BeforeEach
     void setUp() throws Exception {
-        plansProvider.setUp();
+        adminManager.setUp();
         if (selenium.getDriver() == null)
             selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
         else
@@ -54,7 +54,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     @AfterEach
     void tearDown() throws Exception {
-        plansProvider.tearDown();
+        adminManager.tearDown();
     }
 
     @Test
@@ -65,7 +65,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1),
                 environment.enmasseVersion());
 
-        plansProvider.createInfraConfig(infra);
+        adminManager.createInfraConfig(infra);
 
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0.0));
@@ -73,8 +73,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
         AddressPlan weakTopicPlan = PlanUtils.createAddressPlanObject("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
 
-        plansProvider.createAddressPlan(weakQueuePlan);
-        plansProvider.createAddressPlan(weakTopicPlan);
+        adminManager.createAddressPlan(weakQueuePlan);
+        adminManager.createAddressPlan(weakTopicPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -84,7 +84,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressPlan> addressPlans = Arrays.asList(weakQueuePlan, weakTopicPlan);
 
         AddressSpacePlan weakSpacePlan = PlanUtils.createAddressSpacePlanObject("weak-plan", infra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(weakSpacePlan);
+        adminManager.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
         AddressSpace weakAddressSpace = AddressSpaceUtils.createAddressSpaceObject("weak-address-space", AddressSpaceType.STANDARD,
@@ -140,11 +140,11 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan anycastPlan = PlanUtils.createAddressPlanObject("anycast-test1", AddressType.ANYCAST,
                 Collections.singletonList(new ResourceRequest("router", 0.3)));
 
-        plansProvider.createAddressPlan(queuePlan);
-        plansProvider.createAddressPlan(queuePlan2);
-        plansProvider.createAddressPlan(queuePlan3);
-        plansProvider.createAddressPlan(topicPlan);
-        plansProvider.createAddressPlan(anycastPlan);
+        adminManager.createAddressPlan(queuePlan);
+        adminManager.createAddressPlan(queuePlan2);
+        adminManager.createAddressPlan(queuePlan3);
+        adminManager.createAddressPlan(topicPlan);
+        adminManager.createAddressPlan(anycastPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -154,7 +154,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, queuePlan3, topicPlan, anycastPlan);
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("quota-limits-pooled-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(addressSpacePlan);
+        adminManager.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
@@ -222,8 +222,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         new ResourceRequest("broker", 1.0),
                         new ResourceRequest("router", 0.01)));
 
-        plansProvider.createAddressPlan(queuePlan);
-        plansProvider.createAddressPlan(topicPlan);
+        adminManager.createAddressPlan(queuePlan);
+        adminManager.createAddressPlan(topicPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -233,7 +233,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan);
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("quota-limits-sharded-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(addressSpacePlan);
+        adminManager.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
@@ -302,9 +302,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .endSpec()
                 .build();
 
-        plansProvider.createAddressPlan(simpleQueue);
-        plansProvider.createAddressPlan(partitionedQueue);
-        plansProvider.createAddressPlan(manyPartitionedQueue);
+        adminManager.createAddressPlan(simpleQueue);
+        adminManager.createAddressPlan(partitionedQueue);
+        adminManager.createAddressPlan(manyPartitionedQueue);
 
         //define and create address space plan
         AddressSpacePlan partitionedAddressesPlan = new AddressSpacePlanBuilder()
@@ -321,7 +321,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .endSpec()
                 .build();
 
-        plansProvider.createAddressSpacePlan(partitionedAddressesPlan);
+        adminManager.createAddressSpacePlan(partitionedAddressesPlan);
 
         Thread.sleep(30_000);
 
@@ -383,7 +383,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
         AddressPlan xlQueuePlan = PlanUtils.createAddressPlanObject("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
-        plansProvider.createAddressPlan(xlQueuePlan);
+        adminManager.createAddressPlan(xlQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -393,7 +393,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressPlan> addressPlans = Collections.singletonList(xlQueuePlan);
         AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(manyAddressesPlan);
+        adminManager.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
@@ -432,9 +432,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<ResourceRequest> addressResourcesQueueBeta = Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0));
 
         AddressPlan queuePlanAlpha = PlanUtils.createAddressPlanObject("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
-        plansProvider.createAddressPlan(queuePlanAlpha);
+        adminManager.createAddressPlan(queuePlanAlpha);
         AddressPlan queuePlanBeta = PlanUtils.createAddressPlanObject("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
-        plansProvider.createAddressPlan(queuePlanBeta);
+        adminManager.createAddressPlan(queuePlanBeta);
 
 
         //define and create address space plan
@@ -445,7 +445,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressPlan> addressPlans = Arrays.asList(queuePlanAlpha, queuePlanBeta);
         AddressSpacePlan scaleSpacePlan = PlanUtils.createAddressSpacePlanObject("scale-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(scaleSpacePlan);
+        adminManager.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
         AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
@@ -503,10 +503,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<ResourceRequest> addressResourcesSharded = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0));
 
         AddressPlan queuePlanDistributed = PlanUtils.createAddressPlanObject("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
-        plansProvider.createAddressPlan(queuePlanDistributed);
+        adminManager.createAddressPlan(queuePlanDistributed);
 
         AddressPlan queuePlanSharded = PlanUtils.createAddressPlanObject("sharded-standard-queue", AddressType.QUEUE, addressResourcesSharded);
-        plansProvider.createAddressPlan(queuePlanSharded);
+        adminManager.createAddressPlan(queuePlanSharded);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -516,7 +516,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         List<AddressPlan> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
         AddressSpacePlan scaleSpacePlan = PlanUtils.createAddressSpacePlanObject("scale-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(scaleSpacePlan);
+        adminManager.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
         AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
@@ -542,7 +542,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
 
         //replace original plan in address by another
-        plansProvider.replaceAddressPlan(queuePlanSharded);
+        adminManager.replaceAddressPlan(queuePlanSharded);
 
         assertEquals(getAddressesObjects(
                 messagePersistAddressSpace,
@@ -584,11 +584,11 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan pooledQueuePlan = PlanUtils.createAddressPlanObject("after-pooled-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.44), new ResourceRequest("router", 0.0)));
 
-        plansProvider.createAddressPlan(beforeQueuePlan);
-        plansProvider.createAddressPlan(beforeTopicPlan);
-        plansProvider.createAddressPlan(afterQueuePlan);
-        plansProvider.createAddressPlan(afterTopicPlan);
-        plansProvider.createAddressPlan(pooledQueuePlan);
+        adminManager.createAddressPlan(beforeQueuePlan);
+        adminManager.createAddressPlan(beforeTopicPlan);
+        adminManager.createAddressPlan(afterQueuePlan);
+        adminManager.createAddressPlan(afterTopicPlan);
+        adminManager.createAddressPlan(pooledQueuePlan);
 
         //define and create address space plans
 
@@ -617,9 +617,9 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 Collections.singletonList(pooledQueuePlan));
 
 
-        plansProvider.createAddressSpacePlan(beforeAddressSpacePlan);
-        plansProvider.createAddressSpacePlan(afterAddressSpacePlan);
-        plansProvider.createAddressSpacePlan(pooledAddressSpacePlan);
+        adminManager.createAddressSpacePlan(beforeAddressSpacePlan);
+        adminManager.createAddressSpacePlan(afterAddressSpacePlan);
+        adminManager.createAddressSpacePlan(pooledAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
@@ -664,8 +664,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
                 Collections.singletonList(new ResourceRequest("broker", 0.7)));
 
-        plansProvider.createAddressPlan(beforeQueuePlan);
-        plansProvider.createAddressPlan(afterQueuePlan);
+        adminManager.createAddressPlan(beforeQueuePlan);
+        adminManager.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
@@ -679,8 +679,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(afterQueuePlan));
 
-        plansProvider.createAddressSpacePlan(beforeAddressSpacePlan);
-        plansProvider.createAddressSpacePlan(afterAddressSpacePlan);
+        adminManager.createAddressSpacePlan(beforeAddressSpacePlan);
+        adminManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.BROKERED,
@@ -716,8 +716,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan beforeQueuePlan = PlanUtils.createAddressPlanObject("before-large-sharded-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 2.0), new ResourceRequest("router", 0)));
 
-        plansProvider.createAddressPlan(beforeQueuePlan);
-        plansProvider.createAddressPlan(afterQueuePlan);
+        adminManager.createAddressPlan(beforeQueuePlan);
+        adminManager.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
@@ -738,8 +738,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 Collections.singletonList(afterQueuePlan));
 
 
-        plansProvider.createAddressSpacePlan(beforeAddressSpacePlan);
-        plansProvider.createAddressSpacePlan(afterAddressSpacePlan);
+        adminManager.createAddressSpacePlan(beforeAddressSpacePlan);
+        adminManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
@@ -777,8 +777,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.8), new ResourceRequest("router", 0.0)));
 
-        plansProvider.createAddressPlan(beforeQueuePlan);
-        plansProvider.createAddressPlan(afterQueuePlan);
+        adminManager.createAddressPlan(beforeQueuePlan);
+        adminManager.createAddressPlan(afterQueuePlan);
 
         AddressSpacePlan addressPlan = PlanUtils.createAddressSpacePlanObject("address-switch-address-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
@@ -788,7 +788,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                         new ResourceAllowance("aggregate", 10.0)),
                 Arrays.asList(beforeQueuePlan, afterQueuePlan));
 
-        plansProvider.createAddressSpacePlan(addressPlan);
+        adminManager.createAddressSpacePlan(addressPlan);
 
         AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
                 addressPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);

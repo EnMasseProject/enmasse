@@ -539,7 +539,7 @@ public class TestUtils {
                 return;
             }
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
-            Thread.sleep(2000);
+            Thread.sleep(5000);
         }
         throw new IllegalStateException("Failed to wait for: " + forWhat);
     }

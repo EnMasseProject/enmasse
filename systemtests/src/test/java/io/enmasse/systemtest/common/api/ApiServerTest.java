@@ -55,23 +55,23 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag(isolated)
 public class ApiServerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
-    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     @BeforeEach
     void setUp() {
-        plansProvider.setUp();
+        adminManager.setUp();
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        plansProvider.tearDown();
+        adminManager.tearDown();
     }
 
     @Test
     void testRestApiGetSchema() throws Exception {
         AddressPlan queuePlan = PlanUtils.createAddressPlanObject("test-schema-rest-api-addr-plan", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0.0)));
-        plansProvider.createAddressPlan(queuePlan);
+        adminManager.createAddressPlan(queuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -81,7 +81,7 @@ public class ApiServerTest extends TestBase {
         List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("schema-rest-api-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(addressSpacePlan);
+        adminManager.createAddressSpacePlan(addressSpacePlan);
 
         Future<AddressSpaceSchemaList> data = getSchema();
         AddressSpaceSchemaList schemaData = data.get(20, TimeUnit.SECONDS);

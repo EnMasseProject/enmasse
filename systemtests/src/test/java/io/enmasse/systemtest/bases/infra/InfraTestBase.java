@@ -8,7 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.PlansProvider;
+import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -38,7 +37,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
             "kubernetes.io/portworx-volume", "kubernetes.io/rbd");
 
-    protected static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    protected static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     protected InfraConfig testInfra;
     protected AddressPlan exampleAddressPlan;
@@ -46,12 +45,12 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
 
     @BeforeEach
     void setUp() throws Exception {
-        plansProvider.setUp();
+        adminManager.setUp();
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        plansProvider.tearDown();
+        adminManager.tearDown();
     }
 
     protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec) {
