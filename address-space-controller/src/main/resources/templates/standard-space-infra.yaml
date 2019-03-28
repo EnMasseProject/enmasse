@@ -556,6 +556,10 @@ objects:
     - name: inter-router
       port: 55672
       targetPort: 55672
+    - name: health
+      port: 8080
+      protocol: TCP
+      targetPort: http
     selector:
       capability: router
       infraUuid: ${INFRA_UUID}
