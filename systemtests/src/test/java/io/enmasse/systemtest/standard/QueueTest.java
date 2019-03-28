@@ -186,8 +186,8 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         Address large = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
         Address small = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
 
-        testScale(xlarge, large);
-        testScale(large, small);
+        testScale(xlarge, large, true);
+        testScale(large, small, false);
     }
 
     @Test
@@ -196,15 +196,18 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         Address large = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
         Address small = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
 
-        testScale(small, large);
-        testScale(large, xlarge);
+        testScale(small, large, true);
+        testScale(large, xlarge, false);
     }
 
-    private void testScale(Address before, Address after) throws Exception {
+    private void testScale(Address before, Address after, boolean createInitial) throws Exception {
         assertEquals(before.getSpec().getAddress(), after.getSpec().getAddress());
         assertEquals(before.getMetadata().getName(), after.getMetadata().getName());
         assertEquals(before.getSpec().getType(), after.getSpec().getType());
-        setAddresses(before);
+
+        if (createInitial) {
+            setAddresses(before);
+        }
 
         AmqpClient client = amqpClientFactory.createQueueClient();
         final List<String> prefixes = Arrays.asList("foo", "bar", "baz", "quux");
