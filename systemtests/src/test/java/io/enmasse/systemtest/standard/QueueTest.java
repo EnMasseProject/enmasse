@@ -182,16 +182,22 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testScaledown() throws Exception {
-        Address before = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Address after = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
-        testScale(before, after);
+        Address xlarge = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_XLARGE_QUEUE);
+        Address large = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address small = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+
+        testScale(xlarge, large);
+        testScale(large, small);
     }
 
     @Test
     void testScaleup() throws Exception {
-        Address before = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Address after = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        testScale(before, after);
+        Address xlarge = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_XLARGE_QUEUE);
+        Address large = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address small = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+
+        testScale(small, large);
+        testScale(large, xlarge);
     }
 
     private void testScale(Address before, Address after) throws Exception {
