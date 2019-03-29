@@ -13,11 +13,13 @@ import (
 
 	enmasse "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/klog"
 
 	"time"
 
+	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 	informers "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions"
 
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -87,16 +89,24 @@ func main() {
 	cfg, err := rest.InClusterConfig()
 	if err != nil {
 		klog.Fatalf("Error getting in-cluster config: %v", err.Error())
+		os.Exit(1)
 	}
 
 	kubeClient, err := kubernetes.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building kubernetes client: %v", err.Error())
+		os.Exit(1)
 	}
 
 	enmasseClient, err := enmasse.NewForConfig(cfg)
 	if err != nil {
 		klog.Fatalf("Error building EnMasse client: %v", err.Error())
+		os.Exit(1)
+	}
+
+	if err := enmassescheme.AddToScheme(scheme.Scheme); err != nil {
+		klog.Fatalf("Failed to register EnMasse schema", err.Error())
+		os.Exit(1)
 	}
 
 	enmasseInformerFactory := informers.NewSharedInformerFactory(enmasseClient, time.Second*30)
@@ -109,7 +119,7 @@ func main() {
 
 	enmasseInformerFactory.Start(stopCh)
 
-	if err = configurator.Run(2, stopCh); err != nil {
+	if err = configurator.Run(1, stopCh); err != nil {
 		klog.Fatalf("Failed running configurator: %v", err.Error())
 	}
 }
