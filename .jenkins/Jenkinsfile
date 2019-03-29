@@ -14,6 +14,7 @@ pipeline {
 //        string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
 //        string(name: 'REGISTRY_AGE', defaultValue: '20', description: 'registry older then REGISTRY_AGE (in hours) will be removed')
 //        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
+//        string(name: 'UPGRADE_FROM', defaultValue: '', description: 'upgrade from')
 //    }
     options {
         timeout(time: 1, unit: 'HOURS')
@@ -132,7 +133,7 @@ pipeline {
                         [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                         [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.upgrade.**'],
                         [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
-                        [$class: 'StringParameterValue', name: 'START_VERSION', value: '0.26.2'],
+                        [$class: 'StringParameterValue', name: 'START_VERSION', value: params.UPGRADE_FROM],
                 ]
             }
         }
