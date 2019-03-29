@@ -3,7 +3,7 @@ def lib
 def AGENT = null
 
 node('master') {
-    stage {
+    stage('Set agent label') {
         AGENT = ghprbCommentBody.contains("debug=true") ? "${params.AGENT_LABEL}-debug" : "${params.AGENT_LABEL}"
         echo "This agent label will be used: ${AGENT}"
     }
