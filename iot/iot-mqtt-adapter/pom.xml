@@ -20,6 +20,10 @@
       <artifactId>hono-adapter-mqtt-vertx</artifactId>
       <version>${hono.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.hono</groupId>
+      <artifactId>hono-legal</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
