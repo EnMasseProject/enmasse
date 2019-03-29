@@ -22,7 +22,6 @@ import javax.ws.rs.core.SecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.address.model.CoreCrd;
 import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
@@ -58,7 +57,7 @@ public class HttpClusterUserService {
     }
 
     private static void verifyAuthorized(SecurityContext securityContext, ResourceVerb verb) {
-        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole("", verb, RESOURCE_NAME, CoreCrd.GROUP))) {
+        if (!securityContext.isUserInRole(RbacSecurityContext.rbacToRole("", verb, RESOURCE_NAME, UserCrd.GROUP))) {
             throw Exceptions.notAuthorizedException();
         }
     }
