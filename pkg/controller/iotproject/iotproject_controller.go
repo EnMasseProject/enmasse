@@ -13,6 +13,7 @@ import (
 
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -49,6 +50,16 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 
 	// Watch for changes to primary resource IoTProject
 	err = c.Watch(&source.Kind{Type: &iotv1alpha1.IoTProject{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+
+	// watch for messaging users
+
+	err = c.Watch(&source.Kind{Type: &userv1beta1.MessagingUser{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &iotv1alpha1.IoTProject{},
+	})
 	if err != nil {
 		return err
 	}
