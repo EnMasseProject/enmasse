@@ -2,6 +2,7 @@
 enmasse_serviceaccount: enmasse-admin
 enmasse_environment: development
 enable_rbac: true
+enable_iot: false
 keycloak_admin_user: admin
 service_catalog: false
 register_api_server: false

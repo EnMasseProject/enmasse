@@ -42,6 +42,9 @@
     name: api_service
   when: register_api_server
 - import_role:
+    name: iot
+  when: enable_iot
+- import_role:
     name: monitoring-infrastructure
   when: monitoring_infrastructure
 - import_role:
