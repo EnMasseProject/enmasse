@@ -7,18 +7,17 @@ package main
 
 import (
 	"fmt"
+	"time"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog"
-	"time"
 
 	clientset "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
-	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 	iotinformers "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/iot/v1alpha1"
 
 	iotlisters "github.com/enmasseproject/enmasse/pkg/client/listers/iot/v1alpha1"
@@ -48,8 +47,6 @@ func NewConfigurator(
 	projectInformer iotinformers.IoTProjectInformer,
 	ephermalCertBase string,
 ) *Configurator {
-
-	enmassescheme.AddToScheme(scheme.Scheme)
 
 	controller := &Configurator{
 		kubeclientset:    kubeclientset,
