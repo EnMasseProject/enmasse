@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: iot-operator
+  name: "enmasse.io:iot-operator-${NAMESPACE}"
   labels:
     app: enmasse
 roleRef:
