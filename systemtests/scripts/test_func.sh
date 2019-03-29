@@ -115,7 +115,7 @@ function run_test() {
 function teardown_test() {
     PROJECT_NAME=$1
     CMD=${2:-oc}
-    if [[ ${CMD} == "oc" ]]; then
+    if [[ ${CMD} == "oc" ]] && [[ ${DEBUG} == 'false' ]]; then
         ansible-playbook -i ${CURDIR}/../ansible/inventory/systemtests.inventory ${CURDIR}/../../ansible/playbooks/openshift/uninstall.yml --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\"}"
     fi
     ${CMD} delete namespace ${PROJECT_NAME}
