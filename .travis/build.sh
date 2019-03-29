@@ -13,7 +13,7 @@ SYSTEMTEST_PROFILE=${SYSTEMTEST_PROFILE:-"smoke"}
 
 if use_external_registry
 then
-    export IMAGE_VERSION=${VERSION}
+    export IMAGE_VERSION=${TAG}
 else
     export DOCKER_REGISTRY="localhost:5000"
 fi
