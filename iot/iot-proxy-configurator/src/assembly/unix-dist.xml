@@ -27,7 +27,7 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <files>
         <file>
-            <source>${project.basedir}/build/qdr-proxy-configurator</source>
+            <source>${project.basedir}/build/iot-proxy-configurator</source>
             <outputDirectory>/</outputDirectory>
             <fileMode>0755</fileMode>
         </file>

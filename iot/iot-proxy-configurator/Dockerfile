@@ -10,6 +10,6 @@ ARG maven_version
 ARG commit
 ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
 
-ADD target/qdr-proxy-configurator-${MAVEN_VERSION}-dist.tar.gz /
+ADD target/iot-proxy-configurator-${MAVEN_VERSION}-dist.tar.gz /
 
-ENTRYPOINT /qdr-proxy-configurator
+ENTRYPOINT /iot-proxy-configurator

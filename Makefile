@@ -3,7 +3,7 @@ include $(TOPDIR)/Makefile.env.mk
 
 GO_DIRS = \
 	enmasse-controller-manager \
-	iot/qdr-proxy-configurator \
+	iot/iot-proxy-configurator \
 	iot/iot-gc \
 
 DOCKER_DIRS = \

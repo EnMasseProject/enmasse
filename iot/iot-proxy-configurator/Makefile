@@ -1,2 +1,2 @@
-CMD=qdr-proxy-configurator
+CMD=iot-proxy-configurator
 include ../../Makefile.go.mk
