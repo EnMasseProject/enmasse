@@ -3,6 +3,7 @@ kind: ClusterRole
 metadata:
   name: iot.enmasse.io:tenant-edit
   labels:
+    app: enmasse
     enmasse-component: iot
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
