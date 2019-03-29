@@ -200,27 +200,22 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 	}
 
 	// if the status has endpoint information ...
-
 	if project.Status.DownstreamEndpoint != nil {
 		// ... we extract the password and return it
 		credentials.Password = project.Status.DownstreamEndpoint.Password
 	}
-	newPassword := false
-	// if the password is not set ...
-	if credentials.Password == "" {
+
+	// if the project is ready and password is not set yet ...
+	if (project.Status.IsReady && credentials.Password == "") || util.IsNewObject(existing) {
 		// ... we generate a new one ...
+		log.Info("Generating new password")
 		password, err := util.GeneratePassword(32)
 		if err != nil {
 			return err
 		}
-		// ... and return it in the credentials structure
+		// ... return it in the credentials structure
 		credentials.Password = password
-		newPassword = true
-	}
-
-	if newPassword || util.IsNewObject(existing) {
-		// only set password when we are creating the object initially
-		// or created a new password ... as we cannot detect a change
+		// ... and set it to the messaging user
 		existing.Spec.Authentication.Password = []byte(credentials.Password)
 	}
 

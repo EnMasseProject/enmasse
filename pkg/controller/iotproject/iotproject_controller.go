@@ -142,7 +142,6 @@ func (r *ReconcileIoTProject) updateProjectStatusError(ctx context.Context, requ
 
 	newProject := project.DeepCopy()
 	newProject.Status.IsReady = false
-	newProject.Status.DownstreamEndpoint = nil
 
 	return r.client.Update(ctx, newProject)
 }
