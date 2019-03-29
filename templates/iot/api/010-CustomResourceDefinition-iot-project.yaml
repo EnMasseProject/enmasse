@@ -3,6 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   name: iotprojects.iot.enmasse.io
   labels:
+    app: enmasse
     enmasse-component: iot
 spec:
   group: iot.enmasse.io
