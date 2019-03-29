@@ -90,7 +90,7 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 		&handler.EnqueueRequestsFromMapFunc{
 			ToRequests: handler.ToRequestsFunc(func(a handler.MapObject) []reconcile.Request {
 
-				l := log.WithValues("kind", "AddressSpace", "object", a)
+				l := log.WithValues("kind", "AddressSpace", "namespace", a.Meta.GetNamespace(), "name", a.Meta.GetName())
 
 				l.V(2).Info("Change event")
 
