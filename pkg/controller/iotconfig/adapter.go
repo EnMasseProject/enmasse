@@ -24,7 +24,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 
 	err := install.ApplyContainerWithError(deployment, "qdr-cfg", func(container *corev1.Container) error {
 
-		if err := install.SetContainerImage(container, "qdr-proxy-configurator", config); err != nil {
+		if err := install.SetContainerImage(container, "iot-proxy-configurator", config); err != nil {
 			return err
 		}
 

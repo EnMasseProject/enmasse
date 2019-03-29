@@ -12,7 +12,7 @@ build/operatorImageMap.yaml:
 	echo "iot-http-adapter: $(IOT_HTTP_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-mqtt-adapter: $(IOT_MQTT_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-tenant-service: $(IOT_TENANT_SERVICE_IMAGE)" >> "$@"
-	echo "qdr-proxy-configurator: $(QDR_PROXY_CONFIGURATOR_IMAGE)" >> "$@"
+	echo "iot-proxy-configurator: $(IOT_PROXY_CONFIGURATOR_IMAGE)" >> "$@"
 	echo "qdrouterd-base: $(QDROUTERD_BASE_IMAGE)" >> "$@"
 	echo "none-authservice: $(NONE_AUTHSERVICE_IMAGE)" >> "$@"
 	echo "keycloak: $(KEYCLOAK_IMAGE)" >> "$@"

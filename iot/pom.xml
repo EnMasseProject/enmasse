@@ -32,7 +32,7 @@
     <module>iot-mqtt-adapter</module>
     <module>iot-tenant-service</module>
     <module>iot-gc</module>
-    <module>qdr-proxy-configurator</module>
+    <module>iot-proxy-configurator</module>
   </modules>
 
   <dependencyManagement>
