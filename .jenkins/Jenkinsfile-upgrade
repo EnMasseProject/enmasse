@@ -9,6 +9,7 @@ pipeline {
 //        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
 //        string(name: 'START_VERSION', defaultValue: '0.26.2', description: 'Version of enmasse which will be upgraded')
 //        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
+//        string(name: 'DEBUG', defaultValue: 'false', description: 'skip post actions')
 //    }
     options {
         timeout(time: 1, unit: 'HOURS')
@@ -159,7 +160,7 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR)
+                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR, params.DEBUG)
             }
         }
         failure {
