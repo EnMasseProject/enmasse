@@ -1,4 +1,5 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
+MVNPROJ=$(shell realpath --relative-to="$(realpath $(TOPDIR))" "$(shell pwd)")
 include $(TOPDIR)/Makefile.common
 ifeq ($(SKIP_TESTS),true)
 MAVEN_ARGS="-DskipTests"
@@ -9,7 +10,7 @@ endif
 
 ifneq ($(FULL_BUILD),true)
 build:
-	cd $(TOPDIR); $(IMAGE_ENV) mvn clean install $(MAVEN_ARGS)
+	cd $(TOPDIR); $(IMAGE_ENV) mvn -pl $(MVNPROJ) -am clean install $(MAVEN_ARGS)
 
 test:
 ifeq ($(SKIP_TESTS),true)
