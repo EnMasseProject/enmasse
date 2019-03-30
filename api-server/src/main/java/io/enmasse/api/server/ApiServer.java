@@ -125,7 +125,8 @@ public class ApiServer extends AbstractVerticle {
         try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
             return response.code() >= 200 && response.code() < 300;
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            log.warn("Error checking if running on OpenShift, assuming Kubernetes: {}", e.getMessage());
+            return false;
         }
     }
 
