@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -34,12 +35,12 @@ import java.util.stream.Collectors;
 public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap, ConfigMapList> {
 
     private static final Logger log = LoggerFactory.getLogger(ConfigMapAddressApi.class);
-    private final NamespacedOpenShiftClient client;
+    private final NamespacedKubernetesClient client;
     private final String infraUuid;
     private final WorkQueue<ConfigMap> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
     private ObjectMapper mapper = new ObjectMapper();
 
-    public ConfigMapAddressApi(NamespacedOpenShiftClient client, String infraUuid) {
+    public ConfigMapAddressApi(NamespacedKubernetesClient client, String infraUuid) {
         this.client = client;
         this.infraUuid = infraUuid;
     }

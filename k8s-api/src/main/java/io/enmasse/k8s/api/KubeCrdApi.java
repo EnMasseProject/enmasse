@@ -9,6 +9,7 @@ import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -19,14 +20,14 @@ import java.util.ArrayList;
 
 public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList, DT extends Doneable<T>> implements CrdApi<T>, ListerWatcher<T, LT> {
 
-    private final NamespacedOpenShiftClient client;
+    private final NamespacedKubernetesClient client;
     private final String namespace;
     private final Class<T> tClazz;
     private final Class<LT> ltClazz;
     private final Class<DT> dtClazz;
     private final CustomResourceDefinition customResourceDefinition;
 
-    public KubeCrdApi(NamespacedOpenShiftClient client, String namespace, CustomResourceDefinition customResourceDefinition,
+    public KubeCrdApi(NamespacedKubernetesClient client, String namespace, CustomResourceDefinition customResourceDefinition,
                       Class<T> tClazz,
                       Class<LT> ltClazz,
                       Class<DT> dtClazz) {

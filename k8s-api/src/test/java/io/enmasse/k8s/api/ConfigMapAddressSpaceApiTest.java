@@ -8,6 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.util.JULInitializingTest;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.jupiter.api.AfterEach;
@@ -30,19 +31,18 @@ class ConfigMapAddressSpaceApiTest extends JULInitializingTest {
     private static final String ADDRESS_SPACE_NAMESPACE = "myproject";
     private static final String TEST_UUID = "fd93dc62-197b-11e9-9e48-c85b762e5a2c";
 
-    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+    private KubernetesServer kubeServer = new KubernetesServer(false, true);
     private AddressSpaceApi api;
 
     @BeforeEach
     void setUp() {
-        openShiftServer.before();
-        NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
-        api = new ConfigMapAddressSpaceApi(client);
+        kubeServer.before();
+        api = new ConfigMapAddressSpaceApi(kubeServer.getClient());
     }
 
     @AfterEach
     void tearDown() {
-        openShiftServer.after();
+        kubeServer.after();
     }
 
     @Test

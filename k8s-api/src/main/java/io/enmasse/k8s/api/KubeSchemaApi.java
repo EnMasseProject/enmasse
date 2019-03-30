@@ -10,6 +10,7 @@ import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
 import io.enmasse.admin.model.v1.*;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +59,7 @@ public class KubeSchemaApi implements SchemaApi {
         this.isOpenShift = isOpenShift;
     }
 
-    public static KubeSchemaApi create(NamespacedOpenShiftClient openShiftClient, String namespace, boolean isOpenShift) {
+    public static KubeSchemaApi create(NamespacedKubernetesClient openShiftClient, String namespace, boolean isOpenShift) {
         CrdApi<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.addressSpacePlans(),
                 io.enmasse.admin.model.v1.AddressSpacePlan.class,
                 AddressSpacePlanList.class,

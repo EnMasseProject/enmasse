@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +41,10 @@ public class KubernetesHelper implements Kubernetes {
     private static final ObjectMapper mapper = new ObjectMapper();
     private final File templateDir;
     private static final String TEMPLATE_SUFFIX = ".yaml";
-    private final OpenShiftClient client;
+    private final KubernetesClient client;
     private final String infraUuid;
 
-    public KubernetesHelper(OpenShiftClient client, File templateDir, String infraUuid) {
+    public KubernetesHelper(KubernetesClient client, File templateDir, String infraUuid) {
         this.client = client;
         this.templateDir = templateDir;
         this.infraUuid = infraUuid;
@@ -172,6 +173,6 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public KubernetesList processTemplate(String templateName, Map<String,String> parameters) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return Templates.process(client, templateFile, parameters);
+        return Templates.process(templateFile, parameters);
     }
 }

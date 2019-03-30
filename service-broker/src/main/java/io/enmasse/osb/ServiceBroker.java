@@ -18,6 +18,8 @@ import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
@@ -56,7 +58,7 @@ public class ServiceBroker extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), true);
+        SchemaApi schemaApi = KubeSchemaApi.create(client.adapt(NamespacedKubernetesClient.class), client.getNamespace(), true);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
@@ -65,8 +67,8 @@ public class ServiceBroker extends AbstractVerticle {
         ensureRouteExists(client, options);
         ensureCredentialsExist(client, options);
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
-        AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client.adapt(NamespacedKubernetesClient.class));
+        AuthApi authApi = new KubeAuthApi(client.adapt(NamespacedKubernetesClient.class), client.getConfiguration().getOauthToken());
 
         UserApi userApi = createUserApi(options, authenticationServiceRegistry);
 
@@ -103,7 +105,7 @@ public class ServiceBroker extends AbstractVerticle {
     }
 
     private UserApi createUserApi(ServiceBrokerOptions options, AuthenticationServiceRegistry authenticationServiceRegistry) {
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client, authenticationServiceRegistry);
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client.adapt(NamespacedKubernetesClient.class), authenticationServiceRegistry);
         return new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, Clock.systemUTC()), new NullUserApi());
     }
 
