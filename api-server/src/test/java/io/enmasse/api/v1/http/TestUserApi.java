@@ -4,6 +4,7 @@
  */
 package io.enmasse.api.v1.http;
 
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserList;
@@ -18,12 +19,12 @@ public class TestUserApi implements UserApi {
     public boolean throwException = false;
 
     @Override
-    public boolean isAvailable() {
+    public boolean isAvailable(AuthenticationService authenticationService) {
         return true;
     }
 
     @Override
-    public Optional<User> getUserWithName(String realm, String name) {
+    public Optional<User> getUserWithName(AuthenticationService authenticationService, String realm, String name) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
@@ -33,7 +34,7 @@ public class TestUserApi implements UserApi {
     }
 
     @Override
-    public void createUser(String realm, User user) {
+    public void createUser(AuthenticationService authenticationService, String realm, User user) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
@@ -43,7 +44,7 @@ public class TestUserApi implements UserApi {
     }
 
     @Override
-    public boolean replaceUser(String realm, User user) {
+    public boolean replaceUser(AuthenticationService authenticationService, String realm, User user) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
@@ -58,7 +59,7 @@ public class TestUserApi implements UserApi {
     }
 
     @Override
-    public void deleteUser(String realm, User user) {
+    public void deleteUser(AuthenticationService authenticationService, String realm, User user) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
@@ -69,12 +70,12 @@ public class TestUserApi implements UserApi {
     }
 
     @Override
-    public boolean realmExists(String realm) {
+    public boolean realmExists(AuthenticationService authenticationService, String realm) {
         return userMap.containsKey(realm);
     }
 
     @Override
-    public UserList listUsers(String namespace) {
+    public UserList listUsers(AuthenticationService authenticationService, String namespace) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
@@ -90,15 +91,15 @@ public class TestUserApi implements UserApi {
     }
 
     @Override
-    public UserList listUsersWithLabels(String namespace, Map<String, String> labels) {
+    public UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        return listUsers(namespace);
+        return listUsers(authenticationService, namespace);
     }
 
     @Override
-    public UserList listAllUsers() {
+    public UserList listAllUsers(AuthenticationService authenticationService) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
@@ -110,15 +111,15 @@ public class TestUserApi implements UserApi {
     }
 
     @Override
-    public UserList listAllUsersWithLabels(Map<String, String> labels) {
+    public UserList listAllUsersWithLabels(AuthenticationService authenticationService, Map<String, String> labels) {
         if (throwException) {
             throw new RuntimeException("exception");
         }
-        return listAllUsers();
+        return listAllUsers(authenticationService);
     }
 
     @Override
-    public void deleteUsers(String namespace) {
+    public void deleteUsers(AuthenticationService authenticationService, String namespace) {
         if (throwException) {
             throw new RuntimeException("exception");
         }

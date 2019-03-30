@@ -19,6 +19,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,10 +42,12 @@ public class HttpClusterUserService {
     private static final Logger log = LoggerFactory.getLogger(HttpClusterUserService.class.getName());
 
     private final UserApi userApi;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final Clock clock;
 
-    public HttpClusterUserService(UserApi userApi, Clock clock) {
+    public HttpClusterUserService(UserApi userApi, AuthenticationServiceRegistry authenticationServiceRegistry, Clock clock) {
         this.userApi = userApi;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.clock = clock;
     }
 
@@ -71,11 +75,13 @@ public class HttpClusterUserService {
             Instant now = clock.instant();
             UserList userList = new UserList();
 
-            if (labelSelector != null) {
-                Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                userList.getItems().addAll(userApi.listAllUsersWithLabels(labels).getItems());
-            } else {
-                userList.getItems().addAll(userApi.listAllUsers().getItems());
+            for (AuthenticationService authenticationService : authenticationServiceRegistry.listAuthenticationServices()) {
+                if (labelSelector != null) {
+                    Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
+                    userList.getItems().addAll(userApi.listAllUsersWithLabels(authenticationService, labels).getItems());
+                } else {
+                    userList.getItems().addAll(userApi.listAllUsers(authenticationService).getItems());
+                }
             }
 
             return Response.ok(HttpUserService.formatResponse(acceptHeader, now, userList)).build();

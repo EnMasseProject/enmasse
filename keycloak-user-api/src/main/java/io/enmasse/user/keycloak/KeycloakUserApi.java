@@ -5,8 +5,23 @@
 package io.enmasse.user.keycloak;
 
 
-import static java.util.Optional.empty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.k8s.util.TimeUtil;
+import io.enmasse.user.api.UserApi;
+import io.enmasse.user.model.v1.*;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.OwnerReference;
+import org.keycloak.admin.client.CreatedResponseUtil;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.representations.idm.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -20,37 +35,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-
-import org.keycloak.admin.client.CreatedResponseUtil;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.RealmResource;
-import org.keycloak.admin.client.resource.UserResource;
-import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.FederatedIdentityRepresentation;
-import org.keycloak.representations.idm.GroupRepresentation;
-import org.keycloak.representations.idm.RealmRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.enmasse.k8s.util.TimeUtil;
-import io.enmasse.user.api.UserApi;
-import io.enmasse.user.model.v1.Operation;
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthentication;
-import io.enmasse.user.model.v1.UserAuthenticationBuilder;
-import io.enmasse.user.model.v1.UserAuthenticationType;
-import io.enmasse.user.model.v1.UserAuthorization;
-import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import io.enmasse.user.model.v1.UserBuilder;
-import io.enmasse.user.model.v1.UserList;
-import io.enmasse.user.model.v1.UserSpecBuilder;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.fabric8.kubernetes.api.model.OwnerReference;
+import static java.util.Optional.empty;
 
 
 public class KeycloakUserApi implements UserApi {
@@ -60,7 +45,7 @@ public class KeycloakUserApi implements UserApi {
     private final Clock clock;
     private final KeycloakFactory keycloakFactory;
     private final Duration apiTimeout;
-    private volatile Keycloak keycloak;
+    private final Map<String, Keycloak> keycloakMap = new HashMap<>();
 
     public KeycloakUserApi(KeycloakFactory keycloakFactory, Clock clock) {
         this(keycloakFactory, clock, Duration.ZERO);
@@ -76,21 +61,22 @@ public class KeycloakUserApi implements UserApi {
         T handle(Keycloak keycloak);
     }
 
-    private synchronized <T> T withKeycloak(KeycloakHandler<T> consumer) {
-        if (keycloak == null) {
-            keycloak = keycloakFactory.createInstance();
+    private synchronized <T> T withKeycloak(AuthenticationService authenticationService, KeycloakHandler<T> consumer) {
+        if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
+            keycloakMap.put(authenticationService.getMetadata().getName(), keycloakFactory.createInstance(authenticationService));
         }
-        return consumer.handle(keycloak);
+        return consumer.handle(keycloakMap.get(authenticationService.getMetadata().getName()));
     }
 
     interface RealmHandler<T> {
         T handle(RealmResource realm);
     }
 
-    private synchronized <T> T withRealm(String realmName, RealmHandler<T> consumer) throws Exception {
-        if (keycloak == null) {
-            keycloak = keycloakFactory.createInstance();
+    private synchronized <T> T withRealm(AuthenticationService authenticationService, String realmName, RealmHandler<T> consumer) throws Exception {
+        if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
+            keycloakMap.put(authenticationService.getMetadata().getName(), keycloakFactory.createInstance(authenticationService));
         }
+        Keycloak keycloak = keycloakMap.get(authenticationService.getMetadata().getName());
         RealmResource realmResource = waitForRealm(keycloak, realmName, apiTimeout);
         return consumer.handle(realmResource);
     }
@@ -131,17 +117,18 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public synchronized boolean isAvailable() {
-        if (keycloak == null) {
-            keycloak = keycloakFactory.createInstance();
+    public synchronized boolean isAvailable(AuthenticationService authenticationService) {
+        if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
+            Keycloak keycloak = keycloakFactory.createInstance(authenticationService);
+            keycloakMap.put(authenticationService.getMetadata().getName(), keycloak);
         }
-        return keycloak != null;
+        return keycloakMap.get(authenticationService.getMetadata().getName()) != null;
     }
 
     @Override
-    public Optional<User> getUserWithName(String realmName, String resourceName) throws Exception {
+    public Optional<User> getUserWithName(AuthenticationService authenticationService, String realmName, String resourceName) throws Exception {
         log.info("Retrieving user {} in realm {}", resourceName, realmName);
-        return withRealm(realmName, realm -> realm.users().list().stream()
+        return withRealm(authenticationService, realmName, realm -> realm.users().list().stream()
                 .filter(userRep -> {
                     Map<String, List<String>> attributes = userRep.getAttributes();
                     return attributes != null && attributes.get("resourceName") != null && resourceName.equals(attributes.get("resourceName").get(0));
@@ -226,12 +213,12 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public void createUser(String realmName, User user) throws Exception {
+    public void createUser(AuthenticationService authenticationService, String realmName, User user) throws Exception {
         log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realmName);
         user.validate();
         validateForCreation(user);
 
-        withRealm(realmName, realm -> {
+        withRealm(authenticationService, realmName, realm -> {
 
             List<UserRepresentation> reps = realm.users().search(user.getSpec().getUsername());
 
@@ -359,17 +346,17 @@ public class KeycloakUserApi implements UserApi {
         return desiredGroups;
     }
 
-    private Optional<UserRepresentation> getUser(String realmName, String username) throws Exception {
-        return withRealm(realmName, realm -> realm.users().search(username).stream()
+    private Optional<UserRepresentation> getUser(AuthenticationService authenticationService, String realmName, String username) throws Exception {
+        return withRealm(authenticationService, realmName, realm -> realm.users().search(username).stream()
                 .filter(userRep -> username.equals(userRep.getUsername()))
                 .findFirst());
     }
 
     @Override
-    public boolean replaceUser(String realmName, User user) throws Exception {
+    public boolean replaceUser(AuthenticationService authenticationService, String realmName, User user) throws Exception {
         log.info("Replacing user {} in realm {}", user.getSpec().getUsername(), realmName);
         user.validate();
-        UserRepresentation userRep = getUser(realmName, user.getSpec().getUsername()).orElse(null);
+        UserRepresentation userRep = getUser(authenticationService, realmName, user.getSpec().getUsername()).orElse(null);
 
         if (userRep == null) {
             return false;
@@ -382,7 +369,7 @@ public class KeycloakUserApi implements UserApi {
             }
         }
 
-        return withRealm(realmName, realm -> {
+        return withRealm(authenticationService, realmName, realm -> {
             if (user.getSpec().getAuthentication() != null) {
                 switch (user.getSpec().getAuthentication().getType()) {
                     case password:
@@ -459,9 +446,9 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public void deleteUser(String realmName, User user) throws Exception {
+    public void deleteUser(AuthenticationService authenticationService, String realmName, User user) throws Exception {
         log.info("Deleting user {} in realm {}", user.getSpec().getUsername(), realmName);
-        withRealm(realmName, realm -> {
+        withRealm(authenticationService, realmName, realm -> {
             List<UserRepresentation> users = realm.users().search(user.getSpec().getUsername());
             for (UserRepresentation userRep : users) {
                 log.info("Found user with name {}, want {}", userRep.getUsername(), user.getSpec().getUsername());
@@ -474,12 +461,12 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public boolean realmExists(String realmName) {
-        return withKeycloak(kc -> getRealmResource(kc, realmName) != null);
+    public boolean realmExists(AuthenticationService authenticationService, String realmName) {
+        return withKeycloak(authenticationService, kc -> getRealmResource(kc, realmName) != null);
     }
 
-    private UserList queryUsers(final Predicate<RealmRepresentation> realmPredicate, final Predicate<UserRepresentation> userPredicate) {
-        return withKeycloak(keycloak -> {
+    private UserList queryUsers(AuthenticationService authenticationService, final Predicate<RealmRepresentation> realmPredicate, final Predicate<UserRepresentation> userPredicate) {
+        return withKeycloak(authenticationService, keycloak -> {
 
             List<RealmRepresentation> realmReps = keycloak.realms().findAll();
             UserList userList = new UserList();
@@ -506,8 +493,8 @@ public class KeycloakUserApi implements UserApi {
      * List all users, from all namespaces.
      */
     @Override
-    public UserList listAllUsers() {
-        return queryUsers(
+    public UserList listAllUsers(AuthenticationService authenticationService) {
+        return queryUsers(authenticationService,
                         realm -> getAttribute(realm, "namespace").isPresent(),
                         user -> true);
     }
@@ -516,8 +503,8 @@ public class KeycloakUserApi implements UserApi {
      * List users from a single namespace.
      */
     @Override
-    public UserList listUsers(final String namespace) {
-        return queryUsers(
+    public UserList listUsers(AuthenticationService authenticationService, final String namespace) {
+        return queryUsers(authenticationService,
                         realm -> hasAttribute(realm, "namespace", namespace),
                         user -> true);
     }
@@ -648,22 +635,22 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public UserList listUsersWithLabels(String namespace, Map<String, String> labels) {
-        return queryUsers(
+    public UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) {
+        return queryUsers(authenticationService,
                         realm -> hasAttribute(realm, "namespace", namespace),
                         user -> matchesLabels(user, labels));
     }
 
     @Override
-    public UserList listAllUsersWithLabels(final Map<String, String> labels) {
-        return queryUsers(
+    public UserList listAllUsersWithLabels(AuthenticationService authenticationService, final Map<String, String> labels) {
+        return queryUsers(authenticationService,
                         realm -> getAttribute(realm, "namespace").isPresent(),
                         user -> matchesLabels(user, labels));
     }
 
     @Override
-    public void deleteUsers(String namespace) {
-        withKeycloak(keycloak -> {
+    public void deleteUsers(AuthenticationService authenticationService, String namespace) {
+        withKeycloak(authenticationService, keycloak -> {
             List<RealmRepresentation> realmReps = keycloak.realms().findAll();
             for (RealmRepresentation realmRep : realmReps) {
                 String realmNs = realmRep.getAttributes().get("namespace");

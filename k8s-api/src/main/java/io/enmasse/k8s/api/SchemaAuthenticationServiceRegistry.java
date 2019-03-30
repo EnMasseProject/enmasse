@@ -53,4 +53,9 @@ public class SchemaAuthenticationServiceRegistry implements AuthenticationServic
             return standards.stream().findFirst();
         }
     }
+
+    @Override
+    public List<AuthenticationService> listAuthenticationServices() {
+        return schemaProvider.getSchema().getAuthenticationServices();
+    }
 }

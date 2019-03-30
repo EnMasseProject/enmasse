@@ -7,13 +7,14 @@ package io.enmasse.controller;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Collections;
+import java.util.Optional;
 
 import io.enmasse.address.model.AuthenticationService;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressSpace;
@@ -55,7 +56,9 @@ public class StatusControllerTest {
                 .build()))
         .thenReturn(Collections.emptySet());
 
-        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, null);
+        AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.empty());
+        StatusController controller = new StatusController(kubernetes, new TestSchemaProvider(), infraResourceFactory, authenticationServiceRegistry, null);
 
         AuthenticationService authenticationService = new AuthenticationService();
         authenticationService.setType(AuthenticationServiceType.NONE);

@@ -15,6 +15,8 @@ import static org.mockito.Mockito.when;
 
 import java.time.Clock;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 
 import javax.ws.rs.core.Response;
@@ -22,6 +24,10 @@ import javax.ws.rs.core.SecurityContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,10 +61,27 @@ public class HttpUserServiceTest {
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
         userApi = new TestUserApi();
-        this.userService = new HttpUserService(addressSpaceApi, userApi, Clock.systemUTC());
         securityContext = mock(SecurityContext.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
 
+        AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        AuthenticationService authenticationService = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .endMetadata()
+                .withNewSpec()
+                .withType(AuthenticationServiceType.standard)
+                .endSpec()
+                .withNewStatus()
+                .withHost("example")
+                .withPort(5671)
+                .endStatus()
+                .build();
+        when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
+        when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
+        when(authenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
+
+        this.userService = new HttpUserService(addressSpaceApi, userApi, authenticationServiceRegistry, Clock.systemUTC());
         addressSpaceApi.createAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("myspace")
@@ -129,8 +152,8 @@ public class HttpUserServiceTest {
                         .build())
                 .build();
 
-        userApi.createUser("r1", u1);
-        userApi.createUser("r2", u2);
+        userApi.createUser(authenticationService, "r1", u1);
+        userApi.createUser(authenticationService, "r2", u2);
     }
 
     private Response invoke(Callable<Response> fn) {
@@ -229,7 +252,7 @@ public class HttpUserServiceTest {
         Response response = invoke(() -> userService.createUser(securityContext, new ResteasyUriInfo("http://localhost:8443/", null, "/"), "ns1", u3));
         assertThat(response.getStatus(), is(201));
 
-        assertThat(userApi.listUsers("ns1").getItems(), hasItem(u3));
+        assertThat(userApi.listUsers(null, "ns1").getItems(), hasItem(u3));
     }
 
     @Test
@@ -365,8 +388,8 @@ public class HttpUserServiceTest {
         assertThat(response.getStatus(), is(200));
         assertThat(((Status) response.getEntity()).getStatusCode(), is(200));
 
-        assertTrue(userApi.listUsers("ns1").getItems().isEmpty());
-        assertFalse(userApi.listUsers("ns2").getItems().isEmpty());
+        assertTrue(userApi.listUsers(null, "ns1").getItems().isEmpty());
+        assertFalse(userApi.listUsers(null, "ns2").getItems().isEmpty());
     }
 
     @Test
@@ -380,11 +403,11 @@ public class HttpUserServiceTest {
     public void deleteAllUsers() {
         Response response = invoke(() -> userService.deleteUsers(securityContext, "unknown"));
         assertThat(response.getStatus(), is(200));
-        assertThat(userApi.listUsers("ns1").getItems().size(), is(1));
+        assertThat(userApi.listUsers(null, "ns1").getItems().size(), is(1));
 
         response = invoke(() -> userService.deleteUsers(securityContext, "ns1"));
         assertThat(response.getStatus(), is(200));
-        assertThat(userApi.listUsers("ns1").getItems().size(), is(0));
+        assertThat(userApi.listUsers(null, "ns1").getItems().size(), is(0));
     }
 
     @Test

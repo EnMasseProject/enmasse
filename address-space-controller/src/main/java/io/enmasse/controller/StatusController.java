@@ -5,10 +5,12 @@
 package io.enmasse.controller;
 
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.user.api.UserApi;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -28,12 +30,14 @@ public class StatusController implements Controller {
     private final Kubernetes kubernetes;
     private final SchemaProvider schemaProvider;
     private final InfraResourceFactory infraResourceFactory;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final UserApi userApi;
 
-    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, UserApi userApi) {
+    public StatusController(Kubernetes kubernetes, SchemaProvider schemaProvider, InfraResourceFactory infraResourceFactory, AuthenticationServiceRegistry authenticationServiceRegistry, UserApi userApi) {
         this.kubernetes = kubernetes;
         this.schemaProvider = schemaProvider;
         this.infraResourceFactory = infraResourceFactory;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.userApi = userApi;
     }
 
@@ -105,12 +109,17 @@ public class StatusController implements Controller {
     }
 
     private void checkAuthServiceReady(AddressSpace addressSpace) {
-        if (AuthenticationServiceType.STANDARD.equals(addressSpace.getSpec().getAuthenticationService().getType())) {
+        AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+        if (authenticationService != null) {
+            String realm = authenticationService.getSpec().getRealm();
+            if (realm == null) {
+                realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+            }
             try {
-                boolean isReady = userApi.realmExists(addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
+                boolean isReady = userApi.realmExists(authenticationService, realm);
                 if (!isReady) {
                     addressSpace.getStatus().setReady(false);
-                    addressSpace.getStatus().appendMessage("Standard authentication service is not configured with realm " + addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
+                    addressSpace.getStatus().appendMessage("Authentication service is not configured with realm " + addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
                 }
             } catch (Exception e) {
                 String msg = String.format("Error checking authentication service status: %s", e.getMessage());

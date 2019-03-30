@@ -50,7 +50,7 @@ public class OSBTestBase {
                 return "http://localhost/console/" + addressSpace.getMetadata().getName();
             }
         });
-        bindingService = new OSBBindingService(addressSpaceApi, null, null, null);
+        bindingService = new OSBBindingService(addressSpaceApi, null, null, null, null);
         lastOperationService = new OSBLastOperationService(addressSpaceApi, null, null);
     }
 

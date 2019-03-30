@@ -5,6 +5,7 @@
 
 package io.enmasse.api.server;
 
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.*;
@@ -12,7 +13,7 @@ import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
-import io.enmasse.user.api.UserApiWithFallback;
+import io.enmasse.user.api.DelegateUserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
@@ -38,6 +39,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.time.Clock;
+import java.util.Map;
 
 public class ApiServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class.getName());
@@ -71,9 +73,11 @@ public class ApiServer extends AbstractVerticle {
 
         AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
 
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client, authenticationServiceRegistry);
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client);
         Clock clock = Clock.systemUTC();
-        UserApi userApi = new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout()), new NullUserApi());
+        UserApi userApi = new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
+                AuthenticationServiceType.external, new NullUserApi(),
+                AuthenticationServiceType.standard, new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout())));
 
         String clientCa;
         String requestHeaderClientCa;

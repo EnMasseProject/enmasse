@@ -9,6 +9,7 @@ import io.enmasse.api.auth.AllowAllAuthInterceptor;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.osb.api.bind.OSBBindingService;
@@ -40,12 +41,13 @@ public class HTTPServer extends AbstractVerticle {
     private final UserApi userApi;
     private final int listenPort;
     private final ConsoleProxy consoleProxy;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
 
     private HttpServer httpServer;
 
     public HTTPServer(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider,
                       AuthApi authApi, String certDir, boolean enableRbac,
-                      UserApi userApi, int listenPort, ConsoleProxy consoleProxy) {
+                      UserApi userApi, int listenPort, ConsoleProxy consoleProxy, AuthenticationServiceRegistry authenticationServiceRegistry) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = certDir;
@@ -54,6 +56,7 @@ public class HTTPServer extends AbstractVerticle {
         this.userApi = userApi;
         this.listenPort = listenPort;
         this.consoleProxy = consoleProxy;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
     }
 
     @Override
@@ -77,7 +80,7 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpConsoleService(authApi.getNamespace(), addressSpaceApi));
         deployment.getRegistry().addSingletonResource(new OSBCatalogService(addressSpaceApi, authApi, schemaProvider));
         deployment.getRegistry().addSingletonResource(new OSBProvisioningService(addressSpaceApi, authApi, schemaProvider, consoleProxy));
-        deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, userApi));
+        deployment.getRegistry().addSingletonResource(new OSBBindingService(addressSpaceApi, authApi, schemaProvider, authenticationServiceRegistry, userApi));
         deployment.getRegistry().addSingletonResource(new OSBLastOperationService(addressSpaceApi, authApi, schemaProvider));
 
         VertxRequestHandler requestHandler = new VertxRequestHandler(vertx, deployment);
