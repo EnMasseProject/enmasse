@@ -10,25 +10,21 @@ import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.*;
+import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.api.UserApiWithFallback;
-import io.enmasse.user.keycloak.KeycloakUserApi;
-import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.user.keycloak.KeycloakFactory;
+import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import org.apache.qpid.proton.amqp.transport.Open;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +57,7 @@ public class ServiceBroker extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        SchemaApi schemaApi = KubeSchemaApi.create(client.adapt(NamespacedKubernetesClient.class), client.getNamespace(), true);
+        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), true);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
@@ -70,8 +66,8 @@ public class ServiceBroker extends AbstractVerticle {
         ensureRouteExists(client.adapt(OpenShiftClient.class), options);
         ensureCredentialsExist(client, options);
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client.adapt(NamespacedKubernetesClient.class));
-        AuthApi authApi = new KubeAuthApi(client.adapt(NamespacedKubernetesClient.class), client.getConfiguration().getOauthToken());
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
+        AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
         UserApi userApi = createUserApi(options, authenticationServiceRegistry);
 
@@ -108,7 +104,7 @@ public class ServiceBroker extends AbstractVerticle {
     }
 
     private UserApi createUserApi(ServiceBrokerOptions options, AuthenticationServiceRegistry authenticationServiceRegistry) {
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client.adapt(NamespacedKubernetesClient.class), authenticationServiceRegistry);
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client, authenticationServiceRegistry);
         return new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, Clock.systemUTC()), new NullUserApi());
     }
 
