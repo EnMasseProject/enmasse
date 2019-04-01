@@ -320,6 +320,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
 
+        addressPlan = plansProvider.getAddressPlan(addressPlan.getMetadata().getName());
         // Increase number of partitions and expect broker to be created
         addressPlan.getSpec().setPartitions(2);
         plansProvider.replaceAddressPlan(addressPlan);

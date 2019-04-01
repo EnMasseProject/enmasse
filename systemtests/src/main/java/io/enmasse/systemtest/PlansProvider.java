@@ -97,6 +97,10 @@ public class PlansProvider {
         return adminApiClient.getAddressSpacePlan(config);
     }
 
+    public AddressPlan getAddressPlan(String name) throws Exception {
+        return adminApiClient.getAddressPlan(name);
+    }
+
     //------------------------------------------------------------------------------------------------
     // Infra configs
     //------------------------------------------------------------------------------------------------
@@ -126,4 +130,5 @@ public class PlansProvider {
         adminApiClient.deleteInfraConfig(infraConfigDefinition);
         infraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
     }
+
 }
