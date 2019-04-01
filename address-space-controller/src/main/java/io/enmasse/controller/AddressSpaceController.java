@@ -21,6 +21,8 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import okhttp3.HttpUrl;
@@ -38,7 +40,7 @@ import java.time.Duration;
 
 public class AddressSpaceController {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
-    private final NamespacedOpenShiftClient controllerClient;
+    private final NamespacedKubernetesClient controllerClient;
     private final AddressSpaceControllerOptions options;
 
     static {
@@ -54,14 +56,14 @@ public class AddressSpaceController {
     private ControllerChain controllerChain;
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
-        this.controllerClient = new DefaultOpenShiftClient();
+        this.controllerClient = new DefaultKubernetesClient();
         this.options = options;
     }
 
-    private static boolean isOpenShift(NamespacedOpenShiftClient client) {
+    private static boolean isOpenShift(NamespacedKubernetesClient client) {
         // Need to query the full API path because Kubernetes does not allow GET on /
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/apis/route.openshift.io");
+        HttpUrl url = HttpUrl.get(client.getMasterUrl()).resolve("/apis/route.openshift.io");
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
                 .get();
@@ -83,7 +85,7 @@ public class AddressSpaceController {
         }
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
-        Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, controllerClient.getConfiguration().getOauthToken(), options.getTemplateDir(), isOpenShift);
+        Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, options.getTemplateDir(), isOpenShift);
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "address-space-controller")
@@ -106,7 +108,7 @@ public class AddressSpaceController {
         controllerChain.addController(new RealmController(new Keycloak(keycloakFactory), new KubeUserLookupApi(controllerClient, isOpenShift), userApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
-        controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault()));
+        controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);
         controllerChain.addController(new DeleteController(kubernetes));
@@ -138,7 +140,7 @@ public class AddressSpaceController {
         }
     }
 
-    private void configureDefaultResources(NamespacedOpenShiftClient client, File resourcesDir) {
+    private void configureDefaultResources(NamespacedKubernetesClient client, File resourcesDir) {
         String namespace = client.getNamespace();
 
         KubeResourceApplier.applyIfDifferent(new File(resourcesDir, "configmaps"),

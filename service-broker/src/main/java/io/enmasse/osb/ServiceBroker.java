@@ -10,17 +10,18 @@ import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.*;
+import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.api.UserApiWithFallback;
-import io.enmasse.user.keycloak.KeycloakUserApi;
-import io.enmasse.osb.api.provision.ConsoleProxy;
 import io.enmasse.user.keycloak.KeycloakFactory;
+import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -36,7 +37,7 @@ import java.util.Base64;
 
 public class ServiceBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ServiceBroker.class.getName());
-    private final NamespacedOpenShiftClient client;
+    private final NamespacedKubernetesClient client;
     private final ServiceBrokerOptions options;
 
     static {
@@ -50,7 +51,7 @@ public class ServiceBroker extends AbstractVerticle {
     }
 
     private ServiceBroker(ServiceBrokerOptions options) {
-        this.client = new DefaultOpenShiftClient();
+        this.client = new DefaultKubernetesClient();
         this.options = options;
     }
 
@@ -62,7 +63,7 @@ public class ServiceBroker extends AbstractVerticle {
 
         AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
 
-        ensureRouteExists(client, options);
+        ensureRouteExists(client.adapt(OpenShiftClient.class), options);
         ensureCredentialsExist(client, options);
 
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
@@ -71,7 +72,7 @@ public class ServiceBroker extends AbstractVerticle {
         UserApi userApi = createUserApi(options, authenticationServiceRegistry);
 
         ConsoleProxy consoleProxy = addressSpace -> {
-            Route route = client.routes().withName(options.getConsoleProxyRouteName()).get();
+            Route route = client.adapt(OpenShiftClient.class).routes().inNamespace(client.getNamespace()).withName(options.getConsoleProxyRouteName()).get();
             if (route == null) {
                 return null;
             }
@@ -89,7 +90,7 @@ public class ServiceBroker extends AbstractVerticle {
                 });
     }
 
-    private void ensureCredentialsExist(NamespacedOpenShiftClient client, ServiceBrokerOptions options) {
+    private void ensureCredentialsExist(NamespacedKubernetesClient client, ServiceBrokerOptions options) {
         Secret secret = client.secrets().withName(options.getServiceCatalogCredentialsSecretName()).get();
         if (secret == null) {
             client.secrets().createNew()
@@ -107,8 +108,8 @@ public class ServiceBroker extends AbstractVerticle {
         return new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, Clock.systemUTC()), new NullUserApi());
     }
 
-    private static void ensureRouteExists(NamespacedOpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {
-        Route proxyRoute = client.routes().withName(serviceBrokerOptions.getConsoleProxyRouteName()).get();
+    private static void ensureRouteExists(OpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {
+        Route proxyRoute = client.routes().inNamespace(client.getNamespace()).withName(serviceBrokerOptions.getConsoleProxyRouteName()).get();
         if (proxyRoute == null) {
             String caCertificate = new String(Files.readAllBytes(new File(serviceBrokerOptions.getCertDir(), "tls.crt").toPath()), StandardCharsets.UTF_8);
             client.routes().createNew()

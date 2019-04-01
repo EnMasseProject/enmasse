@@ -17,9 +17,9 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
@@ -41,7 +41,7 @@ import java.time.Clock;
 
 public class ApiServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class.getName());
-    private final NamespacedOpenShiftClient client;
+    private final NamespacedKubernetesClient client;
     private final ApiServerOptions options;
 
     static {
@@ -53,8 +53,8 @@ public class ApiServer extends AbstractVerticle {
         }
     }
 
-    private ApiServer(ApiServerOptions options) {
-        this.client = new DefaultOpenShiftClient();
+    private ApiServer(ApiServerOptions options) throws IOException {
+        this.client = new DefaultKubernetesClient();
         this.options = options;
     }
 
@@ -94,8 +94,10 @@ public class ApiServer extends AbstractVerticle {
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {
                 log.info("API Server started successfully");
+                startPromise.complete();
             } else {
                 log.error("API Server failed to start", result.cause());
+                startPromise.fail(result.cause());
             }
         });
     }
@@ -114,18 +116,27 @@ public class ApiServer extends AbstractVerticle {
         }
     }
 
-    private static boolean isOpenShift(NamespacedOpenShiftClient client) {
-        // Need to query the full API path because Kubernetes does not allow GET on /
-        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/apis/route.openshift.io");
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .get();
+    private static boolean isOpenShift(NamespacedKubernetesClient client) throws InterruptedException {
+        int retries = 10;
+        while (true) {
+            // Need to query the full API path because Kubernetes does not allow GET on /
+            OkHttpClient httpClient = client.adapt(OkHttpClient.class);
+            HttpUrl url = HttpUrl.get(client.getMasterUrl()).resolve("/apis/route.openshift.io");
+            Request.Builder requestBuilder = new Request.Builder()
+                    .url(url)
+                    .get();
 
-        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
-            return response.code() >= 200 && response.code() < 300;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
+                return response.code() >= 200 && response.code() < 300;
+            } catch (IOException e) {
+                retries--;
+                if (retries <= 0) {
+                    throw new UncheckedIOException(e);
+                } else {
+                    log.warn("Exception when checking API availability, retrying {} times", retries, e);
+                }
+            }
+            Thread.sleep(5000);
         }
     }
 

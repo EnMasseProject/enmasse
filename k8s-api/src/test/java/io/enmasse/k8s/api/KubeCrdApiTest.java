@@ -10,6 +10,8 @@ import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
 import io.enmasse.k8s.util.JULInitializingTest;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 import org.junit.jupiter.api.AfterEach;
@@ -25,21 +27,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class KubeCrdApiTest extends JULInitializingTest {
 
-    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+    private KubernetesServer kubeServer = new KubernetesServer(false, true);
 
     @BeforeEach
     void setUp() {
-        openShiftServer.before();
+        kubeServer.before();
     }
 
     @AfterEach
     void tearDown() {
-        openShiftServer.after();
+        kubeServer.after();
     }
 
     @Test
     void testNotifiesExisting() throws Exception {
-        NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
+        NamespacedKubernetesClient client = kubeServer.getClient();
         CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
         CrdApi<AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(client, client.getNamespace(), crd,
                 AddressSpacePlan.class,
@@ -71,7 +73,7 @@ class KubeCrdApiTest extends JULInitializingTest {
 
     @Test
     void testNotifiesCreated() throws Exception {
-        NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
+        NamespacedKubernetesClient client = kubeServer.getClient();
         CustomResourceDefinition crd = AdminCrd.addressSpacePlans();
         CrdApi<AddressSpacePlan> addressSpacePlanApi = new KubeCrdApi<>(client, client.getNamespace(), crd,
                 AddressSpacePlan.class,

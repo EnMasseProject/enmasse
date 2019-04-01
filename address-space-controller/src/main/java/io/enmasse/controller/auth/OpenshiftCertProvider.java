@@ -9,16 +9,16 @@ import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class OpenshiftCertProvider implements CertProvider {
     private static final Logger log = LoggerFactory.getLogger(OpenshiftCertProvider.class);
-    private final OpenShiftClient client;
+    private final KubernetesClient client;
     private final String namespace;
 
-    public OpenshiftCertProvider(OpenShiftClient client) {
+    public OpenshiftCertProvider(KubernetesClient client) {
         this.client = client;
         this.namespace = client.getNamespace();
     }

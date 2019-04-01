@@ -12,7 +12,9 @@ import java.util.stream.Collectors;
 
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.common.Kubernetes;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -24,11 +26,11 @@ import org.slf4j.LoggerFactory;
 public class OpenSSLCertManager implements CertManager {
     private static final Logger log = LoggerFactory.getLogger(OpenSSLCertManager.class);
     private static final int PROCESS_LINE_BUFFER_SIZE = 10;
-    private final OpenShiftClient client;
+    private final KubernetesClient client;
     private final String namespace;
     private final File certDir;
 
-    public OpenSSLCertManager(OpenShiftClient controllerClient,
+    public OpenSSLCertManager(KubernetesClient controllerClient,
                               File certDir) {
         this.client = controllerClient;
         this.certDir = certDir;
@@ -44,7 +46,7 @@ public class OpenSSLCertManager implements CertManager {
                                                         final Map<String, String> secretLabels,
                                                         final File keyFile,
                                                         final File certFile,
-                                                        final OpenShiftClient client)
+                                                        final KubernetesClient client)
             throws IOException {
         return createSecretFromCertAndKeyFiles(secretName, secretLabels, "tls.key", "tls.crt", keyFile, certFile, client);
     }
@@ -55,7 +57,7 @@ public class OpenSSLCertManager implements CertManager {
                                                           final String certKey,
                                                           final File keyFile,
                                                           final File certFile,
-                                                          final OpenShiftClient client)
+                                                          final KubernetesClient client)
             throws IOException {
         Map<String, String> data = new LinkedHashMap<>();
         Base64.Encoder encoder = Base64.getEncoder();
@@ -253,7 +255,7 @@ public class OpenSSLCertManager implements CertManager {
         }
     }
 
-    public static OpenSSLCertManager create(OpenShiftClient controllerClient) {
+    public static OpenSSLCertManager create(KubernetesClient controllerClient) {
         return new OpenSSLCertManager(controllerClient, new File("/tmp"));
     }
 
