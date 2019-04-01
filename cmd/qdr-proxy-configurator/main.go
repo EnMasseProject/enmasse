@@ -105,7 +105,7 @@ func main() {
 	}
 
 	if err := enmassescheme.AddToScheme(scheme.Scheme); err != nil {
-		klog.Fatalf("Failed to register EnMasse schema", err.Error())
+		klog.Fatalf("Failed to register EnMasse schema: %v", err.Error())
 		os.Exit(1)
 	}
 
