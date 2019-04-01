@@ -264,6 +264,77 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     }
 
     @Test
+    void testScalePlanPartitions() throws Exception {
+        //define and create address plans
+        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
+        AddressPlan addressPlan = new AddressPlanBuilder()
+                .editOrNewMetadata()
+                .withName("partitioned-queue")
+                .endMetadata()
+                .editOrNewSpec()
+                .withAddressType("queue")
+                .withPartitions(1)
+                .addToResources("router", 0.001)
+                .addToResources("broker", 0.6)
+                .endSpec()
+                .build();
+
+        plansProvider.createAddressPlan(addressPlan);
+
+        //define and create address space plan
+        AddressSpacePlan partitionedAddressesPlan = new AddressSpacePlanBuilder()
+                .editOrNewMetadata()
+                .withName("partitioned-addresses")
+                .endMetadata()
+                .editOrNewSpec()
+                .withAddressSpaceType("standard")
+                .withInfraConfigRef("default")
+                .addToResourceLimits("broker", 10.0)
+                .addToResourceLimits("router", 2.0)
+                .addToResourceLimits("aggregate", 12.0)
+                .addToAddressPlans("partitioned-queue")
+                .endSpec()
+                .build();
+
+        plansProvider.createAddressSpacePlan(partitionedAddressesPlan);
+
+        //create address space plan with new plan
+        AddressSpace partitioned = AddressSpaceUtils.createAddressSpaceObject("partitioned", AddressSpaceType.STANDARD,
+                partitionedAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        createAddressSpace(partitioned);
+
+        UserCredentials cred = new UserCredentials("testus", "papyrus");
+        createUser(partitioned, cred);
+
+        Address address = new AddressBuilder()
+                .editOrNewMetadata()
+                .withName("partitioned.myqueue")
+                .endMetadata()
+                .editOrNewSpec()
+                .withAddress("myqueue")
+                .withPlan("partitioned-queue")
+                .withType("queue")
+                .endSpec()
+                .build();
+        appendAddresses(partitioned, address);
+        waitForBrokerReplicas(partitioned, address, 1);
+        assertCanConnect(partitioned, cred, Collections.singletonList(address));
+
+        // Increase number of partitions and expect broker to be created
+        addressPlan.getSpec().setPartitions(2);
+        plansProvider.replaceAddressPlan(addressPlan);
+        waitForBrokerReplicas(partitioned, address, 2);
+        assertCanConnect(partitioned, cred, Collections.singletonList(address));
+
+
+        // Decrease number of partitions and expect broker to disappear
+        addressPlan.getSpec().setPartitions(1);
+        plansProvider.replaceAddressPlan(addressPlan);
+        waitForBrokerReplicas(partitioned, address, 1);
+        assertCanConnect(partitioned, cred, Collections.singletonList(address));
+    }
+
+    @Test
     void testScalePooledBrokers() throws Exception {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
