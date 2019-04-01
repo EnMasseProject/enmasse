@@ -132,7 +132,7 @@
                   </validation>
                </xa-datasource>
                <drivers>
-                  <driver name="postgresql" module="org.postgresql">
+                  <driver name="postgresql" module="org.postgresql.jdbc">
                      <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
                   </driver>
                </drivers>
