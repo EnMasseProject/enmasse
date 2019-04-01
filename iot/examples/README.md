@@ -51,14 +51,13 @@
 * Register a device
 
   ```
-  oc project enmasse-infra
-  curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711"}' https://$(oc get routes device-registry --template='{{ .spec.host }}')/registration/myapp.iot
+  curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711"}' https://$(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')/registration/myapp.iot
   ```
 
 * Add credentials for a device
 
   ```
-  curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-plain":"'hono-secret'"}]}' https://$(oc get routes device-registry --template='{{ .spec.host }}')/credentials/myapp.iot
+  curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-plain":"'hono-secret'"}]}' https://$(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')/credentials/myapp.iot
   ```
 
 * Start a telemetry consumer
@@ -71,10 +70,9 @@ In Hono project run
   # at least once run
   mvn package -am
 
-  oc project myapp
-  oc get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].cert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
+  oc -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].cert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
 
-  mvn spring-boot:run -Drun.arguments=--hono.client.host=$(oc get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].externalHost}),--hono.client.port=443,--hono.client.username=consumer,--hono.client.password=foobar,--tenant.id=myapp.iot,--hono.client.trustStorePath=target/config/hono-demo-certs-jar/tls.crt
+  mvn spring-boot:run -Drun.arguments=--hono.client.host=$(oc -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].externalHost}),--hono.client.port=443,--hono.client.username=consumer,--hono.client.password=foobar,--tenant.id=myapp.iot,--hono.client.trustStorePath=target/config/hono-demo-certs-jar/tls.crt
   ```
 
 * Send telemetry message using HTTP
