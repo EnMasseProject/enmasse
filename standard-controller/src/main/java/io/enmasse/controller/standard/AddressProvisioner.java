@@ -251,15 +251,24 @@ public class AddressProvisioner {
     }
 
     private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address, Set<Address> addressSet) {
-        AddressPlan addressPlan = addressResolver.getDesiredPlan(address);
+        AddressPlan desiredPlan = addressResolver.getDesiredPlan(address);
+        AddressPlanStatus appliedPlan = Optional.ofNullable(address.getStatus()).map(Status::getPlanStatus).orElse(null);
 
         Map<String, Map<String, UsageInfo>> needed = copyUsageMap(usage);
 
-        for (Map.Entry<String, Double> resourceRequest : addressPlan.getResources().entrySet()) {
+        for (Map.Entry<String, Double> resourceRequest : desiredPlan.getResources().entrySet()) {
+
             String resourceName = resourceRequest.getKey();
             Map<String, UsageInfo> resourceUsage = needed.computeIfAbsent(resourceName, k -> new HashMap<>());
             if ("router".equals(resourceName)) {
                 UsageInfo info = resourceUsage.computeIfAbsent("all", k -> new UsageInfo());
+
+                // Remove existing usage
+                if (appliedPlan != null && appliedPlan.getResources().get(resourceName) != null) {
+                    info.subUsed(appliedPlan.getResources().get(resourceName));
+                }
+
+                // Add new usage
                 info.addUsed(resourceRequest.getValue());
             } else if ("broker".equals(resourceName)) {
                 if ("subscription".equals(address.getSpec().getType())) {
@@ -274,8 +283,17 @@ public class AddressProvisioner {
                         log.warn("No topic specified for subscription {}", address.getSpec().getAddress());
                     }
                 } else if ("queue".equals(address.getSpec().getType()) || resourceRequest.getValue() < 1) {
+                    // Remove existing usage
+                    if (appliedPlan != null && appliedPlan.getResources().get(resourceName) != null && address.getStatus() != null) {
+                        for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
+                            UsageInfo info = resourceUsage.get(brokerStatus.getClusterId());
+                            info.subUsed(appliedPlan.getResources().get(resourceName));
+                        }
+                    }
+
+                    // Schedule address and add usage
                     boolean scheduled = false;
-                    int partitions = getQueuePartitions(resourceRequest.getValue(), addressPlan.getPartitions());
+                    int partitions = getQueuePartitions(resourceRequest.getValue(), desiredPlan.getPartitions());
                     for (int retry = 0; !scheduled && retry < partitions + 1; retry++) {
                         scheduled = scheduleAddress(resourceUsage, address, resourceRequest.getValue(), partitions);
                         if (!scheduled) {

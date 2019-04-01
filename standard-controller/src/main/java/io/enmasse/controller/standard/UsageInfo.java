@@ -25,6 +25,11 @@ class UsageInfo {
         needed = (int) Math.ceil(used);
     }
 
+    public void subUsed(double sub) {
+        this.used -= sub;
+        needed = (int) Math.ceil(used);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

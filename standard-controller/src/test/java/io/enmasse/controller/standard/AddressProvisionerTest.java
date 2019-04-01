@@ -470,7 +470,7 @@ public class AddressProvisionerTest {
     public void testSwitchShardedAddressPlan() throws Exception {
 
         AddressProvisioner provisioner = new ProvisionerTestFixture(Arrays.asList(
-                new ResourceAllowance("broker", 3),
+                new ResourceAllowance("broker", 2),
                 new ResourceAllowance("router", 1),
                 new ResourceAllowance("aggregate", 4))).addressProvisioner;
 
@@ -518,9 +518,9 @@ public class AddressProvisionerTest {
 
         usageMap = provisioner.checkUsage(Sets.newSet(q1));
         provisioner.checkQuota(usageMap, Sets.newSet(q1), Sets.newSet(q1));
-        assertTrue(q1.getStatus().getMessages().contains("Quota exceeded"));
-        assertThat(q1.getStatus().getPhase(), is(Active));
-        assertNotEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
+        assertTrue(q1.getStatus().getMessages().isEmpty());
+        assertThat(q1.getStatus().getPhase(), is(Configuring));
+        assertEquals(q1.getSpec().getPlan(), q1.getAnnotation(AnnotationKeys.APPLIED_PLAN));
     }
 
     /*
