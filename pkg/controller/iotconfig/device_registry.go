@@ -68,7 +68,7 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 
 	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
-		if err := install.SetContainerImage(container, "iot-device-registry", config); err != nil {
+		if err := install.SetContainerImage(container, "iot-device-registry-file", config); err != nil {
 			return err
 		}
 
