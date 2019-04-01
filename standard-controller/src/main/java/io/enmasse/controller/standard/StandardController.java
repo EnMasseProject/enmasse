@@ -75,7 +75,7 @@ public class StandardController {
 
     public void start() throws Exception {
 
-        SchemaApi schemaApi = KubeSchemaApi.create(kubeClient, kubeClient.getNamespace(), isOpenShift(kubeClient));
+        SchemaApi schemaApi = KubeSchemaApi.create(kubeClient, kubeClient.getNamespace(), false);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
@@ -129,21 +129,6 @@ public class StandardController {
                 kubeClient.close();
                 log.info("StandardController stopped");
             }
-        }
-    }
-
-    private static boolean isOpenShift(NamespacedKubernetesClient client) {
-        // Need to query the full API path because Kubernetes does not allow GET on /
-        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
-        HttpUrl url = HttpUrl.get(client.getMasterUrl()).resolve("/apis/route.openshift.io");
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .get();
-
-        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
-            return response.code() >= 200 && response.code() < 300;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 }
