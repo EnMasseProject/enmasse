@@ -188,6 +188,54 @@ spec:
           resourceNames: [ "extension-apiserver-authentication" ]
           verbs: [ "get" ]
       deployments:
+      - name: enmasse-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: enmasse
+              name: enmasse-operator
+          template:
+            metadata:
+              labels:
+                app: enmasse
+                name: enmasse-operator
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                    - weight: 1
+                      preference:
+                        matchExpressions:
+                          - key: node-role.enmasse.io/operator-infra
+                            operator: In
+                            values:
+                              - "true"
+              serviceAccountName: enmasse-operator
+              containers:
+              - name: controller
+                image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
+                imagePullPolicy: ${IMAGE_PULL_POLICY}
+                env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: OPERATOR_NAME
+                  value: "enmasse-operator"
+                - name: ENMASSE_DEFAULT_PULL_POLICY
+                  value: "${IMAGE_PULL_POLICY}"
+                - name: CONTROLLER_DISABLE_ALL
+                  value: "true"
+                - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
+                  value: "true"
+                resources:
+                  limits:
+                    memory: 128Mi
       - name: user-api-server
         spec:
           replicas: 1
@@ -332,54 +380,6 @@ spec:
                   name: apiservice-cert
                   readOnly: true
               serviceAccountName: api-server
-      - name: enmasse-operator
-        spec:
-          replicas: 1
-          selector:
-            matchLabels:
-              app: enmasse
-              name: enmasse-operator
-          template:
-            metadata:
-              labels:
-                app: enmasse
-                name: enmasse-operator
-            spec:
-              affinity:
-                nodeAffinity:
-                  preferredDuringSchedulingIgnoredDuringExecution:
-                    - weight: 1
-                      preference:
-                        matchExpressions:
-                          - key: node-role.enmasse.io/operator-infra
-                            operator: In
-                            values:
-                              - "true"
-              serviceAccountName: enmasse-operator
-              containers:
-              - name: controller
-                image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
-                imagePullPolicy: ${IMAGE_PULL_POLICY}
-                env:
-                - name: POD_NAME
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.name
-                - name: NAMESPACE
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.namespace
-                - name: OPERATOR_NAME
-                  value: "enmasse-operator"
-                - name: ENMASSE_DEFAULT_PULL_POLICY
-                  value: "${IMAGE_PULL_POLICY}"
-                - name: CONTROLLER_DISABLE_ALL
-                  value: "true"
-                - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
-                  value: "true"
-                resources:
-                  limits:
-                    memory: 128Mi
       - name: address-space-controller
         spec:
           replicas: 1
