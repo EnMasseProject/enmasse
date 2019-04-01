@@ -286,7 +286,7 @@ spec:
                     path: /healthz
                     port: http
                     scheme: HTTP
-                  initialDelaySeconds: 30
+                  initialDelaySeconds: 60
                 name: api-server
                 ports:
                 - containerPort: 8080
@@ -358,7 +358,7 @@ spec:
                     path: /healthz
                     port: http
                     scheme: HTTP
-                  initialDelaySeconds: 30
+                  initialDelaySeconds: 60
                 name: api-server
                 ports:
                 - containerPort: 8080
