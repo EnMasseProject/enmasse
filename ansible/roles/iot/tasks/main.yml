@@ -1,0 +1,7 @@
+---
+- name: Apply the IoT CRD
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/iot/api
+- name: Apply the IoT Common
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/iot/common
+- name: Apply the IoT Operator
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/iot/operator
