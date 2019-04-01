@@ -127,7 +127,10 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 			install.ApplyEnvSecret(container, "DB_PASSWORD", "database-password", authservice.Spec.Standard.Datasource.CredentialsSecret.Name)
 		}
 
-		container.Args = []string{"start-keycloak.sh", "-b", "0.0.0.0", "-c", "standalone-" + string(authservice.Spec.Standard.Datasource.Type) + ".xml"}
+		// Only allow setting data source on initial creation
+		if util.IsNewObject(deployment) {
+			container.Args = []string{"start-keycloak.sh", "-b", "0.0.0.0", "-c", "standalone-" + string(authservice.Spec.Standard.Datasource.Type) + ".xml"}
+		}
 
 		container.Ports = []corev1.ContainerPort{{
 			ContainerPort: 5671,
@@ -170,10 +173,13 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 	install.ApplyEmptyDirVolume(deployment, "keycloak-configuration")
 	install.ApplyEmptyDirVolume(deployment, "keycloak-configuration")
 
-	if authservice.Spec.Standard.Storage.Type == adminv1beta1.PersistentClaim {
-		install.ApplyPersistentVolume(deployment, "keycloak-persistence", *authservice.Spec.Standard.Storage.ClaimName)
-	} else {
-		install.ApplyEmptyDirVolume(deployment, "keycloak-persistence")
+	// Only allow setting volume on initial creation
+	if util.IsNewObject(deployment) {
+		if authservice.Spec.Standard.Storage.Type == adminv1beta1.PersistentClaim {
+			install.ApplyPersistentVolume(deployment, "keycloak-persistence", *authservice.Spec.Standard.Storage.ClaimName)
+		} else {
+			install.ApplyEmptyDirVolume(deployment, "keycloak-persistence")
+		}
 	}
 
 	if authservice.Spec.Standard.ServiceAccountName != nil {
@@ -217,18 +223,21 @@ func applyStandardAuthServiceVolume(authservice *adminv1beta1.AuthenticationServ
 
 	install.ApplyDefaultLabels(&pvc.ObjectMeta, "standard-authservice", *authservice.Spec.Standard.Storage.ClaimName)
 
-	selector := authservice.Spec.Standard.Storage.Selector
-	storageClassName := authservice.Spec.Standard.Storage.Class
-	resources := corev1.ResourceRequirements{
-		Requests: map[corev1.ResourceName]resource.Quantity{"storage": authservice.Spec.Standard.Storage.Size},
-	}
+	// Only allow setting volume on initial creation
+	if util.IsNewObject(pvc) {
+		selector := authservice.Spec.Standard.Storage.Selector
+		storageClassName := authservice.Spec.Standard.Storage.Class
+		resources := corev1.ResourceRequirements{
+			Requests: map[corev1.ResourceName]resource.Quantity{"storage": authservice.Spec.Standard.Storage.Size},
+		}
 
-	pvc.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{
-		corev1.ReadWriteOnce,
+		pvc.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{
+			corev1.ReadWriteOnce,
+		}
+		pvc.Spec.Selector = selector
+		pvc.Spec.StorageClassName = storageClassName
+		pvc.Spec.Resources = resources
 	}
-	pvc.Spec.Selector = selector
-	pvc.Spec.StorageClassName = storageClassName
-	pvc.Spec.Resources = resources
 	return nil
 }
 
