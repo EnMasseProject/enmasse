@@ -266,10 +266,21 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     @Test
     void testScalePlanPartitions() throws Exception {
         //define and create address plans
-        List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
-        AddressPlan addressPlan = new AddressPlanBuilder()
+        AddressPlan partitionedQueue = new AddressPlanBuilder()
                 .editOrNewMetadata()
                 .withName("partitioned-queue")
+                .endMetadata()
+                .editOrNewSpec()
+                .withAddressType("queue")
+                .withPartitions(2)
+                .addToResources("router", 0.001)
+                .addToResources("broker", 0.6)
+                .endSpec()
+                .build();
+
+        AddressPlan simpleQueue = new AddressPlanBuilder()
+                .editOrNewMetadata()
+                .withName("simple-queue")
                 .endMetadata()
                 .editOrNewSpec()
                 .withAddressType("queue")
@@ -279,7 +290,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .endSpec()
                 .build();
 
-        plansProvider.createAddressPlan(addressPlan);
+        plansProvider.createAddressPlan(simpleQueue);
+        plansProvider.createAddressPlan(partitionedQueue);
 
         //define and create address space plan
         AddressSpacePlan partitionedAddressesPlan = new AddressSpacePlanBuilder()
@@ -288,18 +300,15 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .endMetadata()
                 .editOrNewSpec()
                 .withAddressSpaceType("standard")
-                .withInfraConfigRef("default")
+                .withInfraConfigRef("default-minimal")
                 .addToResourceLimits("broker", 10.0)
                 .addToResourceLimits("router", 2.0)
                 .addToResourceLimits("aggregate", 12.0)
-                .addToAddressPlans("partitioned-queue")
+                .addToAddressPlans("simple-queue", "partitioned-queue")
                 .endSpec()
                 .build();
 
         plansProvider.createAddressSpacePlan(partitionedAddressesPlan);
-
-        // Wait for schema to be reloaded
-        Thread.sleep(10_000);
 
         //create address space plan with new plan
         AddressSpace partitioned = AddressSpaceUtils.createAddressSpaceObject("partitioned", AddressSpaceType.STANDARD,
@@ -315,7 +324,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .endMetadata()
                 .editOrNewSpec()
                 .withAddress("myqueue")
-                .withPlan("partitioned-queue")
+                .withPlan("simple-queue")
                 .withType("queue")
                 .endSpec()
                 .build();
@@ -323,17 +332,17 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
 
-        addressPlan = plansProvider.getAddressPlan(addressPlan.getMetadata().getName());
         // Increase number of partitions and expect broker to be created
-        addressPlan.getSpec().setPartitions(2);
-        plansProvider.replaceAddressPlan(addressPlan);
-        waitForBrokerReplicas(partitioned, address, 2);
+        address.getSpec().setPlan("partitioned-queue");
+        replaceAddress(partitioned, address);
+
+        waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
 
 
         // Decrease number of partitions and expect broker to disappear
-        addressPlan.getSpec().setPartitions(1);
-        plansProvider.replaceAddressPlan(addressPlan);
+        address.getSpec().setPlan("simple-queue");
+        replaceAddress(partitioned, address);
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
     }
