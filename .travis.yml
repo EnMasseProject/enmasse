@@ -22,15 +22,15 @@ jdk:
 python:
   - "2.7.14"
 go:
-  - "1.10.x"
+  - "1.11.x"
 jobs:
   include:
     - stage: build
       before_install:
         - pip install --user requests[security] ansible
         - gem install asciidoctor
-        - gimme 1.10.5
-        - source ~/.gimme/envs/go1.10.5.env
+        - gimme 1.11.6
+        - source ~/.gimme/envs/go1.11.6.env
         - go version
       install: true # would only call "mvn install", which doesn't help us at this point
       before_script:
@@ -65,8 +65,8 @@ jobs:
       before_install:
         - sudo pip install requests[security] ansible
         - gem install asciidoctor
-        - gimme 1.10.5
-        - source ~/.gimme/envs/go1.10.5.env
+        - gimme 1.11.6
+        - source ~/.gimme/envs/go1.11.6.env
         - go version
       script:
         - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"

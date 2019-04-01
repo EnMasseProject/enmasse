@@ -1,5 +1,5 @@
-hash: 9c1d756b6d3a1805afa0b3fd31e76ba1ba69c66294c82a2950ba3fd5d821d42a
-updated: 2019-03-08T17:27:02.690644266+01:00
+hash: 946bfcb844212b407e7d1dba73d0241742b5086499d24e1f508ec0ab6d4f3b70
+updated: 2019-04-01T13:28:20.456896087+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -7,7 +7,7 @@ imports:
   - compute/metadata
   - internal
 - name: github.com/beorn7/perks
-  version: 3a771d992973f24aa725d07868b467d1ddfceafb
+  version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
   subpackages:
   - quantile
 - name: github.com/davecgh/go-spew
@@ -19,7 +19,7 @@ imports:
 - name: github.com/go-logr/logr
   version: 9fb12b3b21c5415d16ac18dc5cd42c1cfdd40c4e
 - name: github.com/go-logr/zapr
-  version: 03f06a783fbb7dfaf3f629c7825480e43a7105e6
+  version: 7536572e8d55209135cd5e7ccf7fce43dca217ab
 - name: github.com/gogo/protobuf
   version: c0656edd0d9eab7c66d1eb0c568f9039345796f7
   subpackages:
@@ -66,7 +66,7 @@ imports:
 - name: github.com/mattbaird/jsonpatch
   version: 81af80346b1a01caae0cbc27fd3c1ba5b11e189f
 - name: github.com/matttproud/golang_protobuf_extensions
-  version: c182affec369e30f25d3eb8cd8a478dee585ae7d
+  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
 - name: github.com/modern-go/concurrent
@@ -74,7 +74,7 @@ imports:
 - name: github.com/modern-go/reflect2
   version: 05fbef0ca5da472bbf96c9322b84a53edc03c9fd
 - name: github.com/openshift/api
-  version: 5ad8479f64f1b60ee9c62ce8ef1fe6638838725e
+  version: 8741ff068a473be041d7bafb4502c12e4f10aab5
   subpackages:
   - apps
   - apps/v1
@@ -113,6 +113,9 @@ imports:
   - webconsole/v1
 - name: github.com/openshift/client-go
   version: 431ec9a26e5021f35fa41ee9a89842db9bfdb370
+  subpackages:
+  - route/clientset/versioned/scheme
+  - route/clientset/versioned/typed/route/v1
 - name: github.com/operator-framework/operator-sdk
   version: 15244d60ef7e328531a4f150a05b1fdabf9cc1ae
   subpackages:
@@ -123,7 +126,7 @@ imports:
 - name: github.com/peterbourgon/diskv
   version: 5f041e8faa004a95c88a202771f4cc3e991971e6
 - name: github.com/prometheus/client_golang
-  version: 9a369d2d384a32f2836ed433d12194f9ca19f0ed
+  version: 505eaef017263e299324067d40ca2c48f6a2cf50
   subpackages:
   - prometheus
   - prometheus/internal
@@ -133,17 +136,14 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: bf857faf208676b0294bd49959aa34c8d98163ed
+  version: cfeb6f9992ffa54aaa4f2170ade4067ee478b250
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: d0f344d83b0c80a1bc03b547a2374a9ec6711144
+  version: 65c1f6f8f0fc1e2185eb9863a3bc751496404259
   subpackages:
-  - internal/util
-  - iostats
-  - nfs
   - xfs
 - name: github.com/spf13/pflag
   version: 298182f68c66c05229eb03ac171abe6e309ee79a
@@ -152,7 +152,7 @@ imports:
 - name: go.uber.org/multierr
   version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
 - name: go.uber.org/zap
-  version: d2a364dac1d9b70c651d9f47381c5912361e5596
+  version: 82e3b47c1fe49387143b1a051a9ab6f34a08678d
   subpackages:
   - buffer
   - internal/bufferpool
@@ -196,7 +196,7 @@ imports:
   subpackages:
   - rate
 - name: golang.org/x/tools
-  version: e7e52e73e2735bea994c85b62483cc6376dd8d74
+  version: e9f45831faab4562ce3f53f7196b67c08f948e86
 - name: google.golang.org/appengine
   version: 4a4468ece617fc8205e99368fa2200e9d1fad421
   subpackages:
@@ -371,7 +371,7 @@ imports:
 - name: k8s.io/gengo
   version: 7a1b7fb0289f3b6f206589cdcfcad73009b6e840
 - name: k8s.io/klog
-  version: a5bc97fbc634d635061f3146511332c7e313a55a
+  version: 71442cd4037d612096940ceb0f3fec3f7fff66e0
 - name: k8s.io/kube-openapi
   version: 0cf8f7e6ed1d2e3d47d02e3b6e559369af24d803
   subpackages:
@@ -384,6 +384,7 @@ imports:
   - pkg/client
   - pkg/client/apiutil
   - pkg/client/config
+  - pkg/client/fake
   - pkg/controller
   - pkg/controller/controllerutil
   - pkg/event
