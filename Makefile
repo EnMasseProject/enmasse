@@ -22,7 +22,7 @@ DOCKER_DIRS = \
 	service-broker \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
-	iot/iot-device-registry \
+	iot/iot-device-registry-file \
 	iot/iot-http-adapter \
 	iot/iot-mqtt-adapter \
 

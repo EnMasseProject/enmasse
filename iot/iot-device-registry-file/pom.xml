@@ -12,7 +12,7 @@
     <relativePath>../iot-application-base</relativePath>
   </parent>
 
-  <artifactId>iot-device-registry</artifactId>
+  <artifactId>iot-device-registry-file</artifactId>
 
   <dependencies>
     <dependency>
