@@ -72,12 +72,11 @@ public final class Templates {
     /**
      * Process a template.
      *
-     * @param client The client to use
      * @param templateFile The file to process.
      * @param parameters The parameters to apply, may be {@code null}.
      * @return The list of processed resources.
      */
-    public static KubernetesList process(final OpenShiftClient client, final File templateFile, final Map<String, String> parameters) {
+    public static KubernetesList process(final File templateFile, final Map<String, String> parameters) {
 
         try (InputStream input = new BufferedInputStream(new FileInputStream(templateFile))) {
             return processLocally(input, parameters);
@@ -89,7 +88,7 @@ public final class Templates {
         // return client.templates().load(templateFile).processLocally(parameters);
     }
 
-    public static KubernetesList process(final OpenShiftClient client, final InputStream template, final Map<String, String> parameters) {
+    public static KubernetesList process(final InputStream template, final Map<String, String> parameters) {
         try {
             return processLocally(template, parameters);
         } catch (Exception e) {

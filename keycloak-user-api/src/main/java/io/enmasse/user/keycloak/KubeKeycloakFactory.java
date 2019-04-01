@@ -11,6 +11,7 @@ import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandard;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -40,11 +41,11 @@ public class KubeKeycloakFactory implements KeycloakFactory {
     private static final Logger log = LoggerFactory.getLogger(KubeKeycloakFactory.class.getName());
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-    private final NamespacedOpenShiftClient openShiftClient;
+    private final NamespacedKubernetesClient kubeClient;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
 
-    public KubeKeycloakFactory(NamespacedOpenShiftClient openShiftClient, AuthenticationServiceRegistry authenticationServiceRegistry) {
-        this.openShiftClient = openShiftClient;
+    public KubeKeycloakFactory(NamespacedKubernetesClient kubeClient, AuthenticationServiceRegistry authenticationServiceRegistry) {
+        this.kubeClient = kubeClient;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
     }
 
@@ -64,9 +65,9 @@ public class KubeKeycloakFactory implements KeycloakFactory {
         AuthenticationServiceSpecStandard standard = authenticationService.getSpec().getStandard();
         String credentialsSecretNamespace = standard.getCredentialsSecret().getNamespace();
         if (credentialsSecretNamespace == null || credentialsSecretNamespace.isEmpty()) {
-            credentialsSecretNamespace = openShiftClient.getNamespace();
+            credentialsSecretNamespace = kubeClient.getNamespace();
         }
-        Secret credentials = openShiftClient.secrets().inNamespace(credentialsSecretNamespace).withName(standard.getCredentialsSecret().getName()).get();
+        Secret credentials = kubeClient.secrets().inNamespace(credentialsSecretNamespace).withName(standard.getCredentialsSecret().getName()).get();
 
         String keycloakUri = String.format("https://%s:8443/auth", authenticationService.getStatus().getHost());
         Base64.Decoder b64dec = Base64.getDecoder();
@@ -76,9 +77,9 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
         String certificateSecretNamespace = standard.getCredentialsSecret().getNamespace();
         if (certificateSecretNamespace == null || certificateSecretNamespace.isEmpty()) {
-            certificateSecretNamespace = openShiftClient.getNamespace();
+            certificateSecretNamespace = kubeClient.getNamespace();
         }
-        Secret certificate = openShiftClient.secrets().inNamespace(certificateSecretNamespace).withName(standard.getCertificateSecret().getName()).get();
+        Secret certificate = kubeClient.secrets().inNamespace(certificateSecretNamespace).withName(standard.getCertificateSecret().getName()).get();
 
         KeyStore trustStore = createKeyStore(b64dec.decode(certificate.getData().get("tls.crt")));
         ResteasyJackson2Provider provider = new ResteasyJackson2Provider() {

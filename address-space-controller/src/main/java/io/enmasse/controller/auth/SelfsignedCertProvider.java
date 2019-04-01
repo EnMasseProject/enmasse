@@ -8,6 +8,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +19,11 @@ import java.util.Map;
 
 public class SelfsignedCertProvider implements CertProvider {
     private static final Logger log = LoggerFactory.getLogger(SelfsignedCertProvider.class);
-    private final OpenShiftClient client;
+    private final KubernetesClient client;
     private final CertManager certManager;
     private final String namespace;
 
-    public SelfsignedCertProvider(OpenShiftClient client, CertManager certManager) {
+    public SelfsignedCertProvider(KubernetesClient client, CertManager certManager) {
         this.client = client;
         this.certManager = certManager;
         this.namespace = client.getNamespace();

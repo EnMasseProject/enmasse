@@ -5,6 +5,7 @@
 package io.enmasse.api.auth;
 
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.json.JsonObject;
 import okhttp3.*;
@@ -20,11 +21,11 @@ import java.util.Map;
 
 public class KubeAuthApi implements AuthApi {
     private static final Logger log = LoggerFactory.getLogger(KubeAuthApi.class);
-    private final NamespacedOpenShiftClient client;
+    private final NamespacedKubernetesClient client;
     private final String namespace;
     private final String apiToken;
 
-    public KubeAuthApi(NamespacedOpenShiftClient client, String apiToken) {
+    public KubeAuthApi(NamespacedKubernetesClient client, String apiToken) {
         this.client = client;
         this.namespace = client.getNamespace();
         this.apiToken = apiToken;
@@ -33,7 +34,7 @@ public class KubeAuthApi implements AuthApi {
     private JsonObject doRawHttpRequest(String path, String method, JsonObject body, boolean errorOk) {
         OkHttpClient httpClient = client.adapt(OkHttpClient.class);
 
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve(path);
+        HttpUrl url = HttpUrl.get(client.getMasterUrl()).resolve(path);
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
                 .addHeader("Content-Type", "application/json")

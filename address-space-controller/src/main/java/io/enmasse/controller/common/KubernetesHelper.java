@@ -15,7 +15,9 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicy;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.io.File;
 import java.util.*;
@@ -27,12 +29,12 @@ import java.util.stream.Collectors;
 public class KubernetesHelper implements Kubernetes {
     private static final String TEMPLATE_SUFFIX = ".yaml";
 
-    private final NamespacedOpenShiftClient client;
+    private final NamespacedKubernetesClient client;
     private final String namespace;
     private final File templateDir;
     private final boolean isOpenShift;
 
-    public KubernetesHelper(String namespace, NamespacedOpenShiftClient client, String token, File templateDir, boolean isOpenShift) {
+    public KubernetesHelper(String namespace, NamespacedKubernetesClient client, File templateDir, boolean isOpenShift) {
         this.client = client;
         this.namespace = namespace;
         this.templateDir = templateDir;
@@ -82,7 +84,7 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public KubernetesList processTemplate(String templateName, Map<String, String> parameters) {
         File templateFile = new File(templateDir, templateName + TEMPLATE_SUFFIX);
-        return Templates.process(client, templateFile, parameters);
+        return Templates.process(templateFile, parameters);
     }
 
     @Override
@@ -118,7 +120,7 @@ public class KubernetesHelper implements Kubernetes {
         client.services().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         client.persistentVolumeClaims().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         if (isOpenShift) {
-            client.routes().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
+            client.adapt(OpenShiftClient.class).routes().withLabel(LabelKeys.INFRA_TYPE).withLabelNotIn(LabelKeys.INFRA_UUID, uuids).delete();
         }
     }
 

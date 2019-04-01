@@ -50,7 +50,7 @@ public class TemplateTest {
                 InputStream template = TemplateTest.class.getResourceAsStream("template_1.yaml");
                 InputStream result = TemplateTest.class.getResourceAsStream("template_1.result.yaml");) {
 
-            final KubernetesList list = normalize(Templates.process(new DefaultOpenShiftClient(), template, parameters));
+            final KubernetesList list = normalize(Templates.process(template, parameters));
             final KubernetesList expected = normalize(mapper.readValue(result, KubernetesList.class));
 
             assertThat(list, CoreMatchers.is(expected));
@@ -67,7 +67,7 @@ public class TemplateTest {
 
         try (InputStream template = TemplateTest.class.getResourceAsStream("template_1.yaml")) {
             assertThrows(RuntimeException.class, () -> {
-                Templates.process(new DefaultOpenShiftClient(), template, parameters);
+                Templates.process(template, parameters);
             });
         }
 

@@ -5,17 +5,19 @@
 package io.enmasse.controller.keycloak;
 
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.api.model.User;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KubeUserLookupApi implements UserLookupApi {
     private static final Logger log = LoggerFactory.getLogger(KubeUserLookupApi.class);
-    private final NamespacedOpenShiftClient client;
+    private final NamespacedKubernetesClient client;
     private final boolean isOpenShift;
 
-    public KubeUserLookupApi(NamespacedOpenShiftClient client, boolean isOpenShift) {
+    public KubeUserLookupApi(NamespacedKubernetesClient client, boolean isOpenShift) {
         this.client = client;
         this.isOpenShift = isOpenShift;
     }
@@ -27,7 +29,7 @@ public class KubeUserLookupApi implements UserLookupApi {
                 return "";
             }
             try {
-                User user = client.users().withName(userName).get();
+                User user = client.adapt(OpenShiftClient.class).users().withName(userName).get();
                 if (user == null) {
                     return "";
                 }

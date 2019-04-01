@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.api.model.RouteBuilder;
@@ -25,14 +26,16 @@ import java.util.stream.Collectors;
 
 public class EndpointController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(EndpointController.class.getName());
-    private final OpenShiftClient client;
+    private final KubernetesClient client;
     private final boolean exposeServicesByDefault;
     private final String namespace;
+    private final boolean isOpenShift;
 
-    public EndpointController(OpenShiftClient client, boolean exposeServicesByDefault) {
+    public EndpointController(KubernetesClient client, boolean exposeServicesByDefault, boolean isOpenShift) {
         this.client = client;
         this.exposeServicesByDefault = exposeServicesByDefault;
         namespace = client.getNamespace();
+        this.isOpenShift = isOpenShift;
     }
 
     @Override
@@ -167,7 +170,10 @@ public class EndpointController implements Controller {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         String routeName = KubeUtil.getAddressSpaceRouteName(endpointSpec.getName(), addressSpace);
 
-        Route existingRoute = client.routes().inNamespace(namespace).withName(routeName).get();
+        if (!isOpenShift) {
+            return null;
+        }
+        Route existingRoute = client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).withName(routeName).get();
         if (existingRoute != null) {
             return existingRoute;
         }
@@ -234,7 +240,7 @@ public class EndpointController implements Controller {
             }
         }
         log.info("Creating route {} for endpoint {}", routeName, endpointSpec.getName());
-        return client.routes().inNamespace(namespace).create(route.build());
+        return client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).create(route.build());
     }
 
     private Service ensureExternalServiceExists(AddressSpace addressSpace, EndpointSpec endpointSpec, ExposeSpec exposeSpec) {

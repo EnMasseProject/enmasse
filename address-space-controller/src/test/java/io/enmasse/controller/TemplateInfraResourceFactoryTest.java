@@ -20,9 +20,10 @@ import io.enmasse.admin.model.v1.*;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.AddressSpace;
@@ -33,25 +34,23 @@ import io.enmasse.address.model.EndpointSpecBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.KubernetesHelper;
 import io.enmasse.k8s.util.JULInitializingTest;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.server.mock.OpenShiftServer;
 
 public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
 
-    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+    private KubernetesServer kubeServer = new KubernetesServer(false, true);
 
     private TemplateInfraResourceFactory resourceFactory;
-    private NamespacedOpenShiftClient client;
+    private NamespacedKubernetesClient client;
 
     @AfterEach
     void tearDown() {
-        openShiftServer.after();
+        kubeServer.after();
     }
 
     @BeforeEach
     public void setup() {
-        openShiftServer.before();
-        client = openShiftServer.getOpenshiftClient();
+        kubeServer.before();
+        client = kubeServer.getClient();
         client.secrets().createNew().editOrNewMetadata().withName("certs").endMetadata().addToData("tls.crt", "cert").done();
         AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
         AuthenticationService authenticationService = new AuthenticationServiceBuilder()
@@ -72,11 +71,10 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
         resourceFactory = new TemplateInfraResourceFactory(
                 new KubernetesHelper("test",
                         client,
-                        client.getConfiguration().getOauthToken(),
                         new File("src/test/resources/templates"),
                         true),
                 authenticationServiceRegistry,
-                true);
+                false);
     }
 
     @Test

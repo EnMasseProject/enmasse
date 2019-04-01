@@ -7,8 +7,8 @@ package io.enmasse.k8s.api;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.k8s.util.JULInitializingTest;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import io.fabric8.openshift.client.server.mock.OpenShiftServer;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,19 +27,19 @@ class ConfigMapAddressApiTest extends JULInitializingTest {
     private static final String ADDRESS_SPACE = "myspace";
     private static final String ADDRESS_NAME = String.format("%s.%s", ADDRESS_SPACE, ADDRESS);
 
-    private OpenShiftServer openShiftServer = new OpenShiftServer(false, true);
+    private KubernetesServer kubeServer = new KubernetesServer(false, true);
     private AddressApi api;
 
     @BeforeEach
     void setUp() {
-        openShiftServer.before();
-        NamespacedOpenShiftClient client = openShiftServer.getOpenshiftClient();
+        kubeServer.before();
+        NamespacedKubernetesClient client = kubeServer.getClient();
         api = new ConfigMapAddressApi(client, UUID.randomUUID().toString());
     }
 
     @AfterEach
     void tearDown() {
-        openShiftServer.after();
+        kubeServer.after();
     }
 
     @Test

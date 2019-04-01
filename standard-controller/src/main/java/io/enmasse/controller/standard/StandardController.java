@@ -7,6 +7,8 @@ package io.enmasse.controller.standard;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.Vertx;
@@ -61,26 +63,26 @@ public class StandardController {
         }
     }
 
-    private final NamespacedOpenShiftClient openShiftClient;
+    private final NamespacedKubernetesClient kubeClient;
     private final StandardControllerOptions options;
     private AddressController addressController;
     private HTTPServer httpServer;
 
     public StandardController(StandardControllerOptions options) {
-        this.openShiftClient = new DefaultOpenShiftClient();
+        this.kubeClient = new DefaultKubernetesClient();
         this.options = options;
     }
 
     public void start() throws Exception {
 
-        SchemaApi schemaApi = KubeSchemaApi.create(openShiftClient, openShiftClient.getNamespace(), isOpenShift(openShiftClient));
+        SchemaApi schemaApi = KubeSchemaApi.create(kubeClient, kubeClient.getNamespace(), false);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        Kubernetes kubernetes = new KubernetesHelper(openShiftClient, options.getTemplateDir(), options.getInfraUuid());
+        Kubernetes kubernetes = new KubernetesHelper(kubeClient, options.getTemplateDir(), options.getInfraUuid());
         BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, options);
 
-        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(openShiftClient, openShiftClient.getNamespace(), Clock.systemUTC(), "standard-controller")
+        EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(kubeClient, kubeClient.getNamespace(), Clock.systemUTC(), "standard-controller")
                 : new LogEventLogger();
 
         Metrics metrics = new Metrics();
@@ -91,7 +93,7 @@ public class StandardController {
 
         addressController = new AddressController(
                 options,
-                new ConfigMapAddressApi(openShiftClient, options.getInfraUuid()),
+                new ConfigMapAddressApi(kubeClient, options.getInfraUuid()),
                 kubernetes,
                 clusterGenerator,
                 eventLogger,
@@ -124,24 +126,9 @@ public class StandardController {
                     }
                 }
             } finally {
-                openShiftClient.close();
+                kubeClient.close();
                 log.info("StandardController stopped");
             }
-        }
-    }
-
-    private static boolean isOpenShift(NamespacedOpenShiftClient client) {
-        // Need to query the full API path because Kubernetes does not allow GET on /
-        OkHttpClient httpClient = client.adapt(OkHttpClient.class);
-        HttpUrl url = HttpUrl.get(client.getOpenshiftUrl()).resolve("/apis/route.openshift.io");
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .get();
-
-        try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
-            return response.code() >= 200 && response.code() < 300;
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 }
