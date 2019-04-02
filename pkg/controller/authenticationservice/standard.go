@@ -121,8 +121,8 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 
 		if authservice.Spec.Standard.Datasource.Type == adminv1beta1.PostgresqlDatasource {
 			install.ApplyEnvSimple(container, "DB_HOST", authservice.Spec.Standard.Datasource.Host)
-			install.ApplyEnvSimple(container, "DB_PORT", string(authservice.Spec.Standard.Datasource.Port))
-			install.ApplyEnvSimple(container, "DB_NAME", authservice.Spec.Standard.Datasource.Database)
+			install.ApplyEnvSimple(container, "DB_PORT", fmt.Sprintf("%d", authservice.Spec.Standard.Datasource.Port))
+			install.ApplyEnvSimple(container, "DB_DATABASE", authservice.Spec.Standard.Datasource.Database)
 			install.ApplyEnvSecret(container, "DB_USERNAME", "database-user", authservice.Spec.Standard.Datasource.CredentialsSecret.Name)
 			install.ApplyEnvSecret(container, "DB_PASSWORD", "database-password", authservice.Spec.Standard.Datasource.CredentialsSecret.Name)
 		}
