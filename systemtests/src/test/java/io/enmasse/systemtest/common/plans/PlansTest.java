@@ -317,7 +317,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .addToResourceLimits("broker", 2.0)
                 .addToResourceLimits("router", 2.0)
                 .addToResourceLimits("aggregate", 12.0)
-                .addToAddressPlans("simple-queue", "partitioned-queue", "many-partitioned-queue")
+                .addToAddressPlans(simpleQueue.getMetadata().getName(), partitionedQueue.getMetadata().getName(), manyPartitionedQueue.getMetadata().getName())
                 .endSpec()
                 .build();
 
@@ -339,7 +339,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .endMetadata()
                 .editOrNewSpec()
                 .withAddress("myqueue")
-                .withPlan("simple-queue")
+                .withPlan(simpleQueue.getMetadata().getName())
                 .withType("queue")
                 .endSpec()
                 .build();
@@ -348,7 +348,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
 
         // Increase number of partitions and expect broker to be created
-        address.getSpec().setPlan("partitioned-queue");
+        address.getSpec().setPlan(partitionedQueue.getMetadata().getName());
         replaceAddress(partitioned, address);
 
         waitForBrokerReplicas(partitioned, address, 1);
@@ -356,13 +356,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
 
         // Decrease number of partitions and expect broker to disappear
-        address.getSpec().setPlan("simple-queue");
+        address.getSpec().setPlan(simpleQueue.getMetadata().getName());
         replaceAddress(partitioned, address);
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
 
         // Increase to too many partitions
-        address.getSpec().setPlan("many-partitioned-queue");
+        address.getSpec().setPlan(manyPartitionedQueue.getMetadata().getName());
         replaceAddress(partitioned, address);
         waitForBrokerReplicas(partitioned, address, 1);
         TimeoutBudget budget = new TimeoutBudget(60, TimeUnit.SECONDS);
