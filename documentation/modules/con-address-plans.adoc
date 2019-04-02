@@ -26,12 +26,12 @@ The following fields are required:
 
 A single router can support five instances of addresses and broker can support three instances of addresses with this plan. If the number of addresses with this plan increases to four, another broker is created. If it increases further to six, another router is created as well.
 
-In the `standard` address space, address plans for the address type `queue` also supports a field
-`partitions` which allows a queue to be sharded accross multiple brokers for HA and performance
-benefits, at the cost of loosing message ordering. Specifying an amount of `broker` resource above
-1 will automatically cause a queue to be partitioned.
+In the `standard` address space, address plans for the `queue` address type may contain a field
+`partitions`, which allows a queue to be sharded accross multiple brokers for HA and improved performance. Specifying an amount of `broker` resource above 1 will automatically cause a queue to be partitioned. 
 
-Note, however, that although the address space plan allows two routers and two brokers to be deployed, it only allows two pods to be deployed in total. This means that the address space is restricted to three addresses with the `small-queue` plan.
+NOTE: A sharded queue no longer guarantees message ordering.
+
+Although the example address space plan in link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans] allows two routers and two brokers to be deployed, it only allows two pods to be deployed in total. This means that the address space is restricted to three addresses with the `small-queue` plan.
 
 The `small-anycast` plan does not consume any broker resources, and can provision two routers at the expense of not being able to create any brokers:
 
