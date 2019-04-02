@@ -278,6 +278,18 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .endSpec()
                 .build();
 
+        AddressPlan manyPartitionedQueue = new AddressPlanBuilder()
+                .editOrNewMetadata()
+                .withName("many-partitioned-queue")
+                .endMetadata()
+                .editOrNewSpec()
+                .withAddressType("queue")
+                .withPartitions(4)
+                .addToResources("router", 0.001)
+                .addToResources("broker", 0.6)
+                .endSpec()
+                .build();
+
         AddressPlan simpleQueue = new AddressPlanBuilder()
                 .editOrNewMetadata()
                 .withName("simple-queue")
@@ -292,6 +304,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         plansProvider.createAddressPlan(simpleQueue);
         plansProvider.createAddressPlan(partitionedQueue);
+        plansProvider.createAddressPlan(manyPartitionedQueue);
 
         //define and create address space plan
         AddressSpacePlan partitionedAddressesPlan = new AddressSpacePlanBuilder()
@@ -301,10 +314,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .editOrNewSpec()
                 .withAddressSpaceType("standard")
                 .withInfraConfigRef("default-minimal")
-                .addToResourceLimits("broker", 10.0)
+                .addToResourceLimits("broker", 2.0)
                 .addToResourceLimits("router", 2.0)
                 .addToResourceLimits("aggregate", 12.0)
-                .addToAddressPlans("simple-queue", "partitioned-queue")
+                .addToAddressPlans("simple-queue", "partitioned-queue", "many-partitioned-queue")
                 .endSpec()
                 .build();
 
@@ -345,6 +358,22 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         replaceAddress(partitioned, address);
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
+
+        // Increase to too many partitions
+        address.getSpec().setPlan("many-partitioned-queue");
+        replaceAddress(partitioned, address);
+        waitForBrokerReplicas(partitioned, address, 1);
+        TimeoutBudget budget = new TimeoutBudget(60, TimeUnit.SECONDS);
+        Address replaced = null;
+        while (!budget.timeoutExpired()) {
+            replaced = getAddressesObjects(partitioned, Optional.of(address.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
+            if (replaced.getStatus().getMessages().contains("Quota exceeded")) {
+                break;
+            }
+        }
+        replaced = getAddressesObjects(partitioned, Optional.of(address.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
+        assertNotNull(replaced);
+        assertTrue(replaced.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
     }
 
     @Test
