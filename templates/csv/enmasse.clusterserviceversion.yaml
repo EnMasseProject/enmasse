@@ -11,6 +11,8 @@ metadata:
     description: EnMasse provides a self-service messaging platform with a uniform interface to manage different messaging infrastructure.
     containerImage: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
     createdAt: 2019-02-19T00:00:00Z
+    capabilities: Seamless Upgrades
+    repository: https://github.com/EnMasseProject/enmasse
     support: EnMasse
     alm-examples: '[{"apiVersion":"admin.enmasse.io/v1beta1","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"1Gi","storage":"5Gi"},"addressFullPolicy":"BLOCK"},"router":{"linkCapacity":50,"resources":{"memory":"512Mi"}}}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"spec":{"addressType":"queue","shortDescription":"Small Queue","resources":{"router":0.01,"broker":0.1}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressSpacePlan","metadata":{"name":"standard-small"},"spec":{"addressSpaceType":"standard","infraConfigRef":"my-standard-infra","shortDescription":"Small Address Space Plan","resourceLimits":{"router":1,"broker":2,"aggregate":2},"addressPlans":["small-standard-queue"]}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"AuthenticationService","metadata":{"name":"none-authservice"},"spec":{"type":"none"}},{"apiVersion":"enmasse.io/v1beta1","kind":"AddressSpace","metadata":{"name":"myspace"},"spec":{"type":"standard","plan":"standard-small"}},{"apiVersion":"enmasse.io/v1beta1","kind":"Address","metadata":{"name":"myspace.myqueue"},"spec":{"address":"myqueue","type":"queue","plan":"small-standard-queue"}},{"apiVersion":"user.enmasse.io/v1beta1","kind":"MessagingUser","metadata":{"name":"myspace.user"},"spec":{"username":"user","authentication":{"type":"password","password":"ZW5tYXNzZQ=="},"authorization":[{"operations":["send","recv"],"addresses":["myqueue"]}]}},{"apiVersion":"iot.enmasse.io/v1alpha1","kind":"IoTConfig","metadata":{"name":"default"},"spec":{}}]'
 spec:
@@ -186,6 +188,54 @@ spec:
           resourceNames: [ "extension-apiserver-authentication" ]
           verbs: [ "get" ]
       deployments:
+      - name: enmasse-operator
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              app: enmasse
+              name: enmasse-operator
+          template:
+            metadata:
+              labels:
+                app: enmasse
+                name: enmasse-operator
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                    - weight: 1
+                      preference:
+                        matchExpressions:
+                          - key: node-role.enmasse.io/operator-infra
+                            operator: In
+                            values:
+                              - "true"
+              serviceAccountName: enmasse-operator
+              containers:
+              - name: controller
+                image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
+                imagePullPolicy: ${IMAGE_PULL_POLICY}
+                env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                - name: OPERATOR_NAME
+                  value: "enmasse-operator"
+                - name: ENMASSE_DEFAULT_PULL_POLICY
+                  value: "${IMAGE_PULL_POLICY}"
+                - name: CONTROLLER_DISABLE_ALL
+                  value: "true"
+                - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
+                  value: "true"
+                resources:
+                  limits:
+                    memory: 128Mi
       - name: user-api-server
         spec:
           replicas: 1
@@ -236,7 +286,7 @@ spec:
                     path: /healthz
                     port: http
                     scheme: HTTP
-                  initialDelaySeconds: 30
+                  initialDelaySeconds: 60
                 name: api-server
                 ports:
                 - containerPort: 8080
@@ -308,7 +358,7 @@ spec:
                     path: /healthz
                     port: http
                     scheme: HTTP
-                  initialDelaySeconds: 30
+                  initialDelaySeconds: 60
                 name: api-server
                 ports:
                 - containerPort: 8080
@@ -330,59 +380,9 @@ spec:
                   name: apiservice-cert
                   readOnly: true
               serviceAccountName: api-server
-      - name: enmasse-operator
-        spec:
-          replicas: 1
-          selector:
-            matchLabels:
-              app: enmasse
-              name: enmasse-operator
-          template:
-            metadata:
-              labels:
-                app: enmasse
-                name: enmasse-operator
-            spec:
-              affinity:
-                nodeAffinity:
-                  preferredDuringSchedulingIgnoredDuringExecution:
-                    - weight: 1
-                      preference:
-                        matchExpressions:
-                          - key: node-role.enmasse.io/operator-infra
-                            operator: In
-                            values:
-                              - "true"
-              serviceAccountName: enmasse-operator
-              containers:
-              - name: controller
-                image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
-                imagePullPolicy: ${IMAGE_PULL_POLICY}
-                env:
-                - name: POD_NAME
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.name
-                - name: NAMESPACE
-                  valueFrom:
-                    fieldRef:
-                      fieldPath: metadata.namespace
-                - name: OPERATOR_NAME
-                  value: "enmasse-operator"
-                - name: ENMASSE_DEFAULT_PULL_POLICY
-                  value: "${IMAGE_PULL_POLICY}"
-                - name: CONTROLLER_DISABLE_ALL
-                  value: "true"
-                - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
-                  value: "true"
-                resources:
-                  limits:
-                    memory: 128Mi
       - name: address-space-controller
         spec:
           replicas: 1
-          strategy:
-            type: Recreate
           selector:
             matchLabels:
               app: enmasse
