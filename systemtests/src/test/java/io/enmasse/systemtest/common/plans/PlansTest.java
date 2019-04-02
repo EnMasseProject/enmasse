@@ -323,6 +323,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         plansProvider.createAddressSpacePlan(partitionedAddressesPlan);
 
+        Thread.sleep(30_000);
+
         //create address space plan with new plan
         AddressSpace partitioned = AddressSpaceUtils.createAddressSpaceObject("partitioned", AddressSpaceType.STANDARD,
                 partitionedAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
