@@ -174,6 +174,32 @@ public class AddressProvisionerTest {
     }
 
     @Test
+    public void testQuotaCheckPartitionedQueues() {
+
+        ProvisionerTestFixture testFixture = new ProvisionerTestFixture(Arrays.asList(
+                new ResourceAllowance("broker", 1),
+                new ResourceAllowance("router", 1),
+                new ResourceAllowance("aggregate", 4)));
+
+        Address q1 = new AddressBuilder(createQueue("q1", "small-sharded-queue", createPooledBrokerStatus("broker-1234-0")))
+                .editStatus()
+                .withPhase(Active)
+                .withPlanStatus(AddressPlanStatus.fromAddressPlan(testFixture.standardControllerSchema.getType().findAddressType("queue").get().findAddressPlan("small-queue").get()))
+                .endStatus()
+                .build();
+
+        AddressProvisioner provisioner = testFixture.addressProvisioner;
+
+        Map<String, Map<String, UsageInfo>> usageMap = provisioner.checkUsage(Set.of(q1));
+
+        Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, Set.of(q1), Sets.newSet(q1));
+
+        assertEquals(usageMap, neededMap);
+        assertThat(q1.getStatus().getPhase(), is(Active));
+        assertTrue(q1.getStatus().getMessages().contains("Quota exceeded"));
+    }
+
+    @Test
     public void testQuotaCheckMany() {
         Map<String, Address> addresses = new HashMap<>();
         for (int i = 0; i < 200; i++) {
