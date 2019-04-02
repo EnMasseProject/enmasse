@@ -30,6 +30,14 @@ spec:
 
     * **Supports a wide variety of messaging patterns** - Choose between JMS-style messaging with strict guarantees, or messaging that supports a larger number of connections and higher throughput.
 
+    ### Examples
+
+    The example resources provided this operator can be categorized into resources managed by the operator admin and resources managed by messaging tenants.
+
+    The `AddressSpacePlan`, `AddressPlan`, `StandardInfraConfig`, `BrokeredInfraConfig` and `AuthenticationService` resources should be created by the operator admin in the same namespace where the operator is running.
+
+    The `AddressSpace`, `Address` and `MessagingUser` resources should be created by the messaging tenant in the same namespace as the application that will use messaging.
+
     ### Documentation
     
     Documentation for the latest releases can be found on our [website](http://enmasse.io)
