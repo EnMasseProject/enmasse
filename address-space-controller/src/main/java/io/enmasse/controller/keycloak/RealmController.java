@@ -32,7 +32,7 @@ public class RealmController implements Controller {
     private final UserLookupApi userLookupApi;
     private final UserApi userApi;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
-    private KeycloakRealmParams lastParams;
+    private final Map<String, KeycloakRealmParams> lastParams = new HashMap<>();
 
     public RealmController(KeycloakApi keycloak, UserLookupApi userLookupApi, UserApi userApi, AuthenticationServiceRegistry authenticationServiceRegistry) {
         this.keycloak = keycloak;
@@ -144,10 +144,10 @@ public class RealmController implements Controller {
             AuthenticationService authenticationService = entry.getAuthenticationService();
             List<AddressSpace> addressSpaces = entry.getAddressSpaces();
             KeycloakRealmParams keycloakRealmParams = KeycloakRealmParams.fromAuthenticationService(authenticationService);
-            if (!Objects.equals(lastParams, keycloakRealmParams)) {
+            if (!Objects.equals(lastParams.computeIfAbsent(authenticationService.getMetadata().getName(), k -> KeycloakRealmParams.NULL_PARAMS), keycloakRealmParams)) {
                 log.info("Identity provider params: {}", keycloakRealmParams);
                 updateExistingRealms(authenticationService, keycloakRealmParams);
-                lastParams = keycloakRealmParams;
+                lastParams.put(authenticationService.getMetadata().getName(), keycloakRealmParams);
             }
 
             Set<String> actualRealms = keycloak.getRealmNames(authenticationService);
