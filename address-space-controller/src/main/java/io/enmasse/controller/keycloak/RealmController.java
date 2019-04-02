@@ -154,7 +154,7 @@ public class RealmController implements Controller {
 
             for (AddressSpace addressSpace : addressSpaces) {
                 String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-                if (!actualRealms.contains(realmName)) {
+                if (actualRealms.contains(realmName)) {
                     continue;
                 }
                 log.info("Creating realm {} in authentication service {}", realmName, authenticationService.getMetadata().getName());
