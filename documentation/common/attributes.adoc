@@ -33,7 +33,7 @@
 :BaseProductVersion: master
 
 // Component attributes
-
+:BrokerName: Apache ActiveMQ Artemis
 :ClientAmqpJmsName: Apache Qpid JMS
 :ClientAmqpCppName: Apache Qpid Proton C++
 :ClientAmqpPythonName: Apache Qpid Proton Python
@@ -58,6 +58,7 @@
 
 
 // Other links
+:LinkaddressFullPolicyDocs: https://activemq.apache.org/artemis/docs/latest/address-model.html
 
 // Section enablers
 :NoneAuthService:

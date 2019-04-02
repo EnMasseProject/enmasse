@@ -24,6 +24,13 @@ include::assemblies/assembly-service-admin-guide.adoc[leveloffset=+1]
 
 include::assemblies/assembly-tenant-guide.adoc[leveloffset=+1]
 
+
+[appendix]
+include::modules/ref-brokered-infra-config-fields.adoc[leveloffset=+1]
+
+[appendix]
+include::modules/ref-standard-infra-config-fields.adoc[leveloffset=+1]
+
 [appendix]
 
 == REST API reference

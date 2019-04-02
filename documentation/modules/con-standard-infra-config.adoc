@@ -9,6 +9,8 @@
 spaces. The standard infrastructure configuration is referenced by address space plans in their
 `spec.infraConfigRef` field. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans].
 
+For detailed information about the available standard infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-fields-messaging[Standard infrastructure configuration fields table].
+
 [source,yaml,options="nowrap",subs="attributes"]
 ----
 apiVersion: admin.enmasse.io/v1beta1
