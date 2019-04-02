@@ -26,7 +26,7 @@ class UsageInfo {
     }
 
     public void subUsed(double sub) {
-        this.used -= sub;
+        this.used = Math.max(0, used - sub);
         needed = (int) Math.ceil(used);
     }
 

@@ -64,9 +64,10 @@ public class AddressProvisioner {
 
     private void addToUsage(Map<String, Map<String, UsageInfo>> usageMap, Address address) {
         AddressType addressType = addressResolver.getType(address);
-        AddressPlan addressPlan = addressResolver.getPlan(addressType, address);
+        AddressPlanStatus appliedPlan = addressResolver.getAppliedPlan(address)
+                .orElseGet(() -> AddressPlanStatus.fromAddressPlan(addressResolver.getDesiredPlan(address)));
 
-        for (Map.Entry<String, Double> resourceRequest : addressPlan.getResources().entrySet()) {
+        for (Map.Entry<String, Double> resourceRequest : appliedPlan.getResources().entrySet()) {
             if ("subscription".equals(address.getSpec().getType())) {
                 if (address.getStatus().getBrokerStatuses().isEmpty()) {
                     log.warn("Unexpected pooled address without cluster id: " + address.getSpec().getAddress());
@@ -87,7 +88,7 @@ public class AddressProvisioner {
                 }
                 for (BrokerStatus status : address.getStatus().getBrokerStatuses()) {
                     if (BrokerState.Active.equals(status.getState())) {
-                        addToUsage(usageMap, status.getClusterId(), "broker", getPartitionedCredits(resourceRequest.getValue(), addressPlan.getPartitions()));
+                        addToUsage(usageMap, status.getClusterId(), "broker", getPartitionedCredits(resourceRequest.getValue(), appliedPlan.getPartitions()));
                     }
                 }
 
