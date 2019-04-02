@@ -125,13 +125,13 @@ public class RealmController implements Controller {
 
         for (AuthenticationService authenticationService : authenticationServiceRegistry.listAuthenticationServices()) {
             if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) && authenticationService.getSpec().getRealm() == null) {
-                Set<String> realmNames = keycloak.getRealmNames(authenticationService);
+                Set<String> actualRealms = keycloak.getRealmNames(authenticationService);
                 Set<String> desiredRealms = authserviceMap.getOrDefault(authenticationService.getMetadata().getName(), new AuthServiceEntry(authenticationService)).getAddressSpaces().stream()
                         .map(a -> a.getAnnotation(AnnotationKeys.REALM_NAME))
                         .collect(Collectors.toSet());
 
-                log.info("Actual: {}, Desired: {}", realmNames, desiredRealms);
-                for (String realmName : realmNames) {
+                log.info("Actual: {}, Desired: {}", actualRealms, desiredRealms);
+                for (String realmName : actualRealms) {
                     if (!desiredRealms.contains(realmName) && !MASTER_REALM.equals(realmName)) {
                         log.info("Deleting realm {}", realmName);
                         keycloak.deleteRealm(authenticationService, realmName);
@@ -150,8 +150,13 @@ public class RealmController implements Controller {
                 lastParams = keycloakRealmParams;
             }
 
+            Set<String> actualRealms = keycloak.getRealmNames(authenticationService);
+
             for (AddressSpace addressSpace : addressSpaces) {
                 String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+                if (!actualRealms.contains(realmName)) {
+                    continue;
+                }
                 log.info("Creating realm {} in authentication service {}", realmName, authenticationService.getMetadata().getName());
                 String userName = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY);
                 String userId = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY_UID);
