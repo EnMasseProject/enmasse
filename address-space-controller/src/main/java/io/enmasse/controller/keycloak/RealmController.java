@@ -152,7 +152,7 @@ public class RealmController implements Controller {
 
             for (AddressSpace addressSpace : addressSpaces) {
                 String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-                log.info("Creating realm {}", realmName);
+                log.info("Creating realm {} in authentication service {}", realmName, authenticationService.getMetadata().getName());
                 String userName = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY);
                 String userId = addressSpace.getAnnotation(AnnotationKeys.CREATED_BY_UID);
                 if (userId == null || userId.isEmpty()) {

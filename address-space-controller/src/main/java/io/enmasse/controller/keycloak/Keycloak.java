@@ -29,7 +29,7 @@ public class Keycloak implements KeycloakApi {
     private static final String IDENTITY_PROVIDER_BASE_URL = "baseUrl";
 
     private final KeycloakFactory keycloakFactory;
-    private final Map<String, KeycloakRealmParams> realmState = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, KeycloakRealmParams>> realmState = new ConcurrentHashMap<>();
     private final Map<String, org.keycloak.admin.client.Keycloak> keycloakMap = new HashMap<>();
 
     public Keycloak(KeycloakFactory keycloakFactory) {
@@ -101,14 +101,16 @@ public class Keycloak implements KeycloakApi {
 
         withKeycloak(authenticationService, kc -> {
             kc.realms().create(newRealm);
-            realmState.put(realmName, params);
+            Map<String, KeycloakRealmParams> state = realmState.computeIfAbsent(authenticationService.getMetadata().getName(), k -> new HashMap<>());
+            state.put(realmName, params);
             return true;
         });
     }
 
     @Override
     public void updateRealm(AuthenticationService authenticationService, String realmName, KeycloakRealmParams updated) {
-        KeycloakRealmParams current = realmState.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
+        Map<String, KeycloakRealmParams> state = realmState.computeIfAbsent(authenticationService.getMetadata().getName(), k -> new HashMap<>());
+        KeycloakRealmParams current = state.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
         if (!updated.equals(current)) {
             withKeycloak(authenticationService, kc -> {
                 RealmResource realm = kc.realm(realmName);
@@ -158,7 +160,7 @@ public class Keycloak implements KeycloakApi {
                     }
 
                     if (!updatedProviderItems.isEmpty() || browserSecurityHeadersChanged) {
-                        realmState.put(realmName, updated);
+                        state.put(realmName, updated);
                     }
                 }
                 return true;
