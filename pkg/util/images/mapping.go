@@ -45,7 +45,7 @@ func loadImageMapFrom(fileName string) (map[string]string, error) {
 }
 
 func setIfEnvPresent(data map[string]string, key string, envVar string) {
-	value, present := os.LookupEnv(key)
+	value, present := os.LookupEnv(envVar)
 	if present {
 		data[key] = value
 	}
