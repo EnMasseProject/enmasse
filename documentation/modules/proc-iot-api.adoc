@@ -1,0 +1,43 @@
+[id='iot-{api}-{context}']
+
+= Sending and receiving {api} data
+
+.Procedure
+
+== Starting {api} consumer
+
+. In Hono project run:
++
+[options="nowrap",subs="attributes"]
+----
+cd cli
+----
+. At least once run:
++
+[options="nowrap",subs="attributes"]
+----
+mvn package -am
+----
+. Get the messaging endpoint certificate:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].cert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
+----
+. Run the consumer application:
++
+[options="nowrap",subs="attributes"]
+----
+mvn spring-boot:run -Drun.arguments=--hono.client.host=$({cmdcli} -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].externalHost}),--hono.client.port=443,--hono.client.username=consumer,--hono.client.password=foobar,--tenant.id=myapp.iot,--hono.client.trustStorePath=target/config/hono-demo-certs-jar/tls.crt,--message.type={api}
+----
+
+== Sending {api} data
+
+. Send {api} message using HTTP:
++
+[options="nowrap",subs="attributes"]
+----
+curl --insecure -X POST -i -u sensor1@myapp.iot:hono-secret -H 'Content-Type: application/json' --data-binary '{"temp": 5}' https://$({cmdcli} -n enmasse-infra get route iot-http-adapter --template='{{.spec.host}}')/{api}
+----
+
+// TODO cover using MQTT here

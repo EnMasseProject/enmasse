@@ -1,0 +1,29 @@
+[id='iot-creating-project-{context}']
+= Creating an IoT project
+
+.Procedure
+
+. Change to a non-admin user:
+
+. Create a _managed_ IoT Project:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} new-project myapp
+{cmdcli} create -f iot/examples/iot-project-managed.yaml
+----
+
+. Wait for the resources to be ready:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} get addressspace -w
+{cmdcli} get iotproject -w
+----
+
+. Create a messaging consumer user:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f iot/examples/iot-user.yaml
+----

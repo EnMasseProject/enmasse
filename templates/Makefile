@@ -11,6 +11,7 @@ IOT_MODULES=\
 	iot/api \
 	iot/common \
 	iot/operator \
+	iot/examples \
 
 MODULES=\
 	$(IOT_MODULES) \

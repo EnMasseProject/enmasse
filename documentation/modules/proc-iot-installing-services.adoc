@@ -1,0 +1,23 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-openshift.adoc
+
+[id='installing-services-{context}']
+= Installing IoT services
+
+.Procedure
+
+. Deploy the IoT bundles:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/preview-bundles/iot
+----
+
+. Install an example IoT infrastructure configuration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/iot/examples/iot-config.yaml
+----
+

@@ -1,0 +1,18 @@
+[id='iot-creating-device-{context}']
+= Creating an IoT device
+
+.Procedure
+
+. Register a device:
++
+[options="nowrap",subs="attributes"]
+----
+curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711"}' https://$(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')/registration/myapp.iot
+----
+
+. Add credentials for a device:
++
+[options="nowrap",subs="attributes"]
+----
+curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-plain":"'hono-secret'"}]}' https://$({cmdcli} -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')/credentials/myapp.iot
+----
