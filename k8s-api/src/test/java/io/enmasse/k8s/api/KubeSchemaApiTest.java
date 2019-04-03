@@ -145,6 +145,8 @@ public class KubeSchemaApiTest {
 
             assertTrue(type.findAddressType("queue").get().findAddressPlan("plan3").isPresent());
         }
+
+        System.out.println(schema.printSchema());
     }
 
     @Test

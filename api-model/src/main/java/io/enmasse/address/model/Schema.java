@@ -5,11 +5,13 @@
 package io.enmasse.address.model;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -93,5 +95,20 @@ public class Schema {
             }
         }
         return authenticationServiceList;
+    }
+
+    public String printSchema() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("{types=[");
+        for (AddressSpaceType type : addressSpaceTypes) {
+            builder.append("{name=").append(type.getName()).append(",addressSpacePlans=[");
+            for (AddressSpacePlan addressSpacePlan : type.getPlans()) {
+                builder.append("{name=").append(addressSpacePlan.getMetadata().getName()).append(", addressPlans=[").append(String.join(",", addressSpacePlan.getAddressPlans())).append("]}");
+            }
+            builder.append("]}");
+        }
+        builder.append(",authenticationServices=[").append(authenticationServices.stream().map(a -> a.getMetadata().getName()).collect(Collectors.joining(","))).append("]");
+        builder.append("}");
+        return builder.toString();
     }
 }
