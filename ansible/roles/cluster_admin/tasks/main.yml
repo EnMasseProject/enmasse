@@ -26,6 +26,12 @@
     name: standard_authservice
   when: '"standard" in authentication_services'
 - import_role:
+    name: example_plans
+  when: install_example_plans
+- import_role:
+    name: example_roles
+  when: install_example_roles
+- import_role:
     name: address_space_controller
 - import_role:
     name: enmasse_operator
@@ -53,9 +59,3 @@
 - import_role:
     name: alerting
   when: alerting
-- import_role:
-    name: example_plans
-  when: install_example_plans
-- import_role:
-    name: example_roles
-  when: install_example_roles
