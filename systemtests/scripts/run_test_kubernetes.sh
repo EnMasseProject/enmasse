@@ -69,7 +69,7 @@ spec:
 EOF
 
 
-if [ "$DEPLOY_IOT" = "true" ]; then
+if [[ "${DEPLOY_IOT}" == "true" ]]; then
     echo "Deploying IoT components"
     sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*/*.yaml
 
@@ -89,7 +89,7 @@ mkdir -p ${LOG_DIR}
 get_kubernetes_info ${LOG_DIR} services default "-before"
 get_kubernetes_info ${LOG_DIR} pods default "-before"
 
-if [[ -z "$DISABLE_LOG_SYNC" ]]; then
+if [[ -z "${DISABLE_LOG_SYNC}" ]]; then
     #start docker logging
     DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
     ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} ${KUBERNETES_NAMESPACE} > /dev/null 2> /dev/null &
@@ -103,20 +103,20 @@ echo "Running test profile: ${TEST_PROFILE}"
 #execute test
 case "${TEST_PROFILE}" in
 "smoke")
-    run_test "**.SmokeTest" systemtests-shared-brokered || failure=$(($failure + 1))
-    run_test "**.SmokeTest" systemtests-shared-standard || failure=$(($failure + 1))
+    run_test shared-brokered "**.SmokeTest" || failure=$(($failure + 1))
+    run_test shared-standard "**.SmokeTest" || failure=$(($failure + 1))
     ;;
 "smoke-iot")
-    run_test "" systemtests-smoke-iot || failure=$(($failure + 1))
+    run_test smoke-iot "" || failure=$(($failure + 1))
     ;;
 *)
-    run_test ${TESTCASE} systemtests || failure=$(($failure + 1))
+    run_test systemtests ${TESTCASE} || failure=$(($failure + 1))
     ;;
 esac
 
 kubectl get events --all-namespaces --sort-by lastTimestamp
 
-if [[ -z "$DISABLE_LOG_SYNC" ]]; then
+if [[ -z "${DISABLE_LOG_SYNC}" ]]; then
     #stop docker logging
     echo "process for syncing docker logs with PID: ${LOGS_PID} will be killed"
     kill ${LOGS_PID} || true

@@ -119,14 +119,15 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <properties>
-                        <groups>${groups}</groups>
-                        <excludedGroups>${excludeGroups}</excludedGroups>
-                    </properties>
+                    <groups>${groups}</groups>
+                    <excludedGroups>${excludeGroups}</excludedGroups>
                     <skipTests>${skip.tests}</skipTests>
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
                     </systemProperties>
+                    <includes>
+                        <include>io.enmasse.systemtest.**</include>
+                    </includes>
                 </configuration>
             </plugin>
             <plugin>
@@ -158,102 +159,102 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>shared-standard | shared-brokered | isolated</groups>
+                <groups>shared-standard | shared-brokered | isolated | marathon | shared-iot</groups>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-brokered-pr</id>
+            <id>shared-brokered-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
                 <groups>shared-brokered &amp; !nonPR &amp; !smoke &amp; !marathon</groups>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-standard-pr</id>
+            <id>shared-standard-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
                 <groups>shared-standard &amp; !nonPR &amp; !smoke &amp; !marathon</groups>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-isolated-pr</id>
+            <id>isolated-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
                 <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon</groups>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-isolated</id>
+            <id>isolated</id>
             <properties>
                 <groups>isolated &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-brokered</id>
+            <id>shared-brokered</id>
             <properties>
                 <groups>shared-brokered &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-standard</id>
+            <id>shared-standard</id>
             <properties>
                 <groups>shared-standard &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-iot</id>
+            <id>shared-iot</id>
             <properties>
                 <groups>shared-iot &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-smoke-iot</id>
+            <id>smoke-iot</id>
             <properties>
                 <groups>shared-iot &amp; smoke &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-marathon</id>
+            <id>marathon</id>
             <properties>
                 <groups>marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-smoke</id>
+            <id>smoke</id>
             <properties>
                 <groups>smoke &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-upgrade</id>
+            <id>upgrade</id>
             <properties>
                 <groups>upgrade &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-standard-release</id>
+            <id>shared-standard-release</id>
             <properties>
                 <groups>shared-standard &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-shared-brokered-release</id>
+            <id>shared-brokered-release</id>
             <properties>
                 <groups>shared-brokered &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>systemtests-isolated-release</id>
+            <id>isolated-release</id>
             <properties>
                 <groups>isolated &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
