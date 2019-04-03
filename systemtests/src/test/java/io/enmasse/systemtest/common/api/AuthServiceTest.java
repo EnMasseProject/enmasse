@@ -62,7 +62,6 @@ class AuthServiceTest extends TestBase {
     }
 
     @Test
-    @Disabled("Does not work in current state of auth services")
     void testAuthenticateAgainstMultipleAuthServices() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-eph", false);
         adminManager.createAuthService(standardAuth);
@@ -121,6 +120,7 @@ class AuthServiceTest extends TestBase {
     }
 
     @Test
+    @Disabled("Does not work in current state of auth services")
     void testAuthServiceWithoutDeletingClaim() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-claim", true, "1Gi", false, "test-claim");
         adminManager.createAuthService(standardAuth);
