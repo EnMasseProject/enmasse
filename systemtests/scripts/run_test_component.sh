@@ -44,7 +44,11 @@ if [[ "${TEST_PROFILE}" = "systemtests-pr" ]]; then
     run_test shared-brokered-pr ${TESTCASE} || failure=$(($failure + 1))
     run_test shared-standard-pr ${TESTCASE} || failure=$(($failure + 1))
     run_test isolated-pr ${TESTCASE} || failure=$(($failure + 1))
-elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]] || [[ "${TEST_PROFILE}" = "systemtests-upgrade" ]]; then
+elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]] \
+    || [[ "${TEST_PROFILE}" = "systemtests-upgrade" ]] \
+    || [[ "${TEST_PROFILE}" = "smoke" ]] \
+    || [[ "${TEST_PROFILE}" = "systemtests-smoke" ]] \
+    || [[ "${TEST_PROFILE}" = "smoke-iot" ]]; then
     run_test ${TEST_PROFILE} ${TESTCASE} || failure=$(($failure + 1))
 elif [[ "${TEST_PROFILE}" = "systemtests-release" ]]; then
     run_test shared-brokered-release ${TESTCASE} || failure=$(($failure + 1))
