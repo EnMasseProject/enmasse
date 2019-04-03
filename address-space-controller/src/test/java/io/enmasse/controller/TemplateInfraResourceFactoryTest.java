@@ -74,7 +74,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                         new File("src/test/resources/templates"),
                         true),
                 authenticationServiceRegistry,
-                false);
+                Collections.emptyMap(), false);
     }
 
     @Test

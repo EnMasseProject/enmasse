@@ -76,8 +76,8 @@ objects:
           command:
           - /opt/app-root/src/bin/launch_node.sh
           - /opt/app-root/src/bin/subserv.js
-          image: ${env.AGENT_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${AGENT_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -181,8 +181,8 @@ objects:
             value: '8883'
           - name: ENMASSE_MQTT_MAXMESSAGESIZE
             value: ${MQTT_MAXMESSAGESIZE}
-          image: ${env.MQTT_GATEWAY_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${MQTT_GATEWAY_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 60
             tcpSocket:
@@ -196,8 +196,8 @@ objects:
           - mountPath: /etc/mqtt-gateway/ssl
             name: ssl-certs
             readOnly: true
-        - image: ${env.MQTT_GATEWAY_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+        - image: ${MQTT_GATEWAY_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           env:
           - name: MESSAGING_SERVICE_HOST
             value: messaging-${INFRA_UUID}
@@ -266,8 +266,8 @@ objects:
             value: 55671
           - name: MESSAGING_SERVICE_ROUTE_CONTAINER_PORT
             value: 56671
-          image: ${env.MQTT_LWT_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${MQTT_LWT_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           name: mqtt-lwt
           volumeMounts:
           - mountPath: /etc/enmasse-certs
@@ -290,3 +290,15 @@ parameters:
 - description: The secret with cert for the mqtt service
   name: MQTT_SECRET
   required: true
+- name: AGENT_IMAGE
+  description: Agent Image
+  value: ${env.AGENT_IMAGE}
+- name: MQTT_GATEWAY_IMAGE
+  description: MQTT Gateway Image
+  value: ${env.MQTT_GATEWAY_IMAGE}
+- name: MQTT_LWT_IMAGE
+  description: MQTT LwT Image
+  value: ${env.MQTT_LWT_IMAGE}
+- name: IMAGE_PULL_POLICY
+  description: Image Pull Policy
+  value: ${env.IMAGE_PULL_POLICY}

@@ -25,10 +25,12 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
     private static final ObjectMapper mapper = new ObjectMapper();
     private final Kubernetes kubernetes;
     private final StandardControllerOptions options;
+    private final Map<String, String> env;
 
-    public TemplateBrokerSetGenerator(Kubernetes kubernetes, StandardControllerOptions options) {
+    public TemplateBrokerSetGenerator(Kubernetes kubernetes, StandardControllerOptions options, Map<String, String> env) {
         this.kubernetes = kubernetes;
         this.options = options;
+        this.env = env;
     }
 
     private boolean isShardedTopic(AddressPlan addressPlan) {
@@ -94,6 +96,9 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_SECRET, options.getAuthenticationServiceCaSecret());
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, options.getAuthenticationServiceClientSecret());
         paramMap.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, options.getAuthenticationServiceSaslInitHost());
+        setIfEnvPresent(paramMap, TemplateParameter.BROKER_IMAGE);
+        setIfEnvPresent(paramMap, TemplateParameter.BROKER_PLUGIN_IMAGE);
+        setIfEnvPresent(paramMap, TemplateParameter.TOPIC_FORWARDER_IMAGE);
 
         if (address != null) {
             paramMap.put(TemplateParameter.ADDRESS, address.getSpec().getAddress());
@@ -158,5 +163,11 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
             Kubernetes.addObjectAnnotation(items, AnnotationKeys.ADDRESS, address.getSpec().getAddress());
         }
         return items;
+    }
+
+    private void setIfEnvPresent(Map<String, String> parameters, String key) {
+        if (env.get(key) != null) {
+            parameters.put(key, env.get(key));
+        }
     }
 }
