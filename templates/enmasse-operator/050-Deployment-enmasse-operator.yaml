@@ -43,7 +43,7 @@ spec:
               fieldPath: metadata.namespace
         - name: OPERATOR_NAME
           value: "enmasse-operator"
-        - name: ENMASSE_DEFAULT_PULL_POLICY
+        - name: IMAGE_PULL_POLICY
           value: "${IMAGE_PULL_POLICY}"
         - name: CONTROLLER_DISABLE_ALL
           value: "true"
@@ -51,6 +51,28 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
           value: "true"
+        - name: IOT_AUTH_SERVICE_IMAGE
+          value: ${IOT_AUTH_SERVICE_IMAGE}
+        - name: IOT_DEVICE_REGISTRY_FILE_IMAGE
+          value: ${IOT_DEVICE_REGISTRY_FILE_IMAGE}
+        - name: IOT_GC_IMAGE
+          value: ${IOT_GC_IMAGE}
+        - name: IOT_HTTP_ADAPTER_IMAGE
+          value: ${IOT_HTTP_ADAPTER_IMAGE}
+        - name: IOT_MQTT_ADAPTER_IMAGE
+          value: ${IOT_MQTT_ADAPTER_IMAGE}
+        - name: IOT_TENANT_SERVICE_IMAGE
+          value: ${IOT_TENANT_SERVICE_IMAGE}
+        - name: IOT_PROXY_CONFIGURATOR_IMAGE
+          value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
+        - name: QDROUTERD_BASE_IMAGE
+          value: ${QDROUTERD_BASE_IMAGE}
+        - name: NONE_AUTHSERVICE_IMAGE
+          value: ${NONE_AUTHSERVICE_IMAGE}
+        - name: KEYCLOAK_IMAGE
+          value: ${KEYCLOAK_IMAGE}
+        - name: KEYCLOAK_PLUGIN_IMAGE
+          value: ${KEYCLOAK_PLUGIN_IMAGE}
         resources:
           limits:
             memory: 128Mi

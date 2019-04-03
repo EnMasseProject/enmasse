@@ -33,11 +33,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
     private final Kubernetes kubernetes;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
+    private final Map<String, String> env;
     private final boolean openShift;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceRegistry authenticationServiceRegistry, boolean openShift) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceRegistry authenticationServiceRegistry, Map<String, String> env, boolean openShift) {
         this.kubernetes = kubernetes;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
+        this.env = env;
         this.openShift = openShift;
     }
 
@@ -132,6 +134,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
         parameters.put(TemplateParameter.MQTT_SECRET, serviceCertMapping.get("mqtt").getSecretName());
+        setIfEnvPresent(parameters, TemplateParameter.AGENT_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.MQTT_GATEWAY_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.MQTT_LWT_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.IMAGE_PULL_POLICY);
     }
 
     private List<HasMetadata> createStandardInfraMqtt(AddressSpace addressSpace, String templateName) {
@@ -194,6 +200,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
 
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
+        setIfEnvPresent(parameters, TemplateParameter.AGENT_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.STANDARD_CONTROLLER_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.ROUTER_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.BROKER_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.BROKER_PLUGIN_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.TOPIC_FORWARDER_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.IMAGE_PULL_POLICY);
 
         Map<String, String> infraAnnotations = standardInfraConfig.getMetadata().getAnnotations();
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
@@ -269,6 +282,11 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
         }
 
+        setIfEnvPresent(parameters, TemplateParameter.AGENT_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.BROKER_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.BROKER_PLUGIN_IMAGE);
+        setIfEnvPresent(parameters, TemplateParameter.IMAGE_PULL_POLICY);
+
         List<HasMetadata> items;
         String templateName = getAnnotation(brokeredInfraConfig.getMetadata().getAnnotations(), AnnotationKeys.TEMPLATE_NAME, "brokered-space-infra");
         if (brokeredInfraConfig.getSpec().getBroker() != null) {
@@ -304,6 +322,13 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
         return items;
     }
+
+    private void setIfEnvPresent(Map<String, String> parameters, String key) {
+        if (env.get(key) != null) {
+            parameters.put(key, env.get(key));
+        }
+    }
+
 
     @Override
     public List<HasMetadata> createInfraResources(AddressSpace addressSpace, InfraConfig infraConfig) {

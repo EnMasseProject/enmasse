@@ -80,7 +80,7 @@ public class StandardController {
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
         Kubernetes kubernetes = new KubernetesHelper(kubeClient, options.getTemplateDir(), options.getInfraUuid());
-        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, options);
+        BrokerSetGenerator clusterGenerator = new TemplateBrokerSetGenerator(kubernetes, options, System.getenv());
 
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(kubeClient, kubeClient.getNamespace(), Clock.systemUTC(), "standard-controller")
                 : new LogEventLogger();

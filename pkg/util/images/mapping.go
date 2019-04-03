@@ -44,10 +44,31 @@ func loadImageMapFrom(fileName string) (map[string]string, error) {
 
 }
 
+func setIfEnvPresent(data map[string]string, key string, envVar string) {
+	value, present := os.LookupEnv(key)
+	if present {
+		data[key] = value
+	}
+}
+
+func overrideImageMapFromEnv(data map[string]string) {
+	setIfEnvPresent(data, "iot-auth-service", "IOT_AUTH_SERVICE_IMAGE")
+	setIfEnvPresent(data, "iot-device-registry-file", "IOT_DEVICE_REGISTRY_FILE_IMAGE")
+	setIfEnvPresent(data, "iot-gc", "IOT_GC_IMAGE")
+	setIfEnvPresent(data, "iot-http-adapter", "IOT_HTTP_ADAPTER_IMAGE")
+	setIfEnvPresent(data, "iot-mqtt-adapter", "IOT_MQTT_ADAPTER_IMAGE")
+	setIfEnvPresent(data, "iot-tenant-service", "IOT_TENANT_SERVICE_IMAGE_IMAGE")
+	setIfEnvPresent(data, "iot-proxy-configurator", "IOT_PROXY_CONFIGURATOR_IMAGE")
+	setIfEnvPresent(data, "qdrouterd-base", "QDROUTERD_BASE_IMAGE")
+	setIfEnvPresent(data, "none-authservice", "NONE_AUTHSERVICE_IMAGE")
+	setIfEnvPresent(data, "keycloak", "KEYCLOAK_IMAGE")
+	setIfEnvPresent(data, "keycloak-plugin", "KEYCLOAK_PLUGIN_IMAGE")
+}
+
 const defaultImageMapFileName = "operatorImageMap.yaml"
 
 func init() {
-	defaultPullPolicy = corev1.PullPolicy(os.Getenv("ENMASSE_DEFAULT_PULL_POLICY"))
+	defaultPullPolicy = corev1.PullPolicy(os.Getenv("IMAGE_PULL_POLICY"))
 }
 
 func lazyLoadImageMap() {
@@ -66,6 +87,7 @@ func lazyLoadImageMap() {
 		panic(err)
 	}
 
+	overrideImageMapFromEnv(imageMap)
 }
 
 func GetImage(name string) (string, error) {

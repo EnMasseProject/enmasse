@@ -261,8 +261,8 @@ objects:
             value: "INFER"
           - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
             value: "qdrouterd-headless-${INFRA_UUID}"
-          image: ${env.ROUTER_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${ROUTER_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
             initialDelaySeconds: 30
             httpGet:
@@ -424,8 +424,16 @@ objects:
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
           - name: MESSAGING_SECRET
             value: ${MESSAGING_SECRET}
-          image: ${env.STANDARD_CONTROLLER_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          - name: BROKER_IMAGE
+            value: ${BROKER_IMAGE}
+          - name: BROKER_PLUGIN_IMAGE
+            value: ${BROKER_PLUGIN_IMAGE}
+          - name: TOPIC_FORWARDER_IMAGE
+            value: ${TOPIC_FORWARDER_IMAGE}
+          - name: ${IMAGE_PULL_POLICY}
+            value: ${IMAGE_PULL_POLICY}
+          image: ${STANDARD_CONTROLLER_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -484,7 +492,7 @@ objects:
             value: ${ADDRESS_SPACE_NAMESPACE}
           - name: MESSAGING_CERT
             value: /opt/agent/messaging-cert/tls.crt
-          image: ${env.AGENT_IMAGE}
+          image: ${AGENT_IMAGE}
           imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
             httpGet:
@@ -712,3 +720,24 @@ parameters:
 - description: Router worker threads
   name: ROUTER_WORKER_THREADS
   value: '4'
+- name: IMAGE_PULL_POLICY
+  description: Image Pull Policy
+  value: ${env.IMAGE_PULL_POLICY}
+- name: ROUTER_IMAGE
+  description: Router image
+  value: ${env.ROUTER_IMAGE}
+- name: STANDARD_CONTROLLER_IMAGE
+  description: Standard Controller Image
+  value: ${env.STANDARD_CONTROLLER_IMAGE}
+- name: AGENT_IMAGE
+  description: Agent Image
+  value: ${env.AGENT_IMAGE}
+- name: BROKER_IMAGE
+  description: Broker Image
+  value: ${env.BROKER_IMAGE}
+- name: BROKER_PLUGIN_IMAGE
+  description: Broker Plugin Image
+  value: ${env.BROKER_PLUGIN_IMAGE}
+- name: TOPIC_FORWARDER_IMAGE
+  description: Topic Forwarder Image
+  value: ${env.TOPIC_FORWARDER_IMAGE}

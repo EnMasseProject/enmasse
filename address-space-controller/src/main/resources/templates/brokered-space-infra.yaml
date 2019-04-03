@@ -100,8 +100,8 @@ objects:
             value: serverData
           - name: HOME
             value: /var/run/artemis/split-1/
-          image: ${env.ARTEMIS_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${BROKER_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           command:
           - /opt/apache-artemis/custom/bin/launch-broker.sh
           livenessProbe:
@@ -168,8 +168,8 @@ objects:
             value: serverData
           - name: HOME
             value: /var/run/artemis/split-1/
-          image: ${env.ARTEMIS_PLUGIN_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${BROKER_PLUGIN_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           name: broker-plugin
           volumeMounts:
           - mountPath: /var/run/artemis
@@ -331,8 +331,8 @@ objects:
             value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
           - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
             value: ${AUTHENTICATION_SERVICE_KC_IDP_HINT}
-          image: ${env.AGENT_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${AGENT_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -466,3 +466,18 @@ parameters:
 - description: Broker address full policy
   name: BROKER_ADDRESS_FULL_POLICY
   value: FAIL
+- name: IMAGE_PULL_POLICY
+  description: Image Pull Policy
+  value: ${env.IMAGE_PULL_POLICY}
+- name: AGENT_IMAGE
+  description: Agent Image
+  value: ${env.AGENT_IMAGE}
+- name: BROKER_IMAGE
+  description: Broker Image
+  value: ${env.BROKER_IMAGE}
+- name: BROKER_PLUGIN_IMAGE
+  description: Broker Plugin Image
+  value: ${env.BROKER_PLUGIN_IMAGE}
+- name: TOPIC_FORWARDER_IMAGE
+  description: Topic Forwarder Image
+  value: ${env.TOPIC_FORWARDER_IMAGE}

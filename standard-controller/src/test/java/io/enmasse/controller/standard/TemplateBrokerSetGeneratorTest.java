@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class TemplateBrokerSetGeneratorTest {
         kubernetes = mock(Kubernetes.class);
 
         standardControllerSchema = new StandardControllerSchema();
-        generator = new TemplateBrokerSetGenerator(kubernetes, new StandardControllerOptions());
+        generator = new TemplateBrokerSetGenerator(kubernetes, new StandardControllerOptions(), Collections.emptyMap());
     }
 
     @Test

@@ -57,8 +57,8 @@ replace_images: prepare
 					  -e 's,\$${KEYCLOAK_IMAGE},$(KEYCLOAK_IMAGE),g' \
 					  -e 's,\$${KEYCLOAK_PLUGIN_IMAGE},$(KEYCLOAK_PLUGIN_IMAGE),g' \
 					  -e 's,\$${TOPIC_FORWARDER_IMAGE},$(TOPIC_FORWARDER_IMAGE),g' \
-					  -e 's,\$${ARTEMIS_IMAGE},$(ARTEMIS_IMAGE),g' \
-					  -e 's,\$${ARTEMIS_PLUGIN_IMAGE},$(ARTEMIS_PLUGIN_IMAGE),g' \
+					  -e 's,\$${BROKER_IMAGE},$(BROKER_IMAGE),g' \
+					  -e 's,\$${BROKER_PLUGIN_IMAGE},$(BROKER_PLUGIN_IMAGE),g' \
 					  -e 's,\$${SUBSERV_IMAGE},$(SUBSERV_IMAGE),g' \
 					  -e 's,\$${API_SERVER_IMAGE},$(API_SERVER_IMAGE),g' \
 					  -e 's,\$${SERVICE_BROKER_IMAGE},$(SERVICE_BROKER_IMAGE),g' \
@@ -79,8 +79,6 @@ replace_images: prepare
 					  -e 's,\$${IOT_DEVICE_REGISTRY_IMAGE},$(IOT_DEVICE_REGISTRY_IMAGE),g' \
 					  -e 's,\$${IOT_HTTP_ADAPTER_IMAGE},$(IOT_HTTP_ADAPTER_IMAGE),g' \
 					  -e 's,\$${IOT_MQTT_ADAPTER_IMAGE},$(IOT_MQTT_ADAPTER_IMAGE),g' \
-					  -e 's,\$${a},$(a),g' \
-					  -e 's,\$${IOT_OPERATOR_IMAGE},$(IOT_OPERATOR_IMAGE),g' \
 					  -e 's,\$${QDR_PROXY_CONFIGURATOR_IMAGE},$(QDR_PROXY_CONFIGURATOR_IMAGE),g' \
 					  -e 's,\$${ENMASSE_CONTROLLER_MANAGER_IMAGE},$(ENMASSE_CONTROLLER_MANAGER_IMAGE),g' > $$i.tmp; \
 		mv $$i.tmp $$i; \

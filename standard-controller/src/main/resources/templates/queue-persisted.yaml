@@ -119,8 +119,8 @@ objects:
             value: serverData
           - name: HOME
             value: /var/run/artemis/split-1/
-          image: ${env.ARTEMIS_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${BROKER_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           command:
           - /opt/apache-artemis/custom/bin/launch-broker.sh
           livenessProbe:
@@ -203,8 +203,8 @@ objects:
             value: serverData
           - name: HOME
             value: /var/run/artemis/split-1/
-          image: ${env.ARTEMIS_PLUGIN_IMAGE}
-          imagePullPolicy: ${env.IMAGE_PULL_POLICY}
+          image: ${BROKER_PLUGIN_IMAGE}
+          imagePullPolicy: ${IMAGE_PULL_POLICY}
           name: broker-plugin
           volumeMounts:
           - mountPath: /etc/enmasse-certs
@@ -298,3 +298,12 @@ parameters:
 - name: BROKER_CONNECTOR_IDLE_TIMEOUT_MS
   description: Idle timeout set for connectors
   value: "16000"
+- name: IMAGE_PULL_POLICY
+  description: Image Pull Policy
+  value: ${env.IMAGE_PULL_POLICY}
+- name: BROKER_IMAGE
+  description: Broker Image
+  value: ${env.BROKER_IMAGE}
+- name: BROKER_PLUGIN_IMAGE
+  description: Broker Plugin Image
+  value: ${env.BROKER_PLUGIN_IMAGE}

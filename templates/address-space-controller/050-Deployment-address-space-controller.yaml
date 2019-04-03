@@ -75,6 +75,24 @@ spec:
               key: recheckInterval
               name: address-space-controller-config
               optional: true
+        - name: IMAGE_PULL_POLICY
+          value: ${IMAGE_PULL_POLICY}
+        - name: ROUTER_IMAGE
+          value: ${ROUTER_IMAGE}
+        - name: STANDARD_CONTROLLER_IMAGE
+          value: ${STANDARD_CONTROLLER_IMAGE}
+        - name: AGENT_IMAGE
+          value: ${AGENT_IMAGE}
+        - name: BROKER_IMAGE
+          value: ${BROKER_IMAGE}
+        - name: BROKER_PLUGIN_IMAGE
+          value: ${BROKER_PLUGIN_IMAGE}
+        - name: TOPIC_FORWARDER_IMAGE
+          value: ${TOPIC_FORWARDER_IMAGE}
+        - name: MQTT_GATEWAY_IMAGE
+          value: ${MQTT_GATEWAY_IMAGE}
+        - name: MQTT_LWT_IMAGE
+          value: ${MQTT_LWT_IMAGE}
         image: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         livenessProbe:
