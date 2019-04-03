@@ -46,16 +46,48 @@ replace_images: prepare
 		cp -r $$i $(BUILDDIR)/replaced/$$D/ ; \
 	done
 	for i in `find $(BUILDDIR)/replaced -name "*.yaml"`; do \
-		cat $$i | $(IMAGE_ENV) envsubst '$${MAVEN_VERSION},$${ENMASSE_VERSION},$${IMAGE_PULL_POLICY},$${ADDRESS_SPACE_CONTROLLER_IMAGE},$${STANDARD_CONTROLLER_IMAGE},$${ROUTER_IMAGE},$${NONE_AUTHSERVICE_IMAGE},$${KEYCLOAK_IMAGE},$${KEYCLOAK_CONTROLLER_IMAGE},$${KEYCLOAK_PLUGIN_IMAGE},$${TOPIC_FORWARDER_IMAGE},$${ARTEMIS_IMAGE},$${ARTEMIS_PLUGIN_IMAGE},$${SUBSERV_IMAGE},$${API_SERVER_IMAGE},$${SERVICE_BROKER_IMAGE},$${AGENT_IMAGE},$${MQTT_GATEWAY_IMAGE},$${MQTT_LWT_IMAGE},$${PROMETHEUS_IMAGE},$${ALERTMANAGER_IMAGE},$${GRAFANA_IMAGE},$${KUBE_STATE_METRICS_IMAGE},$${OAUTH_PROXY_IMAGE},$${HONO_IMAGE},$${ENMASSE_CONTROLLER_MANAGER_IMAGE}' > $$i.tmp; \
+		cat $$i | sed -e 's,\$${ADDRESS_SPACE_CONTROLLER_IMAGE},$(ADDRESS_SPACE_CONTROLLER_IMAGE),g' \
+					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
+					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
+					  -e 's,\$${ENMASSE_VERSION},$(ENMASSE_VERSION),g' \
+					  -e 's,\$${IMAGE_PULL_POLICY},$(IMAGE_PULL_POLICY),g' \
+					  -e 's,\$${STANDARD_CONTROLLER_IMAGE},$(STANDARD_CONTROLLER_IMAGE),g' \
+					  -e 's,\$${ROUTER_IMAGE},$(ROUTER_IMAGE),g' \
+					  -e 's,\$${NONE_AUTHSERVICE_IMAGE},$(NONE_AUTHSERVICE_IMAGE),g' \
+					  -e 's,\$${KEYCLOAK_IMAGE},$(KEYCLOAK_IMAGE),g' \
+					  -e 's,\$${KEYCLOAK_PLUGIN_IMAGE},$(KEYCLOAK_PLUGIN_IMAGE),g' \
+					  -e 's,\$${TOPIC_FORWARDER_IMAGE},$(TOPIC_FORWARDER_IMAGE),g' \
+					  -e 's,\$${ARTEMIS_IMAGE},$(ARTEMIS_IMAGE),g' \
+					  -e 's,\$${ARTEMIS_PLUGIN_IMAGE},$(ARTEMIS_PLUGIN_IMAGE),g' \
+					  -e 's,\$${SUBSERV_IMAGE},$(SUBSERV_IMAGE),g' \
+					  -e 's,\$${API_SERVER_IMAGE},$(API_SERVER_IMAGE),g' \
+					  -e 's,\$${SERVICE_BROKER_IMAGE},$(SERVICE_BROKER_IMAGE),g' \
+					  -e 's,\$${AGENT_IMAGE},$(AGENT_IMAGE),g' \
+					  -e 's,\$${MQTT_GATEWAY_IMAGE},$(MQTT_GATEWAY_IMAGE),g' \
+					  -e 's,\$${MQTT_LWT_IMAGE},$(MQTT_LWT_IMAGE),g' \
+					  -e 's,\$${PROMETHEUS_IMAGE},$(PROMETHEUS_IMAGE),g' \
+					  -e 's,\$${ALERTMANAGER_IMAGE},$(ALERTMANAGER_IMAGE),g' \
+					  -e 's,\$${GRAFANA_IMAGE},$(GRAFANA_IMAGE),g' \
+					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
+					  -e 's,\$${OAUTH_PROXY_IMAGE},$(OAUTH_PROXY_IMAGE),g' \
+					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
+					  -e 's,\$${QDROUTERD_BASE_IMAGE},$(QDROUTERD_BASE_IMAGE),g' \
+					  -e 's,\$${HONO_VERSION},$(HONO_VERSION),g' \
+					  -e 's,\$${IOT_GC_IMAGE},$(IOT_GC_IMAGE),g' \
+					  -e 's,\$${IOT_TENANT_SERVICE_IMAGE},$(IOT_TENANT_SERVICE_IMAGE),g' \
+					  -e 's,\$${IOT_AUTH_SERVICE_IMAGE},$(IOT_AUTH_SERVICE_IMAGE),g' \
+					  -e 's,\$${IOT_DEVICE_REGISTRY_IMAGE},$(IOT_DEVICE_REGISTRY_IMAGE),g' \
+					  -e 's,\$${IOT_HTTP_ADAPTER_IMAGE},$(IOT_HTTP_ADAPTER_IMAGE),g' \
+					  -e 's,\$${IOT_MQTT_ADAPTER_IMAGE},$(IOT_MQTT_ADAPTER_IMAGE),g' \
+					  -e 's,\$${a},$(a),g' \
+					  -e 's,\$${IOT_OPERATOR_IMAGE},$(IOT_OPERATOR_IMAGE),g' \
+					  -e 's,\$${QDR_PROXY_CONFIGURATOR_IMAGE},$(QDR_PROXY_CONFIGURATOR_IMAGE),g' \
+					  -e 's,\$${ENMASSE_CONTROLLER_MANAGER_IMAGE},$(ENMASSE_CONTROLLER_MANAGER_IMAGE),g' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
 component_install: replace_images
 	cp -r $(BUILDDIR)/replaced/* $(PACKAGE_INSTALL_DIR)/components/
-	for i in `find $(PACKAGE_INSTALL_DIR)/components -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
-		mv $$i.tmp $$i; \
-	done
 
 ansible_install: component_install
 	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
@@ -67,10 +99,6 @@ $(ENMASSE_BUNDLE): replace_images
 	for i in crds address-space-controller api-server api-service enmasse-operator; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
-	for i in `find $(ENMASSE_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
-		mv $$i.tmp $$i; \
-	done
 
 MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/monitoring
 $(MONITORING_BUNDLE): replace_images
@@ -78,20 +106,12 @@ $(MONITORING_BUNDLE): replace_images
 	for i in alertmanager grafana kube-state-metrics prometheus service-monitor prometheus-rules; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(MONITORING_BUNDLE)/; \
 	done
-	for i in `find $(MONITORING_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE}' > $$i.tmp; \
-		mv $$i.tmp $$i; \
-	done
 
 IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/iot
 $(IOT_BUNDLE): replace_images
 	mkdir -p $(IOT_BUNDLE)
 	for i in $(IOT_MODULES); do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
-	done
-	for i in `find $(IOT_BUNDLE) -name "*.yaml"`; do \
-		cat $$i | $(IMAGE_ENV) HONO_VERSION="$(HONO_VERSION)" NAMESPACE=$(DEFAULT_PROJECT) envsubst '$${NAMESPACE},$${HONO_VERSION},$${IMAGE_PULL_POLICY},$${QDROUTERD_BASE_IMAGE},$${IOT_GC_IMAGE},$${IOT_OPERATOR_IMAGE},$${QDR_PROXY_CONFIGURATOR_IMAGE},$${IOT_TENANT_SERVICE_IMAGE},$${IOT_AUTH_SERVICE_IMAGE},$${IOT_DEVICE_REGISTRY_IMAGE},$${IOT_HTTP_ADAPTER_IMAGE},$${IOT_MQTT_ADAPTER_IMAGE},$${ENMASSE_CONTROLLER_MANAGER_IMAGE}' > $$i.tmp; \
-		mv $$i.tmp $$i; \
 	done
 
 OLM=$(PACKAGE_INSTALL_DIR)/olm/enmasse
