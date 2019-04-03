@@ -9,6 +9,7 @@ spec:
   displayOrder: 0
   shortDescription: A plan for small queues
   longDescription: A plan for small queues that consume little resources
+  partitions: 1
   addressType: queue
   resources:
     router: 0.2

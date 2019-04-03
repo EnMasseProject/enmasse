@@ -30,6 +30,7 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressPlanStatus extends AbstractWithAdditionalProperties {
     private String name;
+    private Integer partitions;
     private Map<String, Double> resources;
 
     public String getName() {
@@ -48,11 +49,20 @@ public class AddressPlanStatus extends AbstractWithAdditionalProperties {
         this.resources = new HashMap<>(resources);
     }
 
+    public Integer getPartitions() {
+        return partitions;
+    }
+
+    public void setPartitions(Integer partitions) {
+        this.partitions = partitions;
+    }
+
     @Override
     public String toString() {
         return "AddressPlanStatus{" +
                 "name='" + name + '\'' +
                 ", resources=" + resources +
+                ", partitions=" + partitions +
                 '}';
     }
 
@@ -62,18 +72,20 @@ public class AddressPlanStatus extends AbstractWithAdditionalProperties {
         if (o == null || getClass() != o.getClass()) return false;
         AddressPlanStatus that = (AddressPlanStatus) o;
         return Objects.equals(name, that.name) &&
-                Objects.equals(resources, that.resources);
+                Objects.equals(resources, that.resources) &&
+                Objects.equals(partitions, that.partitions);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, resources);
+        return Objects.hash(name, resources, partitions);
     }
 
     public static AddressPlanStatus fromAddressPlan(AddressPlan addressPlan) {
         AddressPlanStatus planStatus = new AddressPlanStatus();
         planStatus.setName(addressPlan.getMetadata().getName());
         planStatus.setResources(addressPlan.getResources());
+        planStatus.setPartitions(addressPlan.getPartitions());
         return planStatus;
     }
 }

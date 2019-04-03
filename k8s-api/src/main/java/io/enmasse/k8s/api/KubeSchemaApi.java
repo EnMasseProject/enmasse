@@ -126,6 +126,11 @@ public class KubeSchemaApi implements SchemaApi {
         } else if ("standard".equals(addressSpaceType)) {
             requiredResources.add("router");
             if (!Arrays.asList("anycast", "multicast").contains(addressPlan.getAddressType())) {
+                if (!"queue".equals(addressPlan.getAddressType()) && addressPlan.getPartitions() > 1) {
+                    String error = "Error validating address plan " + addressPlan.getMetadata().getName() + ": address type " + addressPlan.getAddressType() + " does not support more than 1 partition";
+                    log.warn(error);
+                    throw new SchemaValidationException(error);
+                }
                 requiredResources.add("broker");
             }
         }

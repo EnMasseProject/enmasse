@@ -13,4 +13,5 @@ public interface AddressPlan extends HasMetadata {
     String getShortDescription();
     String getAddressType();
     Map<String, Double> getResources();
+    int getPartitions();
 }

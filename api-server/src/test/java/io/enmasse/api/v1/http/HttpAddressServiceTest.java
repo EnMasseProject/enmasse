@@ -24,7 +24,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
 
-import static io.enmasse.config.AnnotationKeys.BROKER_ID;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -71,7 +70,6 @@ public class HttpAddressServiceTest {
                 .withNewMetadata()
                 .withName(String.format("%s.q1", MY_ADDRESSSPACE))
                 .withNamespace(MY_NAMESPACE)
-                .withAnnotations(Collections.singletonMap(BROKER_ID, String.format("broker-%s", UUID.randomUUID())))
                 .endMetadata()
 
                 .withNewSpec()
@@ -80,7 +78,6 @@ public class HttpAddressServiceTest {
                 .withType("queue")
                 .withPlan("plan1")
                 .endSpec()
-
                 .build();
     }
 
@@ -138,7 +135,6 @@ public class HttpAddressServiceTest {
         final JsonPatch patch = mapper.readValue("[" +
                 "{\"op\":\"replace\",\"path\":\"/metadata/name\",\"value\":\"newname\"}," +
                 "{\"op\":\"replace\",\"path\":\"/metadata/namespace\",\"value\":\"newnamespace\"}," +
-                String.format("{\"op\":\"replace\",\"path\":\"/metadata/annotations/enmasse.io~1broker-id\",\"value\":\"broker-%s\"},", brokerId) +
                 "{\"op\":\"add\",\"path\":\"/metadata/labels/mylabel\",\"value\":\"myvalue\"}" +
                 "]", JsonPatch.class);
 
@@ -148,7 +144,5 @@ public class HttpAddressServiceTest {
         assertThat(updated.getMetadata().getLabels().get("mylabel"), is("myvalue"));
         assertThat(updated.getMetadata().getName(), is(address1.getMetadata().getName()));
         assertThat(updated.getMetadata().getNamespace(), is(address1.getMetadata().getNamespace()));
-        assertThat(updated.getMetadata().getAnnotations().get(BROKER_ID), is(address1.getMetadata().getAnnotations().get(BROKER_ID)));
-
     }
 }

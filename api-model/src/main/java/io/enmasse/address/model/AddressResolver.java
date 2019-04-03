@@ -29,6 +29,10 @@ public class AddressResolver {
                 .findAddressPlan(address.getSpec().getPlan()).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + address.getSpec().getPlan() + " for address type " + address.getSpec().getType()));
     }
 
+    public Optional<AddressPlanStatus> getAppliedPlan(Address address) {
+        return Optional.ofNullable(address.getStatus()).flatMap(status -> Optional.ofNullable(status.getPlanStatus()));
+    }
+
     public AddressPlan getPlan(AddressType addressType, String plan) {
         return addressType.findAddressPlan(plan).orElseThrow(() -> new UnresolvedAddressException("Unknown address plan " + plan + " for address type " + addressType.getName()));
     }
