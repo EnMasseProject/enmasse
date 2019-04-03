@@ -18,4 +18,5 @@ public interface AuthenticationServiceRegistry {
     Optional<io.enmasse.admin.model.v1.AuthenticationService> findAuthenticationServiceByName(String name);
     List<io.enmasse.admin.model.v1.AuthenticationService> findAuthenticationServiceByType(AuthenticationServiceType type);
     Optional<io.enmasse.admin.model.v1.AuthenticationService> resolveDefaultAuthenticationService();
+    List<io.enmasse.admin.model.v1.AuthenticationService> listAuthenticationServices();
 }

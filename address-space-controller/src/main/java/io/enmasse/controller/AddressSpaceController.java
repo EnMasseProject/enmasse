@@ -5,6 +5,7 @@
 
 package io.enmasse.controller;
 
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
@@ -16,15 +17,13 @@ import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
-import io.enmasse.user.api.UserApiWithFallback;
+import io.enmasse.user.api.DelegateUserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -37,6 +36,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Map;
 
 public class AddressSpaceController {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
@@ -98,16 +98,18 @@ public class AddressSpaceController {
 
         InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, isOpenShift);
 
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient, authenticationServiceRegistry);
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
         Clock clock = Clock.systemUTC();
-        UserApi userApi = new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO), new NullUserApi());
+        UserApi userApi = new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
+                AuthenticationServiceType.external, new NullUserApi(),
+                AuthenticationServiceType.standard, new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO)));
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
         controllerChain.addController(new RealmController(new Keycloak(keycloakFactory), new KubeUserLookupApi(controllerClient, isOpenShift), userApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
-        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, userApi));
+        controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);

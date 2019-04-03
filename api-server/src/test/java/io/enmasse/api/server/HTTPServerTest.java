@@ -41,6 +41,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Clock;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
@@ -96,8 +97,8 @@ public class HTTPServerTest {
                                 .build()))
                         .build())
                 .build());
-        when(userApi.listUsers(any())).thenReturn(users);
-        when(userApi.listAllUsers()).thenReturn(users);
+        when(userApi.listUsers(any(), any())).thenReturn(users);
+        when(userApi.listAllUsers(any())).thenReturn(users);
 
         ApiServerOptions options = new ApiServerOptions();
         options.setVersion("1.0");
@@ -115,6 +116,7 @@ public class HTTPServerTest {
                 .build();
         when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
         when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
+        when(authenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
 
         this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, new Metrics(), options, null, null, Clock.systemUTC(), authenticationServiceRegistry,0, 0);
         vertx.deployVerticle(this.server, context.succeeding(arg -> context.completeNow()));

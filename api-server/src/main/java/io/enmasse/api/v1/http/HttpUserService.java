@@ -7,26 +7,12 @@ package io.enmasse.api.v1.http;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.PATCH;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -39,7 +25,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
 import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.api.common.CheckedFunction;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,11 +64,13 @@ public class HttpUserService {
 
     private final AddressSpaceApi addressSpaceApi;
     private final UserApi userApi;
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final Clock clock;
 
-    public HttpUserService(AddressSpaceApi addressSpaceApi, UserApi userApi, Clock clock) {
+    public HttpUserService(AddressSpaceApi addressSpaceApi, UserApi userApi, AuthenticationServiceRegistry authenticationServiceRegistry, Clock clock) {
         this.addressSpaceApi = addressSpaceApi;
         this.userApi = userApi;
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.clock = clock;
     }
 
@@ -107,11 +97,22 @@ public class HttpUserService {
 
             Instant now = clock.instant();
             UserList userList = new UserList();
-            if (labelSelector != null) {
-                Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                userList.getItems().addAll(userApi.listUsersWithLabels(namespace, labels).getItems());
-            } else {
-                userList.getItems().addAll(userApi.listUsers(namespace).getItems());
+            Set<AddressSpace> addressSpaces = addressSpaceApi.listAddressSpaces(namespace);
+            Map<String, AuthenticationService> authenticationServiceMap = new HashMap<>();
+            for (AddressSpace addressSpace : addressSpaces) {
+                AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+                if (authenticationService == null) {
+                    return Response.status(404).entity(Status.notFound("AuthenticationService", addressSpace.getSpec().getAuthenticationService().getName())).build();
+                }
+                if (authenticationServiceMap.get(authenticationService.getMetadata().getName()) == null) {
+                    authenticationServiceMap.put(authenticationService.getMetadata().getName(), authenticationService);
+                    if (labelSelector != null) {
+                        Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
+                        userList.getItems().addAll(userApi.listUsersWithLabels(authenticationService, namespace, labels).getItems());
+                    } else {
+                        userList.getItems().addAll(userApi.listUsers(authenticationService, namespace).getItems());
+                    }
+                }
             }
             return Response.ok(formatResponse(acceptHeader, now, userList)).build();
         });
@@ -131,13 +132,27 @@ public class HttpUserService {
             if (addressSpace == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
-            String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+            AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+            if (authenticationService == null) {
+                return Response.status(404).entity(Status.notFound("AuthenticationService", addressSpace.getSpec().getAuthenticationService().getName())).build();
+            }
+
+            String realm = getRealm(authenticationService, addressSpace);
+
             log.debug("Retrieving user {} in realm {} namespace {}", userNameWithAddressSpace, realm, namespace);
 
-            return userApi.getUserWithName(realm, userNameWithAddressSpace)
+            return userApi.getUserWithName(authenticationService, realm, userNameWithAddressSpace)
                     .map(user -> Response.ok(formatResponse(acceptHeader, now, user)).build())
                     .orElseGet(() -> Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build());
         });
+    }
+
+    private static String getRealm(AuthenticationService authenticationService, AddressSpace addressSpace) {
+        String realm = authenticationService.getSpec().getRealm();
+        if (realm == null) {
+            realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+        }
+        return realm;
     }
 
     private static String parseAddressSpace(String userNameWithAddressSpace) {
@@ -162,10 +177,15 @@ public class HttpUserService {
             if (addressSpace == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
-            String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+            AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+            if (authenticationService == null) {
+                return Response.status(404).entity(Status.notFound("AuthenticationService", addressSpace.getSpec().getAuthenticationService().getName())).build();
+            }
 
-            userApi.createUser(realm, user);
-            User created = userApi.getUserWithName(realm, user.getMetadata().getName()).orElse(user);
+            String realm = getRealm(authenticationService, addressSpace);
+
+            userApi.createUser(authenticationService, realm, user);
+            User created = userApi.getUserWithName(authenticationService, realm, user.getMetadata().getName()).orElse(user);
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
             builder.path(created.getMetadata().getName());
             return Response.created(builder.build()).entity(created).build();
@@ -199,12 +219,18 @@ public class HttpUserService {
             if (addressSpace == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
-            String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
-            if (!userApi.replaceUser(realm, user)) {
+            AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+            if (authenticationService == null) {
+                return Response.status(404).entity(Status.notFound("AuthenticationService", addressSpace.getSpec().getAuthenticationService().getName())).build();
+            }
+
+            String realm = getRealm(authenticationService, addressSpace);
+
+            if (!userApi.replaceUser(authenticationService, realm, user)) {
                 return Response.status(404).entity(Status.notFound("MessagingUser", user.getMetadata().getName())).build();
             }
-            User replaced = userApi.getUserWithName(realm, user.getMetadata().getName()).orElse(user);
+            User replaced = userApi.getUserWithName(authenticationService, realm, user.getMetadata().getName()).orElse(user);
             return Response.ok().entity(replaced).build();
         });
     }
@@ -244,10 +270,16 @@ public class HttpUserService {
             if (addressSpace == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
-            String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+
+            AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+            if (authenticationService == null) {
+                return Response.status(404).entity(Status.notFound("AuthenticationService", addressSpace.getSpec().getAuthenticationService().getName())).build();
+            }
+
+            String realm = getRealm(authenticationService, addressSpace);
             log.debug("Retrieving user {} in realm {} namespace {}", userNameWithAddressSpace, realm, namespace);
 
-            Optional<User> existing = userApi.getUserWithName(realm, userNameWithAddressSpace);
+            Optional<User> existing = userApi.getUserWithName(authenticationService, realm, userNameWithAddressSpace);
 
             if (!existing.isPresent()) {
                 return Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build();
@@ -261,7 +293,7 @@ public class HttpUserService {
             User replacement = MAPPER.treeToValue(patched, User.class);
             replacement = overrideNameAndNamespace(existingUser, replacement);
 
-            if (!userApi.replaceUser(realm, replacement)) {
+            if (!userApi.replaceUser(authenticationService, realm, replacement)) {
                 return Response.status(404).entity(Status.notFound("MessagingUser", replacement.getMetadata().getName())).build();
             }
             return Response.ok().entity(replacement).build();
@@ -291,14 +323,20 @@ public class HttpUserService {
             if (addressSpace == null) {
                 return Response.status(404).entity(Status.notFound("AddressSpace", addressSpaceName)).build();
             }
-            String realm = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+
+            AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+            if (authenticationService == null) {
+                return Response.status(404).entity(Status.notFound("AuthenticationService", addressSpace.getSpec().getAuthenticationService().getName())).build();
+            }
+
+            String realm = getRealm(authenticationService, addressSpace);
 
             log.debug("Deleting user {} in realm {} namespace {}", userNameWithAddressSpace, realm, namespace);
-            User user = userApi.getUserWithName(realm, userNameWithAddressSpace).orElse(null);
+            User user = userApi.getUserWithName(authenticationService, realm, userNameWithAddressSpace).orElse(null);
             if (user == null) {
                 return Response.status(404).entity(Status.notFound("MessagingUser", userNameWithAddressSpace)).build();
             }
-            userApi.deleteUser(realm, user);
+            userApi.deleteUser(authenticationService, realm, user);
             return Response.ok(Status.successStatus(200)).build();
         });
     }
@@ -308,7 +346,19 @@ public class HttpUserService {
     public Response deleteUsers(@Context SecurityContext securityContext, @PathParam("namespace") String namespace) throws Exception {
         return doRequest("Error deleting address space s", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.delete);
-            userApi.deleteUsers(namespace);
+
+            Map<String, AuthenticationService> authenticationServiceMap = new HashMap<>();
+            Set<AddressSpace> addressSpaces = addressSpaceApi.listAddressSpaces(namespace);
+            for (AddressSpace addressSpace : addressSpaces) {
+                AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+                if (authenticationService == null) {
+                    return Response.status(404).entity(Status.notFound("AuthenticationService", addressSpace.getSpec().getAuthenticationService().getName())).build();
+                }
+                if (authenticationServiceMap.get(authenticationService.getMetadata().getName()) == null) {
+                    authenticationServiceMap.put(authenticationService.getMetadata().getName(), authenticationService);
+                    userApi.deleteUsers(authenticationService, namespace);
+                }
+            }
             return Response.ok(Status.successStatus(200)).build();
         });
     }

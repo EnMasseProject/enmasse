@@ -12,7 +12,6 @@ import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.plugins.providers.jackson.ResteasyJackson2Provider;
@@ -32,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.util.Base64;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -42,22 +40,14 @@ public class KubeKeycloakFactory implements KeycloakFactory {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final NamespacedKubernetesClient kubeClient;
-    private final AuthenticationServiceRegistry authenticationServiceRegistry;
 
-    public KubeKeycloakFactory(NamespacedKubernetesClient kubeClient, AuthenticationServiceRegistry authenticationServiceRegistry) {
+    public KubeKeycloakFactory(NamespacedKubernetesClient kubeClient) {
         this.kubeClient = kubeClient;
-        this.authenticationServiceRegistry = authenticationServiceRegistry;
     }
 
     @Override
-    public Keycloak createInstance() {
-        List<AuthenticationService> authenticationServices = authenticationServiceRegistry.findAuthenticationServiceByType(AuthenticationServiceType.standard);
-        if (authenticationServices.isEmpty()) {
-            return null;
-        }
-        // Only 1 instance of standard supported
-        AuthenticationService authenticationService = authenticationServices.get(0);
-        if (authenticationService.getStatus() == null) {
+    public Keycloak createInstance(AuthenticationService authenticationService) {
+        if (!authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) || authenticationService.getStatus() == null) {
             return null;
         }
         log.info("Using standard authentication service '{}'", authenticationService.getMetadata().getName());

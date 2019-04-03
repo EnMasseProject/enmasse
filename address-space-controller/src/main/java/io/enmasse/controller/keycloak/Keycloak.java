@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller.keycloak;
 
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import org.keycloak.admin.client.resource.IdentityProviderResource;
 import org.keycloak.admin.client.resource.IdentityProvidersResource;
@@ -28,8 +29,8 @@ public class Keycloak implements KeycloakApi {
     private static final String IDENTITY_PROVIDER_BASE_URL = "baseUrl";
 
     private final KeycloakFactory keycloakFactory;
-    private final Map<String, KeycloakRealmParams> realmState = new ConcurrentHashMap<>();
-    private volatile org.keycloak.admin.client.Keycloak keycloak;
+    private final Map<String, Map<String, KeycloakRealmParams>> realmState = new ConcurrentHashMap<>();
+    private final Map<String, org.keycloak.admin.client.Keycloak> keycloakMap = new HashMap<>();
 
     public Keycloak(KeycloakFactory keycloakFactory) {
         this.keycloakFactory = keycloakFactory;
@@ -39,22 +40,22 @@ public class Keycloak implements KeycloakApi {
         T handle(org.keycloak.admin.client.Keycloak keycloak);
     }
 
-    private synchronized <T> T withKeycloak(Handler<T> consumer) {
-        if (keycloak == null) {
-            keycloak = keycloakFactory.createInstance();
+    private synchronized <T> T withKeycloak(AuthenticationService authenticationService, Handler<T> consumer) {
+        if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
+            keycloakMap.put(authenticationService.getMetadata().getName(), keycloakFactory.createInstance(authenticationService));
         }
-        return consumer.handle(keycloak);
+        return consumer.handle(keycloakMap.get(authenticationService.getMetadata().getName()));
     }
 
     @Override
-    public Set<String> getRealmNames() {
-        return withKeycloak(kc -> kc.realms().findAll().stream()
+    public Set<String> getRealmNames(AuthenticationService authenticationService) {
+        return withKeycloak(authenticationService, kc -> kc.realms().findAll().stream()
                 .map(RealmRepresentation::getRealm)
                 .collect(Collectors.toSet()));
     }
 
     @Override
-    public void createRealm(String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params) {
+    public void createRealm(AuthenticationService authenticationService, String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params) {
         final RealmRepresentation newRealm = new RealmRepresentation();
         newRealm.setRealm(realmName);
         newRealm.setEnabled(true);
@@ -98,18 +99,20 @@ public class Keycloak implements KeycloakApi {
             newRealm.setClients(Collections.singletonList(console));
         }
 
-        withKeycloak(kc -> {
+        withKeycloak(authenticationService, kc -> {
             kc.realms().create(newRealm);
-            realmState.put(realmName, params);
+            Map<String, KeycloakRealmParams> state = realmState.computeIfAbsent(authenticationService.getMetadata().getName(), k -> new HashMap<>());
+            state.put(realmName, params);
             return true;
         });
     }
 
     @Override
-    public void updateRealm(String realmName, KeycloakRealmParams updated) {
-        KeycloakRealmParams current = realmState.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
+    public void updateRealm(AuthenticationService authenticationService, String realmName, KeycloakRealmParams updated) {
+        Map<String, KeycloakRealmParams> state = realmState.computeIfAbsent(authenticationService.getMetadata().getName(), k -> new HashMap<>());
+        KeycloakRealmParams current = state.getOrDefault(realmName, KeycloakRealmParams.NULL_PARAMS);
         if (!updated.equals(current)) {
-            withKeycloak(kc -> {
+            withKeycloak(authenticationService, kc -> {
                 RealmResource realm = kc.realm(realmName);
                 if (realm != null) {
 
@@ -157,7 +160,7 @@ public class Keycloak implements KeycloakApi {
                     }
 
                     if (!updatedProviderItems.isEmpty() || browserSecurityHeadersChanged) {
-                        realmState.put(realmName, updated);
+                        state.put(realmName, updated);
                     }
                 }
                 return true;
@@ -168,8 +171,8 @@ public class Keycloak implements KeycloakApi {
     }
 
     @Override
-    public void deleteRealm(String realmName) {
-        withKeycloak(kc -> {
+    public void deleteRealm(AuthenticationService authenticationService, String realmName) {
+        withKeycloak(authenticationService, kc -> {
 
             try {
                 kc.realm(realmName).remove();

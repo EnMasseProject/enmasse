@@ -4,8 +4,9 @@
  */
 package io.enmasse.user.keycloak;
 
+import io.enmasse.admin.model.v1.AuthenticationService;
 import org.keycloak.admin.client.Keycloak;
 
 public interface KeycloakFactory {
-    Keycloak createInstance();
+    Keycloak createInstance(AuthenticationService authenticationService);
 }

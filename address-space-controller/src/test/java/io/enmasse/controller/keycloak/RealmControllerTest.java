@@ -63,80 +63,81 @@ public class RealmControllerTest {
                 .build();
         when(mockAuthenticationServiceRegistry.findAuthenticationService(standardSvc)).thenReturn(Optional.of(authenticationService));
         when(mockAuthenticationServiceRegistry.findAuthenticationServiceByType(eq(io.enmasse.admin.model.v1.AuthenticationServiceType.standard))).thenReturn(Arrays.asList(authenticationService));
+        when(mockAuthenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
 
         manager = new RealmController(new KeycloakApi() {
             @Override
-            public Set<String> getRealmNames() {
+            public Set<String> getRealmNames(AuthenticationService auth) {
                 return new HashSet<>(realms);
             }
 
             @Override
-            public void createRealm(String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params) {
+            public void createRealm(AuthenticationService auth, String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params) {
                 realms.add(realmName);
             }
 
             @Override
-            public void updateRealm(String realmName, KeycloakRealmParams updated) {
+            public void updateRealm(AuthenticationService auth, String realmName, KeycloakRealmParams updated) {
                 updatedRealms.add(realmName);
             }
 
             @Override
-            public void deleteRealm(String realmName) {
+            public void deleteRealm(AuthenticationService auth, String realmName) {
                 realms.remove(realmName);
             }
         }, mockUserLookupApi, new UserApi() {
             @Override
-            public boolean isAvailable() {
+            public boolean isAvailable(AuthenticationService auth) {
                 return true;
             }
 
             @Override
-            public Optional<User> getUserWithName(String realm, String name) {
+            public Optional<User> getUserWithName(AuthenticationService auth, String realm, String name) {
                 return Optional.empty();
             }
 
             @Override
-            public void createUser(String realm, User user) {
+            public void createUser(AuthenticationService auth, String realm, User user) {
                 realmAdminUsers.put(realm, user.getSpec().getUsername());
             }
 
             @Override
-            public boolean replaceUser(String realm, User user) {
+            public boolean replaceUser(AuthenticationService auth, String realm, User user) {
                 return false;
             }
 
             @Override
-            public void deleteUser(String realm, User user) {
+            public void deleteUser(AuthenticationService auth, String realm, User user) {
 
             }
 
             @Override
-            public boolean realmExists(String realm) {
+            public boolean realmExists(AuthenticationService auth, String realm) {
                 return true;
             }
 
             @Override
-            public UserList listUsers(String realm) {
+            public UserList listUsers(AuthenticationService auth, String realm) {
                 return null;
             }
 
             @Override
-            public UserList listUsersWithLabels(String realm, Map<String, String> labels) {
+            public UserList listUsersWithLabels(AuthenticationService auth, String realm, Map<String, String> labels) {
                 return null;
             }
 
             @Override
-            public UserList listAllUsers() {
+            public UserList listAllUsers(AuthenticationService auth) {
                 return null;
             }
 
             @Override
-            public UserList listAllUsersWithLabels(Map<String, String> labels) {
+            public UserList listAllUsersWithLabels(AuthenticationService auth, Map<String, String> labels) {
                 return null;
             }
 
             @Override
-            public void deleteUsers(String namespace) {
+            public void deleteUsers(AuthenticationService auth, String namespace) {
 
             }
         }, mockAuthenticationServiceRegistry);
@@ -209,6 +210,7 @@ public class RealmControllerTest {
                 .build();
         when(mockAuthenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
         when(mockAuthenticationServiceRegistry.findAuthenticationServiceByType(eq(io.enmasse.admin.model.v1.AuthenticationServiceType.standard))).thenReturn(Arrays.asList(authenticationService));
+        when(mockAuthenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
 
         manager.reconcileAll(spaces);
         assertEquals(1, updatedRealms.size());
@@ -220,6 +222,7 @@ public class RealmControllerTest {
                         .withName(name)
                         .withNamespace("myns")
                         .addToAnnotations(AnnotationKeys.CREATED_BY, "developer")
+                        .addToAnnotations(AnnotationKeys.REALM_NAME, name)
                         .build())
 
                 .withNewSpec()

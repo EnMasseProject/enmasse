@@ -7,9 +7,11 @@ package io.enmasse.osb.api.bind;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.Exceptions;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -31,11 +33,13 @@ import java.util.*;
 @Produces({MediaType.APPLICATION_JSON})
 public class OSBBindingService extends OSBServiceBase {
 
+    private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final UserApi userApi;
     private final Random random = new SecureRandom();
 
-    public OSBBindingService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider, UserApi userApi) {
+    public OSBBindingService(AddressSpaceApi addressSpaceApi, AuthApi authApi, SchemaProvider schemaProvider, AuthenticationServiceRegistry authenticationServiceRegistry, UserApi userApi) {
         super(addressSpaceApi, authApi, schemaProvider);
+        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.userApi = userApi;
     }
 
@@ -132,11 +136,17 @@ public class OSBBindingService extends OSBServiceBase {
                 .withSpec(specBuilder.build())
                 .build();
 
-        String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        if (userApi.getUserWithName(realmName, user.getMetadata().getName()).isPresent()) {
-            userApi.replaceUser(realmName, user);
-        } else {
-            userApi.createUser(realmName, user);
+        AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+        if (authenticationService != null) {
+            String realmName = authenticationService.getSpec().getRealm();
+            if (realmName == null) {
+                realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+            }
+            if (userApi.getUserWithName(authenticationService, realmName, user.getMetadata().getName()).isPresent()) {
+                userApi.replaceUser(authenticationService, realmName, user);
+            } else {
+                userApi.createUser(authenticationService, realmName, user);
+            }
         }
         return user;
     }
@@ -191,15 +201,21 @@ public class OSBBindingService extends OSBServiceBase {
 
     private boolean deleteUser(AddressSpace addressSpace, String username) throws Exception {
 
-        String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        Optional<User> user = userApi.getUserWithName(realmName, addressSpace.getMetadata().getName() + "." + username);
-        if (user.isPresent()) {
-            userApi.deleteUser(realmName, user.get());
-            return true;
-        } else {
-            return false;
+        AuthenticationService authenticationService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService()).orElse(null);
+        if (authenticationService != null) {
+            String realmName = authenticationService.getSpec().getRealm();
+            if (realmName == null) {
+                realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+            }
+            Optional<User> user = userApi.getUserWithName(authenticationService, realmName, addressSpace.getMetadata().getName() + "." + username);
+            if (user.isPresent()) {
+                userApi.deleteUser(authenticationService, realmName, user.get());
+                return true;
+            } else {
+                return false;
+            }
         }
-
+        return false;
     }
 
 }

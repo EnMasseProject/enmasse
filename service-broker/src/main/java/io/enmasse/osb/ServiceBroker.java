@@ -7,13 +7,14 @@ package io.enmasse.osb;
 
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.*;
 import io.enmasse.osb.api.provision.ConsoleProxy;
+import io.enmasse.user.api.DelegateUserApi;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
-import io.enmasse.user.api.UserApiWithFallback;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
@@ -33,7 +34,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.Base64;
+import java.util.Map;
 
 public class ServiceBroker extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ServiceBroker.class.getName());
@@ -69,7 +72,7 @@ public class ServiceBroker extends AbstractVerticle {
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
-        UserApi userApi = createUserApi(options, authenticationServiceRegistry);
+        UserApi userApi = createUserApi(options);
 
         ConsoleProxy consoleProxy = addressSpace -> {
             Route route = client.adapt(OpenShiftClient.class).routes().inNamespace(client.getNamespace()).withName(options.getConsoleProxyRouteName()).get();
@@ -79,7 +82,7 @@ public class ServiceBroker extends AbstractVerticle {
             return String.format("https://%s/console/%s", route.getSpec().getHost(), addressSpace.getMetadata().getName());
         };
 
-        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy),
+        vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy, authenticationServiceRegistry),
                 result -> {
                     if (result.succeeded()) {
                         log.info("EnMasse Service Broker started");
@@ -103,9 +106,11 @@ public class ServiceBroker extends AbstractVerticle {
         }
     }
 
-    private UserApi createUserApi(ServiceBrokerOptions options, AuthenticationServiceRegistry authenticationServiceRegistry) {
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client, authenticationServiceRegistry);
-        return new UserApiWithFallback(new KeycloakUserApi(keycloakFactory, Clock.systemUTC()), new NullUserApi());
+    private UserApi createUserApi(ServiceBrokerOptions options) {
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client);
+        return new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
+                AuthenticationServiceType.external, new NullUserApi(),
+                AuthenticationServiceType.standard, new KeycloakUserApi(keycloakFactory, Clock.systemUTC(), Duration.ZERO)));
     }
 
     private static void ensureRouteExists(OpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {

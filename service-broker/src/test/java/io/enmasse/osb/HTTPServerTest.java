@@ -7,15 +7,15 @@ package io.enmasse.osb;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AddressSpaceStatus;
-import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.osb.api.provision.ConsoleProxy;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -52,6 +53,19 @@ public class HTTPServerTest {
         addressSpace = createAddressSpace(addressSpaceName);
         instanceApi.createAddressSpace(addressSpace);
 
+        AuthenticationServiceRegistry authenticationServiceRegistry = mock(AuthenticationServiceRegistry.class);
+        AuthenticationService authenticationService = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .endMetadata()
+                .withNewStatus()
+                .withHost("example")
+                .withPort(5671)
+                .endStatus()
+                .build();
+        when(authenticationServiceRegistry.findAuthenticationService(any())).thenReturn(Optional.of(authenticationService));
+        when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
+
         AuthApi authApi = mock(AuthApi.class);
         when(authApi.getNamespace()).thenReturn("controller");
         when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
@@ -62,7 +76,7 @@ public class HTTPServerTest {
             public String getConsoleUrl(AddressSpace addressSpace) {
                 return "http://localhost/console/" + addressSpaceName;
             }
-        });
+        }, authenticationServiceRegistry);
         vertx.deployVerticle(httpServer, context.succeeding(id -> context.completeNow()));
     }
 
