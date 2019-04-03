@@ -11,7 +11,7 @@ import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.PlansProvider;
+import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -35,16 +35,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     @BeforeEach
     void setUp() {
-        plansProvider.setUp();
+        adminManager.setUp();
     }
 
     @AfterEach
     void tearDown() throws Exception {
-        plansProvider.tearDown();
+        adminManager.tearDown();
     }
 
     @Test
@@ -53,12 +53,12 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         List<ResourceRequest> addressResources = Collections.singletonList(new ResourceRequest("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
         AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject(weakQueuePlanName, AddressType.QUEUE, addressResources);
-        plansProvider.createAddressPlan(weakQueuePlan);
+        adminManager.createAddressPlan(weakQueuePlan);
 
-        AddressSpacePlan standardPlan = plansProvider.getAddressSpacePlan("standard");
-        plansProvider.createAddressPlan(weakQueuePlan);
+        AddressSpacePlan standardPlan = adminManager.getAddressSpacePlan("standard");
+        adminManager.createAddressPlan(weakQueuePlan);
         standardPlan = new DoneableAddressSpacePlan(standardPlan).addNewAddressPlan(weakQueuePlanName).done();
-        plansProvider.removeAddressSpacePlan(standardPlan);
+        adminManager.removeAddressSpacePlan(standardPlan);
 
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 20;

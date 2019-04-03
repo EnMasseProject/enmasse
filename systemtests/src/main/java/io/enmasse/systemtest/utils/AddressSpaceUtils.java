@@ -100,18 +100,19 @@ public class AddressSpaceUtils {
         return createAddressSpaceObject(name, null, type, plan, authService);
     }
 
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan, AuthenticationServiceType authServiceType, String authServiceName) {
-        return createAddressSpaceResource(name, type, authServiceType)
+    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan, String authServiceName) {
+        return createAddressSpaceResource(name, type, authServiceName)
                 .editSpec()
                 .withPlan(plan)
-                .editAuthenticationService()
-                .withName(authServiceName)
-                .endAuthenticationService()
                 .endSpec()
                 .done();
     }
 
     private static DoneableAddressSpace createAddressSpaceResource(String name, AddressSpaceType type, AuthenticationServiceType auth) {
+        return createAddressSpaceResource(name, type, auth.equals(AuthenticationServiceType.STANDARD) ? "standard-authservice" : "none-authservice");
+    }
+
+    private static DoneableAddressSpace createAddressSpaceResource(String name, AddressSpaceType type, String authServiceName) {
         return new DoneableAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName(name)
@@ -120,8 +121,7 @@ public class AddressSpaceUtils {
                 .withType(type.toString())
                 .withPlan(type.equals(AddressSpaceType.BROKERED) ? AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
                 .withNewAuthenticationService()
-                .withType(auth)
-                .withName(auth.equals(AuthenticationServiceType.STANDARD) ? "standard-authservice" : "none-authservice")
+                .withName(authServiceName)
                 .endAuthenticationService()
                 .endSpec()
                 .build());

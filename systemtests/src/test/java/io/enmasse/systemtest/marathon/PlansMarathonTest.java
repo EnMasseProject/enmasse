@@ -30,11 +30,11 @@ import java.util.List;
 class PlansMarathonTest extends MarathonTestBase {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     @BeforeEach
     void setUp() {
-        plansProvider.setUp();
+        adminManager.setUp();
     }
 
     @AfterEach
@@ -42,7 +42,7 @@ class PlansMarathonTest extends MarathonTestBase {
         logCollector.collectRouterState("planMarathonTearDown");
         logCollector.collectConfigMaps("plansMarathonTearDown");
         if (!environment.skipCleanup()) {
-            plansProvider.tearDown();
+            adminManager.tearDown();
         }
     }
 
@@ -51,7 +51,7 @@ class PlansMarathonTest extends MarathonTestBase {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
         AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        plansProvider.createAddressPlan(xxsQueuePlan);
+        adminManager.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -61,7 +61,7 @@ class PlansMarathonTest extends MarathonTestBase {
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(manyAddressesPlan);
+        adminManager.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
@@ -105,7 +105,7 @@ class PlansMarathonTest extends MarathonTestBase {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
         AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        plansProvider.createAddressPlan(xxsQueuePlan);
+        adminManager.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -115,7 +115,7 @@ class PlansMarathonTest extends MarathonTestBase {
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(manyAddressesPlan);
+        adminManager.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,

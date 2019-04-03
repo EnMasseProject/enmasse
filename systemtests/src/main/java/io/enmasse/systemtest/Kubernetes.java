@@ -128,16 +128,16 @@ public abstract class Kubernetes {
         return terminatedPodsLogs;
     }
 
-    public Map<String, String> getLogsByLables(String namespace, Map<String,String> labels) {
+    public Map<String, String> getLogsByLables(String namespace, Map<String, String> labels) {
         Map<String, String> logs = new HashMap<>();
         try {
             client.pods().inNamespace(namespace).withLabels(labels).list().getItems().stream()
-                .forEach(pod->{
-                    logs.put(pod.getMetadata().getName(),
-                            client.pods().inNamespace(namespace)
-                                .withName(pod.getMetadata().getName())
-                                .getLog());
-                });
+                    .forEach(pod -> {
+                        logs.put(pod.getMetadata().getName(),
+                                client.pods().inNamespace(namespace)
+                                        .withName(pod.getMetadata().getName())
+                                        .getLog());
+                    });
         } catch (Exception e) {
             log.error("Error getting logs by labels.");
             e.printStackTrace();
@@ -557,6 +557,7 @@ public abstract class Kubernetes {
                     public void onFailure(Throwable throwable, Response response) {
                         data.completeExceptionally(throwable);
                     }
+
                     @Override
                     public void onClose(int i, String s) {
                         data.complete(baos.toString());
@@ -607,5 +608,81 @@ public abstract class Kubernetes {
         return new String(Base64.getDecoder().decode(client.secrets().inNamespace(namespace).list().getItems().stream()
                 .filter(secret -> secret.getMetadata().getName().contains(name + "-token")).collect(Collectors.toList())
                 .get(0).getData().get("token")), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Creates pvc from resource
+     *
+     * @param namespace namespace
+     * @param resources resources
+     */
+    public void createPvc(String namespace, PersistentVolumeClaim resources) {
+        if (!pvcExists(namespace, resources.getMetadata().getName())) {
+            PersistentVolumeClaim serRes = client.persistentVolumeClaims().inNamespace(namespace).create(resources);
+            log.info("PVC {} created", serRes.getMetadata().getName());
+        } else {
+            log.info("PVC {} already exists", resources.getMetadata().getName());
+        }
+    }
+
+    /**
+     * Deletes pvc
+     *
+     * @param namespace namespace
+     * @param pvcName   pvc name
+     */
+    public void deletePvc(String namespace, String pvcName) {
+        client.persistentVolumeClaims().inNamespace(namespace).withName(pvcName).delete();
+        log.info("PVC {} deleted", pvcName);
+    }
+
+    /**
+     * Test if pvc already exists
+     *
+     * @param namespace namespace
+     * @param pvcName   of pvc
+     * @return boolean
+     */
+    public boolean pvcExists(String namespace, String pvcName) {
+        return client.persistentVolumeClaims().inNamespace(namespace).list().getItems().stream()
+                .map(pvc -> pvc.getMetadata().getName()).collect(Collectors.toList()).contains(pvcName);
+    }
+
+    /**
+     * Creates pvc from resource
+     *
+     * @param namespace namespace
+     * @param resources resources
+     */
+    public void createSecret(String namespace, Secret resources) {
+        if (!secretExists(namespace, resources.getMetadata().getName())) {
+            Secret serRes = client.secrets().inNamespace(namespace).create(resources);
+            log.info("Secret {} created", serRes.getMetadata().getName());
+        } else {
+            log.info("Secret {} already exists", resources.getMetadata().getName());
+        }
+    }
+
+    /**
+     * Deletes pvc
+     *
+     * @param namespace namespace
+     * @param secret    secret name
+     */
+    public void deleteSecret(String namespace, String secret) {
+        client.secrets().inNamespace(namespace).withName(secret).delete();
+        log.info("Secret {} deleted", secret);
+    }
+
+    /**
+     * Test if secret already exists
+     *
+     * @param namespace namespace
+     * @param secret    of pvc
+     * @return boolean
+     */
+    public boolean secretExists(String namespace, String secret) {
+        return client.secrets().inNamespace(namespace).list().getItems().stream()
+                .map(sec -> sec.getMetadata().getName()).collect(Collectors.toList()).contains(secret);
     }
 }

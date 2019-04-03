@@ -38,20 +38,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final PlansProvider plansProvider = new PlansProvider(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     private ConsoleWebPage consoleWebPage;
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
         selenium.setupDriver(environment, kubernetes, buildDriver());
-        plansProvider.setUp();
+        adminManager.setUp();
     }
 
     @AfterEach
     public void tearDownDrivers() throws Exception {
         selenium.tearDownDrivers();
-        plansProvider.tearDown();
+        adminManager.tearDown();
     }
 
     //============================================================================================
@@ -72,9 +72,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         AddressPlan consoleTopicPlan2 = PlanUtils.createAddressPlanObject("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
         AddressPlan consoleQueuePlan3 = PlanUtils.createAddressPlanObject("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
 
-        plansProvider.createAddressPlan(consoleQueuePlan1);
-        plansProvider.createAddressPlan(consoleTopicPlan2);
-        plansProvider.createAddressPlan(consoleQueuePlan3);
+        adminManager.createAddressPlan(consoleQueuePlan1);
+        adminManager.createAddressPlan(consoleTopicPlan2);
+        adminManager.createAddressPlan(consoleQueuePlan3);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -84,7 +84,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
         AddressSpacePlan consolePlan = PlanUtils.createAddressSpacePlanObject("console-plan",
                 "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
-        plansProvider.createAddressSpacePlan(consolePlan);
+        adminManager.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
         AddressSpace consoleAddrSpace = AddressSpaceUtils.createAddressSpaceObject("console-plan-instance", AddressSpaceType.STANDARD,

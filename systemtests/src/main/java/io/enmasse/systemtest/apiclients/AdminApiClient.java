@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.apiclients;
 
+import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AdminCrd;
@@ -11,6 +12,7 @@ import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -21,6 +23,7 @@ public class AdminApiClient extends ApiClient {
     private final String addressPlansPath;
     private final String brokeredInfraconfigPath;
     private final String standardInfraconfigPath;
+    private final String authenticationServicePath;
 
     public AdminApiClient(Kubernetes kubernetes) {
         super(kubernetes, kubernetes::getMasterEndpoint, "admin.enmasse.io/" + AdminCrd.VERSION_V1BETA2);
@@ -28,6 +31,7 @@ public class AdminApiClient extends ApiClient {
         this.addressPlansPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/addressplans", AdminCrd.VERSION_V1BETA2, kubernetes.getNamespace());
         this.brokeredInfraconfigPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/brokeredinfraconfigs", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
         this.standardInfraconfigPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/standardinfraconfigs", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
+        this.authenticationServicePath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/authenticationservices", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
     }
 
     public void close() {
@@ -39,6 +43,10 @@ public class AdminApiClient extends ApiClient {
     protected String apiClientName() {
         return "AdminApi";
     }
+
+    //////////////////////////////////////////////////////////////
+    // AddressSpace plans
+    //////////////////////////////////////////////////////////////
 
     public AddressSpacePlan getAddressSpacePlan(String name) throws Exception {
         JsonObject spacePlan = getResource("address-space-plan", addressSpacePlansPath, name);
@@ -57,6 +65,10 @@ public class AdminApiClient extends ApiClient {
         deleteResource("address-space-plan", addressSpacePlansPath, addressSpacePlan.getMetadata().getName());
     }
 
+    //////////////////////////////////////////////////////////////
+    // Address Plans
+    //////////////////////////////////////////////////////////////
+
     public AddressPlan getAddressPlan(String name) throws Exception {
         return PlanUtils.jsonToAddressPlan(getResource("address-plan", addressPlansPath, name));
     }
@@ -72,6 +84,10 @@ public class AdminApiClient extends ApiClient {
     public void deleteAddressPlan(AddressPlan addressPlan) throws Exception {
         deleteResource("address-plan", addressPlansPath, addressPlan.getMetadata().getName());
     }
+
+    //////////////////////////////////////////////////////////////
+    // Infra configs
+    //////////////////////////////////////////////////////////////
 
     public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         createResource("infra-config", getInfraApiPath(infraConfigDefinition), PlanUtils.infraToJson(infraConfigDefinition));
@@ -91,5 +107,25 @@ public class AdminApiClient extends ApiClient {
 
     private String getInfraApiPath(InfraConfig config) {
         return config.getKind().equals("StandardInfraConfig") ? standardInfraconfigPath : brokeredInfraconfigPath;
+    }
+
+    //////////////////////////////////////////////////////////////
+    // Authentication Service
+    //////////////////////////////////////////////////////////////
+
+    public AuthenticationService getAuthService(String name) throws Exception {
+        return AuthServiceUtils.jsonToAuthenticationService(getResource("authentication-service", authenticationServicePath, name));
+    }
+
+    public void createAuthService(AuthenticationService authService) throws Exception {
+        createResource("authentication-service", authenticationServicePath, AuthServiceUtils.authenticationServiceToJson(authService));
+    }
+
+    public void replaceAuthService(AuthenticationService authService) throws Exception {
+        replaceResource("authentication-service", authenticationServicePath, authService.getMetadata().getName(), AuthServiceUtils.authenticationServiceToJson(authService));
+    }
+
+    public void deleteAuthService(AuthenticationService authService) throws Exception {
+        deleteResource("authentication-service", authenticationServicePath, authService.getMetadata().getName());
     }
 }

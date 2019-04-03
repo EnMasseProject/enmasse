@@ -44,13 +44,13 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                 PlanUtils.createStandardAdminResourceObject("512Mi", adminTemplateSpec),
                 PlanUtils.createStandardRouterResourceObject("256Mi", routerTemplateSpec),
                 environment.enmasseVersion());
-        plansProvider.createInfraConfig(testInfra);
+        adminManager.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan", AddressType.TOPIC, Arrays.asList(
                 new ResourceRequest("broker", 1.0),
                 new ResourceRequest("router", 1.0)));
 
-        plansProvider.createAddressPlan(exampleAddressPlan);
+        adminManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan",
                 testInfra.getMetadata().getName(),
@@ -61,7 +61,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                         new ResourceAllowance("aggregate", 5.0)),
                 Collections.singletonList(exampleAddressPlan));
 
-        plansProvider.createAddressSpacePlan(exampleSpacePlan);
+        adminManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.STANDARD,
                 exampleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
@@ -93,7 +93,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                 PlanUtils.createStandardRouterResourceObject(routerMemory, 200, routerReplicas),
                 environment.enmasseVersion());
 
-        plansProvider.createInfraConfig(infra);
+        adminManager.createInfraConfig(infra);
 
         AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan-2",
                 infra.getMetadata().getName(), AddressSpaceType.STANDARD,
@@ -102,7 +102,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                         new ResourceAllowance("router", 3.0),
                         new ResourceAllowance("aggregate", 5.0)),
                 Collections.singletonList(exampleAddressPlan));
-        plansProvider.createAddressSpacePlan(exampleSpacePlan);
+        adminManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(exampleAddressSpace);
@@ -127,9 +127,9 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                 PlanUtils.createStandardAdminResourceObject("512Mi", null),
                 PlanUtils.createStandardRouterResourceObject("256Mi", 200, 2),
                 environment.enmasseVersion());
-        plansProvider.createInfraConfig(testInfra);
+        adminManager.createInfraConfig(testInfra);
 
-        StandardInfraConfig actualInfra = plansProvider.getStandardInfraConfig(testInfra.getMetadata().getName());
+        StandardInfraConfig actualInfra = adminManager.getStandardInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 

@@ -38,12 +38,12 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
                 PlanUtils.createBrokeredAdminResourceObject("512Mi", adminTemplateSpec),
                 environment.enmasseVersion());
 
-        plansProvider.createInfraConfig(testInfra);
+        adminManager.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan", AddressType.TOPIC,
                 Arrays.asList(new ResourceRequest("broker", 1.0)));
 
-        plansProvider.createAddressPlan(exampleAddressPlan);
+        adminManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan",
                 testInfra.getMetadata().getName(),
@@ -51,7 +51,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
                 Collections.singletonList(new ResourceAllowance("broker", 3.0)),
                 Collections.singletonList(exampleAddressPlan));
 
-        plansProvider.createAddressSpacePlan(exampleSpacePlan);
+        adminManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.BROKERED,
                 exampleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
@@ -82,14 +82,14 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
                 PlanUtils.createBrokeredAdminResourceObject(adminMemory, null),
                 environment.enmasseVersion());
 
-        plansProvider.createInfraConfig(infra);
+        adminManager.createInfraConfig(infra);
 
         AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan-2",
                 infra.getMetadata().getName(), AddressSpaceType.BROKERED,
                 Collections.singletonList(new ResourceAllowance("broker", 3.0)),
                 Collections.singletonList(exampleAddressPlan));
 
-        plansProvider.createAddressSpacePlan(exampleSpacePlan);
+        adminManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(exampleAddressSpace);
@@ -105,9 +105,9 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
                 PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", null),
                 PlanUtils.createBrokeredAdminResourceObject("512Mi", null),
                 environment.enmasseVersion());
-        plansProvider.createInfraConfig(testInfra);
+        adminManager.createInfraConfig(testInfra);
 
-        BrokeredInfraConfig actualInfra = plansProvider.getBrokeredInfraConfig(testInfra.getMetadata().getName());
+        BrokeredInfraConfig actualInfra = adminManager.getBrokeredInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 

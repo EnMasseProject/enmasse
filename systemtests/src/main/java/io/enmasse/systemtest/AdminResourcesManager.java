@@ -6,19 +6,22 @@ package io.enmasse.systemtest;
 
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.apiclients.AdminApiClient;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
-public class PlansProvider {
+public class AdminResourcesManager {
 
     private static Logger log = CustomLogger.getLogger();
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
     private ArrayList<InfraConfig> infraConfigs;
+    private ArrayList<AuthenticationService> authServices;
     private final AdminApiClient adminApiClient;
 
-    public PlansProvider(Kubernetes kubernetes) {
+    public AdminResourcesManager(Kubernetes kubernetes) {
         this.adminApiClient = new AdminApiClient(kubernetes);
     }
 
@@ -26,23 +29,30 @@ public class PlansProvider {
         addressPlans = new ArrayList<>();
         addressSpacePlans = new ArrayList<>();
         infraConfigs = new ArrayList<>();
+        authServices = new ArrayList<>();
     }
 
     public void tearDown() throws Exception {
-        for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
-            adminApiClient.deleteAddressSpacePlan(addressSpacePlan);
-        }
+        if (!Environment.getInstance().skipCleanup()) {
+            for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
+                adminApiClient.deleteAddressSpacePlan(addressSpacePlan);
+            }
 
-        for (AddressPlan addressPlan : addressPlans) {
-            adminApiClient.deleteAddressPlan(addressPlan);
-        }
+            for (AddressPlan addressPlan : addressPlans) {
+                adminApiClient.deleteAddressPlan(addressPlan);
+            }
 
-        for (InfraConfig infraConfigDefinition : infraConfigs) {
-            adminApiClient.deleteInfraConfig(infraConfigDefinition);
-        }
+            for (InfraConfig infraConfigDefinition : infraConfigs) {
+                adminApiClient.deleteInfraConfig(infraConfigDefinition);
+            }
 
-        addressPlans.clear();
-        addressSpacePlans.clear();
+            for (AuthenticationService authService : authServices) {
+                adminApiClient.deleteAuthService(authService);
+            }
+
+            addressPlans.clear();
+            addressSpacePlans.clear();
+        }
     }
 
     //------------------------------------------------------------------------------------------------
@@ -105,12 +115,12 @@ public class PlansProvider {
     // Infra configs
     //------------------------------------------------------------------------------------------------
 
-    public BrokeredInfraConfig getBrokeredInfraConfig(String config) throws Exception {
-        return (BrokeredInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.BROKERED, config);
+    public BrokeredInfraConfig getBrokeredInfraConfig(String name) throws Exception {
+        return (BrokeredInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.BROKERED, name);
     }
 
-    public StandardInfraConfig getStandardInfraConfig(String config) throws Exception {
-        return (StandardInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.STANDARD, config);
+    public StandardInfraConfig getStandardInfraConfig(String name) throws Exception {
+        return (StandardInfraConfig) adminApiClient.getInfraConfig(AddressSpaceType.STANDARD, name);
     }
 
     public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
@@ -131,4 +141,37 @@ public class PlansProvider {
         infraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
     }
 
+    //------------------------------------------------------------------------------------------------
+    // Authentication services
+    //------------------------------------------------------------------------------------------------
+
+    public AuthenticationService getAuthService(String name) throws Exception {
+        return adminApiClient.getAuthService(name);
+    }
+
+    public void createAuthService(AuthenticationService authService) throws Exception {
+        createAuthService(authService, false);
+    }
+
+    public void createAuthService(AuthenticationService authenticationService, boolean replaceExisting) throws Exception {
+        if (replaceExisting) {
+            adminApiClient.replaceAuthService(authenticationService);
+        } else {
+            adminApiClient.createAuthService(authenticationService);
+            authServices.add(authenticationService);
+        }
+        TestUtils.waitUntilCondition("Auth service is deployed: " + authenticationService.getMetadata().getName(), () ->
+                        TestUtils.listReadyPods(Kubernetes.getInstance()).stream().filter(pod ->
+                                pod.getMetadata().getName().contains(authenticationService.getMetadata().getName())).count() == 1,
+                new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    public void removeAuthService(AuthenticationService authService) throws Exception {
+        adminApiClient.deleteAuthService(authService);
+        authServices.removeIf(authserviceId -> authserviceId.getMetadata().getName().equals(authService.getMetadata().getName()));
+        TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), () ->
+                        TestUtils.listReadyPods(Kubernetes.getInstance()).stream().noneMatch(pod ->
+                                pod.getMetadata().getName().contains(authService.getMetadata().getName())),
+                new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
 }
