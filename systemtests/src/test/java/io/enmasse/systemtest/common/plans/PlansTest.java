@@ -363,9 +363,8 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         // Increase to too many partitions
         address.getSpec().setPlan(manyPartitionedQueue.getMetadata().getName());
-        replaceAddress(partitioned, address);
-        waitForBrokerReplicas(partitioned, address, 1);
-        TimeoutBudget budget = new TimeoutBudget(60, TimeUnit.SECONDS);
+        TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
+        AddressUtils.replaceAddress(addressApiClient, partitioned, address, false, budget);
         Address replaced = null;
         while (!budget.timeoutExpired()) {
             replaced = getAddressesObjects(partitioned, Optional.of(address.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
