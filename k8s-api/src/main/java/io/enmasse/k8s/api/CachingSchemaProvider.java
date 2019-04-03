@@ -24,7 +24,7 @@ public class CachingSchemaProvider implements SchemaProvider, Watcher<Schema> {
         if (items == null || items.isEmpty()) {
             return;
         }
-        log.info("Schema updated");
         schema = items.get(0);
+        log.info("Schema updated: {}", schema.printSchema());
     }
 }
