@@ -103,13 +103,13 @@ function wait_until_cluster_up() {
 }
 
 function run_test() {
-    TESTCASE=$1
-    PROFILE=${2:-systemtests}
+    PROFILE=${1:-systemtests}
+    TESTCASE=${2}
 
     if [[ -n "${TESTCASE}" ]]; then
         EXTRA_TEST_ARGS="-Dtest=${TESTCASE}"
     fi
-    mvn -B test -pl systemtests -am -P${PROFILE} -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false -Djansi.force=true -Dstyle.color=always ${EXTRA_TEST_ARGS}
+    mvn -B test -pl systemtests -am -P${PROFILE} -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false -Djansi.force=true -Dstyle.color=always -DskipTests ${EXTRA_TEST_ARGS}
 }
 
 function teardown_test() {

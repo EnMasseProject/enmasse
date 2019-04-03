@@ -41,19 +41,19 @@ info "process for syncing docker logs is running with PID: ${LOGS_PID}"
 
 #run tests
 if [[ "${TEST_PROFILE}" = "systemtests-pr" ]]; then
-    run_test ${TESTCASE} systemtests-shared-brokered-pr || failure=$(($failure + 1))
-    run_test ${TESTCASE} systemtests-shared-standard-pr || failure=$(($failure + 1))
-    run_test ${TESTCASE} systemtests-isolated-pr || failure=$(($failure + 1))
+    run_test shared-brokered-pr ${TESTCASE} || failure=$(($failure + 1))
+    run_test shared-standard-pr ${TESTCASE} || failure=$(($failure + 1))
+    run_test isolated-pr ${TESTCASE} || failure=$(($failure + 1))
 elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]] || [[ "${TEST_PROFILE}" = "systemtests-upgrade" ]]; then
-    run_test ${TESTCASE} ${TEST_PROFILE}|| failure=$(($failure + 1))
+    run_test ${TEST_PROFILE} ${TESTCASE} || failure=$(($failure + 1))
 elif [[ "${TEST_PROFILE}" = "systemtests-release" ]]; then
-    run_test ${TESTCASE} systemtests-shared-brokered-release || failure=$(($failure + 1))
-    run_test ${TESTCASE} systemtests-shared-standard-release || failure=$(($failure + 1))
-    run_test ${TESTCASE} systemtests-isolated-release || failure=$(($failure + 1))
+    run_test shared-brokered-release ${TESTCASE} || failure=$(($failure + 1))
+    run_test shared-standard-release ${TESTCASE} || failure=$(($failure + 1))
+    run_test isolated-release ${TESTCASE} || failure=$(($failure + 1))
 else
-    run_test ${TESTCASE} systemtests-shared-brokered || failure=$(($failure + 1))
-    run_test ${TESTCASE} systemtests-shared-standard || failure=$(($failure + 1))
-    run_test ${TESTCASE} systemtests-isolated || failure=$(($failure + 1))
+    run_test shared-brokered ${TESTCASE} || failure=$(($failure + 1))
+    run_test shared-standard ${TESTCASE} || failure=$(($failure + 1))
+    run_test isolated ${TESTCASE} || failure=$(($failure + 1))
 fi
 
 #stop system resources logging

@@ -34,7 +34,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
 
 @Tag(sharedIot)
-@Tag(smoke)
 public class SimpleK8sDeployTest {
 
     private static final String NAMESPACE = Environment.getInstance().namespace();
