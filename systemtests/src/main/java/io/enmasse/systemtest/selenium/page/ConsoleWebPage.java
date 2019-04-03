@@ -8,16 +8,12 @@ package io.enmasse.systemtest.selenium.page;
 import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -396,7 +392,8 @@ public class ConsoleWebPage implements IWebPage {
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (defaultAddressSpace.getSpec().getAuthenticationService().getType().equals(AuthenticationServiceType.STANDARD)) {
+        if (new AdminResourcesManager(Kubernetes.getInstance()).getAuthService(defaultAddressSpace.getSpec()
+                .getAuthenticationService().getName()).getSpec().getType().equals(AuthenticationServiceType.standard)) {
             if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), clickOnOpenshift, viaOpenShift))
                 throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
         }
