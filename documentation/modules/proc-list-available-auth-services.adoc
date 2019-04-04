@@ -1,7 +1,6 @@
 // Module included in the following assemblies:
 //
 // assembly-managing-address-spaces.adoc
-// assembly-managing-addresses.adoc
 
 [id='proc-list-available-auth-services-{context}']
 = Listing available authentication services using the command line

@@ -7,7 +7,7 @@
 
 Authentication services are used to configure the authentication and authorization endpoints
 available to messaging clients. The authentication services are configured by the {ProductName}
-service operator, and are selected when creating an address space.
+service operator, and are specified when creating an address space.
 
 An authentication service has a type, which can either be `none`, `standard`, or `external`. The
 `none` authentication service type allows all clients to send and receive messages to any address.
@@ -55,7 +55,7 @@ spec:
 <3> (Optional on OpenShift) A custom certificate can be specified. On OpenShift, a certificate is automatically created if not specified.
 <4> (Optional) Resource limits for the {AuthProductName} instance can be specified.
 <5> (Optional) The storage type can be specified as `ephemeral` or `persistent-claim`. For `persistent-claim`, you should also configure the size of the claim. The default type is `ephemeral`.
-<6> (Optional) Specifies the datasource to be used by {AuthProductName}. The default option is the embedded `h2` datasource. For production usage, the `postgresql` datasource is recommended.
+<6> (Optional) Specifies the data source to be used by {AuthProductName}. The default option is the embedded `h2` data source. For production usage, the `postgresql` data source is recommended.
 
 An `external` authentication service can be configured using the following example:
 
@@ -79,4 +79,5 @@ spec:
 <3> The port of the external authentication service.
 <4> (Optional) The CA certificate to trust when connecting to the authentication service.
 
-The external authentication service must implement the API described in link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-service-api-{context}[].
+The external authentication service must implement the API described in link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-service-api-messaging[External authentication service API].
+

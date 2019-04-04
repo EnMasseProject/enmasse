@@ -3,7 +3,7 @@
 // assembly-managing-address-spaces.adoc
 // assembly-managing-addresses.adoc
 
-[id='proc-list-available-plans-{context}']
+[id='proc-list-available-address-space-plans-{context}']
 = Listing available address space plans using the command line
 
 You can list the address space plans available for your address space type.
@@ -19,7 +19,7 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. Retrieve the schema showing available plans (replace `standard` with `brokered` for the brokered address space type):
+. Retrieve the schema showing available address space plans (replace `standard` with `brokered` for the brokered address space type):
 +
 [source,yaml,subs="attributes",options="nowrap"]
 ----

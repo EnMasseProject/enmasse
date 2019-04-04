@@ -6,7 +6,7 @@ spec:
   type: standard <1>
   plan: standard-unlimited <2>
   authenticationService:
-    type: standard <3>
+    name: standard-authservice <3>
   endpoints: <4>
     - name: messaging
       service: messaging
