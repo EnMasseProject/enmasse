@@ -80,7 +80,7 @@ replace_images: prepare
 					  -e 's,\$${IOT_HTTP_ADAPTER_IMAGE},$(IOT_HTTP_ADAPTER_IMAGE),g' \
 					  -e 's,\$${IOT_MQTT_ADAPTER_IMAGE},$(IOT_MQTT_ADAPTER_IMAGE),g' \
 					  -e 's,\$${IOT_PROXY_CONFIGURATOR_IMAGE},$(IOT_PROXY_CONFIGURATOR_IMAGE),g' \
-					  -e 's,\$${ENMASSE_CONTROLLER_MANAGER_IMAGE},$(ENMASSE_CONTROLLER_MANAGER_IMAGE),g' > $$i.tmp; \
+					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 

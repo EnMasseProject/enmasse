@@ -9,7 +9,7 @@ metadata:
     categories: "Streaming & Messaging"
     certified: "false"
     description: EnMasse provides a self-service messaging platform with a uniform interface to manage different messaging infrastructure.
-    containerImage: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
+    containerImage: ${CONTROLLER_MANAGER_IMAGE}
     createdAt: 2019-02-19T00:00:00Z
     capabilities: Seamless Upgrades
     repository: https://github.com/EnMasseProject/enmasse
@@ -222,7 +222,7 @@ spec:
               serviceAccountName: enmasse-operator
               containers:
               - name: controller
-                image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
+                image: ${CONTROLLER_MANAGER_IMAGE}
                 imagePullPolicy: ${IMAGE_PULL_POLICY}
                 env:
                 - name: POD_NAME

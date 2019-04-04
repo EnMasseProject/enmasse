@@ -30,7 +30,7 @@ spec:
       serviceAccountName: enmasse-operator
       containers:
       - name: controller
-        image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
+        image: ${CONTROLLER_MANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
         - name: POD_NAME

@@ -2,7 +2,7 @@ TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 include $(TOPDIR)/Makefile.env.mk
 
 GO_DIRS = \
-	enmasse-controller-manager \
+	controller-manager \
 	iot/iot-proxy-configurator \
 	iot/iot-gc \
 

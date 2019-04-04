@@ -126,7 +126,7 @@
         <module>service-broker</module>
         <module>bundle</module>
         <module>iot</module>
-        <module>enmasse-controller-manager</module>
+        <module>controller-manager</module>
     </modules>
 
     <dependencyManagement>

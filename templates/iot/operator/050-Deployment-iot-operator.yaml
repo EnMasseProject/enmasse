@@ -20,7 +20,7 @@ spec:
       serviceAccountName: iot-operator
       containers:
       - name: operator
-        image: ${ENMASSE_CONTROLLER_MANAGER_IMAGE}
+        image: ${CONTROLLER_MANAGER_IMAGE}
         imagePullPolicy: ${IMAGE_PULL_POLICY}
         env:
         - name: POD_NAME

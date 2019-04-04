@@ -1,4 +1,4 @@
-CMD=enmasse-controller-manager
+CMD=controller-manager
 include ../Makefile.go.mk
 
 build: build/operatorImageMap.yaml build/$(CMD)
