@@ -4,12 +4,12 @@
  */
 package io.enmasse.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
-import io.enmasse.admin.model.v1.BrokeredInfraConfig;
-import io.enmasse.admin.model.v1.InfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
@@ -18,6 +18,9 @@ import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -28,8 +31,10 @@ import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
 import static io.enmasse.address.model.KubeUtil.lookupResource;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
+    private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class);
     private static final String KC_IDP_HINT_NONE = "none";
     private static final String KC_IDP_HINT_OPENSHIFT = "openshift-v3";
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private final Kubernetes kubernetes;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
@@ -193,6 +198,15 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                 parameters.put(TemplateParameter.ROUTER_WORKER_THREADS, String.valueOf(standardInfraConfig.getSpec().getRouter().getWorkerThreads()));
             }
 
+            if (standardInfraConfig.getSpec().getRouter().getPolicy() != null) {
+                try {
+                    String vhostPolicyJson = createVhostPolicyJson("$default", standardInfraConfig.getSpec().getRouter().getPolicy());
+                    parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_JSON, vhostPolicyJson);
+                    parameters.put(TemplateParameter.ROUTER_ENABLE_VHOST_POLICY, "true");
+                } catch (Exception e) {
+                    log.warn("Error setting router policy settings, ignoring", e);
+                }
+            }
         }
 
         if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getResources() != null && standardInfraConfig.getSpec().getAdmin().getResources().getMemory() != null) {
@@ -246,6 +260,43 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         } else {
             return items;
         }
+    }
+
+    private String createVhostPolicyJson(String vhost, RouterPolicySpec policy) throws JsonProcessingException {
+        Map<String, Object> defaultGroupPolicy = new HashMap<>();
+        defaultGroupPolicy.put("remoteHosts", "*");
+        if (policy.getMaxSessionsPerConnection() != null) {
+            defaultGroupPolicy.put("maxSessions", policy.getMaxSessionsPerConnection());
+        }
+
+        if (policy.getMaxSendersPerConnection() != null) {
+            defaultGroupPolicy.put("maxSenders", policy.getMaxSendersPerConnection());
+        }
+
+        if (policy.getMaxReceiversPerConnection() != null) {
+            defaultGroupPolicy.put("maxReceivers", policy.getMaxReceiversPerConnection());
+        }
+
+        Map<String, Object> defaultVhostPolicy = new HashMap<>();
+        defaultVhostPolicy.put("hostname", vhost);
+        defaultVhostPolicy.put("allowUnknownUser", true);
+
+        if (policy.getMaxConnections() != null) {
+            defaultVhostPolicy.put("maxConnections", policy.getMaxConnections());
+        }
+
+        if (policy.getMaxConnectionsPerHost() != null) {
+            defaultVhostPolicy.put("maxConnectionsPerHost", policy.getMaxConnectionsPerHost());
+        }
+
+        if (policy.getMaxConnectionsPerUser() != null) {
+            defaultVhostPolicy.put("maxConnectionsPerUser", policy.getMaxConnectionsPerUser());
+        }
+
+        defaultVhostPolicy.put("groups", Collections.singletonMap(vhost, defaultGroupPolicy));
+
+        Map<String, Object> vhostPolicy = Collections.singletonMap("vhost", defaultVhostPolicy);
+        return mapper.writeValueAsString(Collections.singletonList(Collections.singletonList(vhostPolicy)));
     }
 
     private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {

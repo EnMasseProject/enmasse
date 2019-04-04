@@ -1634,9 +1634,31 @@ __optional__|integer
 __optional__|integer
 |**podTemplate** +
 __optional__|<<_io_enmasse_admin_v1beta1_infraconfigpodspec,io.enmasse.admin.v1beta1.InfraConfigPodSpec>>
+|**policy** +
+__optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter_policy,policy>>
 |**resources** +
 __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter_resources,resources>>
 |**workerThreads** +
+__optional__|integer
+|===
+
+[[_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter_policy]]
+**policy**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**maxConnections** +
+__optional__|integer
+|**maxConnectionsPerHost** +
+__optional__|integer
+|**maxConnectionsPerUser** +
+__optional__|integer
+|**maxReceiversPerConnection** +
+__optional__|integer
+|**maxSendersPerConnection** +
+__optional__|integer
+|**maxSessionsPerConnection** +
 __optional__|integer
 |===
 
