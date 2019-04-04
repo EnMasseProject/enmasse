@@ -71,7 +71,7 @@ spec:
   external:
     host: example.com <2>
     port: 5671 <3>
-    caCertSercret: <4>
+    caCertSecret: <4>
       name: my-ca-cert
 ----
 <1> (Optional) The `realm` is passed in the authentication request. If not specified, an identifier in the form of _namespace-addressspace_ is used as the realm.
