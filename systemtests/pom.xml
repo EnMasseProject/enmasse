@@ -214,7 +214,7 @@
         <profile>
             <id>smoke-iot</id>
             <properties>
-                <groups>shared-iot &amp; smoke &amp; !marathon</groups>
+                <groups>shared-iot &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
