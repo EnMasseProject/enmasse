@@ -296,7 +296,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         defaultVhostPolicy.put("groups", Collections.singletonMap(vhost, defaultGroupPolicy));
 
         Map<String, Object> vhostPolicy = Collections.singletonMap("vhost", defaultVhostPolicy);
-        return mapper.writeValueAsString(Collections.singletonList(Collections.singletonList(vhostPolicy)));
+        return mapper.writeValueAsString(vhostPolicy);
     }
 
     private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {
