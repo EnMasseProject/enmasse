@@ -27,7 +27,7 @@
     <includeBaseDirectory>False</includeBaseDirectory>
     <files>
         <file>
-            <source>${project.basedir}/build/enmasse-controller-manager</source>
+            <source>${project.basedir}/build/controller-manager</source>
             <outputDirectory>/</outputDirectory>
             <fileMode>0755</fileMode>
         </file>
