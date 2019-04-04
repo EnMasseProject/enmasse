@@ -74,10 +74,7 @@ public class HttpAdapterClient extends ApiClient {
     }
 
     private String getBasicAuth(final String user, final String password) {
-        final StringBuilder result = new StringBuilder("Basic ");
-        result.append(Base64.getEncoder().encodeToString(new StringBuilder(user).append(":").append(password)
-                .toString().getBytes(StandardCharsets.UTF_8)));
-        return result.toString();
+        return "Basic " + Base64.getEncoder().encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8));
     }
 
 }

@@ -37,7 +37,7 @@ import io.fabric8.kubernetes.api.model.Quantity;
 @Tag(sharedIot)
 @Tag(smoke)
 @DisabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "false")
-public class SimpleK8sDeployTest {
+class SimpleK8sDeployTest {
 
     private static final String NAMESPACE = Environment.getInstance().namespace();
 
@@ -60,7 +60,7 @@ public class SimpleK8sDeployTest {
     private Kubernetes client = Kubernetes.getInstance();
 
     @BeforeAll
-    protected static void setup () throws Exception {
+    static void setup () throws Exception {
         Map<String, String> secrets = new HashMap<>();
         secrets.put("iot-auth-service", "systemtests-iot-auth-service-tls");
         secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
@@ -143,17 +143,17 @@ public class SimpleK8sDeployTest {
     }
 
     @AfterAll
-    protected static void cleanup() throws Exception {
+    static void cleanup() throws Exception {
         KubeCMDClient.deleteIoTConfig(NAMESPACE, "default");
     }
 
     @Test
-    public void testDeploy() throws Exception {
+    void testDeploy() throws Exception {
 
         final TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
 
         try {
-            TestUtils.waitUntilCondition("IoT Config to deploy", () -> allDeploymentsPresent(), budget);
+            TestUtils.waitUntilCondition("IoT Config to deploy", this::allDeploymentsPresent, budget);
             TestUtils.waitForNReplicas(this.client , EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
         } catch ( Exception e ) {
             TestUtils.streamNonReadyPods(this.client, NAMESPACE).forEach(KubeCMDClient::dumpPodLogs);

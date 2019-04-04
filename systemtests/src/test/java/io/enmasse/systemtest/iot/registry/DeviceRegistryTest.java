@@ -26,7 +26,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 @Tag(sharedIot)
-public class DeviceRegistryTest extends IoTTestBaseWithShared {
+class DeviceRegistryTest extends IoTTestBaseWithShared {
 
     private Logger log = CustomLogger.getLogger();
 

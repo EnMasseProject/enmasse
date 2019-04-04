@@ -8,6 +8,7 @@ pipeline {
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
         PLANS_JOB_NAME = 'enmasse-master-common'
         UPGRADE_JOB_NAME = 'enmasse-master-upgrade'
+        IOT_JOB_NAME = 'enmasse-master-iot'
         MAILING_LIST = credentials('MAILING_LIST')
     }
 //    parameters {
@@ -134,6 +135,19 @@ pipeline {
                         [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.upgrade.**'],
                         [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         [$class: 'StringParameterValue', name: 'START_VERSION', value: params.UPGRADE_FROM],
+                ]
+            }
+        }
+        stage('execute iot') {
+            environment {
+                ACTUAL_COMMIT = readFile('actual-commit.file')
+            }
+            steps {
+                build job: env.IOT_JOB_NAME, wait: false, parameters: [
+                        [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
+                        [$class: 'BooleanParameterValue', name: 'DEPLOY_IOT', value: true],
+                        [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'iot.**'],
+                        [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                 ]
             }
         }
