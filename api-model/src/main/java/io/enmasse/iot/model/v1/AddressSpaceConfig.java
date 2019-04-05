@@ -4,8 +4,6 @@
  */
 package io.enmasse.iot.model.v1;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -20,26 +18,26 @@ import io.sundr.builder.annotations.Inline;
                 type = Doneable.class,
                 prefix = "Doneable",
                 value = "done"))
-@JsonInclude(NON_NULL)
-public class ManagedDownstreamStrategy {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class AddressSpaceConfig {
+    private String name;
+    private String plan;
 
-    private AddressSpaceConfig addressSpace;
-    private AddressesConfig addresses;
-
-    public AddressSpaceConfig getAddressSpace() {
-        return addressSpace;
+    public String getName() {
+        return name;
     }
 
-    public void setAddressSpace(AddressSpaceConfig addressSpace) {
-        this.addressSpace = addressSpace;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public AddressesConfig getAddresses() {
-        return addresses;
+    public String getPlan() {
+        return plan;
     }
 
-    public void setAddresses(AddressesConfig addresses) {
-        this.addresses = addresses;
+    public void setPlan(String plan) {
+        this.plan = plan;
     }
+
 
 }

@@ -2,9 +2,8 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.iot.model.v1;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -20,26 +19,22 @@ import io.sundr.builder.annotations.Inline;
                 type = Doneable.class,
                 prefix = "Doneable",
                 value = "done"))
-@JsonInclude(NON_NULL)
-public class ManagedDownstreamStrategy {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class AddressConfig {
 
-    private AddressSpaceConfig addressSpace;
-    private AddressesConfig addresses;
+    private String plan;
 
-    public AddressSpaceConfig getAddressSpace() {
-        return addressSpace;
+    public AddressConfig() {}
+
+    public AddressConfig(String plan) {
+        this.plan = plan;
     }
 
-    public void setAddressSpace(AddressSpaceConfig addressSpace) {
-        this.addressSpace = addressSpace;
+    public String getPlan() {
+        return plan;
     }
 
-    public AddressesConfig getAddresses() {
-        return addresses;
+    public void setPlan(String plan) {
+        this.plan = plan;
     }
-
-    public void setAddresses(AddressesConfig addresses) {
-        this.addresses = addresses;
-    }
-
 }
