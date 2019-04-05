@@ -18,7 +18,7 @@ function setup_test_openshift() {
 
     export_required_env
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}, iot: ${DEPLOY_IOT}"
 
     rm -rf ${TEST_LOGDIR}
     mkdir -p ${TEST_LOGDIR}
@@ -31,8 +31,7 @@ function setup_test_openshift() {
     if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
         ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
     fi
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\"}"
-
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"enable_iot\": \"${DEPLOY_IOT}\" }"
     wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE} ${UPGRADE}
 }
 
@@ -61,10 +60,10 @@ function wait_until_enmasse_up() {
     UPGRADE=${3:-false}
 
     expected_pods=6
-    if [ "$DEPLOY_IOT" = "true" ]; then
+    if [[ "${DEPLOY_IOT}" == "true" ]]; then
         expected_pods=$(($expected_pods + 1))
     fi
-    if [[ "$CLUSTER_TYPE" == "kubernetes" ]]; then
+    if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
         expected_pods=$(($expected_pods - 1))
     fi
 

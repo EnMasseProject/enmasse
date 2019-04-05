@@ -5,23 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
-import static io.enmasse.systemtest.TestTag.smoke;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
 import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -32,32 +16,49 @@ import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static io.enmasse.systemtest.TestTag.sharedIot;
+import static io.enmasse.systemtest.TestTag.smoke;
 
 @Tag(sharedIot)
-public class SimpleK8sDeployTest {
+@Tag(smoke)
+@EnabledIfSystemProperty(named = Environment.useMinikubeEnv, matches = "true")
+class SimpleK8sDeployTest {
 
     private static final String NAMESPACE = Environment.getInstance().namespace();
 
-    private static final String[] EXPECTED_DEPLOYMENTS = new String[] {
-                    "iot-auth-service",
-                    "iot-device-registry",
-                    "iot-gc",
-                    "iot-http-adapter",
-                    "iot-mqtt-adapter",
-                    "iot-tenant-service",
+    private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
+            "iot-auth-service",
+            "iot-device-registry",
+            "iot-gc",
+            "iot-http-adapter",
+            "iot-mqtt-adapter",
+            "iot-tenant-service",
     };
 
-    private static final Map<String,String> IOT_LABELS;
+    private static final Map<String, String> IOT_LABELS;
 
     static {
-        IOT_LABELS= new HashMap<> ();
+        IOT_LABELS = new HashMap<>();
         IOT_LABELS.put("component", "iot");
     }
 
     private Kubernetes client = Kubernetes.getInstance();
 
     @BeforeAll
-    protected static void setup () throws Exception {
+    static void setup() throws Exception {
         Map<String, String> secrets = new HashMap<>();
         secrets.put("iot-auth-service", "systemtests-iot-auth-service-tls");
         secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
@@ -140,26 +141,26 @@ public class SimpleK8sDeployTest {
     }
 
     @AfterAll
-    protected static void cleanup() throws Exception {
+    static void cleanup() throws Exception {
         KubeCMDClient.deleteIoTConfig(NAMESPACE, "default");
     }
 
     @Test
-    public void testDeploy() throws Exception {
+    void testDeploy() throws Exception {
 
         final TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
 
         try {
-            TestUtils.waitUntilCondition("IoT Config to deploy", () -> allDeploymentsPresent(), budget);
-            TestUtils.waitForNReplicas(this.client , EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
-        } catch ( Exception e ) {
+            TestUtils.waitUntilCondition("IoT Config to deploy", this::allDeploymentsPresent, budget);
+            TestUtils.waitForNReplicas(this.client, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+        } catch (Exception e) {
             TestUtils.streamNonReadyPods(this.client, NAMESPACE).forEach(KubeCMDClient::dumpPodLogs);
             KubeCMDClient.describePods(NAMESPACE);
             throw e;
         }
     }
 
-    private boolean allDeploymentsPresent () {
+    private boolean allDeploymentsPresent() {
         final String[] deployments = this.client.listDeployments(IOT_LABELS).stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .toArray(String[]::new);

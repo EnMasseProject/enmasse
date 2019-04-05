@@ -138,6 +138,11 @@ public class UserUtils {
                 .done();
     }
 
+    public static User getUserObject(UserApiClient apiClient, String addressSpace, String username) throws Exception {
+        JsonObject response = apiClient.getUser(addressSpace, username);
+        return jsonResponseToUser(response).stream().findFirst().orElse(null);
+    }
+
     public static Future<List<User>> getAllUsersObjects(UserApiClient apiClient) throws Exception {
         JsonObject response = apiClient.getAllUsers();
         CompletableFuture<List<User>> listOfUsers = new CompletableFuture<>();

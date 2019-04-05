@@ -5,6 +5,7 @@ def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 pipeline {
 //    parameters {
 //        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
+//        string(name: 'DEPLOY_IOT', defaultValue: 'false', description: 'deploy iot component')
 //        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
 //        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
 //        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
@@ -74,7 +75,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.TAG, false, false, true)
+                        lib.installEnmasse(env.TAG, false, false, true, params.DEPLOY_IOT)
                     }
                 }
             }
