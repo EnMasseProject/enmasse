@@ -1,0 +1,41 @@
+// Module included in the following assemblies:
+//
+// master-openshift.adoc
+// master-kubernetes.adoc
+// master.adoc
+
+[id='ref-brokered-infra-config-fields-{context}']
+= Brokered infrastructure configuration fields
+
+This table shows the fields available for the brokered infrastructure configuration and a brief description.
+
+.Brokered infrastructure configuration fields table
+[cols="40%a,60%a,options="header"]
+|===
+|Field |Description
+|version |Specifies the {ProductName} version used. When upgrading, {ProductName} uses this field to determine whether to upgrade the infrastructure to the requested version.
+|admin.resources.memory |Specifies the amount of memory allocated to the admin pod.
+|admin.podTemplate.metadata.labels |Specifies the labels added to the admin pod.
+|admin.podTemplate.spec.priorityClassName |Specifies the priority class to use for the admin pod so you can prioritize admin pods over other pods in the {KubePlatform} cluster.
+|admin.podTemplate.spec.affinity |Specifies the affinity settings for the admin pod so you can specify where on particular nodes a pod runs, or if it cannot run together with other instances.
+|admin.podTemplate.spec.tolerations |Specifies the toleration settings for the admin pod, which allows this pod to run on certain nodes that other pods cannot run on.
+|broker.resources.memory |Specifies the amount of memory allocated to the broker.
+|broker.resources.storage |Specifies the amount of storage requested for the broker.
+|broker.podTemplate.metadata.labels |Specifies the labels added to the broker pod.
+|broker.podTemplate.spec.priorityClassName |Specifies the priority class to use for the broker pod so you can prioritize broker pods over other pods in the {KubePlatform} cluster.
+|broker.podTemplate.spec.affinity |Specifies the affinity settings for the broker pod so you can specify where on particular nodes a pod runs, or if it cannot run together with other instances.
+|broker.podTemplate.spec.tolerations |Specifies the toleration settings for the broker pod, which allows this pod to run on certain nodes that other pods cannot run on.
+|broker.resources.addressFullPolicy |Specifies action taken when a queue is full: `BLOCK`, `FAIL`, `PAGE`, `DROP`. The default value is `PAGE`. For more information see the link:{LinkaddressFullPolicyDocs}[{BrokerName} documentation^].
+|broker.storageClassName |Specifies what storage class to use for the persistent volume for the broker.
+|broker.updatePersistentVolumeClaim |If the persistent volume supports resizing, setting this value to `true` allows the broker storage to be resized.
+|router.resources.memory |Specifies the amount of memory allocated to the router.
+|router.resources.linkCapcity |Specifies the default number of credits issued on AMQP links for the router.
+|router.resources.minReplicas |Specifies the minimum number of router pods to run; a minimum of two are required for high availability (HA) configuration.
+|router.podTemplate.metadata.labels |Specifies the labels added to the router pod.
+|router.podTemplate.spec.priorityClassName |Specifies the priority class to use for the router pod so you can prioritize router pods over other pods in the {KubePlatform} cluster.
+|router.podTemplate.spec.affinity |Specifies the affinity settings for the router pod so you can specify where on particular nodes a pod runs, or if it cannot run together with other instances.
+|router.podTemplate.spec.tolerations |Specifies the toleration settings for the router pod, which allows this pod to run on certain nodes that other pods cannot run on.
+|router.idleTimeout |Specifies the AMQP idle timeout to use for all router listeners.
+|router.workerThreads |Specifies the number of worker threads to use for the router.
+|===
+
