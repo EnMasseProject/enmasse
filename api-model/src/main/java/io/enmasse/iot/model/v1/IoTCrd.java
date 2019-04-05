@@ -15,9 +15,11 @@ public class IoTCrd {
     public static final String API_VERSION = GROUP + "/" + VERSION;
 
     private static final CustomResourceDefinition PROJECT_CRD;
+    private static final CustomResourceDefinition CONFIG_CRD;
 
     static {
         PROJECT_CRD = CustomResources.createCustomResource(GROUP, VERSION, IoTProject.KIND);
+        CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION, IoTConfig.KIND);
     }
 
     public static void registerCustomCrds() {
@@ -28,6 +30,10 @@ public class IoTCrd {
 
     public static CustomResourceDefinition project() {
         return PROJECT_CRD;
+    }
+
+    public static CustomResourceDefinition config() {
+        return CONFIG_CRD;
     }
 
 }
