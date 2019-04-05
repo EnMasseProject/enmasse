@@ -6,5 +6,7 @@ ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
 ADD target/iot-http-adapter-${MAVEN_VERSION}.jar /iot-http-adapter.jar
+ADD launch_java.sh /opt/run-java/
+RUN chmod a+x /opt/run-java/launch_java.sh
 
 CMD ["/opt/run-java/launch_java.sh", "/iot-http-adapter.jar"]

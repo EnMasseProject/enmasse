@@ -6,5 +6,7 @@ ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
 ADD target/iot-device-registry-file-${MAVEN_VERSION}.jar /iot-device-registry-file.jar
+ADD launch_java.sh /opt/run-java/
+RUN chmod a+x /opt/run-java/launch_java.sh
 
 CMD ["/opt/run-java/launch_java.sh", "/iot-device-registry-file.jar"]
