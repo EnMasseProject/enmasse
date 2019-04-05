@@ -104,6 +104,10 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		install.ApplyVolumeMountSimple(container, "keycloak-providers", "/opt/jboss/keycloak/providers", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)
 		install.ApplyVolumeMountSimple(container, "standard-authservice-cert", "/opt/enmasse/cert", false)
+		// Only allow setting data source on initial creation
+		if util.IsNewObject(deployment) {
+			install.ApplyEnvSimple(container, "KEYCLOAK_CONFIG_FILE", "standalone-"+string(authservice.Spec.Standard.Datasource.Type)+".xml")
+		}
 	})
 	install.ApplyContainer(deployment, "keycloak", func(container *corev1.Container) {
 		install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image)
@@ -127,10 +131,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 			install.ApplyEnvSecret(container, "DB_PASSWORD", "database-password", authservice.Spec.Standard.Datasource.CredentialsSecret.Name)
 		}
 
-		// Only allow setting data source on initial creation
-		if util.IsNewObject(deployment) {
-			container.Args = []string{"start-keycloak.sh", "-b", "0.0.0.0", "-c", "standalone-" + string(authservice.Spec.Standard.Datasource.Type) + ".xml"}
-		}
+		container.Args = []string{"start-keycloak.sh", "-b", "0.0.0.0", "-c", "standalone-openshift.xml"}
 
 		container.Ports = []corev1.ContainerPort{{
 			ContainerPort: 5671,
