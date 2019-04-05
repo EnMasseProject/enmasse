@@ -4,24 +4,23 @@
  */
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.CustomLogger;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.message.Message;
+
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
-import org.apache.qpid.proton.message.Message;
-import org.slf4j.Logger;
 
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
-class Sender extends ClientHandlerBase<Integer> {
-    private static Logger log = CustomLogger.getLogger();
+class Sender extends AbstractSender<Integer> {
+
     private final AtomicInteger numSent = new AtomicInteger(0);
-    private final Iterator<Message> messageQueue;
-    private final Predicate<Message> predicate;
+    protected final Iterator<Message> messageQueue;
+    protected final Predicate<Message> predicate;
 
     public Sender(AmqpConnectOptions clientOptions,
                   LinkOptions linkOptions,
@@ -36,35 +35,13 @@ class Sender extends ClientHandlerBase<Integer> {
     }
 
     @Override
-    public void connectionOpened(ProtonConnection connection) {
-        ProtonSender sender = connection.createSender(linkOptions.getTarget().getAddress());
-        sender.setTarget(linkOptions.getTarget());
-        sender.setQoS(clientOptions.getQos());
-        sender.openHandler(result -> {
-            if (result.succeeded()) {
-                log.info("Sender link '" + sender.getTarget().getAddress() + "' opened, sending messages");
-                connectPromise.complete(null);
-                sendNext(connection, sender);
-            } else {
-                handleError(connection, sender.getRemoteCondition());
-            }
-        });
-        sender.closeHandler(result -> handleError(connection, sender.getRemoteCondition()));
-        sender.open();
+    protected String getCurrentState() {
+        return "after " + numSent.get() + " messages sent";
     }
 
     @Override
-    protected void connectionClosed(ProtonConnection conn) {
-        conn.close();
-        resultPromise.completeExceptionally(new RuntimeException("Connection closed after " + numSent.get() + " messages sent"));
-        connectPromise.completeExceptionally(new RuntimeException("Connection closed after " + numSent.get() + " messages sent"));
-    }
-
-    @Override
-    protected void connectionDisconnected(ProtonConnection conn) {
-        conn.close();
-        resultPromise.completeExceptionally(new RuntimeException("Connection disconnected after " + numSent.get() + " messages sent"));
-        connectPromise.completeExceptionally(new RuntimeException("Connection disconnected after " + numSent.get() + " messages sent"));
+    protected void sendMessages(ProtonConnection connection, ProtonSender sender) {
+        sendNext(connection, sender);
     }
 
     private void sendNext(ProtonConnection connection, ProtonSender sender) {

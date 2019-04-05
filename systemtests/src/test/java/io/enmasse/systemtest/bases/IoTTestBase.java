@@ -92,6 +92,17 @@ public abstract class IoTTestBase extends TestBase {
         return null;
     }
 
+    /**
+     * Get the Hono tenant name from the project configuration.
+     */
+    protected String tenantId() {
+        var project = getSharedIoTProject();
+        if (project == null) {
+            return null;
+        }
+        return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
+    }
+
     protected void createIoTConfig(IoTConfig config) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_CONFIG);
         if (iotConfigApiClient.existsIoTConfig(config.getMetadata().getName())) {

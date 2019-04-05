@@ -9,6 +9,9 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -17,16 +20,25 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
 public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
     protected static Logger log = CustomLogger.getLogger();
 
+    private final String addressSpace = "shared-address-space";
+
     protected IoTConfig sharedConfig;
     protected IoTProject sharedProject;
 
+    private UserCredentials credentials;
+    protected AmqpClientFactory iotAmqpClientFactory;
+
     @BeforeEach
     public void setUpSharedIoTProject() throws Exception {
+
+        this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+
         if (sharedConfig == null) {
             CertBundle certBundle = CertificateUtils.createCertBundle();
             sharedConfig = new IoTConfigBuilder()
@@ -51,9 +63,25 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         }
 
         if (sharedProject == null) {
-            sharedProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", "shard-address-space");
+            sharedProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", this.addressSpace);
             createIoTProject(sharedProject);
         }
+
+        this.iotAmqpClientFactory = createAmqpClientFactory();
+    }
+
+    public String getAddressSpace() {
+        return this.addressSpace;
+    }
+
+    /**
+     * Create a new {@link AmqpClientFactory} for the IoTProject's address space.
+     */
+    private AmqpClientFactory createAmqpClientFactory() throws Exception {
+
+        getUserApiClient().createUser(this.addressSpace, this.credentials);
+        return new AmqpClientFactory(kubernetes, Environment.getInstance(), getAddressSpace(this.addressSpace), this.credentials);
+
     }
 
     @AfterEach
@@ -78,6 +106,13 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                 log.warn("Remove shared iotproject when test failed - SKIPPED!");
             }
         }
+
+        // always clean up random user
+        getUserApiClient().deleteUser(this.addressSpace, this.credentials.getUsername());
+        if (this.iotAmqpClientFactory != null) {
+            this.iotAmqpClientFactory.close();
+            this.iotAmqpClientFactory = null;
+        }
     }
 
     @Override
@@ -89,6 +124,5 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
     public IoTProject getSharedIoTProject() {
         return sharedProject;
     }
-
 
 }

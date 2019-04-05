@@ -22,6 +22,10 @@ import java.time.Instant;
 import java.util.Map;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
+import static io.enmasse.systemtest.apiclients.Predicates.in;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
+import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -164,32 +168,14 @@ class DeviceRegistryTest extends IoTTestBaseWithShared {
         HttpAdapterClient httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId + "@" + tenantId(), password);
         JsonObject payload = new JsonObject(Map.of("data", "dummy"));
 
-        String expectedResponse = authFail ? "401" : "503, 202";
-        log.info("Sending event data expected response. " + expectedResponse);
-        httpAdapterClient.sendEvent(payload, (responseCode) -> {
-            log.info("Received response: " + responseCode);
-            if (authFail) {
-                return responseCode == HttpURLConnection.HTTP_UNAUTHORIZED;
-            } else {
-                return responseCode == HttpURLConnection.HTTP_UNAVAILABLE || responseCode == HttpURLConnection.HTTP_ACCEPTED;
-            }
-        }, expectedResponse);
+        var expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE, HTTP_ACCEPTED);
+        log.info("Sending event data expected response: {}", expectedResponse);
+        httpAdapterClient.sendEvent(payload, expectedResponse );
 
-        expectedResponse = authFail ? "401" : "503";
-        log.info("Sending telemetry data expected response: " + expectedResponse);
-        httpAdapterClient.sendTelemetry(payload, (responseCode) -> {
-            log.info("Received response: " + responseCode);
-            if (authFail) {
-                return responseCode == HttpURLConnection.HTTP_UNAUTHORIZED;
-            } else {
-                return responseCode == HttpURLConnection.HTTP_UNAVAILABLE;
-            }
-        }, expectedResponse);
+        expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE);
+        log.info("Sending telemetry data expected response: {}", expectedResponse);
+        httpAdapterClient.sendTelemetry(payload, expectedResponse);
 
-    }
-
-    private String tenantId() {
-        return String.format("%s.%s", sharedProject.getMetadata().getNamespace(), sharedProject.getMetadata().getName());
     }
 
 }
