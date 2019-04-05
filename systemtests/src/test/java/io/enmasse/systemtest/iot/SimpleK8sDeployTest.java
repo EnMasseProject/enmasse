@@ -20,7 +20,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,7 +34,7 @@ import static io.enmasse.systemtest.TestTag.smoke;
 
 @Tag(sharedIot)
 @Tag(smoke)
-@DisabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "false")
+@EnabledIfSystemProperty(named = Environment.useMinikubeEnv, matches = "true")
 class SimpleK8sDeployTest {
 
     private static final String NAMESPACE = Environment.getInstance().namespace();
