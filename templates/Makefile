@@ -101,7 +101,7 @@ $(ENMASSE_BUNDLE): replace_images
 MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/monitoring
 $(MONITORING_BUNDLE): replace_images
 	mkdir -p $(MONITORING_BUNDLE)
-	for i in alertmanager grafana kube-state-metrics prometheus service-monitor prometheus-rules; do \
+	for i in alertmanager grafana kube-state-metrics prometheus service-monitors prometheus-rules; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(MONITORING_BUNDLE)/; \
 	done
 
