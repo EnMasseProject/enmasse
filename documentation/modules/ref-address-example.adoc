@@ -12,5 +12,5 @@ include::../common/address-example1.yaml[]
 <1> The address name must be prefixed with the address space name and a dot. Address names can only include alphanumeric characters.
 <2> The address is the messaging address this address resource represents.
 <3> The address type dictates the semantics of this address.
-<4> The address plan describes the resource usage for the address. See link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-plans-messaging[Listing available plans] for details on how to get the available plans.
+<4> The address plan describes the resource usage for the address. For more information about how to view the available plans see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-address-plans-messaging[Listing available address plans].
 

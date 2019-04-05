@@ -1,0 +1,28 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+// assembly-managing-addresses.adoc
+
+[id='proc-list-available-address-space-plans-{context}']
+= Listing available address space plans using the command line
+
+You can list the address space plans available for your address space type.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a messaging tenant:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+endif::[]
+
+. Retrieve the schema showing available address space plans (replace `standard` with `brokered` for the brokered address space type):
++
+[source,yaml,subs="attributes",options="nowrap"]
+----
+{cmdcli} get addressspaceschema standard -o jsonpath='{.spec.plans[*].name}'
+----
+

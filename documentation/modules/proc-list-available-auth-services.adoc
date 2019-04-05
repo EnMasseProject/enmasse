@@ -1,0 +1,27 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='proc-list-available-auth-services-{context}']
+= Listing available authentication services using the command line
+
+You can list the authentication services available for your address space type.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a messaging tenant:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+endif::[]
+
+. Retrieve the schema with the authentication services listed (replace `standard` with `brokered` for the brokered address space type):
++
+[source,yaml,subs="attributes",options="nowrap"]
+----
+{cmdcli} get addressspaceschema standard -o jsonpath='{.spec.authenticationServices}'
+----
+

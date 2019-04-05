@@ -12,6 +12,6 @@ This address space example shows only the required options to create an `Address
 include::../common/address-space-example1.yaml[]
 ----
 <1> The address space type can be either `brokered` or `standard`.
-<2> The address space plan depends on the address space type and what has been configured by the {ProductName} administrator. See link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-plans-messaging[Listing available plans] for details on how to get the available plans.
+<2> The address space plan depends on the address space type and what has been configured by the {ProductName} administrator. To view your available address space plans, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-address-space-plans-messaging[Listing available address space plans].
 
 
