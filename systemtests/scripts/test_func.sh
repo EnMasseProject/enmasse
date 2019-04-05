@@ -60,10 +60,10 @@ function wait_until_enmasse_up() {
     UPGRADE=${3:-false}
 
     expected_pods=6
-    if [ "$DEPLOY_IOT" = "true" ]; then
+    if [[ "${DEPLOY_IOT}" == "true" ]]; then
         expected_pods=$(($expected_pods + 1))
     fi
-    if [[ "$CLUSTER_TYPE" == "kubernetes" ]]; then
+    if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
         expected_pods=$(($expected_pods - 1))
     fi
 

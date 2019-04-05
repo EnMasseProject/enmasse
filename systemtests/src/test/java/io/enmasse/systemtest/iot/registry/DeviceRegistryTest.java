@@ -4,18 +4,6 @@
  */
 package io.enmasse.systemtest.iot.registry;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.net.HttpURLConnection;
-import java.time.Instant;
-import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
@@ -24,6 +12,18 @@ import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+
+import java.net.HttpURLConnection;
+import java.time.Instant;
+import java.util.Map;
+
+import static io.enmasse.systemtest.TestTag.sharedIot;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag(sharedIot)
 class DeviceRegistryTest extends IoTTestBaseWithShared {
@@ -37,13 +37,13 @@ class DeviceRegistryTest extends IoTTestBaseWithShared {
 
     @BeforeEach
     void initClient() {
-        if ( deviceRegistryEndpoint == null ) {
+        if (deviceRegistryEndpoint == null) {
             deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         }
-        if ( httpAdapterEndpoint == null ) {
+        if (httpAdapterEndpoint == null) {
             httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         }
-        if ( client == null ) {
+        if (client == null) {
             client = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         }
     }
@@ -149,8 +149,8 @@ class DeviceRegistryTest extends IoTTestBaseWithShared {
         //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
 
         checkCredentials(authId, newPassword, false);
-        log.info("Waiting "+expirySeconds+" seconds for credentials to expire");
-        Thread.sleep((expirySeconds+1)*1000);
+        log.info("Waiting " + expirySeconds + " seconds for credentials to expire");
+        Thread.sleep((expirySeconds + 1) * 1000);
         checkCredentials(authId, newPassword, true);
 
         credentialsClient.deleteAllCredentials(tenantId(), DUMMY_DEVICE_ID);
@@ -161,27 +161,27 @@ class DeviceRegistryTest extends IoTTestBaseWithShared {
     }
 
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {
-        HttpAdapterClient httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId+"@"+tenantId(), password);
+        HttpAdapterClient httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId + "@" + tenantId(), password);
         JsonObject payload = new JsonObject(Map.of("data", "dummy"));
 
         String expectedResponse = authFail ? "401" : "503, 202";
-        log.info("Sending event data expected response. "+expectedResponse);
-        httpAdapterClient.sendEvent(payload, (responseCode)->{
-            log.info("Received response: "+responseCode);
-            if(authFail) {
+        log.info("Sending event data expected response. " + expectedResponse);
+        httpAdapterClient.sendEvent(payload, (responseCode) -> {
+            log.info("Received response: " + responseCode);
+            if (authFail) {
                 return responseCode == HttpURLConnection.HTTP_UNAUTHORIZED;
-            }else {
+            } else {
                 return responseCode == HttpURLConnection.HTTP_UNAVAILABLE || responseCode == HttpURLConnection.HTTP_ACCEPTED;
             }
         }, expectedResponse);
 
         expectedResponse = authFail ? "401" : "503";
-        log.info("Sending telemetry data expected response: "+expectedResponse);
-        httpAdapterClient.sendTelemetry(payload, (responseCode)-> {
-            log.info("Received response: "+responseCode);
-            if(authFail) {
+        log.info("Sending telemetry data expected response: " + expectedResponse);
+        httpAdapterClient.sendTelemetry(payload, (responseCode) -> {
+            log.info("Received response: " + responseCode);
+            if (authFail) {
                 return responseCode == HttpURLConnection.HTTP_UNAUTHORIZED;
-            }else {
+            } else {
                 return responseCode == HttpURLConnection.HTTP_UNAVAILABLE;
             }
         }, expectedResponse);

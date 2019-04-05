@@ -4,33 +4,30 @@
  */
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorization;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static io.enmasse.systemtest.TestTag.sharedIot;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(sharedIot)
 class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
@@ -48,36 +45,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
         String addressSpaceName = "managed-address-space";
 
-        IoTProject project = new IoTProjectBuilder()
-                .withNewMetadata()
-                .withName("iot-project-managed")
-                .endMetadata()
-                .withNewSpec()
-                .withNewDownstreamStrategy()
-                .withNewManagedStrategy()
-                .withNewAddressSpace()
-                .withName(addressSpaceName)
-                .withPlan("standard-unlimited")
-                .withType("standard")
-                .endAddressSpace()
-                .withNewAddresses()
-                .withNewTelemetry()
-                .withPlan("standard-small-anycast")
-                .withType("anycast")
-                .endTelemetry()
-                .withNewEvent()
-                .withPlan("standard-small-queue")
-                .withType("queue")
-                .endEvent()
-                .withNewCommand()
-                .withPlan("standard-small-anycast")
-                .withType("anycast")
-                .endCommand()
-                .endAddresses()
-                .endManagedStrategy()
-                .endDownstreamStrategy()
-                .endSpec()
-                .build();
+        IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName);
 
         createIoTProject(project);// waiting until ready
 
@@ -103,29 +71,29 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
         //addresses
         //{event/control/telemetry}/"project-namespace"."project-name"
-        String addressSuffix = "/"+project.getMetadata().getNamespace()+"."+project.getMetadata().getName();
+        String addressSuffix = "/" + project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
         List<Address> addresses = getAddressesObjects(addressSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
         assertEquals(3, addresses.size());
         assertEquals(3, addresses.stream()
-            .map(Address::getMetadata)
-            .map(ObjectMeta::getOwnerReferences)
-            .flatMap(List::stream)
-            .filter(reference -> isOwner(project, reference))
-            .count());
+                .map(Address::getMetadata)
+                .map(ObjectMeta::getOwnerReferences)
+                .flatMap(List::stream)
+                .filter(reference -> isOwner(project, reference))
+                .count());
         int correctAddressesCounter = 0;
-        for(Address address : addresses) {
-            if ( address.getSpec().getAddress().equals(IOT_ADDRESS_EVENT + addressSuffix) ) {
+        for (Address address : addresses) {
+            if (address.getSpec().getAddress().equals(IOT_ADDRESS_EVENT + addressSuffix)) {
                 assertEquals("queue", address.getSpec().getType());
                 assertEquals("standard-small-queue", address.getSpec().getPlan());
                 correctAddressesCounter++;
-            } else if ( address.getSpec().getAddress().equals(IOT_ADDRESS_CONTROL + addressSuffix)
-                    || address.getSpec().getAddress().equals(IOT_ADDRESS_TELEMETRY + addressSuffix) ) {
+            } else if (address.getSpec().getAddress().equals(IOT_ADDRESS_CONTROL + addressSuffix)
+                    || address.getSpec().getAddress().equals(IOT_ADDRESS_TELEMETRY + addressSuffix)) {
                 assertEquals("anycast", address.getSpec().getType());
                 assertEquals("standard-small-anycast", address.getSpec().getPlan());
                 correctAddressesCounter++;
             }
         }
-        assertEquals(3, correctAddressesCounter, "There are incorrect IoT addresses "+addresses);
+        assertEquals(3, correctAddressesCounter, "There are incorrect IoT addresses " + addresses);
 
         //username "adapter"
         //name "project-address-space"+".adapter"
@@ -139,11 +107,11 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
         assertThat(actualAuthorization.getOperations(), containsInAnyOrder(Operation.recv, Operation.send));
 
         assertThat(actualAuthorization.getAddresses(), containsInAnyOrder(IOT_ADDRESS_EVENT + addressSuffix,
-                                                                            IOT_ADDRESS_CONTROL + addressSuffix,
-                                                                            IOT_ADDRESS_TELEMETRY + addressSuffix,
-                                                                            IOT_ADDRESS_EVENT + addressSuffix + "/*",
-                                                                            IOT_ADDRESS_CONTROL + addressSuffix + "/*",
-                                                                            IOT_ADDRESS_TELEMETRY + addressSuffix + "/*"));
+                IOT_ADDRESS_CONTROL + addressSuffix,
+                IOT_ADDRESS_TELEMETRY + addressSuffix,
+                IOT_ADDRESS_EVENT + addressSuffix + "/*",
+                IOT_ADDRESS_CONTROL + addressSuffix + "/*",
+                IOT_ADDRESS_TELEMETRY + addressSuffix + "/*"));
     }
 
     private boolean isOwner(IoTProject project, OwnerReference ownerReference) {

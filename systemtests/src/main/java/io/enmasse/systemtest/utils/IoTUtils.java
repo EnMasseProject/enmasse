@@ -4,21 +4,19 @@
  */
 package io.enmasse.systemtest.utils;
 
-import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
 import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import org.slf4j.Logger;
+
+import java.util.concurrent.TimeUnit;
 
 public class IoTUtils {
 
@@ -29,7 +27,7 @@ public class IoTUtils {
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
             config = apiClient.getIoTConfig(config.getMetadata().getName());
-            isReady = config.getStatus()!=null && config.getStatus().isInitialized();
+            isReady = config.getStatus() != null && config.getStatus().isInitialized();
             if (!isReady) {
                 log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
                 Thread.sleep(10000);
@@ -46,7 +44,7 @@ public class IoTUtils {
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
             project = apiClient.getIoTProject(project.getMetadata().getName());
-            isReady = project.getStatus()!=null && project.getStatus().isReady();
+            isReady = project.getStatus() != null && project.getStatus().isReady();
             if (!isReady) {
                 log.info("Waiting until IoTProject: '{}' will be in ready state", project.getMetadata().getName());
                 Thread.sleep(10000);
@@ -59,21 +57,21 @@ public class IoTUtils {
     }
 
     private static void waitForIoTProjectDeleted(Kubernetes kubernetes, AddressApiClient addressApiClient, IoTProject project) throws Exception {
-        if(project.getSpec().getDownstreamStrategy().getManagedStrategy() != null) {
+        if (project.getSpec().getDownstreamStrategy().getManagedStrategy() != null) {
             String addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
             AddressSpace addressSpace = AddressSpaceUtils.getAddressSpacesObjects(addressApiClient)
-                .stream()
-                .filter(space -> space.getMetadata().getName().equals(addressSpaceName))
-                .findFirst()
-                .orElse(null);
-            if(addressSpace != null) {
+                    .stream()
+                    .filter(space -> space.getMetadata().getName().equals(addressSpaceName))
+                    .findFirst()
+                    .orElse(null);
+            if (addressSpace != null) {
                 AddressSpaceUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
             }
         }
     }
 
     public static boolean isIoTInstalled(Kubernetes kubernetes) {
-        return kubernetes.getCRD("iotprojects.iot.enmasse.io")!=null;
+        return kubernetes.getCRD("iotprojects.iot.enmasse.io") != null;
     }
 
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProjectApiClient iotProjectApiClient, IoTProject project, AddressApiClient addressApiClient) throws Exception {
@@ -83,7 +81,7 @@ public class IoTUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void syncIoTProject(IoTProject project , IoTProjectApiClient apiClient) throws Exception {
+    public static void syncIoTProject(IoTProject project, IoTProjectApiClient apiClient) throws Exception {
         IoTProject result = apiClient.getIoTProject(project.getMetadata().getName());
         project.setMetadata(result.getMetadata());
         project.setSpec(result.getSpec());
@@ -95,6 +93,39 @@ public class IoTUtils {
         config.setMetadata(result.getMetadata());
         config.setSpec(result.getSpec());
         config.setStatus(result.getStatus());
+    }
+
+    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName) {
+        return new IoTProjectBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .endMetadata()
+                .withNewSpec()
+                .withNewDownstreamStrategy()
+                .withNewManagedStrategy()
+                .withNewAddressSpace()
+                .withName(addressSpaceName)
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withType(AddressSpaceType.STANDARD.toString())
+                .endAddressSpace()
+                .withNewAddresses()
+                .withNewTelemetry()
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .withType(AddressType.ANYCAST.toString())
+                .endTelemetry()
+                .withNewEvent()
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .withType(AddressType.QUEUE.toString())
+                .endEvent()
+                .withNewCommand()
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .withType(AddressType.ANYCAST.toString())
+                .endCommand()
+                .endAddresses()
+                .endManagedStrategy()
+                .endDownstreamStrategy()
+                .endSpec()
+                .build();
     }
 
 }

@@ -4,13 +4,6 @@
  */
 package io.enmasse.systemtest.bases;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
-
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
@@ -21,6 +14,12 @@ import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.IoTUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class IoTTestBase extends TestBase {
 
@@ -34,8 +33,8 @@ public abstract class IoTTestBase extends TestBase {
     private List<IoTProject> iotProjects = new ArrayList<>();
 
     protected String iotProjectNamespace = "iot-project-ns";
-	protected IoTProjectApiClient iotProjectApiClient;
-	protected IoTConfigApiClient iotConfigApiClient;
+    protected IoTProjectApiClient iotProjectApiClient;
+    protected IoTConfigApiClient iotConfigApiClient;
 
     @BeforeEach
     public void setupIoT() throws Exception {
@@ -59,8 +58,8 @@ public abstract class IoTTestBase extends TestBase {
             if (!environment.skipCleanup()) {
                 //FIXME maybe collect logs of iot related pods?
                 log.info("All IoTProjects will be removed");
-                for(IoTProject project : iotProjects) {
-                    if(iotProjectApiClient.existsIoTProject(project.getMetadata().getName())) {
+                for (IoTProject project : iotProjects) {
+                    if (iotProjectApiClient.existsIoTProject(project.getMetadata().getName())) {
                         IoTUtils.deleteIoTProjectAndWait(kubernetes, iotProjectApiClient, project, addressApiClient);
                     } else {
                         log.info("IoTProject '" + project.getMetadata().getName() + "' doesn't exists!");
@@ -68,8 +67,8 @@ public abstract class IoTTestBase extends TestBase {
                 }
                 iotProjects.clear();
                 log.info("All IoTConfigs will be removed");
-                for(IoTConfig config : iotConfigs) {
-                    if(iotConfigApiClient.existsIoTConfig(config.getMetadata().getName())) {
+                for (IoTConfig config : iotConfigs) {
+                    if (iotConfigApiClient.existsIoTConfig(config.getMetadata().getName())) {
                         iotConfigApiClient.deleteIoTConfig(config.getMetadata().getName());
                     } else {
                         log.info("IoTConfig '" + config.getMetadata().getName() + "' doesn't exists!");
@@ -95,12 +94,12 @@ public abstract class IoTTestBase extends TestBase {
 
     protected void createIoTConfig(IoTConfig config) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_CONFIG);
-        if(iotConfigApiClient.existsIoTConfig(config.getMetadata().getName())) {
+        if (iotConfigApiClient.existsIoTConfig(config.getMetadata().getName())) {
             log.info("iot config {} already exists", config.getMetadata().getName());
-        }else {
+        } else {
             log.info("iot config {} will be created", config.getMetadata().getName());
             iotConfigApiClient.createIoTConfig(config);
-            if(!config.equals(getSharedIoTConfig())) {
+            if (!config.equals(getSharedIoTConfig())) {
                 iotConfigs.add(config);
             }
         }
@@ -111,12 +110,12 @@ public abstract class IoTTestBase extends TestBase {
 
     protected void createIoTProject(IoTProject project) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_PROJECT);
-        if(iotProjectApiClient.existsIoTProject(project.getMetadata().getName())) {
+        if (iotProjectApiClient.existsIoTProject(project.getMetadata().getName())) {
             log.info("iot project {} already exists", project.getMetadata().getName());
-        }else {
+        } else {
             log.info("iot project {} will be created", project.getMetadata().getName());
             iotProjectApiClient.createIoTProject(project);
-            if(!project.equals(getSharedIoTProject())) {
+            if (!project.equals(getSharedIoTProject())) {
                 iotProjects.add(project);
             }
         }
