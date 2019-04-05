@@ -50,6 +50,16 @@ objects:
 - apiVersion: v1
   kind: ConfigMap
   metadata:
+    name: qdrouterd-policies.${INFRA_UUID}
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+  data:
+    policies.json: ${ROUTER_VHOST_POLICY_JSON}
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
     name: qdrouterd-config.${INFRA_UUID}
     labels:
       app: enmasse
@@ -166,6 +176,11 @@ objects:
         authenticatePeer: yes
         idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
+      }
+
+      policy {
+        policyDir: /etc/qpid-dispatch/policies
+        enableVhostPolicy: ${ROUTER_ENABLE_VHOST_POLICY}
       }
 
       connector {
@@ -315,6 +330,8 @@ objects:
             readOnly: true
           - mountPath: /etc/qpid-dispatch/config
             name: qdrouterd-config
+          - mountPath: /etc/qpid-dispatch/policies
+            name: qdrouterd-policies
         volumes:
         - name: ssl-certs
           secret:
@@ -328,6 +345,9 @@ objects:
         - name: qdrouterd-config
           configMap:
             name: qdrouterd-config.${INFRA_UUID}
+        - name: qdrouterd-policies
+          configMap:
+            name: qdrouterd-policies.${INFRA_UUID}
 - apiVersion: v1
   data:
     tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
@@ -720,6 +740,12 @@ parameters:
 - description: Router worker threads
   name: ROUTER_WORKER_THREADS
   value: '4'
+- description: Enable router vhost policies
+  name: ROUTER_ENABLE_VHOST_POLICY
+  value: 'false'
+- description: Router vhost policy json
+  name: ROUTER_VHOST_POLICY_JSON
+  value: '[]'
 - name: IMAGE_PULL_POLICY
   description: Image Pull Policy
   value: ${env.IMAGE_PULL_POLICY}

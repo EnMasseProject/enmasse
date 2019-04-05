@@ -149,7 +149,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
         assertEquals(expectedRouter.getResources().getMemory(), actualRouter.getResources().getMemory());
         assertEquals(expectedRouter.getLinkCapacity(), actualRouter.getLinkCapacity());
         assertEquals(expectedRouter.getMinReplicas(), actualRouter.getMinReplicas());
-
+        assertEquals(expectedRouter.getPolicy(), actualRouter.getPolicy());
     }
 
     private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec) {

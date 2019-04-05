@@ -30,6 +30,13 @@ spec:
       memory: 256Mi
     linkCapcity: 1000
     minReplicas: 1
+    policy:
+      maxConnections: 1000
+      maxConnectionsPerHost: 1
+      maxConnectionsPerUser: 10
+      maxSessionsPerConnection: 10
+      maxSendersPerConnection: 5
+      maxReceiversPerConnection: 5
     podTemplate:
       spec:
         affinity:

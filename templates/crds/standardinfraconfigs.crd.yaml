@@ -144,3 +144,18 @@ spec:
                   type: integer
                 workerThreads:
                   type: integer
+                policy:
+                  type: object
+                  properties:
+                    maxConnections:
+                      type: integer
+                    maxConnectionsPerUser:
+                      type: integer
+                    maxConnectionsPerHost:
+                      type: integer
+                    maxSessionsPerConnection:
+                      type: integer
+                    maxSendersPerConnection:
+                      type: integer
+                    maxReceiversPerConnection:
+                      type: integer
