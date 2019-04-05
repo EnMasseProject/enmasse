@@ -35,7 +35,7 @@ public abstract class TestBaseWithShared extends TestBase {
     private static final Address dummyAddress = AddressUtils.createQueueAddressObject("dummy-address", DestinationPlan.STANDARD_SMALL_QUEUE);
     protected static AddressSpace sharedAddressSpace;
     private static Logger log = CustomLogger.getLogger();
-    private static Map<AddressSpaceType, Integer> spaceCountMap = new HashMap<>();
+    private static Map<String, Integer> spaceCountMap = new HashMap<>();
 
     private static void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         TestBase.deleteAddressSpace(addressSpace);
@@ -47,9 +47,9 @@ public abstract class TestBaseWithShared extends TestBase {
 
     @BeforeEach
     public void setupShared() throws Exception {
-        spaceCountMap.putIfAbsent(getAddressSpaceType(), 0);
+        spaceCountMap.putIfAbsent(getAddressSpaceType().toString().toLowerCase(), 0);
         sharedAddressSpace = AddressSpaceUtils.createAddressSpaceObject(
-                getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType()),
+                getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType().toString().toLowerCase()),
                 getAddressSpaceType(),
                 AuthenticationServiceType.STANDARD);
         createAddressSpace(sharedAddressSpace);
@@ -82,7 +82,7 @@ public abstract class TestBaseWithShared extends TestBase {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    spaceCountMap.put(AddressSpaceType.valueOf(sharedAddressSpace.getSpec().getType()), spaceCountMap.get(AddressSpaceType.valueOf(sharedAddressSpace.getSpec().getType())) + 1);
+                    spaceCountMap.put(sharedAddressSpace.getSpec().getType().toLowerCase(), spaceCountMap.get(sharedAddressSpace.getSpec().getType()) + 1);
                 }
             } else {
                 log.warn("Remove address spaces when test failed - SKIPPED!");
