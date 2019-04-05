@@ -60,14 +60,16 @@ public class IoTProjectTest {
                 .withNewSpec()
                 .withNewDownstreamStrategy()
                 .withNewManagedStrategy()
-                .withAddressSpaceName("managed")
+                .withNewAddressSpace()
+                .withName("managed")
+                .endAddressSpace()
                 .endManagedStrategy()
                 .endDownstreamStrategy()
                 .endSpec()
                 .build();
 
         assertEquals("proj", project.getMetadata().getName());
-        assertEquals("managed", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpaceName());
+        assertEquals("managed", project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertNull(project.getSpec().getDownstreamStrategy().getExternalStrategy());
     }
 
