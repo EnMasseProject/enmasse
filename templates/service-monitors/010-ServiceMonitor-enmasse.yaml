@@ -3,6 +3,7 @@ kind: ServiceMonitor
 metadata:
   name: enmasse
   labels:
+    monitoring-key: middleware
     app: enmasse
 spec:
   selector:

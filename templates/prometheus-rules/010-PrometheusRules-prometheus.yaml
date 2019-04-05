@@ -2,6 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   labels:
+    monitoring-key: middleware
     prometheus: k8s
     role: alert-rules
   name: prometheus-k8s-rules
