@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.enmasse.admin.model.v1.*;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -209,6 +210,23 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 }
             }
         }
+    }
+
+    @Test
+    public void testVhostPolicyGen() throws JsonProcessingException {
+        String vhost = "$default";
+        RouterPolicySpec policySpec = new RouterPolicySpecBuilder()
+                .withMaxConnections(1000)
+                .withMaxConnectionsPerHost(10)
+                .withMaxConnectionsPerUser(10)
+                .withMaxSendersPerConnection(5)
+                .withMaxReceiversPerConnection(5)
+                .withMaxSessionsPerConnection(5)
+                .build();
+
+        String policyJson = TemplateInfraResourceFactory.createVhostPolicyJson(vhost, policySpec);
+        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"maxSessions\":5,\"maxSenders\":5,\"remoteHosts\":\"*\",\"maxReceivers\":5}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
+        assertEquals(expected, policyJson);
     }
 
     private <T> T findItem(Class<T> clazz, String kind, String name, List<HasMetadata> items) {

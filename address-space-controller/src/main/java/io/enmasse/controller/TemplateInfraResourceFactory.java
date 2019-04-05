@@ -262,7 +262,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
     }
 
-    private String createVhostPolicyJson(String vhost, RouterPolicySpec policy) throws JsonProcessingException {
+    static String createVhostPolicyJson(String vhost, RouterPolicySpec policy) throws JsonProcessingException {
         Map<String, Object> defaultGroupPolicy = new HashMap<>();
         defaultGroupPolicy.put("remoteHosts", "*");
         if (policy.getMaxSessionsPerConnection() != null) {
@@ -295,8 +295,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         defaultVhostPolicy.put("groups", Collections.singletonMap(vhost, defaultGroupPolicy));
 
-        Map<String, Object> vhostPolicy = Collections.singletonMap("vhost", defaultVhostPolicy);
-        return mapper.writeValueAsString(vhostPolicy);
+        List<Object> values = new ArrayList<>();
+        values.add("vhost");
+        values.add(defaultVhostPolicy);
+        return mapper.writeValueAsString(Collections.singletonList(values));
     }
 
     private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {
