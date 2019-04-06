@@ -51,17 +51,17 @@ public class KubernetesHelper implements Kubernetes {
         for (HasMetadata resource : resources.getItems()) {
             try {
                 if (resource instanceof ConfigMap) {
-                    client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
+                    client.configMaps().withName(resource.getMetadata().getName()).createOrReplace((ConfigMap) resource);
                 } else if (resource instanceof Secret) {
-                    client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
+                    client.secrets().withName(resource.getMetadata().getName()).createOrReplace((Secret) resource);
                 } else if (resource instanceof Deployment) {
                     client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
                 } else if (resource instanceof StatefulSet) {
                     client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
                 } else if (resource instanceof Service) {
-                    client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
+                    client.services().withName(resource.getMetadata().getName()).createOrReplace((Service) resource);
                 } else if (resource instanceof NetworkPolicy) {
-                    client.network().networkPolicies().withName(resource.getMetadata().getName()).patch((NetworkPolicy) resource);
+                    client.network().networkPolicies().withName(resource.getMetadata().getName()).createOrReplace((NetworkPolicy) resource);
                 } else if (resource instanceof PersistentVolumeClaim && patchPersistentVolumeClaims) {
                     client.persistentVolumeClaims().withName(resource.getMetadata().getName()).patch((PersistentVolumeClaim) resource);
                 }
