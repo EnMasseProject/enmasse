@@ -50,7 +50,11 @@ public class AddressPlanStatus extends AbstractWithAdditionalProperties {
     }
 
     public Integer getPartitions() {
-        return partitions;
+        if (partitions != null) {
+            return partitions;
+        } else {
+            return 1;
+        }
     }
 
     public void setPartitions(Integer partitions) {
