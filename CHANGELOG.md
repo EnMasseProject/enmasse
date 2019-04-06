@@ -1,3 +1,8 @@
+## 0.28.0
+* Support for sharding queues of all sizes
+* Support for specifying router policies
+* Support for adjusting idle timeouts, worker threads of router and broker connections
+
 ## 0.27.0
 * Support for deploying via Operator Lifecycle Manager 
 * Experimental support for integrated IoT service based on Eclipse Hono
