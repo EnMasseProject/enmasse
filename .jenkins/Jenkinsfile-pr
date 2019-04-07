@@ -119,7 +119,7 @@ pipeline {
         //----------------------------------------------------------------------------------------------------
         stage('[upgrade] download released version') {
             when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
+                expression { env.TEST_PROFILE == 'upgrade' }
             }
             steps {
                 sh "git checkout -- agent && git checkout tags/${env.UPGRADE_FROM}"
@@ -128,7 +128,7 @@ pipeline {
         }
         stage('[upgrade] deploy enmasse') {
             when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
+                expression { env.TEST_PROFILE == 'upgrade' }
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
@@ -140,7 +140,7 @@ pipeline {
         }
         stage('[upgrade] run systemtests before upgrade') {
             when {
-                expression { env.TEST_PROFILE == 'systemtests-upgrade' }
+                expression { env.TEST_PROFILE == 'upgrade' }
             }
             environment {
                 USE_DUMMY_ADDRESS = true
