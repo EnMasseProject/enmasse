@@ -75,7 +75,7 @@ class UpgradeTest extends TestBase {
             kubernetes.listPods().forEach(pod -> {
                 pod.getSpec().getContainers().forEach(container -> {
                     log.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
-                    if (!images.contains(container.getImage().replace("enmasse-controller-manager", "controller-controller"))) { //TODO workaround due to image rename
+                    if (!images.contains(container.getImage().replace("enmasse-controller-manager", "controller-manager"))) { //TODO workaround due to image rename
                         log.warn("Container is not upgraded");
                         ready.set(false);
                     } else {
