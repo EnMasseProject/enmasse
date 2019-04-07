@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.upgrade;
@@ -58,7 +59,8 @@ class UpgradeTest extends TestBase {
         log.info("Sleep after {}", downgrade ? "downgrade" : "upgrade");
         Thread.sleep(300_000);
 
-        checkImagesUpdated(templatePaths.getFileName().toString().split("-")[1]);
+        Pattern pattern = Pattern.compile("-(.*)");
+        checkImagesUpdated(pattern.matcher(templatePaths.getFileName().toString()).group(1));
     }
 
     private void checkImagesUpdated(String version) throws Exception {
@@ -75,7 +77,7 @@ class UpgradeTest extends TestBase {
             kubernetes.listPods().forEach(pod -> {
                 pod.getSpec().getContainers().forEach(container -> {
                     log.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
-                    if (!images.contains(container.getImage().replace("enmasse-controller-manager", "controller-manager"))) { //TODO workaround due to image rename
+                    if (!images.contains(container.getImage().replace("enmasse-", ""))) { //TODO workaround due to image rename
                         log.warn("Container is not upgraded");
                         ready.set(false);
                     } else {
