@@ -225,7 +225,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .build();
 
         String policyJson = TemplateInfraResourceFactory.createVhostPolicyJson(vhost, policySpec);
-        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"maxSessions\":5,\"maxSenders\":5,\"remoteHosts\":\"*\",\"maxReceivers\":5}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
+        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"maxSessions\":5,\"sources\":\"*\",\"maxSenders\":5,\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"maxReceivers\":5,\"targets\":\"*\"}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
         assertEquals(expected, policyJson);
     }
 
