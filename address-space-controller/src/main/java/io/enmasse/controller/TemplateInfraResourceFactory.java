@@ -265,6 +265,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     static String createVhostPolicyJson(String vhost, RouterPolicySpec policy) throws JsonProcessingException {
         Map<String, Object> defaultGroupPolicy = new HashMap<>();
         defaultGroupPolicy.put("remoteHosts", "*");
+        defaultGroupPolicy.put("sources", "*");
+        defaultGroupPolicy.put("targets", "*");
+        defaultGroupPolicy.put("allowDynamicSource", true);
+        defaultGroupPolicy.put("allowAnonymousSender", true);
         if (policy.getMaxSessionsPerConnection() != null) {
             defaultGroupPolicy.put("maxSessions", policy.getMaxSessionsPerConnection());
         }
