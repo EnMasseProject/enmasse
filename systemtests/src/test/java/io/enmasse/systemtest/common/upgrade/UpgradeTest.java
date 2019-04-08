@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -57,10 +58,11 @@ class UpgradeTest extends TestBase {
 
         assertTrue(CmdClient.execute(cmd, 300_000, true).getRetCode(), "Deployment of new version of enmasse failed");
         log.info("Sleep after {}", downgrade ? "downgrade" : "upgrade");
-        Thread.sleep(300_000);
+        Thread.sleep(120_000);
 
-        Pattern pattern = Pattern.compile("-(.*)");
-        checkImagesUpdated(pattern.matcher(templatePaths.getFileName().toString()).group(1));
+        Matcher m = Pattern.compile("-(.*)").matcher(templatePaths.getFileName().toString());
+        m.find();
+        checkImagesUpdated(m.group().substring(1));
     }
 
     private void checkImagesUpdated(String version) throws Exception {
@@ -77,7 +79,7 @@ class UpgradeTest extends TestBase {
             kubernetes.listPods().forEach(pod -> {
                 pod.getSpec().getContainers().forEach(container -> {
                     log.info("Pod {}, current container {}", pod.getMetadata().getName(), container.getImage());
-                    if (!images.contains(container.getImage().replace("enmasse-", ""))) { //TODO workaround due to image rename
+                    if (!images.contains(container.getImage().replace("enmasse-", ""))) { //TODO workaround due to image rename (remove after 0.28 release)
                         log.warn("Container is not upgraded");
                         ready.set(false);
                     } else {
@@ -96,7 +98,7 @@ class UpgradeTest extends TestBase {
                 log.info("*********************************************");
             });
             return ready.get();
-        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
     private void runUpgradeTest(boolean upgraded) throws Exception {
