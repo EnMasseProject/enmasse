@@ -385,8 +385,8 @@ function wait_until_file_close() {
     do
         NOW=$(date +%s)
         if [[ ${NOW} -gt ${END} ]]; then
-            err "Timed out waiting for closing files!"
-            err_and_exit "Files in folder ${FOLDER} are still opened"
+            warn "Timed out waiting for closing files!"
+            kill -9 $(lsof -t +D ${FOLDER}) || true
         fi
         if [[ -n "$(lsof +D ${FOLDER})" ]]; then
             lsof +D "${FOLDER}" || true
