@@ -35,6 +35,15 @@ export function loadMessagingInstances() {
     });
 }
 
+export function loadMessagingInstance(namespace) {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/'+namespace+'/addressspaces')
+    .then(response => translateAddressSpaces(response.data))
+    .catch(error => {
+      console.log(error);
+      return [];
+    });
+}
+
 export function loadStandardAddressPlans() {
   return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/standard')
     .then(response => getPlanNames(response.data))

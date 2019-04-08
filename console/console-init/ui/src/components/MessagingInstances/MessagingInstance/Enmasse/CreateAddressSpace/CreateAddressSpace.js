@@ -13,7 +13,7 @@ import mdImage from "../../../../../assets/images/pfbg_992.jpg";
 import md2xImage from "../../../../../assets/images/pfbg_992@2x.jpg";
 import lgImage from "../../../../../assets/images/pfbg_1200.jpg";
 import filter from '../../../../../assets/images/background-filter.svg';
-import {loadNamespaces} from "../../Namespaces";
+import InstanceLoader from '../../InstanceLoader';
 import {NotificationConsumer, NotificationProvider} from '../../../../../context/notification-manager';
 
 
@@ -52,8 +52,9 @@ class CreateAddressSpace extends React.Component {
       .catch(error => {
         console.log("Couldn't set the brokered plans: " + error);
       });
-    loadNamespaces()
+    InstanceLoader.loadNamespaces()
       .then(namespaces => {
+        console.log('LOADING NAMESPACES: ',namespaces);
         this.setState({namespaces: namespaces});
         if (!this.state.newInstance.namespace
           || !namespaces.includes(this.state.newInstance.namespace)) {
