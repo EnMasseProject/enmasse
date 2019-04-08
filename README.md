@@ -22,7 +22,7 @@ EnMasse provides a self-service messaging platform on Kubernetes and OpenShift w
 
 ## To start using EnMasse
 
-See our documentation on our [website].
+See the documentation on our [website].
 
 ## To start developing EnMasse
 
