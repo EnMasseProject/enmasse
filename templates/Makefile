@@ -11,7 +11,6 @@ IOT_MODULES=\
 	iot/api \
 	iot/common \
 	iot/operator \
-	iot/examples \
 
 MODULES=\
 	$(IOT_MODULES) \
@@ -21,6 +20,7 @@ MODULES=\
 	example-roles \
 	example-plans \
 	example-authservices \
+	iot/examples \
 	api-server \
 	api-service \
 	grafana \
