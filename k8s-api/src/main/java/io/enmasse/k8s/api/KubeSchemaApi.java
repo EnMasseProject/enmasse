@@ -338,6 +338,9 @@ public class KubeSchemaApi implements SchemaApi {
             for (String addressPlanName : addressSpacePlan.getAddressPlans()) {
                 try {
                     AddressPlan addressPlan = addressPlanByName.get(addressPlanName);
+                    if (addressPlan == null) {
+                        throw new SchemaValidationException("Unable to find address plan " + addressPlanName);
+                    }
                     validateAddressPlan(addressSpacePlan.getAddressSpaceType(), addressPlan);
                     plansForAddressSpacePlan.add(addressPlan);
                 } catch (SchemaValidationException e) {
