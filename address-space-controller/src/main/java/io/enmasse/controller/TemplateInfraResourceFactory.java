@@ -105,7 +105,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_OAUTH_URL, authService.getMetadata().getAnnotations().get(AnnotationKeys.OAUTH_URL));
         }
 
-
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
         for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
             if (endpoint.getCert() != null) {
