@@ -79,78 +79,22 @@ pipeline {
                 }
             }
         }
-        stage('run systemtests before upgrade') {
-            environment {
-                USE_DUMMY_ADDRESS = true
-                SKIP_CLEANUP = true
-                SYSTEMTESTS_UPGRADED = false
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
-                    }
-                }
-            }
-        }
-        stage('upgrade enmasse') {
+        stage('run systemtests upgrade tests') {
             environment {
                 DOCKER_REGISTRY = credentials('docker-registry-host')
                 DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
                 DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
                 DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
                 TAG = "${params.BUILD_TAG}"
+                USE_DUMMY_ADDRESS = true
+                UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
+                DOWNGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${params.START_VERSION}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh "git checkout ${params.COMMIT_SHA}"
-                        sh "make imageenv"
-                        lib.installEnmasse(env.TAG, true, true, true, false)
-                    }
-                }
-            }
-        }
-        stage('run systemtests after upgrade') {
-            environment {
-                USE_DUMMY_ADDRESS = true
-                SKIP_CLEANUP = true
-                SYSTEMTESTS_UPGRADED = true
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
-                    }
-                }
-            }
-        }
-        stage('download released version again') {
-            steps {
-                sh "sh ./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
-            }
-        }
-        stage('downgrade enmasse') {
-            environment {
-                TAG = "${params.START_VERSION}"
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        lib.installEnmasse(params.START_VERSION, true, true, false, false)
-                    }
-                }
-            }
-        }
-        stage('run systemtests after downgrade') {
-            environment {
-                USE_DUMMY_ADDRESS = true
-                SKIP_CLEANUP = false
-                SYSTEMTESTS_UPGRADED = true
-            }
-            steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
+                        sh 'make templates || true'
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
                     }
                 }

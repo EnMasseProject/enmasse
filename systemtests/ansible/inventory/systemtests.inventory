@@ -12,4 +12,5 @@ keycloak_admin_password=admin
 authentication_services=["none", "standard"]
 monitoring_infrastructure=False
 service_monitors=False
+enable_iot=False
 alerting=False

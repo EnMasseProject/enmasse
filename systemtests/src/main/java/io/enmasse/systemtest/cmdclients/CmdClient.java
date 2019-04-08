@@ -22,7 +22,7 @@ public abstract class CmdClient {
         return execute(Arrays.asList(cmd),timeout, logToOutput);
     }
 
-    protected static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput) {
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput) {
         try {
             Executor executor = new Executor();
             int ret = executor.execute(command, timeout);
