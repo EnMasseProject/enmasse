@@ -6,6 +6,7 @@ BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
+<<<<<<< HEAD
 
 IOT_MODULES=\
 	iot/api \
@@ -31,6 +32,9 @@ MODULES=\
 	service-monitors \
 	prometheus-rules \
 	csv \
+=======
+MODULES=crds address-space-controller example-roles example-plans api-server api-service grafana none-authservice prometheus service-broker cluster-service-broker standard-authservice alertmanager kube-state-metrics kafka
+>>>>>>> bd4bcd786... Add install bundle for kafka
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
@@ -119,7 +123,14 @@ $(OLM): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(OLM)/; \
 	done
 
-install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
+KAFKA_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/kafka
+$(KAFKA_BUNDLE): replace_images
+	mkdir -p $(KAFKA_BUNDLE)
+	for i in kafka; do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(KAFKA_BUNDLE)/; \
+	done
+
+install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM) $(KAFKA_BUNDLE)
 	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
@@ -127,4 +138,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM) $(KAFKA_BUNDLE)

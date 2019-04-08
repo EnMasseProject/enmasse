@@ -23,6 +23,7 @@ public class AdminCrd {
     private static final CustomResourceDefinition BROKERED_INFRA_CONFIG_CRD;
     private static final CustomResourceDefinition STANDARD_INFRA_CONFIG_CRD;
     private static final CustomResourceDefinition AUTHENTICATION_SERVICE_CRD;
+    private static final CustomResourceDefinition KAFKA_INFRA_CONFIG_CRD;
 
     static {
         ADDRESS_PLAN_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA2, AddressPlan.KIND);
@@ -30,6 +31,7 @@ public class AdminCrd {
         BROKERED_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, BrokeredInfraConfig.KIND);
         STANDARD_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, StandardInfraConfig.KIND);
         AUTHENTICATION_SERVICE_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, AuthenticationService.KIND);
+        KAFKA_INFRA_CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION_V1BETA1, KafkaInfraConfig.KIND);
     }
 
     public static void registerCustomCrds() {
@@ -45,6 +47,9 @@ public class AdminCrd {
 
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, StandardInfraConfig.KIND, StandardInfraConfig.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, StandardInfraConfigList.KIND, StandardInfraConfigList.class);
+
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, KafkaInfraConfig.KIND, KafkaInfraConfig.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, KafkaInfraConfigList.KIND, KafkaInfraConfigList.class);
 
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, AuthenticationService.KIND, AuthenticationService.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION_V1BETA1, AuthenticationServiceList.KIND, AuthenticationServiceList.class);
@@ -71,4 +76,7 @@ public class AdminCrd {
         return AUTHENTICATION_SERVICE_CRD;
     }
 
+    public static CustomResourceDefinition kafkaInfraConfigs() {
+        return KAFKA_INFRA_CONFIG_CRD;
+    }
 }

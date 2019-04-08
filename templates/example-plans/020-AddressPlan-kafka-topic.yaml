@@ -1,0 +1,16 @@
+apiVersion: admin.enmasse.io/v1beta1
+kind: AddressPlan
+metadata:
+  name: kafka-topic
+  labels:
+    app: enmasse
+displayName: Kafka Topic
+displayOrder: 0
+shortDescription: Creates a kafka topic
+longDescription: Creates a kafka topic
+uuid: 90a9832a-3106-11e9-b371-c85b7644b4a4
+addressType: topic
+requiredResources:
+- name: kafka
+  credit: 0.001
+

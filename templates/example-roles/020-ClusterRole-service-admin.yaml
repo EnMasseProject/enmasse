@@ -7,5 +7,5 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-admin: "true"
 rules:
   - apiGroups: [ "admin.enmasse.io" ]
-    resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs" ]
+    resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "kafkainfraconfigs" ]
     verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]

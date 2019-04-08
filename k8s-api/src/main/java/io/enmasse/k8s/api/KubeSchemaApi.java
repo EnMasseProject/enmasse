@@ -29,6 +29,7 @@ public class KubeSchemaApi implements SchemaApi {
     private CrdApi<io.enmasse.admin.model.v1.AddressPlan> addressPlanApi;
     private CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi;
     private CrdApi<StandardInfraConfig> standardInfraConfigApi;
+    private CrdApi<KafkaInfraConfig> kafkaInfraConfigApi;
     private CrdApi<AuthenticationService> authenticationServiceApi;
 
     private final Clock clock;
@@ -40,6 +41,7 @@ public class KubeSchemaApi implements SchemaApi {
     private volatile List<io.enmasse.admin.model.v1.AddressSpacePlan> currentAddressSpacePlans;
     private volatile List<io.enmasse.admin.model.v1.AddressPlan> currentAddressPlans;
     private volatile List<StandardInfraConfig> currentStandardInfraConfigs;
+    private volatile List<KafkaInfraConfig> currentKafkaInfraConfigs;
     private volatile List<BrokeredInfraConfig> currentBrokeredInfraConfigs;
     private volatile List<AuthenticationService> currentAuthenticationServices;
 
@@ -47,6 +49,7 @@ public class KubeSchemaApi implements SchemaApi {
                          CrdApi<io.enmasse.admin.model.v1.AddressPlan> addressPlanApi,
                          CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi,
                          CrdApi<StandardInfraConfig> standardInfraConfigApi,
+                         CrdApi<KafkaInfraConfig> kafkaInfraConfigApi,
                          CrdApi<AuthenticationService> authenticationServiceApi,
                          Clock clock,
                          boolean isOpenShift) {
@@ -54,6 +57,7 @@ public class KubeSchemaApi implements SchemaApi {
         this.addressPlanApi = addressPlanApi;
         this.brokeredInfraConfigApi = brokeredInfraConfigApi;
         this.standardInfraConfigApi = standardInfraConfigApi;
+        this.kafkaInfraConfigApi = kafkaInfraConfigApi;
         this.authenticationServiceApi = authenticationServiceApi;
         this.clock = clock;
         this.isOpenShift = isOpenShift;
@@ -85,9 +89,14 @@ public class KubeSchemaApi implements SchemaApi {
                 AuthenticationServiceList.class,
                 DoneableAuthenticationService.class);
 
+        CrdApi<KafkaInfraConfig> kafkaInfraConfigApi = new KubeCrdApi<>(openShiftClient, namespace, AdminCrd.kafkaInfraConfigs(),
+                KafkaInfraConfig.class,
+                KafkaInfraConfigList.class,
+                DoneableKafkaInfraConfig.class);
+
         Clock clock = Clock.systemUTC();
 
-        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, clock, isOpenShift);
+        return new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, kafkaInfraConfigApi, authenticationServiceApi, clock, isOpenShift);
     }
 
     private void validateAddressSpacePlan(AddressSpacePlan addressSpacePlan, List<AddressPlan> addressPlans, List<String> infraTemplateNames) {
@@ -108,7 +117,10 @@ public class KubeSchemaApi implements SchemaApi {
         }
 
         Set<String> resources = addressSpacePlan.getResourceLimits().keySet();
-        List<String> required = "brokered".equals(addressSpacePlan.getAddressSpaceType()) ? Arrays.asList("broker") : Arrays.asList("broker", "router", "aggregate");
+        List<String> required = "brokered".equals(addressSpacePlan.getAddressSpaceType()) ? Arrays.asList("broker") :
+                "standard".equals(addressSpacePlan.getAddressSpaceType()) ? Arrays.asList("broker", "router", "aggregate") :
+                        Collections.singletonList("kafka");
+
         if (!resources.containsAll(required)) {
             Set<String> missing = new HashSet<>(required);
             missing.removeAll(resources);
@@ -133,6 +145,8 @@ public class KubeSchemaApi implements SchemaApi {
                 }
                 requiredResources.add("broker");
             }
+        } else if ("kafka".equals(addressSpaceType)) {
+            requiredResources.add("kafka");
         }
         Set<String> resourcesUsed = addressPlan.getResources().keySet();
 
@@ -224,6 +238,35 @@ public class KubeSchemaApi implements SchemaApi {
         return builder.build();
     }
 
+    private AddressSpaceType createKafkaType(List<AddressSpacePlan> addressSpacePlans, Collection<AddressPlan> addressPlans, List<InfraConfig> kafkaInfraConfigs) {
+        AddressSpaceTypeBuilder builder = new AddressSpaceTypeBuilder();
+        builder.withName("kafka");
+        builder.withDescription("A kafka address space consists of a Kafka cluster operated using the Strimzi Kafka Operator.");
+
+        List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
+                .filter(plan -> "kafka".equals(plan.getAddressSpaceType()))
+                .collect(Collectors.toList());
+        builder.withPlans(filteredAddressSpaceplans);
+
+        List<AddressPlan> filteredAddressPlans = addressPlans.stream()
+                .filter(plan -> filteredAddressSpaceplans.stream()
+                        .filter(aPlan -> aPlan.getAddressPlans().contains(plan.getMetadata().getName()))
+                        .count() > 0)
+                .collect(Collectors.toList());
+
+
+        builder.withInfraConfigs(kafkaInfraConfigs);
+
+        builder.withAddressTypes(Arrays.asList(
+                createAddressType(
+                        "topic",
+                        "A topic address for store-and-forward publish-subscribe messaging. Each message published " +
+                                "to a topic address is forwarded to all subscribes on that address.",
+                        filteredAddressPlans)));
+
+        return builder.build();
+    }
+
     private AddressSpaceType createBrokeredType(List<AddressSpacePlan> addressSpacePlans, Collection<AddressPlan> addressPlans, List<InfraConfig> brokeredInfraConfigs) {
         AddressSpaceTypeBuilder builder = new AddressSpaceTypeBuilder();
         builder.withName("brokered");
@@ -298,6 +341,10 @@ public class KubeSchemaApi implements SchemaApi {
             updateSchema(watcher);
         }, resyncInterval));
 
+        watches.add(kafkaInfraConfigApi.watchResources(items -> {
+            currentKafkaInfraConfigs = items;
+            updateSchema(watcher);
+        }, resyncInterval));
 
         return () -> {
             Exception e = null;
@@ -315,13 +362,13 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     private synchronized void updateSchema(Watcher<Schema> watcher) throws Exception {
-        Schema schema = assembleSchema(currentAddressSpacePlans, currentAddressPlans, currentStandardInfraConfigs, currentBrokeredInfraConfigs, currentAuthenticationServices);
+        Schema schema = assembleSchema(currentAddressSpacePlans, currentAddressPlans, currentStandardInfraConfigs, currentBrokeredInfraConfigs, currentKafkaInfraConfigs, currentAuthenticationServices);
         if (schema != null) {
             watcher.onUpdate(Collections.singletonList(schema));
         }
     }
 
-    Schema assembleSchema(List<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlans, List<io.enmasse.admin.model.v1.AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs, List<AuthenticationService> authenticationServices) {
+    Schema assembleSchema(List<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlans, List<io.enmasse.admin.model.v1.AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs, List<KafkaInfraConfig> kafkaInfraConfigs, List<AuthenticationService> authenticationServices) {
         if (addressSpacePlans == null || addressPlans == null || brokeredInfraConfigs == null || standardInfraConfigs == null || authenticationServices == null) {
             return null;
         }
@@ -361,6 +408,7 @@ public class KubeSchemaApi implements SchemaApi {
         List<AddressSpaceType> types = new ArrayList<>();
         types.add(createBrokeredType(validAddressSpacePlans, validAddressPlans, new ArrayList<>(brokeredInfraConfigs)));
         types.add(createStandardType(validAddressSpacePlans, validAddressPlans, new ArrayList<>(standardInfraConfigs)));
+        types.add(createKafkaType(validAddressSpacePlans, validAddressPlans, new ArrayList<>(kafkaInfraConfigs)));
         return new SchemaBuilder()
                 .withAddressSpaceTypes(types)
                 .withAuthenticationServices(authenticationServices)

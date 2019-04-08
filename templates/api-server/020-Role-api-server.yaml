@@ -12,5 +12,5 @@ rules:
     resources: [ "configmaps" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "admin.enmasse.io" ]
-    resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices" ]
+    resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "kafkainfraconfigs", "authenticationservices" ]
     verbs: [ "get", "list", "watch" ]

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,6 +31,7 @@ public class KubeSchemaApiTest {
     private CrdApi<AddressPlan> addressPlanApi;
     private CrdApi<StandardInfraConfig> standardInfraConfigApi;
     private CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi;
+    private CrdApi<KafkaInfraConfig> kafkaInfraConfigApi;
     private CrdApi<AuthenticationService> authenticationServiceApi;
 
     @BeforeEach
@@ -38,12 +40,13 @@ public class KubeSchemaApiTest {
         addressPlanApi = mock(CrdApi.class);
         standardInfraConfigApi = mock(CrdApi.class);
         brokeredInfraConfigApi = mock(CrdApi.class);
+        kafkaInfraConfigApi = mock(CrdApi.class);
         authenticationServiceApi = mock(CrdApi.class);
     }
 
     @Test
     public void testSchemaAssemble() {
-        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), false);
+        KubeSchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, kafkaInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), false);
 
         List<AddressSpacePlan> addressSpacePlans = Arrays.asList(
                 new AddressSpacePlanBuilder()
@@ -109,6 +112,13 @@ public class KubeSchemaApiTest {
                         .endMetadata()
                         .build());
 
+        List<KafkaInfraConfig> kafkaInfraConfigs = Arrays.asList(
+                new KafkaInfraConfigBuilder()
+                        .withNewMetadata()
+                        .withName("infra1")
+                        .endMetadata()
+                        .build());
+
         List<AuthenticationService> authenticationServices = Arrays.asList(
                 new AuthenticationServiceBuilder()
                         .withNewMetadata()
@@ -116,7 +126,7 @@ public class KubeSchemaApiTest {
                         .endMetadata()
                         .build());
 
-        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs, authenticationServices);
+        Schema schema = schemaApi.assembleSchema(addressSpacePlans, addressPlans, standardInfraConfigs, brokeredInfraConfigs, kafkaInfraConfigs, authenticationServices);
 
         assertTrue(schema.findAddressSpaceType("standard").isPresent());
         assertTrue(schema.findAddressSpaceType("brokered").isPresent());
@@ -155,6 +165,7 @@ public class KubeSchemaApiTest {
         CrdApi<AddressPlan> addressPlanApi = mock(CrdApi.class);
         CrdApi<StandardInfraConfig> standardInfraConfigApi = mock(CrdApi.class);
         CrdApi<BrokeredInfraConfig> brokeredInfraConfigApi = mock(CrdApi.class);
+        CrdApi<KafkaInfraConfig> kafkaInfraConfigApi = mock(CrdApi.class);
         CrdApi<AuthenticationService> authenticationServiceApi = mock(CrdApi.class);
 
         Watch mockWatch = mock(Watch.class);
@@ -165,7 +176,7 @@ public class KubeSchemaApiTest {
         when(standardInfraConfigApi.watchResources(any(), any())).thenReturn(mockWatch);
         when(authenticationServiceApi.watchResources(any(), any())).thenReturn(mockWatch);
 
-        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), true);
+        SchemaApi schemaApi = new KubeSchemaApi(addressSpacePlanApi, addressPlanApi, brokeredInfraConfigApi, standardInfraConfigApi, kafkaInfraConfigApi, authenticationServiceApi, Clock.systemUTC(), true);
 
         schemaApi.watchSchema(items -> { }, Duration.ofSeconds(5));
         verify(addressSpacePlanApi).watchResources(any(), eq(Duration.ofSeconds(5)));
