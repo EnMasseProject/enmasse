@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {loadMessagingInstances} from '../../components/MessagingInstances/MessagingInstance/Enmasse/EnmasseAddressSpaces';
+import InstanceLoader from '../../components/MessagingInstances/MessagingInstance/InstanceLoader';
 
 import MessagingInstances from '../../components/MessagingInstances/MessagingInstances';
 import Layout from '../../components/Layout/Layout';
@@ -18,7 +18,7 @@ class Console extends Component {
   };
 
   refresh = () => {
-    loadMessagingInstances()
+    InstanceLoader.loadInstances()
       .then(messagingSpaces => {
         messagingSpaces.sort((a, b) => (a.timeCreated < b.timeCreated) ? 1 : (a.timeCreated === b.timeCreated) ? ((a.name > b.name) ? 1 : -1) : -1)
         this.setState({
@@ -44,8 +44,13 @@ class Console extends Component {
 
   componentDidMount() {
     this.refresh();
+    // let timeout = parseInt(process.env.REACT_APP_REFRESH_RATE_MILLIS, 10);
+    // this.interval = setInterval(() => {this.refresh()}, timeout);
   }
 
+  // componentWillUnmount() {
+  //   clearInterval(this.interval);
+  // }
 
   render() {
     return (
