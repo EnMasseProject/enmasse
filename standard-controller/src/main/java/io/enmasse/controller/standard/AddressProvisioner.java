@@ -288,7 +288,9 @@ public class AddressProvisioner {
                     if (appliedPlan != null && appliedPlan.getResources().get(resourceName) != null && address.getStatus() != null) {
                         for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
                             UsageInfo info = resourceUsage.get(brokerStatus.getClusterId());
-                            info.subUsed(appliedPlan.getResources().get(resourceName));
+                            if (info != null) {
+                                info.subUsed(appliedPlan.getResources().get(resourceName));
+                            }
                         }
                     }
 
