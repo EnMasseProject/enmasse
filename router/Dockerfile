@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.5-DISPATCH-1273
+FROM enmasseproject/qdrouterd-base:1.5-DISPATCH-1273-1287
 ARG version
 ARG maven_version
 ARG commit
