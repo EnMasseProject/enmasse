@@ -54,8 +54,21 @@
                             <environmentVariables>
                                 <REACT_APP_VERSION>${project.version}</REACT_APP_VERSION>
                                 <REACT_APP_NAME>EnMasse Console</REACT_APP_NAME>
+                                <REACT_APP_REFRESH_RATE_MILLIS>30000</REACT_APP_REFRESH_RATE_MILLIS>
                             </environmentVariables>
                             <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>npm test - console</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                            <workingDirectory>ui</workingDirectory>
+                            <arguments>run test</arguments>
                         </configuration>
                     </execution>
                 </executions>

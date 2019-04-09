@@ -1,4 +1,5 @@
 .navSection {
+  padding-top: 10px !important;
   padding-bottom: 0px !important;
 }
 
@@ -6,6 +7,7 @@ div#root {
   height: 100%;
 }
 
-div.testing {
-  --pf-c-about-modal-box--BackgroundColor: pink;
+header.pf-c-page__header {
+  background-color: #151515;
+  min-height: 30px;
 }

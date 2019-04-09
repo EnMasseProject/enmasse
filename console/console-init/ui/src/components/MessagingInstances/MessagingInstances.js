@@ -8,7 +8,6 @@ import {
 } from '@patternfly/react-core';
 import {Table, TableVariant, TableHeader, TableBody} from '@patternfly/react-table';
 
-
 import {css} from '@patternfly/react-styles';
 import spacingStyles from '@patternfly/patternfly/utilities/Spacing/spacing.css';
 import flexStyles from '@patternfly/patternfly/utilities/Flex/flex.css';
@@ -22,7 +21,6 @@ import CreateAddressSpace from './MessagingInstance/Enmasse/CreateAddressSpace/C
 import InstancesActionKebab from './InstancesActionKebab/InstancesActionKebab';
 import DeleteInstanceModal from './Delete/DeleteInstanceModal';
 import {NotificationConsumer} from "../../context/notification-manager";
-
 
 import { CheckCircleIcon, TimesCircleIcon } from '@patternfly/react-icons';
 
@@ -145,7 +143,7 @@ class MessagingInstances extends React.Component {
     //https://github.com/patternfly/patternfly-react/issues/1482 no verticle align
     if (instances) {
       let newMap = instances.map(instance => {
-        let status = (instance.isReady) ? <Aux><CheckCircleIcon style={{color: 'green'}}/> Ready</Aux> : <Aux><TimesCircleIcon style={{color: 'red'}}/> Unavailable</Aux>;
+        let status = (instance.isReady) ? <Aux><CheckCircleIcon style={{color: 'var(--pf-global--success-color--100)'}}/> Ready</Aux> : <Aux><TimesCircleIcon style={{color: 'var(--pf-global--danger-color--100)'}}/> Unavailable</Aux>;
 
         return {
         cells: [
