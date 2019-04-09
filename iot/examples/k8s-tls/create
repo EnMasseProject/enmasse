@@ -30,7 +30,7 @@ cat "$OUTDIR/ca-cert.pem" "$OUTDIR/root-cert.pem" > "$OUTDIR/trusted-certs.pem"
 # Export information
 
 CA_SUBJECT=$(openssl x509 -in "$OUTDIR/ca-cert.pem" -noout -subject -nameopt RFC2253 | sed s/^subject=//)
-PK=$(openssl x509 -in "$OUTDIR/ca-cert.pem" -noout -pubkey | sed /^---/d | sed -z 's/\n//g')
+PK=$(openssl x509 -in "$OUTDIR/ca-cert.pem" -noout -pubkey | sed /^---/d)
 
 echo $CA_SUBJECT
 echo $PK
