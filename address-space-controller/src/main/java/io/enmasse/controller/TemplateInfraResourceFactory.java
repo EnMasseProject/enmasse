@@ -119,18 +119,21 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             ConsoleServiceSpec service = consoleService.getSpec();
             ConsoleServiceStatus status = consoleService.getStatus();
 
-           kubernetes.getSecret(service.getOauthClientSecret().getName()).ifPresentOrElse(secret -> {
-               parameters.put(TemplateParameter.CONSOLE_OAUTH_DISCOVERY_URL, service.getDiscoveryMetadataURL());
-               parameters.put(TemplateParameter.CONSOLE_OAUTH_SCOPE, service.getScope());
-               Base64.Decoder decoder = Base64.getDecoder();
-               parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_ID, new String(decoder.decode(secret.getData().get("client-id")), StandardCharsets.UTF_8));
-               parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_SECRET, new String(decoder.decode(secret.getData().get("client-secret")), StandardCharsets.UTF_8));
+            SecretReference oauthClientSecret = service.getOauthClientSecret();
+            if (oauthClientSecret != null) {
+                kubernetes.getSecret(oauthClientSecret.getName()).ifPresentOrElse(secret -> {
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_DISCOVERY_URL, service.getDiscoveryMetadataURL());
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_SCOPE, service.getScope());
+                    Base64.Decoder decoder = Base64.getDecoder();
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_ID, new String(decoder.decode(secret.getData().get("client-id")), StandardCharsets.UTF_8));
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_SECRET, new String(decoder.decode(secret.getData().get("client-secret")), StandardCharsets.UTF_8));
 
-               if (status != null && status.getUrl() != null) {
-                   parameters.put(TemplateParameter.CONSOLE_LINK, status.getUrl());
-               }
-           }, () -> log.warn("No console OAuth parameters available from ConsoleService {}, " +
-                   "address space console will be unavailable.", consoleService.getMetadata().getName()));
+                    if (status != null && status.getUrl() != null) {
+                        parameters.put(TemplateParameter.CONSOLE_LINK, status.getUrl());
+                    }
+                }, () -> log.warn("No console OAuth parameters available from ConsoleService {}, " +
+                        "address space console will be unavailable.", consoleService.getMetadata().getName()));
+            }
         }
     }
 
