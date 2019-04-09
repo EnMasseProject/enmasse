@@ -60,9 +60,9 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm test - console</id>
+                        <id>yarn test - console</id>
                         <goals>
-                            <goal>npm</goal>
+                            <goal>yarn</goal>
                         </goals>
                         <phase>test</phase>
                         <configuration>
