@@ -15,6 +15,9 @@ public final class CustomResources {
         String singular = kind.toLowerCase();
         String listKind = kind + "List";
         String plural = singular + "s";
+        if (singular.endsWith("s")) {
+            plural = singular + "es";
+        }
         return new CustomResourceDefinitionBuilder()
                         .editOrNewMetadata()
                         .withName(plural + "." + group)
