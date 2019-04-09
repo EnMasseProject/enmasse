@@ -158,7 +158,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	err := r.client.Get(ctx, request.NamespacedName, consoleservice)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			if (CONSOLE_NAME == request.NamespacedName.Name) {
+			if CONSOLE_NAME == request.NamespacedName.Name {
 				err = ensureSingletonConsoleService(ctx, metav1.ObjectMeta{Namespace: request.NamespacedName.Namespace,
 					Name: request.NamespacedName.Name}, r.client)
 				return reconcile.Result{}, err
@@ -175,6 +175,34 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	err = applyConsoleServiceDefaults(ctx, r.client, r.scheme, consoleservice)
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// Validate we have sufficient information to proceed with the deployment.  On OpenShift, the defaults
+	// will satisfy these requirements. On Kubernetes the user will have to supply the details.
+	if consoleservice.Spec.DiscoveryMetadataURL == nil || consoleservice.Spec.OauthClientSecret == nil {
+		reqLogger.Info("Cannot deploy console as ConsoleService does not define DiscoveryMetadataURL " +
+			"and OauthClientSecret.")
+		return reconcile.Result{}, nil
+	} else {
+		if util.IsOpenshift() {
+			// Secret will be create later if necessary
+		} else {
+			secretName := types.NamespacedName{
+				Name:      consoleservice.Spec.OauthClientSecret.Name,
+				Namespace: consoleservice.Namespace,
+			}
+			oauthsecret := &corev1.Secret{}
+			err := r.client.Get(ctx, secretName, oauthsecret)
+			if err != nil {
+				if k8errors.IsNotFound(err) {
+					reqLogger.Info("Cannot deploy console as ConsoleService OauthClientSecret does not " +
+						"refer to a secret.")
+					return reconcile.Result{}, nil
+				} else {
+					return reconcile.Result{}, err
+				}
+			}
+		}
 	}
 
 	// service
