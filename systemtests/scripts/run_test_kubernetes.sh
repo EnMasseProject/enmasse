@@ -97,6 +97,15 @@ if [[ -z "${DISABLE_LOG_SYNC}" ]]; then
     echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 fi
 
+echo "KWDEBUG Tmp code for diagnostic  do not merge"
+
+finish() {
+   echo KWDEBUG
+   kubectl logs -c console-init -l name=consoleservice
+   echo KWDEBUG end of consoleservice init container log
+}
+trap finish EXIT
+
 wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
 echo "Running test profile: ${TEST_PROFILE}"
