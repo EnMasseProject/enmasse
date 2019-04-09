@@ -8,7 +8,6 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.SecureRandom;
@@ -161,7 +160,7 @@ class CertProviderTest extends TestBase {
                 .setTrustAll(false);
 
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setSocketFactory(getSocketFactory(new FileInputStream(certBundle.getCaCert())));
+        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(certBundle.getCaCert().getBytes())));
         mqttOptions.setUserName(user.getUsername());
         mqttOptions.setPassword(user.getPassword().toCharArray());
         IMqttClient mqttClient = mqttClientFactory.build()
