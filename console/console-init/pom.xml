@@ -12,7 +12,6 @@
     <artifactId>console-init</artifactId>
     <properties>
         <console-node-install-directory>${project.build.directory}/build</console-node-install-directory>
-        <console-ui-directory>${project.basedir}/ui</console-ui-directory>
     </properties>
     <build>
         <plugins>
@@ -21,41 +20,42 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>install npm - console</id>
+                        <id>install yarn - console</id>
                         <goals>
-                            <goal>install-node-and-npm</goal>
+                            <goal>install-node-and-yarn</goal>
                         </goals>
                         <configuration>
                             <nodeVersion>${node.version}</nodeVersion>
-                            <npmVersion>${npm.version}</npmVersion>
-                            <workingDirectory>ui</workingDirectory>
+                            <yarnVersion>${yarn.version}</yarnVersion>
                             <installDirectory>${console-node-install-directory}</installDirectory>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm install - console</id>
+                        <id>yarn install - console</id>
                         <goals>
-                            <goal>npm</goal>
+                            <goal>yarn</goal>
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
-                            <workingDirectory>${console-node-install-directory}</workingDirectory>
-                            <arguments>install -C ${console-ui-directory}</arguments>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                            <workingDirectory>ui</workingDirectory>
+                            <arguments>install</arguments>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>npm build - console</id>
+                        <id>yarn build - console</id>
                         <goals>
-                            <goal>npm</goal>
+                            <goal>yarn</goal>
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
-                            <workingDirectory>${console-node-install-directory}</workingDirectory>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                            <workingDirectory>ui</workingDirectory>
                             <environmentVariables>
                                 <REACT_APP_VERSION>${project.version}</REACT_APP_VERSION>
-                                <REACT_APP_NAME>Enmasse Console</REACT_APP_NAME>
+                                <REACT_APP_NAME>EnMasse Console</REACT_APP_NAME>
                             </environmentVariables>
-                            <arguments>run-script build -C ${console-ui-directory}</arguments>
+                            <arguments>run build</arguments>
                         </configuration>
                     </execution>
                 </executions>
