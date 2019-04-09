@@ -19,10 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class StatusController implements Controller {
@@ -45,7 +42,27 @@ public class StatusController implements Controller {
     public AddressSpace reconcile(AddressSpace addressSpace) {
         checkComponentsReady(addressSpace);
         checkAuthServiceReady(addressSpace);
+        checkExposedEndpoints(addressSpace);
         return addressSpace;
+    }
+
+    private void checkExposedEndpoints(AddressSpace addressSpace) {
+        Map<String, EndpointSpec> exposedEndpoints = new HashMap<>();
+        for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
+            if (endpointSpec.getExpose() != null && endpointSpec.getExpose().getType().equals(ExposeType.route)) {
+                exposedEndpoints.put(endpointSpec.getName(), endpointSpec);
+            }
+        }
+
+        for (EndpointStatus endpointStatus : addressSpace.getStatus().getEndpointStatuses()) {
+            if (exposedEndpoints.containsKey(endpointStatus.getName())) {
+                if (endpointStatus.getExternalHost() == null) {
+                    String msg = String.format("Endpoint '%s' is not yet exposed", endpointStatus.getName());
+                    addressSpace.getStatus().setReady(false);
+                    addressSpace.getStatus().appendMessage(msg);
+                }
+            }
+        }
     }
 
     private InfraConfig getInfraConfig(AddressSpace addressSpace) {
