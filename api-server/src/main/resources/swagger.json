@@ -2063,9 +2063,6 @@
                 "spec": {
                     "type": "object",
                     "properties": {
-                        "resources": {
-                            "type": "object"
-                        },
                         "affinity": {
                             "type": "object"
                         },
@@ -2077,6 +2074,17 @@
                         },
                         "priorityClassName": {
                             "type": "string"
+                        },
+                        "containers": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "resources": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
