@@ -18,6 +18,8 @@ include::../modules/ref-address-example.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-cli.adoc[leveloffset=+1]
 
+include::../modules/proc-create-address-console.adoc[leveloffset=+1]
+
 include::../modules/proc-replace-address-cli.adoc[leveloffset=+1]
 
 
