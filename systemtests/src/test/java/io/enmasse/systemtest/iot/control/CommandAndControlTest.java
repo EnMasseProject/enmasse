@@ -129,7 +129,12 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
                 log.info("Sending out command message");
                 var f2 = t1.sendMessage("control/" + tenantId() + "/" + deviceId, commandMessage)
                         .whenComplete((res, err) -> {
-                            log.info("Message result - res: {}, err:", res, err); // no need for final {}, as this is an exception
+                            String strres = null;
+                            if (res != null) {
+                                strres = res.stream().map(ProtonDelivery::getRemoteState).map(Object::toString).collect(Collectors.joining(", "));
+                            }
+                            log.info("Message result - res: {}, err:", // no need for final {}, as this is an exception
+                                    strres, err);
                         });
                 sentFuture.set(f2);
                 log.info("Message underway");
