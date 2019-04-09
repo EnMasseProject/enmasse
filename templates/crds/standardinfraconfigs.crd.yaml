@@ -60,11 +60,17 @@ spec:
                           type: object
                         tolerations:
                           type: array
+                          items:
+                            type: object
                         priorityClassName:
                           type: string
-                        resources:
-                          type: object
-
+                        containers:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              resources:
+                                type: object
             broker:
               type: object
               properties:

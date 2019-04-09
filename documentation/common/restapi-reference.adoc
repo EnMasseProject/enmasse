@@ -1488,12 +1488,22 @@ __optional__|object
 |Name|Schema
 |**affinity** +
 __optional__|object
+|**containers** +
+__optional__|< <<_io_enmasse_admin_v1beta1_infraconfigpodspec_containers,containers>> > array
 |**priorityClassName** +
 __optional__|string
-|**resources** +
-__optional__|object
 |**tolerations** +
 __optional__|< object > array
+|===
+
+[[_io_enmasse_admin_v1beta1_infraconfigpodspec_containers]]
+**containers**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**resources** +
+__optional__|object
 |===
 
 
