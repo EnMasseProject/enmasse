@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.6.0-rc2
+FROM enmasseproject/qdrouterd-base:1.6.0-patched
 ARG version
 ARG maven_version
 ARG commit
