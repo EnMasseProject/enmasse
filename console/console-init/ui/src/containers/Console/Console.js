@@ -9,8 +9,17 @@ import {NotificationProvider, NotificationConsumer} from '../../context/notifica
 
 class Console extends Component {
 
+
+  constructor(props) {
+    super(props);
+
+    this.refreshRate = parseInt(process.env.REACT_APP_REFRESH_RATE_MILLIS, 10);
+    this.refreshRate = (this.refreshRate) ? this.refreshRate : 15000;
+    console.log('Refresh rate set to : ', this.refreshRate);
+  }
+
   state = {
-    messagingInstances: null,
+    messagingInstances: [],
     instanceTypes: {
       totalInstances: 0,
       addressSpaces: 0,
@@ -44,13 +53,12 @@ class Console extends Component {
 
   componentDidMount() {
     this.refresh();
-    // let timeout = parseInt(process.env.REACT_APP_REFRESH_RATE_MILLIS, 10);
-    // this.interval = setInterval(() => {this.refresh()}, timeout);
+    this.interval = setInterval(() => {this.refresh()}, this.refreshRate);
   }
 
-  // componentWillUnmount() {
-  //   clearInterval(this.interval);
-  // }
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
 
   render() {
     return (

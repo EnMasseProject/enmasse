@@ -7,8 +7,8 @@ class MessagingInstance {
     this.component = 'AS';
     this.type = type;
     this.timeCreated = timeCreated;
-    this.isReady = isReady;
     this.consoleUrl = url;
+    this.isReady = isReady;
   }
 
 }
