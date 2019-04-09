@@ -91,6 +91,8 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
                 response.getInteger("ecode"), is(0));
 
+        Thread.sleep(2000);
+
         response = cliApiClient.sendAndGetStatus(receiver);
         assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
                 response.getInteger("ecode"), is(0));

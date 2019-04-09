@@ -242,14 +242,14 @@
         <profile>
             <id>shared-standard-release</id>
             <properties>
-                <groups>shared-standard &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
+                <groups>shared-standard &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>shared-brokered-release</id>
             <properties>
-                <groups>shared-brokered &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
+                <groups>shared-brokered &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -257,6 +257,13 @@
             <id>isolated-release</id>
             <properties>
                 <groups>isolated &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>iot-release</id>
+            <properties>
+                <groups>shared-iot &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

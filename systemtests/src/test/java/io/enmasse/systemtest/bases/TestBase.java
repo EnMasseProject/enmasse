@@ -280,7 +280,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, Address... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         appendAddresses(addressSpace, budget, destinations);
     }
 
@@ -289,7 +289,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, Address... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         appendAddresses(addressSpace, wait, budget, destinations);
     }
 
@@ -299,13 +299,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void appendAddresses(AddressSpace addressSpace, boolean wait, int batchSize, Address... destinations) throws Exception {
-        TimeoutBudget timeout = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget timeout = new TimeoutBudget(15, TimeUnit.MINUTES);
         AddressUtils.appendAddresses(addressApiClient, kubernetes, timeout, addressSpace, wait, batchSize, destinations);
         logCollector.collectConfigMaps();
     }
 
     protected void setAddresses(AddressSpace addressSpace, int expectedCode, Address... addresses) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         logCollector.collectRouterState("setAddresses");
 
         if (expectedCode == HTTP_CONFLICT) {
@@ -335,7 +335,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void setAddresses(AddressSpace addressSpace, AddressApiClient apiClient, Address... addresses) throws Exception {
-        AddressUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(10, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, addresses);
+        AddressUtils.setAddresses(apiClient, kubernetes, new TimeoutBudget(15, TimeUnit.MINUTES), addressSpace, true, HTTP_CREATED, addresses);
         logCollector.collectConfigMaps();
     }
 
