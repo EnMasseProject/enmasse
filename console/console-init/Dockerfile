@@ -8,3 +8,4 @@ ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
 ADD target/console-init-${MAVEN_VERSION}-dist.tar.gz /
 
+CMD ["/oauth-proxy/bin/init.sh", "/apps/"]
