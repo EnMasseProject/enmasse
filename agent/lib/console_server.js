@@ -139,10 +139,18 @@ ConsoleServer.prototype.ws_bind = function (server, env) {
 ConsoleServer.prototype.close = function (callback) {
     var self = this;
     return new Promise(function (resolve, reject) {
-        self.ws_server.close(resolve);
+        if (self.ws_server) {
+            self.ws_server.close(resolve);
+        } else {
+            resolve();
+        }
     }).then(function () {
         new Promise(function (resolve, reject) {
-            self.server.close(resolve);
+            if (self.server) {
+                server.close(resolve);
+            } else {
+                resolve();
+            }
         });
     }).then(callback);
 }
