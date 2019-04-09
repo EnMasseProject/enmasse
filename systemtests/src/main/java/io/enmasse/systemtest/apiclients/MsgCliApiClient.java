@@ -126,7 +126,7 @@ public class MsgCliApiClient extends ApiClient {
         JsonArray ids = response.getJsonArray("clients");
         String uuid = ids.getString(0);
 
-        Thread.sleep(5000);
+        Thread.sleep(10000);
 
         response = getClientInfo(uuid);
         log.info(response.toString());

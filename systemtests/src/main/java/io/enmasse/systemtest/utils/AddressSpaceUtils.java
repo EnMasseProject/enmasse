@@ -155,7 +155,7 @@ public class AddressSpaceUtils {
         TimeoutBudget budget;
 
         boolean isReady = false;
-        budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
             addressSpace = jsonToAdressSpace(apiClient.getAddressSpace(addressSpace.getMetadata().getName()));
             isReady = isAddressSpaceReady(addressSpace);
@@ -174,7 +174,7 @@ public class AddressSpaceUtils {
 
     public static void waitForAddressSpacePlanApplied(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
         AddressSpace addressSpaceObject = null;
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
 
         boolean isPlanApplied = false;
         while (budget.timeLeft() >= 0 && !isPlanApplied) {
