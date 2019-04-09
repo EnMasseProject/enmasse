@@ -54,7 +54,6 @@ class CreateAddressSpace extends React.Component {
       });
     InstanceLoader.loadNamespaces()
       .then(namespaces => {
-        console.log('LOADING NAMESPACES: ',namespaces);
         this.setState({namespaces: namespaces});
         if (!this.state.newInstance.namespace
           || !namespaces.includes(this.state.newInstance.namespace)) {
@@ -101,17 +100,19 @@ class CreateAddressSpace extends React.Component {
     createNewAddressSpace(this.state.newInstance)
       .then(response => {
         this.props.reload();
-      }).catch(error => {
-        console.log('Failed to create address space <'+name+'>',error);
-      if (error.response) {
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
-        addNotification('Failed to create Address Space: '+error.response.data.message, 'danger');
-      } else {
-        addNotification('Failed to create Address Space', 'danger');
-      }
-    })
+        addNotification('success', 'Successfully created '+name);
+      })
+      .catch(error => {
+        console.log('Failed to create address space <' + name + '>', error);
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+          addNotification('danger', 'Failed to create '+ name, error.response.data.message);
+        } else {
+          addNotification('danger', 'Failed to create name');
+        }
+      })
       .finally(() => this.toggleOpen());
   };
 

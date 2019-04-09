@@ -22,10 +22,9 @@ import InstancesActionKebab from './InstancesActionKebab/InstancesActionKebab';
 import DeleteInstanceModal from './Delete/DeleteInstanceModal';
 import {NotificationConsumer} from "../../context/notification-manager";
 
-import { CheckCircleIcon, TimesCircleIcon } from '@patternfly/react-icons';
+import {CheckCircleIcon, TimesCircleIcon} from '@patternfly/react-icons';
 
 class MessagingInstances extends React.Component {
-
 
   constructor(props) {
     super(props);
@@ -34,30 +33,29 @@ class MessagingInstances extends React.Component {
       page: 1,
       perPage: 5,
       columns: [{title: 'Name/Namespace'}, {title: 'Type'}, 'Status', 'Time Created'],
-      messagingInstances: [],
       rows: [],
       actions: [
         {
           title: 'Delete',
           onClick: (event, rowId, rowData, extra) => {
             let name = this.state.rows[rowId].instanceName;
-            let name1 = rowData.cells[0].title.props.children[0].props.children
             let namespace = rowData.instanceNamespace;
-            let namespace1 = rowData.cells[0].title.props.children[1].props.children;
             return this.openDeleteModal([{name, namespace}]);
           }
         }
       ],
       hasSelectedRows: false,
       isDeleteModalOpen: false,
-      deleteInstances: []
+      deleteInstances: [],
+      allMessagingInstances: props.messagingInstances
     };
-    this.onMessagingInstanceSelect = this.onMessagingInstanceSelect.bind(this);
+    //this.onMessagingInstanceSelect = this.onMessagingInstanceSelect.bind(this);
+
   };
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     if (prevProps.messagingInstances !== this.props.messagingInstances) {
-      this.setState({messagingInstances: this.props.messagingInstances});
+      this.setState({allMessagingInstances: this.props.messagingInstances});
       this.updateRows(this.props.messagingInstances, this.state.page, this.state.perPage);
     }
   };
@@ -67,7 +65,7 @@ class MessagingInstances extends React.Component {
     return this.state.rows.filter(row => row.selected).map(row => {
       let name = row.instanceName;
       let namespace = row.instanceNamespace;
-     return {name, namespace}
+      return {name, namespace}
     });
   };
 
@@ -83,12 +81,9 @@ class MessagingInstances extends React.Component {
         .catch(error => {
           console.log('FAILED to delete name <' + instance.name + '> namespace <' + instance.namespace + '>', error);
           if (error.response) {
-            console.log(error.response.data);
-            console.log(error.response.status);
-            console.log(error.response.headers);
-            addNotification('Failed to delete <' + instance.name + '>: ' + error.response.data.message, 'danger');
+            addNotification('danger', 'Failed to delete '+ instance.name, error.response.data.message);
           } else {
-            addNotification('Failed to delete <'+instance.name+'>', 'danger');
+            addNotification('danger', 'Failed to delete '+ instance.name);
           }
         });
     });
@@ -117,7 +112,15 @@ class MessagingInstances extends React.Component {
   };
 
   updateRows(instances, page, perPage) {
+    let currentSelectedInstances = this.getSelectedInstances();
     let visibleInstances = this.getVisibleMessagingInstances(instances, page, perPage);
+    currentSelectedInstances.forEach(selectedInstance => {
+      let instance = visibleInstances.find(instance => instance.name == selectedInstance.name && instance.namespace == selectedInstance.namespace);
+      if (instance) {
+        instance.selected = true;
+      }
+    });
+
     this.setState({rows: this.getMessagingInstanceCells(visibleInstances)});
   };
 
@@ -133,7 +136,6 @@ class MessagingInstances extends React.Component {
     this.props.reloadMessagingInstances();
   };
 
-
   getMessagingInstanceCells(instances, page, perPage) {
     var styleOrange = {
       backgroundColor: '#FFA300',
@@ -143,30 +145,35 @@ class MessagingInstances extends React.Component {
     //https://github.com/patternfly/patternfly-react/issues/1482 no verticle align
     if (instances) {
       let newMap = instances.map(instance => {
-        let status = (instance.isReady) ? <Aux><CheckCircleIcon style={{color: 'var(--pf-global--success-color--100)'}}/> Ready</Aux> : <Aux><TimesCircleIcon style={{color: 'var(--pf-global--danger-color--100)'}}/> Unavailable</Aux>;
+        let status = (instance.isReady) ?
+          <Aux><CheckCircleIcon style={{color: 'var(--pf-global--success-color--100)'}}/> Ready</Aux> :
+          <Aux><TimesCircleIcon style={{color: 'var(--pf-global--danger-color--100)'}}/> Not Ready</Aux>;
 
         return {
-        cells: [
-          {title: <Aux><a href={instance.consoleUrl}>{instance.name}</a><Text>{instance.namespace}</Text></Aux>},
-          {title: <Aux><Badge style={styleOrange}>{instance.component}</Badge> {instance.type}</Aux>},
-          (status),
-          <Aux>{moment(instance.timeCreated).fromNow()}</Aux>],
-        instanceName: instance.name,
-        instanceNamespace: instance.namespace
-      }});
+          cells: [
+            {title: <Aux><a href={instance.consoleUrl}>{instance.name}</a><Text>{instance.namespace}</Text></Aux>},
+            {title: <Aux><Badge style={styleOrange}>{instance.component}</Badge> {instance.type}</Aux>},
+            (status),
+            <Aux>{moment(instance.timeCreated).fromNow()}</Aux>],
+          instanceName: instance.name,
+          instanceNamespace: instance.namespace,
+          selected: instance.selected
+        }
+      });
       return newMap;
     }
     return [];
   };
 
-  onMessagingInstanceSelect(event, isSelected, rowId) {
+  onMessagingInstanceSelect = (event, isSelected, rowId) => {
     let rows;
     if (rowId === -1) {
-      rows = this.state.rows.map(row => {
+       rows = this.state.rows.map(row => {
         row.selected = isSelected;
         return row;
       });
     } else {
+
       rows = [...this.state.rows];
       rows[rowId].selected = isSelected;
     }
@@ -209,7 +216,7 @@ class MessagingInstances extends React.Component {
               <ToolbarGroup>
                 <ToolbarItem>
                   <Pagination
-                    itemCount={this.state.messagingInstances.length}
+                    itemCount={this.state.allMessagingInstances.length}
                     perPage={this.state.perPage}
                     page={this.state.page}
                     onSetPage={this.onSetPage}
@@ -231,7 +238,7 @@ class MessagingInstances extends React.Component {
               <ToolbarGroup>
                 <ToolbarItem>
                   <Pagination
-                    itemCount={this.state.messagingInstances.length}
+                    itemCount={this.state.allMessagingInstances.length}
                     perPage={this.state.perPage}
                     page={this.state.page}
                     onSetPage={this.onSetPage}

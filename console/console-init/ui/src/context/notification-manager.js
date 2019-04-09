@@ -15,20 +15,22 @@ const Notification = ({notification, onDismiss}) => (
   <Alert
     variant={notification.variant}
     title={notification.content}
-    action={<AlertActionCloseButton onClose={onDismiss}/>}
-  />);
+    action={<AlertActionCloseButton onClose={onDismiss}/>}>
+    {notification.description}
+  </Alert>);
 
 export class NotificationProvider extends Component {
 
   state = {notifications: []};
   count = 0;
 
-  add = (content, variant) => {
+  add = (variant, content, description) => {
     this.setState(state => {
       const item = {
         id: this.count++,
         variant: variant,
-        content: content
+        content: content,
+        description: description
       };
       return {notifications: [...state.notifications, item]};
     });
