@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   Avatar,
-  BackgroundImage,
-  BackgroundImageSrc,
   Brand,
   Dropdown,
   DropdownToggle,
@@ -29,12 +27,6 @@ import Aux from '../../hoc/Aux/Aux';
 import About from '../About/About';
 
 import avatarImg from "../../assets/images/img_avatar.svg";
-import xsImage from '../../assets/images/pfbg_576.jpg';
-import xs2xImage from '../../assets/images/pfbg_576@2x.jpg';
-import smImage from '../../assets/images/pfbg_768.jpg';
-import sm2xImage from '../../assets/images/pfbg_768@2x.jpg';
-import lgImage from '../../assets/images/pfbg_1200.jpg';
-import filter from '../../assets/images/background-filter.svg';
 import brandImg from '../../assets/images/logo.svg';
 
 import './Layout.css';
@@ -146,15 +138,6 @@ class Layout extends React.Component {
       </Toolbar>
     );
 
-    const bgImages = {
-      [BackgroundImageSrc.xs]: xsImage,
-      [BackgroundImageSrc.xs2x]: xs2xImage,
-      [BackgroundImageSrc.sm]: smImage,
-      [BackgroundImageSrc.sm2x]: sm2xImage,
-      [BackgroundImageSrc.lg]: lgImage,
-      [BackgroundImageSrc.filter]: filter
-    };
-
     const Header = (
       <PageHeader
         logo={<Brand src={brandImg} alt="Console Logo" />}
@@ -165,8 +148,7 @@ class Layout extends React.Component {
 
     return (
       <Aux>
-        <BackgroundImage src={bgImages} />
-        <Page header={Header}>
+        <Page header={Header} >
           <PageSection variant={PageSectionVariants.darker} className='navSection'>{PageNav}</PageSection>
           <PageSection variant={PageSectionVariants.light}>
             <About handleAboutModalToggle={this.handleAboutModalToggle} isAboutModalOpen={isAboutModalOpen}/>

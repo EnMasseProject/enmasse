@@ -14,7 +14,8 @@ module.exports = {
     new webpack.DefinePlugin(
       {
       'process.env.REACT_APP_VERSION': JSON.stringify(process.env.REACT_APP_VERSION),
-      'process.env.REACT_APP_NAME': JSON.stringify(process.env.REACT_APP_NAME)
+      'process.env.REACT_APP_NAME': JSON.stringify(process.env.REACT_APP_NAME),
+      'process.env.REACT_APP_REFRESH_RATE_MILLIS': JSON.stringify(process.env.REACT_APP_REFRESH_RATE_MILLIS)
     })
   ],
   module: {
