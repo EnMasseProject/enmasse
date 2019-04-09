@@ -66,7 +66,7 @@ public class HTTPServerTest {
     }
 
     @BeforeEach
-    public void setup(VertxTestContext context) {
+    public void setup(VertxTestContext context) throws Exception {
         vertx = Vertx.vertx();
         addressSpaceApi = new TestAddressSpaceApi();
         addressSpace = createAddressSpace("ns", "myinstance");

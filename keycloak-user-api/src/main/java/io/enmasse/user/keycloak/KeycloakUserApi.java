@@ -58,14 +58,21 @@ public class KeycloakUserApi implements UserApi {
     }
 
     interface KeycloakHandler<T> {
-        T handle(Keycloak keycloak);
+        T handle(Keycloak keycloak) throws Exception;
     }
 
-    private synchronized <T> T withKeycloak(AuthenticationService authenticationService, KeycloakHandler<T> consumer) {
+    private synchronized <T> T withKeycloak(AuthenticationService authenticationService, KeycloakHandler<T> consumer) throws Exception {
         if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
             keycloakMap.put(authenticationService.getMetadata().getName(), keycloakFactory.createInstance(authenticationService));
         }
-        return consumer.handle(keycloakMap.get(authenticationService.getMetadata().getName()));
+        Keycloak keycloak = keycloakMap.get(authenticationService.getMetadata().getName());
+        try {
+            return consumer.handle(keycloak);
+        } catch (Exception e) {
+            keycloakMap.remove(authenticationService.getMetadata().getName());
+            keycloak.close();
+            throw e;
+        }
     }
 
     interface RealmHandler<T> {
@@ -73,12 +80,10 @@ public class KeycloakUserApi implements UserApi {
     }
 
     private synchronized <T> T withRealm(AuthenticationService authenticationService, String realmName, RealmHandler<T> consumer) throws Exception {
-        if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
-            keycloakMap.put(authenticationService.getMetadata().getName(), keycloakFactory.createInstance(authenticationService));
-        }
-        Keycloak keycloak = keycloakMap.get(authenticationService.getMetadata().getName());
-        RealmResource realmResource = waitForRealm(keycloak, realmName, apiTimeout);
-        return consumer.handle(realmResource);
+        return withKeycloak(authenticationService, keycloak -> {
+            RealmResource realmResource = waitForRealm(keycloak, realmName, apiTimeout);
+            return consumer.handle(realmResource);
+        });
     }
 
     private RealmResource waitForRealm(Keycloak keycloak, String realmName, Duration timeout) throws Exception {
@@ -117,12 +122,8 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public synchronized boolean isAvailable(AuthenticationService authenticationService) {
-        if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
-            Keycloak keycloak = keycloakFactory.createInstance(authenticationService);
-            keycloakMap.put(authenticationService.getMetadata().getName(), keycloak);
-        }
-        return keycloakMap.get(authenticationService.getMetadata().getName()) != null;
+    public synchronized boolean isAvailable(AuthenticationService authenticationService) throws Exception {
+        return withKeycloak(authenticationService, Objects::nonNull);
     }
 
     @Override
@@ -461,11 +462,11 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public boolean realmExists(AuthenticationService authenticationService, String realmName) {
+    public boolean realmExists(AuthenticationService authenticationService, String realmName) throws Exception {
         return withKeycloak(authenticationService, kc -> getRealmResource(kc, realmName) != null);
     }
 
-    private UserList queryUsers(AuthenticationService authenticationService, final Predicate<RealmRepresentation> realmPredicate, final Predicate<UserRepresentation> userPredicate) {
+    private UserList queryUsers(AuthenticationService authenticationService, final Predicate<RealmRepresentation> realmPredicate, final Predicate<UserRepresentation> userPredicate) throws Exception {
         return withKeycloak(authenticationService, keycloak -> {
 
             List<RealmRepresentation> realmReps = keycloak.realms().findAll();
@@ -493,7 +494,7 @@ public class KeycloakUserApi implements UserApi {
      * List all users, from all namespaces.
      */
     @Override
-    public UserList listAllUsers(AuthenticationService authenticationService) {
+    public UserList listAllUsers(AuthenticationService authenticationService) throws Exception {
         return queryUsers(authenticationService,
                         realm -> getAttribute(realm, "namespace").isPresent(),
                         user -> true);
@@ -503,7 +504,7 @@ public class KeycloakUserApi implements UserApi {
      * List users from a single namespace.
      */
     @Override
-    public UserList listUsers(AuthenticationService authenticationService, final String namespace) {
+    public UserList listUsers(AuthenticationService authenticationService, final String namespace) throws Exception {
         return queryUsers(authenticationService,
                         realm -> hasAttribute(realm, "namespace", namespace),
                         user -> true);
@@ -635,21 +636,21 @@ public class KeycloakUserApi implements UserApi {
     }
 
     @Override
-    public UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) {
+    public UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) throws Exception {
         return queryUsers(authenticationService,
                         realm -> hasAttribute(realm, "namespace", namespace),
                         user -> matchesLabels(user, labels));
     }
 
     @Override
-    public UserList listAllUsersWithLabels(AuthenticationService authenticationService, final Map<String, String> labels) {
+    public UserList listAllUsersWithLabels(AuthenticationService authenticationService, final Map<String, String> labels) throws Exception {
         return queryUsers(authenticationService,
                         realm -> getAttribute(realm, "namespace").isPresent(),
                         user -> matchesLabels(user, labels));
     }
 
     @Override
-    public void deleteUsers(AuthenticationService authenticationService, String namespace) {
+    public void deleteUsers(AuthenticationService authenticationService, String namespace) throws Exception {
         withKeycloak(authenticationService, keycloak -> {
             List<RealmRepresentation> realmReps = keycloak.realms().findAll();
             for (RealmRepresentation realmRep : realmReps) {

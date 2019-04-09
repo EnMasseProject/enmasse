@@ -12,18 +12,18 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface UserApi {
-    boolean isAvailable(AuthenticationService authenticationService);
+    boolean isAvailable(AuthenticationService authenticationService) throws Exception;
     Optional<User> getUserWithName(AuthenticationService authenticationService, String realm, String name) throws Exception;
     void createUser(AuthenticationService authenticationService, String realm, User user) throws Exception;
     boolean replaceUser(AuthenticationService authenticationService, String realm, User user) throws Exception;
     void deleteUser(AuthenticationService authenticationService, String realm, User user) throws Exception;
 
-    boolean realmExists(AuthenticationService authenticationService, String realm);
+    boolean realmExists(AuthenticationService authenticationService, String realm) throws Exception;
 
-    UserList listUsers(AuthenticationService authenticationService, String namespace);
-    UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels);
-    UserList listAllUsers(AuthenticationService authenticationService);
-    UserList listAllUsersWithLabels(AuthenticationService authenticationService, Map<String, String> labels);
+    UserList listUsers(AuthenticationService authenticationService, String namespace) throws Exception;
+    UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) throws Exception;
+    UserList listAllUsers(AuthenticationService authenticationService) throws Exception;
+    UserList listAllUsersWithLabels(AuthenticationService authenticationService, Map<String, String> labels) throws Exception;
 
-    void deleteUsers(AuthenticationService authenticationService, String namespace);
+    void deleteUsers(AuthenticationService authenticationService, String namespace) throws Exception;
 }

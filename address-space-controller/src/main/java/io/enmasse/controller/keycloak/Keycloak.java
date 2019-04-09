@@ -44,7 +44,14 @@ public class Keycloak implements KeycloakApi {
         if (keycloakMap.get(authenticationService.getMetadata().getName()) == null) {
             keycloakMap.put(authenticationService.getMetadata().getName(), keycloakFactory.createInstance(authenticationService));
         }
-        return consumer.handle(keycloakMap.get(authenticationService.getMetadata().getName()));
+        org.keycloak.admin.client.Keycloak keycloak = keycloakMap.get(authenticationService.getMetadata().getName());
+        try {
+            return consumer.handle(keycloak);
+        } catch (Exception e) {
+            keycloakMap.remove(authenticationService.getMetadata().getName());
+            keycloak.close();
+            throw e;
+        }
     }
 
     @Override

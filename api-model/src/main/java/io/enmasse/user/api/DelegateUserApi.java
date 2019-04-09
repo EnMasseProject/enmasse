@@ -20,7 +20,7 @@ public class DelegateUserApi implements UserApi {
     }
 
     @Override
-    public boolean isAvailable(AuthenticationService authenticationService) {
+    public boolean isAvailable(AuthenticationService authenticationService) throws Exception {
         return userApiMap.get(authenticationService.getSpec().getType()).isAvailable(authenticationService);
     }
 
@@ -45,32 +45,32 @@ public class DelegateUserApi implements UserApi {
     }
 
     @Override
-    public boolean realmExists(AuthenticationService authenticationService, String realm) {
+    public boolean realmExists(AuthenticationService authenticationService, String realm) throws Exception {
         return userApiMap.get(authenticationService.getSpec().getType()).realmExists(authenticationService, realm);
     }
 
     @Override
-    public UserList listUsers(AuthenticationService authenticationService, String namespace) {
+    public UserList listUsers(AuthenticationService authenticationService, String namespace) throws Exception {
         return userApiMap.get(authenticationService.getSpec().getType()).listUsers(authenticationService, namespace);
     }
 
     @Override
-    public UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) {
+    public UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) throws Exception {
         return userApiMap.get(authenticationService.getSpec().getType()).listUsersWithLabels(authenticationService, namespace, labels);
     }
 
     @Override
-    public UserList listAllUsers(AuthenticationService authenticationService) {
+    public UserList listAllUsers(AuthenticationService authenticationService) throws Exception {
         return userApiMap.get(authenticationService.getSpec().getType()).listAllUsers(authenticationService);
     }
 
     @Override
-    public UserList listAllUsersWithLabels(AuthenticationService authenticationService, Map<String, String> labels) {
+    public UserList listAllUsersWithLabels(AuthenticationService authenticationService, Map<String, String> labels) throws Exception {
         return userApiMap.get(authenticationService.getSpec().getType()).listAllUsersWithLabels(authenticationService, labels);
     }
 
     @Override
-    public void deleteUsers(AuthenticationService authenticationService, String namespace) {
+    public void deleteUsers(AuthenticationService authenticationService, String namespace) throws Exception {
         userApiMap.get(authenticationService.getSpec().getType()).deleteUsers(authenticationService, namespace);
     }
 }
