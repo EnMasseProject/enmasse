@@ -60,9 +60,16 @@ public class MqttClientFactory {
 
     public Builder build() {
         return new Builder() {
+            Endpoint endpoint = null;
             AddressSpace addressSpace = defaultAddressSpace;
             MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
             String clientId = UUID.randomUUID().toString();
+
+            @Override
+            public Builder endpoint(Endpoint endpoint) {
+                this.endpoint = endpoint;
+                return this;
+            }
 
             @Override
             public Builder addressSpace(AddressSpace addressSpace) {
@@ -84,7 +91,7 @@ public class MqttClientFactory {
 
             @Override
             public IMqttClient create() throws Exception {
-                return MqttClientFactory.this.create(addressSpace, mqttConnectOptions, clientId);
+                return MqttClientFactory.this.create(endpoint, addressSpace, mqttConnectOptions, clientId);
             }
         };
     }
@@ -93,14 +100,18 @@ public class MqttClientFactory {
         return build().create();
     }
 
-    private IMqttClient create(AddressSpace addressSpace, MqttConnectOptions options, String clientId) throws Exception {
+    private IMqttClient create(Endpoint endpoint, AddressSpace addressSpace, MqttConnectOptions options, String clientId) throws Exception {
 
         Endpoint mqttEndpoint;
 
-        mqttEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
-        if (mqttEndpoint == null) {
-            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-            mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+        if(endpoint == null) {
+            mqttEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
+            if (mqttEndpoint == null) {
+                String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
+                mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            }
+        } else {
+          mqttEndpoint = endpoint;
         }
 
         if(options.getSocketFactory()==null) {
@@ -432,6 +443,8 @@ public class MqttClientFactory {
     }
 
     public interface Builder {
+
+        Builder endpoint(Endpoint endpoint);
 
         Builder addressSpace(AddressSpace addressSpace);
 
