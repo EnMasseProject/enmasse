@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -e
-set -x
 
 get_endpoint() {
    key=$1
@@ -23,12 +22,13 @@ then
    echo -n "${DISCOVERY_METADATA_URL}" | sed -e 's/^data:.*,//' | base64 --decode > ${OAUTH_AUTH_SERVER}
    AUTHORIZATION_ENDPOINT=$(get_endpoint authorization_endpoint < ${OAUTH_AUTH_SERVER})
    TOKEN_ENDPOINT=$(get_endpoint token_endpoint < ${OAUTH_AUTH_SERVER})
+   ISSUER=$(get_endpoint issuer < ${OAUTH_AUTH_SERVER})
+   # OpenShift OAUTH2 server doesn't support a userinfo endpoint.
+   OPENSHIFT_VALIDATE_ENDPOINT="${ISSUER}/apis/user.openshift.io/v1/users/~"
 else
    curl --insecure "${DISCOVERY_METADATA_URL}" > ${OAUTH_AUTH_SERVER}
+   ISSUER=$(get_endpoint issuer < ${OAUTH_AUTH_SERVER})
 fi
-
-ISSUER=$(get_endpoint issuer < ${OAUTH_AUTH_SERVER})
-export AUTHORIZATION_ENDPOINT TOKEN_ENDPOINT ISSUER
 
 find ${SCRIPT_DIR}/.. -type d
 mkdir -p ${TARGET_DIR}
@@ -39,6 +39,7 @@ do
   sed -e "s,\${ISSUER},${ISSUER},g" \
       -e "s,\${AUTHORIZATION_ENDPOINT},${AUTHORIZATION_ENDPOINT},g" \
       -e "s,\${TOKEN_ENDPOINT},${TOKEN_ENDPOINT},g" \
+      -e "s,\${OPENSHIFT_VALIDATE_ENDPOINT},${OPENSHIFT_VALIDATE_ENDPOINT},g" \
       -e "s,\${COOKIE_SECRET},${COOKIE_SECRET},g" \
       -e "s,\${OAUTH2_SCOPE},${OAUTH2_SCOPE},g" \
       -i ${c}
