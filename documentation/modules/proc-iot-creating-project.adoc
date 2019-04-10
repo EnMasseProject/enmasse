@@ -3,14 +3,22 @@
 
 .Procedure
 
+ifeval::["{cmdcli}" == "oc"]
 . Change to a non-admin user:
+endif::[]
 
 . Create a _managed_ IoT Project:
 +
 [options="nowrap",subs="attributes"]
 ----
+ifeval::["{cmdcli}" == "oc"]
 {cmdcli} new-project myapp
-{cmdcli} create -f iot/examples/iot-project-managed.yaml
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+{cmdcli} create namespace myapp
+kubectl config set-context $(kubectl config current-context) --namespace=myapp
+endif::[]
+{cmdcli} create -f install/components/iot/examples/iot-project-managed.yaml
 ----
 
 . Wait for the resources to be ready:
@@ -25,5 +33,5 @@
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} create -f iot/examples/iot-user.yaml
+{cmdcli} create -f install/components/iot/examples/iot-user.yaml
 ----

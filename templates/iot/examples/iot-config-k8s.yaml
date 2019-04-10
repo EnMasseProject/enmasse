@@ -1,0 +1,21 @@
+apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTConfig
+metadata:
+  name: default
+spec:
+  interServiceCertificates:
+    secretCertificatesStrategy:
+      caSecretName: iot-service-ca
+      serviceSecretNames:
+        iot-auth-service: iot-auth-service-tls
+        iot-device-registry: iot-device-registry-tls
+        iot-tenant-service: iot-tenant-service-tls
+  adapters:
+    http:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-http-adapter-tls
+    mqtt:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-mqtt-adapter-tls

@@ -13,11 +13,36 @@
 ----
 {cmdcli} apply -f install/preview-bundles/iot
 ----
+ifeval::["{cmdcli}" == "kubectl"]
+. Create certificates for IoT services. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap",subs="attributes"]
+----
+./install/components/iot/examples/k8s-tls/create
+./install/components/iot/examples/k8s-tls/deploy
+----
+endif::[]
+
+ifeval::["{cmdcli}" == "oc"]
+. Create certificates for MQTT protocol adapter. For testing purposes, you can create a self-signed certificate:
++
+[options="nowrap",subs="attributes"]
+----
+./install/components/iot/examples/k8s-tls/create
+{cmdcli} create secret tls iot-mqtt-adapter-tls --key=install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-key.pem --cert=install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-fullchain.pem
+{cmdcli} create secret generic iot-service-ca --from-file=service-ca.crt=install/components/iot/examples/k8s-tls/build/trusted-certs.pem
+----
+endif::[]
 
 . Install an example IoT infrastructure configuration:
 +
 [options="nowrap",subs="attributes"]
 ----
+ifeval::["{cmdcli}" == "kubectl"]
+{cmdcli} apply -f install/components/iot/examples/iot-config-k8s.yaml
+endif::[]
+ifeval::["{cmdcli}" == "oc"]
 {cmdcli} apply -f install/components/iot/examples/iot-config.yaml
+endif::[]
 ----
 

@@ -1,5 +1,12 @@
 [id='iot-{api}-{context}']
 
+ifeval::["{cmdcli}" == "oc"]
+:http-adapter: $(oc -n enmasse-infra get routes iot-http-adapter --template='{{ .spec.host }}')
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+:http-adapter: $(kubectl -n enmasse-infra get service iot-http-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):30443
+endif::[]
+
 = Sending and receiving {api} data
 
 .Procedure
@@ -24,11 +31,32 @@ mvn package -am
 ----
 {cmdcli} -n myapp get addressspace iot -o jsonpath={.status.caCert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
 ----
+
+. Export messaging endpoint host and port:
++
+[options="nowrap",subs="attributes"]
+----
+export MESSAGING_HOST=$({cmdcli} -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].externalHost})
+export MESSAGING_PORT=443
+----
+ifeval::["{cmdcli}" == "kubectl"]
++
+[NOTE]
+====
+If you are running Kubernetes in a development environment without a proper load balancer, you need to use the IP address of your local cluster and the port of the appropriate service; for example:
+[options="nowrap",subs="attributes"]
+----
+export MESSAGING_HOST=localhost
+export MESSAGING_PORT=5671
+----
+====
+endif::[]
+
 . Run the consumer application:
 +
 [options="nowrap",subs="attributes"]
 ----
-mvn spring-boot:run -Drun.arguments=--hono.client.host=$({cmdcli} -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].externalHost}),--hono.client.port=443,--hono.client.username=consumer,--hono.client.password=foobar,--tenant.id=myapp.iot,--hono.client.trustStorePath=target/config/hono-demo-certs-jar/tls.crt,--message.type={api}
+mvn spring-boot:run -Drun.arguments=--hono.client.host=$MESSAGING_HOST,--hono.client.port=$MESSAGING_PORT,--hono.client.username=consumer,--hono.client.password=foobar,--tenant.id=myapp.iot,--hono.client.trustStorePath=target/config/hono-demo-certs-jar/tls.crt,--message.type={api}
 ----
 
 == Sending {api} data
@@ -37,7 +65,7 @@ mvn spring-boot:run -Drun.arguments=--hono.client.host=$({cmdcli} -n myapp get a
 +
 [options="nowrap",subs="attributes"]
 ----
-curl --insecure -X POST -i -u sensor1@myapp.iot:hono-secret -H 'Content-Type: application/json' --data-binary '{"temp": 5}' https://$({cmdcli} -n enmasse-infra get route iot-http-adapter --template='{{.spec.host}}')/{api}
+curl --insecure -X POST -i -u sensor1@myapp.iot:hono-secret -H 'Content-Type: application/json' --data-binary '{"temp": 5}' https://{http-adapter}/{api}
 ----
 
 // TODO cover using MQTT here
