@@ -57,5 +57,8 @@
     name: service-monitors
   when: service_monitors
 - import_role:
+    name: grafana-dashboards
+  when: service_monitors
+- import_role:
     name: alerting
   when: alerting

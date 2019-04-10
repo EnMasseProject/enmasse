@@ -1,0 +1,29 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring-kube.adoc
+// assembly-monitoring-oc.adoc
+
+[id='deploy-grafana-dashboards-{context}']
+= Deploying Grafana dashboards for graphing metrics
+
+You must deploy Grafana dashboards to graph {ProductName} metrics.
+
+.Prerequisites
+
+* A deployment of Grafana using the link:https://github.com/integr8ly/grafana-operator[Grafana Operator^] is required to deploy the Grafana dashboards.
+
+.Procedure
+
+. Select the {ProductName} namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+
+. Deploy the `grafana-dashboards`:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f /install/components/grafana
+----

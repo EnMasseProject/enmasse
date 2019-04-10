@@ -19,6 +19,3 @@
 
 - name: Deploy Kube-state-metrics
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/kube-state-metrics
-
-- name: Apply the Grafana configuration
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana

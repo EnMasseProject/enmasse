@@ -1,12 +1,11 @@
 // Module included in the following assemblies:
 //
-// assembly-monitoring-kube.adoc
-// assembly-monitoring-oc.adoc
+// assembly-monitoring.adoc
 
 [id='deploy-monitoring-infrastructure-{context}']
 = Installing monitoring infrastructure
 
-If you do not have a pre-existing infrastructure for monitoring, you must install one, which includes Prometheus, Alertmanager, Grafana, and `kube-state-metrics`.
+If you do not have a pre-existing infrastructure for monitoring, you must install one, which includes Prometheus, Alertmanager, and `kube-state-metrics`.
 
 .Prerequisites
 
