@@ -419,6 +419,11 @@ public class HttpAddressSpaceService {
                     "Ready",
                     0,
                     "string"),
+            new TableColumnDefinition("The phase of this address space.",
+                    "",
+                    "Phase",
+                    0,
+                    "string"),
             new TableColumnDefinition("The timestamp representing server time when this address space was created.",
                     "",
                     "Age",
@@ -458,6 +463,7 @@ public class HttpAddressSpaceService {
                                 addressSpace.getSpec().getType(),
                                 addressSpace.getSpec().getPlan(),
                                 addressSpace.getStatus().isReady(),
+                                addressSpace.getStatus().getPhase(),
                                 Optional.ofNullable(addressSpace.getMetadata().getCreationTimestamp())
                                         .map(s -> TimeUtil.formatHumanReadable(Duration.between(TimeUtil.parseRfc3339(s), now)))
                                         .orElse(""),

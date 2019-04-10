@@ -38,6 +38,8 @@ import io.sundr.builder.annotations.Inline;
 public class AddressSpaceStatus {
     @JsonProperty("isReady")
     private boolean ready = false;
+    @JsonProperty("phase")
+    private Phase phase;
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid EndpointStatus> endpointStatuses = new ArrayList<>();
     @JsonSetter(nulls = Nulls.AS_EMPTY)
@@ -50,12 +52,14 @@ public class AddressSpaceStatus {
 
     public AddressSpaceStatus(boolean ready) {
         this.ready = ready;
+        this.phase = Phase.Pending;
     }
 
     public AddressSpaceStatus(AddressSpaceStatus other) {
         this.ready = other.isReady();
         this.endpointStatuses = new ArrayList<>(other.getEndpointStatuses());
         this.messages.addAll(other.getMessages());
+        this.phase = other.getPhase();
     }
 
     public boolean isReady() {
@@ -77,6 +81,14 @@ public class AddressSpaceStatus {
 
     public List<String> getMessages() {
         return messages;
+    }
+
+    public Phase getPhase() {
+        return phase;
+    }
+
+    public void setPhase(Phase phase) {
+        this.phase = phase;
     }
 
     public AddressSpaceStatus appendMessage(String message) {
@@ -104,19 +116,21 @@ public class AddressSpaceStatus {
         if (o == null || getClass() != o.getClass()) return false;
         AddressSpaceStatus status = (AddressSpaceStatus) o;
         return ready == status.ready &&
+                phase == status.phase &&
                 Objects.equals(endpointStatuses, status.endpointStatuses) &&
                 Objects.equals(messages, status.messages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, endpointStatuses, messages);
+        return Objects.hash(ready, phase, endpointStatuses, messages);
     }
 
     @Override
     public String toString() {
         return new StringBuilder()
                 .append("{ready=").append(ready)
+                .append(",").append("phase=").append(phase)
                 .append(",").append("endpointStatuses=").append(endpointStatuses)
                 .append(",").append("messages=").append(messages)
                 .append("}")
