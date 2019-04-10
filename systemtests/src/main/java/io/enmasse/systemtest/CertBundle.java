@@ -4,28 +4,22 @@
  */
 package io.enmasse.systemtest;
 
-import java.io.File;
+import java.util.Base64;
 
 public class CertBundle {
 
-    private File caCert;
-    private File crtFile;
+    private String caCert;
     private String key;
     private String cert;
 
-    public CertBundle(File caCert, File crtFile, String key, String cert) {
+    public CertBundle(String caCert, String key, String cert) {
         this.caCert = caCert;
-        this.crtFile = crtFile;
         this.key = key;
         this.cert = cert;
     }
 
-    public File getCaCert() {
+    public String getCaCert() {
         return caCert;
-    }
-
-    public File getCrtFile() {
-        return crtFile;
     }
 
     public String getKey() {
@@ -35,5 +29,14 @@ public class CertBundle {
     public String getCert() {
         return cert;
     }
+
+    public String getCertB64() {
+        return Base64.getEncoder().encodeToString(cert.getBytes());
+    }
+
+    public String getKeyB64() {
+        return Base64.getEncoder().encodeToString(key.getBytes());
+    }
+
 
 }

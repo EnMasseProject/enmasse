@@ -8,21 +8,15 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -31,12 +25,8 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
 import io.enmasse.address.model.*;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -58,10 +48,10 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.OpenshiftCertValidatorApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.common.api.ApiServerTest;
-import io.enmasse.systemtest.executor.Executor;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.CertificateUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.PemTrustOptions;
@@ -74,22 +64,10 @@ class CertProviderTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static String ENDPOINT_PREFIX = "test-endpoint-";
 
-    private List<File> createdFiles;
-
     private AddressSpace addressSpace;
     private UserCredentials user;
     private Address queue;
     private Address topic;
-
-    @BeforeEach
-    void setUp() {
-        createdFiles = new ArrayList<>();
-    }
-
-    @AfterEach
-    void tearDown() {
-        createdFiles.forEach(FileUtils::deleteQuietly);
-    }
 
     @Test
     void testSelfSigned() throws Exception {
@@ -163,12 +141,12 @@ class CertProviderTest extends TestBase {
 
     @Test
     void testCertBundle() throws Exception {
-        CertBundle certBundle = createCertBundle();
+        CertBundle certBundle = CertificateUtils.createCertBundle();
 
         createTestEnv(new CertSpecBuilder()
                 .withProvider(CertProvider.certBundle.name())
-                .withTlsKey(certBundle.getKey())
-                .withTlsCert(certBundle.getCert())
+                .withTlsKey(certBundle.getKeyB64())
+                .withTlsCert(certBundle.getCertB64())
                 .build());
 
         AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
@@ -178,11 +156,11 @@ class CertProviderTest extends TestBase {
                 .setSsl(true)
                 .setHostnameVerificationAlgorithm("")
                 .setPemTrustOptions(new PemTrustOptions()
-                        .addCertPath(certBundle.getCaCert().getAbsolutePath()))
+                        .addCertValue(Buffer.buffer(certBundle.getCaCert())))
                 .setTrustAll(false);
 
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setSocketFactory(getSocketFactory(new FileInputStream(certBundle.getCaCert())));
+        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(certBundle.getCaCert().getBytes())));
         mqttOptions.setUserName(user.getUsername());
         mqttOptions.setPassword(user.getPassword().toCharArray());
         IMqttClient mqttClient = mqttClientFactory.build()
@@ -196,19 +174,19 @@ class CertProviderTest extends TestBase {
     @Test
     @Disabled("Disabled due to #2427")
     void testConsoleCertBundleTrustEndpointCert() throws Exception {
-        CertBundle certBundle = createCertBundle();
+        CertBundle certBundle = CertificateUtils.createCertBundle();
 
         createTestEnv(new CertSpecBuilder()
                 .withProvider(CertProvider.certBundle.name())
-                .withTlsKey(certBundle.getKey())
-                .withTlsCert(certBundle.getCert())
+                .withTlsKey(certBundle.getKeyB64())
+                .withTlsCert(certBundle.getCertB64())
                 .build(), false);
 
         WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(false)
                 .setPemTrustOptions(new PemTrustOptions()
-                        .addCertPath(certBundle.getCrtFile().getAbsolutePath()))
+                        .addCertValue(Buffer.buffer(certBundle.getCert())))
                 .setVerifyHost(false));
 
         testConsole(webClient);
@@ -217,19 +195,19 @@ class CertProviderTest extends TestBase {
     @Test
     @Disabled("Disabled due to #2427")
     void testConsoleCertBundleTrustCaCert() throws Exception {
-        CertBundle certBundle = createCertBundle();
+        CertBundle certBundle = CertificateUtils.createCertBundle();
 
         createTestEnv(new CertSpecBuilder()
                 .withProvider(CertProvider.certBundle.name())
-                .withTlsKey(certBundle.getKey())
-                .withTlsCert(certBundle.getCert())
+                .withTlsKey(certBundle.getKeyB64())
+                .withTlsCert(certBundle.getCertB64())
                 .build(), false);
 
         WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(false)
                 .setPemTrustOptions(new PemTrustOptions()
-                        .addCertPath(certBundle.getCaCert().getAbsolutePath()))
+                        .addCertValue(Buffer.buffer(certBundle.getCaCert())))
                 .setVerifyHost(false));
 
         testConsole(webClient);
@@ -357,31 +335,6 @@ class CertProviderTest extends TestBase {
         }
     }
 
-    private void createSelfSignedCert(File cert, File key) throws Exception {
-        new Executor().execute(Arrays.asList("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
-                "-out", cert.getAbsolutePath(), "-keyout", key.getAbsolutePath()));
-    }
-
-    public void createCsr(File keyFile, File csrFile) throws Exception {
-        String subjString = "/O=enmasse-systemtests";
-        new Executor().execute(Arrays.asList("openssl", "req", "-new", "-batch", "-nodes", "-keyout",
-                keyFile.getAbsolutePath(), "-subj", subjString, "-out", csrFile.getAbsolutePath()));
-    }
-
-    public File signCsr(File caKey, File caCert, File csrKey, File csrCsr) throws Exception {
-        File crtFile = createTempFile(FilenameUtils.removeExtension(csrKey.getName()), "crt");
-        new Executor().execute(Arrays.asList("openssl", "x509", "-req", "-days", "11000", "-in",
-                csrCsr.getAbsolutePath(), "-CA", caCert.getAbsolutePath(), "-CAkey", caKey.getAbsolutePath(),
-                "-CAcreateserial", "-out", crtFile.getAbsolutePath()));
-        return crtFile;
-    }
-
-    private File createTempFile(String prefix, String suffix) throws IOException {
-        File file = File.createTempFile(prefix, suffix);
-        createdFiles.add(file);
-        return file;
-    }
-
     private SSLSocketFactory getSocketFactory(InputStream caCrtFile) throws Exception {
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
 
@@ -399,18 +352,5 @@ class CertProviderTest extends TestBase {
         return context.getSocketFactory();
     }
 
-    private CertBundle createCertBundle() throws Exception {
-        File caCert = createTempFile("certAuthority", "crt");
-        File caKey = createTempFile("certAuthority", "key");
-        createSelfSignedCert(caCert, caKey);
-        String randomName = UUID.randomUUID().toString();
-        File keyFile = createTempFile(randomName, "key");
-        File csrFile = createTempFile(randomName, "csr");
-        createCsr(keyFile, csrFile);
-        File crtFile = signCsr(caKey, caCert, keyFile, csrFile);
-        String key = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(keyFile));
-        String cert = Base64.getEncoder().encodeToString(FileUtils.readFileToByteArray(crtFile));
-        return new CertBundle(caCert, crtFile, key, cert);
-    }
 
 }

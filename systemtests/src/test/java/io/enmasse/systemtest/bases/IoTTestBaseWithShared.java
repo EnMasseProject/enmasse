@@ -17,7 +17,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
-import java.util.Base64;
 
 public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
@@ -39,8 +38,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                     .withNewMqtt()
                     .withNewEndpoint()
                     .withNewKeyCertificateStrategy()
-                    .withCertificate(ByteBuffer.wrap(Base64.getDecoder().decode(certBundle.getCert())))
-                    .withKey(ByteBuffer.wrap(Base64.getDecoder().decode(certBundle.getKey())))
+                    .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
+                    .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
                     .endKeyCertificateStrategy()
                     .endEndpoint()
                     .endMqtt()
