@@ -267,7 +267,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         deleteAddressSpaceCreatedBySC(namespace, addressSpace);
 
         WebElement errorLog = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.id("myErrorDialogLabel")));
+                selenium.getDriver().findElement(By.id("peerLostErrorDialogLabel")));
         assertTrue(errorLog.isDisplayed());
         log.info("error banner is displayed showing addr space is deleted");
 

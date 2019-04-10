@@ -131,8 +131,12 @@ ConsoleServer.prototype.ws_bind = function (server, env) {
         auth_utils.ws_auth_handler(self.authz, env)(info.req, callback);
     }});
     this.ws_server.on('connection', function (ws, request) {
-        log.info('Accepted incoming websocket connection');
-        self.amqp_container.websocket_accept(ws, self.authz.get_authz_props(request));
+        if (self.authz.access_console(request)) {
+            log.info('Accepting incoming websocket connection');
+            self.amqp_container.websocket_accept(ws, self.authz.get_authz_props(request));
+        } else {
+            ws.close(4403, 'You do not have permission to use this console');
+        }
     });
 };
 
@@ -190,6 +194,11 @@ function static_handler(request, response, transform) {
             if (content_type) {
                 response.setHeader('content-type', content_type);
             }
+            if (transform) {
+                response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                response.setHeader("Pragma", "no-cache");
+                response.setHeader("Expires", "0");
+            }
             log.debug('GET %s => %s', request.url, file);
             response.end(content);
         }
@@ -234,10 +243,17 @@ ConsoleServer.prototype.listen = function (env, callback) {
     let handler = function (request, response) {
         if (request.method === 'GET') {
             try {
-                if (url.parse(request.url).pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
-                    var transform = replacer('<em>messaging\-route\-hostname</em>', env.MESSAGING_ROUTE_HOSTNAME);
+                var u = url.parse(request.url);
+                if (u.pathname && (u.pathname.endsWith('.html') || u.pathname.endsWith("/"))) {
+                    var transform;
+                    if (u.pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
+                        transform = replacer('<em>messaging\-route\-hostname</em>', env.MESSAGING_ROUTE_HOSTNAME);
+                    } else {
+                        var global_console_disabled = !env.CONSOLE_LINK;
+                        transform = replacer('\\${GLOBAL_CONSOLE_DISABLED}', global_console_disabled);
+                    }
                     static_handler(request, response,  transform);
-                } else if (url.parse(request.url).pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
+                } else if (u.pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
                     file_load_handler(request, response, env.MESSAGING_CERT);
                 } else {
                     static_handler(request, response);
@@ -313,7 +329,6 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
         var props = {};
         props.address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
         props.disable_admin = !self.authz.is_admin(sender.connection);
-        props.global_console = !!self.console_link;
 
         buffered_sender.send({subject:'address_types', application_properties:props, body:address_types});
     }).catch(function (error) {

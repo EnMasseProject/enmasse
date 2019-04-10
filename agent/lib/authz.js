@@ -23,12 +23,20 @@ TrustAllPolicy.prototype.has_permission = function (required, actual) {
     return true;
 };
 
+TrustAllPolicy.prototype.access_console = function (request) {
+    return request.authz_props && request.authz_props.console;
+};
+
 TrustAllPolicy.prototype.is_admin = function (connection) {
     return connection.options && connection.options.admin;
 };
 
 TrustAllPolicy.prototype.set_authz_props = function (request, credentials, properties) {
-    request.authz_props = {admin: properties.admin, token: credentials.token};
+    request.authz_props = {
+        admin: properties.admin,
+        console: properties.console,
+        token: credentials.token
+    };
 };
 
 TrustAllPolicy.prototype.get_authz_props = function (request) {
