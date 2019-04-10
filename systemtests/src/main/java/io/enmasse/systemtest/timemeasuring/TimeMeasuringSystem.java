@@ -19,8 +19,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 
 public class TimeMeasuringSystem {
@@ -85,8 +85,9 @@ public class TimeMeasuringSystem {
             id = createOperationsID(SystemtestsOperation.TEST_EXECUTION);
         }
         try {
-            measuringMap.get(testClass).get(testName).get(id).setEndTime(System.currentTimeMillis());
-            log.info("End time of operation {} is correctly stored", id);
+            var record = measuringMap.get(testClass).get(testName).get(id);
+            record.setEndTime(System.currentTimeMillis());
+            log.info("End time of operation {} is correctly stored : took {}", id, record.getDurationHumanReadable());
         } catch (Exception ex) {
             log.warn("End time of operation {} is not set due to exception", id);
         }
@@ -261,13 +262,8 @@ public class TimeMeasuringSystem {
         }
 
         String getDurationHumanReadable() {
-            long millis = getDuration();
-            long hours = TimeUnit.MILLISECONDS.toHours(millis);
-            long minutes = TimeUnit.MILLISECONDS.toMinutes(millis) - (TimeUnit.MILLISECONDS.toHours(millis) * 60);
-            long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) - (TimeUnit.MILLISECONDS.toMinutes(millis) * 60);
-            long milliseconds = TimeUnit.MILLISECONDS.toMillis(millis) - (TimeUnit.MILLISECONDS.toSeconds(millis) * 1000);
-
-            return String.format("%02d:%02d:%02d,%03d", hours, minutes, seconds, milliseconds);
+            var duration = Duration.ofMillis(getDuration());
+            return String.format("%02d:%02d:%02d,%03d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart(), duration.toMillisPart());
         }
 
         String getStartTimeHumanReadable() {

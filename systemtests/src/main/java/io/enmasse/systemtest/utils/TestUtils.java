@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, EnMasse authors.
+ * Copyright 2016-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -24,6 +24,8 @@ import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonObject;
+
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -31,6 +33,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -39,13 +42,17 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
+
+    @FunctionalInterface
+    public static interface Condition {
+          boolean getAsBoolean () throws Exception;
+    }
 
     /**
      * scale up/down specific pod (type: Deployment) in address space
@@ -532,7 +539,11 @@ public class TestUtils {
         throw new IllegalStateException(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
-    public static void waitUntilCondition(final String forWhat, final BooleanSupplier condition, final TimeoutBudget budget) throws Exception {
+    public static void waitUntilCondition(final String forWhat, final Condition condition, final TimeoutBudget budget) throws Exception {
+        waitUntilCondition(forWhat, condition, budget, null);
+    }
+
+    public static void waitUntilCondition(final String forWhat, final Condition condition, final TimeoutBudget budget, final Executable whenFailed) throws Exception {
         Objects.requireNonNull(condition);
         Objects.requireNonNull(budget);
 
@@ -545,6 +556,17 @@ public class TestUtils {
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
             Thread.sleep(5000);
         }
+
+        if (whenFailed != null) {
+            try {
+                whenFailed.execute();
+            } catch (Exception e) {
+                throw e;
+            } catch (Throwable t) {
+                throw new InvocationTargetException(t);
+            }
+        }
+
         throw new IllegalStateException("Failed to wait for: " + forWhat);
     }
 
@@ -571,7 +593,7 @@ public class TestUtils {
     public static void waitForIoTProjectReady(final String namespace, final String name, final TimeoutBudget budget) throws Exception {
         var projectClient = Kubernetes.getInstance().getClient().customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
 
-        final BooleanSupplier s = () -> {
+        final Condition s = () -> {
 
             var config = projectClient.inNamespace(namespace).withName(name).get();
             if (config == null || config.getStatus() == null) {

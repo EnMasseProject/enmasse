@@ -18,27 +18,58 @@ import org.slf4j.Logger;
 
 import static io.enmasse.systemtest.utils.AddressSpaceUtils.jsonToAdressSpace;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class IoTUtils {
 
+    private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
+            "iot-auth-service",
+            "iot-device-registry",
+            "iot-gc",
+            "iot-http-adapter",
+            "iot-mqtt-adapter",
+            "iot-tenant-service",
+    };
+
+    private static final Map<String, String> IOT_LABELS;
+
+    static {
+        IOT_LABELS = new HashMap<>();
+        IOT_LABELS.put("component", "iot");
+    }
+
     private static Logger log = CustomLogger.getLogger();
+    private static final Kubernetes kubernetes = Kubernetes.getInstance();
 
     public static void waitForIoTConfigReady(IoTConfigApiClient apiClient, IoTConfig config) throws Exception {
-        boolean isReady = false;
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        while (budget.timeLeft() >= 0 && !isReady) {
-            config = apiClient.getIoTConfig(config.getMetadata().getName());
-            isReady = config.getStatus() != null && config.getStatus().isInitialized();
-            if (!isReady) {
-                log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
-                Thread.sleep(10000);
-            }
-        }
-        if (!isReady) {
-            String jsonStatus = config != null ? config.getStatus().getState() : "";
-            throw new IllegalStateException("IoTConfig " + config.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
-        }
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+
+        waitIoTInfrastructureReady(budget);
+
+        TestUtils.waitUntilCondition("IoTConfig in ready state", () -> {
+            var updated = apiClient.getIoTConfig(config.getMetadata().getName());
+            return updated.getStatus() != null && updated.getStatus().isInitialized();
+        }, budget, () -> {
+            var updated = apiClient.getIoTConfig(config.getMetadata().getName());
+            String jsonStatus = updated  != null ? updated .getStatus().getState() : "";
+            log.warn("IoTProject status: {}", jsonStatus);
+        });
+    }
+
+    public static void waitIoTInfrastructureReady(final TimeoutBudget budget) throws Exception {
+        TestUtils.waitUntilCondition("IoT Config to deploy", IoTUtils::allDeploymentsPresent, budget);
+        TestUtils.waitForNReplicas(kubernetes, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+    }
+
+    private static boolean allDeploymentsPresent() {
+        final String[] deployments = kubernetes.listDeployments(IOT_LABELS).stream()
+                .map(deployment -> deployment.getMetadata().getName())
+                .toArray(String[]::new);
+        Arrays.sort(deployments);
+        return Arrays.equals(deployments, EXPECTED_DEPLOYMENTS);
     }
 
     public static void waitForIoTProjectReady(IoTProjectApiClient apiClient, AddressApiClient addressSpaceApiClient, IoTProject project) throws Exception {
