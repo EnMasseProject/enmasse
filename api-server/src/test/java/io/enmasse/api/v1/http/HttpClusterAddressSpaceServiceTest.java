@@ -117,7 +117,7 @@ public class HttpClusterAddressSpaceServiceTest {
         assertThat(response.getStatus(), is(200));
         Table data = (Table) response.getEntity();
 
-        assertThat(data.getColumnDefinitions().size(), is(6));
+        assertThat(data.getColumnDefinitions().size(), is(7));
         assertThat(data.getRows().size(), is(2));
     }
 

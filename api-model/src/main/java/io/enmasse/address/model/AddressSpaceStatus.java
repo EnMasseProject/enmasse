@@ -116,19 +116,21 @@ public class AddressSpaceStatus {
         if (o == null || getClass() != o.getClass()) return false;
         AddressSpaceStatus status = (AddressSpaceStatus) o;
         return ready == status.ready &&
+                phase == status.phase &&
                 Objects.equals(endpointStatuses, status.endpointStatuses) &&
                 Objects.equals(messages, status.messages);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, endpointStatuses, messages);
+        return Objects.hash(ready, phase, endpointStatuses, messages);
     }
 
     @Override
     public String toString() {
         return new StringBuilder()
                 .append("{ready=").append(ready)
+                .append(",").append("phase=").append(phase)
                 .append(",").append("endpointStatuses=").append(endpointStatuses)
                 .append(",").append("messages=").append(messages)
                 .append("}")
