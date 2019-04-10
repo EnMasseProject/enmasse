@@ -162,12 +162,12 @@ function websocket_auth(authz, env, get_credentials) {
                 kubernetes.self_subject_access_review(options, namespace,
                     "create", "enmasse.io", "addresses").then(({allowed: allowed_create, reason: reason_create}) => {
                     if (allowed_create) {
-                        authz.set_authz_props(request, credentials, {admin: allowed_create});
+                        authz.set_authz_props(request, credentials, {admin: allowed_create, console: true});
                         ws_upgrade_completion_callback(true);
                     } else {
                         kubernetes.self_subject_access_review(options, namespace,
                             "delete", "enmasse.io", "addresses").then(({allowed: allowed_delete, reason: reason_delete}) => {
-                            authz.set_authz_props(request, credentials, {admin: allowed_delete});
+                            authz.set_authz_props(request, credentials, {admin: allowed_delete, console: true});
                             ws_upgrade_completion_callback(true);
                             if (!allowed_delete) {
                                 log.info("User has neither create nor delete address permission, not granting console admin permission. [%j, %j]",
@@ -179,7 +179,8 @@ function websocket_auth(authz, env, get_credentials) {
             } else {
                 log.warn("User does not have list address permission, not granting console access. [%j]",
                     reason_list);
-                ws_upgrade_completion_callback(false, 403, 'You do not have permission to use this console');
+                authz.set_authz_props(request, credentials, {admin: false, console: false});
+                ws_upgrade_completion_callback(true);
             }
         }).catch(onrejected);
     }

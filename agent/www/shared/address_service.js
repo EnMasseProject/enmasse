@@ -150,10 +150,10 @@ function get_items_from_index(index) {
 
 function AddressService($http) {
     var self = this;  // 'this' is not available in the success function of $http.get
+    this.closeEvent = null;
     this.outstanding_settles = {};
     this.error_queue = [];
     this.admin_disabled = true;
-    this.global_console_disabled = true;
     this.address_index = {};
     this.connection_index = {};
     Object.defineProperty(this, 'addresses', { get: function () { return get_items_from_index(self.address_index); } });
@@ -162,7 +162,14 @@ function AddressService($http) {
     this.address_space_type = '';
     this._additional_listeners = [];
     var ws = rhea.websocket_connect(WebSocket);
-    this.connection = rhea.connect({"connection_details":ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]), "reconnect":true, rejectUnauthorized:true});
+    var connectionDetails = ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]);
+    this.connection = rhea.create_connection({"connection_details": connectionDetails, "reconnect":15000, rejectUnauthorized:true});
+    var eof = this.connection.eof;
+    this.connection.eof = (event) => {
+        this.closeEvent = event;
+        eof.apply(this.connection, arguments);
+    };
+    this.connection.connect();
     this.connection.on('message', this.on_message.bind(this));
     this.connection.on('connection_open', function (context) {
         self.update_periodic_deltas_interval = setInterval(self.update_periodic_deltas.bind(self), 5000);

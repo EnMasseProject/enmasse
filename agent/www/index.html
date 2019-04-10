@@ -55,7 +55,7 @@
   <script type="text/ng-template" id="/peer_lost.html">
     <div class="message-dialog-pf">
       <div class="modal-header">
-        <h4 class="modal-title" id="myErrorDialogLabel">Server Connection Lost</h4>
+        <h4 class="modal-title" id="peerLostErrorDialogLabel">Server Connection Lost</h4>
       </div>
       <div class="modal-body">
         <div>
@@ -68,6 +68,30 @@
             issue is transient, the console will reconnect automatically once the problem is resolved.
           </p>
         </div>
+      </div>
+      <div class="modal-footer" ng-hide=${GLOBAL_CONSOLE_DISABLED}>
+        <a href="/console" type="button" class="btn btn-default">Back</a>
+      </div>
+    </div>
+  </script>
+
+  <script type="text/ng-template" id="/forbidden_list_address.html">
+    <div class="message-dialog-pf">
+      <div class="modal-header">
+        <h4 class="modal-title" id="noRbacErrorDialog">Forbidden - List Address Resources Not Allowed</h4>
+      </div>
+      <div class="modal-body">
+        <div>
+          <p class="lead pficon pficon-error-circle-o">
+            Forbidden - List Address Resources Not Allowed
+          </p>
+          <p>
+              You do not have permission to list the Address resources of this Address Space.
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer" ng-hide=${GLOBAL_CONSOLE_DISABLED}>
+        <a href="/console" type="button" class="btn btn-default">Back</a>
       </div>
     </div>
   </script>
@@ -99,8 +123,8 @@
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
-              <li ng-hide=global_console_disabled><a href="console" id="globalconsole">Return to Console</a></li>
-              <li ng-hide=!global_console_disabled><a href="logout" id="logout">Logout</a></li>
+              <li ng-hide=${GLOBAL_CONSOLE_DISABLED}><a href="console" id="globalconsole">Return to Console</a></li>
+              <li ng-hide=!${GLOBAL_CONSOLE_DISABLED}><a href="logout" id="logout">Logout</a></li>
             </ul>
           </li>
         </ul>
