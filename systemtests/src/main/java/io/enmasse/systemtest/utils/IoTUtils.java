@@ -16,6 +16,8 @@ import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.slf4j.Logger;
 
+import static io.enmasse.systemtest.utils.AddressSpaceUtils.jsonToAdressSpace;
+
 import java.util.concurrent.TimeUnit;
 
 public class IoTUtils {
@@ -39,7 +41,7 @@ public class IoTUtils {
         }
     }
 
-    public static void waitForIoTProjectReady(IoTProjectApiClient apiClient, IoTProject project) throws Exception {
+    public static void waitForIoTProjectReady(IoTProjectApiClient apiClient, AddressApiClient addressSpaceApiClient, IoTProject project) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
@@ -53,6 +55,15 @@ public class IoTUtils {
         if (!isReady) {
             String jsonStatus = project != null && project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
             throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
+        }
+
+        if ( project.getSpec().getDownstreamStrategy() != null
+                && project.getSpec().getDownstreamStrategy().getManagedStrategy() != null
+                && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace() != null
+                && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName() != null
+                ) {
+            var addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
+            AddressSpaceUtils.waitForAddressSpaceReady(addressSpaceApiClient, jsonToAdressSpace(addressSpaceApiClient.getAddressSpace(addressSpaceName)), budget);
         }
     }
 

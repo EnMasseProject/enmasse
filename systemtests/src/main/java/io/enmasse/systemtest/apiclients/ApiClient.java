@@ -86,13 +86,20 @@ public abstract class ApiClient {
     }
 
     protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, Predicate<Integer> expectedCodePredicate,
+            String warnMessage, boolean throwException) {
+
+        responseHandler(ar, promise, expectedCodePredicate, expectedCodePredicate.toString(), warnMessage, throwException);
+
+    }
+
+    protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, Predicate<Integer> expectedCodePredicate,
                                        String expectedCodeOrCodes, String warnMessage, boolean throwException) {
         try {
             if (ar.succeeded()) {
                 HttpResponse<T> response = ar.result();
                 T body = response.body();
                 if (expectedCodePredicate.negate().test(response.statusCode())) {
-                    log.error("expected-code: {}, response-code: {}, body: {}", expectedCodeOrCodes, response.statusCode(), response.body());
+                    log.error("expected-code: {}, response-code: {}, body: {}, op: {}", expectedCodeOrCodes, response.statusCode(), response.body(), warnMessage);
                     promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
                 } else if (response.statusCode() < HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
                     if(throwException) {

@@ -45,6 +45,10 @@ public abstract class Kubernetes {
         return globalNamespace;
     }
 
+    public KubernetesClient getClient() {
+        return client;
+    }
+
     private static int getPort(Service service, String portName) {
         List<ServicePort> ports = service.getSpec().getPorts();
         for (ServicePort port : ports) {

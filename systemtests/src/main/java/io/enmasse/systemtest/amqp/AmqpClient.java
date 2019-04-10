@@ -8,6 +8,8 @@ package io.enmasse.systemtest.amqp;
 import io.enmasse.systemtest.Count;
 import io.enmasse.systemtest.VertxFactory;
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonDelivery;
+
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -102,11 +104,11 @@ public class AmqpClient implements AutoCloseable {
         }
     }
 
-    public Future<Integer> sendMessages(String address, List<String> messages) {
+    public CompletableFuture<Integer> sendMessages(String address, List<String> messages) {
         return sendMessages(address, messages, new Count<>(messages.size()));
     }
 
-    public Future<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate) {
+    public CompletableFuture<Integer> sendMessages(String address, List<String> messages, Predicate<Message> predicate) {
         List<Message> messageList = messages.stream()
                 .map(body -> {
                     Message message = Message.Factory.create();
@@ -118,11 +120,11 @@ public class AmqpClient implements AutoCloseable {
         return sendMessages(address, messageList, predicate);
     }
 
-    public Future<Integer> sendMessages(String address, Message... messages) {
+    public CompletableFuture<Integer> sendMessages(String address, Message... messages) {
         return sendMessages(address, Arrays.asList(messages), new Count<>(messages.length));
     }
 
-    public Future<Integer> sendMessages(String address, Iterable<Message> messages, Predicate<Message> predicate) {
+    public CompletableFuture<Integer> sendMessages(String address, Iterable<Message> messages, Predicate<Message> predicate) {
 
         CompletableFuture<Integer> resultPromise = new CompletableFuture<>();
         Vertx vertx = VertxFactory.create();
@@ -137,5 +139,24 @@ public class AmqpClient implements AutoCloseable {
             resultPromise.completeExceptionally(e);
         }
         return resultPromise;
+    }
+
+    public CompletableFuture<List<ProtonDelivery>> sendMessage(String address, Message message) {
+
+        CompletableFuture<List<ProtonDelivery>> resultPromise = new CompletableFuture<>();
+        Vertx vertx = VertxFactory.create();
+        String containerId = "systemtest-sender-" + address;
+        CompletableFuture<Void> connectPromise = new CompletableFuture<>();
+        vertx.deployVerticle(new SingleSender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), connectPromise, resultPromise, containerId, message));
+
+        try {
+            connectPromise.get(2, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            resultPromise.completeExceptionally(e);
+        }
+
+        return resultPromise
+                .whenComplete((res, err) -> vertx.close());
+
     }
 }

@@ -2,12 +2,19 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.systemtest.iot;
 
+import static io.enmasse.systemtest.iot.MessageType.EVENT;
+import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static java.time.Duration.ofSeconds;
+
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import javax.ws.rs.core.HttpHeaders;
@@ -21,15 +28,14 @@ import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 
 public class HttpAdapterClient extends ApiClient {
 
     protected static Logger log = CustomLogger.getLogger();
-
-    private static final String TELEMETRY_PATH = "/telemetry";
-    private static final String EVENT_PATH = "/event";
 
     public HttpAdapterClient(Kubernetes kubernetes, Endpoint endpoint, String username, String password) {
         super(kubernetes, () -> endpoint, "");
@@ -49,28 +55,70 @@ public class HttpAdapterClient extends ApiClient {
                 .setVerifyHost(false));
     }
 
-    public void sendTelemetry(JsonObject payload, Predicate<Integer> expectedCodePredicate, String expectedCodeOrCodes) throws Exception {
-        CompletableFuture<Buffer> responsePromise = new CompletableFuture<>();
-        log.info("POST-telemetry: body {}", payload.toString());
-        client.post(endpoint.getPort(), endpoint.getHost(), TELEMETRY_PATH)
-            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
-            .putHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType())
-            .timeout(120000)
-            .sendJsonObject(payload,
-                    ar -> responseHandler(ar, responsePromise, expectedCodePredicate, expectedCodeOrCodes, "Error sending telemetry data", false));
-        responsePromise.get(150000, TimeUnit.SECONDS);
+    public void close () {
+        this.client.close();
     }
 
-    public void sendEvent(JsonObject payload, Predicate<Integer> expectedCodePredicate, String expectedCodeOrCodes) throws Exception {
-        CompletableFuture<Buffer> responsePromise = new CompletableFuture<>();
-        log.info("POST-event: body {}", payload.toString());
-        client.post(endpoint.getPort(), endpoint.getHost(), EVENT_PATH)
-            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
-            .putHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType())
-            .timeout(120000)
-            .sendJsonObject(payload,
-                    ar -> responseHandler(ar, responsePromise, expectedCodePredicate, expectedCodeOrCodes, "Error sending event data", false));
-        responsePromise.get(150000, TimeUnit.SECONDS);
+    private static String contentType (final JsonObject payload) {
+        return payload != null ? ContentType.APPLICATION_JSON.getMimeType() : "application/vnd.eclipse-hono-empty-notification";
+    }
+
+    public HttpResponse<?> send(MessageType messageType, JsonObject payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
+            final Duration responseTimeout) throws Exception {
+
+        CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
+        var ms = responseTimeout.toMillis();
+
+        log.info("POST-{}: body {}", messageType.name().toLowerCase(), payload);
+
+        // create new request
+
+        var request = client.post(endpoint.getPort(), endpoint.getHost(), messageType.path())
+                .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+                .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
+                .timeout(ms);
+
+        // allow to customize request
+
+        if (requestCustomizer != null) {
+            requestCustomizer.accept(request);
+        }
+
+        // execute request with payload
+
+        request.sendJsonObject(payload, ar -> {
+
+            // if the request failed ...
+            if (!ar.succeeded()) {
+                // ... fail the response promise
+                responsePromise.completeExceptionally(ar.cause());
+            }
+
+            final CompletableFuture<Buffer> nf = new CompletableFuture<>();
+            responseHandler(ar, nf, expectedCodePredicate, "Error sending " + messageType.name().toLowerCase() + " data", false);
+
+            // use the result from the responseHandler
+            // and map it to the responsePromise
+            nf.whenComplete((res, err) -> {
+                if ( err != null )  {
+                    responsePromise.completeExceptionally(err);
+                } else {
+                    responsePromise.complete(ar.result());
+                }
+            });
+        });
+
+        // the next line gives the timeout a bit extra, as the HTTP timeout should
+        // kick in, we would prefer the timeout via the future.
+        return responsePromise.get(((long)(ms*1.1)), TimeUnit.MILLISECONDS);
+    }
+
+    public HttpResponse<?> sendTelemetry(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
+        return send(TELEMETRY, payload, expectedCodePredicate, null, ofSeconds(15));
+    }
+
+    public HttpResponse<?> sendEvent(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
+        return send(EVENT, payload, expectedCodePredicate, null, ofSeconds(15));
     }
 
     private String getBasicAuth(final String user, final String password) {
