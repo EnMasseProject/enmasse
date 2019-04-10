@@ -7,6 +7,7 @@ package io.enmasse.address.model;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
@@ -15,6 +16,7 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -68,7 +70,8 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
                         .map(AddressTypeInformation::fromAddressType)
                         .collect(Collectors.toList()))
                 .withPlans(addressSpaceType.getPlans().stream()
-                        .map(plan -> new AddressSpacePlanDescription(plan.getMetadata().getName(), plan.getShortDescription(), plan.getResourceLimits()))
+                        .sorted(Comparator.comparingInt(AddressSpacePlan::getDisplayOrder))
+                        .map(plan -> new AddressSpacePlanDescription(plan.getMetadata().getName(), plan.getDisplayName(), plan.getShortDescription(), plan.getResourceLimits()))
                         .collect(Collectors.toList()))
                 .withAuthenticationServices(authenticationServiceList.stream()
                         .map(authenticationService -> authenticationService.getMetadata().getName())
