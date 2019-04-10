@@ -73,12 +73,8 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         if (credentialsClient == null) {
             credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
         }
-        try {
-            registryClient.registerDevice(tenantId(), DUMMY_DEVICE_ID);
-            credentialsClient.addCredentials(tenantId(), DUMMY_DEVICE_ID, deviceAuthId, devicePassword);
-        }catch(Exception e) {
-            e.printStackTrace();
-        }
+        registryClient.registerDevice(tenantId(), DUMMY_DEVICE_ID);
+        credentialsClient.addCredentials(tenantId(), DUMMY_DEVICE_ID, deviceAuthId, devicePassword);
 
         adapterClient = new MqttClientFactory(kubernetes, environment, null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
                 .build()
