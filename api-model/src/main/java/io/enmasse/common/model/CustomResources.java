@@ -15,6 +15,11 @@ public final class CustomResources {
         String singular = kind.toLowerCase();
         String listKind = kind + "List";
         String plural = singular + "s";
+        if (singular.endsWith("s")) {
+            plural = singular + "es";
+        } else if (singular.endsWith("y")) {
+            plural = singular.substring(0, singular.length() - 1) + "ies";
+        }
         return new CustomResourceDefinitionBuilder()
                         .editOrNewMetadata()
                         .withName(plural + "." + group)
