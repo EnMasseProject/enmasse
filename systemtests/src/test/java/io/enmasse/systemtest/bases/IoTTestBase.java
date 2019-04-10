@@ -130,7 +130,7 @@ public abstract class IoTTestBase extends TestBase {
                 iotProjects.add(project);
             }
         }
-        IoTUtils.waitForIoTProjectReady(iotProjectApiClient, project);
+        IoTUtils.waitForIoTProjectReady(iotProjectApiClient, addressApiClient, project);
         IoTUtils.syncIoTProject(project, iotProjectApiClient);
         TimeMeasuringSystem.stopOperation(operationID);
     }

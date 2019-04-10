@@ -152,8 +152,10 @@ public class AddressSpaceUtils {
     }
 
     public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
-        TimeoutBudget budget;
+        return waitForAddressSpaceReady(apiClient, addressSpace, new TimeoutBudget(15, TimeUnit.MINUTES));
+    }
 
+    public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget) throws Exception {
         boolean isReady = false;
         budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
