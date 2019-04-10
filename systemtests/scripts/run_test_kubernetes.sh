@@ -91,8 +91,8 @@ get_kubernetes_info ${LOG_DIR} pods default "-before"
 
 if [[ -z "${DISABLE_LOG_SYNC}" ]]; then
     #start docker logging
-    DOCKER_LOG_DIR="${ARTIFACTS_DIR}/docker-logs"
-    ${CURDIR}/docker-logs.sh ${DOCKER_LOG_DIR} ${KUBERNETES_NAMESPACE} > /dev/null 2> /dev/null &
+    DOCKER_LOG_DIR="${ARTIFACTS_DIR}/pod-logs"
+    ${CURDIR}/pod-logs.sh ${DOCKER_LOG_DIR} ${KUBERNETES_NAMESPACE} > /dev/null 2> /dev/null &
     LOGS_PID=$!
     echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 fi

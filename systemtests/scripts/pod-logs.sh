@@ -17,7 +17,9 @@ while [[ true ]]; do
     for POD in ${PODS}; do
         CONTAINERS=$(${CMD} get pods ${POD} -o=jsonpath='{.spec.containers[*].name}')
         for CONTAINER in ${CONTAINERS}; do
-            ${CMD} logs ${POD} --container=${CONTAINER} > ${LOG_DIR}/${POD}.${CONTAINER}.log
+            if [[ $(${CMD} logs ${POD} --container=${CONTAINER}) ]]; then
+                ${CMD} logs ${POD} --container=${CONTAINER} > ${LOG_DIR}/${POD}.${CONTAINER}.log
+            fi
         done
     done
     sleep 2
