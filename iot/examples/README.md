@@ -10,14 +10,14 @@
 * Install EnMasse with IoT services
 
   ```
-  oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
+  oc apply -f install/bundles/enmasse
   
-  oc apply -f templates/build/enmasse-latest/install/components/example-authservices/standard-authservice.yaml
-  oc apply -f templates/build/enmasse-latest/install/components/example-roles
-  oc apply -f templates/build/enmasse-latest/install/components/example-plans
+  oc apply -f install/components/example-authservices/standard-authservice.yaml
+  oc apply -f install/components/example-roles
+  oc apply -f install/components/example-plans
   
-  oc apply -f templates/build/enmasse-latest/install/preview-bundles/iot
-  oc apply -f iot/examples/iot-config.yaml
+  oc apply -f install/preview-bundles/iot
+  oc apply -f install/components/iot/examples/iot-config.yaml
   ```
 
 * Wait for the EnMasse installation to succeed. The following command should show all pods to be ready:
@@ -32,7 +32,7 @@
 
   ```
   oc new-project myapp || oc project myapp
-  oc create -f iot/examples/iot-project-managed.yaml
+  oc create -f install/components/iot/examples/iot-project-managed.yaml
   ```
 
 * Wait for the resources to be ready
@@ -45,7 +45,7 @@
 * Create Messaging Consumer User
 
   ```
-  oc create -f iot/examples/iot-user.yaml
+  oc create -f install/components/iot/examples/iot-user.yaml
   ```
 
 * Register a device
