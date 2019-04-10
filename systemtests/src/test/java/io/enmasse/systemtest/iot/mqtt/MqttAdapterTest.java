@@ -149,8 +149,4 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
     }
 
-    protected String tenantId() {
-        return String.format("%s.%s", sharedProject.getMetadata().getNamespace(), sharedProject.getMetadata().getName());
-    }
-
 }
