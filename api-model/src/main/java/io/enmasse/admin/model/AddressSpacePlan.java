@@ -13,6 +13,8 @@ public interface AddressSpacePlan extends HasMetadata {
     Map<String, Double> getResourceLimits();
     List<String> getAddressPlans();
     String getShortDescription();
+    String getDisplayName();
+    int getDisplayOrder();
     String getAddressSpaceType();
     String getInfraConfigRef();
 }

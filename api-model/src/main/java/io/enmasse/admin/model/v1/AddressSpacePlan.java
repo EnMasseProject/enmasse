@@ -105,6 +105,26 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
 
     @JsonIgnore
     @Override
+    public String getDisplayName() {
+        String displayName = getMetadata().getName();
+        if (spec != null && spec.getDisplayName() != null) {
+            displayName = spec.getDisplayName();
+        }
+        return displayName;
+    }
+
+    @JsonIgnore
+    @Override
+    public int getDisplayOrder() {
+        int order = 0;
+        if (spec != null && spec.getDisplayOrder() != null) {
+            order = spec.getDisplayOrder();
+        }
+        return order;
+    }
+
+    @JsonIgnore
+    @Override
     public String getAddressSpaceType() {
         if (spec != null) {
             return spec.getAddressSpaceType();

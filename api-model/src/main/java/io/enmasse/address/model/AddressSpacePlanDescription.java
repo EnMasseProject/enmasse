@@ -36,14 +36,16 @@ public class AddressSpacePlanDescription extends AbstractWithAdditionalPropertie
 
     @NotNull
     private String name;
+    private String displayName;
     private String description;
     private Map<String, Double> resourceLimits = new HashMap<>();
 
     public AddressSpacePlanDescription() {
     }
 
-    public AddressSpacePlanDescription(final String name, final String description, Map<String, Double> resourceLimits) {
+    public AddressSpacePlanDescription(final String name, final String displayName, final String description, Map<String, Double> resourceLimits) {
         this.name = name;
+        this.displayName = displayName;
         this.description = description;
         this.resourceLimits = resourceLimits;
     }
@@ -54,6 +56,14 @@ public class AddressSpacePlanDescription extends AbstractWithAdditionalPropertie
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     public String getDescription() {
@@ -70,22 +80,23 @@ public class AddressSpacePlanDescription extends AbstractWithAdditionalPropertie
         if (o == null || getClass() != o.getClass()) return false;
         AddressSpacePlanDescription that = (AddressSpacePlanDescription) o;
         return Objects.equals(name, that.name) &&
+                Objects.equals(displayName, that.displayName) &&
                 Objects.equals(description, that.description) &&
                 Objects.equals(resourceLimits, that.resourceLimits);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, resourceLimits);
+        return Objects.hash(name, displayName, description, resourceLimits);
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("{");
         sb.append("name=").append(this.name);
-        sb.append(",");
-        sb.append("description=").append(this.description);
-        sb.append("resourceLimits=").append(this.resourceLimits);
+        sb.append(", displayName=").append(this.displayName);
+        sb.append(", description=").append(this.description);
+        sb.append(", resourceLimits=").append(this.resourceLimits);
         return sb.append("}").toString();
     }
 

@@ -23,7 +23,7 @@ const translateAddressSpaces = addressSpaces => {
     return translation;
 }
 
-const getPlanNames = plans => plans.spec.plans.map(plan => plan.name).sort();
+const getPlanNames = plans => plans.spec.plans.map(plan => plan.name);
 
 //needs tenant-view role
 export function loadMessagingInstances() {

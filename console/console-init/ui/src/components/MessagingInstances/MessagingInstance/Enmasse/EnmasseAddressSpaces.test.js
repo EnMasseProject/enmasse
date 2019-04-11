@@ -105,6 +105,10 @@ describe('load brokered and standard plans', () => {
         "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
         "resourceLimits": {"router": 1.0, "broker": 1.0, "aggregate": 2.0}
       }, {
+        "name": "standard-medium",
+        "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis.",
+        "resourceLimits": {"router": 3.0, "broker": 3.0, "aggregate": 6.0}
+      }, {
         "name": "standard-unlimited",
         "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis.",
         "resourceLimits": {"router": 10000.0, "broker": 10000.0, "aggregate": 10000.0}
@@ -112,10 +116,6 @@ describe('load brokered and standard plans', () => {
         "name": "standard-unlimited-with-mqtt",
         "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis and MQTT support.",
         "resourceLimits": {"router": 10000.0, "broker": 10000.0, "aggregate": 10000.0}
-      }, {
-        "name": "standard-medium",
-        "description": "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis.",
-        "resourceLimits": {"router": 3.0, "broker": 3.0, "aggregate": 6.0}
       }],
       "authenticationServices": ["none-authservice"]
     }
@@ -154,7 +154,7 @@ describe('load brokered and standard plans', () => {
 
   const expectedBrokeredPlanNames = [ "brokered-single-broker" ];
 
-  const expectedStandardPlanNames = [ 'standard-medium', 'standard-small', 'standard-unlimited', 'standard-unlimited-with-mqtt' ];
+  const expectedStandardPlanNames = [ 'standard-small', 'standard-medium', 'standard-unlimited', 'standard-unlimited-with-mqtt' ];
 
   it('loadStandardAddressPlans should return plan names', (done) => {
     var mock = new MockAdapter(axios);
