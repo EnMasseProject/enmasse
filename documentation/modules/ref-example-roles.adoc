@@ -1,0 +1,36 @@
+// Module included in the following assemblies:
+//
+// assembly-tenant-guide.adoc
+// using master.adoc
+
+[id='ref-example-roles-{context}']
+= {ProductName} resources and {ProductName} example roles
+
+The following table describes the {ProductName} resources.
+
+.{ProductName} resources table
+[cols="50%a,50%a",options="header",subs="attributes"]
+|===
+|Resource |Description
+|`addresses`|
+|`addressplans`|
+|`addressspaceplans`|
+|`addressspaces`|
+|`addressspaceschemas`|
+|`brokeredinfraconfigs`|Specifies the infrastructure configuration for brokered address spaces?
+|`messagingusers`|
+|`standardinfraconfigs`|Specifies the infrastructure configuration for standard address spaces?
+|===
+
+{ProductName} provides the following example roles, which you can use directly or use as models to create your own roles.
+
+.{ProductName} example roles table
+[cols="40%a,60%a",options="header",subs="attributes"]
+|===
+|Role |Description
+|enmasse.io:tenant-view|Specifies `get` and `list` permissions for `addresses`, `addressspaces`, `addressspaceschemas`, and `messagingusers`
+|enmasse.io:tenant-edit|Specifies `create`, `get`, `update`, `delete`, `list`, `watch`, and `patch` permissions for `addresses`, `addressspaces`, and `messagingusers`; `get` and `list` permissions for `addressspaceschemas`
+|`service-admin` cluster role|Specifies `create`, `get`, `update`, `delete`, `list`, `watch`, and `patch` permissions for `addressplans`, `addressspaceplans`, `brokeredinfraconfigs`, and `standardinfraconfigs`
+|===
+
+

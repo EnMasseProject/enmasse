@@ -17,7 +17,10 @@ include::assembly-using-console.adoc[leveloffset=+1]
 
 //Managing users
 include::../modules/con-user-model.adoc[leveloffset=+1]
+
 include::assembly-managing-users.adoc[leveloffset=+1]
+
+include::../modules/ref-example-roles.adoc[leveloffset=+1]
 
 //Connecting applications
 include::assembly-connecting-applications.adoc[leveloffset=+1]
