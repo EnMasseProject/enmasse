@@ -44,7 +44,9 @@ public class StatusController implements Controller {
         checkAuthServiceReady(addressSpace);
         checkExposedEndpoints(addressSpace);
         if (addressSpace.getStatus().isReady()) {
-            addressSpace.getStatus().setPhase(Phase.Active);
+            if (addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
+                addressSpace.getStatus().setPhase(Phase.Active);
+            }
         } else {
             if (Phase.Active.equals(addressSpace.getStatus().getPhase())) {
                 addressSpace.getStatus().setPhase(Phase.Failed);
