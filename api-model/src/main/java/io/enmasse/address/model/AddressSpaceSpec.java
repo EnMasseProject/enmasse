@@ -14,15 +14,18 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.admin.model.v1.NetworkPolicy;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
@@ -30,7 +33,7 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddressSpaceSpec {
+public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
 
     @NotEmpty
     private String type;

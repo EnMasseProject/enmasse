@@ -147,11 +147,17 @@ public class CreateController implements Controller {
             eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
-            addressSpace.getStatus().setPhase(Phase.Configuring);
+            // TODO: Remove conditional after 0.28.0 is released
+            if (addressSpace.getStatus().getPhase() != null) {
+                addressSpace.getStatus().setPhase(Phase.Configuring);
+            }
         } else if (currentInfraConfig == null || !currentInfraConfig.equals(desiredInfraConfig)) {
 
             if (version.equals(desiredInfraConfig.getVersion())) {
-                addressSpace.getStatus().setPhase(Phase.Configuring);
+                // TODO: Remove conditional after 0.28.0 is released
+                if (addressSpace.getStatus().getPhase() != null) {
+                    addressSpace.getStatus().setPhase(Phase.Configuring);
+                }
                 if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                     return addressSpace;
                 }
@@ -170,7 +176,10 @@ public class CreateController implements Controller {
                 log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getVersion(), version);
             }
         } else if (!addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
-            addressSpace.getStatus().setPhase(Phase.Configuring);
+            // TODO: Remove conditional after 0.28.0 is released
+            if (addressSpace.getStatus().getPhase() != null) {
+                addressSpace.getStatus().setPhase(Phase.Configuring);
+            }
             if (checkExceedsQuota(addressSpaceType, addressSpacePlan, addressSpace)) {
                 return addressSpace;
             }

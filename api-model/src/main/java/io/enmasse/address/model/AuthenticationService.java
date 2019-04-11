@@ -11,6 +11,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.model.validation.AuthenticationServiceDetails;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -25,7 +26,7 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
@@ -34,7 +35,7 @@ import io.sundr.builder.annotations.Inline;
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @AuthenticationServiceDetails
-public class AuthenticationService {
+public class AuthenticationService extends AbstractWithAdditionalProperties {
 
     private String name;
     private AuthenticationServiceType type;
