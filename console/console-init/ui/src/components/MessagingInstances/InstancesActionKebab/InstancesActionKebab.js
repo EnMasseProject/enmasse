@@ -44,7 +44,7 @@ class InstancesActionKebab extends React.Component {
           isOpen={isInstancesKebabOpen}
           isPlain
           dropdownItems={[
-            <DropdownItem isDisabled={!this.props.hasSelectedRows} component="button" key="delete"
+            <DropdownItem id="dd-menuitem-delete" isDisabled={!this.props.hasSelectedRows} component="button" key="delete"
                           onClick={this.props.openDeleteModal}>Delete</DropdownItem>,
           ]}
         />

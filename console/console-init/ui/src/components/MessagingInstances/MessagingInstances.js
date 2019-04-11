@@ -191,6 +191,7 @@ class MessagingInstances extends React.Component {
         <NotificationConsumer>
           {({add}) => (
             <DeleteInstanceModal
+              id="modal-delete"
               isOpen={this.state.isDeleteModalOpen}
               handleDeleteModalToggle={this.onDeleteToggle}
               handleDelete={this.handleDelete}
@@ -208,6 +209,7 @@ class MessagingInstances extends React.Component {
                 </ToolbarItem>
                 <ToolbarItem className={css(spacingStyles.mxMd)}>
                   <InstancesActionKebab
+                    id="action-debab-top"
                     hasSelectedRows={this.state.hasSelectedRows}
                     openDeleteModal={() => this.openDeleteModal(this.getSelectedInstances())}
                   />
@@ -216,6 +218,7 @@ class MessagingInstances extends React.Component {
               <ToolbarGroup>
                 <ToolbarItem>
                   <Pagination
+                    id="pagination-bottom-top"
                     itemCount={this.state.allMessagingInstances.length}
                     perPage={this.state.perPage}
                     page={this.state.page}
@@ -228,16 +231,17 @@ class MessagingInstances extends React.Component {
             </Toolbar>
           </CardHeader>
           <CardBody>
-            <Table aria-label="table of messaging instances" onSelect={this.onMessagingInstanceSelect}
+            <Table id="table-instances" aria-label="table of messaging instances" onSelect={this.onMessagingInstanceSelect}
                    cells={columns} rows={rows} actions={actions}>
-              <TableHeader/>
-              <TableBody/>
+              <TableHeader id="table-header"/>
+              <TableBody id="table-body"/>
             </Table>
 
             <Toolbar className={"pf-u-justify-content-flex-end pf-u-mx-xl pf-u-my-md"}>
               <ToolbarGroup>
                 <ToolbarItem>
                   <Pagination
+                    id="pagination-bottom"
                     itemCount={this.state.allMessagingInstances.length}
                     perPage={this.state.perPage}
                     page={this.state.page}

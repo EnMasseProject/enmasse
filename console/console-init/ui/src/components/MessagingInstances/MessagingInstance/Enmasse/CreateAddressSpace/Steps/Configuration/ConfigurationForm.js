@@ -66,7 +66,7 @@ class ConfigurationForm extends React.Component {
     const {newInstance} = this.state;
 
     return (
-      <Form>
+      <Form id="form-configuration">
         <Title size={"xl"}>Configure your component</Title>
         <NamespaceInput
           handleNamespaceChange={this.handleNamespaceChange}

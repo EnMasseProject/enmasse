@@ -11,10 +11,10 @@ const deleteInstanceModal = (props) => {
       isOpen={props.isOpen}
       onClose={props.handleDeleteModalToggle}
       actions={[
-        <Button key="cancel" variant="secondary" onClick={props.handleDeleteModalToggle}>
+        <Button id="button-delete-cancel" key="cancel" variant="secondary" onClick={props.handleDeleteModalToggle}>
           Cancel
         </Button>,
-        <Button key="confirm" variant="primary" onClick={() => props.handleDelete(props.addNotification)}>
+        <Button id="button-delete" key="confirm" variant="primary" onClick={() => props.handleDelete(props.addNotification)}>
           Delete
         </Button>
       ]}
