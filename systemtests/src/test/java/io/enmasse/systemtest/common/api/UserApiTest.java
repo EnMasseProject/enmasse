@@ -82,6 +82,9 @@ class UserApiTest extends TestBase {
         assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
         assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
 
+        //patch user
+        assertThat(KubeCMDClient.patchCR(User.KIND.toLowerCase(), brokered.getMetadata().getName() + "." + cred.getUsername(), "{\"spec\":{\"authentication\":{\"password\":\"aGVp\"}}}").getRetCode(), is(true));
+
         //delete user
         assertThat(KubeCMDClient.deleteUser(kubernetes.getNamespace(), brokered.getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
         assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getMetadata().getName(), cred.getUsername()).getRetCode(), is(false));

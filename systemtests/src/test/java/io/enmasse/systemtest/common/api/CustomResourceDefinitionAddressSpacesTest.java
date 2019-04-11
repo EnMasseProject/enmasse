@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import static io.enmasse.systemtest.Environment.ocpVersionEnv;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.cmdclients.KubeCMDClient.createCR;
+import static io.enmasse.systemtest.cmdclients.KubeCMDClient.patchCR;
 import static io.enmasse.systemtest.cmdclients.KubeCMDClient.updateCR;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
@@ -61,7 +62,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     }
 
     @Test
-    void testReplaceAddressSpace() throws Exception {
+    void testReplacePatchAddressSpace() throws Exception {
         AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_SMALL).endSpec().done();
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
@@ -72,8 +73,15 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec().done();
         updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         waitForAddressSpaceReady(standard);
-
+        waitForAddressSpacePlanApplied(standard);
         assertThat(getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
+
+        // Patch back to small plan
+        assertTrue(patchCR(standard.getKind().toLowerCase(), standard.getMetadata().getName(), "{\"spec\":{\"plan\":\""+ AddressSpacePlans.STANDARD_SMALL + "\"}}").getRetCode());
+        standard = getAddressSpace(standard.getMetadata().getName());
+        waitForAddressSpaceReady(standard);
+        waitForAddressSpacePlanApplied(standard);
+        assertThat(getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_SMALL));
     }
 
     @Test
