@@ -233,7 +233,7 @@ public class PlanUtils {
                     .editOrNewAffinity()
                     .editOrNewNodeAffinity()
                     .addToPreferredDuringSchedulingIgnoredDuringExecution(new PreferredSchedulingTermBuilder()
-                            .withNewWeight(1)
+                            .withWeight(1)
                             .withNewPreference()
                             .addToMatchExpressions(new NodeSelectorRequirementBuilder()
                                     .withKey("node-label-key")
