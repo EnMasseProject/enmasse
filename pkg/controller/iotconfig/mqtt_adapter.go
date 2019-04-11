@@ -43,6 +43,11 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, r.reconcileMqttAdapterConfigMap)
 	})
+	if !util.IsOpenshift() {
+		rc.ProcessSimple(func() error {
+			return r.processService(ctx, nameMqttAdapter + "-external", config, r.reconcileMqttAdapterServiceExternal)
+		})
+	}
 	if config.WantDefaultRoutes(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig) {
 		rc.ProcessSimple(func() error {
 			return r.processRoute(ctx, routeMqttAdapter, config, r.reconcileMqttAdapterRoute)
@@ -263,6 +268,39 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterRoute(config *iotv1alpha1.IoTCo
 	route.Spec.To.Name = nameMqttAdapter
 
 	// return
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) reconcileMqttAdapterServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+
+	install.ApplyServiceDefaults(service, "iot", service.Name)
+
+	if len(service.Spec.Ports) != 1 {
+		service.Spec.Ports = make([]corev1.ServicePort, 1)
+	}
+
+	service.Spec.Ports[0].Name = "mqtts"
+	service.Spec.Ports[0].Port = 30883
+	service.Spec.Ports[0].TargetPort = intstr.FromInt(8883)
+	service.Spec.Ports[0].Protocol = corev1.ProtocolTCP
+
+	// annotations
+
+	if service.Annotations == nil {
+		service.Annotations = make(map[string]string)
+	}
+
+	if err := ApplyInterServiceForService(config, service, ""); err != nil {
+		return err
+	}
+
+	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, service, nameMqttAdapter); err != nil {
+		return err
+	}
+
+	service.Spec.Type = "LoadBalancer"
+	service.Spec.Selector["name"] = nameMqttAdapter
 
 	return nil
 }

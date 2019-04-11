@@ -47,6 +47,12 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, r.reconcileFileDeviceRegistryPersistentVolumeClaim)
 	})
 
+	if !util.IsOpenshift() {
+		rc.ProcessSimple(func() error {
+			return r.processService(ctx, nameDeviceRegistry + "-external", config, r.reconcileFileDeviceRegistryServiceExternal)
+		})
+	}
+
 	if config.WantDefaultRoutes(nil) {
 		rc.ProcessSimple(func() error {
 			return r.processRoute(ctx, routeDeviceRegistry, config, r.reconcileFileDeviceRegistryRoute)
@@ -284,6 +290,34 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryRoute(config *iotv1alpha
 	route.Spec.To.Name = nameDeviceRegistry
 
 	// return
+
+	return nil
+}
+
+
+func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+
+	install.ApplyServiceDefaults(service, "iot", service.Name)
+
+	if len(service.Spec.Ports) != 1 {
+		service.Spec.Ports = make([]corev1.ServicePort, 1)
+	}
+
+	service.Spec.Ports[0].Name = "https"
+	service.Spec.Ports[0].Port = 31443
+	service.Spec.Ports[0].TargetPort = intstr.FromInt(8443)
+	service.Spec.Ports[0].Protocol = corev1.ProtocolTCP
+
+	if service.Annotations == nil {
+		service.Annotations = make(map[string]string)
+	}
+
+	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry); err != nil {
+		return err
+	}
+
+	service.Spec.Type = "LoadBalancer"
+	service.Spec.Selector["name"] = nameDeviceRegistry
 
 	return nil
 }
