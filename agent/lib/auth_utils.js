@@ -18,6 +18,7 @@
 const https = require('https');
 const url = require('url');
 const kubernetes = require('../lib/kubernetes.js');
+const CookieDecoder = require('../lib/cookie_decoder.js');
 const oauth2_factory = require('simple-oauth2');
 const openid_connect = require('openid-client');
 
@@ -300,6 +301,38 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
         }
     };
 
+    var sso_cookie_handler =  function (request, response, next) {
+        var cookies = get_cookies(request);
+        if (!get_from_session(request, "token") && "_oauth_proxy" in cookies) {
+            var oauthproxy_cookie = cookies["_oauth_proxy"];
+            log.info("KWDEBUG got oauthproxy_cookie %s", oauthproxy_cookie);
+
+            var cookieDecoder = new CookieDecoder("QUFBQUJCQkJDQ0NDRERERA=="); // Key needs to be shared with oauth proxy
+            try {
+                var state = cookieDecoder.decode(oauthproxy_cookie);
+
+                if (state.access_token) {
+                    // TODO https://tools.ietf.org/html/rfc6749#page-73 check constituents of access token
+                    log.info("Logged in using cookie");
+                    store_in_session(request, "token", {
+                        getAccessToken: function () {
+                            return state.access_token;
+                        },
+                        revokeAll: function () {
+                            // no op - don't revoke the token as it doesn't belong to us
+                        }
+                    });
+                } else {
+                    log.info("No access token found in SSO cookie");
+                }
+            } finally {
+                next();
+            }
+        } else {
+            next();
+        }
+    };
+
     var openidconnect_handler =  function (request, response, next) {
         if (!get_from_session(request, "token")) {
 
@@ -479,6 +512,7 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
     }
     interceptors.push(init_session_handler);
     interceptors.push(logout_handler);
+    interceptors.push(sso_cookie_handler);
     interceptors.push(openshift ? oauth_handler : openidconnect_handler);
     interceptors.push(logginghandler);
 

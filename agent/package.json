@@ -17,9 +17,9 @@
     },
     "devDependencies": {
         "eslint": "",
-        "mocha": "",
-        "mocha-junit-reporter": "",
-        "istanbul": ""
+        "istanbul": "",
+        "mocha": "^6.1.2",
+        "mocha-junit-reporter": ""
     },
     "scripts": {
         "lint": "eslint lib/*.js",
