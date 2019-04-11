@@ -37,23 +37,21 @@ public class ConsoleWebPage implements IWebPage {
     private AddressApiClient addressApiClient;
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
-    private ConsoleLoginWebPage consoleLoginWebPage;
     private UserCredentials credentials;
-    private OpenshiftWebPage openshiftWebPage;
-
+    private GlobalConsolePage globalConsole;
 
     public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
         this.selenium = selenium;
         this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
-        this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
+        this.globalConsole = new GlobalConsolePage(selenium, "", null);
     }
 
     public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this(selenium, addressApiClient, defaultAddressSpace);
         this.consoleRoute = consoleRoute;
-        this.consoleLoginWebPage = new ConsoleLoginWebPage(selenium);
         this.credentials = credentials;
+        this.globalConsole = new GlobalConsolePage(selenium, "", credentials);
     }
 
     //================================================================================================
@@ -243,7 +241,7 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getLogoutHref() throws Exception {
         log.info("Getting logout link");
-        return getUserDropDown().findElement(By.id("logout"));
+        return getUserDropDown().findElement(By.id("globalconsole"));
     }
 
     public Integer getResultsCount() throws Exception {
@@ -374,19 +372,7 @@ public class ConsoleWebPage implements IWebPage {
         openWebConsolePage(credentials);
     }
 
-    public void openWebConsolePage(boolean viaOpenShift) throws Exception {
-        openWebConsolePage(credentials, false, viaOpenShift);
-    }
-
     public void openWebConsolePage(UserCredentials credentials) throws Exception {
-        openWebConsolePage(credentials, false, false);
-    }
-
-    public void openWebConsolePage(UserCredentials credentials, boolean viaOpenShift) throws Exception {
-        openWebConsolePage(credentials, false, viaOpenShift);
-    }
-
-    public void openWebConsolePage(UserCredentials credentials, boolean clickOnOpenshift, boolean viaOpenShift) throws Exception {
         log.info("Opening console web page");
         logout();
         selenium.getDriver().get(consoleRoute);
@@ -394,8 +380,8 @@ public class ConsoleWebPage implements IWebPage {
         selenium.takeScreenShot();
         if (new AdminResourcesManager(Kubernetes.getInstance()).getAuthService(defaultAddressSpace.getSpec()
                 .getAuthenticationService().getName()).getSpec().getType().equals(AuthenticationServiceType.standard)) {
-            if (!consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), clickOnOpenshift, viaOpenShift))
-                throw new IllegalAccessException(consoleLoginWebPage.getAlertMessage());
+            if (!login(credentials.getUsername(), credentials.getPassword()))
+                throw new IllegalAccessException("Cannot login");
         }
         checkReachableWebPage();
     }
@@ -734,101 +720,22 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public boolean login() throws Exception {
-        return login(credentials, false);
+        return login(credentials);
     }
 
     public boolean login(UserCredentials credentials) throws Exception {
-        return login(credentials, false);
-    }
-
-    public boolean login(UserCredentials credentials, boolean viaOpenShift) throws Exception {
-        return consoleLoginWebPage.login(credentials.getUsername(), credentials.getPassword(), viaOpenShift);
+        return login(credentials.getUsername(), credentials.getPassword());
     }
 
     public void logout() throws Exception {
-        try {
-            selenium.clickOnItem(getUserDropDown(), "User dropdown");
-            selenium.clickOnItem(getLogoutHref(), "Logout");
-        } catch (Exception ex) {
-            log.info("Unable to logout, driver has login page opened.");
-        }
+        globalConsole.logout();
     }
 
-    private class ConsoleLoginWebPage implements IWebPage {
-
-        private Logger log = CustomLogger.getLogger();
-
-        SeleniumProvider selenium;
-
-        public ConsoleLoginWebPage(SeleniumProvider selenium) {
-            this.selenium = selenium;
-        }
-
-        private WebElement getContentElement() throws Exception {
-            return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("kc-content")));
-        }
-
-        private WebElement getUsernameTextInput() throws Exception {
-            return getContentElement().findElement(By.id("username"));
-        }
-
-        private WebElement getPasswordTextInput() throws Exception {
-            return getContentElement().findElement(By.id("password"));
-        }
-
-        private WebElement getLoginButton() throws Exception {
-            return getContentElement().findElement(By.className("btn-lg"));
-        }
-
-        private WebElement getAlertContainer() throws Exception {
-            return selenium.getDriver().findElement(By.className("alert"));
-        }
-
-        private WebElement getOpenshiftButton() {
-            return selenium.getDriver().findElement(By.id("zocial-openshift-v3"));
-        }
-
-        public String getAlertMessage() throws Exception {
-            return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
-        }
-
-        private boolean checkAlert() throws Exception {
-            try {
-                getAlertMessage();
-                return false;
-            } catch (Exception ignored) {
-                return true;
-            }
-        }
-
-        public boolean login(String username, String password, boolean viaOpenShift) throws Exception {
-            return login(username, password, false, viaOpenShift);
-        }
-
-        public boolean login(String username, String password, boolean openOpenshiftLoginPage, boolean viaOpenShift) throws Exception {
-            if (viaOpenShift) {
-                checkReachableWebPage();
-                if (openOpenshiftLoginPage) {
-                    selenium.clickOnItem(getOpenshiftButton());
-                }
-                OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
-                boolean login = ocLoginPage.login(username, password);
-                return login;
-            } else {
-                log.info("Try to login with credentials {} : {}", username, password);
-                selenium.fillInputItem(getUsernameTextInput(), username);
-                selenium.fillInputItem(getPasswordTextInput(), password);
-                selenium.clickOnItem(getLoginButton(), "Log in");
-                return checkAlert();
-            }
-        }
-
-        @Override
-        public void checkReachableWebPage() {
-            String pageTitle = "Log";
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.titleContains(pageTitle));
-        }
+    public boolean login(String username, String password) throws Exception {
+        OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
+        return ocLoginPage.login(username, password);
     }
+
 
     @Override
     public void checkReachableWebPage() {

@@ -694,5 +694,4 @@ public abstract class Kubernetes {
     public CustomResourceDefinition getCRD(String name) {
         return client.customResourceDefinitions().withName(name).get();
     }
-
 }
