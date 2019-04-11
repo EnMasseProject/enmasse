@@ -11,7 +11,7 @@ get_endpoint() {
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 TARGET_DIR=${1-/apps}
 
-export COOKIE_SECRET=$(python -c 'import os,base64; print base64.b64encode(os.urandom(16))')
+export COOKIE_SECRET=$(python -c 'import os,base64; print base64.urlsafe_b64encode(os.urandom(16))')
 
 WELLKNOWN_DIR=${TARGET_DIR}/.well-known
 mkdir -p ${WELLKNOWN_DIR}
