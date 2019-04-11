@@ -37,11 +37,11 @@ public class KubeSchemaApi implements SchemaApi {
             .withZone(ZoneId.of("UTC"));
     private final boolean isOpenShift;
 
-    private volatile List<io.enmasse.admin.model.v1.AddressSpacePlan> currentAddressSpacePlans;
-    private volatile List<io.enmasse.admin.model.v1.AddressPlan> currentAddressPlans;
-    private volatile List<StandardInfraConfig> currentStandardInfraConfigs;
-    private volatile List<BrokeredInfraConfig> currentBrokeredInfraConfigs;
-    private volatile List<AuthenticationService> currentAuthenticationServices;
+    private volatile List<io.enmasse.admin.model.v1.AddressSpacePlan> currentAddressSpacePlans = Collections.emptyList();
+    private volatile List<io.enmasse.admin.model.v1.AddressPlan> currentAddressPlans = Collections.emptyList();
+    private volatile List<StandardInfraConfig> currentStandardInfraConfigs = Collections.emptyList();
+    private volatile List<BrokeredInfraConfig> currentBrokeredInfraConfigs = Collections.emptyList();
+    private volatile List<AuthenticationService> currentAuthenticationServices = Collections.emptyList();
 
     public KubeSchemaApi(CrdApi<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlanApi,
                          CrdApi<io.enmasse.admin.model.v1.AddressPlan> addressPlanApi,
@@ -322,10 +322,6 @@ public class KubeSchemaApi implements SchemaApi {
     }
 
     Schema assembleSchema(List<io.enmasse.admin.model.v1.AddressSpacePlan> addressSpacePlans, List<io.enmasse.admin.model.v1.AddressPlan> addressPlans, List<StandardInfraConfig> standardInfraConfigs, List<BrokeredInfraConfig> brokeredInfraConfigs, List<AuthenticationService> authenticationServices) {
-        if (addressSpacePlans == null || addressPlans == null || brokeredInfraConfigs == null || standardInfraConfigs == null || authenticationServices == null) {
-            return null;
-        }
-
         Set<AddressPlan> validAddressPlans = new HashSet<>();
         Map<String, AddressPlan> addressPlanByName = new HashMap<>();
         for (AddressPlan addressPlan : addressPlans) {
@@ -344,7 +340,7 @@ public class KubeSchemaApi implements SchemaApi {
                     validateAddressPlan(addressSpacePlan.getAddressSpaceType(), addressPlan);
                     plansForAddressSpacePlan.add(addressPlan);
                 } catch (SchemaValidationException e) {
-                    log.error("Error validating address space plan {}, skipping", addressSpacePlan.getMetadata().getName(), e);
+                    log.error("Error validating address plan {}, skipping", addressPlanName, e);
                 }
             }
 
