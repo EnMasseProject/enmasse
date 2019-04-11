@@ -13,6 +13,15 @@ In {ProductName} users can be created using standard command-line tools.
 
 .Procedure
 
+. To correctly base64 encode a password for the user definition file, run the following command:
++
+[options="nowrap",subs="attributes,+quotes"]
+----
+echo -n password | base64 #cGFzc3dvcmQ=
+----
++
+NOTE: Be sure to use the `-n` parameter when running this command. Not specifying that parameter will result in an improperly coded password and cause log-in issues.
+
 . Save the user definition to a file:
 +
 [source,yaml,options="nowrap"]
