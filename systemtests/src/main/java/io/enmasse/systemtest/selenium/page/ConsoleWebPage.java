@@ -374,7 +374,6 @@ public class ConsoleWebPage implements IWebPage {
 
     public void openWebConsolePage(UserCredentials credentials) throws Exception {
         log.info("Opening console web page");
-        logout();
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
@@ -620,7 +619,7 @@ public class ConsoleWebPage implements IWebPage {
      */
     public void createAddressesWebConsole(Address... destinations) throws Exception {
         for (Address dest : destinations) {
-            createAddressWebConsole(dest, false, true);
+            createAddressWebConsole(dest, true);
         }
     }
 
@@ -628,18 +627,11 @@ public class ConsoleWebPage implements IWebPage {
      * create specific address
      */
     public void createAddressWebConsole(Address destination) throws Exception {
-        createAddressWebConsole(destination, true, true);
+        createAddressWebConsole(destination, true);
     }
 
     public void createAddressWebConsole(Address destination, boolean waitForReady) throws Exception {
-        createAddressWebConsole(destination, true, waitForReady);
-    }
-
-    public void createAddressWebConsole(Address destination, boolean openConsolePage, boolean waitForReady) throws Exception {
         log.info("Create address using web console");
-
-        if (openConsolePage)
-            openWebConsolePage();
 
         //get addresses item from left panel view
         openAddressesPageWebConsole();
@@ -685,22 +677,12 @@ public class ConsoleWebPage implements IWebPage {
      */
     public void deleteAddressesWebConsole(Address... destinations) throws Exception {
         for (Address dest : destinations) {
-            deleteAddressWebConsole(dest, false);
+            deleteAddressWebConsole(dest);
         }
     }
 
-    /**
-     * delete specific address
-     */
     public void deleteAddressWebConsole(Address destination) throws Exception {
-        deleteAddressWebConsole(destination, true);
-    }
-
-    public void deleteAddressWebConsole(Address destination, boolean openConsolePage) throws Exception {
         log.info("Remove address using web console");
-
-        if (openConsolePage)
-            openWebConsolePage();
 
         //open addresses
         openAddressesPageWebConsole();
@@ -732,8 +714,14 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public boolean login(String username, String password) throws Exception {
-        OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
-        return ocLoginPage.login(username, password);
+        try {
+            getNavigateMenu();
+            log.info("User is already logged");
+            return true;
+        } catch (Exception ex) {
+            OpenshiftLoginWebPage ocLoginPage = new OpenshiftLoginWebPage(selenium);
+            return ocLoginPage.login(username, password);
+        }
     }
 
 

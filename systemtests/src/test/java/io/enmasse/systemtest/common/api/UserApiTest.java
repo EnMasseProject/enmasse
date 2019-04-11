@@ -379,7 +379,7 @@ class UserApiTest extends TestBase {
             SeleniumManagement.deployFirefoxApp();
             selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
             ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
-            page.openWebConsolePage(credentials, true);
+            page.openWebConsolePage(credentials);
         } finally {
             selenium.saveScreenShots("UserApiTests", "testFederatedUsers");
             selenium.tearDownDrivers();

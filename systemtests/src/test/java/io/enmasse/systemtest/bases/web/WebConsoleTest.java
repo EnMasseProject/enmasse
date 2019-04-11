@@ -9,6 +9,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
@@ -73,8 +74,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         for (Address dest : destinations) {
-            consoleWebPage.createAddressWebConsole(dest, false, true);
-            consoleWebPage.deleteAddressWebConsole(dest, false);
+            consoleWebPage.createAddressWebConsole(dest, true);
+            consoleWebPage.deleteAddressWebConsole(dest);
         }
         assertWaitForValue(0, () -> consoleWebPage.getResultsCount(), new TimeoutBudget(20, TimeUnit.SECONDS));
     }
@@ -206,6 +207,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, clusterUser);
+        consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressWebConsole(destQueue);
         consoleWebPage.createAddressWebConsole(destTopic);
 
@@ -217,7 +219,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
         assertAddressName("Console failed, filter does not contain addresses", items, "queue");
 
-        consoleWebPage.deleteAddressWebConsole(destQueue, false);
+        consoleWebPage.deleteAddressWebConsole(destQueue);
         items = consoleWebPage.getAddressItems();
         assertEquals(0, items.size());
         log.info("filtered address has been deleted and no longer present in filter");
@@ -617,33 +619,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         }
     }
 
-    protected void doTestCannotCreateAddresses() throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(sharedAddressSpace),
-                addressApiClient, sharedAddressSpace, clusterUser);
-        consoleWebPage.openWebConsolePage();
-        consoleWebPage.openAddressesPageWebConsole();
-
-        assertElementDisabled(String.format("Console failed, create button is enabled for user '%s'", clusterUser),
-                consoleWebPage.getCreateButton());
-    }
-
-    protected void doTestCannotDeleteAddresses() throws Exception {
-        Address destination = AddressUtils.createQueueAddressObject("test-cannot-delete-address", getDefaultPlan(AddressType.QUEUE));
-        UserCredentials monitorUser = new UserCredentials("monitor-user-test-2", "monitorPa55");
-
-        setAddresses(destination);
-
-        consoleWebPage = new ConsoleWebPage(selenium,
-                getConsoleRoute(sharedAddressSpace),
-                addressApiClient, sharedAddressSpace, monitorUser);
-        consoleWebPage.openWebConsolePage();
-        consoleWebPage.openAddressesPageWebConsole();
-
-        assertElementDisabled(String.format("Console failed, delete button is enabled for user '%s'", monitorUser),
-                consoleWebPage.getRemoveButton());
-    }
-
     protected void doTestCanOpenConsolePage(UserCredentials credentials) throws Exception {
         try {
             consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
@@ -828,35 +803,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             assertFalse(element.isEnabled(), message);
         } catch (Exception ex) {
             throw new IllegalStateException("Element is enabled");
-        }
-    }
-
-    private void assertElementEnabled(String message, WebElement element) {
-        assertTrue(element.isEnabled(), message);
-    }
-
-    private void assertViewOnlyUsersAddresses(String message, String group, List<AddressWebItem> addresses) {
-        log.info("Check if user {} see only addresses he has rights on", defaultCredentials);
-        if (addresses == null || addresses.size() == 0)
-            fail("No address items in console for group " + group);
-        for (AddressWebItem item : addresses) {
-            if (group.contains("*")) {
-                String rights = defaultCredentials.getUsername().replace("user-view-", "")
-                        .replace("*", "")
-                        .replace("#", "");
-                assertTrue(rights.equals("") || item.getName().contains(rights), message);
-            } else {
-                assertEquals(item.getName(), group.replace("view_", ""), message);
-            }
-        }
-    }
-
-    private void assertViewOnlyUsersConnections(String message, String username, List<ConnectionWebItem> connections) {
-        log.info("Check if user {} see only his connections", username);
-        if (connections == null || connections.size() == 0)
-            fail("No connection items in console under user " + username);
-        for (ConnectionWebItem conn : connections) {
-            assertEquals(conn.getUser(), username, message);
         }
     }
 }

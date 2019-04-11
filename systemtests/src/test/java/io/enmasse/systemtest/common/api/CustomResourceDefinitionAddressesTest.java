@@ -22,10 +22,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -55,7 +52,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         Address dest1 = AddressUtils.createTopicAddressObject("mytopic-agent", DestinationPlan.BROKERED_TOPIC);
         Address dest2 = AddressUtils.createTopicAddressObject("mytopic-api", DestinationPlan.BROKERED_TOPIC);
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, userCredentials);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.createAddressWebConsole(dest1, false);
@@ -68,10 +65,10 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
 
         assertAll(() -> {
-            assertTrue(output.contains(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1)),
+            assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1))),
                     String.format("Get all addresses should contains '%s'; but contains only: %s",
                             AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1), output));
-            assertTrue(output.contains(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2)),
+            assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2))),
                     String.format("Get all addresses should contains '%s'; but contains only: %s",
                             AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2), output));
         });
@@ -133,17 +130,17 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         result = KubeCMDClient.getAddress(environment.namespace(), "-a");
         output = result.getStdOut().trim();
 
-        assertTrue(output.contains(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1)),
+        assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1))),
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1), output));
-        assertTrue(output.contains(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2)),
+        assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2))),
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2), output));
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, userCredentials);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), addressApiClient, brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
-        consoleWeb.deleteAddressWebConsole(dest1, false);
+        consoleWeb.deleteAddressWebConsole(dest1);
         deleteAddresses(brokered, dest2);
 
         TestUtils.waitUntilCondition(() -> {
