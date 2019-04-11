@@ -42,6 +42,11 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, r.reconcileHttpAdapterConfigMap)
 	})
+	if !util.IsOpenshift() {
+		rc.ProcessSimple(func() error {
+			return r.processService(ctx, nameHttpAdapter + "-external", config, r.reconcileHttpAdapterServiceExternal)
+		})
+	}
 	if config.WantDefaultRoutes(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig) {
 		rc.ProcessSimple(func() error {
 			return r.processRoute(ctx, routeHttpAdapter, config, r.reconcileHttpAdapterRoute)
@@ -263,6 +268,37 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTCo
 	route.Spec.To.Name = nameHttpAdapter
 
 	// return
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) reconcileHttpAdapterServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+
+	install.ApplyServiceDefaults(service, "iot", service.Name)
+
+	if len(service.Spec.Ports) != 1 {
+		service.Spec.Ports = make([]corev1.ServicePort, 1)
+	}
+
+	service.Spec.Ports[0].Name = "https"
+	service.Spec.Ports[0].Port = 30443
+	service.Spec.Ports[0].TargetPort = intstr.FromInt(8443)
+	service.Spec.Ports[0].Protocol = corev1.ProtocolTCP
+
+	if service.Annotations == nil {
+		service.Annotations = make(map[string]string)
+	}
+
+	if err := ApplyInterServiceForService(config, service, ""); err != nil {
+		return err
+	}
+
+	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, service, nameHttpAdapter); err != nil {
+		return err
+	}
+
+	service.Spec.Type = "LoadBalancer"
+	service.Spec.Selector["name"] = nameHttpAdapter
 
 	return nil
 }
