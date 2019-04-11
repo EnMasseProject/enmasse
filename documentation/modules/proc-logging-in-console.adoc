@@ -11,7 +11,7 @@
 .Procedure
 . In a web browser, navigate to `https://_console-host-name_` where `_console-host-name_` is the {ProductName} Console host name.
 
-. Log in with your OpenShift user credentials. The {ProductName} console opens.
+. Log in with your OpenShift user credentials. The {ProductName} Console opens.
 
 image::{imagesdir}/console-screenshot.png[{ProductName} console]
 

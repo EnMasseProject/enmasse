@@ -9,15 +9,13 @@ You can create a new address space using the {ProductName} Console.
 
 .Procedure
 
-. Log in to the {ProductName} Console. 
+. Log in to the {ProductName} Console.
 +
 For more information about how to access the {ProductName} Console, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ProductName} Console].
 
 . Click *Create*. The Create an instance wizard opens.
 
-. For the Component type, select *Address Space* and click *Next*.
+. Complete the required fields and when you are finished, click *Finish* to create the new address space.
 
-. Complete the required fields and when you are finished, click *Finish* to create a new address space. 
-
-When the address space has been successfully created, you can click *View instance* to go to the {ProductName} Console and view information about the new address space.
+When the address space has been successfully created, you can click the address space name to go to the {ProductName} Console and view information about the newly created address space.
 
