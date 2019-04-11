@@ -40,7 +40,7 @@ import (
 TODO TLS for the HTTPD side car
 TODO Tidy up (minimise) Apache HTTPD conf
 TODO Tidy up this code - extract utility methods
-TODO unit tests - having prblem with client when interacting with openshift API endpoints?
+TODO unit tests - having problem with client when interacting with openshift API endpoints?
 */
 const CONSOLE_NAME = "console"
 
@@ -185,7 +185,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{}, nil
 	} else {
 		if util.IsOpenshift() {
-			// Secret will be create later if necessary
+			// Secret will be created later if necessary
 		} else {
 			secretName := types.NamespacedName{
 				Name:      consoleservice.Spec.OauthClientSecret.Name,
@@ -293,17 +293,37 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 		}
 	}
 
+	if consoleservice.Spec.SsoCookieSecret == nil {
+		dirty = true
+		secretName := consoleservice.Name + "-sso-cookie-secret"
+		consoleservice.Spec.SsoCookieSecret = &corev1.SecretReference{
+			Name: secretName,
+		}
+
+		err := util.CreateSecret(ctx, client, scheme, consoleservice.Namespace, secretName, consoleservice, func(secret *corev1.Secret) error {
+			install.ApplyDefaultLabels(&secret.ObjectMeta, "consoleservice", secretName)
+
+			secret.Data = make(map[string][]byte)
+			password, err := util.GeneratePassword(32)
+			secret.Data["cookie-secret"] = []byte(password)
+			return err
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if consoleservice.Spec.OauthClientSecret == nil {
+		dirty = true
+		secretName := consoleservice.Name + "-oauth"
+		consoleservice.Spec.OauthClientSecret = &corev1.SecretReference{Name: secretName}
+	}
+
 	if util.IsOpenshift() {
 		if consoleservice.Spec.Scope == nil {
 			dirty = true
 			scope := "user:full"
 			consoleservice.Spec.Scope = &scope
-		}
-
-		if consoleservice.Spec.OauthClientSecret == nil {
-			dirty = true
-			secretName := consoleservice.Name + "-oauth"
-			consoleservice.Spec.OauthClientSecret = &corev1.SecretReference{Name: secretName}
 		}
 
 		if consoleservice.Spec.DiscoveryMetadataURL == nil {
@@ -510,6 +530,17 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			})
 		}
 
+		if consoleservice.Spec.SsoCookieDomain != nil {
+			install.ApplyEnv(container, "SSO_COOKIE_DOMAIN", func(envvar *corev1.EnvVar) {
+				envvar.Value = *consoleservice.Spec.SsoCookieDomain
+			})
+		}
+
+		if consoleservice.Spec.SsoCookieSecret != nil {
+			install.ApplyEnvSecret(container, "SSO_COOKIE_SECRET", "cookie-secret", consoleservice.Spec.SsoCookieSecret.Name)
+		}
+
+
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
 
 		return nil
@@ -522,42 +553,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			if err := install.ApplyContainerImage(container, "console-proxy-openshift", nil); err != nil {
 				return err
 			}
-
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-openshift.cfg"}
-
-			install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
-			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
-
-			if consoleservice.Spec.OauthClientSecret != nil {
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_SECRET", "client-secret", consoleservice.Spec.OauthClientSecret.Name)
-			}
-
-			container.Ports = []corev1.ContainerPort{{
-				ContainerPort: 8443,
-				Name:          "https",
-			}}
-
-			container.ReadinessProbe = &corev1.Probe{
-				InitialDelaySeconds: 60,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
-			}
-			container.LivenessProbe = &corev1.Probe{
-				InitialDelaySeconds: 120,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
-			}
+			applyOauthProxyContainer(container, consoleservice)
 
 			return nil
 		}); err != nil {
@@ -590,44 +587,12 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-kubernetes.cfg"}
 
-			install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
-			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
-
-			if consoleservice.Spec.OauthClientSecret != nil {
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_SECRET", "client-secret", consoleservice.Spec.OauthClientSecret.Name)
-			}
+			applyOauthProxyContainer(container, consoleservice)
 
 			if consoleservice.Spec.Scope != nil {
 				install.ApplyEnv(container, "SSL_CERT_DIR", func(envvar *corev1.EnvVar) {
 					envvar.Value = "/var/run/secrets/kubernetes.io/serviceaccount/"
 				})
-			}
-
-			container.Ports = []corev1.ContainerPort{{
-				ContainerPort: 8443,
-				Name:          "https",
-			}}
-
-			container.ReadinessProbe = &corev1.Probe{
-				InitialDelaySeconds: 60,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
-			}
-			container.LivenessProbe = &corev1.Probe{
-				InitialDelaySeconds: 120,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
 			}
 
 			return nil
@@ -640,6 +605,40 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		Type: appsv1.RecreateDeploymentStrategyType,
 	}
 	return nil
+}
+
+func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1beta1.ConsoleService) {
+	install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
+	install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
+	if consoleservice.Spec.OauthClientSecret != nil {
+		install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
+		install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_SECRET", "client-secret", consoleservice.Spec.OauthClientSecret.Name)
+	}
+
+	container.Ports = []corev1.ContainerPort{{
+		ContainerPort: 8443,
+		Name:          "https",
+	}}
+	container.ReadinessProbe = &corev1.Probe{
+		InitialDelaySeconds: 60,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Port:   intstr.FromString("https"),
+				Path:   "/oauth/healthz",
+				Scheme: "HTTPS",
+			},
+		},
+	}
+	container.LivenessProbe = &corev1.Probe{
+		InitialDelaySeconds: 120,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Port:   intstr.FromString("https"),
+				Path:   "/oauth/healthz",
+				Scheme: "HTTPS",
+			},
+		},
+	}
 }
 
 func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {

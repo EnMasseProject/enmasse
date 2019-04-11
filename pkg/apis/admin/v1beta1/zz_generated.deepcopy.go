@@ -410,6 +410,16 @@ func (in *ConsoleServiceSpec) DeepCopyInto(out *ConsoleServiceSpec) {
 		*out = new(v1.SecretReference)
 		**out = **in
 	}
+	if in.SsoCookieSecret != nil {
+		in, out := &in.SsoCookieSecret, &out.SsoCookieSecret
+		*out = new(v1.SecretReference)
+		**out = **in
+	}
+	if in.SsoCookieDomain != nil {
+		in, out := &in.SsoCookieDomain, &out.SsoCookieDomain
+		*out = new(string)
+		**out = **in
+	}
 	if in.Host != nil {
 		in, out := &in.Host, &out.Host
 		*out = new(string)

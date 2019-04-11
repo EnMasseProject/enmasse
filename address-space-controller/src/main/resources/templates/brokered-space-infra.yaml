@@ -325,14 +325,28 @@ objects:
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
           - name: CONSOLE_OAUTH_DISCOVERY_URL
             value: ${CONSOLE_OAUTH_DISCOVERY_URL}
-          - name: CONSOLE_OAUTH_CLIENT_ID
-            value: ${CONSOLE_OAUTH_CLIENT_ID}
-          - name: CONSOLE_OAUTH_CLIENT_SECRET
-            value: ${CONSOLE_OAUTH_CLIENT_SECRET}
           - name: CONSOLE_OAUTH_SCOPE
             value: ${CONSOLE_OAUTH_SCOPE}
           - name: CONSOLE_LINK
             value: ${CONSOLE_LINK}
+          - name: CONSOLE_OAUTH_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
+                key: client-id
+                optional: true
+          - name: CONSOLE_OAUTH_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
+                key: client-secret
+                optional: true
+          - name: SSO_COOKIE_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: ${CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME}
+                key: cookie-secret
+                optional: true
           image: ${AGENT_IMAGE}
           imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
@@ -482,10 +496,10 @@ parameters:
 - description:
   name: CONSOLE_OAUTH_DISCOVERY_URL
 - description:
-  name: CONSOLE_OAUTH_CLIENT_ID
-- description:
-  name: CONSOLE_OAUTH_CLIENT_SECRET
-- description:
   name: CONSOLE_OAUTH_SCOPE
+- description:
+  name: CONSOLE_OAUTH_SECRET_SECRET_NAME
+- description:
+  name: CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME
 - description:
   name: CONSOLE_LINK

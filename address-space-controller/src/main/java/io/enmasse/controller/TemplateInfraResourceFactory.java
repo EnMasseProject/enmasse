@@ -111,24 +111,26 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         if (console.isPresent()) {
             ConsoleService consoleService = console.get();
-            ConsoleServiceSpec service = consoleService.getSpec();
-            ConsoleServiceStatus status = consoleService.getStatus();
+            ConsoleServiceSpec spec = consoleService.getSpec();
 
-            SecretReference oauthClientSecret = service.getOauthClientSecret();
+            parameters.put(TemplateParameter.CONSOLE_OAUTH_DISCOVERY_URL, spec.getDiscoveryMetadataURL());
+            parameters.put(TemplateParameter.CONSOLE_OAUTH_SCOPE, spec.getScope());
+
+            SecretReference oauthClientSecret = spec.getOauthClientSecret();
             if (oauthClientSecret != null) {
-                kubernetes.getSecret(oauthClientSecret.getName()).ifPresentOrElse(secret -> {
-                    parameters.put(TemplateParameter.CONSOLE_OAUTH_DISCOVERY_URL, service.getDiscoveryMetadataURL());
-                    parameters.put(TemplateParameter.CONSOLE_OAUTH_SCOPE, service.getScope());
-                    Base64.Decoder decoder = Base64.getDecoder();
-                    parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_ID, new String(decoder.decode(secret.getData().get("client-id")), StandardCharsets.UTF_8));
-                    parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_SECRET, new String(decoder.decode(secret.getData().get("client-secret")), StandardCharsets.UTF_8));
-
-                    if (status != null && status.getUrl() != null) {
-                        parameters.put(TemplateParameter.CONSOLE_LINK, status.getUrl());
-                    }
-                }, () -> log.warn("No console OAuth parameters available from ConsoleService {}, " +
-                        "address space console will be unavailable.", consoleService.getMetadata().getName()));
+                parameters.put(TemplateParameter.CONSOLE_OAUTH_SECRET_SECRET_NAME, oauthClientSecret.getName());
             }
+
+            SecretReference cookieSecret = spec.getSsoCookieSecret();
+            if (cookieSecret != null) {
+                parameters.put(TemplateParameter.CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME, cookieSecret.getName());
+            }
+
+            ConsoleServiceStatus status = consoleService.getStatus();
+            if (status != null && status.getUrl() != null) {
+                parameters.put(TemplateParameter.CONSOLE_LINK, status.getUrl());
+            }
+
         }
     }
 
