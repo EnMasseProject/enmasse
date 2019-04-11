@@ -64,7 +64,12 @@ public class HttpAdapterClient extends ApiClient {
     }
 
     public HttpResponse<?> send(MessageType messageType, JsonObject payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
-            final Duration responseTimeout) throws Exception {
+            Duration responseTimeout) throws Exception {
+        return send(messageType, null, payload, expectedCodePredicate, requestCustomizer, responseTimeout);
+    }
+
+    public HttpResponse<?> send(MessageType messageType, String pathSuffix, JsonObject payload, Predicate<Integer> expectedCodePredicate,
+            Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
 
         CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
         var ms = responseTimeout.toMillis();
@@ -73,7 +78,11 @@ public class HttpAdapterClient extends ApiClient {
 
         // create new request
 
-        var request = client.post(endpoint.getPort(), endpoint.getHost(), messageType.path())
+        var path = messageType.path();
+        if (pathSuffix != null) {
+            path += pathSuffix;
+        }
+        var request = client.post(endpoint.getPort(), endpoint.getHost(), path)
                 .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
                 .timeout(ms);
@@ -100,7 +109,7 @@ public class HttpAdapterClient extends ApiClient {
             // use the result from the responseHandler
             // and map it to the responsePromise
             nf.whenComplete((res, err) -> {
-                if ( err != null )  {
+                if (err != null) {
                     responsePromise.completeExceptionally(err);
                 } else {
                     responsePromise.complete(ar.result());
@@ -110,7 +119,7 @@ public class HttpAdapterClient extends ApiClient {
 
         // the next line gives the timeout a bit extra, as the HTTP timeout should
         // kick in, we would prefer the timeout via the future.
-        return responsePromise.get(((long)(ms*1.1)), TimeUnit.MILLISECONDS);
+        return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
     }
 
     public HttpResponse<?> sendTelemetry(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
