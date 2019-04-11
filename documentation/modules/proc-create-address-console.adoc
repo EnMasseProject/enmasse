@@ -3,9 +3,9 @@
 // assembly-using-console.adoc
 
 [id='create-address-console-{context}']
-= Creating addresses using the {ProductName} Console
+= Creating addresses using the {ConsoleName}
 
-You can create new addresses using the {ProductName} Console. The type of addresses that you can create are determined by the type of address space.
+You can create new addresses using the {ConsoleName}. The type of addresses that you can create are determined by the type of address space.
 
 ifdef::Supported[]
 For more information see the {ProductName} link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-supported-features-table-messaging[supported features table].
@@ -16,7 +16,9 @@ endif::Supported[]
 
 .Procedure
 
-. Log in to the {ProductName} Console. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ProductName} Console].
+. Log in to the {ConsoleName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
+
+. Click the address space link for the address space where you want to create a new address.
 
 . Click *New*. The Create new address window opens.
 
@@ -26,5 +28,5 @@ endif::Supported[]
 
 . Select a plan and click *Next*.
 
-. Click *Create*. Your address is displayed in the {ProductName} Console.
+. Click *Create*. Your address is displayed in the {ConsoleName}.
 

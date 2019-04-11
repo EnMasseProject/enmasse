@@ -3,15 +3,15 @@
 // assembly-using-console.adoc
 
 [id='logging-into-console-{context}']
-= Accessing the {ProductName} Console
+= Accessing the {ConsoleName}
 
 .Prerequisites
-* You must have obtained the host name for the {ProductName} Console. For more information about how to obtain the host name, see  link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#retrieving-address-space-information-messaging[Example commands for retrieving address space information].
+* You must have obtained the host name for the {ConsoleName}. For more information about how to obtain the host name, see  link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#retrieving-address-space-information-messaging[Example commands for retrieving address space information].
 
 .Procedure
-. In a web browser, navigate to `https://_console-host-name_` where `_console-host-name_` is the {ProductName} Console host name.
+. In a web browser, navigate to `https://_console-host-name_` where `_console-host-name_` is the {ConsoleName} host name.
 
-. Log in with your OpenShift user credentials. The {ProductName} Console opens.
+. Log in with your OpenShift user credentials. The {ConsoleName} opens.
 
-image::{imagesdir}/console-screenshot.png[{ProductName} console]
+image::{imagesdir}/console-screenshot.png[{ConsoleName}]
 

@@ -5,14 +5,13 @@
 [id='retrieving-address-space-information-{context}']
 = Example commands for retrieving address space information
 
-The following table shows the commands for retrieving address space information, such as the {ProductName} Console host name.
+The following table shows the commands for retrieving address space information, such as the {ConsoleName} host name.
 
 .Retrieving address space information commands table
 [cols="25%a,75%a",options="header",subs="attributes"]
 |===
 |To retrieve the... |Run this command:
-|{ProductName} Console host name |`{cmdcli} get routes console -o jsonpath={.spec.host}`
-`
+|{ConsoleName} host name |`{cmdcli} get routes console -o jsonpath={.spec.host}`
 |status of an address space |`{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}`
 |base64-encoded PEM certificate for the messaging endpoint |`{cmdcli} get addressspace myspace -o 'jsonpath={.status.endpointStatuses[?(@.name=="messaging")].cert}'`
 |host name for the messaging endpoint |`{cmdcli} get addressspace myspace -o 'jsonpath={.status.endpointStatuses[?(@.name=="messaging")].externalHost}'`
