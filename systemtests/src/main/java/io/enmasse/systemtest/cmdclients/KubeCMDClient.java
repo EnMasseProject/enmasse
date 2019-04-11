@@ -74,6 +74,11 @@ public class KubeCMDClient extends CmdClient {
         return createOrUpdateCR(env.namespace(), definition, true);
     }
 
+    public static ExecutionResultData patchCR(String kind, String name, String patchData) {
+        log.info("Patching {} {} in {}", kind, name, env.namespace());
+        return execute(Arrays.asList(CMD, "patch", "-n", env.namespace(), kind, name, "-p", patchData), DEFAULT_SYNC_TIMEOUT, true);
+    }
+
     public static ExecutionResultData updateCR(String namespace, String definition) throws IOException {
         return createOrUpdateCR(namespace, definition, true);
     }

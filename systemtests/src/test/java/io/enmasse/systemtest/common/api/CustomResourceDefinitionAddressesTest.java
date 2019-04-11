@@ -84,6 +84,9 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         assertEquals(1, dest1Response.size(), String.format("Received unexpected count of addresses! got following addresses %s",
                 dest1Response.stream().map(address -> address.getMetadata().getName()).reduce("", String::concat)));
 
+        // Patch new label
+        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), dest1.getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
+
         KubeCMDClient.deleteAddress(environment.namespace(), dest1Response.get(0).getMetadata().getName());
         KubeCMDClient.deleteAddress(environment.namespace(), AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2));
 
@@ -92,7 +95,6 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
             return allAddresses.getStdErr() + allAddresses.getStdOut();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
-
 
     @Test
     void testAddressCreateViaCmdRemoveViaAgentApi() throws Exception {
@@ -132,6 +134,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
         result = KubeCMDClient.getAddress(environment.namespace(), "-a");
         output = result.getStdOut().trim();
+
 
         assertTrue(output.contains(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1)),
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
