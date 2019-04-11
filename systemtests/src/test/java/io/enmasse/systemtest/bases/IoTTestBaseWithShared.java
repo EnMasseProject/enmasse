@@ -107,8 +107,6 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
             }
         }
 
-        // always clean up random user
-        getUserApiClient().deleteUser(this.addressSpace, this.credentials.getUsername());
         if (this.iotAmqpClientFactory != null) {
             this.iotAmqpClientFactory.close();
             this.iotAmqpClientFactory = null;
