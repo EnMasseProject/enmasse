@@ -84,7 +84,7 @@ public class HttpAddressService extends HttpAddressServiceBase {
     }
 
     @PATCH
-    @Consumes({"application/merge-patch+json"})
+    @Consumes({"application/merge-patch+json", "application/strategic-merge-patch+json"})
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{addressName}")
     public Response patchAddress(@Context SecurityContext securityContext,

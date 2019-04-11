@@ -140,7 +140,7 @@ public class HttpAddressSpaceService {
     }
 
     @PATCH
-    @Consumes({"application/merge-patch+json"})
+    @Consumes({"application/merge-patch+json", "application/strategic-merge-patch+json"})
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{addressSpace}")
     public Response patchAddressSpace(@Context SecurityContext securityContext,

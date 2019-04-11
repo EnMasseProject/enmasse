@@ -248,7 +248,7 @@ public class HttpUserService {
     }
 
     @PATCH
-    @Consumes({"application/merge-patch+json"})
+    @Consumes({"application/merge-patch+json", "application/strategic-merge-patch+json"})
     @Produces({MediaType.APPLICATION_JSON})
     @Path("{userName}")
     public Response patchUser(@Context SecurityContext securityContext,
