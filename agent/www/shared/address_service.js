@@ -164,11 +164,6 @@ function AddressService($http) {
     var ws = rhea.websocket_connect(WebSocket);
     var connectionDetails = ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]);
     this.connection = rhea.create_connection({"connection_details": connectionDetails, "reconnect":15000, rejectUnauthorized:true});
-    var eof = this.connection.eof;
-    this.connection.eof = (event) => {
-        this.closeEvent = event;
-        eof.apply(this.connection, arguments);
-    };
     this.connection.connect();
     this.connection.on('message', this.on_message.bind(this));
     this.connection.on('connection_open', function (context) {
@@ -179,6 +174,7 @@ function AddressService($http) {
         }
     });
     this.connection.on('disconnected', function (context) {
+        self.closeEvent = context.error;
         if (self.update_periodic_deltas_interval) {
             clearInterval(self.update_periodic_deltas_interval);
             self.update_periodic_deltas_interval = null;
