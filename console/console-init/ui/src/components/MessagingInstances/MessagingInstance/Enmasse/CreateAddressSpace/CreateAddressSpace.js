@@ -151,7 +151,7 @@ class CreateAddressSpace extends React.Component {
     return (
 
       <React.Fragment>
-        <Button variant="primary" onClick={this.toggleOpen}>
+        <Button id="button-create" variant="primary" onClick={this.toggleOpen}>
           Create
         </Button>
         {isOpen && (

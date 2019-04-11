@@ -106,16 +106,17 @@ class Layout extends React.Component {
       </Nav>
     );
     const helpDropdownItems = [
-      <DropdownItem key="About" onClick={this.handleAboutModalToggle}>About</DropdownItem>
+      <DropdownItem id="dd-menuitem-about" key="About" onClick={this.handleAboutModalToggle}>About</DropdownItem>
     ];
     const userDropdownItems = [
-      <DropdownItem key={"logout"} href="oauth/sign_in">Logout</DropdownItem>
+      <DropdownItem id="dd-menuitem-logout" key={"logout"} href="oauth/sign_in">Logout</DropdownItem>
     ];
     const PageToolbar = (
       <Toolbar>
         <ToolbarGroup>
           <ToolbarItem className={css(accessibleStyles.hiddenOnLg, spacingStyles.mr_0)}>
             <Dropdown
+              id="dd-settings"
               isPlain
               position="right"
               onSelect={this.on171DropdownSelect}
@@ -126,6 +127,7 @@ class Layout extends React.Component {
           </ToolbarItem>
           <ToolbarItem className={css(accessibleStyles.screenReader, accessibleStyles.visibleOnMd)}>
             <Dropdown
+              id="dd-user"
               isPlain
               position="right"
               onSelect={this.onDropdownSelect}
