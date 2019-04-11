@@ -231,8 +231,11 @@ function get_create_server(env) {
     }
 }
 
-function replacer(original, replacement) {
+function replacer(original, replacement, replacer) {
     return function (data) {
+        if (replacer) {
+            data = replacer(data);
+        }
         return data.toString().replace(new RegExp(original, 'g'), replacement);
     }
 }
@@ -250,7 +253,8 @@ ConsoleServer.prototype.listen = function (env, callback) {
                         transform = replacer('<em>messaging\-route\-hostname</em>', env.MESSAGING_ROUTE_HOSTNAME);
                     } else {
                         var global_console_disabled = !env.CONSOLE_LINK;
-                        transform = replacer('\\${GLOBAL_CONSOLE_DISABLED}', global_console_disabled);
+                        transform = replacer('\\${GLOBAL_CONSOLE_DISABLED}', global_console_disabled,
+                            replacer('\\${GLOBAL_CONSOLE_LINK}', env.CONSOLE_LINK));
                     }
                     static_handler(request, response,  transform);
                 } else if (u.pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
