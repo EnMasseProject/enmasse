@@ -146,7 +146,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             json.put("i", i);
             json.put("end", i == 49);
             MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
-            message.setQos(0);
+            message.setQos(1);
             adapterClient.publish(IOT_ADDRESS_TELEMETRY, message);
         }
 
@@ -165,7 +165,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             json.put("i", i);
             json.put("end", i == 4);
             MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
-            message.setQos(0);
+            message.setQos(1);
             adapterClient.publish(IOT_ADDRESS_EVENT, message);
         }
 
