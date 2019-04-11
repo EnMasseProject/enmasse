@@ -90,6 +90,7 @@ public class CliOutputData {
     public static class AddressSpaceRow extends CliDataRow {
         private String plan;
         private boolean ready;
+        private String phase;
         private String status;
 
         AddressSpaceRow(String data) {
@@ -98,9 +99,10 @@ public class CliOutputData {
             this.type = parsedData[1];
             this.plan = parsedData[2];
             this.ready = Boolean.parseBoolean(parsedData[3]);
-            this.age = parsedData[4];
+            this.phase = parsedData[4];
+            this.age = parsedData[5];
             try {
-                this.status = parsedData[5];
+                this.status = parsedData[6];
             } catch (Exception ignored) {
                 this.status = "";
             }
@@ -108,6 +110,10 @@ public class CliOutputData {
 
         public String getPlan() {
             return plan;
+        }
+
+        public String getPhase() {
+            return phase;
         }
 
         public boolean isReady() {
