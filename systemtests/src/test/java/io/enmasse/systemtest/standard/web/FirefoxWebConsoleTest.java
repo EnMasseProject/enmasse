@@ -142,17 +142,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
         doTestCannotDeleteAddresses();
     }
 
-    @Test
-    void testViewAddresses() throws Exception {
-        doTestViewAddresses();
-    }
-
-    @Test
-    @Disabled("related issue: #819")
-    void testViewAddressesWildcards() throws Exception {
-        doTestViewAddressesWildcards();
-    }
-
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class,
@@ -161,7 +150,7 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
 
     @Test
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(defaultCredentials);
+        doTestCanOpenConsolePage(clusterUser);
     }
 
     @Test

@@ -157,17 +157,6 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
         doTestCannotDeleteAddresses();
     }
 
-    @Test
-    void testViewAddresses() throws Exception {
-        doTestViewAddresses();
-    }
-
-    @Test
-    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
-    void testViewAddressesWildcards() throws Exception {
-        doTestViewAddressesWildcards();
-    }
-
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage(new UserCredentials("pepa", "pepaPa555")));
@@ -176,7 +165,7 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(defaultCredentials);
+        doTestCanOpenConsolePage(clusterUser);
     }
 
     @Test

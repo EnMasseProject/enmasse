@@ -126,17 +126,6 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
         doTestCannotDeleteAddresses();
     }
 
-    @Test
-    void testViewAddresses() throws Exception {
-        doTestViewAddresses();
-    }
-
-    @Test
-    @Disabled("not implemented yet")
-    void testViewAddressesWildcards() throws Exception {
-        doTestViewAddressesWildcards();
-    }
-
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class,
@@ -145,7 +134,7 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
 
     @Test
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(defaultCredentials);
+        doTestCanOpenConsolePage(clusterUser);
     }
 
     @Test

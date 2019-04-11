@@ -136,17 +136,6 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
         doTestCannotDeleteAddresses();
     }
 
-    @Test
-    void testViewAddresses() throws Exception {
-        doTestViewAddresses();
-    }
-
-    @Test
-    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
-    void testViewAddressesWildcards() throws Exception {
-        doTestViewAddressesWildcards();
-    }
-
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class,
@@ -156,7 +145,7 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(defaultCredentials);
+        doTestCanOpenConsolePage(clusterUser);
     }
 
     @Test

@@ -78,9 +78,9 @@ public class KubeCMDClient extends CmdClient {
         return createOrUpdateCR(namespace, definition, true);
     }
 
-    public static void getOCUser() {
+    public static String getOCUser() {
         List<String> command = Arrays.asList(CMD, "whoami");
-        execute(command, DEFAULT_SYNC_TIMEOUT, true);
+        return execute(command, DEFAULT_SYNC_TIMEOUT, false).getStdOut().replace(System.getProperty("line.separator"), "");
     }
 
     public static void getCurrentProject() {
