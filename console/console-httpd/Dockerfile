@@ -1,10 +1,6 @@
 FROM centos:7
 
 RUN yum -y install httpd mod_ssl mod_proxy && yum -y clean all
-RUN chmod a+rwx /run/httpd && chown -R 1000170000:1000170000  /run/httpd
-
-USER 1000170000
-
 
 ARG version
 ARG maven_version
