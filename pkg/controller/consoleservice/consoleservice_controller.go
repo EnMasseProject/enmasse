@@ -35,13 +35,12 @@ import (
 	"strings"
 )
 
-
 /*
 TODO TLS for the HTTPD side car
 TODO Tidy up (minimise) Apache HTTPD conf
 TODO Tidy up this code - extract utility methods
 TODO unit tests - having prblem with client when interacting with openshift API endpoints?
- */
+*/
 const CONSOLE_NAME = "console"
 
 var log = logf.Log.WithName("controller_consoleservice")
@@ -86,7 +85,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 		return err
 	}
 
-	if (util.IsOpenshift()) {
+	if util.IsOpenshift() {
 		// Changes to the secret or routes potentially need to be written to the oauthclient
 		err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
@@ -104,7 +103,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 
 				if strings.HasPrefix(a.Meta.GetName(), "console-") {
 					list := &v1beta1.ConsoleServiceList{}
-					err = r.client.List(context.TODO(),  &client.ListOptions{}, list)
+					err = r.client.List(context.TODO(), &client.ListOptions{}, list)
 					if err == nil {
 						for _, item := range list.Items {
 							request := reconcile.Request{
@@ -269,7 +268,7 @@ func (r *ReconcileConsoleService) updateStatus(ctx context.Context, consoleservi
 }
 
 func applyConsoleServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, consoleservice *v1beta1.ConsoleService) error {
-	var dirty = false;
+	var dirty = false
 
 	if consoleservice.Spec.CertificateSecret == nil {
 		dirty = true
@@ -313,7 +312,7 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 				return err
 			}
 
-			if rewritten  {
+			if rewritten {
 				// The well known metadata will be unusable
 				metadata, err := util.WellKnownOauthMetadata()
 				if err != nil {
@@ -323,7 +322,7 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 				keys := []string{
 					"issuer",
 					"authorization_endpoint",
-					"token_endpoint",}
+					"token_endpoint"}
 
 				for _, k := range keys {
 					if u, ok := metadata[k]; ok {
@@ -356,7 +355,7 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 
 	if dirty {
 		// address-space-controller needs to know the default values, so we rewrite the object.
-		err := client.Update(ctx, consoleservice);
+		err := client.Update(ctx, consoleservice)
 		return err
 	}
 
@@ -403,7 +402,6 @@ func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Servic
 	}
 	return nil
 }
-
 
 func (r *ReconcileConsoleService) reconcileRoute(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, *routev1.Route, error) {
 	if util.IsOpenshift() {
@@ -489,6 +487,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	install.ApplyDeploymentDefaults(deployment, "consoleservice", consoleservice.Name)
 
 	install.ApplyEmptyDirVolume(deployment, "apps")
+	install.ApplyEmptyDirVolume(deployment, "httpd")
 	install.ApplySecretVolume(deployment, "console-tls", consoleservice.Spec.CertificateSecret.Name)
 
 	install.ApplyInitContainer(deployment, "console-init", func(container *corev1.Container) {
@@ -496,20 +495,18 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 		if consoleservice.Spec.Scope != nil {
 			install.ApplyEnv(container, "OAUTH2_SCOPE", func(envvar *corev1.EnvVar) {
-				envvar.Value = *consoleservice.Spec.Scope;
+				envvar.Value = *consoleservice.Spec.Scope
 			})
 		}
 
 		if consoleservice.Spec.DiscoveryMetadataURL != nil {
 			install.ApplyEnv(container, "DISCOVERY_METADATA_URL", func(envvar *corev1.EnvVar) {
-				envvar.Value = *consoleservice.Spec.DiscoveryMetadataURL;
+				envvar.Value = *consoleservice.Spec.DiscoveryMetadataURL
 			})
 		}
 
-		container.Command = []string{"/oauth-proxy/bin/init.sh", "/apps/"}
-		install.ApplyVolumeMountSimple(container, "apps", "/apps", false);
+		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
 	})
-
 
 	if util.IsOpenshift() {
 		install.ApplyContainer(deployment, "console-proxy", func(container *corev1.Container) {
@@ -517,8 +514,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-openshift.cfg"}
 
-			install.ApplyVolumeMountSimple(container, "apps", "/apps", false);
-			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true);
+			install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
+			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
 
 			if consoleservice.Spec.OauthClientSecret != nil {
 				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
@@ -554,6 +551,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 		install.ApplyContainer(deployment, "console-httpd", func(container *corev1.Container) {
 			install.ApplyContainerImage(container, "console-httpd", nil)
+			install.ApplyVolumeMountSimple(container, "httpd", "/run/httpd", false)
 
 			container.Ports = []corev1.ContainerPort{{
 				ContainerPort: 8080,
@@ -570,8 +568,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-kubernetes.cfg"}
 
-			install.ApplyVolumeMountSimple(container, "apps", "/apps", false);
-			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true);
+			install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
+			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
 
 			if consoleservice.Spec.OauthClientSecret != nil {
 				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
@@ -580,7 +578,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			if consoleservice.Spec.Scope != nil {
 				install.ApplyEnv(container, "SSL_CERT_DIR", func(envvar *corev1.EnvVar) {
-					envvar.Value = "/var/run/secrets/kubernetes.io/serviceaccount/";
+					envvar.Value = "/var/run/secrets/kubernetes.io/serviceaccount/"
 				})
 			}
 
@@ -665,7 +663,7 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		for _, item := range list.Items {
 			// TODO it would be better if we could use a label allowed us to identify the routes belonging
 			// to address space console instances.
-			if strings.HasPrefix(item.Name, "console-")  {
+			if strings.HasPrefix(item.Name, "console-") {
 				redirects = buildRedirectsFor(item, redirects)
 			}
 		}
@@ -705,14 +703,13 @@ func buildRedirectsFor(route routev1.Route, redirects []string) []string {
 	return redirects
 }
 
-
 func applyOauthClient(oauth *oauthv1.OAuthClient, secret *corev1.Secret, redirects []string) error {
 	install.ApplyDefaultLabels(&oauth.ObjectMeta, "oauthclient", oauth.Name)
 	bytes := secret.Data["client-secret"]
 	oauth.Secret = string(bytes[:])
 
 	oauth.GrantMethod = oauthv1.GrantHandlerAuto
-	oauth.RedirectURIs = redirects;
+	oauth.RedirectURIs = redirects
 	return nil
 }
 
@@ -722,7 +719,7 @@ func applyOauthSecret(secret *corev1.Secret) error {
 		secret.Data = make(map[string][]byte)
 	}
 
-	if _, hassecret := secret.Data["client-secret"];  !hassecret {
+	if _, hassecret := secret.Data["client-secret"]; !hassecret {
 		password, err := util.GeneratePassword(32)
 		if err != nil {
 			return err
@@ -731,7 +728,7 @@ func applyOauthSecret(secret *corev1.Secret) error {
 		secret.Data["client-secret"] = []byte(password)
 	}
 
-	if _, hasid := secret.Data["client-id"];  !hasid {
+	if _, hasid := secret.Data["client-id"]; !hasid {
 		secret.Data["client-id"] = []byte(secret.Name)
 	}
 
@@ -755,12 +752,11 @@ func ensureSingletonConsoleService(ctx context.Context, objectMeta metav1.Object
 	}
 
 	for _, item := range list.Items {
-		if "console" != item.Name  {
-			err = c.Delete(ctx, &item, nil);
-			break;
+		if "console" != item.Name {
+			err = c.Delete(ctx, &item, nil)
+			break
 		}
 	}
 
 	return err
 }
-
