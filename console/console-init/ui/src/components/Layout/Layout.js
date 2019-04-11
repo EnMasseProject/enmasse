@@ -143,20 +143,20 @@ class Layout extends React.Component {
         logo={<Brand src={brandImg} alt="Console Logo" />}
         toolbar={PageToolbar}
         avatar={<Avatar src={avatarImg} alt="Avatar image" />}
+        topNav={PageNav}
       />
     );
 
     return (
       <Aux>
         <Page header={Header} >
-          <PageSection variant={PageSectionVariants.darker} className='navSection'>{PageNav}</PageSection>
+          {/*<PageSection variant={PageSectionVariants.darker} className='navSection'>{PageNav}</PageSection>*/}
           <PageSection variant={PageSectionVariants.light}>
             <About handleAboutModalToggle={this.handleAboutModalToggle} isAboutModalOpen={isAboutModalOpen}/>
             <TextContent>
               {this.props.children}
             </TextContent>
           </PageSection>
-
         </Page>
       </Aux>
     );
