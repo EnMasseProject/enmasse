@@ -4,11 +4,8 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AdminCrd;
-import io.enmasse.admin.model.v1.InfraConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
@@ -24,6 +21,7 @@ public class AdminApiClient extends ApiClient {
     private final String brokeredInfraconfigPath;
     private final String standardInfraconfigPath;
     private final String authenticationServicePath;
+    private final String consolePath;
 
     public AdminApiClient(Kubernetes kubernetes) {
         super(kubernetes, kubernetes::getMasterEndpoint, "admin.enmasse.io/" + AdminCrd.VERSION_V1BETA2);
@@ -32,6 +30,7 @@ public class AdminApiClient extends ApiClient {
         this.brokeredInfraconfigPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/brokeredinfraconfigs", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
         this.standardInfraconfigPath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/standardinfraconfigs", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
         this.authenticationServicePath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/authenticationservices", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
+        this.consolePath = String.format("/apis/admin.enmasse.io/%s/namespaces/%s/consoleservices", AdminCrd.VERSION_V1BETA1, kubernetes.getNamespace());
     }
 
     public void close() {
@@ -127,5 +126,13 @@ public class AdminApiClient extends ApiClient {
 
     public void deleteAuthService(AuthenticationService authService) throws Exception {
         deleteResource("authentication-service", authenticationServicePath, authService.getMetadata().getName());
+    }
+
+    //////////////////////////////////////////////////////////////
+    // Authentication Service
+    //////////////////////////////////////////////////////////////
+
+    public ConsoleService getConsoleService(String name) throws Exception {
+        return new ObjectMapper().readValue(getResource("console-service", consolePath, name).toString(), ConsoleService.class);
     }
 }

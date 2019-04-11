@@ -9,7 +9,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
@@ -648,7 +647,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
-        consoleWebPage.openAddressesPageWebConsole();
 
         for (AddressType type : types) {
             switch (type) {
@@ -656,7 +654,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                     dest_topic = AddressUtils.createTopicAddressObject("topic" + testString, getDefaultPlan(AddressType.TOPIC));
                     log.info("Creating topic for subscription");
                     consoleWebPage.createAddressWebConsole(dest_topic);
-                    dest = AddressUtils.createSubscriptionAddressObject(testString, dest_topic.getSpec().getAddress(), "standard-small-subscription");
+                    dest = AddressUtils.createSubscriptionAddressObject(testString, dest_topic.getSpec().getAddress(), DestinationPlan.STANDARD_SMALL_SUBSCRIPTION);
                     assert_value = 2;
                     break;
                 default:
