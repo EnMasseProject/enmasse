@@ -7,7 +7,7 @@ const {Consumer, Provider} = React.createContext();
 
 
 const NotificationContainer = props => {
-  let style = {position: "fixed", right: '15px', top: '100px', zIndex: 'var(--pf-global--ZIndex--lg)'};
+  let style = {position: "fixed", right: '15px', top: '80px', zIndex: 'var(--pf-global--ZIndex--2xl)'};
   return (<div style={style} {...props} />);
 };
 

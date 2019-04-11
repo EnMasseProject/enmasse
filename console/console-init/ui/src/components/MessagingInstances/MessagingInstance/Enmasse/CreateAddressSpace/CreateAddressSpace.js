@@ -4,15 +4,6 @@ import {Button, BackgroundImageSrc, Wizard} from '@patternfly/react-core';
 import ConfigurationForm from './Steps/Configuration/ConfigurationForm';
 import Review from './Steps/Review';
 import {createNewAddressSpace, loadBrokeredAddressPlans, loadStandardAddressPlans} from '../EnmasseAddressSpaces';
-
-import xsImage from "../../../../../assets/images/pfbg_576.jpg";
-import xs2xImage from "../../../../../assets/images/pfbg_576@2x.jpg";
-import smImage from "../../../../../assets/images/pfbg_768.jpg";
-import sm2xImage from "../../../../../assets/images/pfbg_768@2x.jpg";
-import mdImage from "../../../../../assets/images/pfbg_992.jpg";
-import md2xImage from "../../../../../assets/images/pfbg_992@2x.jpg";
-import lgImage from "../../../../../assets/images/pfbg_1200.jpg";
-import filter from '../../../../../assets/images/background-filter.svg';
 import InstanceLoader from '../../InstanceLoader';
 import {NotificationConsumer, NotificationProvider} from '../../../../../context/notification-manager';
 
@@ -120,15 +111,6 @@ class CreateAddressSpace extends React.Component {
   render() {
     const {isOpen, isConfigurationFormValid, newInstance, allStepsValid} = this.state;
 
-    const images = {
-      [BackgroundImageSrc.xs]: xsImage,
-      [BackgroundImageSrc.xs2x]: xs2xImage,
-      [BackgroundImageSrc.sm]: smImage,
-      [BackgroundImageSrc.sm2x]: sm2xImage,
-      [BackgroundImageSrc.lg]: lgImage,
-      [BackgroundImageSrc.filter]: filter + "(#image_overlay)"
-    };
-
     const steps = [
       {
         id: 1,
@@ -159,12 +141,12 @@ class CreateAddressSpace extends React.Component {
             {({add}) => (
 
               <Wizard
+                style={{backgroundColor: '#151515'}}
                 isOpen={isOpen}
                 title="Create an Instance"
                 onClose={this.toggleOpen}
                 onSave={() => this.onSave(add)}
                 steps={steps}
-                backgroundImgSrc={images}
                 lastStepButtonText="Finish"
               />
             )}

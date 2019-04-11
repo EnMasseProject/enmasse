@@ -145,7 +145,7 @@ class Layout extends React.Component {
         logo={<Brand src={brandImg} alt="Console Logo" />}
         toolbar={PageToolbar}
         avatar={<Avatar src={avatarImg} alt="Avatar image" />}
-        topNav={PageNav}
+        // topNav={PageNav}
       />
     );
 

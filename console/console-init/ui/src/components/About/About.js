@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {AboutModal, TextContent, TextList, TextListItem} from '@patternfly/react-core';
-import brandImg from './pf_mini_logo_white.svg';
+import EmptyImg from '../../assets/images/Empty.svg';
 
 class About extends Component {
 
@@ -22,8 +22,8 @@ class About extends Component {
         isOpen={this.props.isAboutModalOpen}
         onClose={this.props.handleAboutModalToggle}
         productName={productName}
-         brandImageSrc={brandImg}
-         brandImageAlt="Patternfly Logo"
+         brandImageSrc={EmptyImg}
+         brandImageAlt=""
       >
         <TextContent>
           <TextList component="dl">
