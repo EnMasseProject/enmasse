@@ -85,7 +85,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 dest1Response.stream().map(address -> address.getMetadata().getName()).reduce("", String::concat)));
 
         // Patch new label
-        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), dest1.getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
+        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), dest1Response.get(0).getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
 
         KubeCMDClient.deleteAddress(environment.namespace(), dest1Response.get(0).getMetadata().getName());
         KubeCMDClient.deleteAddress(environment.namespace(), AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2));
