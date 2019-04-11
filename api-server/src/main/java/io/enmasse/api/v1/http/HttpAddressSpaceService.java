@@ -207,6 +207,8 @@ public class HttpAddressSpaceService {
             } else {
                 validateAuthenticationService(addressSpace.getSpec().getAuthenticationService());
             }
+
+            addressSpace.getStatus().setPhase(Phase.Pending);
         } else {
             validateChanges(existing, addressSpace);
 
@@ -236,6 +238,7 @@ public class HttpAddressSpaceService {
                     .endSpec()
 
                     .build();
+            addressSpace.getStatus().setPhase(Phase.Pending);
         }
 
         return addressSpace;

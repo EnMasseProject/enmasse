@@ -43,13 +43,15 @@ public class StatusController implements Controller {
         checkComponentsReady(addressSpace);
         checkAuthServiceReady(addressSpace);
         checkExposedEndpoints(addressSpace);
-        if (addressSpace.getStatus().isReady()) {
-            if (addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
-                addressSpace.getStatus().setPhase(Phase.Active);
-            }
-        } else {
-            if (Phase.Active.equals(addressSpace.getStatus().getPhase())) {
-                addressSpace.getStatus().setPhase(Phase.Failed);
+        if (addressSpace.getStatus().getPhase() != null) {
+            if (addressSpace.getStatus().isReady()) {
+                if (addressSpace.getSpec().getPlan().equals(addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN))) {
+                    addressSpace.getStatus().setPhase(Phase.Active);
+                }
+            } else {
+                if (Phase.Active.equals(addressSpace.getStatus().getPhase())) {
+                    addressSpace.getStatus().setPhase(Phase.Failed);
+                }
             }
         }
         return addressSpace;

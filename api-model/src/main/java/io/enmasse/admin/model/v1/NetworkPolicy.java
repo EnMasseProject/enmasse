@@ -22,6 +22,7 @@ import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyEgressRule;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRule;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 @JsonDeserialize(
@@ -31,15 +32,14 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @JsonPropertyOrder({"ingress", "egress"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class NetworkPolicy {
+public class NetworkPolicy extends AbstractWithAdditionalProperties {
     private final List<NetworkPolicyIngressRule> ingress;
     private final List<NetworkPolicyEgressRule> egress;
-
-    private Map<String, Object> additionalProperties = new HashMap<>(0);
 
     public NetworkPolicy(@JsonProperty("ingress") List<NetworkPolicyIngressRule> ingress,
                          @JsonProperty("egress") List<NetworkPolicyEgressRule> egress) {
@@ -75,15 +75,5 @@ public class NetworkPolicy {
         sb.append("{ingress=").append(ingress).append(",")
                 .append("egress=").append(egress).append("}");
         return sb.toString();
-    }
-
-    @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
-        return this.additionalProperties;
-    }
-
-    @JsonAnySetter
-    public void setAdditionalProperty(String name, Object value) {
-        this.additionalProperties.put(name, value);
     }
 }

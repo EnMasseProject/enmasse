@@ -16,9 +16,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.model.validation.ValidBase64;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 /**
@@ -28,6 +30,7 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs = {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
@@ -35,15 +38,18 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AddressSpaceStatus {
+public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     @JsonProperty("isReady")
     private boolean ready = false;
-    @JsonProperty("phase")
+
     private Phase phase;
+
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid EndpointStatus> endpointStatuses = new ArrayList<>();
+
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<String> messages = new ArrayList<>();
+
     @ValidBase64
     private String caCert;
 
@@ -52,7 +58,6 @@ public class AddressSpaceStatus {
 
     public AddressSpaceStatus(boolean ready) {
         this.ready = ready;
-        this.phase = Phase.Pending;
     }
 
     public AddressSpaceStatus(AddressSpaceStatus other) {

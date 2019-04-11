@@ -14,6 +14,7 @@ import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -24,7 +25,7 @@ import io.sundr.builder.annotations.Inline;
         editableEnabled = false,
         generateBuilderPackage = false,
         builderPackage = "io.fabric8.kubernetes.api.builder",
-        refs= {@BuildableReference(AbstractHasMetadata.class)},
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
@@ -32,7 +33,7 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ExposeSpec {
+public class ExposeSpec extends AbstractWithAdditionalProperties {
     @Valid
     private ExposeType type;
     private Map<String, String> annotations = new HashMap<>();
