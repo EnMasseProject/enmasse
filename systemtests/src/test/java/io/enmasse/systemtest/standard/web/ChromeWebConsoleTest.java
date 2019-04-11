@@ -146,20 +146,9 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
         doTestClientsMetrics();
     }
 
-    @Test
-    void testCannotCreateAddresses() throws Exception {
-        doTestCannotCreateAddresses();
-    }
-
-    @Test
-    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
-    void testCannotDeleteAddresses() throws Exception {
-        doTestCannotDeleteAddresses();
-    }
-
     @Test()
     void testCannotOpenConsolePage() {
-        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage(new UserCredentials("pepa", "pepaPa555")));
+        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage(new UserCredentials("noexistuser", "pepaPa555")));
     }
 
     @Test

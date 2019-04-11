@@ -81,7 +81,8 @@ public class GlobalConsolePage implements IWebPage {
 
     private boolean waitUntilLoginPage() {
         try {
-            selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Login"));
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Log in"));
+            selenium.clickOnItem(selenium.getDriver().findElement(By.tagName("button")));
             return true;
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -101,6 +102,9 @@ public class GlobalConsolePage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.presenceOfElementLocated(By.className("pf-c-page__header")));
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.or(
+                ExpectedConditions.presenceOfElementLocated(By.className("pf-c-page__header")),
+                ExpectedConditions.titleContains("Log in")
+        ));
     }
 }
