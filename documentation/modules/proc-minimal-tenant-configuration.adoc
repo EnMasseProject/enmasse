@@ -7,8 +7,6 @@
 
 The following procedure will get you started with a minimal configuration for a messaging application. 
 
-.Prerequisites
-
 .Procedure 
 
 . Save the example configuration:
