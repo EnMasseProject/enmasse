@@ -6,7 +6,7 @@
 = Installing {ProductName} using Operator Marketplace
 
 If the version of {ProductName} you want to install is not available in the link:https://www.operatorhub.io[Operator
-Hub], you can install a custom `OperatorSource` for {ProductName} following these steps.
+Hub^], you can install a custom `OperatorSource` for {ProductName} following these steps.
 
 .Prerequisites
 
