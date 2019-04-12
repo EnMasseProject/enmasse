@@ -60,7 +60,9 @@ function get_options(options, path) {
         rejectUnauthorized: false,
         path: options.path || path,
         headers: {
-            'Authorization': 'Bearer ' + (options.token || process.env.KUBERNETES_TOKEN || read('/var/run/secrets/kubernetes.io/serviceaccount/token'))
+            'Authorization': 'Bearer ' + (options.token || process.env.KUBERNETES_TOKEN || read('/var/run/secrets/kubernetes.io/serviceaccount/token')),
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
         }
     };
 }
@@ -75,11 +77,15 @@ function get_path(base, resource, options) {
 }
 
 function list_options(resource, options) {
-    return get_options(options, get_path('/api/v1/namespaces/', resource, options));
+    var base = resource.startsWith("addresses") ? '/apis/enmasse.io/v1beta1/namespaces/' : '/api/v1/namespaces/';
+    let path = get_path(base, resource, options);
+    return get_options(options, path);
+
 }
 
 function watch_options(resource, options) {
-    return get_options(options, get_path('/api/v1/watch/namespaces/', resource, options));
+    var base = resource.startsWith("addresses") ? '/apis/enmasse.io/v1beta1/watch/namespaces/' : '/api/v1/watch/namespaces/';
+    return get_options(options, get_path(base, resource, options));
 }
 
 function do_get_with_options(opts) {
@@ -97,7 +103,9 @@ function do_get_with_options(opts) {
                         reject(new Error(util.format('Could not parse message as JSON (%s): %s', e, data)));
                     }
                 } else {
-                    reject(new Error(util.format('Failed to retrieve %s: %s %s', opts.path, response.statusCode, data)));
+                    var error = new Error(util.format('Failed to retrieve %s: %s %s', opts.path, response.statusCode, data));
+                    error.statusCode = response.statusCode;
+                    reject(error);
                 }
 	    });
         });
@@ -115,16 +123,26 @@ function do_get_raw(path, options) {
     return do_get_with_options(opts);
 }
 
-function do_request(method, resource, input, options) {
+function do_request(method, input, opts, return_data = false) {
     return new Promise(function (resolve, reject) {
-        var opts = list_options(resource, options || {});
         opts.method = method;
-        var request = https.request(opts, function(response) {
-            var data = '';
-	    response.on('data', function (chunk) { data += chunk; });
-	    response.on('end', function () {
-	        log.info('%s %s => %s', opts.method, opts.path, response.statusCode);
-                resolve(response.statusCode, data);
+        var request = https.request(opts, function (response) {
+            var body = '';
+            response.on('data', function (chunk) {
+                body += chunk;
+            });
+            response.on('end', function () {
+                var statusCode = response.statusCode;
+                log.info('%s %s => %s', opts.method, opts.path, statusCode);
+                var statusObject = {
+                    statusCode: statusCode,
+                    body: body,
+                };
+                if (statusCode >= 400) {
+                    reject(statusObject);
+                } else {
+                    resolve(return_data ? statusObject : statusCode);
+                }
             });
         });
         request.on('error', reject);
@@ -134,16 +152,33 @@ function do_request(method, resource, input, options) {
 };
 
 function do_post(resource, object, options) {
-    return do_request('POST', resource, JSON.stringify(object), options);
+    var opts = list_options(resource, options || {});
+    return do_request('POST', JSON.stringify(object), opts);
 };
 
 function do_put(resource, object, options) {
-    return do_request('PUT', resource, JSON.stringify(object), options);
+    var opts = list_options(resource, options || {});
+    return do_request('PUT', JSON.stringify(object), opts);
 };
 
 function do_delete(resource, options) {
-    return do_request('DELETE', resource, undefined, options);
+    var opts = list_options(resource, options || {});
+    return do_request('DELETE', undefined, opts);
 };
+
+function do_is_openshift() {
+    var opts = get_options({}, "/apis/user.openshift.io");
+    return new Promise(function (resolve, reject) {
+        do_get_with_options(opts)
+            .then(() => {resolve(true)})
+            .catch((e) => {
+                if (e.statusCode === 404) {
+                    resolve(false);
+                } else {
+                    reject(e);
+                }});
+    });
+}
 
 function name_compare(a, b) {
     return myutils.string_compare(a.metadata.name, b.metadata.name);
@@ -249,6 +284,7 @@ Watcher.prototype.close = function () {
 
 module.exports.get_path = get_path;
 module.exports.get_raw = do_get_raw;
+module.exports.is_openshift = do_is_openshift;
 
 module.exports.get = function (resource, options) {
     return do_get(resource, options);
@@ -320,3 +356,47 @@ module.exports.get_messaging_route_hostname = function (options) {
         return Promise.resolve(options.MESSAGING_ROUTE_HOSTNAME);
     }
 };
+
+module.exports.self_subject_access_review = function (options, namespace, verb, group, resource) {
+
+    var opts = get_options(options, "/apis/authorization.k8s.io/v1/selfsubjectaccessreviews");
+    var object = {
+        kind: "SelfSubjectAccessReview",
+        apiVersion: "authorization.k8s.io/v1",
+        spec: {
+            resourceAttributes: {
+                namespace: namespace,
+                verb: verb,
+                group: group,
+                resource: resource
+            }
+        },
+        status: {allowed: false}
+    };
+
+    return new Promise(function (resolve, reject) {
+        do_request('POST', JSON.stringify(object), opts, true).then(({statusCode, body}) =>
+        {
+            try {
+                if (body) {
+                    var review = JSON.parse(body);
+                    if (review && "status" in review) {
+                        var status = review["status"];
+                        var allowed = status["allowed"];
+                        var reason = status["reason"];
+                        resolve({allowed, reason});
+                        return;
+                    }
+                    reject(new Error("Unexpectedly formed SelfSubjectAccessReview response  : " + body));
+                } else {
+                    reject(new Error("Unexpectedly SelfSubjectAccessReview response status code  : " + statusCode + " response body" + body));
+                }
+            } catch (e) {
+                reject(e);
+            }
+        }).catch((e) => {
+            reject(e);
+        });
+    });
+};
+

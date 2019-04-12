@@ -17,14 +17,17 @@
 
 const https = require('https');
 const url = require('url');
-const Keycloak = require('keycloak-connect');
+const kubernetes = require('../lib/kubernetes.js');
+const oauth2_factory = require('simple-oauth2');
+const openid_connect = require('openid-client');
+
 const rhea = require('rhea');
-var auth_service = require('./auth_service.js');
 var log = require("./log.js").logger();
 const myutils = require('./utils.js');
 
 function my_request(original, defaults, options, callback) {
-    return original(myutils.merge({}, defaults, options), callback);
+    var merge = myutils.merge({}, defaults, options);
+    return original(merge, callback);
 }
 
 function set_defaults(defaults) {
@@ -43,7 +46,6 @@ function set_cookie(response, name, value, options) {
     }
     response.setHeader('Set-Cookie', response.cookies);
 }
-
 
 function clear_cookie(response, name) {
     set_cookie(response, name, '', ['Expires ' + new Date().toUTCString()]);
@@ -75,6 +77,14 @@ function init_session(sessions, request, response) {
     request.session = sessions[id];
     touch_session(request.session);
     return request.session;
+}
+
+function expunge_session(sessions, request, response) {
+    let id = get_cookies(request)[SESSION_ID];
+    if (id === undefined || sessions[id] === undefined) {
+        return;
+    }
+    delete sessions[id];
 }
 
 function restore_session(sessions, request) {
@@ -113,98 +123,12 @@ function purge_stale_sessions(sessions, max_idle_time) {
     }
 }
 
-
-function clean_query_string(request, response, next) {
-    var u = url.parse(request.url, true);
-    if (u.query && u.query.session_state) {
-        response.redirect(u.pathname);
-        log.info('redirecting to %s (%s)', u.pathname, request.url);
-    } else {
-        next();
-    }
-}
-
-function patch(sessions, kc_idp_hint) {
-    return function (request, response, next) {
-        let u = url.parse(request.url, true);
-
-        request.query = u.query;
-        request.protocol = 'https';
-        request.hostname = u.hostname || request.headers.host.split(':')[0];
-        init_session(sessions, request, response);
-        response.redirect = function (target) {
-            let target_url = url.parse(target, true);
-            let target_url_query = target_url.query;
-            let is_auth_endpoint_url = "client_id" in target_url_query && "response_type" in target_url_query;
-            if (kc_idp_hint && is_auth_endpoint_url && !("disable_kc_idp_hint" in u.query)) {
-                target_url_query["kc_idp_hint"] = kc_idp_hint;
-                target_url.query = target_url_query;
-                delete target_url.search;
-                target = url.format(target_url);
-                log.info("Modified redirect: %s", target);
-            }
-
-            if (!target) {
-                target = "/";
-            }
-            log.info("Sending redirect: %s", target);
-            response.statusCode = 302;
-            response.setHeader('Location', target);
-            response.end();
-        };
-        response.status = function (code) {
-            response.statusCode = code;
-            return response;
-        };
-        next();
-    }
-};
-
 function step(interceptors, request, response, i, handler) {
     if (i < interceptors.length) {
         interceptors[i](request, response, step.bind(undefined, interceptors, request, response, i+1, handler));
     } else {
         handler(request, response);
     }
-}
-
-const TOKEN_KEY = 'keycloak-token';
-
-function store_grant(grant) {
-    return function (request, response) {
-        store_in_session(request, TOKEN_KEY, grant.__raw);
-    };
-};
-
-function unstore_grant(request, response) {
-    remove_from_session(request, TOKEN_KEY);
-};
-
-const SessionStore = {};
-
-SessionStore.get = function (request) {
-    return get_from_session(request, TOKEN_KEY);
-};
-
-SessionStore.wrap = (grant) => {
-    grant.store = store_grant(grant);
-    grant.unstore = unstore_grant;
-};
-
-
-function get_keycloak_auth_url (env) {
-    let u = 'https://' + (env.AUTHENTICATION_SERVICE_HOST || 'localhost');
-    if (env.AUTHENTICATION_SERVICE_PORT_HTTPS) {
-        u += ':' + env.AUTHENTICATION_SERVICE_PORT_HTTPS;
-    }
-    u += '/auth';
-    return u;
-}
-
-function record_token(token, request) {
-    store_in_session(request, 'token', token.token);
-    store_in_session(request, 'username', token.content.preferred_username);
-    return true;
 }
 
 function get_oauth_credentials(request) {
@@ -219,92 +143,346 @@ function restore_oauth_credentials(sessions, request) {
     return get_oauth_credentials(request);
 }
 
-function auth_failed(response, error) {
-    if (error) log.error('Failed to authenticate: %s', error);
-    response.statusCode = 500;
-    response.end('Failed to authenticate: ' + error);
-}
-
-function auth_required(response, error) {
-    if (error) log.error('Failed to authenticate http request: %s', error);
-    response.setHeader('WWW-Authenticate', 'Basic realm=Authorization Required');
-    response.statusCode = 401;
-    response.end('Authorization Required');
-}
-
-function authenticate(authz, env, get_credentials, failed) {
-    return function (request, response, next) {
-        try {
-            let credentials = get_credentials(request);
-            auth_service.authenticate(credentials, auth_service.default_options(env)).then(function (properties) {
-                if (authz.access_console(properties)) {
-                    next();
-                } else {
-                    response.statusCode = 403;
-                    response.end('You do not have permission to view the console');
-                }
-            }).catch(failed.bind(null, response));
-        } catch (error) {
-            response.statusCode = 500;
-            response.end(error.message);
-        }
-    };
-}
-
 function websocket_auth(authz, env, get_credentials) {
-    return function (request, callback) {
-        let credentials = get_credentials(request);
-        auth_service.authenticate(credentials, auth_service.default_options(env)).then(function (properties) {
-            authz.set_authz_props(request, credentials, properties);
-            if (authz.access_console(properties)) {
-                callback(true);
-            } else {
-                log.error('Access to console denied to %s [%j]', credentials.name, properties);
-                callback(false, 403, 'You do not have permission to use this console');
-            }
-        }).catch(function (error) {
-            log.error('Failed to authorize websocket: %s', error);
-            callback(false, 401, 'Authorization Required');
-        });
-    }
-}
+    return function (request, ws_upgrade_completion_callback) {
 
-function use_oauth(env) {
-    return env.AUTHENTICATION_SERVICE_OAUTH_URL;
+        let credentials = get_credentials(request);
+        let token = credentials.token ? credentials.token.getAccessToken() : null;
+
+        var options = {"token": token};
+        var onrejected = function (error) {
+            log.error('Failed to authorize websocket: %s', error);
+            ws_upgrade_completion_callback(false, 401, 'Authorization Required');
+        };
+
+        const namespace = env.ADDRESS_SPACE_NAMESPACE;
+        kubernetes.self_subject_access_review(options, namespace,
+            "list", "enmasse.io", "addresses").then(({allowed: allowed_list, reason: reason_list}) => {
+            if (allowed_list) {
+                kubernetes.self_subject_access_review(options, namespace,
+                    "create", "enmasse.io", "addresses").then(({allowed: allowed_create, reason: reason_create}) => {
+                    if (allowed_create) {
+                        authz.set_authz_props(request, credentials, {admin: allowed_create, console: true});
+                        ws_upgrade_completion_callback(true);
+                    } else {
+                        kubernetes.self_subject_access_review(options, namespace,
+                            "delete", "enmasse.io", "addresses").then(({allowed: allowed_delete, reason: reason_delete}) => {
+                            authz.set_authz_props(request, credentials, {admin: allowed_delete, console: true});
+                            ws_upgrade_completion_callback(true);
+                            if (!allowed_delete) {
+                                log.info("User has neither create nor delete address permission, not granting console admin permission. [%j, %j]",
+                                    reason_create, reason_delete);
+                            }
+                        }).catch(onrejected);
+                    }
+                }).catch(onrejected);
+            } else {
+                log.warn("User does not have list address permission, not granting console access. [%j]",
+                    reason_list);
+                authz.set_authz_props(request, credentials, {admin: false, console: false});
+                ws_upgrade_completion_callback(true);
+            }
+        }).catch(onrejected);
+    }
 }
 
 let sessions = {};
 
 module.exports.ws_auth_handler = function (authz, env) {
-    return websocket_auth(authz, env, use_oauth(env) ? restore_oauth_credentials.bind(null, sessions) : myutils.basic_auth);
-}
+    return websocket_auth(authz, env, restore_oauth_credentials.bind(null, sessions));
+};
 
-module.exports.auth_handler = function (authz, env, handler) {
-    if (use_oauth(env)) {
-        set_defaults({rejectUnauthorized:false});
-        let kc_idp_hint = env.AUTHENTICATION_SERVICE_KC_IDP_HINT;
-        log.info('kc_idp_hint override: %s', kc_idp_hint);
-
-        let keycloak_config = {
-            "realm": env.AUTHENTICATION_SERVICE_SASL_INIT_HOST,
-            "auth-server-url": env.AUTHENTICATION_SERVICE_OAUTH_URL || get_keycloak_auth_url(env),
-            "ssl-required": "external",
-            "resource": "enmasse-console",
-            "public-client": true,
-            "confidential-port": 0
-        };
-
-        let keycloak = new Keycloak({}, keycloak_config);
-        keycloak.stores.push(SessionStore);
-        setInterval(purge_stale_sessions.bind(null, sessions, 15*60*1000), 60*1000);
-        let interceptors = [patch(sessions, kc_idp_hint)].concat(keycloak.middleware()).concat([keycloak.protect(record_token), authenticate(authz, env, get_oauth_credentials, auth_failed), clean_query_string]);
-        return function (request, response) {
-            step(interceptors, request, response, 0, handler);
-        };
+module.exports.init_auth_handler = function (openshift, env) {
+    var discovery_uri = env.CONSOLE_OAUTH_DISCOVERY_URL;
+    log.debug("Discovery url : %s", discovery_uri);
+    if (openshift) {
+        if (discovery_uri.startsWith("data:")) {
+            return new Promise((resolve, reject) => {
+                try {
+                    var b64string = discovery_uri.replace(/^data:.*,/, '');
+                    var data = Buffer.from(b64string, 'base64');
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        } else {
+            let discoveryUri = url.parse(discovery_uri, false);
+            return new Promise((resolve, reject) => {
+                https.get({
+                    hostname: discoveryUri.hostname,
+                    port: discoveryUri.port,
+                    path: discoveryUri.path,
+                    protocol: discoveryUri.protocol,
+                    rejectUnauthorized: false,
+                }, (response) => {
+                    log.info('GET %s => %s ', discovery_uri, response.statusCode);
+                    response.setEncoding('utf8');
+                    var data = '';
+                    response.on('data', function (chunk) { data += chunk; });
+                    response.on('end', function () {
+                        if (response.statusCode === 200) {
+                            try {
+                                resolve(JSON.parse(data));
+                            } catch (e) {
+                                reject(new Error(util.format('Could not parse message as JSON (%s): %s', e, data)));
+                            }
+                        } else {
+                            var error = new Error(util.format('Failed to retrieve %s: %s %s', discovery_uri, response.statusCode, data));
+                            error.statusCode = response.statusCode;
+                            reject(error);
+                        }
+                    });
+                });
+            });
+        }
     } else {
-        let interceptors = [authenticate(authz, env, myutils.basic_auth, auth_required)];
-        return function (request, response) {
-            step(interceptors, request, response, 0, handler);
-        };
+        return openid_connect.Issuer.discover(discovery_uri);
     }
+};
+
+
+module.exports.auth_handler = function (authz, env, handler, auth_context, openshift) {
+
+    set_defaults({rejectUnauthorized:false});
+
+    setInterval(purge_stale_sessions.bind(null, sessions, 15*60*1000), 60*1000);
+
+    var patch_handler =  function (request, response, next) {
+        request.protocol = request.connection.encrypted ? "https" : "http";
+        let u = url.parse(request.url, true);
+        request.hostname = u.hostname || request.headers.host.split(':')[0];
+
+        response.redirect = function (target) {
+            log.info("Sending redirect: %s", target);
+            response.statusCode = 302;
+            response.setHeader('Location', target);
+            response.end();
+        };
+        response.status = function (code) {
+            response.statusCode = code;
+            return response;
+        };
+        next();
+    };
+
+    var global_console_handler =  function (request, response, next) {
+        let u = url.parse(request.url, true);
+        if (u.pathname === "/console") {
+            response.redirect(env.CONSOLE_LINK);
+        } else {
+            next();
+        }
+    };
+
+    var init_session_handler =  function (request, response, next) {
+        init_session(sessions, request, response);
+        next();
+    };
+
+    var logout_handler =  function (request, response, next) {
+        let u = url.parse(request.url, true);
+        if (u.pathname === "/logout") {
+            var token = get_from_session(request, "token");
+            expunge_session(sessions, request, response);
+            if (token) {
+                token.revokeAll().then(() => {
+                    response.redirect("/");
+                }).catch((e) => {
+                    log.warn("Failed to revoke access token");
+                    response.redirect("/");
+                })
+            } else {
+                response.redirect("/");
+            }
+        } else {
+            next();
+        }
+    };
+
+    var openidconnect_handler =  function (request, response, next) {
+        if (!get_from_session(request, "token")) {
+
+            let u = url.parse(request.url, true);
+            if (u.pathname === "/authcallback" && u.query.code) {
+                var saved_request_url = get_from_session(request, "saved_request_url");
+                var saved_redirect_url = get_from_session(request, "saved_redirect_url");
+                var state = get_from_session(request, "state");
+                var client = get_from_session(request, "openid");
+
+                client.authorizationCallback(saved_redirect_url, u.query, {state: state, code: 'code'})
+                    .then(function (tokenSet) {
+                        tokenSet.getAccessToken = function () {
+                            return tokenSet.id_token;
+                        };
+                        tokenSet.revokeAll = function () {
+                            return client.revoke(tokenSet);
+                        };
+                        store_in_session(request, "token", tokenSet);
+
+                        response.redirect(saved_request_url);
+                    })
+                    .catch((error) => {
+                        console.error('OpenID Connect  Error', error);
+                        response.status(500).end('Authentication failed');
+                    }).finally(() => {
+                        remove_from_session(request, "openid");
+                        remove_from_session(request, "state");
+                        remove_from_session(request, "saved_request_url");
+                        remove_from_session(request, "saved_redirect_url");
+                });
+            } else {
+                const client = new auth_context.Client({
+                    client_id: env.CONSOLE_OAUTH_CLIENT_ID,
+                    client_secret: env.CONSOLE_OAUTH_CLIENT_SECRET,
+                });
+
+                let state = rhea.generate_uuid();
+                let redirect_uri = request.protocol + "://" + request.headers.host + "/authcallback";
+                store_in_session(request, "openid", client);
+                store_in_session(request, "state", state);
+                store_in_session(request, "saved_request_url", request.url);
+                store_in_session(request, "saved_redirect_url", redirect_uri);
+
+                const authorization_url = client.authorizationUrl({
+                    redirect_uri: redirect_uri,
+                    scope: env.CONSOLE_OAUTH_SCOPE,
+                    state: state,
+                    response_type: 'code'
+                });
+
+                // redirect
+                response.redirect(authorization_url)
+            }
+        } else {
+            next();
+        }
+    };
+
+    var oauth_handler =  function (request, response, next) {
+        if (!get_from_session(request, "token")) {
+            let u = url.parse(request.url, true);
+            if (u.pathname === "/authcallback" && u.query.code) {
+                var saved_request_url = get_from_session(request, "saved_request_url");
+                var saved_redirect_url = get_from_session(request, "saved_redirect_url");
+                var oauth2 = get_from_session(request, "oauth2");
+
+                const code = u.query.code;
+
+                try {
+                    const options = {
+                        code: code,
+                        redirect_uri: saved_redirect_url
+                    };
+
+                    oauth2.authorizationCode.getToken(options).then(
+                        result => {
+                            const token = oauth2.accessToken.create(result);
+                            if (!token.getAccessToken) {
+                                token.getAccessToken = function() {
+                                    if (this.token && this.token.access_token) {
+                                        return this.token.access_token;
+                                    } else {
+                                        return null;
+                                    }
+
+                                }
+                            }
+                            store_in_session(request, "token", token);
+
+                            // TODO not getting a refresh_token from openshift - not sure why?
+                            if (token.token.expires_in && token.token.refresh_token) {
+                                var scheduleRefreshFunc = function() {
+                                    var timeout = token.token.expires_in  / 2;
+                                    log.info("Scheduling OAuth token refresh %ds", timeout);
+                                    setTimeout(() => {
+                                        log.info("OAuth token has timed out");
+                                        token.refresh().then(newToken => {
+                                            log.info("OAuth token refresh token complete");
+                                            store_in_session(request, "token", newToken);
+                                            scheduleRefreshFunc();
+                                        }).catch((e) => {
+                                            log.error("Failed to refresh token", e);
+                                        });
+                                    }, timeout * 1000)
+                                };
+                                scheduleRefreshFunc();
+                            }
+                            response.redirect(saved_request_url);
+                        }
+                    ).catch(error => {
+                            console.error('Access Token Error', error.message);
+                            response.status(500).end('Authentication failed');
+
+                        }
+                    ).finally(() => {
+                        remove_from_session(request, "oauth2");
+                        remove_from_session(request, "saved_request_url");
+                        remove_from_session(request, "saved_redirect_url");
+
+                    });
+                } catch(error) {
+                    console.error('Access Token Error', error.message);
+                    response.status(500).end('Authentication failed');
+                }
+            } else {
+                try {
+                    const credentials = {
+                        client: {
+                            id: env.CONSOLE_OAUTH_CLIENT_ID,
+                            secret: env.CONSOLE_OAUTH_CLIENT_SECRET,
+                        },
+                        auth: {
+                            tokenHost: auth_context.issuer,
+                            authorizePath: auth_context.authorization_endpoint,
+                            tokenPath: auth_context.token_endpoint,
+                        },
+                        options: {
+                            authorizationMethod: 'body'
+                        },
+                    };
+
+                    let state = rhea.generate_uuid();
+                    let oauth2 = oauth2_factory.create(credentials);
+                    let redirect_uri = request.protocol + "://" + request.headers.host + "/authcallback";
+                    store_in_session(request, "oauth2", oauth2);
+                    store_in_session(request, "saved_request_url", request.url);
+                    store_in_session(request, "saved_redirect_url", redirect_uri);
+
+                    const authorization_url = oauth2.authorizationCode.authorizeURL({
+                        redirect_uri: redirect_uri,
+                        scope: env.CONSOLE_OAUTH_SCOPE,
+                        state: state
+                    });
+
+                    // redirect
+                    response.redirect(authorization_url)
+                } catch (error) {
+                    console.error('Authorization Error', error.message);
+                    response.status(500).end('Authentication failed');
+                }
+            }
+        } else {
+            next();
+        }
+    };
+
+    var logginghandler =  function (request, response, next) {
+        log.debug("Serving %s", request.url);
+        next();
+    };
+
+    let interceptors = [];
+    interceptors.push(patch_handler);
+    if (env.CONSOLE_LINK) {
+        interceptors.push(global_console_handler);
+    }
+    interceptors.push(init_session_handler);
+    interceptors.push(logout_handler);
+    interceptors.push(openshift ? oauth_handler : openidconnect_handler);
+    interceptors.push(logginghandler);
+
+    return function (request, response) {
+        step(interceptors, request, response, 0, handler);
+    };
 }

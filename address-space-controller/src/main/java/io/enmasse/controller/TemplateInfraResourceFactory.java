@@ -15,6 +15,7 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
@@ -24,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -32,20 +35,21 @@ import static io.enmasse.address.model.KubeUtil.lookupResource;
 
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class);
-    private static final String KC_IDP_HINT_NONE = "none";
-    private static final String KC_IDP_HINT_OPENSHIFT = "openshift-v3";
     private static final ObjectMapper mapper = new ObjectMapper();
+    private final String WELL_KNOWN_CONSOLE_SERVICE_NAME = "console";
 
     private final Kubernetes kubernetes;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final Map<String, String> env;
     private final boolean openShift;
+    private final SchemaProvider schemaProvider;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceRegistry authenticationServiceRegistry, Map<String, String> env, boolean openShift) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceRegistry authenticationServiceRegistry, Map<String, String> env, boolean openShift, SchemaProvider schemaProvider) {
         this.kubernetes = kubernetes;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.env = env;
         this.openShift = openShift;
+        this.schemaProvider = schemaProvider;
     }
 
     private void prepareParameters(InfraConfig infraConfig,
@@ -59,8 +63,10 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             throw new IllegalArgumentException("Authentication service '" + authService.getMetadata().getName() + "' is not yet deployed");
         }
 
-
-        Optional<String> kcIdpHint = getKcIdpHint(infraConfig, addressSpace, authService);
+        Optional<ConsoleService> console = schemaProvider.getSchema().findConsoleService(WELL_KNOWN_CONSOLE_SERVICE_NAME);
+        if (console.isEmpty()) {
+            log.warn("No ConsoleService found named '{}', address space console service will be unavailable", WELL_KNOWN_CONSOLE_SERVICE_NAME);
+        }
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         parameters.put(TemplateParameter.INFRA_NAMESPACE, kubernetes.getNamespace());
@@ -70,7 +76,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authService.getStatus().getHost());
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authService.getStatus().getPort()));
         parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_KC_IDP_HINT, kcIdpHint.orElse(""));
 
         String encodedCaCert = Optional.ofNullable(authService.getStatus().getCaCertSecret())
                 .map(secretName ->
@@ -108,24 +113,28 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
         parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
         parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertMapping.get("console").getSecretName());
-    }
 
-    private Optional<String> getKcIdpHint(final InfraConfig infraConfig,
-                                final AddressSpace addressSpace,
-                                final AuthenticationService authenticationService) {
+        if (console.isPresent()) {
+            ConsoleService consoleService = console.get();
+            ConsoleServiceSpec service = consoleService.getSpec();
+            ConsoleServiceStatus status = consoleService.getStatus();
 
-        String kcIdpHint = null;
-        if (this.openShift && authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard)) {
-            kcIdpHint = KC_IDP_HINT_OPENSHIFT;
+            SecretReference oauthClientSecret = service.getOauthClientSecret();
+            if (oauthClientSecret != null) {
+                kubernetes.getSecret(oauthClientSecret.getName()).ifPresentOrElse(secret -> {
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_DISCOVERY_URL, service.getDiscoveryMetadataURL());
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_SCOPE, service.getScope());
+                    Base64.Decoder decoder = Base64.getDecoder();
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_ID, new String(decoder.decode(secret.getData().get("client-id")), StandardCharsets.UTF_8));
+                    parameters.put(TemplateParameter.CONSOLE_OAUTH_CLIENT_SECRET, new String(decoder.decode(secret.getData().get("client-secret")), StandardCharsets.UTF_8));
+
+                    if (status != null && status.getUrl() != null) {
+                        parameters.put(TemplateParameter.CONSOLE_LINK, status.getUrl());
+                    }
+                }, () -> log.warn("No console OAuth parameters available from ConsoleService {}, " +
+                        "address space console will be unavailable.", consoleService.getMetadata().getName()));
+            }
         }
-
-        kcIdpHint = getAnnotation(infraConfig.getMetadata().getAnnotations(), AnnotationKeys.KC_IDP_HINT, kcIdpHint);
-
-        final String hint = addressSpace.getAnnotation(AnnotationKeys.KC_IDP_HINT);
-        if  ( hint != null) {
-            kcIdpHint = hint;
-        }
-        return KC_IDP_HINT_NONE.equals(kcIdpHint) ? Optional.empty() : Optional.ofNullable(kcIdpHint);
     }
 
     private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {

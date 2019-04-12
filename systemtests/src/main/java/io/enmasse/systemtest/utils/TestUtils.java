@@ -16,6 +16,7 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.AdminApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -161,7 +162,7 @@ public class TestUtils {
      * @return
      */
     private static int numReady(List<Pod> pods) {
-        return (int)pods.stream().filter(pod -> isPodReady(pod, true)).count();
+        return (int) pods.stream().filter(pod -> isPodReady(pod, true)).count();
     }
 
     private static boolean isPodReady(final Pod pod, final boolean doLog) {
@@ -174,12 +175,12 @@ public class TestUtils {
         }
 
         var nonReadyContainers = pod.getStatus().getContainerStatuses().stream()
-            .filter(cs -> !Boolean.TRUE.equals(cs.getReady()))
-            .map(ContainerStatus::getName)
-            .collect(Collectors.toList());
+                .filter(cs -> !Boolean.TRUE.equals(cs.getReady()))
+                .map(ContainerStatus::getName)
+                .collect(Collectors.toList());
 
-        if ( !nonReadyContainers.isEmpty()) {
-            if(doLog) {
+        if (!nonReadyContainers.isEmpty()) {
+            if (doLog) {
                 log.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
             }
             return false;
@@ -582,5 +583,9 @@ public class TestUtils {
         };
 
         TestUtils.waitUntilCondition(String.format("IoTProject to become ready: %s/%s", namespace, name), s, budget);
+    }
+
+    public static String getGlobalConsoleRoute() throws Exception {
+        return new AdminApiClient(Kubernetes.getInstance()).getConsoleService("console").getStatus().getUrl();
     }
 }

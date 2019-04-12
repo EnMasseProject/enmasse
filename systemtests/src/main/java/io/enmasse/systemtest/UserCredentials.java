@@ -13,6 +13,11 @@ public class UserCredentials {
         this.password = password;
     }
 
+    public UserCredentials(String username) {
+        this.username = username;
+        this.password = username;
+    }
+
     public String getUsername() {
         return username;
     }

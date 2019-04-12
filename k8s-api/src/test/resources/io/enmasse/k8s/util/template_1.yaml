@@ -483,8 +483,6 @@ objects:
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
           - name: AUTHENTICATION_SERVICE_OAUTH_URL
             value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
-          - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
-            value: ${AUTHENTICATION_SERVICE_KC_IDP_HINT}
           - name: ADDRESS_SPACE
             value: ${ADDRESS_SPACE}
           - name: ADDRESS_SPACE_NAMESPACE
@@ -683,8 +681,6 @@ parameters:
   name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
 - description: The URL to use for OAUTH (if not set, OAUTH is not used)
   name: AUTHENTICATION_SERVICE_OAUTH_URL
-- description: Name of Keycloak Identification Provider Hint
-  name: AUTHENTICATION_SERVICE_KC_IDP_HINT
 - description: Name standard infra config
   name: STANDARD_INFRA_CONFIG_NAME
   required: true

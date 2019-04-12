@@ -372,8 +372,6 @@ items:
             value: ""
           - name: AUTHENTICATION_SERVICE_OAUTH_URL
             value: ""
-          - name: AUTHENTICATION_SERVICE_KC_IDP_HINT
-            value: ""
           - name: ADDRESS_SPACE
             value: myspace1
           - name: ADDRESS_SPACE_NAMESPACE

@@ -67,7 +67,7 @@ function same_allocation(a, b) {
     for (var i in a) {
         var equal = false;
         for (var j in b) {
-            if (a[i].containerId == b[j].containerId && a[i].clusterId == b[j].clusterId && a[i].state == b[j].state) {
+            if (a[i].containerId === b[j].containerId && a[i].clusterId === b[j].clusterId && a[i].state === b[j].state) {
                 equal = false;
                 break;
             }
@@ -236,9 +236,6 @@ AddressSource.prototype.check_status = function (address_stats) {
     return Promise.all(results);
 };
 
-function get_address_name_for_address(address, addressspace) {
-    return addressspace + "." + myutils.kubernetes_name(address);
-}
 
 AddressSource.prototype.get_configmap_name = function (name) {
     if (this.config.ADDRESS_SPACE_NAMESPACE) {
@@ -246,15 +243,10 @@ AddressSource.prototype.get_configmap_name = function (name) {
     } else {
         return name;
     }
-}
+};
 
-function get_address_name_for_address(address, addressspace) {
-    return addressspace + "." + myutils.kubernetes_name(address);
-}
-
-AddressSource.prototype.create_address = function (definition) {
-    var address_name = get_address_name_for_address(definition.address, this.config.ADDRESS_SPACE);
-    var configmap_name = this.get_configmap_name(address_name);
+AddressSource.prototype.create_address = function (definition, access_token) {
+    var address_name = this.config.ADDRESS_SPACE + "." + myutils.kubernetes_name(definition.address);
     var address = {
         apiVersion: 'enmasse.io/v1beta1',
         kind: 'Address',
@@ -272,38 +264,26 @@ AddressSource.prototype.create_address = function (definition) {
     if (definition.type === 'subscription') {
         address.spec.topic = definition.topic;
     }
-    var configmap = {
-        apiVersion: 'v1',
-        kind: 'ConfigMap',
-        metadata: {
-            name: configmap_name,
-            labels: {
-                type: 'address-config',
-                infraType: 'any'
-            },
-            annotations: {
-                addressSpace: this.config.ADDRESS_SPACE
-            },
-        },
-        data: {
-            'config.json': JSON.stringify(address)
-        }
-    };
-    if (this.config.INFRA_UUID) {
-        configmap.metadata.labels.infraUuid = this.config.INFRA_UUID;
-    }
-    return kubernetes.post('configmaps', configmap, this.config).then(function (result, error) {
+
+    var options = {token : access_token,
+                   namespace: this.config.ADDRESS_SPACE_NAMESPACE};
+    Object.assign(options, this.config);
+    return kubernetes.post('addresses', address, options).then(function (result, error) {
         if (result >= 300) {
-            log.error('failed to create config map for %j [%d %s]: %s', configmap, result, http.STATUS_CODES[result], error);
-            return Promise.reject(new Error(util.format('Failed to created address %j: %d %s %s', definition, result, http.STATUS_CODES[result], error)));
+            log.error('failed to create address for %j [%d %s]: %s', address, result, http.STATUS_CODES[result], error);
+            return Promise.reject(new Error(util.format('Failed to create address %j: %d %s %s', definition, result, http.STATUS_CODES[result], error)));
         } else {
             return Promise.resolve();
         }
     });
 };
 
-AddressSource.prototype.delete_address = function (definition) {
-    return kubernetes.delete_resource('configmaps/' + this.get_configmap_name(definition.name), this.config);
+AddressSource.prototype.delete_address = function (definition, access_token) {
+    var address_name = definition.name;
+    var options = {token : access_token,
+                   namespace: this.config.ADDRESS_SPACE_NAMESPACE};
+    Object.assign(options, this.config);
+    return kubernetes.delete_resource('addresses/' + address_name, options);
 };
 
 function display_order (plan_a, plan_b) {

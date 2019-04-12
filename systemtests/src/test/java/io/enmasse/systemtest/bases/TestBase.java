@@ -75,6 +75,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Environment environment = Environment.getInstance();
+    protected static final UserCredentials clusterUser =  new UserCredentials(KubeCMDClient.getOCUser());
     protected static final Kubernetes kubernetes = Kubernetes.getInstance();
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));

@@ -63,7 +63,6 @@ public class AddressSpaceUtils {
         return createAddressSpaceResource(name, type, AuthenticationServiceType.NONE)
                 .editMetadata()
                 .withNamespace(namespace)
-                .withAnnotations(Collections.singletonMap("enmasse.io/kc-idp-hint", "none"))
                 .endMetadata()
                 .done();
     }
@@ -71,7 +70,6 @@ public class AddressSpaceUtils {
     public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, AuthenticationServiceType authService) {
         return createAddressSpaceResource(name, type, authService)
                 .editMetadata()
-                .withAnnotations(Collections.singletonMap("enmasse.io/kc-idp-hint", "none"))
                 .endMetadata()
                 .done();
     }
@@ -87,7 +85,6 @@ public class AddressSpaceUtils {
     public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, String plan, AuthenticationServiceType authService) {
         return createAddressSpaceResource(name, type, authService)
                 .editMetadata()
-                .withAnnotations(Collections.singletonMap("enmasse.io/kc-idp-hint", "none"))
                 .withNamespace(namespace)
                 .endMetadata()
                 .editSpec()

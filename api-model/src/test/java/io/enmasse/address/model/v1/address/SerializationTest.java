@@ -323,7 +323,7 @@ public class SerializationTest {
         ObjectMapper mapper = new ObjectMapper();
         AddressSpacePlan addressSpacePlan = mapper.readValue(json, AddressSpacePlan.class);
         assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
-        assertThat(addressSpacePlan.getSpec().getAdditionalProperties().get("displayName"), is("MySpace"));
+        assertThat(addressSpacePlan.getSpec().getDisplayName(), is("MySpace"));
         assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
         assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
         assertThat(addressSpacePlan.getResourceLimits().size(), is(2));

@@ -140,9 +140,9 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData restricted = ocPage.viewSecretOfBinding(namespace, restrictedAccesId);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokered);
-        consolePage.login(ocTestUser, true);
-        consolePage.createAddressWebConsole(queue, false, false);
-        consolePage.createAddressWebConsole(topic, false, true);
+        consolePage.login(ocTestUser);
+        consolePage.createAddressWebConsole(queue, false);
+        consolePage.createAddressWebConsole(topic, true);
 
         assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic));
         assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic));
@@ -169,8 +169,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
-        consolePage.login(ocTestUser, true);
-        consolePage.createAddressWebConsole(queue, false, true);
+        consolePage.login(ocTestUser);
+        consolePage.createAddressWebConsole(queue, true);
 
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions()
@@ -196,7 +196,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
         //open console login web page and use OpenShift credentials for login
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, brokeredSpace);
-        consolePage.login(ocTestUser, true);
+        consolePage.login(ocTestUser);
     }
 
     @Test
@@ -216,8 +216,8 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         BindingSecretData credentials = ocPage.viewSecretOfBinding(namespace, bindingID);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
-        consolePage.login(ocTestUser, true);
-        consolePage.createAddressWebConsole(queue, false, true);
+        consolePage.login(ocTestUser);
+        consolePage.createAddressWebConsole(queue, true);
 
         try {
             SystemtestsKubernetesApps.deployMessagingClientApp(namespace, kubernetes);
@@ -260,14 +260,13 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         reloadAddressSpaceEndpoints(addressSpace);
 
         ConsoleWebPage consolePage = ocPage.clickOnDashboard(namespace, addressSpace);
-        consolePage.login(ocTestUser, true);
-        consolePage.createAddressWebConsole(AddressUtils.createQueueAddressObject("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE),
-                false, true);
+        consolePage.login(ocTestUser);
+        consolePage.createAddressWebConsole(AddressUtils.createQueueAddressObject("test-queue-before", DestinationPlan.STANDARD_SMALL_QUEUE), true);
 
         deleteAddressSpaceCreatedBySC(namespace, addressSpace);
 
         WebElement errorLog = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.id("myErrorDialogLabel")));
+                selenium.getDriver().findElement(By.id("peerLostErrorDialogLabel")));
         assertTrue(errorLog.isDisplayed());
         log.info("error banner is displayed showing addr space is deleted");
 

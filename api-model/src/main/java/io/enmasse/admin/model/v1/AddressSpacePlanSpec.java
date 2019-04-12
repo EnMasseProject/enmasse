@@ -18,9 +18,11 @@ import java.util.*;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"displayName", "shortDescription", "infraConfigRef", "addressSpaceType", "addressPlans", "resourceLimits"})
+@JsonPropertyOrder({"displayName", "displayOrder", "shortDescription", "infraConfigRef", "addressSpaceType", "addressPlans", "resourceLimits"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
+    private Integer displayOrder;
+    private String displayName;
     private String shortDescription;
     private String addressSpaceType;
     private Map<String, Double> resourceLimits = new HashMap<>();
@@ -51,34 +53,6 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
         this.resourceLimits = new HashMap<>(resources);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AddressSpacePlanSpec that = (AddressSpacePlanSpec) o;
-        return Objects.equals(shortDescription, that.shortDescription) &&
-                Objects.equals(addressSpaceType, that.addressSpaceType) &&
-                Objects.equals(addressPlans, that.addressPlans) &&
-                Objects.equals(resourceLimits, that.resourceLimits) &&
-                Objects.equals(infraConfigRef, that.infraConfigRef);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(shortDescription, addressSpaceType, resourceLimits, addressPlans, infraConfigRef);
-    }
-
-    @Override
-    public String toString() {
-        return "AddressPlanSpec{" +
-                "shortDescription='" + shortDescription + '\'' +
-                ", addressSpaceType='" + addressSpaceType + '\'' +
-                ", resourceLimits=" + resourceLimits +
-                ", addressPlans=" + addressPlans +
-                ", infraConfigRef=" + infraConfigRef +
-                '}';
-    }
-
     public void setAddressPlans(List<String> addressPlans) {
         this.addressPlans = new ArrayList<>(addressPlans);
     }
@@ -93,5 +67,53 @@ public class AddressSpacePlanSpec extends AbstractWithAdditionalProperties {
 
     public void setInfraConfigRef(String infraConfigRef) {
         this.infraConfigRef = infraConfigRef;
+    }
+
+    public Integer getDisplayOrder() {
+        return displayOrder;
+    }
+
+    public void setDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpacePlanSpec that = (AddressSpacePlanSpec) o;
+        return Objects.equals(shortDescription, that.shortDescription) &&
+                Objects.equals(displayName, that.displayName) &&
+                Objects.equals(displayOrder, that.displayOrder) &&
+                Objects.equals(addressSpaceType, that.addressSpaceType) &&
+                Objects.equals(addressPlans, that.addressPlans) &&
+                Objects.equals(resourceLimits, that.resourceLimits) &&
+                Objects.equals(infraConfigRef, that.infraConfigRef);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(shortDescription, displayName, displayOrder, addressSpaceType, resourceLimits, addressPlans, infraConfigRef);
+    }
+
+    @Override
+    public String toString() {
+        return "AddressPlanSpec{" +
+                "shortDescription='" + shortDescription + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", displayOrder='" + displayOrder + '\'' +
+                ", addressSpaceType='" + addressSpaceType + '\'' +
+                ", resourceLimits=" + resourceLimits +
+                ", addressPlans=" + addressPlans +
+                ", infraConfigRef=" + infraConfigRef +
+                '}';
     }
 }

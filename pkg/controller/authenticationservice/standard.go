@@ -61,7 +61,9 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 		authservice.Spec.Standard.CredentialsSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
-		err := CreateAuthserviceSecret(ctx, client, scheme, secretName, authservice, func(secret *corev1.Secret) error {
+		err := util.CreateSecret(ctx, client, scheme, authservice.Namespace, secretName, authservice, func(secret *corev1.Secret) error {
+			install.ApplyDefaultLabels(&secret.ObjectMeta, "standard-authservice", secretName)
+
 			secret.StringData = make(map[string]string)
 			secret.StringData["admin.username"] = "admin"
 			adminPassword, err := util.GeneratePassword(32)
@@ -82,7 +84,7 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 		}
 
 		if !util.IsOpenshift() {
-			err := CreateAuthserviceSecret(ctx, client, scheme, secretName, authservice, func(secret *corev1.Secret) error {
+			err := util.CreateSecret(ctx, client, scheme, authservice.Namespace, secretName, authservice, func(secret *corev1.Secret) error {
 				cn := util.ServiceToCommonName(authservice.Namespace, *authservice.Spec.Standard.ServiceName)
 				return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
 			})

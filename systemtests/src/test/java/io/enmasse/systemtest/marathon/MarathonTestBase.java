@@ -312,7 +312,7 @@ abstract class MarathonTestBase extends TestBase {
         runTestInLoop(30, () -> {
             SeleniumProvider selenium = new SeleniumProvider();
             selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
-            consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
+            consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, clusterUser);
             consoleWebPage.openWebConsolePage(user);
             try {
                 consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -322,7 +322,7 @@ abstract class MarathonTestBase extends TestBase {
                 selenium.tearDownDrivers();
             } catch (Exception ex) {
                 selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
-                consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, user);
+                consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, clusterUser);
                 consoleWebPage.openWebConsolePage(user);
                 throw new Exception(ex);
             }

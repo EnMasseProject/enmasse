@@ -267,44 +267,45 @@ describe('configmap backed address source', function() {
             done(error);
         });
     });
-    it('creates an address', function(done) {
-        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE: 'foo'});
-        source.once('addresses_defined', function () {
-            source.create_address({address:'myqueue', type:'queue', plan:'clever'}).then(
-                function () {
-                    source.once('addresses_defined', function (addresses) {
-                        assert.equal(addresses.length, 1);
-                        assert.equal(addresses[0].name.substring(0,4), 'foo.');
-                        assert.equal(addresses[0].address, 'myqueue');
-                        assert.equal(addresses[0].type, 'queue');
-                        assert.equal(addresses[0].plan, 'clever');
-                        source.watcher.close().then(function () {
-                            done();
-                        });
-                    });
-                }
-            ).catch(done);
-        });
-    });
-    it('deletes an address', function(done) {
-        configmaps.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');
-        configmaps.add_address_definition({address:'bar', type:'topic'}, 'address-config-bar');
-        var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
-        source.on('addresses_defined', function () {
-            source.delete_address({address:'foo', type:'queue', name:'address-config-foo'}).then(
-                function () {
-                    source.on('addresses_defined', function (addresses) {
-                        assert.equal(addresses.length, 1);
-                        assert.equal(addresses[0].address, 'bar');
-                        assert.equal(addresses[0].type, 'topic');
-                        source.watcher.close().then(function () {
-                            done();
-                        });
-                    });
-                }
-            ).catch(done);
-        });
-    });
+    // internal_address_source now creates address objects, rather than the underlying configmap.
+    // it('creates an address', function(done) {
+    //     var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE: 'foo'});
+    //     source.once('addresses_defined', function () {
+    //         source.create_address({address:'myqueue', type:'queue', plan:'clever'}).then(
+    //             function () {
+    //                 source.once('addresses_defined', function (addresses) {
+    //                     assert.equal(addresses.length, 1);
+    //                     assert.equal(addresses[0].name.substring(0,4), 'foo.');
+    //                     assert.equal(addresses[0].address, 'myqueue');
+    //                     assert.equal(addresses[0].type, 'queue');
+    //                     assert.equal(addresses[0].plan, 'clever');
+    //                     source.watcher.close().then(function () {
+    //                         done();
+    //                     });
+    //                 });
+    //             }
+    //         ).catch(done);
+    //     });
+    // });
+    // it('deletes an address', function(done) {
+    //     configmaps.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');
+    //     configmaps.add_address_definition({address:'bar', type:'topic'}, 'address-config-bar');
+    //     var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+    //     source.on('addresses_defined', function () {
+    //         source.delete_address({address:'foo', type:'queue', name:'address-config-foo'}).then(
+    //             function () {
+    //                 source.on('addresses_defined', function (addresses) {
+    //                     assert.equal(addresses.length, 1);
+    //                     assert.equal(addresses[0].address, 'bar');
+    //                     assert.equal(addresses[0].type, 'topic');
+    //                     source.watcher.close().then(function () {
+    //                         done();
+    //                     });
+    //                 });
+    //             }
+    //         ).catch(done);
+    //     });
+    // });
     it('handles invalid address syntax', function(done) {
         configmaps.add_address_definition({address:'foo', type:'queue'});
         configmaps.add_config_map('baz', {type:'address-config'}, {'config.json': '{bad:x[!'});

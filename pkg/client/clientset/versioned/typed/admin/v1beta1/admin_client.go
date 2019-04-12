@@ -17,6 +17,7 @@ import (
 type AdminV1beta1Interface interface {
 	RESTClient() rest.Interface
 	AuthenticationServicesGetter
+	ConsoleServicesGetter
 }
 
 // AdminV1beta1Client is used to interact with features provided by the admin.enmasse.io group.
@@ -26,6 +27,10 @@ type AdminV1beta1Client struct {
 
 func (c *AdminV1beta1Client) AuthenticationServices(namespace string) AuthenticationServiceInterface {
 	return newAuthenticationServices(c, namespace)
+}
+
+func (c *AdminV1beta1Client) ConsoleServices(namespace string) ConsoleServiceInterface {
+	return newConsoleServices(c, namespace)
 }
 
 // NewForConfig creates a new AdminV1beta1Client for the given config.

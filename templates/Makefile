@@ -31,7 +31,7 @@ MODULES=\
 	kube-state-metrics \
 	service-monitors \
 	prometheus-rules \
-	csv \
+	csv 
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
@@ -70,7 +70,6 @@ replace_images: prepare
 					  -e 's,\$${ALERTMANAGER_IMAGE},$(ALERTMANAGER_IMAGE),g' \
 					  -e 's,\$${GRAFANA_IMAGE},$(GRAFANA_IMAGE),g' \
 					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
-					  -e 's,\$${OAUTH_PROXY_IMAGE},$(OAUTH_PROXY_IMAGE),g' \
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
 					  -e 's,\$${QDROUTERD_BASE_IMAGE},$(QDROUTERD_BASE_IMAGE),g' \
 					  -e 's,\$${HONO_VERSION},$(HONO_VERSION),g' \
@@ -81,7 +80,11 @@ replace_images: prepare
 					  -e 's,\$${IOT_HTTP_ADAPTER_IMAGE},$(IOT_HTTP_ADAPTER_IMAGE),g' \
 					  -e 's,\$${IOT_MQTT_ADAPTER_IMAGE},$(IOT_MQTT_ADAPTER_IMAGE),g' \
 					  -e 's,\$${IOT_PROXY_CONFIGURATOR_IMAGE},$(IOT_PROXY_CONFIGURATOR_IMAGE),g' \
-					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' > $$i.tmp; \
+					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' \
+					  -e 's,\$${CONSOLE_INIT_IMAGE},$(CONSOLE_INIT_IMAGE),g' \
+					  -e 's,\$${CONSOLE_PROXY_OPENSHIFT_IMAGE},$(CONSOLE_PROXY_OPENSHIFT_IMAGE),g' \
+					  -e 's,\$${CONSOLE_PROXY_KUBERNETES_IMAGE},$(CONSOLE_PROXY_KUBERNETES_IMAGE),g' \
+					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' > $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 

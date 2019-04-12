@@ -150,6 +150,9 @@ function get_items_from_index(index) {
 
 function AddressService($http) {
     var self = this;  // 'this' is not available in the success function of $http.get
+    this.closeEvent = null;
+    this.outstanding_settles = {};
+    this.error_queue = [];
     this.admin_disabled = true;
     this.address_index = {};
     this.connection_index = {};
@@ -159,7 +162,9 @@ function AddressService($http) {
     this.address_space_type = '';
     this._additional_listeners = [];
     var ws = rhea.websocket_connect(WebSocket);
-    this.connection = rhea.connect({"connection_details":ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]), "reconnect":true, rejectUnauthorized:true});
+    var connectionDetails = ws("wss://" + location.hostname + ":" + location.port + "/websocket", ["binary", "AMQPWSB10"]);
+    this.connection = rhea.create_connection({"connection_details": connectionDetails, "reconnect":15000, rejectUnauthorized:true});
+    this.connection.connect();
     this.connection.on('message', this.on_message.bind(this));
     this.connection.on('connection_open', function (context) {
         self.update_periodic_deltas_interval = setInterval(self.update_periodic_deltas.bind(self), 5000);
@@ -169,6 +174,7 @@ function AddressService($http) {
         }
     });
     this.connection.on('disconnected', function (context) {
+        self.closeEvent = context.error;
         if (self.update_periodic_deltas_interval) {
             clearInterval(self.update_periodic_deltas_interval);
             self.update_periodic_deltas_interval = null;
@@ -182,10 +188,28 @@ function AddressService($http) {
         }
     });
 
-    this.sender = this.connection.open_sender();
+    this.sender = this.connection.open_sender({autosettle: false});
+    this.sender.on("accepted", (context) => {
+        var delivery = context.delivery;
+        var callback = this.outstanding_settles[delivery];
+        delete this.outstanding_settles[delivery];
+        delivery.settled = true;
+        if (callback) {
+            callback(true);
+        }
+    });
+    this.sender.on("rejected", (context) => {
+        var delivery = context.delivery;
+        var callback = this.outstanding_settles[delivery];
+        delete this.outstanding_settles[delivery];
+        delivery.settled = true;
+        if (callback) {
+            callback(false);
+        }
+    });
     this.connection.open_receiver();
 
-    this.tooltip = {}
+    this.tooltip = {};
     $http.get('tooltips.json')
       .then(function (d) {
         self.tooltip = d.data;
@@ -251,25 +275,35 @@ AddressService.prototype.update_periodic_deltas = function () {
 };
 
 AddressService.prototype.create_address = function (obj) {
-    this.sender.send({subject: 'create_address', body: obj});
-}
+    var delivery = this.sender.send({subject: 'create_address', body: obj});
+    this.outstanding_settles[delivery] = () => {};
+};
 
 AddressService.prototype.delete_selected = function () {
-    var changed = false;
     for (var key in this.address_index) {
         var a = this.address_index[key];
         if (a.selected) {
-            this.sender.send({subject: 'delete_address', body: a});
-            delete this.address_index[key];
-            changed = true;
+            this.delete_selected_addr(a, key);
         }
     }
-    if (changed && this.callback) this.callback('address_deleted');
-}
+};
+
+AddressService.prototype.delete_selected_addr = function (addr, key) {
+    var delivery = this.sender.send({subject: 'delete_address', body: addr});
+    this.outstanding_settles[delivery] = (success) => {
+        if (success) {
+            delete this.address_index[key];
+            if (this.callback) this.callback('address_deleted');
+        } else {
+            console.log("Failed to delete address %s", addr);
+            addr.selected = false;
+        }
+    };
+};
 
 AddressService.prototype.is_unique_valid_name = function (name) {
     return this.address_index[name] === undefined && name.match(/^[^#*\/\s\.:]+$/);
-}
+};
 
 AddressService.prototype.on_message = function (context) {
     if (context.message.subject === 'address') {
@@ -291,6 +325,7 @@ AddressService.prototype.on_message = function (context) {
         this.address_types = context.message.body;
         this.address_space_type = context.message.application_properties.address_space_type;
         this.admin_disabled = context.message.application_properties.disable_admin;
+        this.global_console_disabled = !context.message.application_properties.global_console;
         if (this.callback) this.callback('address_types');
     } else if (context.message.subject === 'connection') {
         var c = context.message.body;
@@ -308,8 +343,13 @@ AddressService.prototype.on_message = function (context) {
             delete this.connection_index[context.message.body];
             if (this.callback) this.callback('connection_deleted');
         }
+    } else if (context.message.subject === 'request_error') {
+        if (this.callback && context.message.body) {
+            this.error_queue.push(context.message.body);
+            this.callback('request_error');
+        }
     }
-}
+};
 
 AddressService.prototype._notify = function () {
     for (var reason in this._reasons) {

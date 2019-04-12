@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <parent>
+        <groupId>io.enmasse</groupId>
+        <artifactId>console</artifactId>
+        <version>0.28-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.enmasse</groupId>
+    <artifactId>console-init</artifactId>
+    <properties>
+        <console-node-install-directory>${project.build.directory}/build</console-node-install-directory>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install yarn - console</id>
+                        <goals>
+                            <goal>install-node-and-yarn</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>${node.version}</nodeVersion>
+                            <yarnVersion>${yarn.version}</yarnVersion>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>yarn install - console</id>
+                        <goals>
+                            <goal>yarn</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                            <workingDirectory>ui</workingDirectory>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>yarn build - console</id>
+                        <goals>
+                            <goal>yarn</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                            <workingDirectory>ui</workingDirectory>
+                            <environmentVariables>
+                                <REACT_APP_VERSION>${project.version}</REACT_APP_VERSION>
+                                <REACT_APP_NAME>EnMasse Console</REACT_APP_NAME>
+                                <REACT_APP_REFRESH_RATE_MILLIS>30000</REACT_APP_REFRESH_RATE_MILLIS>
+                            </environmentVariables>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>yarn test - console</id>
+                        <goals>
+                            <goal>yarn</goal>
+                        </goals>
+                        <phase>test</phase>
+                        <configuration>
+                            <installDirectory>${console-node-install-directory}</installDirectory>
+                            <workingDirectory>ui</workingDirectory>
+                            <arguments>run test</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>dist</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <ignoreMissingDescriptor>false</ignoreMissingDescriptor>
+                            <descriptors>
+                                <descriptor>src/assembly/unix-dist.xml</descriptor>
+                            </descriptors>
+                            <tarLongFileMode>gnu</tarLongFileMode>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

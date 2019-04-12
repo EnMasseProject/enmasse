@@ -32,12 +32,14 @@ var myutils = require('./utils.js');
 var auth_utils = require('./auth_utils.js');
 var Metrics = require('./metrics.js');
 
-function ConsoleServer (address_ctrl, env) {
+function ConsoleServer (address_ctrl, env, openshift) {
+    this.console_link = env.CONSOLE_LINK;
     this.address_ctrl = address_ctrl;
     this.addresses = new AddressList();
     this.metrics = new Metrics(env.ADDRESS_SPACE_NAMESPACE, env.ADDRESS_SPACE);
     this.connections = new Registry();
     this.listeners = {};
+    this.openshift = openshift;
     var self = this;
     this.addresses.on('updated', function (address) {
         self.publish({subject:'address',body:address});
@@ -64,7 +66,6 @@ function ConsoleServer (address_ctrl, env) {
             self.unsubscribe(context.connection.remote.open.container_id);
         }
     }
-    var self = this;
     this.amqp_container.on('sender_close', unsubscribe);
     this.amqp_container.on('connection_close', unsubscribe);
     this.amqp_container.on('disconnected', unsubscribe);
@@ -76,16 +77,35 @@ function ConsoleServer (address_ctrl, env) {
         var reject = function (e, code) {
             log.info('%s request failed: %s', context.message.subject, e);
             context.delivery.reject({condition: code || 'amqp:internal-error', description: '' + e});
-        };
 
+            var sender = self.listeners[context.connection.remote.open.container_id];
+            if (sender) {
+                sender.send({subject:'request_error', body:"Error processing request: " + e});
+            }
+        };
+        var handleServerResponse = function (e) {
+            if (e && e.body) {
+                try {
+                    // Might be a Kubernetes Status response, if so use its message.
+                    var status = JSON.parse(e.body);
+                    if (status.message) {
+                        e.toString = () => {return "" + e.statusCode + " : " + status.message};
+                    }
+                } catch (ignored) {
+                    e.toString = () => {return "" + e.statusCode + " : " + e.body};
+                }
+            }
+            reject(e);
+        };
+        var access_token = self.authz.get_access_token(context.connection);
         if (!self.authz.is_admin(context.connection)) {
             reject(context, 'amqp:unauthorized-access', 'not authorized');
         } else if (context.message.subject === 'create_address') {
             log.info('creating address definition ' + JSON.stringify(context.message.body));
-            self.address_ctrl.create_address(context.message.body).then(accept).catch(reject);
+            self.address_ctrl.create_address(context.message.body, access_token).then(accept).catch(handleServerResponse);
         } else if (context.message.subject === 'delete_address') {
             log.info('deleting address definition ' + context.message.body.address);
-            self.address_ctrl.delete_address(context.message.body).then(accept).catch(reject);
+            self.address_ctrl.delete_address(context.message.body, access_token).then(accept).catch(handleServerResponse);
         } else {
             reject('ignoring message: ' + context.message);
         }
@@ -111,18 +131,30 @@ ConsoleServer.prototype.ws_bind = function (server, env) {
         auth_utils.ws_auth_handler(self.authz, env)(info.req, callback);
     }});
     this.ws_server.on('connection', function (ws, request) {
-        log.info('Accepted incoming websocket connection');
-        self.amqp_container.websocket_accept(ws, self.authz.get_authz_props(request));
+        if (self.authz.access_console(request)) {
+            log.info('Accepting incoming websocket connection');
+            self.amqp_container.websocket_accept(ws, self.authz.get_authz_props(request));
+        } else {
+            ws.close(4403, 'You do not have permission to use this console');
+        }
     });
 };
 
 ConsoleServer.prototype.close = function (callback) {
     var self = this;
     return new Promise(function (resolve, reject) {
-        self.ws_server.close(resolve);
+        if (self.ws_server) {
+            self.ws_server.close(resolve);
+        } else {
+            resolve();
+        }
     }).then(function () {
         new Promise(function (resolve, reject) {
-            self.server.close(resolve);
+            if (self.server) {
+                server.close(resolve);
+            } else {
+                resolve();
+            }
         });
     }).then(callback);
 }
@@ -162,6 +194,11 @@ function static_handler(request, response, transform) {
             if (content_type) {
                 response.setHeader('content-type', content_type);
             }
+            if (transform) {
+                response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                response.setHeader("Pragma", "no-cache");
+                response.setHeader("Expires", "0");
+            }
             log.debug('GET %s => %s', request.url, file);
             response.end(content);
         }
@@ -194,8 +231,11 @@ function get_create_server(env) {
     }
 }
 
-function replacer(original, replacement) {
+function replacer(original, replacement, replacer) {
     return function (data) {
+        if (replacer) {
+            data = replacer(data);
+        }
         return data.toString().replace(new RegExp(original, 'g'), replacement);
     }
 }
@@ -206,10 +246,18 @@ ConsoleServer.prototype.listen = function (env, callback) {
     let handler = function (request, response) {
         if (request.method === 'GET') {
             try {
-                if (url.parse(request.url).pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
-                    var transform = replacer('<em>messaging\-route\-hostname</em>', env.MESSAGING_ROUTE_HOSTNAME);
+                var u = url.parse(request.url);
+                if (u.pathname && (u.pathname.endsWith('.html') || u.pathname.endsWith("/"))) {
+                    var transform;
+                    if (u.pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
+                        transform = replacer('<em>messaging\-route\-hostname</em>', env.MESSAGING_ROUTE_HOSTNAME);
+                    } else {
+                        var global_console_disabled = !env.CONSOLE_LINK;
+                        transform = replacer('\\${GLOBAL_CONSOLE_DISABLED}', global_console_disabled,
+                            replacer('\\${GLOBAL_CONSOLE_LINK}', env.CONSOLE_LINK));
+                    }
                     static_handler(request, response,  transform);
-                } else if (url.parse(request.url).pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
+                } else if (u.pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
                     file_load_handler(request, response, env.MESSAGING_CERT);
                 } else {
                     static_handler(request, response);
@@ -223,10 +271,18 @@ ConsoleServer.prototype.listen = function (env, callback) {
             response.end(util.format('%s not allowed on %s', request.method, request.url));
         }
     };
-    this.server = get_create_server(env)(auth_utils.auth_handler(this.authz, env, handler));
-    this.server.listen(env.port === undefined ? 8080 : env.port, callback);
-    this.ws_bind(this.server, env);
-    return this.server;
+
+    return new Promise((resolve, reject) => {
+        auth_utils.init_auth_handler(this.openshift, env).then((auth_context) => {
+            let handlers = auth_utils.auth_handler(this.authz, env, handler, auth_context, this.openshift);
+            this.server = get_create_server(env)(handlers);
+            var port = env.port === undefined ? 8080 : env.port;
+            this.server.listen(port, callback);
+            log.info("Console listening on port %d", port);
+            this.ws_bind(this.server, env);
+            resolve(this.server);
+        }).catch((e) => reject);
+    });
 };
 
 ConsoleServer.prototype.listen_health = function (env, callback) {
@@ -234,7 +290,7 @@ ConsoleServer.prototype.listen_health = function (env, callback) {
         var self = this;
         var health = http.createServer(function (req, res) {
             var pathname = url.parse(req.url).pathname;
-            if (pathname == "/metrics") {
+            if (pathname === "/metrics") {
                 var data = self.metrics.format_prometheus(new Date().getTime());
                 res.writeHead(200, {'Content-Type': 'text/html'});
                 res.end(data);
@@ -262,6 +318,7 @@ function indexer(message) {
 }
 
 ConsoleServer.prototype.subscribe = function (name, sender) {
+
     var buffered_sender = new BufferedSender(sender, indexer);
     this.listeners[name] = buffered_sender;
     this.addresses.for_each(function (address) {
@@ -276,6 +333,7 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
         var props = {};
         props.address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
         props.disable_admin = !self.authz.is_admin(sender.connection);
+
         buffered_sender.send({subject:'address_types', application_properties:props, body:address_types});
     }).catch(function (error) {
         log.error('failed to get address types from address controller: %s', error);

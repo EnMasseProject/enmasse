@@ -15,124 +15,51 @@
  */
 'use strict';
 
-var myutils = require('./utils.js');
+function TrustAllPolicy() {};
 
-const admin_permission = 'manage';
-const monitor_permission = 'monitor';
-const access_permission = 'view_console';
+// We no longer use derive permissions from keycloak groups.
 
-function AuthorizationPolicy() {};
-
-AuthorizationPolicy.prototype.get_permissions = function (connection) {
-    return connection.options.groups;
-};
-
-AuthorizationPolicy.prototype.has_permission = function (required, actual) {
-    return actual && actual.indexOf(required) >= 0;
-};
-
-function is_view_permission(s) {
-    return s.indexOf('view_') === 0;
-}
-
-AuthorizationPolicy.prototype.access_console = function (properties) {
-    return properties.groups
-        && (this.has_permission(admin_permission, properties.groups)
-            || this.has_permission(monitor_permission, properties.groups)
-            || properties.groups.some(is_view_permission));
-};
-
-AuthorizationPolicy.prototype.is_admin = function (connection) {
-    return this.has_permission(admin_permission, this.get_permissions(connection));
-};
-
-AuthorizationPolicy.prototype.set_authz_props = function (request, credentials, properties) {
-    if (credentials) {
-        request.authz_props = {groups:properties.groups, authid:credentials.username};
-    } else {
-        request.authz_props = {groups:properties.groups};
-    }
-};
-
-AuthorizationPolicy.prototype.get_authz_props = function (request) {
-    try {
-        return request.authz_props;
-    } catch (error) {
-        log.error('error retrieving authz properties for user: %s', error);
-        return undefined;
-    }
-};
-
-AuthorizationPolicy.prototype.address_filter = function (connection) {
-    var permissions = this.get_permissions(connection);
-    if (this.has_permission(admin_permission, permissions) || this.has_permission(monitor_permission, permissions)) {
-        return undefined;
-    } else {
-        var self = this;
-        return function (a) {
-            //TODO: handle wildcards
-            return self.has_permission('view_' + encodeURIComponent(a.address), permissions);
-        };
-    }
-};
-
-AuthorizationPolicy.prototype.connection_filter = function (connection) {
-    var permissions = this.get_permissions(connection);
-    if (this.has_permission(admin_permission, permissions) || this.has_permission(monitor_permission, permissions)) {
-        return undefined;
-    } else {
-        return function (c) {
-            return connection.options.authid !== undefined && connection.options.authid === c.user;
-        };
-    }
-};
-
-AuthorizationPolicy.prototype.can_publish = function (sender, message) {
-    var permissions = this.get_permissions(sender.connection);
-    if (this.has_permission(admin_permission, permissions) || this.has_permission(monitor_permission, permissions)) {
-        return true;
-    } else if (message.subject === 'address' || message.subject === 'address_deleted') {
-        //TODO: handle wildcards
-        return this.has_permission('view_' + encodeURIComponent(message.body.address), permissions);
-    } else if (message.subject === 'connection' || message.subject === 'connection_deleted') {
-        return sender.connection.options.authid === message.body.user;
-    }
-};
-
-function NullPolicy() {};
-
-NullPolicy.prototype.has_permission = function (required, actual) {
+TrustAllPolicy.prototype.has_permission = function (required, actual) {
     return true;
 };
 
-NullPolicy.prototype.access_console = function () {
-    return true;
+TrustAllPolicy.prototype.access_console = function (request) {
+    return request.authz_props && request.authz_props.console;
 };
 
-NullPolicy.prototype.is_admin = function () {
-    return true;
+TrustAllPolicy.prototype.is_admin = function (connection) {
+    return connection.options && connection.options.admin;
 };
 
-NullPolicy.prototype.set_authz_props = function (request, credentials, properties) {};
+TrustAllPolicy.prototype.set_authz_props = function (request, credentials, properties) {
+    request.authz_props = {
+        admin: properties.admin,
+        console: properties.console,
+        token: credentials.token
+    };
+};
 
-NullPolicy.prototype.get_authz_props = function (request) {};
+TrustAllPolicy.prototype.get_authz_props = function (request) {
+    return request.authz_props;
+};
 
-NullPolicy.prototype.address_filter = function (connection) {
+TrustAllPolicy.prototype.address_filter = function (connection) {
     return undefined;
 };
 
-NullPolicy.prototype.connection_filter = function (connection) {
+TrustAllPolicy.prototype.connection_filter = function (connection) {
     return undefined;
 };
 
-NullPolicy.prototype.can_publish = function (sender, message) {
+TrustAllPolicy.prototype.can_publish = function (sender, message) {
     return true;
 };
+
+TrustAllPolicy.prototype.get_access_token = function (connection) {
+    return connection.options && connection.options.token ? connection.options.token.getAccessToken() : null;
+};
+
 
 module.exports.policy = function (env) {
-    if (env.DISABLE_AUTHORIZATION) {
-        return new NullPolicy();
-    } else {
-        return new AuthorizationPolicy();
-    }
-}
+    return new TrustAllPolicy();
+};

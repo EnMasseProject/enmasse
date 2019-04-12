@@ -185,7 +185,6 @@ public class OpenshiftWebPage implements IWebPage {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Login"));
             return true;
         } catch (Exception ex) {
-            ex.printStackTrace();
             return false;
         }
     }
@@ -195,7 +194,6 @@ public class OpenshiftWebPage implements IWebPage {
             selenium.getDriverWait().until(ExpectedConditions.visibilityOfElementLocated(By.className("services-no-sub-categories")));
             return true;
         } catch (Exception ex) {
-            ex.printStackTrace();
             return false;
         }
     }

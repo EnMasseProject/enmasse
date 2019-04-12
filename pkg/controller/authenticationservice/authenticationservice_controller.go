@@ -7,14 +7,8 @@ package authenticationservice
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"reflect"
-	"strings"
-
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
-	oauthv1 "github.com/openshift/api/oauth/v1"
 	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -22,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -207,17 +202,6 @@ func (r *ReconcileAuthenticationService) reconcileStandardAuthService(ctx contex
 	}
 	requeue = requeue || result.Requeue
 
-	keycloakUrl, err := r.keycloakOauthUri(ctx, *authservice.Spec.Standard.RouteName, *authservice.Spec.Standard.ServiceName, authservice)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	result, err = r.reconcileStandardOauthClient(ctx, authservice, keycloakUrl)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-	requeue = requeue || result.Requeue
-
 	result, err = r.reconcileDeployment(ctx, authservice, *authservice.Spec.Standard.DeploymentName, applyStandardAuthServiceDeployment)
 	if err != nil {
 		return reconcile.Result{}, err
@@ -379,82 +363,6 @@ func (r *ReconcileAuthenticationService) reconcileStandardRoute(ctx context.Cont
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileAuthenticationService) keycloakOauthUri(ctx context.Context, routeName string, serviceName string, authservice *adminv1beta1.AuthenticationService) (string, error) {
-
-	if util.IsOpenshift() {
-		route := &routev1.Route{}
-		err := r.client.Get(ctx, types.NamespacedName{Name: routeName, Namespace: authservice.Namespace}, route)
-		if err != nil {
-			return "", err
-		}
-		var oauthUri = ""
-
-		if route.Spec.Host == "" {
-			return "", errors.New("Route host not set, unable to get keycloak oauth URI")
-		}
-
-		if strings.Contains(route.Spec.Host, "127.0.0.1") {
-			service := &corev1.Service{}
-			err := r.client.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: authservice.Namespace}, service)
-			if err != nil {
-				return "", err
-			}
-			oauthUri = "https://" + service.Spec.ClusterIP + ":8443/auth"
-		} else {
-			oauthUri = "https://" + route.Spec.Host + "/auth"
-		}
-		return oauthUri, nil
-	}
-	return "", nil
-}
-
-func (r *ReconcileAuthenticationService) reconcileStandardOauthClient(ctx context.Context, authservice *adminv1beta1.AuthenticationService, keycloakUrl string) (reconcile.Result, error) {
-	if util.IsOpenshift() {
-		var openshiftUrl string
-		openshiftUrl, err := util.OpenshiftUri()
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if openshiftUrl == "" || strings.Contains(openshiftUrl, "https://localhost:8443") || strings.Contains(openshiftUrl, "https://127.0.0.1:8443") {
-			openshiftUrl = fmt.Sprintf("https://%s:%s", util.GetEnvOrDefault("KUBERNETES_SERVICE_HOST", "172.30.0.1"), util.GetEnvOrDefault("KUBERNETES_SERVICE_PORT", "443"))
-		}
-
-		// Cannot us CreateOrUpdate as Get is not properly working
-		var oauthname = "enmasse-oauthclient-" + authservice.Namespace
-		oauth := &oauthv1.OAuthClient{}
-		err = r.client.Get(ctx, types.NamespacedName{Namespace: authservice.Namespace, Name: oauthname}, oauth)
-
-		if err != nil {
-			if k8errors.IsNotFound(err) {
-				oauth.ObjectMeta = metav1.ObjectMeta{Namespace: authservice.Namespace, Name: oauthname}
-				applyOauthClient(authservice, oauth, keycloakUrl)
-				err := r.client.Create(ctx, oauth)
-				if err != nil && !k8errors.IsNotFound(err) {
-					log.Error(err, "Error creating oauth client, ignoring")
-					return reconcile.Result{}, nil
-				}
-			} else {
-				log.Error(err, "Error getting oauth client, ignoring")
-				return reconcile.Result{}, nil
-			}
-		}
-
-		if authservice.Annotations == nil {
-			authservice.Annotations = make(map[string]string)
-		}
-
-		if keycloakUrl != "" {
-			authservice.Annotations["enmasse.io/oauth-url"] = keycloakUrl
-		}
-
-		if openshiftUrl != "" {
-			authservice.Annotations["enmasse.io/identity-provider-url"] = openshiftUrl
-			authservice.Annotations["enmasse.io/identity-provider-client-id"] = oauth.Name
-			authservice.Annotations["enmasse.io/identity-provider-client-secret"] = oauth.Secret
-		}
-	}
-	return reconcile.Result{}, nil
-}
 
 /*
  * This function removes the keycloak controller if it exists. This process is no longer needed if this

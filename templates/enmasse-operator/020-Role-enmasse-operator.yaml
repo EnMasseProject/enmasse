@@ -15,7 +15,7 @@ rules:
     resources: [ "routes", "routes/custom-host", "routes/status"]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "admin.enmasse.io" ]
-    resources: [ "authenticationservices", "authenticationservices/finalizers" ]
+    resources: [ "authenticationservices", "authenticationservices/finalizers", "consoleservices", "consoleservices/finalizers" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]
   - apiGroups: [ "iot.enmasse.io" ]
     resources: [ "iotconfigs", "iotconfigs/finalizers" ]

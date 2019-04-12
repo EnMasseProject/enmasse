@@ -20,10 +20,23 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
         };
 
         $scope.notification = {show_alert:false, alert_msg:''};
-        $scope.removeNotification=function(){
+        $scope.removeNotification=function() {
             $scope.notification.show_alert=false;
-          }
-          
+          };
+
+        address_service.add_additional_listener(function(reason) {
+            if (reason === 'request_error' && address_service.error_queue.length > 0) {
+                var msg = '';
+                while(address_service.error_queue.length > 0) {
+                    msg += address_service.error_queue.pop();
+                }
+                $scope.$apply(() => {
+                    $scope.notification.alert_msg = msg;
+                    $scope.notification.show_alert = true;
+                });
+            }
+        });
+
         $scope.get_plan_display_name = function (type, plan) {
             return address_service.get_plan_display_name(type, plan);
         };
@@ -399,24 +412,27 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
 angular.module('patternfly.modals').controller('PeerLostController', ['$scope', '$uibModal', 'address_service',
     function ($scope, $uibModal, address_service) {
 
-        $scope.openWizardModel = function () {
+        $scope.openWizardModel = function (templateUrl) {
             $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
-                templateUrl: '/peer_lost.html',
+                templateUrl: templateUrl,
                 controller: function ($scope, $uibModalInstance) {
                 },
                 size: 'lg'
             });
-            console.log("modalInstance %s", modalInstance);
         };
 
         address_service.add_additional_listener(function(reason) {
-            console.log('callback %s', reason);
             if (reason === 'peer_disconnected') {
                 if (!$scope.modalInstance) {
-                    console.log("disconnected");
-                    $scope.openWizardModel();
+                    var code = address_service.closeEvent && address_service.closeEvent.code ? address_service.closeEvent.code : -1;
+                    console.log("disconnected - close event code : %d", code);
+                    if (code === 4403) {
+                        $scope.openWizardModel('/forbidden_list_address.html');
+                    } else {
+                        $scope.openWizardModel('/peer_lost.html');
+                    }
                 }
             } else if (reason === 'peer_connected') {
                 if ($scope.modalInstance) {
