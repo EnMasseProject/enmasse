@@ -1,0 +1,71 @@
+// Module included in the following assemblies:
+//
+// assembly-installing.adoc
+
+[id='installing-using-olm-{context}']
+= Installing {ProductName} using Operator Marketplace
+
+If the version of {ProductName} you want to install is not available via the link:https://www.operatorhub.io[Operator
+Hub], you can install a custom `OperatorSource` for {ProductName} following these steps.
+
+.Prerequisites
+
+* Operator Lifecycle Manager must be installed.
+* Operator Marketplace must be installed.
+
+.Procedure 
+
+. Create an `OperatorSource`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+cat <<EOF | {cmdcli} apply -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorSource
+metadata:
+  name: enmasse-operators
+  namespace: {OperatorMarketplaceNamespace}
+spec:
+  type: appregistry
+  endpoint: https://quay.io/cnr
+  registryNamespace: enmasse
+  displayName: "EnMasse Operators"
+  publisher: "EnMasse"
+EOF
+----
+
+. Create a `CatalogSourceConfig` to enable the operator on your {KubePlatform} cluster:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+cat <<EOF | {cmdcli} apply -f -
+apiVersion: operators.coreos.com/v1
+kind: CatalogSourceConfig
+metadata:
+  name: installed-enmasse-operators
+  namespace: {OperatorMarketplaceNamespace}
+spec:
+  csDisplayName: EnMasse Operators
+  csPublisher: EnMasse
+  packages: enmasse
+  targetNamespace: {OperatorNamespace}
+EOF
+----
+
+. Create a `Subscription` to install the operator and receive updates:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+cat <<EOF | {cmdcli} apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: {OperatorName}
+  namespace: {OperatorNamespace}
+spec:
+  channel: alpha
+  name: {OperatorName}
+  source: {OperatorSourceName}
+  sourceNamespace: {OperatorNamespace}
+EOF
+----

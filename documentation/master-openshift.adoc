@@ -7,6 +7,8 @@ include::common/attributes.adoc[]
 :context: messaging
 :cmdcli: oc
 :KubePlatform: OpenShift
+:OperatorNamespace: openshift-operators
+:OperatorMarketplaceNamespace: openshift-marketplace
 
 = Documentation for {ProductName} on OpenShift
 
