@@ -665,7 +665,7 @@ public class ConsoleWebPage implements IWebPage {
 
         AddressWebItem items = (AddressWebItem) selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
 
-        assertNotNull(items, "Console failed, does not contain created address item");
+        assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
 
         if (waitForReady)
             AddressUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,

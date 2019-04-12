@@ -246,7 +246,7 @@ AddressSource.prototype.get_configmap_name = function (name) {
 };
 
 AddressSource.prototype.create_address = function (definition, access_token) {
-    var address_name = this.config.ADDRESS_SPACE + "." + definition.address;
+    var address_name = this.config.ADDRESS_SPACE + "." + myutils.kubernetes_name(definition.address);
     var address = {
         apiVersion: 'enmasse.io/v1beta1',
         kind: 'Address',
@@ -279,7 +279,7 @@ AddressSource.prototype.create_address = function (definition, access_token) {
 };
 
 AddressSource.prototype.delete_address = function (definition, access_token) {
-    var address_name = this.config.ADDRESS_SPACE + "." + definition.address;
+    var address_name = definition.name;
     var options = {token : access_token,
                    namespace: this.config.ADDRESS_SPACE_NAMESPACE};
     Object.assign(options, this.config);
