@@ -19,7 +19,7 @@ include::../modules/proc-installing-using-olm.adoc[leveloffset=+1]
 endif::[]
 ifeval::["{cmdcli}" == "oc"]
 {ProductName} can be installed by applying the YAML files using the `oc` command-line tool, by using
-the Operator Marketplace, or by running the link:https://www.ansible.com/[Ansible] playbooks.
+the Operator Marketplace, or by running the link:https://www.ansible.com/[Ansible^] playbooks.
 
 include::../common/snip-prerequisites-openshift.adoc[]
 
