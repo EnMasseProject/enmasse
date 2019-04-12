@@ -1,7 +1,7 @@
 
 
 class MessagingInstance {
-  constructor(name, namespace, component, type, timeCreated, isReady, url) {
+  constructor(name, namespace, component, type, timeCreated, isReady, phase, url) {
     this.name = name;
     this.namespace = namespace;
     this.component = 'AS';
@@ -9,6 +9,7 @@ class MessagingInstance {
     this.timeCreated = timeCreated;
     this.consoleUrl = url;
     this.isReady = isReady;
+    this.phase = phase;
   }
 
 }
