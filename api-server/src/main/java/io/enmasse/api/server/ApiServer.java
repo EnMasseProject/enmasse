@@ -63,7 +63,7 @@ public class ApiServer extends AbstractVerticle {
     @Override
     public void start(Future<Void> startPromise) throws Exception {
         boolean isOpenShift = isOpenShift(client);
-        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), isOpenShift);
+        SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), options.getVersion(), isOpenShift);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 

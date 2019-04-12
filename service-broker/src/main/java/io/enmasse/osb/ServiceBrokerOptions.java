@@ -18,6 +18,7 @@ public class ServiceBrokerOptions {
     private String serviceCatalogCredentialsSecretName;
     private String consoleProxyRouteName;
     private int listenPort = 8080;
+    private String version;
 
     public Duration getResyncInterval() {
         return resyncInterval;
@@ -111,6 +112,8 @@ public class ServiceBrokerOptions {
             options.setListenPort(Integer.parseInt(listenPort));
         }
 
+        options.setVersion(getEnvOrThrow(env, "VERSION"));
+
         return options;
     }
 
@@ -137,5 +140,13 @@ public class ServiceBrokerOptions {
     public ServiceBrokerOptions setServiceCatalogCredentialsSecretName(String serviceCatalogCredentialsSecretName) {
         this.serviceCatalogCredentialsSecretName = serviceCatalogCredentialsSecretName;
         return this;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

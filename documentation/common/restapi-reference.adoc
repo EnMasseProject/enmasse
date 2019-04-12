@@ -1388,7 +1388,7 @@ __optional__|<<_io_enmasse_admin_v1beta1_brokeredinfraconfigspecbroker,io.enmass
 |**networkPolicy** +
 __optional__|<<_io_enmasse_admin_v1beta1_brokeredinfraconfigspec_networkpolicy,networkPolicy>>
 |**version** +
-__required__|string
+__optional__|string
 |===
 
 [[_io_enmasse_admin_v1beta1_brokeredinfraconfigspec_networkpolicy]]
@@ -1554,7 +1554,7 @@ __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspec_networkpolicy,n
 |**router** +
 __optional__|<<_io_enmasse_admin_v1beta1_standardinfraconfigspecrouter,io.enmasse.admin.v1beta1.StandardInfraConfigSpecRouter>>
 |**version** +
-__required__|string
+__optional__|string
 |===
 
 [[_io_enmasse_admin_v1beta1_standardinfraconfigspec_networkpolicy]]
