@@ -5,7 +5,7 @@
 = Installing {ProductName}
 
 ifeval::["{cmdcli}" == "kubectl"]
-{ProductName} can be installed by applying the YAML files using the `kubectl` command line tool or
+{ProductName} can be installed by applying the YAML files using the `kubectl` command-line tool or
 by using the Operator Marketplace.
 
 include::../common/snip-prerequisites-kubernetes.adoc[]
