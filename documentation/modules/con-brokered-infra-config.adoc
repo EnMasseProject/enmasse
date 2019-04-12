@@ -37,7 +37,8 @@ spec:
 ----
 
 The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
-this field to determine whether to upgrade the infrastructure to the requested version.
+this field to determine whether to upgrade the infrastructure to the requested version. If omitted,
+the version will be assumed to be the same as the controllers reading the config.
 
 The `admin` object specifies the settings you can configure for the `admin` components.
 

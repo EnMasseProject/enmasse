@@ -1858,9 +1858,6 @@
         },
         "io.enmasse.admin.v1beta1.BrokeredInfraConfigSpec": {
             "type": "object",
-            "required": [
-                "version"
-            ],
             "properties": {
                 "version": {
                     "type": "string"
@@ -1998,9 +1995,6 @@
         },
         "io.enmasse.admin.v1beta1.StandardInfraConfigSpec": {
             "type": "object",
-            "required": [
-                "version"
-            ],
             "properties": {
                 "version": {
                     "type": "string"
