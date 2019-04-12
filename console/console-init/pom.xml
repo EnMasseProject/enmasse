@@ -20,32 +20,33 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>install yarn - console</id>
+                        <id>install node and npm - console</id>
                         <goals>
-                            <goal>install-node-and-yarn</goal>
+                            <goal>install-node-and-npm</goal>
                         </goals>
                         <configuration>
                             <nodeVersion>${node.version}</nodeVersion>
-                            <yarnVersion>${yarn.version}</yarnVersion>
+                            <npmVersion>${npm.version}</npmVersion>
                             <installDirectory>${console-node-install-directory}</installDirectory>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>yarn install - console</id>
+                        <id>npm install - console</id>
                         <goals>
-                            <goal>yarn</goal>
+                            <goal>npm</goal>
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
                             <installDirectory>${console-node-install-directory}</installDirectory>
                             <workingDirectory>ui</workingDirectory>
-                            <arguments>install</arguments>
+                            <arguments>install --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2 --quiet</arguments>
                         </configuration>
                     </execution>
+
                     <execution>
-                        <id>yarn build - console</id>
+                        <id>npm build - console</id>
                         <goals>
-                            <goal>yarn</goal>
+                            <goal>npm</goal>
                         </goals>
                         <phase>process-resources</phase>
                         <configuration>
@@ -56,19 +57,19 @@
                                 <REACT_APP_NAME>EnMasse Console</REACT_APP_NAME>
                                 <REACT_APP_REFRESH_RATE_MILLIS>30000</REACT_APP_REFRESH_RATE_MILLIS>
                             </environmentVariables>
-                            <arguments>run build</arguments>
+                            <arguments>run-script build</arguments>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>yarn test - console</id>
+                        <id>npm test - console</id>
                         <goals>
-                            <goal>yarn</goal>
+                            <goal>npm</goal>
                         </goals>
                         <phase>test</phase>
                         <configuration>
                             <installDirectory>${console-node-install-directory}</installDirectory>
                             <workingDirectory>ui</workingDirectory>
-                            <arguments>run test</arguments>
+                            <arguments>run-script test</arguments>
                         </configuration>
                     </execution>
                 </executions>
@@ -96,3 +97,4 @@
         </plugins>
     </build>
 </project>
+
