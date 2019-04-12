@@ -111,7 +111,7 @@ public class MqttClientFactory {
                 mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
             }
         } else {
-          mqttEndpoint = endpoint;
+            mqttEndpoint = endpoint;
         }
 
         if(options.getSocketFactory()==null) {

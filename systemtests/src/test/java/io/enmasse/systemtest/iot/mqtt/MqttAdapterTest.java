@@ -140,11 +140,12 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             return false;
         });
 
+        int messagesToSend = 50;
         log.info("Sending telemetry messages");
-        for ( int i = 0; i < 50; i++ ) {
+        for ( int i = 0; i < messagesToSend; i++ ) {
             JsonObject json = new JsonObject();
             json.put("i", i);
-            json.put("end", i == 49);
+            json.put("end", i == (messagesToSend-1));
             MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
             message.setQos(1);
             adapterClient.publish(IOT_ADDRESS_TELEMETRY, message);
@@ -152,18 +153,19 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
         log.info("Waiting to receive telemetry data in business application");
         futureReceivedMessages.get(15, TimeUnit.SECONDS);
-        assertEquals(50, receivedMessagesCounter.get());
+        assertEquals(messagesToSend, receivedMessagesCounter.get());
 
     }
 
     @Test
     public void basicEventTest() throws Exception {
 
+        int messagesToSend = 5;
         log.info("Sending events");
-        for ( int i = 0; i < 5; i++ ) {
+        for ( int i = 0; i < messagesToSend; i++ ) {
             JsonObject json = new JsonObject();
             json.put("i", i);
-            json.put("end", i == 4);
+            json.put("end", i == (messagesToSend-1));
             MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
             message.setQos(1);
             adapterClient.publish(IOT_ADDRESS_EVENT, message);
@@ -175,7 +177,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         try {
             log.info("Waiting to receive events");
             List<Message> messages = status.getResult().get(60, TimeUnit.SECONDS);
-            assertEquals(5, messages.size());
+            assertEquals(messagesToSend, messages.size());
         }catch(TimeoutException e) {
             log.error("Timeout receiving events, messages received: {} error:", status.getNumReceived(), e);
             throw e;
