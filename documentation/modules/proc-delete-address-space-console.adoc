@@ -15,8 +15,8 @@ For more information about how to access the {ConsoleName}, see link:{BookUrlBas
 
 . Locate the address space that you want to delete.
 
-. In the far right column, click the vertical ellipsis icon and select *Delete*.
+. In the far right column, click the vertical ellipsis icon and select *Delete*. The delete confirmation window opens.
 
-. Confirm your selection by clicking *OK*. The address space is deleted.
+. Confirm your selection by clicking *Delete*. The address space is deleted.
 
 
