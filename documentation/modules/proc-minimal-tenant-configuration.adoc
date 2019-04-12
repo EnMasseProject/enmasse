@@ -1,0 +1,39 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring.adoc
+
+[id='minimal-tenant-configuration-{context}']
+= Minimal tenant configuration
+
+The following procedure will get you started with a minimal configuration for a messaging application. 
+
+.Procedure 
+
+. Save the example configuration:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  type: standard
+  plan: standard-small
+---
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+  name: myspace.myqueue
+spec:
+  address: myqueue
+  type: queue
+  plan: standard-small-queue
+----
+
+. Apply the example configuration:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} apply -f application-config.yaml
+----

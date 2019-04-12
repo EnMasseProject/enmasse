@@ -21,6 +21,8 @@
 :ProductVersion: 
 :ProductMajorVersion: 
 :ProductBundleName: enmasse
+:OperatorName: enmasse
+:OperatorSourceName: enmasse-operators
 :AuthProductName: Keycloak
 :AuthProductNameConsole: Keycloak Administration Console
 :QpidJmsVersion: 0.20.0
@@ -61,6 +63,7 @@
 :LinkaddressFullPolicyDocs: https://activemq.apache.org/artemis/docs/latest/address-model.html
 
 // Section enablers
+:OperatorSource:
 :NoneAuthService:
 :Kubernetes:
 :InstallationAppendix:

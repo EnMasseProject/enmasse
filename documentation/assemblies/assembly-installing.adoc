@@ -5,7 +5,8 @@
 = Installing {ProductName}
 
 ifeval::["{cmdcli}" == "kubectl"]
-These steps follow the manual deployment procedure and work on any platform supporting the `kubectl` command-line client.
+{ProductName} can be installed by applying the YAML files using the `kubectl` command-line tool or
+by using the Operator Marketplace.
 
 include::../common/snip-prerequisites-kubernetes.adoc[]
 
@@ -13,10 +14,12 @@ include::../common/proc-download-procedure.adoc[leveloffset=+1]
 
 include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
 
-include::assembly-installing-manual-steps.adoc[leveloffset=+1]
+include::../modules/proc-installing-using-olm.adoc[leveloffset=+1]
+
 endif::[]
 ifeval::["{cmdcli}" == "oc"]
-{ProductName} can be installed using automated link:https://www.ansible.com/[Ansible] playbooks, the OpenShift template, or the manual steps.
+{ProductName} can be installed by applying the YAML files using the `oc` command-line tool, by using
+the Operator Marketplace, or by running the link:https://www.ansible.com/[Ansible^] playbooks.
 
 include::../common/snip-prerequisites-openshift.adoc[]
 
@@ -24,7 +27,8 @@ include::../common/proc-download-procedure.adoc[leveloffset=+1]
 
 include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
 
+include::../modules/proc-installing-using-olm.adoc[leveloffset=+1]
+
 include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
 
-include::assembly-installing-manual-steps.adoc[leveloffset=+1]
 endif::[]

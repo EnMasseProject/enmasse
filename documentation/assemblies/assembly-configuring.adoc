@@ -4,6 +4,8 @@
 [id='configuring-{context}']
 = Configuring {ProductName}
 
+include::../modules/proc-minimal-service-configuration.adoc[leveloffset=+1]
+
 include::../modules/con-address-space-plans.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-space-plans-cli.adoc[leveloffset=+1]

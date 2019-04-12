@@ -14,7 +14,147 @@ metadata:
     capabilities: Seamless Upgrades
     repository: https://github.com/EnMasseProject/enmasse
     support: EnMasse
-    alm-examples: '[{"apiVersion":"admin.enmasse.io/v1beta1","kind":"StandardInfraConfig","metadata":{"name":"my-standard-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"1Gi","storage":"5Gi"},"addressFullPolicy":"BLOCK"},"router":{"linkCapacity":50,"resources":{"memory":"512Mi"}}}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"BrokeredInfraConfig","metadata":{"name":"my-brokered-infra"},"spec":{"version":"${ENMASSE_VERSION}","broker":{"resources":{"memory":"4Gi"}}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressPlan","metadata":{"name":"small-standard-queue"},"spec":{"addressType":"queue","shortDescription":"Small Queue","resources":{"router":0.01,"broker":0.1}}},{"apiVersion":"admin.enmasse.io/v1beta2","kind":"AddressSpacePlan","metadata":{"name":"standard-small"},"spec":{"addressSpaceType":"standard","infraConfigRef":"my-standard-infra","shortDescription":"Small Address Space Plan","resourceLimits":{"router":1,"broker":2,"aggregate":2},"addressPlans":["small-standard-queue"]}},{"apiVersion":"admin.enmasse.io/v1beta1","kind":"AuthenticationService","metadata":{"name":"none-authservice"},"spec":{"type":"none"}},{"apiVersion":"enmasse.io/v1beta1","kind":"AddressSpace","metadata":{"name":"myspace"},"spec":{"type":"standard","plan":"standard-small"}},{"apiVersion":"enmasse.io/v1beta1","kind":"Address","metadata":{"name":"myspace.myqueue"},"spec":{"address":"myqueue","type":"queue","plan":"small-standard-queue"}},{"apiVersion":"user.enmasse.io/v1beta1","kind":"MessagingUser","metadata":{"name":"myspace.user"},"spec":{"username":"user","authentication":{"type":"password","password":"ZW5tYXNzZQ=="},"authorization":[{"operations":["send","recv"],"addresses":["myqueue"]}]}},{"apiVersion":"iot.enmasse.io/v1alpha1","kind":"IoTConfig","metadata":{"name":"default"},"spec":{}}]'
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "admin.enmasse.io/v1beta1",
+          "kind": "StandardInfraConfig",
+          "metadata": {
+            "name": "my-standard-infra"
+          },
+          "spec": {
+            "broker": {
+              "resources": {
+                "memory": "1Gi",
+                "storage": "5Gi"
+              },
+              "addressFullPolicy": "FAIL"
+            },
+            "router": {
+              "linkCapacity": 50,
+              "resources": {
+                "memory": "512Mi"
+              }
+            }
+          }
+        },
+        {
+          "apiVersion": "admin.enmasse.io/v1beta1",
+          "kind": "BrokeredInfraConfig",
+          "metadata": {
+            "name": "my-brokered-infra"
+          },
+          "spec": {
+            "broker": {
+              "resources": {
+                "memory": "4Gi"
+              }
+            }
+          }
+        },
+        {
+          "apiVersion": "admin.enmasse.io/v1beta2",
+          "kind": "AddressPlan",
+          "metadata": {
+            "name": "standard-small-queue"
+          },
+          "spec": {
+            "addressType": "queue",
+            "shortDescription": "Small Queue",
+            "resources": {
+              "router": 0.01,
+              "broker": 0.1
+            }
+          }
+        },
+        {
+          "apiVersion": "admin.enmasse.io/v1beta2",
+          "kind": "AddressSpacePlan",
+          "metadata": {
+            "name": "standard-small"
+          },
+          "spec": {
+            "addressSpaceType": "standard",
+            "infraConfigRef": "my-standard-infra",
+            "shortDescription": "Small Address Space Plan",
+            "resourceLimits": {
+              "router": 1.0,
+              "broker": 2.0,
+              "aggregate": 2.0
+            },
+            "addressPlans": [
+              "small-standard-queue"
+            ]
+          }
+        },
+        {
+          "apiVersion": "admin.enmasse.io/v1beta1",
+          "kind": "AuthenticationService",
+          "metadata": {
+            "name": "none-authservice"
+          },
+          "spec": {
+            "type": "none"
+          }
+        },
+        {
+          "apiVersion": "enmasse.io/v1beta1",
+          "kind": "AddressSpace",
+          "metadata": {
+            "name": "myspace"
+          },
+          "spec": {
+            "plan": "standard-small",
+            "type": "standard"
+          }
+        },
+        {
+          "apiVersion": "enmasse.io/v1beta1",
+          "kind": "Address",
+          "metadata": {
+            "name": "myspace.myqueue"
+          },
+          "spec": {
+            "address": "myqueue",
+            "plan": "small-standard-queue",
+            "type": "queue"
+          }
+        },
+        {
+          "apiVersion": "user.enmasse.io/v1beta1",
+          "kind": "MessagingUser",
+          "metadata": {
+            "name": "myspace.user"
+          },
+          "spec": {
+            "authentication": {
+              "password": "ZW5tYXNzZQ==",
+              "type": "password"
+            },
+            "authorization": [
+              {
+                "addresses": [
+                  "myqueue"
+                ],
+                "operations": [
+                  "send",
+                  "recv"
+                ]
+              }
+            ],
+            "username": "user"
+          }
+        },
+        {
+          "apiVersion": "iot.enmasse.io/v1alpha1",
+          "kind": "IoTConfig",
+          "metadata": {
+            "name": "default"
+          },
+          "spec": {}
+        }
+      ]
+
 spec:
   maturity: beta
   displayName: EnMasse
@@ -30,13 +170,13 @@ spec:
 
     * **Supports a wide variety of messaging patterns** - Choose between JMS-style messaging with strict guarantees, or messaging that supports a larger number of connections and higher throughput.
 
-    ### Examples
+    ### Configuring
 
-    The example resources provided this operator can be categorized into resources managed by the operator admin and resources managed by messaging tenants.
+    The example resources provided this operator can be categorized into resources managed by the operator admin to configure the infrastructure and resources managed by messaging tenants to provision messaging.
 
-    The `AddressSpacePlan`, `AddressPlan`, `StandardInfraConfig`, `BrokeredInfraConfig` and `AuthenticationService` resources should be created by the operator admin in the same namespace where the operator is running.
+    1. Create the `AddressSpacePlan`, `AddressPlan`, `StandardInfraConfig`, `BrokeredInfraConfig` and `AuthenticationService` resources in the namespace where the operator is installed. See the [minimal service configuration](https://enmasse.io/documentation/master/kubernetes/index.html#minimal-service-configuration-messaging) for examples.
+    2. Create the `AddressSpace`, `Address` and `MessagingUser` resources in the same namespace as the application that will use messaging. See the [minimal tenant configuration](https://enmasse.io/documentation/master/kubernetes/index.html#minimal-tenant-configuration-messaging) for examples.
 
-    The `AddressSpace`, `Address` and `MessagingUser` resources should be created by the messaging tenant in the same namespace as the application that will use messaging.
 
     ### Documentation
     
