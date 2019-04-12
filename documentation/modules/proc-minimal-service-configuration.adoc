@@ -10,8 +10,6 @@ you started with a minimal service configuration. For a more complete example, n
 `install/components/example-plans` folder of the {ProductName} distribution. All of the commands
 must be run in the namespace where {ProductName} is installed.
 
-.Prerequisites
-
 .Procedure 
 
 . Save the example configuration:
