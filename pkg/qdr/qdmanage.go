@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -8,18 +8,29 @@ package qdr
 import (
 	json2 "encoding/json"
 
-	"k8s.io/klog"
 	"os"
 	"os/exec"
 	"strings"
+
+	"k8s.io/klog"
 )
+
+const DefaultCommand = "/usr/bin/qdmanage"
 
 type ResourceNotFoundError struct {
 }
 
 func (e *ResourceNotFoundError) Error() string { return "Resource not found" }
 
-const DefaultCommand = "/usr/bin/qdmanage"
+var _ error = &ResourceNotFoundError{}
+
+func IsNotFound(err error) bool {
+	switch err.(type) {
+	case *ResourceNotFoundError:
+		return true
+	}
+	return false
+}
 
 type Manage struct {
 	URL     string
@@ -141,6 +152,11 @@ func (m *Manage) Delete(routerResource RouterResource) error {
 		"--name": routerResource.GetName(),
 		"--type": routerResource.GetType(),
 	})
+
+	if IsNotFound(err) {
+		// we want to delete, and it was gone already
+		return nil
+	}
 
 	return err
 }
