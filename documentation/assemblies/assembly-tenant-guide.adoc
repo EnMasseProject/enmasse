@@ -8,6 +8,8 @@
 The tenant guide provides resources on how to manage address spaces, addresses, and users as a
 messaging tenant.
 
+include::../modules/proc-minimal-tenant-configuration.adoc[leveloffset=+1]
+
 include::assembly-managing-address-spaces.adoc[leveloffset=+1]
 
 include::assembly-managing-addresses.adoc[leveloffset=+1]
