@@ -7,7 +7,7 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "prebuild": "yarn clean",
+    "prebuild": "npm run-script clean",
     "build": "webpack --config webpack.prod.js",
     "start": "webpack-dev-server --hot --color --progress --info=true --config webpack.dev.js",
     "test": "jest",
@@ -16,7 +16,7 @@
     "lint": "eslint ./src/",
     "build:bundle-profile": "webpack --profile --json > stats.json",
     "bundle-profile:analyze": "yarn build:bundle-profile && webpack-bundle-analyzer ./stats.json",
-    "clean": "yarn rimraf dist"
+    "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@babel/core": "^7.4.3",
