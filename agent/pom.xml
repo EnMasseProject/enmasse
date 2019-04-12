@@ -328,7 +328,7 @@
                           <phase>process-resources</phase>
                           <configuration>
                               <workingDirectory>${project.build.directory}</workingDirectory>
-                              <executable>${project.basedir}/create-license-metadata.sh</executable>
+                              <executable>${project.basedir}/../scripts/create-license-metadata.sh</executable>
                               <arguments>
                                   <argument>${licensereporter-node-install-directory}</argument>
                                   <argument>${project.build.outputDirectory}/licenses</argument>

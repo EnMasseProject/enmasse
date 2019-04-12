@@ -12,9 +12,20 @@
     <artifactId>console-init</artifactId>
     <properties>
         <console-node-install-directory>${project.build.directory}/build</console-node-install-directory>
+        <licensereporter-node-install-directory>${project.build.directory}/noderoot/licensereporter</licensereporter-node-install-directory>
+        <license-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
+        <license-report-stylesheet>${project.basedir}/licenses.xsl</license-report-stylesheet>
     </properties>
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <skipAddThirdParty>true</skipAddThirdParty>
+                    <skipDownloadLicenses>true</skipDownloadLicenses>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
@@ -95,6 +106,72 @@
                 </executions>
             </plugin>
         </plugins>
+
     </build>
+    <profiles>
+    <profile>
+        <id>release</id>
+        <build>
+          <plugins>
+              <plugin>
+                  <groupId>com.github.eirslett</groupId>
+                  <artifactId>frontend-maven-plugin</artifactId>
+                  <executions>
+                      <execution>
+                          <id>install node and npm - license-reporter</id>
+                          <goals>
+                              <goal>install-node-and-npm</goal>
+                          </goals>
+                          <configuration>
+                              <nodeVersion>${node.version}</nodeVersion>
+                              <npmVersion>${npm.version}</npmVersion>
+                              <installDirectory>${licensereporter-node-install-directory}</installDirectory>
+                          </configuration>
+                      </execution>
+                      <execution>
+                          <id>npm install - license-reporter</id>
+                          <goals>
+                              <goal>npm</goal>
+                          </goals>
+                          <phase>process-resources</phase>
+                          <configuration>
+                              <workingDirectory>${licensereporter-node-install-directory}</workingDirectory>
+                              <arguments>install --prefix ${licensereporter-node-install-directory} -g
+                                  license-reporter@1.2.1
+                              </arguments>
+                          </configuration>
+                      </execution>
+                  </executions>
+              </plugin>
+              <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>exec-maven-plugin</artifactId>
+                  <executions>
+                      <execution>
+                          <id>generate-license-metadata</id>
+                          <goals>
+                              <goal>exec</goal>
+                          </goals>
+                          <phase>process-resources</phase>
+                          <configuration>
+                              <workingDirectory>${project.build.directory}</workingDirectory>
+                              <executable>${project.basedir}/../../scripts/create-license-metadata.sh</executable>
+                              <arguments>
+                                  <argument>${licensereporter-node-install-directory}</argument>
+                                  <argument>${project.build.outputDirectory}/licenses</argument>
+                                  <argument>${agent-node-install-directory}</argument>
+                                  <argument>${www-node-install-directory}</argument>
+                              </arguments>
+                              <environmentVariables>
+                                  <LICENSE_REPORTER_OPTS>${license-reporter-opts}</LICENSE_REPORTER_OPTS>
+                              </environmentVariables>
+                          </configuration>
+                      </execution>
+                  </executions>
+              </plugin>
+          </plugins>
+      </build>
+    </profile>
+    </profiles>
 </project>
 
