@@ -481,8 +481,6 @@ objects:
             value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
           - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-          - name: AUTHENTICATION_SERVICE_OAUTH_URL
-            value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
           - name: ADDRESS_SPACE
             value: ${ADDRESS_SPACE}
           - name: ADDRESS_SPACE_NAMESPACE
@@ -679,8 +677,6 @@ parameters:
   name: AUTHENTICATION_SERVICE_CLIENT_SECRET
 - description: The hostname to use in sasl init
   name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
-- description: The URL to use for OAUTH (if not set, OAUTH is not used)
-  name: AUTHENTICATION_SERVICE_OAUTH_URL
 - description: Name standard infra config
   name: STANDARD_INFRA_CONFIG_NAME
   required: true

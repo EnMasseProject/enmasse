@@ -146,6 +146,14 @@ metadata:
           }
         },
         {
+          "apiVersion": "admin.enmasse.io/v1beta1",
+          "kind": "ConsoleService",
+          "metadata": {
+            "name": "console"
+          },
+          "spec": {}
+        },
+        {
           "apiVersion": "iot.enmasse.io/v1alpha1",
           "kind": "IoTConfig",
           "metadata": {
@@ -248,12 +256,12 @@ spec:
           resources: [ "routes", "routes/custom-host", "routes/status"]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "authenticationservices", "authenticationservices/finalizers" ]
+          resources: [ "authenticationservices", "authenticationservices/finalizers", "consoleservices", "consoleservices/finalizers" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch" ]
       - serviceAccountName: address-space-controller
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices" ]
+          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices", "consoleservices" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "pods" ]
@@ -279,7 +287,7 @@ spec:
       - serviceAccountName: address-space-admin
         rules:
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices" ]
+          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices", "consoleservices" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "pods", "secrets" ]
@@ -305,7 +313,7 @@ spec:
           resources: [ "configmaps" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices" ]
+          resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices", "consoleservices" ]
           verbs: [ "get", "list", "watch" ]
       clusterPermissions:
       - serviceAccountName: standard-authservice
@@ -313,11 +321,6 @@ spec:
         - apiGroups: [ "authentication.k8s.io" ]
           resources: [ "tokenreviews" ]
           verbs: [ "create" ]
-      - serviceAccountName: address-space-controller
-        rules:
-        - apiGroups: [ "", "user.openshift.io" ]
-          resources: [ "users" ]
-          verbs: [ "get" ]
       - serviceAccountName: enmasse-operator
         rules:
         - apiGroups: [ "oauth.openshift.io" ]
@@ -862,4 +865,36 @@ spec:
         kind: IoTConfig
         name: iotconfigs.iot.enmasse.io
         displayName: IoT Config
-        description: IoT Infrastructure Configuration
+        description: IoT Infrastructure Configuration Singleton
+      - group: admin.enmasse.io
+        version: v1beta1
+        kind: ConsoleService
+        name: consoleservices.admin.enmasse.io
+        displayName: Console Service
+        description: Console Service Singleton for deploying global console.
+        specDescriptors:
+          - description: The discovery Metadata URL
+            displayName: Discovery Metadata URL
+            path: discoveryMetadataUrl
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: Console certificate secret name
+            displayName: Console certificate secret name
+            path: certificateSecret.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: OAUTH Client Secret Name
+            displayName: OAUTH Client Secret Name
+            path: oauthClientSecret.name
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: Scope
+            displayName: Scope
+            path: scope
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: Host to use for ingress
+            displayName: Host
+            path: host
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'

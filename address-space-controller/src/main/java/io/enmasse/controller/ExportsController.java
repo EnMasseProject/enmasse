@@ -176,4 +176,9 @@ public class ExportsController implements Controller {
         }
         return exportData;
     }
+
+    @Override
+    public String toString() {
+        return "ExportsController";
+    }
 }

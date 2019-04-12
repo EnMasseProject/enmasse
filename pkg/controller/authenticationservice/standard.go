@@ -110,7 +110,6 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 	})
 	install.ApplyContainer(deployment, "keycloak", func(container *corev1.Container) {
 		install.ApplyContainerImage(container, "keycloak", authservice.Spec.Standard.Image)
-		install.ApplyEnvSimple(container, "KEYCLOAK_SASL_XOAUTH_BASE_URI", authservice.Annotations["enmasse.io/oauth-url"])
 		jvmOptions := "-Dvertx.cacheDirBase=/tmp -Djboss.bind.address=0.0.0.0 -Djava.net.preferIPv4Stack=true -Duser.timezone=UTC"
 		if authservice.Spec.Standard.JvmOptions != nil {
 			jvmOptions += " " + *authservice.Spec.Standard.JvmOptions

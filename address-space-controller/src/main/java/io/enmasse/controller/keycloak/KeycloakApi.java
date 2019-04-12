@@ -10,7 +10,6 @@ import java.util.Set;
 
 public interface KeycloakApi {
     Set<String> getRealmNames(AuthenticationService authenticationService);
-    void createRealm(AuthenticationService authenticationService, String namespace, String realmName, String consoleRedirectURI, KeycloakRealmParams params);
-    void updateRealm(AuthenticationService authenticationService, String realmName, KeycloakRealmParams updated);
+    void createRealm(AuthenticationService authenticationService, String namespace, String realmName);
     void deleteRealm(AuthenticationService authenticationService, String realmName);
 }

@@ -370,8 +370,6 @@ items:
             value: ""
           - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
             value: ""
-          - name: AUTHENTICATION_SERVICE_OAUTH_URL
-            value: ""
           - name: ADDRESS_SPACE
             value: myspace1
           - name: ADDRESS_SPACE_NAMESPACE
