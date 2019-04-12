@@ -6,7 +6,7 @@
 = Minimal service configuration
 
 Configuring {ProductName} for production takes some time and consideration. The following procedure will get
-you started with a minimal service configuration. For a more complete example, look in the
+you started with a minimal service configuration. For a more complete example, navigate to the
 `install/components/example-plans` folder of the {ProductName} distribution. All of the commands
 should be run in the namespace where {ProductName} is installed.
 
