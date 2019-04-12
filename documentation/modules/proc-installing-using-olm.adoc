@@ -10,8 +10,8 @@ Hub^], you can install a custom `OperatorSource` for {ProductName} following the
 
 .Prerequisites
 
-* Operator Lifecycle Manager must be installed.
-* Operator Marketplace must be installed.
+* link:https://github.com/operator-framework/operator-lifecycle-manager[Operator Lifecycle Manager] must be installed.
+* link:https://github.com/operator-framework/operator-marketplace[Operator Marketplace] must be installed.
 
 .Procedure 
 
