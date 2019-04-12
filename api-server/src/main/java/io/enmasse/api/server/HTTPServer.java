@@ -38,7 +38,6 @@ import java.time.Clock;
  * HTTP server for deploying address config
  */
 public class HTTPServer extends AbstractVerticle {
-    public static final int PORT = 8080;
     public static final int SECURE_PORT = 8443;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
     private final AddressSpaceApi addressSpaceApi;
@@ -48,34 +47,50 @@ public class HTTPServer extends AbstractVerticle {
     private final String requestHeaderClientCa;
     private final AuthApi authApi;
     private final UserApi userApi;
-    private final Metrics metrics;
     private final boolean isRbacEnabled;
-    private final String version;
     private final Clock clock;
+    private final int port;
 
     private HttpServer httpServer;
-    private HttpServer httpsServer;
 
     public HTTPServer(AddressSpaceApi addressSpaceApi,
                       SchemaProvider schemaProvider,
                       AuthApi authApi,
                       UserApi userApi,
-                      Metrics metrics,
                       ApiServerOptions options,
                       String clientCa,
                       String requestHeaderClientCa,
                       Clock clock) {
+        this(addressSpaceApi,
+                schemaProvider,
+                authApi,
+                userApi,
+                options,
+                clientCa,
+                requestHeaderClientCa,
+                clock,
+                SECURE_PORT);
+    }
+
+    public HTTPServer(AddressSpaceApi addressSpaceApi,
+            SchemaProvider schemaProvider,
+            AuthApi authApi,
+            UserApi userApi,
+            ApiServerOptions options,
+            String clientCa,
+            String requestHeaderClientCa,
+            Clock clock,
+            int port) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
-        this.metrics = metrics;
         this.certDir = options.getCertDir();
         this.clientCa = clientCa;
         this.requestHeaderClientCa = requestHeaderClientCa;
         this.authApi = authApi;
         this.userApi = userApi;
         this.isRbacEnabled = options.isEnableRbac();
-        this.version = options.getVersion();
         this.clock = clock;
+        this.port = port;
     }
 
     @Override
@@ -107,8 +122,6 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpClusterAddressSpaceService(addressSpaceApi, clock));
         deployment.getRegistry().addSingletonResource(new HttpUserService(addressSpaceApi, userApi, clock));
         deployment.getRegistry().addSingletonResource(new HttpClusterUserService(userApi, clock));
-        deployment.getRegistry().addSingletonResource(new HttpHealthService());
-        deployment.getRegistry().addSingletonResource(new HttpMetricsService(version, metrics));
         deployment.getRegistry().addSingletonResource(new HttpRootService());
         deployment.getRegistry().addSingletonResource(new HttpApiRootService());
 
@@ -118,19 +131,7 @@ public class HTTPServer extends AbstractVerticle {
             vertxRequestHandler.handle(event);
         };
 
-        Future<Void> secureReady = Future.future();
-        Future<Void> openReady = Future.future();
-        CompositeFuture readyFuture = CompositeFuture.all(secureReady, openReady);
-        readyFuture.setHandler(result -> {
-            if (result.succeeded()) {
-                startPromise.complete();
-            } else {
-                startPromise.fail(result.cause());
-            }
-        });
-
-        createSecureServer(requestHandler, secureReady);
-        createOpenServer(requestHandler, openReady);
+        createSecureServer(requestHandler, startPromise);
     }
 
     @Override
@@ -138,14 +139,11 @@ public class HTTPServer extends AbstractVerticle {
         if (httpServer != null) {
             httpServer.close();
         }
-        if (httpsServer != null) {
-            httpsServer.close();
-        }
     }
 
     private void createSecureServer(Handler<HttpServerRequest> requestHandler, Future<Void> startPromise) {
+        HttpServerOptions options = new HttpServerOptions();
         if (new File(certDir).exists()) {
-            HttpServerOptions options = new HttpServerOptions();
             File keyFile = new File(certDir, "tls.key");
             File certFile = new File(certDir, "tls.crt");
             log.info("Loading key from " + keyFile.getAbsolutePath() + ", cert from " + certFile.getAbsolutePath());
@@ -170,34 +168,23 @@ public class HTTPServer extends AbstractVerticle {
                 options.setTrustOptions(trustOptions);
                 options.setClientAuth(ClientAuth.REQUEST);
             }
-
-            httpsServer = vertx.createHttpServer(options)
-                    .requestHandler(requestHandler)
-                    .listen(SECURE_PORT, ar -> {
-                        if (ar.succeeded()) {
-                            log.info("Started HTTPS server. Listening on port " + SECURE_PORT);
-                            startPromise.complete();
-                        } else {
-                            log.info("Error starting HTTPS server");
-                            startPromise.fail(ar.cause());
-                        }
-                    });
-        } else {
-            startPromise.complete();
         }
-    }
 
-    private void createOpenServer(Handler<HttpServerRequest> requestHandler, Future<Void> startPromise) {
-        httpServer = vertx.createHttpServer()
+        httpServer = vertx.createHttpServer(options)
                 .requestHandler(requestHandler)
-                .listen(PORT, ar -> {
+                .listen(this.port, ar -> {
                     if (ar.succeeded()) {
-                        log.info("Started HTTP server. Listening on port " + PORT);
+                        int actualPort = ar.result().actualPort();
+                        log.info("Started HTTPS server. Listening on port {}", actualPort);
                         startPromise.complete();
                     } else {
-                        log.info("Error starting HTTP server");
+                        log.info("Error starting HTTPS server");
                         startPromise.fail(ar.cause());
                     }
                 });
+    }
+
+    public int getActualPort() {
+        return httpServer.actualPort();
     }
 }
