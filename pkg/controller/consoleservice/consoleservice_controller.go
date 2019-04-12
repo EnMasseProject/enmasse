@@ -10,6 +10,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"reflect"
+	"strings"
+
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -22,8 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"net/url"
-	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -32,7 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	"strings"
 )
 
 /*
@@ -251,7 +252,9 @@ type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
 func (r *ReconcileConsoleService) updateStatus(ctx context.Context, consoleservice *v1beta1.ConsoleService, updateFn UpdateStatusFn) (reconcile.Result, error) {
 
 	newStatus := v1beta1.ConsoleServiceStatus{}
-	updateFn(&newStatus)
+	if err := updateFn(&newStatus); err != nil {
+		return reconcile.Result{}, err
+	}
 
 	if consoleservice.Status.Host != newStatus.Host ||
 		consoleservice.Status.Port != newStatus.Port ||
@@ -490,8 +493,10 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	install.ApplyEmptyDirVolume(deployment, "httpd")
 	install.ApplySecretVolume(deployment, "console-tls", consoleservice.Spec.CertificateSecret.Name)
 
-	install.ApplyInitContainer(deployment, "console-init", func(container *corev1.Container) {
-		install.ApplyContainerImage(container, "console-init", nil)
+	if err := install.ApplyInitContainerWithError(deployment, "console-init", func(container *corev1.Container) error {
+		if err := install.ApplyContainerImage(container, "console-init", nil); err != nil {
+			return err
+		}
 
 		if consoleservice.Spec.Scope != nil {
 			install.ApplyEnv(container, "OAUTH2_SCOPE", func(envvar *corev1.EnvVar) {
@@ -506,11 +511,17 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
-	})
+
+		return nil
+	}); err != nil {
+		return err
+	}
 
 	if util.IsOpenshift() {
-		install.ApplyContainer(deployment, "console-proxy", func(container *corev1.Container) {
-			install.ApplyContainerImage(container, "console-proxy-openshift", nil)
+		if err := install.ApplyContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
+			if err := install.ApplyContainerImage(container, "console-proxy-openshift", nil); err != nil {
+				return err
+			}
 
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-openshift.cfg"}
 
@@ -547,10 +558,16 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 					},
 				},
 			}
-		})
 
-		install.ApplyContainer(deployment, "console-httpd", func(container *corev1.Container) {
-			install.ApplyContainerImage(container, "console-httpd", nil)
+			return nil
+		}); err != nil {
+			return err
+		}
+
+		if err := install.ApplyContainerWithError(deployment, "console-httpd", func(container *corev1.Container) error {
+			if err := install.ApplyContainerImage(container, "console-httpd", nil); err != nil {
+				return err
+			}
 			install.ApplyVolumeMountSimple(container, "httpd", "/run/httpd", false)
 
 			container.Ports = []corev1.ContainerPort{{
@@ -561,10 +578,15 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			// Can't define a probe as HTTPD bound to loopback.  Perhaps have oauth-proxy's probes reach through
 			// HTTP and hit whoami?
 
-		})
+			return nil
+		}); err != nil {
+			return err
+		}
 	} else {
-		install.ApplyContainer(deployment, "console-proxy", func(container *corev1.Container) {
-			install.ApplyContainerImage(container, "console-proxy-kubernetes", nil)
+		if err := install.ApplyContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
+			if err := install.ApplyContainerImage(container, "console-proxy-kubernetes", nil); err != nil {
+				return err
+			}
 
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-kubernetes.cfg"}
 
@@ -607,7 +629,11 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 					},
 				},
 			}
-		})
+
+			return nil
+		}); err != nil {
+			return err
+		}
 	}
 
 	deployment.Spec.Strategy = appsv1.DeploymentStrategy{
