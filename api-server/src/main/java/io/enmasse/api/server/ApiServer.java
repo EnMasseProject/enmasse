@@ -11,9 +11,9 @@ import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
+import io.enmasse.user.api.DelegateUserApi;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
-import io.enmasse.user.api.DelegateUserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
@@ -93,12 +93,20 @@ public class ApiServer extends AbstractVerticle {
 
         Metrics metrics = new Metrics();
 
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, metrics, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry);
+        HTTPHealthServer httpHealthServer = new HTTPHealthServer(options.getVersion(), metrics);
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry);
 
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {
-                log.info("API Server started successfully");
-                startPromise.complete();
+                vertx.deployVerticle(httpHealthServer, ar -> {
+                    if (ar.succeeded()) {
+                        log.info("API Server started successfully");
+                        startPromise.complete();
+                    } else {
+                        log.error("API Server failed to start", result.cause());
+                        startPromise.fail(result.cause());
+                    }
+                });
             } else {
                 log.error("API Server failed to start", result.cause());
                 startPromise.fail(result.cause());
