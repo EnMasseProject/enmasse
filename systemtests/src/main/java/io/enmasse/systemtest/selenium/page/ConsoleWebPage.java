@@ -14,6 +14,7 @@ import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -40,18 +41,26 @@ public class ConsoleWebPage implements IWebPage {
     private UserCredentials credentials;
     private GlobalConsolePage globalConsole;
 
-    public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) {
+    public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) throws Exception {
         this.selenium = selenium;
         this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
-        this.globalConsole = new GlobalConsolePage(selenium, "", null);
+        this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), null);
     }
 
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, UserCredentials credentials) {
+    public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
+        this.selenium = selenium;
+        this.addressApiClient = addressApiClient;
+        this.defaultAddressSpace = defaultAddressSpace;
+        this.credentials = credentials;
+        this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
+    }
+
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
         this(selenium, addressApiClient, defaultAddressSpace);
         this.consoleRoute = consoleRoute;
         this.credentials = credentials;
-        this.globalConsole = new GlobalConsolePage(selenium, "", credentials);
+        this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
     }
 
     //================================================================================================
@@ -710,7 +719,8 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public void logout() throws Exception {
-        globalConsole.logout();
+        selenium.clickOnItem(getUserDropDown(), "User dropdown");
+        selenium.clickOnItem(getLogoutHref(), "Return to global console");
     }
 
     public boolean login(String username, String password) throws Exception {

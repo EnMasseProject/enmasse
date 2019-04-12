@@ -177,12 +177,23 @@ public class GlobalConsolePage implements IWebPage {
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         AddressSpaceUtils.waitForAddressSpaceReady(new AddressApiClient(Kubernetes.getInstance(), addressSpace.getMetadata().getNamespace()), addressSpace);
         selenium.refreshPage();
+    }
+
+    public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         AddressSpaceWebItem item = (AddressSpaceWebItem) selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getCheckBox(), "Select address space to delete");
         selenium.clickOnItem(getAddressSpaceMenu(), "Address space dropdown");
         selenium.clickOnItem(getDeleteButton());
         selenium.clickOnItem(getModalButtonDelete());
         selenium.waitUntilItemNotPresent(30, () -> getAddressSpaceItem(addressSpace));
+    }
+
+    public ConsoleWebPage openAddressSpaceConsolePage(AddressSpace addressSpace) throws Exception {
+        AddressSpaceWebItem item = (AddressSpaceWebItem) selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.clickOnItem(item.getConsoleRoute());
+        ConsoleWebPage consolePage =  new ConsoleWebPage(selenium, new AddressApiClient(Kubernetes.getInstance()), addressSpace, credentials);
+        consolePage.login();
+        return consolePage;
     }
 
     public List<AddressSpaceWebItem> getAddressSpaceItems() {

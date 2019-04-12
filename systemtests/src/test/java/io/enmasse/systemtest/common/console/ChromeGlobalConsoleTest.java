@@ -32,5 +32,11 @@ class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumProv
         doTestCreateAddressSpace(AddressSpaceUtils.createAddressSpaceObject("test-address-space-standard",
                 kubernetes.getNamespace(), AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL));
     }
+
+    @Test
+    void testConnectToAddressSpaceConsole() throws Exception {
+        doTestConnectToAddressSpaceConsole(AddressSpaceUtils.createAddressSpaceObject("test-address-space-console",
+                kubernetes.getNamespace(), AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED));
+    }
 }
 

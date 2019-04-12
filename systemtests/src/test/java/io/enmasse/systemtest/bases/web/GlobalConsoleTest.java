@@ -5,40 +5,19 @@
 package io.enmasse.systemtest.bases.web;
 
 
-import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
-import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
-import io.enmasse.systemtest.selenium.resources.AddressWebItem;
-import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
-import io.enmasse.systemtest.selenium.resources.FilterType;
-import io.enmasse.systemtest.selenium.resources.SortType;
-import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.selenium.resources.AddressSpaceWebItem;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
-import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static org.hamcrest.CoreMatchers.either;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class GlobalConsoleTest extends TestBase implements ISeleniumProvider {
 
@@ -67,5 +46,18 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
+        assertEquals("Ready", ((AddressSpaceWebItem) selenium.waitUntilItemPresent(30, ()
+                -> globalConsolePage.getAddressSpaceItem(addressSpace))).getStatus());
+        globalConsolePage.deleteAddressSpace(addressSpace);
+    }
+
+    protected void doTestConnectToAddressSpaceConsole(AddressSpace addressSpace) throws Exception {
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage.openGlobalConsolePage();
+        globalConsolePage.createAddressSpace(addressSpace);
+        ConsoleWebPage console = globalConsolePage.openAddressSpaceConsolePage(addressSpace);
+        console.logout();
+        assertTrue(((AddressSpaceWebItem) selenium.waitUntilItemPresent(30, ()
+                -> globalConsolePage.getAddressSpaceItem(addressSpace))).getStatus().contains("Ready"));
     }
 }
