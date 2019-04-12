@@ -26,9 +26,11 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumPro
     }
 
     @Test
-    void testCreateAddressSpace() throws Exception {
-        doTestCreateAddressSpace(AddressSpaceUtils.createAddressSpaceObject("tees-address-space",
+    void testCreateDeleteAddressSpace() throws Exception {
+        doTestCreateAddressSpace(AddressSpaceUtils.createAddressSpaceObject("test-address-space-brokered",
                 kubernetes.getNamespace(), AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED));
+        doTestCreateAddressSpace(AddressSpaceUtils.createAddressSpaceObject("test-address-space-standard",
+                kubernetes.getNamespace(), AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL));
     }
 }
 
