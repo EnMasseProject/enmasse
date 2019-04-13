@@ -63,6 +63,10 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "none-authservice", "NONE_AUTHSERVICE_IMAGE")
 	setIfEnvPresent(data, "keycloak", "KEYCLOAK_IMAGE")
 	setIfEnvPresent(data, "keycloak-plugin", "KEYCLOAK_PLUGIN_IMAGE")
+	setIfEnvPresent(data, "console-init", "CONSOLE_INIT_IMAGE")
+	setIfEnvPresent(data, "console-proxy-openshift", "CONSOLE_PROXY_OPENSHIFT_IMAGE")
+	setIfEnvPresent(data, "console-proxy-kubernetes", "CONSOLE_PROXY_KUBERNETES_IMAGE")
+	setIfEnvPresent(data, "console-httpd", "CONSOLE_HTTPD_IMAGE")
 }
 
 const defaultImageMapFileName = "operatorImageMap.yaml"
