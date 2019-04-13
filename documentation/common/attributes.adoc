@@ -33,6 +33,8 @@
 :Title: Using {ProductName}
 :cpp: C++
 :BaseProductVersion: master
+:ConsoleName: {ProductName} Console
+
 
 // Component attributes
 :BrokerName: Apache ActiveMQ Artemis

@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-.adoc
+// assembly-using-console.adoc
 
 [id='ref-view-message-connection-stats-table-{context}']
 = Viewing message and connection statistics using the {ProductName} Console

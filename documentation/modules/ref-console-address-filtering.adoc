@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// master.adoc
+// assembly-using-console.adoc
 
 [id='ref-console-address-filtering-{context}']
 = Using the {ProductName} Console address filtering

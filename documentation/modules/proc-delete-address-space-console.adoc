@@ -1,0 +1,22 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='proc-delete-address-space-console-{context}']
+= Deleting an address space using the {ConsoleName}
+
+You can delete an existing address space using the {ConsoleName}.
+
+.Procedure
+
+. Log in to the {ConsoleName}.
++
+For more information about how to access the {ConsoleName}, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
+
+. Locate the address space that you want to delete.
+
+. In the far right column, click the vertical ellipsis icon and select *Delete*. The delete confirmation window opens.
+
+. Confirm your selection by clicking *Delete*. The address space is deleted.
+
+

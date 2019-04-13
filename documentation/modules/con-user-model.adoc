@@ -1,13 +1,14 @@
 // Module included in the following assemblies:
 //
 // assembly-tenant-guide.adoc
+// master.adoc
 
 [id='con-user-model-{context}']
 = User model
 
-You can create users to access messaging clients and the {ProductName} Console through user definition files, which specify the authentication type and authorization policies.
+You can create users to specify authorization policies to access {ProductName} from your messaging clients.
 
-Users are configured as `MessagingUser` resources. Users can only be created, deleted, read, updated, and listed.
+Users are configured as `MessagingUser` resources. Users can be created, deleted, read, updated, and listed.
 
 The following example shows the `user-example1.yaml` file:
 

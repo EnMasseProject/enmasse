@@ -1,0 +1,21 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='proc-create-address-space-console-{context}']
+= Creating an address space using the {ConsoleName}
+
+You can create a new address space using the {ConsoleName}.
+
+.Procedure
+
+. Log in to the {ConsoleName}.
++
+For more information about how to access the {ConsoleName}, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ProductName} Console].
+
+. Click *Create*. The Create an instance wizard opens.
+
+. Complete the required fields and when you are finished, click *Finish* to create the new address space.
+
+When the address space has been successfully created, you can click the address space name to go to the {ConsoleName} and view information about the newly created address space.
+
