@@ -194,8 +194,6 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                     cred.getUsername()))).getUsername(), cred.getUsername());
             assertEquals(data.getData(String.format("%s.%s", standard.getMetadata().getName(),
                     cred.getUsername())).getType(), "password");
-            assertEquals(data.getData(String.format("%s.%s", standard.getMetadata().getName(),
-                    user.getUsername())).getType(), "federated");
 
             //===========================
             // Address part

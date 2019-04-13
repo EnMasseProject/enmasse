@@ -114,8 +114,6 @@ objects:
             value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
           - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-          - name: AUTHENTICATION_SERVICE_OAUTH_URL
-            value: ${AUTHENTICATION_SERVICE_OAUTH_URL}                
           - name: AMQ_NAME
             value: serverData
           - name: HOME
@@ -227,8 +225,6 @@ objects:
             value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
           - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-          - name: AUTHENTICATION_SERVICE_OAUTH_URL
-            value: ${AUTHENTICATION_SERVICE_OAUTH_URL}
           - name: AMQ_NAME
             value: serverData
           - name: HOME

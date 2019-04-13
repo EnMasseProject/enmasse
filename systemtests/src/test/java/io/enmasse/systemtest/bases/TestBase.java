@@ -401,24 +401,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return new JsonObject();
     }
 
-    protected JsonObject createUserFederated(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
-        User user = UserUtils.createUserObject(UserAuthenticationType.federated, credentials);
-        return createUserFederated(addressSpace, user);
-    }
-
-    protected JsonObject createUserFederated(AddressSpace addressSpace, User user) throws Exception {
-        log.info("Federated user {} in address space {} will be created", user.getSpec().getUsername(), addressSpace.getMetadata().getName());
-        if (!userExist(addressSpace, user.getSpec().getUsername())) {
-            KubeCMDClient.createOcUser(user.getSpec().getUsername());
-            String userID = KubeCMDClient.getOpenshiftUserId(user.getSpec().getUsername());
-            return getUserApiClient().createUser(
-                    addressSpace.getMetadata().getName(),
-                    UserUtils.userToJson(addressSpace.getMetadata().getName(), user.getSpec().getUsername(), user.getSpec().getUsername(), userID, user),
-                    HTTP_CREATED);
-        }
-        return new JsonObject();
-    }
-
     protected JsonObject createUserServiceAccount(AddressSpace addressSpace, UserCredentials credentials, String namespace) throws Exception {
         User user = UserUtils.createUserObject(UserAuthenticationType.serviceaccount, credentials);
         return createUserServiceaccount(addressSpace, user, namespace);

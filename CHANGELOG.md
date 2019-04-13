@@ -1,4 +1,6 @@
 ## 0.28.0
+* New global console for managing address spaces
+* Use OAUTH/OIDC for console authentication and Kubernetes RBAC for authorization. This removes the special console users in Keycloak
 * Support for sharding queues of all sizes
 * Support for specifying router policies
 * Support for adjusting idle timeouts, worker threads of router and broker connections

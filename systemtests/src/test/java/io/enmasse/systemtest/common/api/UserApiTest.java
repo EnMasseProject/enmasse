@@ -338,22 +338,6 @@ class UserApiTest extends TestBase {
     }
 
     @Test
-    void testFederatedUsers() throws Exception {
-        UserCredentials ocUser = new UserCredentials("test-federated-user", "testovaci");
-        createUserFederated(brokered, ocUser);
-
-        assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getMetadata().getName(), ocUser.getUsername()).getRetCode(), is(true));
-
-        assertCanOpenWebconsole(brokered, ocUser);
-
-        //delete user
-        assertThat("User deleting failed using oc cmd",
-                KubeCMDClient.deleteUser(kubernetes.getNamespace(), brokered.getMetadata().getName(), ocUser.getUsername()).getRetCode(), is(true));
-        assertThat("User is still present",
-                KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getMetadata().getName(), ocUser.getUsername()).getRetCode(), is(false));
-    }
-
-    @Test
     void testServiceaccountUser() throws Exception {
         Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(standard, queue);
@@ -374,19 +358,5 @@ class UserApiTest extends TestBase {
         assertCannotConnect(standard, messagingUser, Collections.singletonList(queue));
 
         kubernetes.deleteServiceAccount("test-service-account", environment.namespace());
-    }
-
-    private void assertCanOpenWebconsole(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
-        SeleniumProvider selenium = new SeleniumProvider();
-        try {
-            SeleniumManagement.deployFirefoxApp();
-            selenium.setupDriver(environment, kubernetes, TestUtils.getFirefoxDriver());
-            ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
-            page.openWebConsolePage(credentials);
-        } finally {
-            selenium.saveScreenShots("UserApiTests", "testFederatedUsers");
-            selenium.tearDownDrivers();
-            SeleniumManagement.removeFirefoxApp();
-        }
     }
 }
