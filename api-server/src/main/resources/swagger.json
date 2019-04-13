@@ -1703,6 +1703,7 @@
                             "type": "string",
                             "enum": [
                                 "password",
+                                "serviceaccount",
                                 "federated"
                             ]
                         },

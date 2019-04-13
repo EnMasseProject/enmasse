@@ -122,22 +122,6 @@ public class UserUtils {
                 .done()));
     }
 
-    public static User userToJson(String addressSpace, String metaUserName, String federatedUserName, String federatedUserId, User user) {
-        return new DoneableUser(user)
-                .editMetadata()
-                .withName(String.format("%s.%s", addressSpace, Pattern.compile(".*:").matcher(metaUserName).replaceAll("")))
-                .endMetadata()
-                .editSpec()
-                .withNewAuthentication()
-                .withType(UserAuthenticationType.federated)
-                .withFederatedUsername(federatedUserName)
-                .withFederatedUserid(federatedUserId)
-                .withProvider("openshift")
-                .endAuthentication()
-                .endSpec()
-                .done();
-    }
-
     public static User getUserObject(UserApiClient apiClient, String addressSpace, String username) throws Exception {
         JsonObject response = apiClient.getUser(addressSpace, username);
         return jsonResponseToUser(response).stream().findFirst().orElse(null);
