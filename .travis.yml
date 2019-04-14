@@ -60,18 +60,18 @@ jobs:
             tags: true
             repo: EnMasseProject/enmasse
     # we keep the "build" stage name in order to run in parallel
-    - dist: xenial
-      install: true
-      before_install:
-        - sudo pip install requests[security] ansible
-        - gem install asciidoctor
-        - gimme 1.11.6
-        - source ~/.gimme/envs/go1.11.6.env
-        - go version
-      script:
-        - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
-        - "./.travis/build-only.sh"
-        - "./.travis/test-iot.sh"
+    #- dist: xenial
+    #  install: true
+    #  before_install:
+    #    - sudo pip install requests[security] ansible
+    #    - gem install asciidoctor
+    #    - gimme 1.11.6
+    #    - source ~/.gimme/envs/go1.11.6.env
+    #    - go version
+    #  script:
+    #    - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
+    #    - "./.travis/build-only.sh"
+    #    - "./.travis/test-iot.sh"
 
 env:
   global:
