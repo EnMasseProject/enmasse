@@ -175,7 +175,9 @@ public class GlobalConsolePage implements IWebPage {
         selenium.clickOnItem(getNextButton());
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
-        AddressSpaceUtils.waitForAddressSpaceReady(new AddressApiClient(Kubernetes.getInstance(), addressSpace.getMetadata().getNamespace()), addressSpace);
+        try (AddressApiClient addressApiClient = new AddressApiClient(Kubernetes.getInstance(), addressSpace.getMetadata().getNamespace())) {
+            AddressSpaceUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+        }
         selenium.refreshPage();
     }
 

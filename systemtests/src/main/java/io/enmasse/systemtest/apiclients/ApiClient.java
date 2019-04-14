@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
 
-public abstract class ApiClient {
+public abstract class ApiClient implements AutoCloseable {
     protected static Logger log = CustomLogger.getLogger();
     protected WebClient client;
     protected Kubernetes kubernetes;
@@ -65,6 +65,11 @@ public abstract class ApiClient {
     protected void reconnect() {
         this.client.close();
         connect();
+    }
+
+    public void close() {
+        this.client.close();
+        this.vertx.close();
     }
 
     protected void connect() {
