@@ -19,7 +19,7 @@ var assert = require('assert');
 var CookieDecoder = require('../lib/cookie_decoder.js');
 
 const oauthcookie = 'ZGV2ZWxvcGVyQGNsdXN0ZXIubG9jYWx8QXRwQUx4ak8vRGVsNnBDeThHMTIxLzY4ODNGMjl5bk5oejdUc1o5cHFhYWNJN1RYQUdCelo5UHFadGZOeUd0M3N6N2hPK25PYWRoN2xXQT18LTYyMTM1NTk2ODAwfA==';
-const cookie_secret = "rRrcG8qj2mwg7bF8CBq2dA==";
+const cookie_secret = Buffer.from("rRrcG8qj2mwg7bF8CBq2dA==", "base64");
 const expectedToken = "gwGey4ZnQyFkY8F7sDKX3qPcSYZnD7nhzX_IGJhLdSE";
 
 describe('cookie_decoder', function() {
