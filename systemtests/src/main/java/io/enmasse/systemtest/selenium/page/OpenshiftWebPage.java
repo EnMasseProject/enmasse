@@ -273,6 +273,8 @@ public class OpenshiftWebPage implements IWebPage {
         selectProjectInWizard(projectName);
         selenium.fillInputItem(getModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
                 name);
+        selenium.fillInputItem(getModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("namespace")),
+                projectName);
         next();
         next();
     }
@@ -285,6 +287,8 @@ public class OpenshiftWebPage implements IWebPage {
         selectProjectInWizard(projectName);
         selenium.fillInputItem(getModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("name")),
                 name);
+        selenium.fillInputItem(getModalWindow().findElement(By.tagName("catalog-parameters")).findElement(By.id("namespace")),
+                projectName);
         next();
         next();
     }

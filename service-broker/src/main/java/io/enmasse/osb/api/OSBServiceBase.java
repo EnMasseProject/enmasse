@@ -62,14 +62,14 @@ public abstract class OSBServiceBase {
 
 
     protected Optional<AddressSpace> findAddressSpaceByInstanceId(String serviceInstanceId) {
-        return addressSpaceApi.listAddressSpacesWithLabels(namespace, Collections.singletonMap(LabelKeys.SERVICE_INSTANCE_ID, serviceInstanceId)).stream().findAny();
+        return addressSpaceApi.listAllAddressSpacesWithLabels(Collections.singletonMap(LabelKeys.SERVICE_INSTANCE_ID, serviceInstanceId)).stream().findAny();
     }
 
-    protected Optional<AddressSpace> findAddressSpaceByName(String name) {
+    protected Optional<AddressSpace> findAddressSpace(String name, String namespace) {
         return addressSpaceApi.listAddressSpaces(namespace).stream().filter(a -> a.getMetadata().getName().equals(name)).findAny();
     }
 
-    protected AddressSpace createAddressSpace(String instanceId, String name, String type, String plan, String userId, String userName) throws Exception {
+    protected AddressSpace createAddressSpace(String instanceId, String name, String namespace, String type, String plan, String userId, String userName) throws Exception {
         AuthenticationService authService = new AuthenticationServiceBuilder()
                 .withType(AuthenticationServiceType.STANDARD)
                 .withDetails(Collections.emptyMap())
@@ -77,6 +77,7 @@ public abstract class OSBServiceBase {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName(name)
+                .withNamespace(namespace)
                 .addToAnnotations(AnnotationKeys.CREATED_BY, userName)
                 .addToAnnotations(AnnotationKeys.CREATED_BY_UID, userId)
                 .addToLabels(LabelKeys.SERVICE_INSTANCE_ID, instanceId)
