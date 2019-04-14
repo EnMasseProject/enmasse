@@ -865,7 +865,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             }
         }
 
-        ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, credentials);
+        ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, clusterUser);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 
