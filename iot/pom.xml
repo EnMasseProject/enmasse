@@ -19,9 +19,7 @@
     <logback.version>1.2.3</logback.version>
     <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
     <micrometer.version>1.0.9</micrometer.version>
-    <vertx.version>3.6.3</vertx.version>
     <netty-tcnative.version>2.0.17.Final</netty-tcnative.version>
-    <netty.version>4.1.30.Final</netty.version>
   </properties>
 
   <modules>
