@@ -625,7 +625,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage.openWebConsolePage();
             log.info(String.format("User %s successfully authenticated", credentials));
             consoleWebPage.openAddressesPageWebConsole();
-        } catch (IllegalAccessException | org.openqa.selenium.UnhandledAlertException | org.openqa.selenium.ElementClickInterceptedException ex) {
+        } catch (IllegalAccessException | org.openqa.selenium.WebDriverException ex) {
             selenium.tearDownDrivers();
             log.info(String.format("User %s can't authenticate", credentials));
             throw new IllegalAccessException();
