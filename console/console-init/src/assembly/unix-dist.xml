@@ -50,6 +50,21 @@
             </includes>
            <fileMode>0755</fileMode>
         </fileSet>
+        <fileSet>
+          <directory>${project.basedir}/ui</directory>
+           <includes>
+              <include>package.json</include>
+           </includes>
+           <fileMode>0644</fileMode>
+        </fileSet>
+        <fileSet>
+           <directory>${project.build.outputDirectory}</directory>
+            <outputDirectory>/</outputDirectory>
+           <includes>
+              <include>licenses/**</include>
+           </includes>
+           <fileMode>0644</fileMode>
+        </fileSet>
     </fileSets>
 
 </assembly>

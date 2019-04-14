@@ -3,14 +3,17 @@
 # Uses https://github.com/bucharest-gold/license-reporter/ to create license metadata with
 # associated license text files.
 #
+set -e
 
 function join { local IFS="$1"; shift; echo "${*}"; }
 
 NODE_ROOT=$1
 TARGET_DIR=$2
+DIST=$3
 NODE_EXE=${NODE_ROOT}/node/node
 LICENSE_REPORTER_EXE=${NODE_ROOT}/bin/license-reporter
 LICENSE_REPORTER_OPTS=${LICENSE_REPORTER_OPTS:---silent}
+shift
 shift
 shift
 
@@ -55,6 +58,6 @@ list=$(join "," ${license_list[@]})
 
 pushd ${TARGET_DIR}
 # Merges the license metadata together
-${NODE_EXE} ${LICENSE_REPORTER_EXE} merge --merge-project-name agent_all  --merge-license-xmls ${list} --merge-output licenses.xml --outputDir . ${LICENSE_REPORTER_OPTS}
+${NODE_EXE} ${LICENSE_REPORTER_EXE} merge --merge-project-name ${DIST}_all  --merge-license-xmls ${list} --merge-output licenses.xml --outputDir . ${LICENSE_REPORTER_OPTS}
 popd
 
