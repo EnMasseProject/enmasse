@@ -1882,7 +1882,7 @@ __optional__|Base64 encoded value of password when 'password' type is specified.
 |**provider** +
 __optional__|Name of provider to use for federated identity when 'federated' type is specified.|string
 |**type** +
-__required__||enum (password, federated)
+__required__||enum (password, serviceaccount)
 |===
 
 [[_io_enmasse_user_v1beta1_userspec_authorization]]
