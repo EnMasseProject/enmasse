@@ -32,7 +32,7 @@ class MessagingInstances extends React.Component {
     this.state = {
       page: 1,
       perPage: 5,
-      columns: [{title: 'Name/Namespace'}, {title: 'Type'}, 'Status', 'Time Created'],
+      columns: [{title: 'Name/Namespace'}, {title: 'Type'}, 'Status', 'Time created'],
       rows: [],
       actions: [
         {
@@ -142,6 +142,14 @@ class MessagingInstances extends React.Component {
       fontSize: 'var(--pf-c-table-cell--FontSize)',
       fontweight: 'var(--pf-c-table-cell--FontWeight)',
     };
+    var nameFont = {
+      lineHeight: '0.125em',
+      fontSize: 'var(--pf-global--FontSize--md)'
+    }
+    var namespaceFont = {
+      fontSize: 'var(--pf-global--FontSize--sm)'
+
+    }
     //https://github.com/patternfly/patternfly-react/issues/1482 no verticle align
     if (instances) {
       let newMap = instances.map(instance => {
@@ -149,10 +157,15 @@ class MessagingInstances extends React.Component {
           <Aux><CheckCircleIcon style={{color: 'var(--pf-global--success-color--100)'}}/> Ready</Aux> :
           <Aux><TimesCircleIcon style={{color: 'var(--pf-global--danger-color--100)'}}/> Not Ready</Aux>;
 
+        let nameLink = (instance.isReady) ?
+          <a style={nameFont} href={instance.consoleUrl}>{instance.name}</a> :
+          <Text style={nameFont} >{instance.name}</Text>;
+
+        let type = (instance.type == 'standard') ? 'Standard' : 'Brokered';
         return {
           cells: [
-            {title: <Aux><a href={instance.consoleUrl}>{instance.name}</a><Text>{instance.namespace}</Text></Aux>},
-            {title: <Aux><Badge style={styleOrange}>{instance.component}</Badge> {instance.type}</Aux>},
+            {title: <Aux>{(nameLink)}<Text style={namespaceFont} >{instance.namespace}</Text></Aux>},
+            {title: <Aux><Badge style={styleOrange}>{instance.component}</Badge>  {type}</Aux>},
             (status),
             <Aux>{moment(instance.timeCreated).fromNow()}</Aux>],
           instanceName: instance.name,
@@ -187,7 +200,7 @@ class MessagingInstances extends React.Component {
 
     const {actions, columns, rows} = this.state;
     return (
-      <Aux>
+      <React.Fragment>
         <NotificationConsumer>
           {({add}) => (
             <DeleteInstanceModal
@@ -255,7 +268,7 @@ class MessagingInstances extends React.Component {
             </Toolbar>
           </CardBody>
         </Card>
-      </Aux>
+      </React.Fragment>
     );
   }
 };
