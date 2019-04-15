@@ -6,8 +6,9 @@ package io.enmasse.systemtest.iot.http;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
-import static io.enmasse.systemtest.apiclients.Predicates.is;
 import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static io.enmasse.systemtest.apiclients.Predicates.is;
+import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.time.Duration.ofSeconds;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -119,7 +121,9 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             JsonObject json = new JsonObject();
             json.put("i", i);
             json.put("end", i == (messagesToSend-1));
-            adapterClient.sendTelemetry(json, is(HTTP_ACCEPTED));
+            adapterClient.send(TELEMETRY, json, is(HTTP_ACCEPTED), request -> {
+                request.putHeader("QoS-Level", "1"); //at least once QoS
+            }, ofSeconds(20));
         }
 
         try {
@@ -163,13 +167,14 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
     }
 
     private void waitForFirstSuccess(MessageType type) throws Exception {
+        JsonObject json = new JsonObject(Map.of("a", "b"));
         TestUtils.waitUntilCondition("First successful "+type.name().toLowerCase()+" message", () -> {
             try {
                 if(type == MessageType.EVENT) {
-                    var response = adapterClient.sendEvent(null, any());
+                    var response = adapterClient.sendEvent(json, any());
                     return response.statusCode() == HTTP_ACCEPTED;
                 } else if(type == MessageType.TELEMETRY) {
-                    var response = adapterClient.sendTelemetry(null, any());
+                    var response = adapterClient.sendTelemetry(json, any());
                     return response.statusCode() == HTTP_ACCEPTED;
                 } else {
                     return true;

@@ -10,10 +10,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
-import io.enmasse.iot.model.v1.IoTCrd;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.AdminApiClient;
@@ -567,22 +563,6 @@ public class TestUtils {
                 throw new RuntimeException(e);
             }
         }, budget);
-    }
-
-    public static void waitForIoTProjectReady(final String namespace, final String name, final TimeoutBudget budget) throws Exception {
-        var projectClient = Kubernetes.getInstance().getClient().customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
-
-        final BooleanSupplier s = () -> {
-
-            var config = projectClient.inNamespace(namespace).withName(name).get();
-            if (config == null || config.getStatus() == null) {
-                return false;
-            }
-            return config.getStatus().isReady();
-
-        };
-
-        TestUtils.waitUntilCondition(String.format("IoTProject to become ready: %s/%s", namespace, name), s, budget);
     }
 
     public static String getGlobalConsoleRoute() throws Exception {
