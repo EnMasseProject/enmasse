@@ -88,6 +88,10 @@ public abstract class OSBServiceBase {
                 .withPlan(plan)
                 .withAuthenticationService(authService)
                 .endSpec()
+                .editOrNewStatus()
+                .withReady(false)
+                .withPhase(Phase.Pending)
+                .endStatus()
 
                 .build();
         addressSpace = setDefaults(addressSpace, namespace);
