@@ -400,3 +400,28 @@ module.exports.self_subject_access_review = function (options, namespace, verb, 
     });
 };
 
+module.exports.whoami = function (options) {
+    var opts = get_options(options, "/apis/user.openshift.io/v1/users/~");
+    return new Promise(function (resolve, reject) {
+        do_request('GET', null, opts, true).then(({statusCode, body}) =>
+        {
+            try {
+                if (body) {
+                    var user = JSON.parse(body);
+                    if (user && "metadata" in user) {
+                        resolve({username: user.metadata.name});
+                        return;
+                    }
+                    reject(new Error("Unexpectedly formed User response  : " + body));
+                } else {
+                    reject(new Error("Unexpectedly User response status code  : " + statusCode + " response body" + body));
+                }
+            } catch (e) {
+                reject(e);
+            }
+        }).catch((e) => {
+            reject(e);
+        });
+    });
+};
+

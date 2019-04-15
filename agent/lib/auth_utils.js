@@ -467,6 +467,24 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
         }
     };
 
+    var get_user_handler =  function (request, response, next) {
+        const token = get_from_session(request, "token");
+        if (token && !get_from_session(request, "username") ) {
+            kubernetes.whoami({token: token.getAccessToken()}).then((data) => {
+                if (data.username) {
+                    log.info("User identified as : %s", data.username);
+                    store_in_session(request, 'username', data.username);
+                }
+            }).catch((e) => {
+                log.warn("Failed to get username for authenticated user", e);
+            }).finally(() => {
+                next();
+            });
+        } else {
+            next();
+        }
+    };
+
     var logginghandler =  function (request, response, next) {
         log.debug("Serving %s", request.url);
         next();
@@ -480,6 +498,9 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
     interceptors.push(init_session_handler);
     interceptors.push(logout_handler);
     interceptors.push(openshift ? oauth_handler : openidconnect_handler);
+    if (openshift) {
+        interceptors.push(get_user_handler);
+    }
     interceptors.push(logginghandler);
 
     return function (request, response) {

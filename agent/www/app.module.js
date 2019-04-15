@@ -15,6 +15,7 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
                             );
     }).controller('NavCtrl', ['$scope', '$timeout',
     function ($scope, $timeout) {
+        $scope.user = "<unknown>";
         $scope.navigationItems = [
             {
                 title: "Addresses",
@@ -28,12 +29,15 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
             }
         ];
         $scope.clickNavigationItem = function (title) {
-            var connectionsNavItem = $scope.navigationItems.find(item => item.title == title);
+            var connectionsNavItem = $scope.navigationItems.find(item => item.title === title);
             var selector = "span."+connectionsNavItem.iconClass.replace(" ", ".");
             $timeout(function() {
                 //If already navigated to the page, the click will only mark the menu item as active.
                 angular.element(selector).parent().click();
             }, 0);
-        }
+        };
+        $scope.setUser = function (user) {
+            $scope.user = user;
+        };
     }
 ]);

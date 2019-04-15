@@ -333,6 +333,7 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
         var props = {};
         props.address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
         props.disable_admin = !self.authz.is_admin(sender.connection);
+        props.user = self.authz.get_user(sender.connection);
 
         buffered_sender.send({subject:'address_types', application_properties:props, body:address_types});
     }).catch(function (error) {
