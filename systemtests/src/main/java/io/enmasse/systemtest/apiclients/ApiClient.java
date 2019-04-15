@@ -63,12 +63,17 @@ public abstract class ApiClient implements AutoCloseable {
     protected abstract String apiClientName();
 
     protected void reconnect() {
-        this.client.close();
+        if (client != null) {
+            this.client.close();
+        }
         connect();
     }
 
+    @Override
     public void close() {
-        this.client.close();
+        if (client != null) {
+            this.client.close();
+        }
         this.vertx.close();
     }
 

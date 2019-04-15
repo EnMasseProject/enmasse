@@ -61,12 +61,6 @@ public class AddressApiClient extends ApiClient {
     }
 
     @Override
-    public void close() {
-        client.close();
-        vertx.close();
-    }
-
-    @Override
     protected String apiClientName() {
         return "Address-Api";
     }
