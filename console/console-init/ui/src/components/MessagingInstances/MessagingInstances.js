@@ -165,6 +165,11 @@ class MessagingInstances extends React.Component {
           icon = <TimesCircleIcon style={{color: 'var(--pf-global--danger-color--100)'}}/>;
         }
         let status = <Aux>{(icon)} {instance.phase}</Aux>;
+
+        let nameLink = (instance.isReady) ?
+              <a style={nameFont} href={instance.consoleUrl}>{instance.name}</a> :
+              <Text style={nameFont} >{instance.name}</Text>;
+
         return {
           cells: [
             {title: <Aux>{(nameLink)}<Text style={namespaceFont} >{instance.namespace}</Text></Aux>},
