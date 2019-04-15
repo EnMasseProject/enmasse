@@ -171,7 +171,7 @@ var content_types = {
     '.ttf': 'application/font-ttf',
     '.eot': 'application/vnd.ms-fontobject',
     '.otf': 'application/font-otf',
-    '.svg': 'application/image/svg+xml'
+    '.svg': 'image/svg+xml'
 };
 
 function get_content_type(file) {

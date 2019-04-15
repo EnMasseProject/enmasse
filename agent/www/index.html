@@ -5,12 +5,15 @@
     <!-- PatternFly Styles -->
     <!-- Note: No other CSS files are needed regardless of what other JS packages located in patternfly/components that you decide to pull in -->
 
-    <link rel="stylesheet" href="node_modules/angular-patternfly/node_modules/patternfly/dist/css/patternfly.min.css">
-    <link rel="stylesheet" href="node_modules/angular-patternfly/node_modules/patternfly/dist/css/patternfly-additions.min.css">
+    <link rel="stylesheet" href="node_modules/angular-patternfly/node_modules/patternfly/dist/css/patternfly.min.css"/>
+    <link rel="stylesheet" href="node_modules/angular-patternfly/node_modules/patternfly/dist/css/patternfly-additions.min.css"/>
     <!-- Angular-PatternFly Styles -->
     <link rel="stylesheet" href="node_modules/angular-patternfly/dist/styles/angular-patternfly.min.css" />
-    <link rel="stylesheet" type="text/css" href="node_modules/angular-ui-grid/ui-grid.min.css">
+    <link rel="stylesheet" type="text/css" href="node_modules/angular-ui-grid/ui-grid.min.css" />
     <link rel="stylesheet" href="assets/css/enmasse.css" />
+
+
+    <link rel="stylesheet" href="./index.css" />
 
     <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/jquery/dist/jquery.min.js"></script>
     <script src="node_modules/angular-patternfly/node_modules/patternfly/node_modules/moment/moment.js"></script>
@@ -102,7 +105,8 @@
 
   <div id="verticalNavLayout" class="layout-pf layout-pf-fixed faux-layout" ng-controller="NavCtrl">
     <div pf-vertical-navigation items="navigationItems" brand-alt="${application.display.name}"
-          pinnable-menus="true" update-active-items-on-click="true">
+         brand-src="./assets/images/brand.svg"
+         pinnable-menus="true" update-active-items-on-click="true">
       <div>
         <ul class="nav navbar-nav navbar-right navbar-iconic">
           <li class="dropdown"></li>
@@ -118,12 +122,12 @@
             </ul>
           </li>
           <li class="dropdown">
-            <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-              <span title="Username" class="fa pficon-user"></span>
+            <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" ng-style="{'max-height':'78px'}">
+              <img class="pf-c-avatar" ng-src="assets/images/img_avatar.svg" alt="User"/>
               <span class="caret"></span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
-              <li ng-hide=${GLOBAL_CONSOLE_DISABLED}><a href="console" id="globalconsole">Return to Console</a></li>
+              <li ng-hide=${GLOBAL_CONSOLE_DISABLED}><a href="console" id="globalconsole">${application.globalconsole.display.name}</a></li>
               <li ng-hide=!${GLOBAL_CONSOLE_DISABLED}><a href="logout" id="logout">Logout</a></li>
             </ul>
           </li>

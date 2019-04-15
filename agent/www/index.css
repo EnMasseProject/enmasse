@@ -1,0 +1,28 @@
+div.nav-pf-vertical-collapsible-menus {
+    top: 80px;
+}
+span.navbar-brand {
+    margin-top: 13px!important;
+    margin-bottom: 13px!important;
+}
+img.pf-c-avatar {
+    height: 36px;
+    width: 36px;
+}
+a#dropdownMenu1 {
+    line-height: 3em;
+    padding-left: 21px;
+}
+.nav-icon-spacing {
+    margin-left: 16px;
+    margin-right: 8px;
+}
+nav.navbar-pf-vertical {
+    background-color: #151515;
+}
+div.row.example-container {
+    margin-top: 30px;
+}
+button.navbar-toggle {
+    padding-top: 15px;
+}
