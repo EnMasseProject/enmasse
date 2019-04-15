@@ -82,6 +82,17 @@ public class AddressSpaceUtils {
                 .done();
     }
 
+    public static AddressSpace createAddressSpaceObject(String name, String namespace, String authServiceName, AddressSpaceType type, String plan) {
+        return createAddressSpaceResource(name, type, authServiceName)
+                .editMetadata()
+                .withNamespace(namespace)
+                .endMetadata()
+                .editSpec()
+                .withPlan(plan)
+                .endSpec()
+                .done();
+    }
+
     public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, String plan, AuthenticationServiceType authService) {
         return createAddressSpaceResource(name, type, authService)
                 .editMetadata()

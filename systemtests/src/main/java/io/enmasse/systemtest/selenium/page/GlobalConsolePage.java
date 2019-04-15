@@ -63,6 +63,10 @@ public class GlobalConsolePage implements IWebPage {
         return selenium.getDriver().findElement(By.id("form-namespace"));
     }
 
+    private WebElement authServiceDropDown() {
+        return selenium.getDriver().findElement(By.id("form-authservice"));
+    }
+
     private WebElement getAddressSpaceNameInput() {
         return selenium.getDriver().findElement(By.id("form-name"));
     }
@@ -165,6 +169,11 @@ public class GlobalConsolePage implements IWebPage {
         selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//option[@value='" + plan + "']")), plan);
     }
 
+    private void selectAuthService(String authService) throws Exception {
+        selenium.clickOnItem(getPlanDropDown(), "address space plan dropdown");
+        selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//option[@value='" + authService + "']")), authService);
+    }
+
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         selenium.clickOnItem(getCreateButton());
         selectNamespace(addressSpace.getMetadata().getNamespace());
@@ -172,6 +181,7 @@ public class GlobalConsolePage implements IWebPage {
         selenium.clickOnItem(addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString().toLowerCase()) ? getBrokeredRadioButton() : getStandardRadioButton(),
                 addressSpace.getSpec().getType());
         selectPlan(addressSpace.getSpec().getPlan());
+        selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
         selenium.clickOnItem(getNextButton());
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
