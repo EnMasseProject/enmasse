@@ -401,7 +401,7 @@ public class AddressApiClient extends ApiClient {
     }
 
     private String getAddressPath(String addressSpace) {
-        return String.format(addressNestedPathPattern, addressSpace);
+        return String.format(addressNestedPathPattern, defaultNamespace, addressSpace);
     }
 
     public void deleteAddress(String addressSpace, Address destination, int expectedCode) throws Exception {
