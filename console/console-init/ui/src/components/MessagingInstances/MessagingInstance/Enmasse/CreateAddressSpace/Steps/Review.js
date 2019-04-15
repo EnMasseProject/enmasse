@@ -40,7 +40,7 @@ class Review extends React.Component {
                 <FormGroup label="Address plan" fieldId={"plan"}>
                   <Text>{newInstance.plan}</Text>
                 </FormGroup>
-                <FormGroup label="Authentication service" fieldId={"plan"}>
+                <FormGroup label="Authentication service" fieldId={"auth-service"}>
                   <Text>{newInstance.authenticationService}</Text>
                 </FormGroup>
               </Form>
