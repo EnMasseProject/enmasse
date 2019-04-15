@@ -39,7 +39,7 @@ func TestOneFQDN(t *testing.T) {
 func doTest(t *testing.T, expected *string, fqdns []string, expectedDomainPortions int) {
 	result, domainPortions := GetCommonDomain(fqdns)
 	if expected == nil {
-		if (result != nil) {
+		if result != nil {
 			t.Error(fmt.Sprintf("Unexpected common domain. Expecting nil got %s ", *result))
 		}
 	} else if *result != *expected {

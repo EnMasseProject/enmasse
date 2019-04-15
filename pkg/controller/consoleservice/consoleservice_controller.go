@@ -264,7 +264,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 
 		newSsoCookieDomain, domainPortionCount := GetCommonDomain(hosts)
 
-		if newSsoCookieDomain != nil &&  consoleservice.Spec.SsoCookieDomain != nil && *newSsoCookieDomain == *consoleservice.Spec.SsoCookieDomain {
+		if newSsoCookieDomain != nil && consoleservice.Spec.SsoCookieDomain != nil && *newSsoCookieDomain == *consoleservice.Spec.SsoCookieDomain {
 			return consoleservice.Spec.SsoCookieDomain, nil
 		} else if domainPortionCount < 2 {
 			// Disallow laying cookies at TLD
@@ -292,7 +292,7 @@ func (r *ReconcileConsoleService) updateService(ctx context.Context, consoleserv
 		return reconcile.Result{}, err
 	}
 
-	if  consoleservice.Spec.SsoCookieDomain != newSsoCookieDomain ||
+	if consoleservice.Spec.SsoCookieDomain != newSsoCookieDomain ||
 		consoleservice.Status.Host != newStatus.Host ||
 		consoleservice.Status.Port != newStatus.Port ||
 		!reflect.DeepEqual(consoleservice.Status.CaCertSecret, newStatus.CaCertSecret) {
@@ -577,7 +577,6 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		if consoleservice.Spec.SsoCookieSecret != nil {
 			install.ApplyEnvSecret(container, "SSO_COOKIE_SECRET", "cookie-secret", consoleservice.Spec.SsoCookieSecret.Name)
 		}
-
 
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
 
