@@ -1,17 +1,17 @@
 /*
 * Copyright 2019, EnMasse authors.
 * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
-*/
+ */
+
 package consoleservice
 
 import (
-	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
-	"testing"
-
 	"fmt"
+	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"testing"
 )
 
 func setup(t *testing.T, consoleservice *adminv1beta1.ConsoleService) *ReconcileConsoleService {
@@ -80,7 +80,6 @@ func TestConsoleService(t *testing.T) {
 	//	t.Fatalf("get deployment: (%v)", err)
 	//}
 
-
 	//if dep.Labels["name"] != "consoleservice" {
 	//	t.Error("wrong label 'name'")
 	//}
@@ -103,5 +102,5 @@ func TestConsoleService(t *testing.T) {
 
 	fmt.Printf("") //%#v", dep)
 
-//	r.client.Create(context.TODO(), dep)  // Why??
+	//	r.client.Create(context.TODO(), dep)  // Why??
 }
