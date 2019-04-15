@@ -97,7 +97,6 @@ export function deleteMessagingInstances(name, namespace) {
 }
 
 export function createNewAddressSpace(instance) {
-  console.log('Creating new address sapce', instance);
   return axios.post('apis/enmasse.io/v1alpha1/namespaces/'+ instance.namespace +'/addressspaces', {
     apiVersion: 'enmasse.io/v1alpha1',
     kind: 'AddressSpace',
