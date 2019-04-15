@@ -172,7 +172,6 @@ class DeviceRegistryTest extends IoTTestBaseWithShared {
         log.info("Sending event data expected response: {}", expectedResponse);
         httpAdapterClient.sendEvent(payload, expectedResponse );
 
-        expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE);
         log.info("Sending telemetry data expected response: {}", expectedResponse);
         httpAdapterClient.sendTelemetry(payload, expectedResponse);
 
