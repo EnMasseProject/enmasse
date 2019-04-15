@@ -54,6 +54,8 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 		}
 	}
 
+	replicas := int32(1)
+	deployment.Spec.Replicas = &replicas
 	deployment.Spec.Template.ObjectMeta.Labels = CreateDefaultLabels(deployment.Spec.Template.ObjectMeta.Labels, component, name)
 
 }
