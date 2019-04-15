@@ -184,8 +184,7 @@ public class OSBBindingService extends OSBServiceBase {
 
         AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId).orElse(null);
         if (addressSpace == null) {
-            return Response.status(Response.Status.GONE).build();
-
+            return Response.status(Response.Status.GONE).entity("{}").build();
         }
 
         try {
@@ -194,7 +193,7 @@ public class OSBBindingService extends OSBServiceBase {
             if(deleteUser(addressSpace, username)) {
                 return Response.ok(new EmptyResponse()).build();
             } else {
-                return Response.status(Response.Status.GONE).build();
+                return Response.status(Response.Status.GONE).entity("{}").build();
             }
         } catch (Exception e) {
             throw new InternalServerErrorException("Exception interacting with auth service", e);

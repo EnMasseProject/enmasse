@@ -119,8 +119,10 @@ public class OSBProvisioningService extends OSBServiceBase {
         if (planId == null) {
             throw Exceptions.badRequestException("Missing plan_id parameter");
         }
-        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId)
-                .orElseThrow(() -> Exceptions.goneException("Service addressspace " + instanceId + " is gone"));
+        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId).orElse(null);
+        if (addressSpace == null) {
+            return Response.status(Response.Status.GONE).entity("{}").build();
+        }
         deleteAddressSpace(addressSpace);
         return Response.ok(new EmptyResponse()).build();
 
