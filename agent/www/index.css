@@ -9,7 +9,7 @@ img.pf-c-avatar {
     height: 36px;
     width: 36px;
 }
-a#dropdownMenu1 {
+a#dropdownMenu1, a#dropdownMenu2 {
     line-height: 3em;
     padding-left: 21px;
 }
@@ -25,4 +25,9 @@ div.row.example-container {
 }
 button.navbar-toggle {
     padding-top: 15px;
+}
+img.pf-c-avatar {
+    margin-top: 20px;
+    margin-left: 25px;
+    margin-right: 10px;
 }

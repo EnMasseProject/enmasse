@@ -113,7 +113,7 @@
           <li class="dropdown">
             <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
               <span title="Help" class="fa pficon-help"></span>
-              <span class="caret"></span>
+              <span class="caret" ng-style="{'margin-left':'8px'}"></span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
               <li><a href="help.html" target="_blank">Help</a></li>
@@ -122,14 +122,18 @@
             </ul>
           </li>
           <li class="dropdown">
+
             <a class="dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" ng-style="{'max-height':'78px'}">
-              <img class="pf-c-avatar" ng-src="assets/images/img_avatar.svg" alt="User"/>
-              <span class="caret"></span>
+              <span class="pf-c-dropdown__toggle-text" ng-style="{'font-weight':'400','font-size':'1.5rem','color':'#ededed'}">{{user}}</span>
+              <span class="caret" ng-style="{'margin-left':'8px'}"></span>
             </a>
             <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
               <li ng-hide=${GLOBAL_CONSOLE_DISABLED}><a href="console" id="globalconsole">${application.globalconsole.display.name}</a></li>
               <li ng-hide=!${GLOBAL_CONSOLE_DISABLED}><a href="logout" id="logout">Logout</a></li>
             </ul>
+          </li>
+          <li>
+            <img class="pf-c-avatar" ng-src="assets/images/img_avatar.svg" alt="User"/>
           </li>
         </ul>
       </div>
