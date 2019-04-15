@@ -9,10 +9,10 @@ import (
 	"strings"
 )
 
-func GetCommonDomain(all_fqdns []string) (*string) {
+func GetCommonDomain(all_fqdns []string) (*string, int) {
 
 	if len(all_fqdns) <= 1 {
-		return nil;
+		return nil, 0;
 	}
 
 	first_fqdn := strings.Split(all_fqdns[0], ".")
@@ -36,9 +36,9 @@ func GetCommonDomain(all_fqdns []string) (*string) {
 	}
 
 	if len(common) == 0 {
-		return nil
+		return nil, 0
 	} else {
 		common_sub := "." + strings.Join(common,".")
-		return &common_sub
+		return &common_sub, len(common)
 	}
 }

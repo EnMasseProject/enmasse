@@ -262,10 +262,13 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 			}
 		}
 
-		newSsoCookieDomain := GetCommonDomain(hosts)
+		newSsoCookieDomain, domainPortionCount := GetCommonDomain(hosts)
 
-		if newSsoCookieDomain != nil &&  consoleservice.Spec.CertificateSecret != nil && *newSsoCookieDomain == *consoleservice.Spec.SsoCookieDomain {
+		if newSsoCookieDomain != nil &&  consoleservice.Spec.SsoCookieDomain != nil && *newSsoCookieDomain == *consoleservice.Spec.SsoCookieDomain {
 			return consoleservice.Spec.SsoCookieDomain, nil
+		} else if domainPortionCount < 2 {
+			// Disallow laying cookies at TLD
+			return nil, nil
 		}
 
 		return newSsoCookieDomain, nil
