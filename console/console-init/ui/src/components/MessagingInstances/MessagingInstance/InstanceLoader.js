@@ -6,63 +6,52 @@ import {loadMessagingInstance, loadMessagingInstances, deleteMessagingInstances}
 
 class InstanceLoader {
 
-  openshiftApiAvailable;
-
-  constructor() {
-    this.openshiftApiAvailable = true;
-    axios.get('apis/project.openshift.io/v1/')
-      .then(response => {
-        console.log('Running in Openshift');
-      })
-      .catch(error => {
-          console.log('Running in Kubernetes.', error);
-          this.openshiftApiAvailable = false;
-        }
-      );
-  }
-
-  translateNamespaces = namespaces => (
-    namespaces.items.map(namespace => namespace.metadata.name)
-  );
+  translateNamespaces = namespaces => {
+    console.log('returning : ',namespaces.items.map(namespace => namespace.metadata.name));
+    return namespaces.items.map(namespace => namespace.metadata.name);
+  };
 
   loadNamespaces() {
-    if (this.openshiftApiAvailable) {
+    return axios.get('apis/project.openshift.io/v1/').then(() => {
       return axios.get('apis/project.openshift.io/v1/projects')
-        .then(response => this.translateNamespaces(response.data))
-        .catch(error => {
-            console.log('FAILED to load namespaces', error);
-            throw(error);
-          }
-        );
-    } else {
+          .then(response => {
+            return this.translateNamespaces(response.data);
+          })
+          .catch(error => {
+              console.log('FAILED to load namespaces', error);
+              throw(error);
+            }
+          );
+      }
+    ).catch(() => {
       console.log('Can not load namespaces in Kubernetes');
       return new Promise((resolve, reject) =>
         resolve([]));
-    }
+    });
   }
 
   loadInstances() {
-    if (this.openshiftApiAvailable) {
-      return new Promise((resolve, reject) => {
-        this.loadNamespaces().then(namespaces => {
-          let promises = [];
-          namespaces.forEach(namespace => {
-            promises.push(loadMessagingInstance(namespace));
-          });
-          Promise.all(promises)
-            .then(values => {
-              console.log('success: ', values);
-              resolve([].concat.apply([], values));
-            })
-            .catch(error => {
-              console.log('failed: ', error);
-              reject(error);
+    return axios.get('apis/project.openshift.io/v1/')
+      .then(() => {
+        return this.loadNamespaces().then(namespaces => {
+            console.log('loadInstances....1');
+            let promises = [];
+            namespaces.forEach(namespace => {
+              promises.push(loadMessagingInstance(namespace));
             });
-        });
+            return Promise.all(promises)
+              .then(values => {
+                return [].concat.apply([], values);
+              })
+              .catch(error => {
+                console.log('failed: ', error);
+                return error;
+              });
+          });
+        })
+      .catch(() => {
+        return loadMessagingInstances();
       });
-    } else {
-      return loadMessagingInstances();
-    }
   }
 };
 
