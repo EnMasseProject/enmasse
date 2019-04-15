@@ -24,7 +24,7 @@ import java.util.Objects;
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
 @JsonPropertyOrder({"discoveryMetadataURL", "oauthClientSecret", "certificateSecret",
-        "scope"})
+        "scope", "ssoCookieSecret", "ssoCookieDomain"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ConsoleServiceSpec extends AbstractWithAdditionalProperties {
 
@@ -32,6 +32,8 @@ public class ConsoleServiceSpec extends AbstractWithAdditionalProperties {
     private SecretReference oauthClientSecret;
     private SecretReference certificateSecret;
     private String scope;
+    private SecretReference ssoCookieSecret;
+    private String ssoCookieDomain;
 
     @Override
     public boolean equals(Object o) {
@@ -41,12 +43,15 @@ public class ConsoleServiceSpec extends AbstractWithAdditionalProperties {
         return Objects.equals(discoveryMetadataURL, that.discoveryMetadataURL) &&
                 Objects.equals(oauthClientSecret, that.oauthClientSecret) &&
                 Objects.equals(certificateSecret, that.certificateSecret) &&
+                Objects.equals(ssoCookieSecret, that.ssoCookieSecret) &&
+                Objects.equals(ssoCookieDomain, that.ssoCookieDomain) &&
                 Objects.equals(scope, that.scope);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(discoveryMetadataURL, oauthClientSecret, certificateSecret, scope);
+        return Objects.hash(discoveryMetadataURL, oauthClientSecret, certificateSecret, scope,
+                ssoCookieSecret, ssoCookieDomain);
     }
 
     @Override
@@ -55,6 +60,8 @@ public class ConsoleServiceSpec extends AbstractWithAdditionalProperties {
                 "discoveryMetadataURL='" + discoveryMetadataURL + '\'' +
                 ", oauthClientSecret=" + oauthClientSecret +
                 ", certificateSecret=" + certificateSecret +
+                ", ssoCookieSecret=" + ssoCookieSecret +
+                ", ssoCookieDomain=" + ssoCookieDomain +
                 ", scope='" + scope + '\'' +
                 '}';
     }
@@ -90,4 +97,22 @@ public class ConsoleServiceSpec extends AbstractWithAdditionalProperties {
     public void setScope(String scope) {
         this.scope = scope;
     }
+
+    public SecretReference getSsoCookieSecret() {
+        return ssoCookieSecret;
+    }
+
+    public void setSsoCookieSecret(final SecretReference ssoCookieSecret) {
+        this.ssoCookieSecret = ssoCookieSecret;
+    }
+
+    public String getSsoCookieDomain() {
+        return ssoCookieDomain;
+    }
+
+    public void setSsoCookieDomain(String ssoCookieDomain) {
+        this.ssoCookieDomain = ssoCookieDomain;
+    }
+
+
 }

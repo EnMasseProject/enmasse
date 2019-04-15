@@ -11,7 +11,9 @@ get_endpoint() {
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 TARGET_DIR=${1-/apps}
 
-export COOKIE_SECRET=$(python -c 'import os,base64; print base64.urlsafe_b64encode(os.urandom(16))')
+SSO_COOKIE_SECRET=$(python -c \
+'import os,base64; \
+ print base64.urlsafe_b64encode(os.environ["SSO_COOKIE_SECRET"] if "SSO_COOKIE_SECRET" in os.environ else os.urandom(32))')
 
 WELLKNOWN_DIR=${TARGET_DIR}/.well-known
 mkdir -p ${WELLKNOWN_DIR}
@@ -40,7 +42,8 @@ do
       -e "s,\${AUTHORIZATION_ENDPOINT},${AUTHORIZATION_ENDPOINT},g" \
       -e "s,\${TOKEN_ENDPOINT},${TOKEN_ENDPOINT},g" \
       -e "s,\${OPENSHIFT_VALIDATE_ENDPOINT},${OPENSHIFT_VALIDATE_ENDPOINT},g" \
-      -e "s,\${COOKIE_SECRET},${COOKIE_SECRET},g" \
+      -e "s,\${SSO_COOKIE_SECRET},${SSO_COOKIE_SECRET},g" \
+      -e "s,\${SSO_COOKIE_DOMAIN},${SSO_COOKIE_DOMAIN},g" \
       -e "s,\${OAUTH2_SCOPE},${OAUTH2_SCOPE},g" \
       -i ${c}
 done

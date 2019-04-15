@@ -127,11 +127,13 @@ type ConsoleService struct {
 }
 
 type ConsoleServiceSpec struct {
-	DiscoveryMetadataURL *string                  `json:"discoveryMetadataURL,omitempty"`
-	Scope                *string                  `json:"scope,omitempty"`
-	OauthClientSecret    *corev1.SecretReference  `json:"oauthClientSecret,omitempty"`
-	CertificateSecret    *corev1.SecretReference  `json:"certificateSecret,omitempty"`
-	Host                 *string                  `json:"host,omitempty"`
+	DiscoveryMetadataURL *string                 `json:"discoveryMetadataURL,omitempty"`
+	Scope                *string                 `json:"scope,omitempty"`
+	OauthClientSecret    *corev1.SecretReference `json:"oauthClientSecret,omitempty"`
+	CertificateSecret    *corev1.SecretReference `json:"certificateSecret,omitempty"`
+	SsoCookieSecret      *corev1.SecretReference `json:"ssoCookieSecret,omitempty"`
+	SsoCookieDomain      *string                 `json:"ssoCookieDomain,omitempty"`
+	Host                 *string                 `json:"host,omitempty"`
 }
 
 type ConsoleServiceStatus struct {

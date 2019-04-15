@@ -35,6 +35,15 @@ spec:
                   type: string
                 namespace:
                   type: string
+            ssoCookieSecret:
+              type: object
+              properties:
+                name:
+                  type: string
+                namespace:
+                  type: string
+            ssoCookieDomain:
+              type: string
             scope:
               type: string
             host:

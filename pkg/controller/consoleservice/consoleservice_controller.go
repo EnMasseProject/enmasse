@@ -10,8 +10,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
@@ -40,7 +42,7 @@ import (
 TODO TLS for the HTTPD side car
 TODO Tidy up (minimise) Apache HTTPD conf
 TODO Tidy up this code - extract utility methods
-TODO unit tests - having prblem with client when interacting with openshift API endpoints?
+TODO unit tests - having problem with client when interacting with openshift API endpoints?
 */
 const CONSOLE_NAME = "console"
 
@@ -185,7 +187,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{}, nil
 	} else {
 		if util.IsOpenshift() {
-			// Secret will be create later if necessary
+			// Secret will be created later if necessary
 		} else {
 			secretName := types.NamespacedName{
 				Name:      consoleservice.Spec.OauthClientSecret.Name,
@@ -220,7 +222,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	requeue = requeue || result.Requeue
 
 	// oauthclient
-	result, err = r.reconcileOauthClient(ctx, consoleservice)
+	result, redirects, err := r.reconcileOauthClient(ctx, consoleservice)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -233,7 +235,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	}
 	requeue = requeue || result.Requeue
 
-	result, err = r.updateStatus(ctx, consoleservice, func(status *v1beta1.ConsoleServiceStatus) error {
+	result, err = r.updateService(ctx, consoleservice, func(status *v1beta1.ConsoleServiceStatus) error {
 
 		if route != nil && len(route.Status.Ingress) > 0 {
 			status.Host = route.Status.Ingress[0].Host
@@ -242,24 +244,60 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 			status.CaCertSecret = cert
 		}
 		return nil
+	}, func() (*string, error) {
+
+		if consoleservice.Annotations != nil {
+			if sval, ok := consoleservice.Annotations["enmasse.io/disable-autocompute-sso-cookie-domain"]; ok {
+				if bval, ok := strconv.ParseBool(sval); ok == nil && bval {
+					return consoleservice.Spec.SsoCookieDomain, nil
+				}
+			}
+		}
+
+		hosts := make([]string, len(redirects))
+		for i, v := range redirects {
+			hosts[i] = v.Hostname()
+			if net.ParseIP(hosts[i]) != nil {
+				return nil, nil
+			}
+		}
+
+		newSsoCookieDomain, domainPortionCount := GetCommonDomain(hosts)
+
+		if newSsoCookieDomain != nil &&  consoleservice.Spec.SsoCookieDomain != nil && *newSsoCookieDomain == *consoleservice.Spec.SsoCookieDomain {
+			return consoleservice.Spec.SsoCookieDomain, nil
+		} else if domainPortionCount < 2 {
+			// Disallow laying cookies at TLD
+			return nil, nil
+		}
+
+		return newSsoCookieDomain, nil
 	})
 
 	return reconcile.Result{Requeue: requeue}, nil
 }
 
 type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
+type UpdateDomainFn func() (*string, error)
 
-func (r *ReconcileConsoleService) updateStatus(ctx context.Context, consoleservice *v1beta1.ConsoleService, updateFn UpdateStatusFn) (reconcile.Result, error) {
+func (r *ReconcileConsoleService) updateService(ctx context.Context, consoleservice *v1beta1.ConsoleService, updateFn UpdateStatusFn, fn UpdateDomainFn) (reconcile.Result, error) {
 
 	newStatus := v1beta1.ConsoleServiceStatus{}
 	if err := updateFn(&newStatus); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if consoleservice.Status.Host != newStatus.Host ||
+	newSsoCookieDomain, err := fn()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if  consoleservice.Spec.SsoCookieDomain != newSsoCookieDomain ||
+		consoleservice.Status.Host != newStatus.Host ||
 		consoleservice.Status.Port != newStatus.Port ||
 		!reflect.DeepEqual(consoleservice.Status.CaCertSecret, newStatus.CaCertSecret) {
 
+		consoleservice.Spec.SsoCookieDomain = newSsoCookieDomain
 		consoleservice.Status = newStatus
 		err := r.client.Update(ctx, consoleservice)
 		if err != nil {
@@ -293,17 +331,37 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 		}
 	}
 
+	if consoleservice.Spec.SsoCookieSecret == nil {
+		dirty = true
+		secretName := consoleservice.Name + "-sso-cookie-secret"
+		consoleservice.Spec.SsoCookieSecret = &corev1.SecretReference{
+			Name: secretName,
+		}
+
+		err := util.CreateSecret(ctx, client, scheme, consoleservice.Namespace, secretName, consoleservice, func(secret *corev1.Secret) error {
+			install.ApplyDefaultLabels(&secret.ObjectMeta, "consoleservice", secretName)
+
+			secret.Data = make(map[string][]byte)
+			password, err := util.GeneratePassword(32)
+			secret.Data["cookie-secret"] = []byte(password)
+			return err
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if consoleservice.Spec.OauthClientSecret == nil {
+		dirty = true
+		secretName := consoleservice.Name + "-oauth"
+		consoleservice.Spec.OauthClientSecret = &corev1.SecretReference{Name: secretName}
+	}
+
 	if util.IsOpenshift() {
 		if consoleservice.Spec.Scope == nil {
 			dirty = true
 			scope := "user:full"
 			consoleservice.Spec.Scope = &scope
-		}
-
-		if consoleservice.Spec.OauthClientSecret == nil {
-			dirty = true
-			secretName := consoleservice.Name + "-oauth"
-			consoleservice.Spec.OauthClientSecret = &corev1.SecretReference{Name: secretName}
 		}
 
 		if consoleservice.Spec.DiscoveryMetadataURL == nil {
@@ -510,6 +568,17 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			})
 		}
 
+		if consoleservice.Spec.SsoCookieDomain != nil {
+			install.ApplyEnv(container, "SSO_COOKIE_DOMAIN", func(envvar *corev1.EnvVar) {
+				envvar.Value = *consoleservice.Spec.SsoCookieDomain
+			})
+		}
+
+		if consoleservice.Spec.SsoCookieSecret != nil {
+			install.ApplyEnvSecret(container, "SSO_COOKIE_SECRET", "cookie-secret", consoleservice.Spec.SsoCookieSecret.Name)
+		}
+
+
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
 
 		return nil
@@ -522,42 +591,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			if err := install.ApplyContainerImage(container, "console-proxy-openshift", nil); err != nil {
 				return err
 			}
-
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-openshift.cfg"}
-
-			install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
-			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
-
-			if consoleservice.Spec.OauthClientSecret != nil {
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_SECRET", "client-secret", consoleservice.Spec.OauthClientSecret.Name)
-			}
-
-			container.Ports = []corev1.ContainerPort{{
-				ContainerPort: 8443,
-				Name:          "https",
-			}}
-
-			container.ReadinessProbe = &corev1.Probe{
-				InitialDelaySeconds: 60,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
-			}
-			container.LivenessProbe = &corev1.Probe{
-				InitialDelaySeconds: 120,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
-			}
+			applyOauthProxyContainer(container, consoleservice)
 
 			return nil
 		}); err != nil {
@@ -590,44 +625,12 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-kubernetes.cfg"}
 
-			install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
-			install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
-
-			if consoleservice.Spec.OauthClientSecret != nil {
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
-				install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_SECRET", "client-secret", consoleservice.Spec.OauthClientSecret.Name)
-			}
+			applyOauthProxyContainer(container, consoleservice)
 
 			if consoleservice.Spec.Scope != nil {
 				install.ApplyEnv(container, "SSL_CERT_DIR", func(envvar *corev1.EnvVar) {
 					envvar.Value = "/var/run/secrets/kubernetes.io/serviceaccount/"
 				})
-			}
-
-			container.Ports = []corev1.ContainerPort{{
-				ContainerPort: 8443,
-				Name:          "https",
-			}}
-
-			container.ReadinessProbe = &corev1.Probe{
-				InitialDelaySeconds: 60,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
-			}
-			container.LivenessProbe = &corev1.Probe{
-				InitialDelaySeconds: 120,
-				Handler: corev1.Handler{
-					HTTPGet: &corev1.HTTPGetAction{
-						Port:   intstr.FromString("https"),
-						Path:   "/oauth/healthz",
-						Scheme: "HTTPS",
-					},
-				},
 			}
 
 			return nil
@@ -642,7 +645,41 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	return nil
 }
 
-func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1beta1.ConsoleService) {
+	install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
+	install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
+	if consoleservice.Spec.OauthClientSecret != nil {
+		install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_ID", "client-id", consoleservice.Spec.OauthClientSecret.Name)
+		install.ApplyEnvSecret(container, "OAUTH2_PROXY_CLIENT_SECRET", "client-secret", consoleservice.Spec.OauthClientSecret.Name)
+	}
+
+	container.Ports = []corev1.ContainerPort{{
+		ContainerPort: 8443,
+		Name:          "https",
+	}}
+	container.ReadinessProbe = &corev1.Probe{
+		InitialDelaySeconds: 60,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Port:   intstr.FromString("https"),
+				Path:   "/oauth/healthz",
+				Scheme: "HTTPS",
+			},
+		},
+	}
+	container.LivenessProbe = &corev1.Probe{
+		InitialDelaySeconds: 120,
+		Handler: corev1.Handler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Port:   intstr.FromString("https"),
+				Path:   "/oauth/healthz",
+				Scheme: "HTTPS",
+			},
+		},
+	}
+}
+
+func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, []url.URL, error) {
 	if util.IsOpenshift() {
 
 		secretref := consoleservice.Spec.OauthClientSecret
@@ -660,22 +697,25 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 
 		if err != nil {
 			log.Error(err, "Failed reconciling OAuth Secret")
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil, err
 		}
 
 		key := client.ObjectKey{Namespace: consoleservice.Namespace, Name: consoleservice.Name}
 		route := &routev1.Route{}
 		err = r.client.Get(ctx, key, route)
 		if err != nil {
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil, err
 		}
 
 		if len(route.Status.Ingress) == 0 {
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, nil, nil
 		}
 
-		redirects := make([]string, 0)
-		redirects = buildRedirectsFor(*route, redirects)
+		redirects := make([]url.URL, 0)
+		redirects, err = buildRedirectsFor(*route, redirects)
+		if err != nil {
+			return reconcile.Result{}, nil, err
+		}
 
 		list := &routev1.RouteList{}
 
@@ -683,14 +723,17 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		//_ = opts.SetLabelSelector("app=enmasse")
 		err = r.client.List(context.TODO(), opts, list)
 		if err != nil {
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, nil, nil
 		}
 
 		for _, item := range list.Items {
 			// TODO it would be better if we could use a label allowed us to identify the routes belonging
 			// to address space console instances.
 			if strings.HasPrefix(item.Name, "console-") {
-				redirects = buildRedirectsFor(item, redirects)
+				redirects, err = buildRedirectsFor(item, redirects)
+				if err != nil {
+					return reconcile.Result{}, nil, err
+				}
 			}
 		}
 		oauth := &oauthv1.OAuthClient{
@@ -709,33 +752,40 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 
 		if err != nil {
 			log.Error(err, "Failed reconciling OAuth")
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil, err
 		}
 
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, redirects, nil
 	}
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, nil, nil
 }
 
-func buildRedirectsFor(route routev1.Route, redirects []string) []string {
+func buildRedirectsFor(route routev1.Route, redirects []url.URL) ([]url.URL, error) {
 	scheme := "http"
 	if route.Spec.TLS != nil {
 		scheme = "https"
 	}
 	for _, ingress := range route.Status.Ingress {
-		redirect := fmt.Sprintf("%s://%s", scheme, ingress.Host)
-		redirects = append(redirects, redirect)
+		redirect, err := url.Parse(fmt.Sprintf("%s://%s", scheme, ingress.Host))
+		if err != nil {
+			return []url.URL{}, err
+		}
+		redirects = append(redirects, *redirect)
 	}
-	return redirects
+	return redirects, nil
 }
 
-func applyOauthClient(oauth *oauthv1.OAuthClient, secret *corev1.Secret, redirects []string) error {
+func applyOauthClient(oauth *oauthv1.OAuthClient, secret *corev1.Secret, redirects []url.URL) error {
 	install.ApplyDefaultLabels(&oauth.ObjectMeta, "oauthclient", oauth.Name)
 	bytes := secret.Data["client-secret"]
 	oauth.Secret = string(bytes[:])
 
 	oauth.GrantMethod = oauthv1.GrantHandlerAuto
-	oauth.RedirectURIs = redirects
+	str_redirects := make([]string, len(redirects))
+	for i, v := range redirects {
+		str_redirects[i] = v.String()
+	}
+	oauth.RedirectURIs = str_redirects
 	return nil
 }
 

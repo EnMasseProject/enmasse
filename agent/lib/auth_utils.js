@@ -18,12 +18,15 @@
 const https = require('https');
 const url = require('url');
 const kubernetes = require('../lib/kubernetes.js');
+const CookieDecoder = require('../lib/cookie_decoder.js');
 const oauth2_factory = require('simple-oauth2');
 const openid_connect = require('openid-client');
 
 const rhea = require('rhea');
 var log = require("./log.js").logger();
 const myutils = require('./utils.js');
+const RFC6749_VALID_ACCESS_TOKEN = RegExp('^[\x20-\x7F]+$');
+const SSO_COOKIE_NAME = "_oauth_proxy";
 
 function my_request(original, defaults, options, callback) {
     var merge = myutils.merge({}, defaults, options);
@@ -266,34 +269,57 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
         next();
     };
 
-    var global_console_handler =  function (request, response, next) {
-        let u = url.parse(request.url, true);
-        if (u.pathname === "/console") {
-            response.redirect(env.CONSOLE_LINK);
-        } else {
-            next();
-        }
-    };
-
     var init_session_handler =  function (request, response, next) {
         init_session(sessions, request, response);
         next();
     };
 
-    var logout_handler =  function (request, response, next) {
+    var logout_handler =  function (path, redirect, request, response, next) {
         let u = url.parse(request.url, true);
-        if (u.pathname === "/logout") {
+        if (u.pathname === path) {
             var token = get_from_session(request, "token");
-            expunge_session(sessions, request, response);
             if (token) {
-                token.revokeAll().then(() => {
-                    response.redirect("/");
-                }).catch((e) => {
+                token.revokeAll().catch(() => {
                     log.warn("Failed to revoke access token");
-                    response.redirect("/");
-                })
+                }).finally(() => {
+                    response.redirect(redirect);
+                });
             } else {
-                response.redirect("/");
+                response.redirect(redirect);
+            }
+        } else {
+            next();
+        }
+    };
+
+    var sso_cookie_handler =  function (cookie_decoder, request, response, next) {
+        var cookies = get_cookies(request);
+        if (!get_from_session(request, "token") && SSO_COOKIE_NAME in cookies) {
+            var oauthproxy_cookie = cookies[SSO_COOKIE_NAME];
+            try {
+                var state = cookie_decoder.decode(oauthproxy_cookie);
+
+                if (state.access_token) {
+                    if (RFC6749_VALID_ACCESS_TOKEN.test(state.access_token)) {
+                        log.info("Authenticated using SSO cookie - user : %s", state.user);
+                        store_in_session(request, "token", {
+                            getAccessToken: function () {
+                                return state.access_token;
+                            },
+                            revokeAll: function () {
+                                // no op - don't revoke the token as it doesn't belong to us
+                                return Promise.resolve();
+                            }
+                        });
+                        store_in_session(request, 'username', state.user);
+                    } else {
+                        log.debug("Access token within SSO cookie malformed, probably wrong cookie key.");
+                    }
+                } else {
+                    log.debug("No access token found in SSO cookie");
+                }
+            } finally {
+                next();
             }
         } else {
             next();
@@ -385,7 +411,6 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
                                     } else {
                                         return null;
                                     }
-
                                 }
                             }
                             store_in_session(request, "token", token);
@@ -493,10 +518,18 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
     let interceptors = [];
     interceptors.push(patch_handler);
     if (env.CONSOLE_LINK) {
-        interceptors.push(global_console_handler);
+        interceptors.push(logout_handler.bind(null, "/console", env.CONSOLE_LINK));
     }
     interceptors.push(init_session_handler);
-    interceptors.push(logout_handler);
+    interceptors.push(logout_handler.bind(null, "/logout", "/"));
+    if (env.SSO_COOKIE_SECRET) {
+        try {
+            const decoder = new CookieDecoder(env.SSO_COOKIE_SECRET);
+            interceptors.push(sso_cookie_handler.bind(null, decoder));
+        } catch (e) {
+            log.warn("Cookie secret not of expected length, SSO disabled.", e);
+        }
+    }
     interceptors.push(openshift ? oauth_handler : openidconnect_handler);
     if (openshift) {
         interceptors.push(get_user_handler);
