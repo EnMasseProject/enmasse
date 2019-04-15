@@ -119,7 +119,7 @@ class Layout extends React.Component {
               id="dd-settings"
               isPlain
               position="right"
-              onSelect={this.on171DropdownSelect}
+              onSelect={this.onDropdownSelect}
               toggle={<DropdownToggle onToggle={this.onHelpDropdownToggle}><CogIcon/></DropdownToggle>}
               isOpen={isHelpDropdownOpen}
               dropdownItems={helpDropdownItems}
