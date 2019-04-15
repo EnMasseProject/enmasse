@@ -69,7 +69,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     //============================================================================================
 
     protected void doTestCreateDeleteAddress(Address... destinations) throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         for (Address dest : destinations) {
@@ -80,7 +80,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCreateDeleteDurableSubscription(Address... destinations) throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
@@ -102,7 +102,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestAddressStatus(Address destination) throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressWebConsole(destination, false);
@@ -121,7 +121,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 4;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -155,7 +155,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 4;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -204,7 +204,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         Address destTopic = AddressUtils.createAddressObject(AddressType.TOPIC, testString + "topic",
                 getDefaultPlan(AddressType.TOPIC), Optional.empty());
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressWebConsole(destQueue);
@@ -232,7 +232,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 4;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -276,7 +276,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 2;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -303,7 +303,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 4;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -319,7 +319,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 4;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -358,7 +358,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 2;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -379,7 +379,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         int addressCount = 2;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -398,7 +398,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
 
     protected void doTestFilterConnectionsByEncrypted() throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address queue = AddressUtils.createQueueAddressObject("queue-via-web-connections-encrypted", getDefaultPlan(AddressType.QUEUE));
@@ -425,7 +425,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestFilterConnectionsByUser() throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address queue = AddressUtils.createQueueAddressObject("queue-via-web-connections-users", getDefaultPlan(AddressType.QUEUE));
@@ -478,7 +478,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestFilterConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -500,7 +500,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
@@ -520,7 +520,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestFilterConnectionsByContainerId() throws Exception {
         int connectionCount = 5;
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address dest = AddressUtils.createQueueAddressObject("queue-via-web", getDefaultPlan(AddressType.QUEUE));
@@ -545,7 +545,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestSortConnectionsByContainerId() throws Exception {
         int connectionCount = 5;
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address dest = AddressUtils.createQueueAddressObject("queue-via-web", getDefaultPlan(AddressType.QUEUE));
@@ -567,7 +567,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestMessagesMetrics() throws Exception {
         int msgCount = 19;
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address dest = AddressUtils.createQueueAddressObject("queue-via-web", getDefaultPlan(AddressType.QUEUE));
@@ -596,7 +596,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     protected void doTestClientsMetrics() throws Exception {
         int senderCount = 5;
         int receiverCount = 10;
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address dest = AddressUtils.createQueueAddressObject("queue-via-web", getDefaultPlan(AddressType.QUEUE));
@@ -620,7 +620,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     protected void doTestCanOpenConsolePage(UserCredentials credentials) throws Exception {
         try {
-            consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+            consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                     sharedAddressSpace, credentials);
             consoleWebPage.openWebConsolePage();
             log.info(String.format("User %s successfully authenticated", credentials));
@@ -644,7 +644,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             testString = String.join("", Collections.nCopies(24, "10charHere"));
         }
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
 
@@ -677,7 +677,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         String testString = "addressname";
         Address destValid = AddressUtils.createQueueAddressObject(testString, getDefaultPlan(AddressType.QUEUE));
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
@@ -696,7 +696,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     }
 
     protected void doTestCreateAddressWithSymbolsAt61stCharIndex(Address... destinations) throws Exception {
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
@@ -715,7 +715,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         Address destTopic = AddressUtils.createAddressObject(AddressType.TOPIC, "test-addr-topic",
                 getDefaultPlan(AddressType.TOPIC), Optional.empty());
 
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), addressApiClient,
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();

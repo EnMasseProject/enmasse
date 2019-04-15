@@ -202,7 +202,6 @@ public class ApiServerTest extends TestBase {
             ConsoleWebPage console = new ConsoleWebPage(
                     selenium,
                     getConsoleRoute(addressSpace),
-                    addressApiClient,
                     addressSpace,
                     luckyUser);
             console.openWebConsolePage();
