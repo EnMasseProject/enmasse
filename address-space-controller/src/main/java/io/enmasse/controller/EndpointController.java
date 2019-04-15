@@ -155,6 +155,10 @@ public class EndpointController implements Controller {
                     if (service != null && service.getSpec().getPorts().size() > 0) {
                         statusBuilder.withExternalHost(service.getSpec().getLoadBalancerIP());
                         statusBuilder.withExternalPorts(endpointInfo.endpointStatus.getServicePorts());
+                        Secret certSecret = client.secrets().inNamespace(namespace).withName(KubeUtil.getExternalCertSecretName(endpointInfo.endpointSpec.getService(), addressSpace)).get();
+                        if (certSecret != null) {
+                            statusBuilder.withCert(certSecret.getData().get("tls.crt"));
+                        }
                     }
                     break;
             }

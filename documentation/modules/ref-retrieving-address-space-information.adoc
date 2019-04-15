@@ -13,7 +13,7 @@ The following table shows the commands for retrieving address space information,
 |To retrieve the... |Run this command:
 |{ConsoleName} host name |`{cmdcli} get routes console -o jsonpath={.spec.host}`
 |status of an address space |`{cmdcli} get addressspace myspace -o jsonpath={.status.isReady}`
-|base64-encoded PEM certificate for the messaging endpoint |`{cmdcli} get addressspace myspace -o 'jsonpath={.status.endpointStatuses[?(@.name=="messaging")].cert}'`
+|base64-encoded PEM certificate for the messaging endpoint |`{cmdcli} get addressspace myspace -o 'jsonpath={.status.caCert}'`
 |host name for the messaging endpoint |`{cmdcli} get addressspace myspace -o 'jsonpath={.status.endpointStatuses[?(@.name=="messaging")].externalHost}'`
 |===
 

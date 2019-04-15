@@ -22,7 +22,7 @@ mvn package -am
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].cert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
+{cmdcli} -n myapp get addressspace iot -o jsonpath={.status.caCert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
 ----
 . Run the consumer application:
 +
