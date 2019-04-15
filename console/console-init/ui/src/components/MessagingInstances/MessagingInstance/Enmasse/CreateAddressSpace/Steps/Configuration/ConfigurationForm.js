@@ -43,7 +43,9 @@ class ConfigurationForm extends React.Component {
     newInstance.typeStandard = value;
     newInstance.typeBrokered = !value;
     newInstance.plan = this.props.standardPlans[0];
-    newInstance.authenticationService = this.props.standardAuthenticationServices[0];
+    if (!this.props.standardAuthenticationServices.find(authService => authService==newInstance.authenticationService)) {
+      newInstance.authenticationService = this.props.standardAuthenticationServices[0];
+    }
 
     this.props.onChange(this.isValid(newInstance), newInstance);
     this.setState({newInstance: newInstance});
@@ -54,7 +56,9 @@ class ConfigurationForm extends React.Component {
     newInstance.typeBrokered = value;
     newInstance.typeStandard = !value;
     newInstance.plan = this.props.brokeredPlans[0];
-    newInstance.authenticationService = this.props.brokeredAuthenticationServices[0];
+    if (!this.props.brokeredAuthenticationServices.find(authService => authService==newInstance.authenticationService)) {
+      newInstance.authenticationService = this.props.brokeredAuthenticationServices[0];
+    }
 
     this.props.onChange(this.isValid(newInstance), newInstance);
     this.setState({newInstance: newInstance});
@@ -69,7 +73,7 @@ class ConfigurationForm extends React.Component {
 
 
   isValid(instance) {
-    return Boolean(instance.name && instance.plan && instance.namespace && (instance.typeBrokered || instance.typeStandard));
+    return Boolean(instance.authenticationService && instance.name && instance.plan && instance.namespace && (instance.typeBrokered || instance.typeStandard));
   }
 
   render() {
@@ -101,8 +105,8 @@ class ConfigurationForm extends React.Component {
           typeBrokered={newInstance.typeBrokered}
         />
         <AuthenticationServiceInput
-          newInstance={newInstance.authenticationService}
-          handleNamespaceChange={this.handleAuthenticationServiceChange}
+          authenticationService={newInstance.authenticationService}
+          handleAuthenticationServiceChange={this.handleAuthenticationServiceChange}
           brokeredAuthenticationServices={this.props.brokeredAuthenticationServices}
           standardAuthenticationServices={this.props.standardAuthenticationServices}
           typeStandard={newInstance.typeStandard}

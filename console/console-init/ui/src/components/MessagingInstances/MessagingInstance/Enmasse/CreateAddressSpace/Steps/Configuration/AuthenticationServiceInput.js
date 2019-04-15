@@ -14,8 +14,8 @@ const authenticationServiceInput = (props) => {
       <FormSelect
         value={props.authenticationService}
         onChange={props.handleAuthenticationServiceChange}
-        id="form-namespace"
-        name="form-namespace"
+        id="form-authservice"
+        name="form-authservice"
       >
         {
           authServices.map((option, index) => (

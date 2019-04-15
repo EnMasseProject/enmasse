@@ -7,7 +7,6 @@ import {loadMessagingInstance, loadMessagingInstances, deleteMessagingInstances}
 class InstanceLoader {
 
   translateNamespaces = namespaces => {
-    console.log('returning : ',namespaces.items.map(namespace => namespace.metadata.name));
     return namespaces.items.map(namespace => namespace.metadata.name);
   };
 
@@ -34,7 +33,6 @@ class InstanceLoader {
     return axios.get('apis/project.openshift.io/v1/')
       .then(() => {
         return this.loadNamespaces().then(namespaces => {
-            console.log('loadInstances....1');
             let promises = [];
             namespaces.forEach(namespace => {
               promises.push(loadMessagingInstance(namespace));
