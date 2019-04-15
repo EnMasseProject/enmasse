@@ -57,7 +57,7 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "iot-gc", "IOT_GC_IMAGE")
 	setIfEnvPresent(data, "iot-http-adapter", "IOT_HTTP_ADAPTER_IMAGE")
 	setIfEnvPresent(data, "iot-mqtt-adapter", "IOT_MQTT_ADAPTER_IMAGE")
-	setIfEnvPresent(data, "iot-tenant-service", "IOT_TENANT_SERVICE_IMAGE_IMAGE")
+	setIfEnvPresent(data, "iot-tenant-service", "IOT_TENANT_SERVICE_IMAGE")
 	setIfEnvPresent(data, "iot-proxy-configurator", "IOT_PROXY_CONFIGURATOR_IMAGE")
 	setIfEnvPresent(data, "qdrouterd-base", "QDROUTERD_BASE_IMAGE")
 	setIfEnvPresent(data, "none-authservice", "NONE_AUTHSERVICE_IMAGE")
