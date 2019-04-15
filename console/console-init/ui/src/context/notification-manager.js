@@ -32,6 +32,7 @@ export class NotificationProvider extends Component {
         content: content,
         description: description
       };
+      setTimeout(()=>{this.remove(item.id)}, 8000);
       return {notifications: [...state.notifications, item]};
     });
   };
