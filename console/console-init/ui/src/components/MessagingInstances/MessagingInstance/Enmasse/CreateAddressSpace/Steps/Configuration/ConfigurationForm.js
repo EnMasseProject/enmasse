@@ -4,6 +4,7 @@ import {
   Title
 } from '@patternfly/react-core';
 
+import AuthenticationServiceInput from './AuthenticationServiceInput';
 import PlansInput from './PlansInput';
 import AddressSpaceTypeInput from './AddressSpaceTypeInput';
 import NameInput from './NameInput';
@@ -30,11 +31,19 @@ class ConfigurationForm extends React.Component {
     this.setState({newInstance: newInstance});
   }
 
+  handleAuthenticationServiceChange = authenticationService => {
+    var newInstance = {...this.state.newInstance};
+    newInstance.authenticationService = authenticationService;
+    this.props.onChange(this.isValid(newInstance), newInstance);
+    this.setState({newInstance: newInstance});
+  }
+
   handleTypeStandardChange = (value) => {
     var newInstance = {...this.state.newInstance};
     newInstance.typeStandard = value;
     newInstance.typeBrokered = !value;
     newInstance.plan = this.props.standardPlans[0];
+    newInstance.authenticationService = this.props.standardAuthenticationServices[0];
 
     this.props.onChange(this.isValid(newInstance), newInstance);
     this.setState({newInstance: newInstance});
@@ -45,6 +54,7 @@ class ConfigurationForm extends React.Component {
     newInstance.typeBrokered = value;
     newInstance.typeStandard = !value;
     newInstance.plan = this.props.brokeredPlans[0];
+    newInstance.authenticationService = this.props.brokeredAuthenticationServices[0];
 
     this.props.onChange(this.isValid(newInstance), newInstance);
     this.setState({newInstance: newInstance});
@@ -83,10 +93,18 @@ class ConfigurationForm extends React.Component {
           handleTypeBrokeredChange={this.handleTypeBrokeredChange}
         />
         <PlansInput
-          newInstance={newInstance}
+          plan={newInstance.plan}
           handlePlanChange={this.handlePlanChange}
           standardPlans={this.props.standardPlans}
           brokeredPlans={this.props.brokeredPlans}
+          typeStandard={newInstance.typeStandard}
+          typeBrokered={newInstance.typeBrokered}
+        />
+        <AuthenticationServiceInput
+          newInstance={newInstance.authenticationService}
+          handleNamespaceChange={this.handleAuthenticationServiceChange}
+          brokeredAuthenticationServices={this.props.brokeredAuthenticationServices}
+          standardAuthenticationServices={this.props.standardAuthenticationServices}
           typeStandard={newInstance.typeStandard}
           typeBrokered={newInstance.typeBrokered}
         />

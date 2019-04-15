@@ -5,22 +5,27 @@ const translateAddressSpaces = addressSpaces => {
 
   let translation = addressSpaces.items.map(namespace => {
 
-      let consoleUrl = null;
-      namespace.status.endpointStatuses.forEach(function(endpoint,index) {
-        if (endpoint.name == 'console') {
-          consoleUrl = 'https://'+endpoint.externalHost;
-        }
-      });
-
-      return new MessagingSpace(namespace.metadata.name,
-        namespace.metadata.namespace,
-        namespace.kind,
-        namespace.spec.type,
-        namespace.metadata.creationTimestamp,
-        namespace.status.isReady,
-        consoleUrl);
+    let consoleUrl = null;
+    namespace.status.endpointStatuses.forEach(function (endpoint, index) {
+      if (endpoint.name == 'console') {
+        consoleUrl = 'https://' + endpoint.externalHost;
+      }
     });
-    return translation;
+
+    return new MessagingSpace(namespace.metadata.name,
+      namespace.metadata.namespace,
+      namespace.kind,
+      namespace.spec.type,
+      namespace.metadata.creationTimestamp,
+      namespace.status.isReady,
+      consoleUrl);
+  });
+  return translation;
+}
+
+const getAuthenticationServices = authenticationServices => {
+  console.log(authenticationServices);
+  return authenticationServices.spec.authenticationServices;
 }
 
 const getPlanNames = plans => plans.spec.plans.map(plan => plan.name);
@@ -44,11 +49,29 @@ export function loadMessagingInstance(namespace) {
     });
 }
 
+export function loadStandardAuthenticationServices() {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/standard')
+    .then(response => getAuthenticationServices(response.data))
+    .catch(error => {
+      console.log(error);
+      throw(error);
+    });
+}
+
+export function loadBrokeredAuthenticationServices() {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/brokered')
+    .then(response => getAuthenticationServices(response.data))
+    .catch(error => {
+      console.log(error);
+      throw(error);
+    });
+}
+
 export function loadStandardAddressPlans() {
   return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/standard')
     .then(response => getPlanNames(response.data))
     .catch(error => {
-       console.log(error);
+      console.log(error);
       throw(error);
     });
 }
@@ -83,7 +106,11 @@ export function createNewAddressSpace(instance) {
     },
     spec: {
       plan: instance.plan,
-      type: (instance.typeStandard ? 'standard' : 'brokered')
+      type: (instance.typeStandard ? 'standard' : 'brokered'),
+      authenticationService:
+        {
+          name: instance.authenticationService
+        }
     }
   })
     .then(response => console.log('CREATE successful: ', response))

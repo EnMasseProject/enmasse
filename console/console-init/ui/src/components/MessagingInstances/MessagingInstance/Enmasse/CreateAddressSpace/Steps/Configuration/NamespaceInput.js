@@ -1,8 +1,6 @@
 import React from 'react';
 import {FormGroup, FormSelect, FormSelectOption, TextInput} from "@patternfly/react-core";
 
-import InstanceLoader from '../../../../InstanceLoader';
-
 const namespaceInput = (props) => {
 
 
@@ -34,7 +32,7 @@ const namespaceInput = (props) => {
       isRequired
       label="Namespace"
       fieldId="form-namespace">
-      {InstanceLoader.openshiftApiAvailable ? selectBox : textField}
+      {props.namespaces.length >0 ? selectBox : textField}
     </FormGroup>
   );
 }

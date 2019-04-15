@@ -3,7 +3,6 @@ import React from 'react';
 import {configure, shallow} from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 
-import InstanceLoader from '../../../../InstanceLoader';
 import NamespaceInput from './NamespaceInput';
 import {FormSelectOption} from "@patternfly/react-core";
 
@@ -20,7 +19,6 @@ describe('< Namespace Input />', () => {
 
   it('If running in Openshift show the select box', () => {
 
-    InstanceLoader.openshiftApiAvailable = true;
     wrapper = shallow(<NamespaceInput namespaces={namespaces} handleNamespaceChange={()=>{}}/>);
 
     expect(wrapper.exists()).toBe(true);
@@ -30,8 +28,7 @@ describe('< Namespace Input />', () => {
 
   it('If running in Kubernetes show the select box', () => {
 
-    InstanceLoader.openshiftApiAvailable = false;
-    wrapper = shallow(<NamespaceInput namespaces={namespaces} handleNamespaceChange={()=>{}}/>);
+    wrapper = shallow(<NamespaceInput namespaces={[]} handleNamespaceChange={()=>{}}/>);
 
     expect(wrapper.exists()).toBe(true);
     expect(wrapper.find('TextInput')).toHaveLength(1);

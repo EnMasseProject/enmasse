@@ -3,7 +3,13 @@ import {Button, BackgroundImageSrc, Wizard} from '@patternfly/react-core';
 
 import ConfigurationForm from './Steps/Configuration/ConfigurationForm';
 import Review from './Steps/Review';
-import {createNewAddressSpace, loadBrokeredAddressPlans, loadStandardAddressPlans} from '../EnmasseAddressSpaces';
+import {
+  createNewAddressSpace,
+  loadBrokeredAddressPlans,
+  loadStandardAddressPlans,
+  loadStandardAuthenticationServices,
+  loadBrokeredAuthenticationServices
+} from '../EnmasseAddressSpaces';
 import InstanceLoader from '../../InstanceLoader';
 import {NotificationConsumer, NotificationProvider} from '../../../../../context/notification-manager';
 
@@ -19,11 +25,14 @@ class CreateAddressSpace extends React.Component {
       namespace: '',
       typeStandard: '',
       typeBrokered: '',
-      plan: ''
+      plan: '',
+      authenticationService: '',
     },
     brokeredPlans: [],
     standardPlans: [],
-    namespaces: []
+    namespaces: [],
+    brokeredAuthenticationServices: [],
+    standardAuthenticationServices: []
   };
 
   state = {...this.initialState};
@@ -42,6 +51,20 @@ class CreateAddressSpace extends React.Component {
       })
       .catch(error => {
         console.log("Couldn't set the brokered plans: " + error);
+      });
+    loadStandardAuthenticationServices()
+      .then(authenticationServices => {
+        this.state.standardAuthenticationServices = authenticationServices;
+      })
+      .catch(error => {
+        console.log("Couldn't set the authenticationServices: " + error);
+      });
+    loadBrokeredAuthenticationServices()
+      .then(authenticationServices => {
+        this.state.brokeredAuthenticationServices = authenticationServices;
+      })
+      .catch(error => {
+        console.log("Couldn't set the authenticationServices: " + error);
       });
     InstanceLoader.loadNamespaces()
       .then(namespaces => {
@@ -63,6 +86,7 @@ class CreateAddressSpace extends React.Component {
 
   resetConfiguration = () => {
     this.state.newInstance.namespace = this.initialState.newInstance.namespace;
+    this.state.newInstance.authenticationService = this.initialState.newInstance.authenticationService;
     this.state.newInstance.plan = '';
     this.state.newInstance.typeBrokered = this.state.newInstance.typeStandard = false;
     this.state.newInstance.name = '';
@@ -91,7 +115,7 @@ class CreateAddressSpace extends React.Component {
     createNewAddressSpace(this.state.newInstance)
       .then(response => {
         this.props.reload();
-        addNotification('success', 'Successfully created '+name);
+        addNotification('success', 'Successfully created '+ name);
       })
       .catch(error => {
         console.log('Failed to create address space <' + name + '>', error);
@@ -120,6 +144,8 @@ class CreateAddressSpace extends React.Component {
                                        onChange={this.onConfigurationFormChange}
                                        standardPlans={this.state.standardPlans}
                                        brokeredPlans={this.state.brokeredPlans}
+                                       standardAuthenticationServices={this.state.standardAuthenticationServices}
+                                       brokeredAuthenticationServices={this.state.brokeredAuthenticationServices}
                                        namespaces={this.state.namespaces}/>),
         enableNext: isConfigurationFormValid
       },
