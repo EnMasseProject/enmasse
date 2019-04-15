@@ -38,12 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-/*
-TODO TLS for the HTTPD side car
-TODO Tidy up (minimise) Apache HTTPD conf
-TODO Tidy up this code - extract utility methods
-TODO unit tests - having problem with client when interacting with openshift API endpoints?
-*/
 const CONSOLE_NAME = "console"
 
 var log = logf.Log.WithName("controller_consoleservice")
