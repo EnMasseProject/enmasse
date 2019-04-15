@@ -80,6 +80,7 @@ objects:
           infraType: standard
           infraUuid: ${INFRA_UUID}
       spec:
+        serviceAccountName: address-space-admin
         containers:
         - env:
           - name: INFRA_UUID
