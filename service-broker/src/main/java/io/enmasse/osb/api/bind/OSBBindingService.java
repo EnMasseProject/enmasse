@@ -182,8 +182,10 @@ public class OSBBindingService extends OSBServiceBase {
         log.info("Received unbind request for instance {}, binding {}", instanceId, bindingId);
         verifyAuthorized(securityContext, ResourceVerb.get);
 
-        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId)
-            .orElseThrow(() -> Exceptions.notFoundException("Service instance " + instanceId + " does not exist"));
+        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId).orElse(null);
+        if (addressSpace == null) {
+            return Response.status(Response.Status.GONE).entity("{}").build();
+        }
 
         try {
             String username = "user-" + bindingId;
@@ -191,7 +193,7 @@ public class OSBBindingService extends OSBServiceBase {
             if(deleteUser(addressSpace, username)) {
                 return Response.ok(new EmptyResponse()).build();
             } else {
-                return Response.status(Response.Status.GONE).build();
+                return Response.status(Response.Status.GONE).entity("{}").build();
             }
         } catch (Exception e) {
             throw new InternalServerErrorException("Exception interacting with auth service", e);

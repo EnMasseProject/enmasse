@@ -604,7 +604,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         try {
             SeleniumManagement.deployFirefoxApp();
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressApiClient, addressSpace, defaultCredentials);
+            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, defaultCredentials);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
 
@@ -1022,8 +1022,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         log.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
     }
 
-    protected void deleteAddressSpaceCreatedBySC(String namespace, AddressSpace addressSpace) throws Exception {
-        TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, namespace, logCollector);
+    protected void deleteAddressSpaceCreatedBySC(AddressSpace addressSpace) throws Exception {
+        TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, logCollector);
     }
 
     protected List<Address> getAllStandardAddresses() {

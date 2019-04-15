@@ -106,8 +106,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     void testCreateAddressSpaceViaCmdNonAdminUser() throws Exception {
         String namespace = Credentials.namespace();
         UserCredentials user = Credentials.userCredentials();
-        try {
-            AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
+        try (AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace)) {
             AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
             JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
@@ -134,11 +133,10 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     void testCliOutput() throws Exception {
         String namespace = "cli-output";
         UserCredentials user = new UserCredentials("pepan", "pepan");
-        try {
+        try (AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace)) {
             //===========================
             // AddressSpace part
             //===========================
-            AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace);
             AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
             AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-standard", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
 

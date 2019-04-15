@@ -202,7 +202,6 @@ public class ApiServerTest extends TestBase {
             ConsoleWebPage console = new ConsoleWebPage(
                     selenium,
                     getConsoleRoute(addressSpace),
-                    addressApiClient,
                     addressSpace,
                     luckyUser);
             console.openWebConsolePage();
@@ -355,14 +354,14 @@ public class ApiServerTest extends TestBase {
         String namespace1 = "test-namespace-1";
         String namespace2 = "test-namespace-2";
 
+        AddressApiClient nameSpaceClient1 = new AddressApiClient(kubernetes, namespace1);
+        AddressApiClient nameSpaceClient2 = new AddressApiClient(kubernetes, namespace2);
+
         try {
             kubernetes.createNamespace(namespace1);
             kubernetes.createNamespace(namespace2);
 
             log.info("--------------- Address space part -------------------");
-
-            AddressApiClient nameSpaceClient1 = new AddressApiClient(kubernetes, namespace1);
-            AddressApiClient nameSpaceClient2 = new AddressApiClient(kubernetes, namespace2);
 
             AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("brokered", namespace1, AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
             AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard", namespace2, AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
@@ -402,6 +401,8 @@ public class ApiServerTest extends TestBase {
                             .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).collect(Collectors.toList()).size(),
                     is(2));
         } finally {
+            nameSpaceClient1.close();
+            nameSpaceClient2.close();
             kubernetes.deleteNamespace(namespace1);
             kubernetes.deleteNamespace(namespace2);
         }

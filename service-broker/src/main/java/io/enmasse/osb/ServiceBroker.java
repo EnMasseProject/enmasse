@@ -79,7 +79,7 @@ public class ServiceBroker extends AbstractVerticle {
             if (route == null) {
                 return null;
             }
-            return String.format("https://%s/console/%s", route.getSpec().getHost(), addressSpace.getMetadata().getName());
+            return String.format("https://%s/console/%s/%s", route.getSpec().getHost(), addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
         };
 
         vertx.deployVerticle(new HTTPServer(addressSpaceApi, schemaProvider, authApi, options.getCertDir(), options.getEnableRbac(), userApi, options.getListenPort(), consoleProxy, authenticationServiceRegistry),

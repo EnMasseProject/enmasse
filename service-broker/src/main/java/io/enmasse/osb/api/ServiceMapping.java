@@ -147,7 +147,15 @@ public class ServiceMapping {
             instanceNameProperty.setMinLength(1);
             instanceNameProperty.setMaxLength(64);
             instanceNameProperty.setPattern("^[a-z][a-z0-9-]{0,63}$");
+
+            StringSchema instanceNamespaceProperty = new StringSchema();
+            instanceNamespaceProperty.setDescription("The namespace of the address space to create");
+            instanceNamespaceProperty.setRequired(true);
+            instanceNamespaceProperty.setMinLength(1);
+            instanceNamespaceProperty.setMaxLength(64);
+            instanceNamespaceProperty.setPattern("^[a-z][a-z0-9-]{0,63}$");
             serviceCreateParameters.putProperty("name", instanceNameProperty);
+            serviceCreateParameters.putProperty("namespace", instanceNamespaceProperty);
             InputParameters createParametersSchema = new InputParameters(serviceCreateParameters);
             InputParameters updateParametersSchema = null;
             ServiceInstanceSchema instanceSchema = new ServiceInstanceSchema(createParametersSchema, updateParametersSchema);

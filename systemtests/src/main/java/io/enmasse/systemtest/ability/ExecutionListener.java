@@ -57,8 +57,8 @@ public class ExecutionListener implements TestExecutionListener {
                     iotProjectClient.listAllIoTProjects().forEach(project -> {
                         log.info("iot project '{}' will be removed", project.getMetadata().getName());
                         String projectNamespace = project.getMetadata().getNamespace();
-                        try {
-                            IoTUtils.deleteIoTProjectAndWait(kube, new IoTProjectApiClient(kube, projectNamespace), project, new AddressApiClient(kube, projectNamespace));
+                        try (AddressApiClient addressApiClient = new AddressApiClient(kube, projectNamespace)) {
+                            IoTUtils.deleteIoTProjectAndWait(kube, new IoTProjectApiClient(kube, projectNamespace), project, addressApiClient);
                         } catch ( Exception e ) {
                             e.printStackTrace();
                         }

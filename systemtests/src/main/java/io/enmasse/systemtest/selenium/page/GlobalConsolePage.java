@@ -175,7 +175,9 @@ public class GlobalConsolePage implements IWebPage {
         selenium.clickOnItem(getNextButton());
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
-        AddressSpaceUtils.waitForAddressSpaceReady(new AddressApiClient(Kubernetes.getInstance(), addressSpace.getMetadata().getNamespace()), addressSpace);
+        try (AddressApiClient addressApiClient = new AddressApiClient(Kubernetes.getInstance(), addressSpace.getMetadata().getNamespace())) {
+            AddressSpaceUtils.waitForAddressSpaceReady(addressApiClient, addressSpace);
+        }
         selenium.refreshPage();
     }
 
@@ -191,7 +193,7 @@ public class GlobalConsolePage implements IWebPage {
     public ConsoleWebPage openAddressSpaceConsolePage(AddressSpace addressSpace) throws Exception {
         AddressSpaceWebItem item = (AddressSpaceWebItem) selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getConsoleRoute());
-        ConsoleWebPage consolePage =  new ConsoleWebPage(selenium, new AddressApiClient(Kubernetes.getInstance()), addressSpace, credentials);
+        ConsoleWebPage consolePage = new ConsoleWebPage(selenium, addressSpace, credentials);
         consolePage.login();
         return consolePage;
     }

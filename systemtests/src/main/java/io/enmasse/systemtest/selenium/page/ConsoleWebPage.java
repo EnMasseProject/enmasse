@@ -35,29 +35,26 @@ public class ConsoleWebPage implements IWebPage {
     private static Logger log = CustomLogger.getLogger();
     private SeleniumProvider selenium;
     private String consoleRoute;
-    private AddressApiClient addressApiClient;
     private AddressSpace defaultAddressSpace;
     private ToolbarType toolbarType;
     private UserCredentials credentials;
     private GlobalConsolePage globalConsole;
 
-    public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace) throws Exception {
+    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace) throws Exception {
         this.selenium = selenium;
-        this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
         this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), null);
     }
 
-    public ConsoleWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
+    public ConsoleWebPage(SeleniumProvider selenium, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
         this.selenium = selenium;
-        this.addressApiClient = addressApiClient;
         this.defaultAddressSpace = defaultAddressSpace;
         this.credentials = credentials;
         this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
     }
 
-    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressApiClient addressApiClient, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
-        this(selenium, addressApiClient, defaultAddressSpace);
+    public ConsoleWebPage(SeleniumProvider selenium, String consoleRoute, AddressSpace defaultAddressSpace, UserCredentials credentials) throws Exception {
+        this(selenium, defaultAddressSpace);
         this.consoleRoute = consoleRoute;
         this.credentials = credentials;
         this.globalConsole = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
@@ -677,7 +674,7 @@ public class ConsoleWebPage implements IWebPage {
         assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
 
         if (waitForReady)
-            AddressUtils.waitForDestinationsReady(addressApiClient, defaultAddressSpace,
+            AddressUtils.waitForDestinationsReady(new AddressApiClient(Kubernetes.getInstance(), defaultAddressSpace.getMetadata().getNamespace()), defaultAddressSpace,
                     new TimeoutBudget(5, TimeUnit.MINUTES), destination);
     }
 
