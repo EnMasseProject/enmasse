@@ -1,8 +1,6 @@
 import React from 'react';
 import {FormGroup, FormSelect, FormSelectOption, TextInput} from "@patternfly/react-core";
 
-import InstanceLoader from '../../../../InstanceLoader';
-
 const namespaceInput = (props) => {
 
 
