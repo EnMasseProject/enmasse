@@ -167,9 +167,10 @@ class MessagingInstances extends React.Component {
         let status = <Aux>{(icon)} {instance.phase}</Aux>;
 
         let nameLink = (instance.isReady) ?
-              <a style={nameFont} href={instance.consoleUrl}>{instance.name}</a> :
-              <Text style={nameFont} >{instance.name}</Text>;
+          <a style={nameFont} href={instance.consoleUrl}>{instance.name}</a> :
+          <Text style={nameFont} >{instance.name}</Text>;
 
+        let type = (instance.type == 'standard') ? 'Standard' : 'Brokered';
         return {
           cells: [
             {title: <Aux>{(nameLink)}<Text style={namespaceFont} >{instance.namespace}</Text></Aux>},
