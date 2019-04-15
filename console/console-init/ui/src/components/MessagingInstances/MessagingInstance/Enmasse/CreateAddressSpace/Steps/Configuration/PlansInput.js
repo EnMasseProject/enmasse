@@ -11,7 +11,7 @@ const plansFormGroup = (props) => {
       label="Address plan"
       fieldId="form-planName">
       <FormSelect
-        value={props.newInstance.plan}
+        value={props.plan}
         onChange={props.handlePlanChange}
         id="form-planName"
         name="form-planName"

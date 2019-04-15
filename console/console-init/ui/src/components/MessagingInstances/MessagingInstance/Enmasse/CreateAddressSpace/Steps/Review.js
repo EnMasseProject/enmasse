@@ -40,6 +40,9 @@ class Review extends React.Component {
                 <FormGroup label="Address plan" fieldId={"plan"}>
                   <Text>{newInstance.plan}</Text>
                 </FormGroup>
+                <FormGroup label="Authentication service" fieldId={"plan"}>
+                  <Text>{newInstance.authenticationService}</Text>
+                </FormGroup>
               </Form>
             </CardBody>
           </Card>
