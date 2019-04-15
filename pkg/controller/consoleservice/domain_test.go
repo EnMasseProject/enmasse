@@ -43,6 +43,6 @@ func doTest(t *testing.T, expected *string, fqdns []string) {
 			t.Error(fmt.Sprintf("Unexpected common domain. Expecting nil got %s ", *result))
 		}
 	} else if *result != *expected {
-		t.Error(fmt.Sprintf("Unexpected common domain. Expecting %s, got %s ", expected, *result))
+		t.Error(fmt.Sprintf("Unexpected common domain. Expecting %s, got %s ", *expected, *result))
 	}
 }
