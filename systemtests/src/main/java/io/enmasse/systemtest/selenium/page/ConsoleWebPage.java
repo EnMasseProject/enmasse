@@ -674,7 +674,7 @@ public class ConsoleWebPage implements IWebPage {
         assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
 
         if (waitForReady)
-            AddressUtils.waitForDestinationsReady(new AddressApiClient(Kubernetes.getInstance(), destination.getMetadata().getNamespace()), defaultAddressSpace,
+            AddressUtils.waitForDestinationsReady(new AddressApiClient(Kubernetes.getInstance(), defaultAddressSpace.getMetadata().getNamespace()), defaultAddressSpace,
                     new TimeoutBudget(5, TimeUnit.MINUTES), destination);
     }
 
