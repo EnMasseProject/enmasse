@@ -182,8 +182,11 @@ public class OSBBindingService extends OSBServiceBase {
         log.info("Received unbind request for instance {}, binding {}", instanceId, bindingId);
         verifyAuthorized(securityContext, ResourceVerb.get);
 
-        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId)
-            .orElseThrow(() -> Exceptions.notFoundException("Service instance " + instanceId + " does not exist"));
+        AddressSpace addressSpace = findAddressSpaceByInstanceId(instanceId).orElse(null);
+        if (addressSpace == null) {
+            return Response.status(Response.Status.GONE).build();
+
+        }
 
         try {
             String username = "user-" + bindingId;
