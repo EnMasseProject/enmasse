@@ -471,15 +471,15 @@ public class TestUtils {
         kubernetes.replaceConfigMap(addrSpace.getMetadata().getNamespace(), destConfigMap);
     }
 
-    public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, String namespace, GlobalLogCollector logCollector) throws Exception {
+    public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
         logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpaceCreatedBySC");
-        kubernetes.deleteNamespace(namespace);
-        waitForNamespaceDeleted(kubernetes, namespace);
+        kubernetes.deleteNamespace(addressSpace.getMetadata().getNamespace());
+        waitForNamespaceDeleted(kubernetes, addressSpace.getMetadata().getNamespace());
         AddressSpaceUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
     }

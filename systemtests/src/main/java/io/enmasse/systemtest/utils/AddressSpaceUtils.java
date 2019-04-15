@@ -200,8 +200,20 @@ public class AddressSpaceUtils {
         return convertToAddressSpaceObject(addressSpaceJson).get(0);
     }
 
+    public static AddressSpace getAddressSpaceObject(AddressApiClient apiClient, String addressSpaceName, String namespace) throws Exception {
+        JsonObject addressSpaceJson = apiClient.getAddressSpace(addressSpaceName, namespace);
+        log.info("address space received {}", addressSpaceJson.toString());
+        return convertToAddressSpaceObject(addressSpaceJson).get(0);
+    }
+
     public static void syncAddressSpaceObject(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
-        AddressSpace results = jsonToAdressSpace(apiClient.getAddressSpace(addressSpace.getMetadata().getName()));
+        JsonObject json = null;
+        if (addressSpace.getMetadata().getNamespace() != null) {
+            json = apiClient.getAddressSpace(addressSpace.getMetadata().getName(), addressSpace.getMetadata().getNamespace());
+        } else {
+            json = apiClient.getAddressSpace(addressSpace.getMetadata().getName());
+        }
+        AddressSpace results = jsonToAdressSpace(json);
         addressSpace.setSpec(results.getSpec());
         addressSpace.setMetadata(results.getMetadata());
         addressSpace.setStatus(results.getStatus());

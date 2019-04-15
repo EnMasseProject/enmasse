@@ -72,7 +72,7 @@ public class OSBProvisioningService extends OSBServiceBase {
         }
 
         String name = request.getParameter("name").orElse(service.getName() + "-" + shortenUuid(instanceId));
-        String namespace = request.getParameter("namespace").orElse(service.getName() + "-" + shortenUuid(instanceId));
+        String namespace = request.getParameter("namespace").orElseThrow(() -> Exceptions.badRequestException("Parameter namespace not set"));
         Optional<AddressSpace> existingAddressSpace = findAddressSpaceByInstanceId(instanceId);
 
         if (existingAddressSpace.isPresent()) {

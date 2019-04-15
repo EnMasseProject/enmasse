@@ -234,9 +234,10 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(getAddToProjectDropDown(), "Add to project dropdown");
     }
 
-    public String provisionAddressSpaceViaSC(AddressSpace addressSpace, String projectName) throws Exception {
+    public String provisionAddressSpaceViaSC(AddressSpace addressSpace) throws Exception {
         log.info("Service for addressSpace {} will be provisioned", addressSpace);
         openOpenshiftPage();
+        String projectName = addressSpace.getMetadata().getNamespace();
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString())) {
             createAddressSpaceBrokered(addressSpace.getMetadata().getName(), projectName);
         } else {
@@ -250,9 +251,7 @@ public class OpenshiftWebPage implements IWebPage {
         waitForRedirectToService();
         String serviceId = getProvisionedServiceItem().getId();
         waitUntilServiceIsReady();
-        try (AddressApiClient addressApiClient = new AddressApiClient(Kubernetes.getInstance(), projectName)) {
-            addressSpace = AddressSpaceUtils.getAddressSpaceObject(addressApiClient, addressSpace.getMetadata().getName());
-        }
+        addressSpace = AddressSpaceUtils.getAddressSpaceObject(addressApiClient, addressSpace.getMetadata().getName(), addressSpace.getMetadata().getNamespace());
         return serviceId;
     }
 
@@ -330,11 +329,11 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(selenium.getDriver().findElement(By.className("projects-view-all")), "Show all projects");
     }
 
-    public String createBinding(String projectName, String receiveAddress, String sendAddresses) throws Exception {
-        log.info("Binding in namespace {} will be created", projectName);
+    public String createBinding(AddressSpace addressSpace, String receiveAddress, String sendAddresses) throws Exception {
+        log.info("Binding in namespace {} will be created", addressSpace.getMetadata().getNamespace());
         openOpenshiftPage();
         clickOnShowAllProjects();
-        selenium.clickOnItem(getProjectListItem(projectName), projectName);
+        selenium.clickOnItem(getProjectListItem(addressSpace.getMetadata().getNamespace()), addressSpace.getMetadata().getNamespace());
         waitForRedirectToService();
         selenium.clickOnItem(getProvisionedServiceItem().getServiceActionCreateBinding(), "Create Binding");
         next();
@@ -351,7 +350,8 @@ public class OpenshiftWebPage implements IWebPage {
         return bindingId;
     }
 
-    public void removeBinding(String namespace, String bindingID) throws Exception {
+    public void removeBinding(AddressSpace addressSpace, String bindingID) throws Exception {
+        String namespace = addressSpace.getMetadata().getNamespace();
         log.info("Binding {} in namespace {} will be removed", bindingID, namespace);
         openOpenshiftPage();
         clickOnShowAllProjects();
@@ -364,9 +364,10 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(getModalWindow().findElement(By.className("btn-danger")));
     }
 
-    public BindingSecretData viewSecretOfBinding(String namespace, String bindingID) throws Exception {
+    public BindingSecretData viewSecretOfBinding(AddressSpace addressSpace, String bindingID) throws Exception {
         openOpenshiftPage();
         clickOnShowAllProjects();
+        String namespace = addressSpace.getMetadata().getNamespace();
         selenium.clickOnItem(getProjectListItem(namespace), namespace);
         waitForRedirectToService();
         ProvisionedServiceItem serviceItem = getProvisionedServiceItem();
@@ -379,10 +380,10 @@ public class OpenshiftWebPage implements IWebPage {
         return secretData;
     }
 
-    public ConsoleWebPage clickOnDashboard(String namespace, AddressSpace addressSpace) throws Exception {
+    public ConsoleWebPage clickOnDashboard(AddressSpace addressSpace) throws Exception {
         openOpenshiftPage();
         clickOnShowAllProjects();
-        selenium.clickOnItem(getProjectListItem(namespace), namespace);
+        selenium.clickOnItem(getProjectListItem(addressSpace.getMetadata().getNamespace()), addressSpace.getMetadata().getNamespace());
         waitForRedirectToService();
         ProvisionedServiceItem serviceItem = getProvisionedServiceItem();
         serviceItem.collapseServiceItem();
