@@ -25,7 +25,7 @@ const openid_connect = require('openid-client');
 const rhea = require('rhea');
 var log = require("./log.js").logger();
 const myutils = require('./utils.js');
-const RFC6749_VALID_ACCESS_TOKEN = RegExp('^[\x20-\x7F]+$').compile();
+const RFC6749_VALID_ACCESS_TOKEN = RegExp('^[\x20-\x7F]+$');
 const SSO_COOKIE_NAME = "_oauth_proxy";
 
 function my_request(original, defaults, options, callback) {
@@ -278,14 +278,12 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
         let u = url.parse(request.url, true);
         if (u.pathname === path) {
             var token = get_from_session(request, "token");
-            expunge_session(sessions, request, response);
             if (token) {
-                token.revokeAll().then(() => {
-                    response.redirect(redirect);
-                }).catch((e) => {
+                token.revokeAll().catch(() => {
                     log.warn("Failed to revoke access token");
+                }).finally(() => {
                     response.redirect(redirect);
-                })
+                });
             } else {
                 response.redirect(redirect);
             }
@@ -303,7 +301,7 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
 
                 if (state.access_token) {
                     if (RFC6749_VALID_ACCESS_TOKEN.test(state.access_token)) {
-                        log.info("Authenticating using SSO cookie - user : %s", state.user);
+                        log.info("Authenticated using SSO cookie - user : %s", state.user);
                         store_in_session(request, "token", {
                             getAccessToken: function () {
                                 return state.access_token;
@@ -413,7 +411,6 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
                                     } else {
                                         return null;
                                     }
-
                                 }
                             }
                             store_in_session(request, "token", token);

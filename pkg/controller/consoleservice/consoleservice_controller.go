@@ -10,8 +10,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/url"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
@@ -220,7 +222,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	requeue = requeue || result.Requeue
 
 	// oauthclient
-	result, err = r.reconcileOauthClient(ctx, consoleservice)
+	result, redirects, err := r.reconcileOauthClient(ctx, consoleservice)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -233,7 +235,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	}
 	requeue = requeue || result.Requeue
 
-	result, err = r.updateStatus(ctx, consoleservice, func(status *v1beta1.ConsoleServiceStatus) error {
+	result, err = r.updateService(ctx, consoleservice, func(status *v1beta1.ConsoleServiceStatus) error {
 
 		if route != nil && len(route.Status.Ingress) > 0 {
 			status.Host = route.Status.Ingress[0].Host
@@ -242,24 +244,57 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 			status.CaCertSecret = cert
 		}
 		return nil
+	}, func() (*string, error) {
+
+		if consoleservice.Annotations != nil {
+			if sval, ok := consoleservice.Annotations["enmasse.io/disable-autocompute-sso-cookie-domain"]; ok {
+				if bval, ok := strconv.ParseBool(sval); ok == nil && bval {
+					return consoleservice.Spec.SsoCookieDomain, nil
+				}
+			}
+		}
+
+		hosts := make([]string, len(redirects))
+		for i, v := range redirects {
+			hosts[i] = v.Hostname()
+			if net.ParseIP(hosts[i]) != nil {
+				return nil, nil
+			}
+		}
+
+		newSsoCookieDomain := GetCommonDomain(hosts)
+
+		if newSsoCookieDomain != nil &&  consoleservice.Spec.CertificateSecret != nil && *newSsoCookieDomain == *consoleservice.Spec.SsoCookieDomain {
+			return consoleservice.Spec.SsoCookieDomain, nil
+		}
+
+		return newSsoCookieDomain, nil
 	})
 
 	return reconcile.Result{Requeue: requeue}, nil
 }
 
 type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
+type UpdateDomainFn func() (*string, error)
 
-func (r *ReconcileConsoleService) updateStatus(ctx context.Context, consoleservice *v1beta1.ConsoleService, updateFn UpdateStatusFn) (reconcile.Result, error) {
+func (r *ReconcileConsoleService) updateService(ctx context.Context, consoleservice *v1beta1.ConsoleService, updateFn UpdateStatusFn, fn UpdateDomainFn) (reconcile.Result, error) {
 
 	newStatus := v1beta1.ConsoleServiceStatus{}
 	if err := updateFn(&newStatus); err != nil {
 		return reconcile.Result{}, err
 	}
 
-	if consoleservice.Status.Host != newStatus.Host ||
+	newSsoCookieDomain, err := fn()
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	if  consoleservice.Spec.SsoCookieDomain != newSsoCookieDomain ||
+		consoleservice.Status.Host != newStatus.Host ||
 		consoleservice.Status.Port != newStatus.Port ||
 		!reflect.DeepEqual(consoleservice.Status.CaCertSecret, newStatus.CaCertSecret) {
 
+		consoleservice.Spec.SsoCookieDomain = newSsoCookieDomain
 		consoleservice.Status = newStatus
 		err := r.client.Update(ctx, consoleservice)
 		if err != nil {
@@ -641,7 +676,7 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 	}
 }
 
-func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, []url.URL, error) {
 	if util.IsOpenshift() {
 
 		secretref := consoleservice.Spec.OauthClientSecret
@@ -659,22 +694,25 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 
 		if err != nil {
 			log.Error(err, "Failed reconciling OAuth Secret")
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil, err
 		}
 
 		key := client.ObjectKey{Namespace: consoleservice.Namespace, Name: consoleservice.Name}
 		route := &routev1.Route{}
 		err = r.client.Get(ctx, key, route)
 		if err != nil {
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil, err
 		}
 
 		if len(route.Status.Ingress) == 0 {
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, nil, nil
 		}
 
-		redirects := make([]string, 0)
-		redirects = buildRedirectsFor(*route, redirects)
+		redirects := make([]url.URL, 0)
+		redirects, err = buildRedirectsFor(*route, redirects)
+		if err != nil {
+			return reconcile.Result{}, nil, err
+		}
 
 		list := &routev1.RouteList{}
 
@@ -682,14 +720,17 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		//_ = opts.SetLabelSelector("app=enmasse")
 		err = r.client.List(context.TODO(), opts, list)
 		if err != nil {
-			return reconcile.Result{}, nil
+			return reconcile.Result{}, nil, nil
 		}
 
 		for _, item := range list.Items {
 			// TODO it would be better if we could use a label allowed us to identify the routes belonging
 			// to address space console instances.
 			if strings.HasPrefix(item.Name, "console-") {
-				redirects = buildRedirectsFor(item, redirects)
+				redirects, err = buildRedirectsFor(item, redirects)
+				if err != nil {
+					return reconcile.Result{}, nil, err
+				}
 			}
 		}
 		oauth := &oauthv1.OAuthClient{
@@ -708,33 +749,40 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 
 		if err != nil {
 			log.Error(err, "Failed reconciling OAuth")
-			return reconcile.Result{}, err
+			return reconcile.Result{}, nil, err
 		}
 
-		return reconcile.Result{}, nil
+		return reconcile.Result{}, redirects, nil
 	}
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, nil, nil
 }
 
-func buildRedirectsFor(route routev1.Route, redirects []string) []string {
+func buildRedirectsFor(route routev1.Route, redirects []url.URL) ([]url.URL, error) {
 	scheme := "http"
 	if route.Spec.TLS != nil {
 		scheme = "https"
 	}
 	for _, ingress := range route.Status.Ingress {
-		redirect := fmt.Sprintf("%s://%s", scheme, ingress.Host)
-		redirects = append(redirects, redirect)
+		redirect, err := url.Parse(fmt.Sprintf("%s://%s", scheme, ingress.Host))
+		if err != nil {
+			return []url.URL{}, err
+		}
+		redirects = append(redirects, *redirect)
 	}
-	return redirects
+	return redirects, nil
 }
 
-func applyOauthClient(oauth *oauthv1.OAuthClient, secret *corev1.Secret, redirects []string) error {
+func applyOauthClient(oauth *oauthv1.OAuthClient, secret *corev1.Secret, redirects []url.URL) error {
 	install.ApplyDefaultLabels(&oauth.ObjectMeta, "oauthclient", oauth.Name)
 	bytes := secret.Data["client-secret"]
 	oauth.Secret = string(bytes[:])
 
 	oauth.GrantMethod = oauthv1.GrantHandlerAuto
-	oauth.RedirectURIs = redirects
+	str_redirects := make([]string, len(redirects))
+	for i, v := range redirects {
+		str_redirects[i] = v.String()
+	}
+	oauth.RedirectURIs = str_redirects
 	return nil
 }
 
