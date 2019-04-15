@@ -46,7 +46,7 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
-        assertEquals("Ready", ((AddressSpaceWebItem) selenium.waitUntilItemPresent(30, ()
+        assertEquals("Active", ((AddressSpaceWebItem) selenium.waitUntilItemPresent(30, ()
                 -> globalConsolePage.getAddressSpaceItem(addressSpace))).getStatus());
         globalConsolePage.deleteAddressSpace(addressSpace);
     }
@@ -58,6 +58,6 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
         ConsoleWebPage console = globalConsolePage.openAddressSpaceConsolePage(addressSpace);
         console.logout();
         assertTrue(((AddressSpaceWebItem) selenium.waitUntilItemPresent(30, ()
-                -> globalConsolePage.getAddressSpaceItem(addressSpace))).getStatus().contains("Ready"));
+                -> globalConsolePage.getAddressSpaceItem(addressSpace))).getStatus().contains("Active"));
     }
 }
