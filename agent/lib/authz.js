@@ -35,7 +35,8 @@ TrustAllPolicy.prototype.set_authz_props = function (request, credentials, prope
     request.authz_props = {
         admin: properties.admin,
         console: properties.console,
-        token: credentials.token
+        token: credentials.token,
+        username: credentials.username,
     };
 };
 
@@ -57,6 +58,10 @@ TrustAllPolicy.prototype.can_publish = function (sender, message) {
 
 TrustAllPolicy.prototype.get_access_token = function (connection) {
     return connection.options && connection.options.token ? connection.options.token.getAccessToken() : null;
+};
+
+TrustAllPolicy.prototype.get_user = function (connection) {
+    return connection.options && connection.options.username ? connection.options.username : null;
 };
 
 

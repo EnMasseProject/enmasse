@@ -150,6 +150,7 @@ function get_items_from_index(index) {
 
 function AddressService($http) {
     var self = this;  // 'this' is not available in the success function of $http.get
+    this.user = null;
     this.closeEvent = null;
     this.outstanding_settles = {};
     this.error_queue = [];
@@ -325,7 +326,7 @@ AddressService.prototype.on_message = function (context) {
         this.address_types = context.message.body;
         this.address_space_type = context.message.application_properties.address_space_type;
         this.admin_disabled = context.message.application_properties.disable_admin;
-        this.global_console_disabled = !context.message.application_properties.global_console;
+        this.user = context.message.application_properties.user;
         if (this.callback) this.callback('address_types');
     } else if (context.message.subject === 'connection') {
         var c = context.message.body;

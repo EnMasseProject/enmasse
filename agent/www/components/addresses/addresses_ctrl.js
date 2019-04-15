@@ -168,6 +168,7 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
             $scope.items.sort(compareFn);
           }
           $scope.admin_disabled = address_service.admin_disabled;
+          $scope.setUser(address_service.user);
           $scope.items.forEach( function (item) {
             if (item.senders + item.receivers > 0) {
               if (!item.ingress_outcomes_link_table) {
