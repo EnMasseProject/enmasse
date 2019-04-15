@@ -6,7 +6,10 @@ package io.enmasse.systemtest.selenium.page;
 
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
@@ -390,7 +393,7 @@ public class OpenshiftWebPage implements IWebPage {
         selenium.clickOnItem(serviceItem.getRedirectConsoleButton());
         Set<String> tabHandles = selenium.getDriver().getWindowHandles();
         selenium.getDriver().switchTo().window(tabHandles.toArray()[tabHandles.size() - 1].toString());
-        return new ConsoleWebPage(selenium, addressApiClient, addressSpace);
+        return new ConsoleWebPage(selenium, addressSpace);
     }
 
     @Override

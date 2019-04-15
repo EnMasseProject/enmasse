@@ -193,7 +193,7 @@ public class GlobalConsolePage implements IWebPage {
     public ConsoleWebPage openAddressSpaceConsolePage(AddressSpace addressSpace) throws Exception {
         AddressSpaceWebItem item = (AddressSpaceWebItem) selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getConsoleRoute());
-        ConsoleWebPage consolePage =  new ConsoleWebPage(selenium, new AddressApiClient(Kubernetes.getInstance()), addressSpace, credentials);
+        ConsoleWebPage consolePage = new ConsoleWebPage(selenium, addressSpace, credentials);
         consolePage.login();
         return consolePage;
     }
