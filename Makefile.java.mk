@@ -7,6 +7,10 @@ endif
 ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
 	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
 endif
+ifneq ($(strip $(GLOBAL_CONSOLE_DISPLAY_NAME)),)
+	MAVEN_ARGS+="-Dapplication.globalconsole.display.name='$(PROJECT_DISPLAY_NAME) Console'"
+endif
+
 
 ifneq ($(FULL_BUILD),true)
 build:
