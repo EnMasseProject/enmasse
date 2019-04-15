@@ -5,9 +5,9 @@
 
 :parent-context: {context}
 [id='assembly-using-console-{context}']
-= Using the {ProductName} Console
+= Using the {ConsoleName}
 
-You can use the {ProductName} Console to perform tasks such as link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-console-messaging[creating] and link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-delete-address-space-console-messaging[deleting an address space], link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-console-messaging[creating an address], and link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-view-message-conn-stats-table-messaging[viewing message and connection statistics].
+You can use the {ConsoleName} to perform tasks such as link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-console-messaging[creating] and link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-delete-address-space-console-messaging[deleting an address space], link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-console-messaging[creating an address], and link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-view-message-conn-stats-table-messaging[viewing message and connection statistics].
 
 include::../modules/proc-logging-in-console.adoc[leveloffset=+1]
 
