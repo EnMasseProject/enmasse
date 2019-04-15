@@ -1,8 +1,9 @@
 ## 0.28.0
-* New global console for managing address spaces
-* Use OAUTH/OIDC for console authentication and Kubernetes RBAC for authorization. This removes the special console users in Keycloak
-* Support for sharding queues of all sizes
+* New global console for managing address spaces that uses OAUTH/OIDC for console authentication and Kubernetes RBAC for authorization.
+* Change per-address space console to use the same authentication and authorization mechanisms as the global console
+* Support for shard multiple queues across the same set of brokers
 * Support for specifying router policies
+* Upgrade to qpid dispatch router 1.7.0
 * Support for adjusting idle timeouts, worker threads of router and broker connections
 
 ## 0.27.0
