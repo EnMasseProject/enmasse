@@ -34,11 +34,7 @@ spec:
         - name: CERT_DIR
           value: /api-server-cert
         - name: ENABLE_RBAC
-          valueFrom:
-            configMapKeyRef:
-              key: enableRbac
-              name: api-server-config
-              optional: true
+          value: "true"
         - name: APISERVER_CLIENT_CA_CONFIG_NAME
           value: extension-apiserver-authentication
         - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
