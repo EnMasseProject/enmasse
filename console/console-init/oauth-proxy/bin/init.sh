@@ -54,7 +54,7 @@ done
 
 echo "window.env = {" > ${TARGET_DIR}/www/env.js
 echo "  OPENSHIFT_AVAILABLE:${OPENSHIFT_AVAILABLE}," >> ${TARGET_DIR}/www/env.js
-#if [ ! -z ${ITEM_REFRESH_RATE} ]; then
-#  echo "  ITEM_REFRESH_RATE:${ITEM_REFRESH_RATE}," >> ${TARGET_DIR}/www/env.js
-#fi
+if [ ! -z ${ITEM_REFRESH_RATE} ]; then
+  echo "  ITEM_REFRESH_RATE:${ITEM_REFRESH_RATE}," >> ${TARGET_DIR}/www/env.js
+fi
 echo "};" >> ${TARGET_DIR}/www/env.js

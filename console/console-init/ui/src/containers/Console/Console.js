@@ -13,8 +13,8 @@ class Console extends Component {
   constructor(props) {
     super(props);
 
-    this.refreshRate = parseInt(process.env.REACT_APP_REFRESH_RATE_MILLIS, 10);
-    this.refreshRate = (this.refreshRate) ? this.refreshRate : 15000;
+    this.refreshRate = parseInt(window.env.ITEM_REFRESH_RATE, 10);
+    this.refreshRate = (this.refreshRate) ? this.refreshRate : 30000;
     console.log('Refresh rate set to : ', this.refreshRate);
   }
 
