@@ -4,20 +4,14 @@
  */
 package io.enmasse.address.model;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
-
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
-import io.enmasse.common.model.AbstractHasMetadata;
-import io.enmasse.model.validation.AuthenticationServiceDetails;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
+
+import java.util.Objects;
 
 /**
  * Represents an authentication service for an {@link AddressSpace}.
@@ -34,12 +28,16 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@AuthenticationServiceDetails
 public class AuthenticationService extends AbstractWithAdditionalProperties {
 
     private String name;
+
+    private String host;
+    private Integer port;
+    private String realm;
+
+    // TODO: Keep for backwards compatibility
     private AuthenticationServiceType type;
-    private Map<String, Object> details = new HashMap<> ();
 
     public AuthenticationService() {
     }
@@ -52,20 +50,36 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
         return type;
     }
 
-    public void setDetails(Map<String, Object> details) {
-        this.details = details;
-    }
-
-    public Map<String, Object> getDetails() {
-        return Collections.unmodifiableMap(details);
-    }
-
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public void setPort(Integer port) {
+        this.port = port;
+    }
+
+    public String getRealm() {
+        return realm;
+    }
+
+    public void setRealm(String realm) {
+        this.realm = realm;
     }
 
     @Override
@@ -75,11 +89,13 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
         final AuthenticationService that = (AuthenticationService) o;
         return Objects.equals(name, that.name) &&
                 Objects.equals(type, that.type) &&
-                Objects.equals(details, that.details);
+                Objects.equals(host, that.host) &&
+                Objects.equals(port, that.port) &&
+                Objects.equals(realm, that.realm);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, details);
+        return Objects.hash(name, type, host, port, realm);
     }
 }

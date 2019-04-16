@@ -4,8 +4,6 @@
  */
 package io.enmasse.address.model;
 
-import java.util.*;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -15,36 +13,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum AuthenticationServiceType {
     NONE,
     STANDARD,
-    EXTERNAL(new AuthenticationServiceDetail("host", String.class, true),
-        new AuthenticationServiceDetail("port", Integer.class, true),
-            new AuthenticationServiceDetail("caCertSecretName", String.class, false),
-            new AuthenticationServiceDetail("clientCertSecretName", String.class, false),
-            new AuthenticationServiceDetail("saslInitHost", String.class, true));
-
-    private final Map<String, Class<?>> detailsFields = new HashMap<>();
-    private final Set<String> mandatoryFields = new HashSet<>();
-
-    AuthenticationServiceType(AuthenticationServiceDetail ... details) {
-        for (AuthenticationServiceDetail detail : details) {
-            detailsFields.put(detail.getName(), detail.getType());
-
-            if (detail.isMandatory()) {
-                mandatoryFields.add(detail.getName());
-            }
-        }
-    }
-
-    public io.enmasse.admin.model.v1.AuthenticationServiceType toAdminType() {
-        return io.enmasse.admin.model.v1.AuthenticationServiceType.valueOf(name().toLowerCase());
-    }
-
-    public Map<String, Class<?>> getDetailsFields() {
-        return Collections.unmodifiableMap(detailsFields);
-    }
-
-    public Set<String> getMandatoryFields() {
-        return Collections.unmodifiableSet(mandatoryFields);
-    }
+    EXTERNAL;
 
     @JsonValue
     public String getName() {

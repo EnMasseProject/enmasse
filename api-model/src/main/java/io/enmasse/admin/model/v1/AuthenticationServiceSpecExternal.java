@@ -11,6 +11,7 @@ import java.util.Objects;
 public class AuthenticationServiceSpecExternal extends AbstractWithAdditionalProperties {
     private String host;
     private int port;
+    private boolean allowOverride = false;
     private SecretReference caCertSecret;
     private SecretReference clientCertSecret;
 
@@ -53,13 +54,14 @@ public class AuthenticationServiceSpecExternal extends AbstractWithAdditionalPro
         AuthenticationServiceSpecExternal that = (AuthenticationServiceSpecExternal) o;
         return port == that.port &&
                 Objects.equals(host, that.host) &&
+                Objects.equals(allowOverride, that.allowOverride) &&
                 Objects.equals(caCertSecret, that.caCertSecret) &&
                 Objects.equals(clientCertSecret, that.clientCertSecret);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(host, port, caCertSecret, clientCertSecret);
+        return Objects.hash(host, port, allowOverride, caCertSecret, clientCertSecret);
     }
 
     @Override
@@ -67,8 +69,17 @@ public class AuthenticationServiceSpecExternal extends AbstractWithAdditionalPro
         return "AuthenticationServiceSpecExternal{" +
                 "host='" + host + '\'' +
                 ", port=" + port +
+                ", allowOverride=" + port +
                 ", caCertSecret=" + caCertSecret +
                 ", clientCertSecret=" + clientCertSecret +
                 '}';
+    }
+
+    public boolean isAllowOverride() {
+        return allowOverride;
+    }
+
+    public void setAllowOverride(boolean allowOverride) {
+        this.allowOverride = allowOverride;
     }
 }

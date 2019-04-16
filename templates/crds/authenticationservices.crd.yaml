@@ -161,6 +161,8 @@ spec:
               - host
               - port
               properties:
+                allowOverride:
+                  type: boolean
                 host:
                   type: string
                 port:
