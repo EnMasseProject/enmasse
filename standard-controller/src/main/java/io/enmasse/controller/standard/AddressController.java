@@ -47,6 +47,7 @@ public class AddressController implements Watcher<Address> {
     private final Metrics metrics;
     private final BrokerIdGenerator brokerIdGenerator;
     private final BrokerClientFactory brokerClientFactory;
+    private static int routerCheckFailures;
 
     public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
         this.options = options;
@@ -59,6 +60,7 @@ public class AddressController implements Watcher<Address> {
         this.metrics = metrics;
         this.brokerIdGenerator = brokerIdGenerator;
         this.brokerClientFactory = brokerClientFactory;
+        this.routerCheckFailures = 0;
     }
 
     public void start() throws Exception {
@@ -135,7 +137,12 @@ public class AddressController implements Watcher<Address> {
         long provisionResources = System.nanoTime();
 
         Set<Address> liveAddresses = filterByPhases(addressSet, EnumSet.of(Configuring, Active));
-        checkStatuses(liveAddresses, addressResolver);
+        List<RouterStatus> routerStatusList = checkRouterStatuses();
+
+        if (!routerStatusList.isEmpty()) {
+            checkAddressStatuses(liveAddresses, addressResolver, routerStatusList);
+        }
+
         long checkStatuses = System.nanoTime();
         for (Address address : liveAddresses) {
             if (address.getStatus().isReady()) {
@@ -179,16 +186,16 @@ public class AddressController implements Watcher<Address> {
         }
 
         long replaceAddresses = System.nanoTime();
-        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver);
+        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList);
         long gcTerminating = System.nanoTime();
 
         log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
 
-        int ready = 0;
+        float ready = 0;
         for (Address address : addressList) {
             ready += address.getStatus().isReady() ? 1 : 0;
         }
-        int notReady = addressList.size() - ready;
+        float notReady = addressList.size() - ready;
 
         long now = System.currentTimeMillis();
 
@@ -196,6 +203,11 @@ public class AddressController implements Watcher<Address> {
         metrics.reportMetric(new Metric("version", "The version of the standard-controller", MetricType.gauge, new MetricValue(0, now, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion()))));
 
         MetricLabel [] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
+        if (routerStatusList.isEmpty()) {
+            ready = Float.NaN;
+            notReady = Float.NaN;
+
+        }
         metrics.reportMetric(new Metric("addresses_ready_total", "Total number of addresses in ready state", MetricType.gauge, new MetricValue(ready, now, metricLabels)));
         metrics.reportMetric(new Metric("addresses_not_ready_total", "Total number of address in a not ready state", MetricType.gauge, new MetricValue(notReady, now, metricLabels)));
         metrics.reportMetric(new Metric("addresses_total", "Total number of addresses", MetricType.gauge, new MetricValue(addressList.size(), now, metricLabels)));
@@ -208,6 +220,9 @@ public class AddressController implements Watcher<Address> {
 
         long totalTime = gcTerminating - start;
         metrics.reportMetric(new Metric("standard_controller_loop_duration_seconds", "Time spent in controller loop", MetricType.gauge, new MetricValue((double) totalTime / 1_000_000_000.0, now, metricLabels)));
+
+        metrics.reportMetric(new Metric("standard_controller_router_check_failures_total", "Number of RouterCheckFailures", MetricType.counter, new MetricValue(routerCheckFailures, now, metricLabels)));
+
     }
 
     private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
@@ -315,8 +330,8 @@ public class AddressController implements Watcher<Address> {
                 .collect(Collectors.toSet());
     }
 
-    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
-        Map<Address, Integer> okMap = checkStatuses(addresses, addressResolver);
+    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList) throws Exception {
+        Map<Address, Integer> okMap = checkAddressStatuses(addresses, addressResolver, routerStatusList);
         for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {
             if (entry.getValue() == 0) {
                 log.info("Garbage collecting {}", entry.getKey());
@@ -374,11 +389,8 @@ public class AddressController implements Watcher<Address> {
         }
     }
 
-    private Map<Address, Integer> checkStatuses(Set<Address> addresses, AddressResolver addressResolver) throws Exception {
-        Map<Address, Integer> numOk = new HashMap<>();
-        if (addresses.isEmpty()) {
-            return numOk;
-        }
+    private List<RouterStatus> checkRouterStatuses() throws Exception {
+
         RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
@@ -391,10 +403,19 @@ public class AddressController implements Watcher<Address> {
                 } catch (Exception e) {
                     log.info("Error requesting router status from {}. Ignoring", router.getMetadata().getName(), e);
                     eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, options.getAddressSpace());
+                    routerCheckFailures++;
                 }
             }
         }
+        return routerStatusList;
+    }
 
+    private Map<Address, Integer> checkAddressStatuses(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList) throws Exception {
+
+        Map<Address, Integer> numOk = new HashMap<>();
+        if (addresses.isEmpty()) {
+            return numOk;
+        }
         Map<String, Integer> clusterOk = new HashMap<>();
         for (Address address : addresses) {
             AddressType addressType = addressResolver.getType(address);
