@@ -25,3 +25,6 @@ include::../modules/proc-standard-auth-service.adoc[leveloffset=+1]
 include::../modules/proc-none-auth-service.adoc[leveloffset=+1]
 
 include::../modules/con-external-authentication-service-api.adoc[leveloffset=+1]
+
+include::../modules/ref-example-roles.adoc[leveloffset=+1]
+

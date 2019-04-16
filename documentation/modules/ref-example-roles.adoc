@@ -1,7 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-tenant-guide.adoc
-// using master.adoc
+// assembly-configuring.adoc
 
 [id='ref-example-roles-{context}']
 = {ProductName} example roles

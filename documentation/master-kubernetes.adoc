@@ -28,6 +28,12 @@ include::assemblies/assembly-tenant-guide.adoc[leveloffset=+1]
 
 
 [appendix]
+include::modules/ref-resources-table-service-admin.adoc[leveloffset=+1]
+
+[appendix]
+include::modules/ref-resources-table-messaging-tenant.adoc[leveloffset=+1]
+
+[appendix]
 include::modules/ref-brokered-infra-config-fields.adoc[leveloffset=+1]
 
 [appendix]

@@ -1,6 +1,8 @@
 // Module included in the following assemblies:
 //
-// 
+// master-kubernetes.adoc
+// master-openshift.adoc
+// Installing master.adoc
 
 [id='ref-resources-table-service-admin-{context}']
 = {ProductName} resources for service administrators
@@ -11,9 +13,9 @@ The following table describes the {ProductName} resources that pertain to the se
 [cols="50%a,50%a",options="header",subs="attributes"]
 |===
 |Resource |Description
-|`addressplans`|
-|`addressspaceplans`|
-|`brokeredinfraconfigs`|Specifies the infrastructure configuration for brokered address spaces?
-|`standardinfraconfigs`|Specifies the infrastructure configuration for standard address spaces?
+|`addressplans`|Specifies the address plan.
+|`addressspaceplans`|Specifies the address space plan.
+|`brokeredinfraconfigs`|Specifies the infrastructure configuration for brokered address spaces. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-fields-messaging[Brokered infrastructure configuration fields table].
+|`standardinfraconfigs`|Specifies the infrastructure configuration for standard address spaces. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-fields-messaging[Standard infrastructure configuration fields table].
 |===
 
