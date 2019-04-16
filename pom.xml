@@ -979,10 +979,6 @@
                                             <name>applicationDisplayName</name>
                                             <value>${application.display.name}</value>
                                         </parameter>
-					<parameter>
-					    <name>applicationGlobalConsoleDisplayName</name>
-					    <value>${application.globalconsole.display.name}</value>
-					</parameter>
                                         <parameter>
                                             <name>licenseAdviceText</name>
                                             <value>${license.advice.text}</value>
@@ -997,7 +993,6 @@
                         </configuration>
                     </plugin>
                 </plugins>
-
             </build>
         </profile>
         <profile>

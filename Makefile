@@ -41,13 +41,6 @@ ASCIIDOCTOR_FLAGS       = -v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTO
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS=-DskipTests -Dmaven.test.skip=true
 endif
-ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
-	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
-endif
-ifneq ($(strip $(GLOBAL_CONSOLE_DISPLAY_NAME)),)
-        MAVEN_ARGS+="-Dapplication.globalconsole.display.name=$(GLOBAL_CONSOLE_DISPLAY_NAME)"
-endif
-
 
 all: build_java build_go templates
 
