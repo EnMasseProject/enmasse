@@ -4,15 +4,6 @@ include $(TOPDIR)/Makefile.common
 ifeq ($(SKIP_TESTS),true)
 MAVEN_ARGS="-DskipTests"
 endif
-ifneq ($(strip $(PROJECT_DISPLAY_NAME)),)
-	MAVEN_ARGS+="-Dapplication.display.name=$(PROJECT_DISPLAY_NAME)"
-endif
-ifneq ($(strip $(GLOBAL_CONSOLE_DISPLAY_NAME)),)
-	MAVEN_ARGS+="-Dapplication.globalconsole.display.name='$(PROJECT_DISPLAY_NAME) Console'"
-endif
-ifneq ($(strip $(PROJECT_DOCS_URL)),)
-	MAVEN_ARGS+="-Dapplication.docs=$(PROJECT_DOCS_URL)"
-endif
 
 ifneq ($(FULL_BUILD),true)
 build:
