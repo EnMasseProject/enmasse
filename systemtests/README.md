@@ -9,7 +9,7 @@ fallback to `kubectl`.
 It is assumed that you have EnMasse running already. If not, have a look at
 the [documentation](http://enmasse.io/documentation/master/openshift/#quickstart-messaging-gs).
 
-*NOTE*: On OKD, make sure `oc` is logged in to your cluster:
+*NOTE*: On OKD, make sure `oc` is logged in to your cluster. Also, you should not run the tests with `cluster-admin` privileges but rather use a standard user :
 
     oc login https://localhost:8443
 
