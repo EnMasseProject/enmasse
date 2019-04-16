@@ -50,6 +50,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     void testAddressSpaceCreateViaCmdRemoveViaApi() throws Exception {
         AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foo", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
         JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
+        addToAddressSpacess(brokered);
         createCR(addressSpacePayloadJson.toString());
         waitForAddressSpaceReady(brokered);
 
@@ -65,6 +66,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     void testReplacePatchAddressSpace() throws Exception {
         AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-foobar", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
         standard = new DoneableAddressSpace(standard).editSpec().withPlan(AddressSpacePlans.STANDARD_SMALL).endSpec().done();
+        addToAddressSpacess(standard);
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
         addToAddressSpacess(standard);
         waitForAddressSpaceReady(standard);
@@ -108,6 +110,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
         UserCredentials user = Credentials.userCredentials();
         try (AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace)) {
             AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-addressspaces-test-baz", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+            addToAddressSpacess(brokered);
             JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
@@ -139,6 +142,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             //===========================
             AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("crd-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
             AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("crd-standard", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
+            addToAddressSpacess(brokered);
+            addToAddressSpacess(standard);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
