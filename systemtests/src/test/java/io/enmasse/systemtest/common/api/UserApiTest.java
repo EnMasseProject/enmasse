@@ -62,7 +62,7 @@ class UserApiTest extends TestBase {
             try {
                 removeUser(addressSpace, user.getMetadata().getName());
             } catch (Exception e) {
-                log.info("Clean: User not exists {}", user.getMetadata().getName());
+                log.info("Clean: User not exists {}", user.getSpec().getUsername());
             }
         });
     }
