@@ -18,7 +18,7 @@ kind: StandardInfraConfig
 metadata:
   name: myconfig
 spec:
-  version: {EnMasseVersion}
+  version: "{EnMasseVersion}"
   admin:
     resources:
       memory: 256Mi
