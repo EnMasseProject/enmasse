@@ -1,0 +1,23 @@
+// Module included in the following assemblies:
+//
+// 
+
+[id='ref-resources-table-messaging-tenant-{context}']
+= {ProductName} resources for messaging tenants
+
+The following table describes the {ProductName} resources that pertain to the messaging tenant role.
+
+.Messaging tenant {ProductName} resources table
+[cols="50%a,50%a",options="header",subs="attributes"]
+|===
+|Resource |Description
+|`addresses`|
+|`addressplans`|
+|`addressspaceplans`|
+|`addressspaces`|
+|`addressspaceschemas`|
+|`brokeredinfraconfigs`|Specifies the infrastructure configuration for brokered address spaces?
+|`messagingusers`|
+|`standardinfraconfigs`|Specifies the infrastructure configuration for standard address spaces?
+|===
+

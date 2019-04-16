@@ -1,0 +1,19 @@
+// Module included in the following assemblies:
+//
+// 
+
+[id='ref-resources-table-service-admin-{context}']
+= {ProductName} resources for service administrators
+
+The following table describes the {ProductName} resources that pertain to the service administrator role.
+
+.{ProductName} service administrator resources table
+[cols="50%a,50%a",options="header",subs="attributes"]
+|===
+|Resource |Description
+|`addressplans`|
+|`addressspaceplans`|
+|`brokeredinfraconfigs`|Specifies the infrastructure configuration for brokered address spaces?
+|`standardinfraconfigs`|Specifies the infrastructure configuration for standard address spaces?
+|===
+
