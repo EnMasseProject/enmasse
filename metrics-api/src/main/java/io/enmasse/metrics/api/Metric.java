@@ -49,7 +49,7 @@ public class Metric {
         this.description = updated.getDescription();
         this.type = updated.getType();
 
-        if (MetricType.up.equals(type) || MetricType.gauge.equals(type)) {
+        if (MetricType.up.equals(type) || MetricType.gauge.equals(type) || MetricType.counter.equals(type)) {
             values.putAll(updated.values);
         }
     }
