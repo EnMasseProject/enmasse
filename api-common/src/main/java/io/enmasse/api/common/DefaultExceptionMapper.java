@@ -13,6 +13,7 @@ import javax.ws.rs.ext.Provider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.enmasse.address.model.UnresolvedAddressException;
 import io.enmasse.address.model.UnresolvedAddressSpaceException;
+import io.enmasse.user.keycloak.KeycloakUnavailableException;
 import io.enmasse.user.model.v1.UserValidationFailedException;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
@@ -31,6 +32,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             statusCode = ((KubernetesClientException) exception).getStatus().getCode();
         } else if (exception instanceof UnresolvedAddressException || exception instanceof JsonProcessingException || exception instanceof UnresolvedAddressSpaceException || exception instanceof ValidationException || exception instanceof UserValidationFailedException) {
             statusCode = Response.Status.BAD_REQUEST.getStatusCode();
+        } else if (exception instanceof KeycloakUnavailableException) {
+            statusCode = Response.Status.SERVICE_UNAVAILABLE.getStatusCode();
         } else {
             statusCode = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
         }

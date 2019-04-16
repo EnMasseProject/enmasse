@@ -6,6 +6,7 @@
 package io.enmasse.osb;
 
 import io.enmasse.address.model.CoreCrd;
+import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.auth.AuthApi;
@@ -72,7 +73,7 @@ public class ServiceBroker extends AbstractVerticle {
         AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client);
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
-        UserApi userApi = createUserApi(options);
+        UserApi userApi = createUserApi(options, schemaProvider);
 
         ConsoleProxy consoleProxy = addressSpace -> {
             Route route = client.adapt(OpenShiftClient.class).routes().inNamespace(client.getNamespace()).withName(options.getConsoleProxyRouteName()).get();
@@ -106,11 +107,13 @@ public class ServiceBroker extends AbstractVerticle {
         }
     }
 
-    private UserApi createUserApi(ServiceBrokerOptions options) {
+    private UserApi createUserApi(ServiceBrokerOptions options, CachingSchemaProvider schemaProvider) {
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client);
+        KeycloakUserApi keycloakUserApi = new KeycloakUserApi(keycloakFactory, Clock.systemUTC(), Duration.ZERO);
+        schemaProvider.registerListener(newSchema -> keycloakUserApi.pruneAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
         return new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
                 AuthenticationServiceType.external, new NullUserApi(),
-                AuthenticationServiceType.standard, new KeycloakUserApi(keycloakFactory, Clock.systemUTC(), Duration.ZERO)));
+                AuthenticationServiceType.standard, keycloakUserApi));
     }
 
     private static void ensureRouteExists(OpenShiftClient client, ServiceBrokerOptions serviceBrokerOptions) throws IOException {

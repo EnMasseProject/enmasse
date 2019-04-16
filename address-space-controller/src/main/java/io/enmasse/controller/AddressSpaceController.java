@@ -5,18 +5,18 @@
 
 package io.enmasse.controller;
 
+import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.KubernetesHelper;
-import io.enmasse.controller.keycloak.Keycloak;
 import io.enmasse.controller.keycloak.RealmController;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
+import io.enmasse.user.api.DelegateUserApi;
 import io.enmasse.user.api.NullUserApi;
 import io.enmasse.user.api.UserApi;
-import io.enmasse.user.api.DelegateUserApi;
 import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
@@ -97,16 +97,18 @@ public class AddressSpaceController {
 
         InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, System.getenv(), isOpenShift, schemaProvider);
 
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
         Clock clock = Clock.systemUTC();
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
+        KeycloakUserApi keycloakUserApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
+        schemaProvider.registerListener(newSchema -> keycloakUserApi.pruneAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
         UserApi userApi = new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
                 AuthenticationServiceType.external, new NullUserApi(),
-                AuthenticationServiceType.standard, new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO)));
+                AuthenticationServiceType.standard, keycloakUserApi));
 
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
-        controllerChain.addController(new RealmController(new Keycloak(keycloakFactory), authenticationServiceRegistry));
+        controllerChain.addController(new RealmController(keycloakUserApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, userApi));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));

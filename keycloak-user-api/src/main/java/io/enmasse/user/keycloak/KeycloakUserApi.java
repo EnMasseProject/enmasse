@@ -8,6 +8,7 @@ package io.enmasse.user.keycloak;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.k8s.util.TimeUtil;
+import io.enmasse.user.api.RealmApi;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -38,7 +39,7 @@ import java.util.stream.Collectors;
 import static java.util.Optional.empty;
 
 
-public class KeycloakUserApi implements UserApi {
+public class KeycloakUserApi implements UserApi, RealmApi {
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakUserApi.class);
 
@@ -47,14 +48,22 @@ public class KeycloakUserApi implements UserApi {
     private final Duration apiTimeout;
     private final Map<String, Keycloak> keycloakMap = new HashMap<>();
 
-    public KeycloakUserApi(KeycloakFactory keycloakFactory, Clock clock) {
-        this(keycloakFactory, clock, Duration.ZERO);
-    }
-
     public KeycloakUserApi(KeycloakFactory keycloakFactory, Clock clock, Duration apiTimeout) {
         this.keycloakFactory = keycloakFactory;
         this.clock = clock;
         this.apiTimeout = apiTimeout;
+    }
+
+    public synchronized void pruneAuthenticationServices(List<AuthenticationService> items) {
+        Set<String> desired = items.stream().map(a -> a.getMetadata().getName()).collect(Collectors.toSet());
+        Set<String> toRemove = new HashSet<>(keycloakMap.keySet());
+        toRemove.removeAll(desired);
+        for (String authService : toRemove) {
+            Keycloak keycloak = keycloakMap.remove(authService);
+            if (keycloak != null && !keycloak.isClosed()) {
+                keycloak.close();
+            }
+        }
     }
 
     interface KeycloakHandler<T> {
@@ -671,6 +680,36 @@ public class KeycloakUserApi implements UserApi {
 
     }
 
+    @Override
+    public Set<String> getRealmNames(AuthenticationService authenticationService) throws Exception {
+        return withKeycloak(authenticationService, kc -> kc.realms().findAll().stream()
+                .map(RealmRepresentation::getRealm)
+                .collect(Collectors.toSet()));
+    }
+
+    @Override
+    public void createRealm(AuthenticationService authenticationService, String namespace, String realmName) throws Exception {
+        final RealmRepresentation newRealm = new RealmRepresentation();
+        newRealm.setRealm(realmName);
+        newRealm.setEnabled(true);
+        newRealm.setPasswordPolicy("hashAlgorithm(scramsha1)");
+        newRealm.setAttributes(new HashMap<>());
+        newRealm.getAttributes().put("namespace", namespace);
+        newRealm.getAttributes().put("enmasse-realm", "true");
+
+        withKeycloak(authenticationService, kc -> {
+            kc.realms().create(newRealm);
+            return true;
+        });
+    }
+
+    @Override
+    public void deleteRealm(AuthenticationService authenticationService, String realmName) throws Exception {
+        withKeycloak(authenticationService, kc -> {
+            kc.realm(realmName).remove();
+            return true;
+        });
+    }
 
     public static String decodePart(final String part) {
         try {
