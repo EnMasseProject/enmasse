@@ -979,7 +979,7 @@
                                             <name>applicationDisplayName</name>
                                             <value>${application.display.name}</value>
                                         </parameter>
-                    					<parameter>
+                                        <parameter>
                                             <name>licenseAdviceText</name>
                                             <value>${license.advice.text}</value>
                                         </parameter>
