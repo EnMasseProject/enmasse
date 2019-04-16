@@ -983,7 +983,11 @@
 					    <name>applicationGlobalConsoleDisplayName</name>
 					    <value>${application.globalconsole.display.name}</value>
 					</parameter>
-                                        <parameter>
+					<parameter>
+					    <name>applicationDocs</name>
+					    <value>${application.docs}</value>
+                                        </parameter>
+					<parameter>
                                             <name>licenseAdviceText</name>
                                             <value>${license.advice.text}</value>
                                         </parameter>

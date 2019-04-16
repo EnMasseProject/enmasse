@@ -47,7 +47,9 @@ endif
 ifneq ($(strip $(GLOBAL_CONSOLE_DISPLAY_NAME)),)
         MAVEN_ARGS+="-Dapplication.globalconsole.display.name=$(GLOBAL_CONSOLE_DISPLAY_NAME)"
 endif
-
+ifneq ($(strip $(PROJECT_DOCS_URL)),)
+	MAVEN_ARGS+="-Dapplication.docs=$(PROJECT_DOCS_URL)"
+endif
 
 all: build_java build_go templates
 

@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {AboutModal, TextContent, TextList, TextListItem} from '@patternfly/react-core';
 import EmptyImg from '../../assets/images/Empty.svg';
+import Aux from '../../hoc/Aux/Aux';
 
 class About extends Component {
 
@@ -16,6 +17,15 @@ class About extends Component {
       productVersion = '';
       console.log('process.env.REACT_APP_VERSION is not set');
     }
+    let docs = process.env.REACT_APP_DOCS;
+    let docsElement;
+    if (docs) {
+      docsElement=
+        <Aux>
+          <TextListItem component="dt">Documentation</TextListItem>
+          <TextListItem component="dd"><a href={process.env.REACT_APP_DOCS}>{process.env.REACT_APP_DOCS}</a></TextListItem>
+        </Aux>;
+    }
 
     return (
       <AboutModal
@@ -29,6 +39,7 @@ class About extends Component {
           <TextList component="dl">
             <TextListItem component="dt">EnMasse Version</TextListItem>
             <TextListItem component="dd">{productVersion}</TextListItem>
+            {(docsElement)}
           </TextList>
         </TextContent>
       </AboutModal>

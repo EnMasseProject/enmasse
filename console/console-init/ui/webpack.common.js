@@ -15,7 +15,8 @@ module.exports = {
       {
       'process.env.REACT_APP_VERSION': JSON.stringify(process.env.REACT_APP_VERSION),
       'process.env.REACT_APP_NAME': JSON.stringify(process.env.REACT_APP_NAME),
-      'process.env.REACT_APP_REFRESH_RATE_MILLIS': JSON.stringify(process.env.REACT_APP_REFRESH_RATE_MILLIS)
+      'process.env.REACT_APP_REFRESH_RATE_MILLIS': JSON.stringify(process.env.REACT_APP_REFRESH_RATE_MILLIS),
+      'process.env.REACT_APP_DOCS': JSON.stringify(process.env.REACT_APP_DOCS)
     })
   ],
   module: {
