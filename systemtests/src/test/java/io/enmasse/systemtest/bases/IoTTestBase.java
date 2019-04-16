@@ -4,6 +4,19 @@
  */
 package io.enmasse.systemtest.bases;
 
+import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
+import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.time.Duration.ofSeconds;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.Logger;
+
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
@@ -11,15 +24,13 @@ import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
 import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.IoTUtils;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.vertx.core.json.JsonObject;
 
 public abstract class IoTTestBase extends TestBase {
 
@@ -114,7 +125,7 @@ public abstract class IoTTestBase extends TestBase {
                 iotConfigs.add(config);
             }
         }
-        IoTUtils.waitForIoTConfigReady(iotConfigApiClient, config);
+        IoTUtils.waitForIoTConfigReady(iotConfigApiClient, kubernetes, config);
         IoTUtils.syncIoTConfig(config, iotConfigApiClient);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -133,6 +144,31 @@ public abstract class IoTTestBase extends TestBase {
         IoTUtils.waitForIoTProjectReady(iotProjectApiClient, addressApiClient, project);
         IoTUtils.syncIoTProject(project, iotProjectApiClient);
         TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
+        waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
+    }
+
+    protected void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+        JsonObject json = new JsonObject(Map.of("a", "b"));
+        TestUtils.waitUntilCondition("First successful "+type.name().toLowerCase()+" message", () -> {
+            try {
+                if(type == MessageType.EVENT) {
+                    var response = adapterClient.sendEvent(json, any());
+                    return response.statusCode() == HTTP_ACCEPTED;
+                } else if(type == MessageType.TELEMETRY) {
+                    var response = adapterClient.sendTelemetry(json, any());
+                    return response.statusCode() == HTTP_ACCEPTED;
+                } else {
+                    return true;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, ofDuration(ofSeconds(60)));
+
+        log.info("First "+type.name().toLowerCase()+" message accepted");
     }
 
 }

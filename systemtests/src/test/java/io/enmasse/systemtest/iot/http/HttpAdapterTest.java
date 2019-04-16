@@ -5,8 +5,6 @@
 package io.enmasse.systemtest.iot.http;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
-import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
-import static io.enmasse.systemtest.apiclients.Predicates.any;
 import static io.enmasse.systemtest.apiclients.Predicates.is;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
@@ -16,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -40,7 +37,6 @@ import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageType;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -113,7 +109,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
         AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
         Future<List<Message>> futureReceivedMessages = setUpMessagingConsumer(IOT_ADDRESS_TELEMETRY, receivedMessagesCounter);
 
-        waitForFirstSuccess(MessageType.TELEMETRY);
+        waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
 
         int messagesToSend = 50;
         log.info("Sending telemetry messages");
@@ -140,7 +136,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
     @Test
     public void basicEventTest() throws Exception {
 
-        waitForFirstSuccess(MessageType.EVENT);
+        waitForFirstSuccess(adapterClient, MessageType.EVENT);
 
         int eventsToSend = 5;
         log.info("Sending events");
@@ -164,27 +160,6 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             throw e;
         }
 
-    }
-
-    private void waitForFirstSuccess(MessageType type) throws Exception {
-        JsonObject json = new JsonObject(Map.of("a", "b"));
-        TestUtils.waitUntilCondition("First successful "+type.name().toLowerCase()+" message", () -> {
-            try {
-                if(type == MessageType.EVENT) {
-                    var response = adapterClient.sendEvent(json, any());
-                    return response.statusCode() == HTTP_ACCEPTED;
-                } else if(type == MessageType.TELEMETRY) {
-                    var response = adapterClient.sendTelemetry(json, any());
-                    return response.statusCode() == HTTP_ACCEPTED;
-                } else {
-                    return true;
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, ofDuration(ofSeconds(60)));
-
-        log.info("First "+type.name().toLowerCase()+" message accepted");
     }
 
     private Future<List<Message>> setUpMessagingConsumer(String type, AtomicInteger receivedMessagesCounter) {
