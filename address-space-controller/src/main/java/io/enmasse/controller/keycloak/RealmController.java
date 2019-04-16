@@ -11,6 +11,7 @@ import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.Controller;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.user.api.RealmApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,10 +21,10 @@ import java.util.stream.Collectors;
 public class RealmController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(RealmController.class);
     private static final String MASTER_REALM = "master";
-    private final KeycloakApi keycloak;
+    private final RealmApi keycloak;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
 
-    public RealmController(KeycloakApi keycloak, AuthenticationServiceRegistry authenticationServiceRegistry) {
+    public RealmController(RealmApi keycloak, AuthenticationServiceRegistry authenticationServiceRegistry) {
         this.keycloak = keycloak;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
     }

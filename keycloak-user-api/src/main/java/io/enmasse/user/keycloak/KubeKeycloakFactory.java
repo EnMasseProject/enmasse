@@ -48,7 +48,7 @@ public class KubeKeycloakFactory implements KeycloakFactory {
     @Override
     public Keycloak createInstance(AuthenticationService authenticationService) {
         if (!authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) || authenticationService.getStatus() == null) {
-            return null;
+            throw new KeycloakUnavailableException("Standard authentication service " + authenticationService.getMetadata().getName() + " is not available");
         }
         log.info("Using standard authentication service '{}'", authenticationService.getMetadata().getName());
 

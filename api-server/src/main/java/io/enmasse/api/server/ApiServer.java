@@ -73,11 +73,13 @@ public class ApiServer extends AbstractVerticle {
 
         AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
 
-        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client);
         Clock clock = Clock.systemUTC();
+        KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client);
+        KeycloakUserApi keycloakUserApi = new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout());
+        schemaProvider.registerListener(newSchema -> keycloakUserApi.retainAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
         UserApi userApi = new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
                 AuthenticationServiceType.external, new NullUserApi(),
-                AuthenticationServiceType.standard, new KeycloakUserApi(keycloakFactory, clock, options.getUserApiTimeout())));
+                AuthenticationServiceType.standard, keycloakUserApi));
 
         String clientCa;
         String requestHeaderClientCa;

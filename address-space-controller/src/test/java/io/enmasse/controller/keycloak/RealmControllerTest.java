@@ -9,6 +9,7 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.user.api.RealmApi;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ public class RealmControllerTest {
         when(mockAuthenticationServiceRegistry.findAuthenticationServiceByType(eq(io.enmasse.admin.model.v1.AuthenticationServiceType.standard))).thenReturn(Arrays.asList(authenticationService));
         when(mockAuthenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
 
-        manager = new RealmController(new KeycloakApi() {
+        manager = new RealmController(new RealmApi() {
             @Override
             public Set<String> getRealmNames(AuthenticationService auth) {
                 return new HashSet<>(realms);
