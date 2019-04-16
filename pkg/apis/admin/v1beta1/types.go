@@ -96,6 +96,7 @@ type AuthenticationServiceSpecExternal struct {
 	Port             int                     `json:"port"`
 	CaCertSecret     *corev1.SecretReference `json:"caCertSecret,omitempty"`
 	ClientCertSecret *corev1.SecretReference `json:"clientCertSecret,omitempty"`
+	AllowOverride    bool                    `json:"allowOverride,omitempty"`
 }
 
 type AuthenticationServiceStatus struct {
@@ -122,7 +123,7 @@ type AuthenticationServiceList struct {
 type ConsoleService struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              ConsoleServiceSpec `json:"spec"`
+	Spec              ConsoleServiceSpec   `json:"spec"`
 	Status            ConsoleServiceStatus `json:"status"`
 }
 
@@ -137,9 +138,9 @@ type ConsoleServiceSpec struct {
 }
 
 type ConsoleServiceStatus struct {
-	Host             string                  `json:"host,omitempty"`
-	Port             int                     `json:"port,omitempty"`
-	CaCertSecret     *corev1.SecretReference `json:"caCertSecret,omitempty"`
+	Host         string                  `json:"host,omitempty"`
+	Port         int                     `json:"port,omitempty"`
+	CaCertSecret *corev1.SecretReference `json:"caCertSecret,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -150,5 +151,3 @@ type ConsoleServiceList struct {
 
 	Items []ConsoleService `json:"items"`
 }
-
-

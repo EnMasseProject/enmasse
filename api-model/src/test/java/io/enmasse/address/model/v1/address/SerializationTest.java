@@ -192,12 +192,7 @@ public class SerializationTest {
                 .endEndpoint()
 
                 .withNewAuthenticationService()
-                    .withType(AuthenticationServiceType.EXTERNAL)
-                    .addToDetails("host", "my.example.com")
-                    .addToDetails("port", 5671)
-                    .addToDetails("caCertSecretName", "authservicesecret")
-                    .addToDetails("clientCertSecretName", "clientcertsecret")
-                    .addToDetails("saslInitHost", "my.example.com")
+                    .withName("myservice")
                 .endAuthenticationService()
 
                 .endSpec()
@@ -242,8 +237,7 @@ public class SerializationTest {
         assertThat(deserialized.getSpec().getEndpoints().get(0).getService(), is(addressSpace.getSpec().getEndpoints().get(0).getService()));
         assertThat(deserialized.getSpec().getEndpoints().get(0).getCert().getProvider(), is(addressSpace.getSpec().getEndpoints().get(0).getCert().getProvider()));
         assertThat(deserialized.getSpec().getEndpoints().get(0).getCert().getSecretName(), is(addressSpace.getSpec().getEndpoints().get(0).getCert().getSecretName()));
-        assertThat(deserialized.getSpec().getAuthenticationService().getType(), is(addressSpace.getSpec().getAuthenticationService().getType()));
-        assertThat(deserialized.getSpec().getAuthenticationService().getDetails(), is(addressSpace.getSpec().getAuthenticationService().getDetails()));
+        assertThat(deserialized.getSpec().getAuthenticationService().getName(), is(addressSpace.getSpec().getAuthenticationService().getName()));
         assertThat(addressSpace, is(deserialized));
     }
 
@@ -613,14 +607,20 @@ public class SerializationTest {
                 "  \"type\":\"standard\"," +
                 "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
-                "     \"type\": \"external\"" +
+                "     \"name\": \"external\"," +
+                "     \"host\": \"override.example.com\"," +
+                "     \"port\": 1234," +
+                "     \"realm\": \"override\"" +
                 "  }" +
                 "}" +
                 "}";
 
         ObjectMapper mapper = new ObjectMapper();
-        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
-        assertEquals(3, exception.getConstraintViolations().size());
+        AddressSpace addressSpace = mapper.readValue(json, AddressSpace.class);
+        assertThat(addressSpace.getSpec().getAuthenticationService().getName(), is("external"));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getHost(), is("override.example.com"));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getPort(), is(1234));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getRealm(), is("override"));
     }
 
     @Test
@@ -635,12 +635,7 @@ public class SerializationTest {
                 "  \"type\":\"standard\"," +
                 "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
-                "     \"type\": \"external\"," +
-                "     \"details\": {" +
-                "       \"host\": \"my.example.com\"," +
-                "       \"saslInitHost\": \"localhost\"," +
-                "       \"port\": 1234" +
-                "     }" +
+                "     \"name\": \"myservice\"" +
                 "  }" +
                 "}" +
                 "}";
@@ -648,34 +643,6 @@ public class SerializationTest {
         ObjectMapper mapper = new ObjectMapper();
         AddressSpace addressSpace= mapper.readValue(json, AddressSpace.class);
         validate(addressSpace);
-        assertEquals("my.example.com", addressSpace.getSpec().getAuthenticationService().getDetails().get("host"));
-        assertEquals("localhost", addressSpace.getSpec().getAuthenticationService().getDetails().get("saslInitHost"));
-        assertEquals(1234, addressSpace.getSpec().getAuthenticationService().getDetails().get("port"));
-    }
-
-    @Test
-    public void testDeserializeAddressSpaceWithExtraAuthServiceValues() throws IOException {
-        String json = "{" +
-                "\"apiVersion\":\"enmasse.i/v1beta1\"," +
-                "\"kind\":\"AddressSpace\"," +
-                "\"metadata\":{" +
-                "  \"name\":\"myspace\"" +
-                "}," +
-                "\"spec\": {" +
-                "  \"type\":\"standard\"," +
-                "  \"plan\":\"myplan\"," +
-                "  \"authenticationService\": {" +
-                "     \"type\": \"standard\"," +
-                "     \"details\": {" +
-                "       \"host\": \"my.example.com\"" +
-                "     }" +
-                "  }" +
-                "}" +
-                "}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
-        assertEquals(1, exception.getConstraintViolations().size());
     }
 
     @Test

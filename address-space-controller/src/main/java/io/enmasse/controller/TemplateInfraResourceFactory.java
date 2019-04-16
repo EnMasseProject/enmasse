@@ -6,17 +6,21 @@ package io.enmasse.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.KubeUtil;
 import io.enmasse.admin.model.v1.*;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.SecretReference;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
@@ -25,8 +29,6 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -63,6 +65,22 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             throw new IllegalArgumentException("Authentication service '" + authService.getMetadata().getName() + "' is not yet deployed");
         }
 
+        String authServiceHost = authService.getStatus().getHost();
+        int authServicePort = authService.getStatus().getPort();
+        String authServiceRealm = authService.getSpec().getRealm() != null ? authService.getSpec().getRealm() : addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+
+        if (authService.getSpec().getType().equals(AuthenticationServiceType.external) && authService.getSpec().getExternal() != null && authService.getSpec().getExternal().isAllowOverride()) {
+            if (addressSpace.getSpec().getAuthenticationService().getHost() != null) {
+                authServiceHost = addressSpace.getSpec().getAuthenticationService().getHost();
+            }
+            if (addressSpace.getSpec().getAuthenticationService().getPort() != null) {
+                authServicePort = addressSpace.getSpec().getAuthenticationService().getPort();
+            }
+            if (addressSpace.getSpec().getAuthenticationService().getRealm() != null) {
+                authServiceRealm = addressSpace.getSpec().getAuthenticationService().getRealm();
+            }
+        }
+
         Optional<ConsoleService> console = schemaProvider.getSchema().findConsoleService(WELL_KNOWN_CONSOLE_SERVICE_NAME);
         if (console.isEmpty()) {
             log.warn("No ConsoleService found named '{}', address space console service will be unavailable", WELL_KNOWN_CONSOLE_SERVICE_NAME);
@@ -73,8 +91,8 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
         parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
         parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getMetadata().getNamespace());
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authService.getStatus().getHost());
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authService.getStatus().getPort()));
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authServiceHost);
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authServicePort));
         parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
 
         String encodedCaCert = Optional.ofNullable(authService.getStatus().getCaCertSecret())
@@ -94,11 +112,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, authService.getStatus().getClientCertSecret().getName());
         }
 
-        if (authService.getSpec().getRealm() != null) {
-            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authService.getSpec().getRealm());
-        } else {
-            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, addressSpace.getAnnotation(AnnotationKeys.REALM_NAME));
-        }
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authServiceRealm);
 
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
         for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
