@@ -57,6 +57,7 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
     }
 
     protected void doTestCreateAddressSpace(AddressSpace addressSpace) throws Exception {
+        addToAddressSpacess(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -66,6 +67,7 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
     }
 
     protected void doTestConnectToAddressSpaceConsole(AddressSpace addressSpace) throws Exception {
+        addToAddressSpacess(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -84,6 +86,7 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
                 standardAuth.getMetadata().getName(),
                 AddressSpaceType.BROKERED,
                 AddressSpacePlans.BROKERED);
+        addToAddressSpacess(addressSpace);
 
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
