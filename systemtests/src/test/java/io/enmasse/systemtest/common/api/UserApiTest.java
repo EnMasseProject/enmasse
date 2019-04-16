@@ -60,7 +60,7 @@ class UserApiTest extends TestBase {
     void cleanUsers() {
         users.forEach((addressSpace, user) -> {
             try {
-                removeUser(addressSpace, user.getMetadata().getName());
+                removeUser(addressSpace, user.getSpec().getUsername());
             } catch (Exception e) {
                 log.info("Clean: User not exists {}", user.getSpec().getUsername());
             }
