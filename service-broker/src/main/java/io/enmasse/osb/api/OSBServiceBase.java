@@ -67,7 +67,6 @@ public abstract class OSBServiceBase {
     protected AddressSpace createAddressSpace(String instanceId, String name, String namespace, String type, String plan, String userId, String userName) throws Exception {
         AuthenticationService authService = new AuthenticationServiceBuilder()
                 .withType(AuthenticationServiceType.STANDARD)
-                .withDetails(Collections.emptyMap())
                 .build();
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()

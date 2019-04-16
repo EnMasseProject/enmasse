@@ -607,14 +607,20 @@ public class SerializationTest {
                 "  \"type\":\"standard\"," +
                 "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
-                "     \"type\": \"external\"" +
+                "     \"name\": \"external\"," +
+                "     \"host\": \"override.example.com\"," +
+                "     \"port\": 1234," +
+                "     \"realm\": \"override\"" +
                 "  }" +
                 "}" +
                 "}";
 
         ObjectMapper mapper = new ObjectMapper();
-        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
-        assertEquals(3, exception.getConstraintViolations().size());
+        AddressSpace addressSpace = mapper.readValue(json, AddressSpace.class);
+        assertThat(addressSpace.getSpec().getAuthenticationService().getName(), is("external"));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getHost(), is("override.example.com"));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getPort(), is(1234));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getRealm(), is("override"));
     }
 
     @Test
@@ -637,31 +643,6 @@ public class SerializationTest {
         ObjectMapper mapper = new ObjectMapper();
         AddressSpace addressSpace= mapper.readValue(json, AddressSpace.class);
         validate(addressSpace);
-    }
-
-    @Test
-    public void testDeserializeAddressSpaceWithExtraAuthServiceValues() throws IOException {
-        String json = "{" +
-                "\"apiVersion\":\"enmasse.i/v1beta1\"," +
-                "\"kind\":\"AddressSpace\"," +
-                "\"metadata\":{" +
-                "  \"name\":\"myspace\"" +
-                "}," +
-                "\"spec\": {" +
-                "  \"type\":\"standard\"," +
-                "  \"plan\":\"myplan\"," +
-                "  \"authenticationService\": {" +
-                "     \"type\": \"standard\"," +
-                "     \"details\": {" +
-                "       \"host\": \"my.example.com\"" +
-                "     }" +
-                "  }" +
-                "}" +
-                "}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        ConstraintViolationException exception = assertThrows(ConstraintViolationException.class, () -> validate(mapper.readValue(json, AddressSpace.class)));
-        assertEquals(1, exception.getConstraintViolations().size());
     }
 
     @Test

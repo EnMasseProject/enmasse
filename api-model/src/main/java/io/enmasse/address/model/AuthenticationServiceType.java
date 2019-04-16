@@ -20,6 +20,10 @@ public enum AuthenticationServiceType {
         return name().toLowerCase();
     }
 
+    public io.enmasse.admin.model.v1.AuthenticationServiceType toAdminType() {
+        return io.enmasse.admin.model.v1.AuthenticationServiceType.valueOf(name().toLowerCase());
+    }
+
     @JsonCreator
     public static AuthenticationServiceType create(String name) {
         return valueOf(name.toUpperCase());
