@@ -608,9 +608,11 @@ public class SerializationTest {
                 "  \"plan\":\"myplan\"," +
                 "  \"authenticationService\": {" +
                 "     \"name\": \"external\"," +
-                "     \"host\": \"override.example.com\"," +
-                "     \"port\": 1234," +
-                "     \"realm\": \"override\"" +
+                "     \"overrides\": {" +
+                "         \"host\": \"override.example.com\"," +
+                "         \"port\": 1234," +
+                "         \"realm\": \"override\"" +
+                "     }" +
                 "  }" +
                 "}" +
                 "}";
@@ -618,9 +620,9 @@ public class SerializationTest {
         ObjectMapper mapper = new ObjectMapper();
         AddressSpace addressSpace = mapper.readValue(json, AddressSpace.class);
         assertThat(addressSpace.getSpec().getAuthenticationService().getName(), is("external"));
-        assertThat(addressSpace.getSpec().getAuthenticationService().getHost(), is("override.example.com"));
-        assertThat(addressSpace.getSpec().getAuthenticationService().getPort(), is(1234));
-        assertThat(addressSpace.getSpec().getAuthenticationService().getRealm(), is("override"));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getOverrides().getHost(), is("override.example.com"));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getOverrides().getPort(), is(1234));
+        assertThat(addressSpace.getSpec().getAuthenticationService().getOverrides().getRealm(), is("override"));
     }
 
     @Test

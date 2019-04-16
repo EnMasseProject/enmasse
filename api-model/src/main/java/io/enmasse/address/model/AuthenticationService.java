@@ -32,9 +32,7 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
 
     private String name;
 
-    private String host;
-    private Integer port;
-    private String realm;
+    private AuthenticationServiceOverrides overrides;
 
     // TODO: Keep for backwards compatibility
     private AuthenticationServiceType type;
@@ -58,28 +56,12 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
         this.name = name;
     }
 
-    public String getHost() {
-        return host;
+    public void setOverrides(AuthenticationServiceOverrides overrides) {
+        this.overrides = overrides;
     }
 
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-
-    public void setPort(Integer port) {
-        this.port = port;
-    }
-
-    public String getRealm() {
-        return realm;
-    }
-
-    public void setRealm(String realm) {
-        this.realm = realm;
+    public AuthenticationServiceOverrides getOverrides() {
+        return overrides;
     }
 
     @Override
@@ -89,13 +71,11 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
         final AuthenticationService that = (AuthenticationService) o;
         return Objects.equals(name, that.name) &&
                 Objects.equals(type, that.type) &&
-                Objects.equals(host, that.host) &&
-                Objects.equals(port, that.port) &&
-                Objects.equals(realm, that.realm);
+                Objects.equals(overrides, that.overrides);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, host, port, realm);
+        return Objects.hash(name, type, overrides);
     }
 }
