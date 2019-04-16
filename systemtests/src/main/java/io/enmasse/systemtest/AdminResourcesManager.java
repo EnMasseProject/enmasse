@@ -160,7 +160,7 @@ public class AdminResourcesManager {
             adminApiClient.createAuthService(authenticationService);
             authServices.add(authenticationService);
         }
-        TestUtils.waitUntilCondition("Auth service is deployed: " + authenticationService.getMetadata().getName(), () ->
+        TestUtils.waitUntilCondition("Auth service is deployed: " + authenticationService.getMetadata().getName(), (phase) ->
                         TestUtils.listReadyPods(Kubernetes.getInstance()).stream().filter(pod ->
                                 pod.getMetadata().getName().contains(authenticationService.getMetadata().getName())).count() == 1,
                 new TimeoutBudget(5, TimeUnit.MINUTES));
@@ -169,7 +169,7 @@ public class AdminResourcesManager {
     public void removeAuthService(AuthenticationService authService) throws Exception {
         adminApiClient.deleteAuthService(authService);
         authServices.removeIf(authserviceId -> authserviceId.getMetadata().getName().equals(authService.getMetadata().getName()));
-        TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), () ->
+        TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), (phase) ->
                         TestUtils.listReadyPods(Kubernetes.getInstance()).stream().noneMatch(pod ->
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),
                 new TimeoutBudget(5, TimeUnit.MINUTES));

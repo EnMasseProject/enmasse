@@ -12,9 +12,9 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.IoTUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,8 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -38,23 +36,9 @@ class SimpleK8sDeployTest {
 
     private static final String NAMESPACE = Environment.getInstance().namespace();
 
-    private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
-            "iot-auth-service",
-            "iot-device-registry",
-            "iot-gc",
-            "iot-http-adapter",
-            "iot-mqtt-adapter",
-            "iot-tenant-service",
-    };
-
-    private static final Map<String, String> IOT_LABELS;
-
-    static {
-        IOT_LABELS = new HashMap<>();
-        IOT_LABELS.put("component", "iot");
-    }
-
     private Kubernetes client = Kubernetes.getInstance();
+
+    private static IoTConfig config;
 
     @BeforeAll
     static void setup() throws Exception {
@@ -76,7 +60,7 @@ class SimpleK8sDeployTest {
                 .withNewProxyConfiguratorLike(r1).endProxyConfigurator()
                 .build();
 
-        IoTConfig config = new IoTConfigBuilder()
+        config = new IoTConfigBuilder()
 
                 .withNewMetadata()
                 .withName("default")
@@ -146,26 +130,7 @@ class SimpleK8sDeployTest {
 
     @Test
     void testDeploy() throws Exception {
-
-        final TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-
-        try {
-            TestUtils.waitUntilCondition("IoT Config to deploy", this::allDeploymentsPresent, budget);
-            TestUtils.waitForNReplicas(this.client, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
-        } catch (Exception e) {
-            TestUtils.streamNonReadyPods(this.client, NAMESPACE).forEach(KubeCMDClient::dumpPodLogs);
-            KubeCMDClient.describePods(NAMESPACE);
-            throw e;
-        }
+        IoTUtils.waitForIoTConfigReady(new IoTConfigApiClient(client), client, config);
     }
-
-    private boolean allDeploymentsPresent() {
-        final String[] deployments = this.client.listDeployments(IOT_LABELS).stream()
-                .map(deployment -> deployment.getMetadata().getName())
-                .toArray(String[]::new);
-        Arrays.sort(deployments);
-        return Arrays.equals(deployments, EXPECTED_DEPLOYMENTS);
-    }
-
 
 }

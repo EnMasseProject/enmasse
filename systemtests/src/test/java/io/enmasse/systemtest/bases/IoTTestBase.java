@@ -4,22 +4,34 @@
  */
 package io.enmasse.systemtest.bases;
 
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
-import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
-import io.enmasse.systemtest.apiclients.UserApiClient;
-import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
-import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.enmasse.systemtest.utils.IoTUtils;
+import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.WaitPhase;
+import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
+import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
+import io.enmasse.systemtest.apiclients.UserApiClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageType;
+import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
+import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
 
 public abstract class IoTTestBase extends TestBase {
 
@@ -114,7 +126,7 @@ public abstract class IoTTestBase extends TestBase {
                 iotConfigs.add(config);
             }
         }
-        IoTUtils.waitForIoTConfigReady(iotConfigApiClient, config);
+        IoTUtils.waitForIoTConfigReady(iotConfigApiClient, kubernetes, config);
         IoTUtils.syncIoTConfig(config, iotConfigApiClient);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -133,6 +145,40 @@ public abstract class IoTTestBase extends TestBase {
         IoTUtils.waitForIoTProjectReady(iotProjectApiClient, addressApiClient, project);
         IoTUtils.syncIoTProject(project, iotProjectApiClient);
         TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
+        waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
+    }
+
+    protected void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+        JsonObject json = new JsonObject(Map.of("a", "b"));
+        String message = "First successful "+type.name().toLowerCase()+" message";
+        TestUtils.waitUntilCondition(message, (phase) -> {
+            try {
+                if(type == MessageType.EVENT) {
+                    var response = adapterClient.sendEvent(json, any());
+                    logResponseIfLastTryFailed(phase, response, message);
+                    return response.statusCode() == HTTP_ACCEPTED;
+                } else if(type == MessageType.TELEMETRY) {
+                    var response = adapterClient.sendTelemetry(json, any());
+                    logResponseIfLastTryFailed(phase, response, message);
+                    return response.statusCode() == HTTP_ACCEPTED;
+                } else {
+                    return true;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, new TimeoutBudget(2, TimeUnit.MINUTES));
+
+        log.info("First "+type.name().toLowerCase()+" message accepted");
+    }
+
+    private void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
+        if(phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
+            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
+        }
     }
 
 }

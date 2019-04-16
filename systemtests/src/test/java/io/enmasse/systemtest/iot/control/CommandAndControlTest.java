@@ -11,7 +11,6 @@ import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
@@ -25,12 +24,12 @@ import org.apache.qpid.proton.message.Message;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.net.HttpURLConnection.HTTP_OK;
-import static java.time.Duration.ofSeconds;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
@@ -51,8 +50,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
-import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
-import static io.enmasse.systemtest.apiclients.Predicates.any;
 import static io.enmasse.systemtest.apiclients.Predicates.is;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
@@ -125,13 +122,14 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     }
 
     @Test
+    @Disabled
     void testOneShotCommand() throws Exception {
 
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
 
         var f1 = setupMessagingReceiver(sentFuture, null);
 
-        waitForFirstSuccessOnTelemetry();
+        waitForFirstSuccessOnTelemetry(httpClient);
 
         var response = sendTelemetryWithTtd();
 
@@ -143,6 +141,7 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     }
 
     @Test
+    @Disabled
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();
@@ -158,7 +157,7 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
             commandMessage.setReplyTo(replyToAddress);
         });
 
-        waitForFirstSuccessOnTelemetry();
+        waitForFirstSuccessOnTelemetry(httpClient);
 
         var response = sendTelemetryWithTtd();
 
@@ -253,21 +252,6 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
         }, Optional.empty()).getResult();
         return f1;
 
-    }
-
-    private void waitForFirstSuccessOnTelemetry() throws Exception {
-        // wait for the first telemetry message to succeed
-
-        TestUtils.waitUntilCondition("First successful telemetry message", () -> {
-            try {
-                var response = this.httpClient.sendTelemetry(null, any());
-                return response.statusCode() == HTTP_ACCEPTED;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, ofDuration(ofSeconds(60)));
-
-        log.info("First telemetry message accepted");
     }
 
     private void assertTelemetryResponse(final HttpResponse<?> response) {

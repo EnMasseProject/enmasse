@@ -73,7 +73,7 @@ class UpgradeTest extends TestBase {
         String images = Files.readString(imageEnvDir);
         log.info("Expected images: {}", images);
 
-        TestUtils.waitUntilCondition("Images are updated", () -> {
+        TestUtils.waitUntilCondition("Images are updated", (phase) -> {
             AtomicBoolean ready = new AtomicBoolean(true);
             log.info("=======================================================");
             kubernetes.listPods().forEach(pod -> {

@@ -12,19 +12,34 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
 import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.slf4j.Logger;
 
 import static io.enmasse.systemtest.utils.AddressSpaceUtils.jsonToAdressSpace;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class IoTUtils {
 
     private static Logger log = CustomLogger.getLogger();
 
-    public static void waitForIoTConfigReady(IoTConfigApiClient apiClient, IoTConfig config) throws Exception {
+    private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
+                    "iot-auth-service",
+                    "iot-device-registry",
+                    "iot-gc",
+                    "iot-http-adapter",
+                    "iot-mqtt-adapter",
+                    "iot-tenant-service",
+            };
+
+
+    private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
+
+    public static void waitForIoTConfigReady(IoTConfigApiClient apiClient, Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         while (budget.timeLeft() >= 0 && !isReady) {
@@ -39,6 +54,23 @@ public class IoTUtils {
             String jsonStatus = config != null ? config.getStatus().getState() : "";
             throw new IllegalStateException("IoTConfig " + config.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
+
+        try {
+            TestUtils.waitUntilCondition("IoT Config to deploy", (phase)->allDeploymentsPresent(kubernetes), budget);
+            TestUtils.waitForNReplicas(kubernetes, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+        } catch (Exception e) {
+            TestUtils.streamNonReadyPods(kubernetes, config.getMetadata().getNamespace()).forEach(KubeCMDClient::dumpPodLogs);
+            KubeCMDClient.describePods(config.getMetadata().getNamespace());
+            throw e;
+        }
+    }
+
+    private static boolean allDeploymentsPresent(Kubernetes kubernetes) {
+        final String[] deployments = kubernetes.listDeployments(IOT_LABELS).stream()
+                .map(deployment -> deployment.getMetadata().getName())
+                .toArray(String[]::new);
+        Arrays.sort(deployments);
+        return Arrays.equals(deployments, EXPECTED_DEPLOYMENTS);
     }
 
     public static void waitForIoTProjectReady(IoTProjectApiClient apiClient, AddressApiClient addressSpaceApiClient, IoTProject project) throws Exception {
