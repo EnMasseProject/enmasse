@@ -65,7 +65,7 @@ public class SeleniumManagement {
         for (int i = 1; i <= attempts; i++) {
             SystemtestsKubernetesApps.deleteSeleniumPod(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
             try {
-                TestUtils.waitUntilCondition("Selenium pods ready", () -> {
+                TestUtils.waitUntilCondition("Selenium pods ready", (phase) -> {
                             List<String> current = TestUtils.listReadyPods(Kubernetes.getInstance(),
                                     SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
                             current.removeAll(beforeRestart);

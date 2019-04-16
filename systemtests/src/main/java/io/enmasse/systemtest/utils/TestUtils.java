@@ -36,7 +36,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -529,19 +529,24 @@ public class TestUtils {
         throw new IllegalStateException(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
-    public static void waitUntilCondition(final String forWhat, final BooleanSupplier condition, final TimeoutBudget budget) throws Exception {
+    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) throws Exception {
         Objects.requireNonNull(condition);
         Objects.requireNonNull(budget);
 
         log.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
 
         while (!budget.timeoutExpired()) {
-            if (condition.getAsBoolean()) {
+            if (condition.test(WaitPhase.LOOP)) {
                 return;
             }
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
             Thread.sleep(5000);
         }
+
+        if(condition.test(WaitPhase.LAST_TRY)) {
+            return;
+        }
+
         throw new IllegalStateException("Failed to wait for: " + forWhat);
     }
 
@@ -553,7 +558,7 @@ public class TestUtils {
             throws Exception {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
 
-        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, () -> {
+        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, (phase) -> {
             try {
                 final String newVersion = provideNewResourceVersion.get();
                 return !currentResourceVersion.equals(newVersion);

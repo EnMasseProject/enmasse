@@ -56,7 +56,7 @@ public class IoTUtils {
         }
 
         try {
-            TestUtils.waitUntilCondition("IoT Config to deploy", ()->allDeploymentsPresent(kubernetes), budget);
+            TestUtils.waitUntilCondition("IoT Config to deploy", (phase)->allDeploymentsPresent(kubernetes), budget);
             TestUtils.waitForNReplicas(kubernetes, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
         } catch (Exception e) {
             TestUtils.streamNonReadyPods(kubernetes, config.getMetadata().getNamespace()).forEach(KubeCMDClient::dumpPodLogs);
