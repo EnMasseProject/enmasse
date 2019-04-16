@@ -24,7 +24,7 @@ import java.net.MalformedURLException;
 
 
 public class ExecutionListener implements TestExecutionListener {
-    static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {

@@ -276,7 +276,7 @@ public class KubeCMDClient extends CmdClient {
     }
 
     public static ExecutionResultData describePods(String namespace) {
-        return execute(DEFAULT_SYNC_TIMEOUT, true, "kubectl", "-n", namespace, "describe", "pods");
+        return execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "-n", namespace, "describe", "pods");
     }
 
     public static ExecutionResultData createFromFile(String namespace, Path path) {

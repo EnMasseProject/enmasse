@@ -12,6 +12,7 @@ import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
+import io.enmasse.systemtest.ability.TestWatcher;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
@@ -44,6 +45,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
 import javax.jms.DeliveryMode;
@@ -72,10 +74,11 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Base class for all tests
  */
+@ExtendWith(TestWatcher.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final Environment environment = Environment.getInstance();
-    protected static final UserCredentials clusterUser =  new UserCredentials(KubeCMDClient.getOCUser());
+    protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
     protected static final Kubernetes kubernetes = Kubernetes.getInstance();
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
