@@ -69,7 +69,7 @@ public class AuthenticationServiceSpecExternal extends AbstractWithAdditionalPro
         return "AuthenticationServiceSpecExternal{" +
                 "host='" + host + '\'' +
                 ", port=" + port +
-                ", allowOverride=" + port +
+                ", allowOverride=" + allowOverride +
                 ", caCertSecret=" + caCertSecret +
                 ", clientCertSecret=" + clientCertSecret +
                 '}';
