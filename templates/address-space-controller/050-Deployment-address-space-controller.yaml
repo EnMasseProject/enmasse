@@ -7,6 +7,8 @@ metadata:
   name: address-space-controller
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: enmasse
