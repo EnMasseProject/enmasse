@@ -117,6 +117,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
         sender.setArguments(arguments);
         arguments.remove(ClientArgument.MSG_CONTENT);
+        arguments.put(ClientArgument.TIMEOUT, "40");
         receiver.setArguments(arguments);
 
         log.info("Subscribe receiver");
@@ -125,7 +126,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         if (isBrokered(sharedAddressSpace)) {
             waitForSubscribers(new ArtemisManagement(), sharedAddressSpace, dest.getSpec().getAddress(), 1);
         } else {
-            Thread.sleep(10_000); //mqtt connection is not in console
+            Thread.sleep(30_000); //mqtt connection is not in console
         }
 
         log.info("Send messages");
