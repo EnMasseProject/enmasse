@@ -6,11 +6,10 @@ package io.enmasse.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.CertSpec;
-import io.enmasse.address.model.EndpointSpec;
-import io.enmasse.address.model.KubeUtil;
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
@@ -70,14 +69,17 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         String authServiceRealm = authService.getSpec().getRealm() != null ? authService.getSpec().getRealm() : addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
 
         if (authService.getSpec().getType().equals(AuthenticationServiceType.external) && authService.getSpec().getExternal() != null && authService.getSpec().getExternal().isAllowOverride()) {
-            if (addressSpace.getSpec().getAuthenticationService().getHost() != null) {
-                authServiceHost = addressSpace.getSpec().getAuthenticationService().getHost();
-            }
-            if (addressSpace.getSpec().getAuthenticationService().getPort() != null) {
-                authServicePort = addressSpace.getSpec().getAuthenticationService().getPort();
-            }
-            if (addressSpace.getSpec().getAuthenticationService().getRealm() != null) {
-                authServiceRealm = addressSpace.getSpec().getAuthenticationService().getRealm();
+            if (addressSpace.getSpec().getAuthenticationService().getOverrides() != null) {
+                AuthenticationServiceOverrides overrides = addressSpace.getSpec().getAuthenticationService().getOverrides();
+                if (overrides.getHost() != null) {
+                    authServiceHost = overrides.getHost();
+                }
+                if (overrides.getPort() != null) {
+                    authServicePort = overrides.getPort();
+                }
+                if (overrides.getRealm() != null) {
+                    authServiceRealm = overrides.getRealm();
+                }
             }
         }
 

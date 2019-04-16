@@ -1433,11 +1433,25 @@
                 "authenticationService": {
                     "type": "object",
                     "properties": {
+                        "name": {
+                            "type": "string"
+                        },
                         "type": {
                             "type": "string"
                         },
-                        "details": {
-                            "type": "object"
+                        "overrides": {
+                            "type": "object",
+                            "properties": {
+                                "host": {
+                                    "type": "string"
+                                },
+                                "port": {
+                                    "type": "integer"
+                                },
+                                "realm": {
+                                    "type": "string"
+                                }
+                            }
                         }
                     }
                 },
