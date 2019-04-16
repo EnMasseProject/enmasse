@@ -18,7 +18,7 @@ kind: BrokeredInfraConfig
 metadata:
   name: brokered-infra-config-example
 spec:
-  version: {EnMasseVersion}
+  version: "{EnMasseVersion}"
   admin:
     resources:
       memory: 256Mi
