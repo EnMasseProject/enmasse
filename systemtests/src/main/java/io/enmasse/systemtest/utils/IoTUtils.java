@@ -21,6 +21,7 @@ import static io.enmasse.systemtest.utils.AddressSpaceUtils.jsonToAdressSpace;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class IoTUtils {
@@ -52,17 +53,11 @@ public class IoTUtils {
         }
         if (!isReady) {
             String jsonStatus = config != null ? config.getStatus().getState() : "";
-            throw new IllegalStateException("IoTConfig " + config.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
+            throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
-        try {
-            TestUtils.waitUntilCondition("IoT Config to deploy", (phase)->allDeploymentsPresent(kubernetes), budget);
-            TestUtils.waitForNReplicas(kubernetes, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
-        } catch (Exception e) {
-            TestUtils.streamNonReadyPods(kubernetes, config.getMetadata().getNamespace()).forEach(KubeCMDClient::dumpPodLogs);
-            KubeCMDClient.describePods(config.getMetadata().getNamespace());
-            throw e;
-        }
+        TestUtils.waitUntilCondition("IoT Config to deploy", (phase)->allDeploymentsPresent(kubernetes), budget);
+        TestUtils.waitForNReplicas(kubernetes, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
     }
 
     private static boolean allDeploymentsPresent(Kubernetes kubernetes) {
