@@ -13,12 +13,8 @@ import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.selenium.SeleniumManagement;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
-import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
@@ -30,6 +26,8 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -45,6 +43,7 @@ class UserApiTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("user-api-address-space-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
     private AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("user-api-address-space-standard", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
+    private Map<AddressSpace, User> users = new HashMap<>();
 
     @BeforeEach
     void deployAddressSpaces() throws Exception {
@@ -54,6 +53,18 @@ class UserApiTest extends TestBase {
         if (!AddressSpaceUtils.existAddressSpace(addressApiClient, standard.getMetadata().getName())) {
             createAddressSpace(standard);
         }
+        users.clear();
+    }
+
+    @AfterEach
+    void cleanUsers() {
+        users.forEach((addressSpace, user) -> {
+            try {
+                removeUser(addressSpace, user.getMetadata().getName());
+            } catch (Exception e) {
+                log.info("Clean: User not exists {}", user.getMetadata().getName());
+            }
+        });
     }
 
     @BeforeAll
@@ -77,6 +88,7 @@ class UserApiTest extends TestBase {
                         .withOperations(Operation.send, Operation.recv).build()));
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(brokered.getMetadata().getName(), testUser);
+        users.put(brokered, testUser);
 
         //create user
         assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
@@ -100,6 +112,7 @@ class UserApiTest extends TestBase {
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(brokered.getMetadata().getName(), testUser);
         userDefinitionPayload.getJsonObject("spec").getJsonArray("authorization").getJsonObject(0).getJsonArray("operations").add("unknown");
+        users.put(brokered, testUser);
 
         //create user
         ExecutionResultData createUserResponse = KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString());
@@ -131,6 +144,7 @@ class UserApiTest extends TestBase {
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(brokered.getMetadata().getName(), testUser);
         userDefinitionPayload.getJsonObject("spec").getJsonArray("authorization").getJsonObject(0).getJsonArray("operations").add("posilani");
+        users.put(brokered, testUser);
 
         Throwable exception = assertThrows(ExecutionException.class, () -> getUserApiClient().createUser(userDefinitionPayload, HTTP_INTERNAL_ERROR));
         assertTrue(exception.getMessage().contains("value not one of declared Enum instance names: [send, view, recv, manage]"));
@@ -154,6 +168,7 @@ class UserApiTest extends TestBase {
                         .withOperations(Operation.send).build()));
 
         JsonObject userDefinitionPayload = UserUtils.userToJson(brokered.getMetadata().getName(), testUser);
+        users.put(brokered, testUser);
 
         //create user
         assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
@@ -193,6 +208,7 @@ class UserApiTest extends TestBase {
                         .withAddresses(queue.getSpec().getAddress())
                         .withOperations(Operation.send).build()));
 
+        users.put(brokered, testUser);
         createUser(standard, testUser);
 
         AmqpClient client = amqpClientFactory.createQueueClient(standard);
@@ -219,6 +235,7 @@ class UserApiTest extends TestBase {
                         .withAddresses("*")
                         .withOperations(Operation.send).build()));
 
+        users.put(brokered, testUser);
         createUser(brokered, testUser);
 
         testUser = new DoneableUser(testUser).editSpec().withUsername("").endSpec().done();
@@ -255,6 +272,8 @@ class UserApiTest extends TestBase {
                         .withAddresses("*")
                         .withOperations(Operation.send, Operation.recv).build()));
 
+        users.put(brokered, testUser);
+        users.put(brokered, testUser2);
         createUser(brokered, testUser);
         createUser(brokered, testUser2);
 
@@ -281,6 +300,7 @@ class UserApiTest extends TestBase {
                 new UserAuthorizationBuilder()
                         .withAddresses("*")
                         .withOperations(Operation.send).build()));
+        users.put(brokered, testUser);
         getUserApiClient().createUser(UserUtils.userToJson(brokered.getMetadata().getName(), "userpepinator", testUser), HTTP_CREATED);
 
         //first char of username must be a-z0-9 (other symbols respond with HTTP:400)
@@ -298,6 +318,7 @@ class UserApiTest extends TestBase {
                 new UserAuthorizationBuilder()
                         .withAddresses("*")
                         .withOperations(Operation.send).build()));
+        users.put(brokered, testUser3);
         getUserApiClient().createUser(UserUtils.userToJson(brokered.getMetadata().getName(), "userpepinator", testUser3), HTTP_CREATED);
 
         //underscore is also allowed in user name (response HTTP:201)
@@ -306,7 +327,7 @@ class UserApiTest extends TestBase {
                 new UserAuthorizationBuilder()
                         .withAddresses("*")
                         .withOperations(Operation.send).build()));
-
+        users.put(brokered, testUser4);
         getUserApiClient().createUser(UserUtils.userToJson(brokered.getMetadata().getName(), "userpepinator", testUser4), HTTP_CREATED);
 
         //last char must also be a-z (other symbols respond with HTTP:400)
@@ -324,7 +345,7 @@ class UserApiTest extends TestBase {
                 new UserAuthorizationBuilder()
                         .withAddresses("*")
                         .withOperations(Operation.send).build()));
-
+        users.put(brokered, testUser6);
         getUserApiClient().createUser(UserUtils.userToJson(brokered.getMetadata().getName(), "userpepinator", testUser6), HTTP_CREATED);
 
         //Foreign symbols may not be used in username (response HTTP:400)
@@ -342,21 +363,23 @@ class UserApiTest extends TestBase {
         Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
         setAddresses(standard, queue);
         UserCredentials serviceAccount = new UserCredentials("test-service-account", "");
-        createUserServiceAccount(standard, serviceAccount, environment.namespace());
-        UserCredentials messagingUser = new UserCredentials("@@serviceaccount@@",
-                kubernetes.getServiceaccountToken(serviceAccount.getUsername(), environment.namespace()));
-        log.info("username: {}, password: {}", messagingUser.getUsername(), messagingUser.getPassword());
+        try {
+            createUserServiceAccount(standard, serviceAccount, environment.namespace());
+            UserCredentials messagingUser = new UserCredentials("@@serviceaccount@@",
+                    kubernetes.getServiceaccountToken(serviceAccount.getUsername(), environment.namespace()));
+            log.info("username: {}, password: {}", messagingUser.getUsername(), messagingUser.getPassword());
 
-        assertCanConnect(standard, messagingUser, Collections.singletonList(queue));
+            assertCanConnect(standard, messagingUser, Collections.singletonList(queue));
 
-        //delete user
-        assertThat("User deleting failed using oc cmd",
-                KubeCMDClient.deleteUser(kubernetes.getNamespace(), standard.getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(true));
-        assertThat("User is still present",
-                KubeCMDClient.getUser(kubernetes.getNamespace(), standard.getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(false));
+            //delete user
+            assertThat("User deleting failed using oc cmd",
+                    KubeCMDClient.deleteUser(kubernetes.getNamespace(), standard.getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(true));
+            assertThat("User is still present",
+                    KubeCMDClient.getUser(kubernetes.getNamespace(), standard.getMetadata().getName(), serviceAccount.getUsername()).getRetCode(), is(false));
 
-        assertCannotConnect(standard, messagingUser, Collections.singletonList(queue));
-
-        kubernetes.deleteServiceAccount("test-service-account", environment.namespace());
+            assertCannotConnect(standard, messagingUser, Collections.singletonList(queue));
+        } finally {
+            kubernetes.deleteServiceAccount("test-service-account", environment.namespace());
+        }
     }
 }
