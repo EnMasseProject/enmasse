@@ -284,22 +284,28 @@ public class AddressSpaceUtils {
     public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
         log.info("Waiting for AddressSpace {} to be deleted", addressSpace.getMetadata().getName());
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        waitForItems(addressSpace, budget, () -> kubernetes.listPods(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
-        waitForItems(addressSpace, budget, () -> kubernetes.listConfigMaps(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
-        waitForItems(addressSpace, budget, () -> kubernetes.listServices(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
-        waitForItems(addressSpace, budget, () -> kubernetes.listSecrets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
-        waitForItems(addressSpace, budget, () -> kubernetes.listDeployments(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
-        waitForItems(addressSpace, budget, () -> kubernetes.listStatefulSets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
-        waitForItems(addressSpace, budget, () -> kubernetes.listServiceAccounts(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
-        waitForItems(addressSpace, budget, () -> kubernetes.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))).size());
+        waitForItems(addressSpace, budget, () -> kubernetes.listPods(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kubernetes.listConfigMaps(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kubernetes.listServices(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kubernetes.listSecrets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kubernetes.listDeployments(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kubernetes.listStatefulSets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kubernetes.listServiceAccounts(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kubernetes.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
     }
 
-    private static void waitForItems(AddressSpace addressSpace, TimeoutBudget budget, Callable<Integer> callable) throws Exception {
-        while (budget.timeLeft() >= 0 && callable.call() > 0) {
+    private static <T> void waitForItems(AddressSpace addressSpace, TimeoutBudget budget, Callable<List<T>> callable) throws Exception {
+        List<T> resources = null;
+        while (budget.timeLeft() >= 0) {
+            resources = callable.call();
+            if (resources == null || resources.isEmpty()) {
+                break;
+            }
             Thread.sleep(1000);
         }
-        if (callable.call() > 0) {
-            throw new TimeoutException("Timed out waiting for namespace " + addressSpace.getMetadata().getName() + " to disappear");
+        resources = callable.call();
+        if (resources != null && resources.size() > 0) {
+            throw new TimeoutException("Timed out waiting for namespace " + addressSpace.getMetadata().getName() + " to disappear. Resources left: " + resources);
         }
     }
 
