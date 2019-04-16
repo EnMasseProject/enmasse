@@ -5,7 +5,6 @@
 
 package io.enmasse.controller;
 
-import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.Kubernetes;
@@ -100,7 +99,7 @@ public class AddressSpaceController {
         Clock clock = Clock.systemUTC();
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
         KeycloakUserApi keycloakUserApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
-        schemaProvider.registerListener(newSchema -> keycloakUserApi.pruneAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
+        schemaProvider.registerListener(newSchema -> keycloakUserApi.retainAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
         UserApi userApi = new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
                 AuthenticationServiceType.external, new NullUserApi(),
                 AuthenticationServiceType.standard, keycloakUserApi));

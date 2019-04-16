@@ -54,7 +54,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
         this.apiTimeout = apiTimeout;
     }
 
-    public synchronized void pruneAuthenticationServices(List<AuthenticationService> items) {
+    public synchronized void retainAuthenticationServices(List<AuthenticationService> items) {
         Set<String> desired = items.stream().map(a -> a.getMetadata().getName()).collect(Collectors.toSet());
         Set<String> toRemove = new HashSet<>(keycloakMap.keySet());
         toRemove.removeAll(desired);

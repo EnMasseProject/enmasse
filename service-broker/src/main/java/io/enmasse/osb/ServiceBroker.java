@@ -6,7 +6,6 @@
 package io.enmasse.osb;
 
 import io.enmasse.address.model.CoreCrd;
-import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.auth.AuthApi;
@@ -110,7 +109,7 @@ public class ServiceBroker extends AbstractVerticle {
     private UserApi createUserApi(ServiceBrokerOptions options, CachingSchemaProvider schemaProvider) {
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(client);
         KeycloakUserApi keycloakUserApi = new KeycloakUserApi(keycloakFactory, Clock.systemUTC(), Duration.ZERO);
-        schemaProvider.registerListener(newSchema -> keycloakUserApi.pruneAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
+        schemaProvider.registerListener(newSchema -> keycloakUserApi.retainAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
         return new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
                 AuthenticationServiceType.external, new NullUserApi(),
                 AuthenticationServiceType.standard, keycloakUserApi));
