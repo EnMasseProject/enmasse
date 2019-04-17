@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -23,6 +25,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -30,6 +33,7 @@ import org.slf4j.Logger;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
@@ -49,7 +53,6 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
     private Logger log = CustomLogger.getLogger();
 
-    private static final String DUMMY_DEVICE_ID = "1234";
     private Endpoint mqttAdapterEndpoint;
     private Endpoint deviceRegistryEndpoint;
     private DeviceRegistryClient registryClient;
@@ -57,10 +60,11 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
     private IMqttClient adapterClient;
     private AmqpClient businessApplicationClient;
 
-    private String deviceAuthId = "sensor1234";
-    private String devicePassword = "devicePwd1234";
-    private String businessApplicationUsername = "businessuser";
-    private String businessApplicationPassword = "businesspwd";
+    private final String deviceId = UUID.randomUUID().toString();
+    private final String deviceAuthId = UUID.randomUUID().toString();
+    private final String devicePassword = UUID.randomUUID().toString();
+    private final String businessApplicationUsername = UUID.randomUUID().toString();
+    private final String businessApplicationPassword = UUID.randomUUID().toString();
 
     @BeforeEach
     void initEnv() throws Exception {
@@ -76,15 +80,15 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         if (credentialsClient == null) {
             credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
         }
-        registryClient.registerDevice(tenantId(), DUMMY_DEVICE_ID);
-        credentialsClient.addCredentials(tenantId(), DUMMY_DEVICE_ID, deviceAuthId, devicePassword);
+        registryClient.registerDevice(tenantId(), deviceId);
+        credentialsClient.addCredentials(tenantId(), deviceId, deviceAuthId, devicePassword);
 
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);
         adapterClient = new MqttClientFactory(kubernetes, environment, null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
                 .build()
-                .clientId(DUMMY_DEVICE_ID)
+                .clientId(deviceId)
                 .endpoint(mqttAdapterEndpoint)
                 .mqttConnectionOptions(mqttOptions)
                 .create();
@@ -114,10 +118,10 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
     @AfterEach
     void cleanEnv() throws Exception {
-        credentialsClient.deleteAllCredentials(tenantId(), DUMMY_DEVICE_ID);
-        credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
-        registryClient.deleteDeviceRegistration(tenantId(), DUMMY_DEVICE_ID);
-        registryClient.getDeviceRegistration(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
+        credentialsClient.deleteAllCredentials(tenantId(), deviceId);
+        credentialsClient.getCredentials(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        registryClient.deleteDeviceRegistration(tenantId(), deviceId);
+        registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         adapterClient.disconnect();
         adapterClient.close();
         businessApplicationClient.close();
@@ -126,6 +130,27 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
     @Test
     public void basicTelemetryTest() throws Exception {
 
+        var timeout = new TimeoutBudget(2, TimeUnit.MINUTES);
+        businessApplicationClient.recvMessages(IOT_ADDRESS_TELEMETRY + "/" + tenantId(), msg -> {
+            log.info("First telemetry message accepted");
+            timeout.reset(0, TimeUnit.MILLISECONDS);
+            return true;
+        });
+
+        var warmUpMessage = new JsonObject(Map.of("a", "b"));
+        while(!timeout.timeoutExpired()) {
+            MqttMessage message = new MqttMessage(warmUpMessage.toBuffer().getBytes());
+            message.setQos(0);
+            log.info("Sending telemetry data");
+            adapterClient.publish(IOT_ADDRESS_TELEMETRY, message);
+            Thread.sleep(5000);
+        }
+
+    }
+
+    @Test
+    @Disabled
+    public void batchTelemetryTest() throws Exception {
         log.info("Connecting amqp consumer");
         AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
         Future<List<Message>> futureReceivedMessages = businessApplicationClient.recvMessages(IOT_ADDRESS_TELEMETRY + "/" + tenantId(), msg ->{
@@ -133,6 +158,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
                 Binary value = ((Data) msg.getBody()).getValue();
                 JsonObject json = new JsonObject(Buffer.buffer(value.getArray()));
                 if(json.containsKey("i")) {
+                    log.info("Telemetry message received");
                     receivedMessagesCounter.incrementAndGet();
                     return json.getBoolean("end");
                 }
@@ -147,14 +173,13 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             json.put("i", i);
             json.put("end", i == (messagesToSend-1));
             MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
-            message.setQos(1);
+            message.setQos(0);
             adapterClient.publish(IOT_ADDRESS_TELEMETRY, message);
         }
 
         log.info("Waiting to receive telemetry data in business application");
-        futureReceivedMessages.get(15, TimeUnit.SECONDS);
+        futureReceivedMessages.get(60, TimeUnit.SECONDS);
         assertEquals(messagesToSend, receivedMessagesCounter.get());
-
     }
 
     @Test

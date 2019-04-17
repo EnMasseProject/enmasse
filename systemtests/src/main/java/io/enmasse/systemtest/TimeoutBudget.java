@@ -18,7 +18,7 @@ public class TimeoutBudget {
         reset(timeout, timeUnit);
     }
 
-    private void reset(long timeout, TimeUnit timeUnit) {
+    public void reset(long timeout, TimeUnit timeUnit) {
         this.startTime = System.currentTimeMillis();
         this.endTime = startTime + timeUnit.toMillis(timeout);
     }
