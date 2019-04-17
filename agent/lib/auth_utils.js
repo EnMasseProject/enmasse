@@ -318,6 +318,8 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
                 } else {
                     log.debug("No access token found in SSO cookie");
                 }
+            } catch (e) {
+                log.debug("Failed to decode SSO cookie, probably wrong cookie key.", e);
             } finally {
                 next();
             }
