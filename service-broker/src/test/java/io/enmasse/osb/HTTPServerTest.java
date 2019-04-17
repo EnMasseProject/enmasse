@@ -68,9 +68,10 @@ public class HTTPServerTest {
 
         AuthApi authApi = mock(AuthApi.class);
         when(authApi.getNamespace()).thenReturn("controller");
-        when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
-        when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
-        when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
+        TokenReview tokenReview = new TokenReview("foo", "myid", null, null, true);
+        when(authApi.performTokenReview(eq("mytoken"))).thenReturn(tokenReview);
+        when(authApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
+        when(authApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
         httpServer = new HTTPServer(instanceApi, new TestSchemaProvider(), authApi, null, false, null, 0, new ConsoleProxy() {
             @Override
             public String getConsoleUrl(AddressSpace addressSpace) {

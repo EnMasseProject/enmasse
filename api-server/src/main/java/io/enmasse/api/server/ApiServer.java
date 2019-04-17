@@ -5,7 +5,10 @@
 
 package io.enmasse.api.server;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
+import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
 import io.enmasse.k8s.api.*;
@@ -39,12 +42,14 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.time.Clock;
+import java.util.List;
 import java.util.Map;
 
 public class ApiServer extends AbstractVerticle {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class.getName());
     private final NamespacedKubernetesClient client;
     private final ApiServerOptions options;
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
         try {
@@ -83,9 +88,11 @@ public class ApiServer extends AbstractVerticle {
 
         String clientCa;
         String requestHeaderClientCa;
+        ApiHeaderConfig apiHeaderConfig = ApiHeaderConfig.DEFAULT_HEADERS_CONFIG;
         try {
             ConfigMap extensionApiserverAuthentication = client.configMaps().inNamespace(options.getApiserverClientCaConfigNamespace()).withName(options.getApiserverClientCaConfigName()).get();
             clientCa = validateCert("client-ca", extensionApiserverAuthentication.getData().get("client-ca-file"));
+            apiHeaderConfig = parseApiHeaderConfig(extensionApiserverAuthentication, apiHeaderConfig);
             requestHeaderClientCa = validateCert("request-header-client-ca", extensionApiserverAuthentication.getData().get("requestheader-client-ca-file"));
         } catch (KubernetesClientException e) {
             log.info("Unable to retrieve config for client CA. Skipping", e);
@@ -96,7 +103,7 @@ public class ApiServer extends AbstractVerticle {
         Metrics metrics = new Metrics();
 
         HTTPHealthServer httpHealthServer = new HTTPHealthServer(options.getVersion(), metrics);
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry);
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry, apiHeaderConfig);
 
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {
@@ -114,6 +121,29 @@ public class ApiServer extends AbstractVerticle {
                 startPromise.fail(result.cause());
             }
         });
+    }
+
+    private ApiHeaderConfig parseApiHeaderConfig(ConfigMap extensionApiserverAuthentication, ApiHeaderConfig defaultConfig) throws IOException {
+        String userJson = extensionApiserverAuthentication.getData().get("requestheader-username-headers");
+        String groupJson = extensionApiserverAuthentication.getData().get("requestheader-group-headers");
+        String extraJson = extensionApiserverAuthentication.getData().get("requestheader-extra-headers-prefix");
+
+        List<String> userHeader = defaultConfig.getUserHeaders();
+        if (userJson != null) {
+            userHeader = mapper.readValue(userJson, new TypeReference<List<String>>() {});
+        }
+
+        List<String> groupHeader = defaultConfig.getGroupHeaders();
+        if (groupJson != null) {
+            groupHeader = mapper.readValue(groupJson, new TypeReference<List<String>>() {});
+        }
+
+        List<String> extraHeader = defaultConfig.getExtraHeadersPrefix();
+        if (extraJson != null) {
+            extraHeader = mapper.readValue(extraJson, new TypeReference<List<String>>() {});
+        }
+
+        return new ApiHeaderConfig(userHeader, groupHeader, extraHeader);
     }
 
     private static String validateCert(String id, String ca) {

@@ -10,12 +10,12 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
+import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -74,9 +74,10 @@ public class HTTPServerTest {
 
         AuthApi authApi = mock(AuthApi.class);
         when(authApi.getNamespace()).thenReturn("controller");
-        when(authApi.performTokenReview(eq("mytoken"))).thenReturn(new TokenReview("foo", "myid", true));
-        when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
-        when(authApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
+        TokenReview tokenReview = new TokenReview("foo", "myid", null, null, true);
+        when(authApi.performTokenReview(eq("mytoken"))).thenReturn(tokenReview);
+        when(authApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
+        when(authApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), any(), anyString())).thenReturn(new SubjectAccessReview("foo", true));
 
         UserApi userApi = mock(UserApi.class);
         UserList users = new UserList();
@@ -118,7 +119,7 @@ public class HTTPServerTest {
         when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
         when(authenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
 
-        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, options, null, null, Clock.systemUTC(), authenticationServiceRegistry, 0);
+        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, options, null, null, Clock.systemUTC(), authenticationServiceRegistry, 0, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG);
         vertx.deployVerticle(this.server, context.succeeding(arg -> context.completeNow()));
     }
 

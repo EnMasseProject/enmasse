@@ -6,6 +6,7 @@
 package io.enmasse.api.server;
 
 import io.enmasse.api.auth.AllowAllAuthInterceptor;
+import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
@@ -55,18 +56,20 @@ public class HTTPServer extends AbstractVerticle {
     private final Clock clock;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final int port;
+    private final ApiHeaderConfig apiHeaderConfig;
 
     private HttpServer httpServer;
 
     public HTTPServer(AddressSpaceApi addressSpaceApi,
-            SchemaProvider schemaProvider,
-            AuthApi authApi,
-            UserApi userApi,
-            ApiServerOptions options,
-            String clientCa,
-            String requestHeaderClientCa,
-            Clock clock,
-            AuthenticationServiceRegistry authenticationServiceRegistry) {
+                      SchemaProvider schemaProvider,
+                      AuthApi authApi,
+                      UserApi userApi,
+                      ApiServerOptions options,
+                      String clientCa,
+                      String requestHeaderClientCa,
+                      Clock clock,
+                      AuthenticationServiceRegistry authenticationServiceRegistry,
+                      ApiHeaderConfig apiHeaderConfig) {
         this(addressSpaceApi,
                 schemaProvider,
                 authApi,
@@ -76,7 +79,8 @@ public class HTTPServer extends AbstractVerticle {
                 requestHeaderClientCa,
                 clock,
                 authenticationServiceRegistry,
-                SECURE_PORT);
+                SECURE_PORT,
+                apiHeaderConfig);
     }
 
     public HTTPServer(AddressSpaceApi addressSpaceApi,
@@ -88,7 +92,8 @@ public class HTTPServer extends AbstractVerticle {
             String requestHeaderClientCa,
             Clock clock,
             AuthenticationServiceRegistry authenticationServiceRegistry,
-            int port) {
+            int port,
+            ApiHeaderConfig apiHeaderConfig) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = options.getCertDir();
@@ -100,6 +105,7 @@ public class HTTPServer extends AbstractVerticle {
         this.clock = clock;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.port = port;
+        this.apiHeaderConfig = apiHeaderConfig;
     }
 
     @Override
@@ -111,7 +117,7 @@ public class HTTPServer extends AbstractVerticle {
 
         if (isRbacEnabled) {
             log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, path ->
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, apiHeaderConfig, path ->
                     path.equals(HttpHealthService.BASE_URI) ||
                             path.equals(HttpMetricsService.BASE_URI) ||
                             path.equals("/swagger.json")));
