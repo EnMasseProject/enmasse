@@ -15,7 +15,6 @@ The following table describes the {ProductName} resources that pertain to the me
 |Resource |Description
 |`addresses`|Specifies the address.
 |`addressspaces`|Specifies the address space.
-|`addressspaceschemas`|Specifies .
 |`messagingusers`|Specifies the authorization policy that controls which addresses may be used and the operations that may be performed on those addresses.
 |===
 

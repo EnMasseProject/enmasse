@@ -15,6 +15,7 @@ The following table describes the {ProductName} resources that pertain to the se
 |Resource |Description
 |`addressplans`|Specifies the address plan.
 |`addressspaceplans`|Specifies the address space plan.
+|`addressspaceschemas`|Defines the service characteristics available to an `addresspace`. An `addressspace` refers to one `addressspaceschema`. `standard` and `brokered` are predefined `addressspaceschemas`.
 |`brokeredinfraconfigs`|Specifies the infrastructure configuration for brokered address spaces. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-fields-messaging[Brokered infrastructure configuration fields table].
 |`standardinfraconfigs`|Specifies the infrastructure configuration for standard address spaces. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-fields-messaging[Standard infrastructure configuration fields table].
 |===
