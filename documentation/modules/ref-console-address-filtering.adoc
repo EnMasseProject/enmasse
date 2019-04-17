@@ -3,11 +3,11 @@
 // assembly-using-console.adoc
 
 [id='ref-console-address-filtering-{context}']
-= Using the {ProductName} Console address filtering
+= Using the {ConsoleName} address filtering
 
-The address name filtering feature in the {ProductName} Console uses regular expressions. Also, filters are cumulative.
+The address name filtering feature in the {ConsoleName} uses regular expressions. Also, filters are cumulative.
 
-.{ProductName} Console address name filtering behavior
+.{ConsoleName} address name filtering behavior
 [cols="34%a,33%a,33%a",options="header"]
 |===
 |To match... |Use... |Results in...

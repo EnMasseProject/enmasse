@@ -3,10 +3,10 @@
 // assembly-using-console.adoc
 
 [id='ref-view-message-connection-stats-table-{context}']
-= Viewing message and connection statistics using the {ProductName} Console
+= Viewing message and connection statistics using the {ConsoleName}
 
 .Prerequisites
-* You must be logged into the {ProductName} Console.
+* You must be logged into the {ConsoleName}.
 
 .Message statistics reference table
 [cols="50%a,50%a",options="header"]
@@ -34,3 +34,4 @@
 |Standard address space only: Username used by the client to connect |The third column
 |===
 NOTE: For the brokered address space only, on the Connections page, the number of senders is either `0` or `1`. As soon as one or more senders exist, `1` is displayed rather than reflecting the actual number of senders.
+
