@@ -51,13 +51,7 @@ CookieDecoder.prototype.decode = function (oauthcookie_base64url) {
         throw Error(util.format("invalid number of fields (got %d expected 4)", cookie_chunks.length));
     }
     var access_token_ciphered = cookie_chunks[1];
-    var refresh_token_token_ciphered = cookie_chunks[3];
-
     session_state.access_token = this._do_decode(access_token_ciphered);
-    if (refresh_token_token_ciphered) {
-        session_state.refresh_token = this._do_decode(refresh_token_token_ciphered);
-    }
-
     return session_state;
 };
 
