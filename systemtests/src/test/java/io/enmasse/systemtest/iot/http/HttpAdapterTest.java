@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -55,11 +56,11 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
     private AmqpClient businessApplicationClient;
     private HttpAdapterClient adapterClient;
 
-    private String deviceId = "1234";
-    private String deviceAuthId = "sensor1234";
-    private String devicePassword = "devicePwd1234";
-    private String businessApplicationUsername = "businessuser";
-    private String businessApplicationPassword = "businesspwd";
+    private final String deviceId = UUID.randomUUID().toString();
+    private final String deviceAuthId = UUID.randomUUID().toString();
+    private final String devicePassword = UUID.randomUUID().toString();
+    private final String businessApplicationUsername = UUID.randomUUID().toString();
+    private final String businessApplicationPassword = UUID.randomUUID().toString();
 
     @BeforeEach
     void initEnv() throws Exception {
