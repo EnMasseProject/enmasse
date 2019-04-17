@@ -14,14 +14,14 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.SecurityContext;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -44,7 +44,7 @@ public class AuthInterceptorTest {
         tokenFile = File.createTempFile("token", "");
         mockAuthApi = mock(AuthApi.class);
         when(mockAuthApi.getNamespace()).thenReturn("myspace");
-        handler = new AuthInterceptor(mockAuthApi, new Predicate<String>() {
+        handler = new AuthInterceptor(mockAuthApi, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG, new Predicate<String>() {
             @Override
             public boolean test(String s) {
                 return "/healthz".equals(s);
@@ -83,7 +83,7 @@ public class AuthInterceptorTest {
 
     @Test
     public void testInvalidToken() {
-        TokenReview returnedTokenReview = new TokenReview(null, null, false);
+        TokenReview returnedTokenReview = new TokenReview(null, null, null, null, false);
         when(mockAuthApi.performTokenReview("invalid_token")).thenReturn(returnedTokenReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer invalid_token");
         assertThrows(NotAuthorizedException.class, () -> handler.filter(mockRequestContext));
@@ -91,10 +91,10 @@ public class AuthInterceptorTest {
 
     @Test
     public void testValidTokenButNotAuthorized() {
-        TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
+        TokenReview returnedTokenReview = new TokenReview("foo", "myid", null, null, true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", false);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(returnedTokenReview), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -120,8 +120,13 @@ public class AuthInterceptorTest {
     @Test
     public void testCertAuthorization() {
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("me", true);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("me"), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        TokenReview tokenReview = new TokenReview("me", "", Collections.singleton("system:authenticated"), Map.of("custom-header", Collections.singletonList("customvalue")), true);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
+        when(mockRequestContext.getHeaderString("X-Remote-Group")).thenReturn("system:authenticated");
+        MultivaluedMap<String, String> map = new MultivaluedHashMap<>();
+        map.put("X-Remote-Extra-Custom-Header", Collections.singletonList("customvalue"));
+        when(mockRequestContext.getHeaders()).thenReturn(map);
 
         HttpServerRequest request = mock(HttpServerRequest.class);
         HttpConnection connection = mock(HttpConnection.class);
@@ -144,8 +149,9 @@ public class AuthInterceptorTest {
 
     @Test
     public void testCertAuthorizationFailed() throws SSLPeerUnverifiedException {
+        TokenReview tokenReview = new TokenReview("system:anonymous", "", null, null, false);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("system:anonymous", false);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("system:anonymous"), any(), any(), eq("create"), eq("enmasse.io"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), eq("create"), eq("enmasse.io"))).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
 
         HttpServerRequest request = mock(HttpServerRequest.class);
@@ -170,10 +176,10 @@ public class AuthInterceptorTest {
 
     @Test
     public void testAuthorized() throws IOException {
-        TokenReview returnedTokenReview = new TokenReview("foo", "myid", true);
+        TokenReview returnedTokenReview = new TokenReview("foo", "myid", null, null, true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", true);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq("foo"), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(returnedTokenReview), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 

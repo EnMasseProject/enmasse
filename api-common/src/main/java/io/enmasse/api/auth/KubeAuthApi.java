@@ -6,7 +6,7 @@ package io.enmasse.api.auth;
 
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import okhttp3.*;
 import org.slf4j.Logger;
@@ -16,8 +16,7 @@ import javax.ws.rs.InternalServerErrorException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Map;
+import java.util.*;
 
 public class KubeAuthApi implements AuthApi {
     private static final Logger log = LoggerFactory.getLogger(KubeAuthApi.class);
@@ -80,6 +79,8 @@ public class KubeAuthApi implements AuthApi {
             boolean authenticated = false;
             String userName = null;
             String userId = null;
+            Set<String> groups = null;
+            Map<String, List<String>> extra = null;
             if (status != null) {
                 Boolean auth = status.getBoolean("authenticated");
                 authenticated = auth == null ? false : auth;
@@ -87,16 +88,65 @@ public class KubeAuthApi implements AuthApi {
                 if (user != null) {
                     userName = user.getString("username");
                     userId = user.getString("uid");
+                    JsonArray groupArray = user.getJsonArray("groups");
+                    if (groupArray != null) {
+                        groups = new HashSet<>();
+                        for (int i = 0; i < groupArray.size(); i++) {
+                            groups.add(groupArray.getString(i));
+                        }
+                    }
+
+                    JsonObject extraObject = user.getJsonObject("extra");
+                    if (extraObject != null) {
+                        extra = new HashMap<>();
+                        for (String field : extraObject.fieldNames()) {
+                            JsonArray extraValues = extraObject.getJsonArray(field);
+                            List<String> extraValuesList = new ArrayList<>();
+                            for (int i = 0; i < extraValues.size(); i++) {
+                                extraValuesList.add(extraValues.getString(i));
+                            }
+                            extra.put(field, extraValuesList);
+                        }
+                    }
+
                 }
             }
-            return new TokenReview(userName, userId, authenticated);
+            return new TokenReview(userName, userId, groups, extra, authenticated);
         } else {
-            return new TokenReview(null, null, false);
+            return new TokenReview(null, null, null, null, false);
+        }
+    }
+
+    private static void putCommonSpecAttributes(JsonObject spec, TokenReview tokenReview) {
+        if (tokenReview.getUserName() != null && !tokenReview.getUserName().isEmpty()) {
+            spec.put("user", tokenReview.getUserName());
+        }
+        if (tokenReview.getUserId() != null && !tokenReview.getUserId().isEmpty()) {
+            spec.put("uid", tokenReview.getUserId());
+        }
+        if (tokenReview.getGroups() != null && !tokenReview.getGroups().isEmpty()) {
+            JsonArray groups = new JsonArray();
+            for (String group : tokenReview.getGroups()) {
+                groups.add(group);
+            }
+            spec.put("groups", groups);
+        }
+
+        if (tokenReview.getExtra() != null && !tokenReview.getExtra().isEmpty()) {
+            JsonObject extra = new JsonObject();
+            for (Map.Entry<String, List<String>> entry : tokenReview.getExtra().entrySet()) {
+                JsonArray entryArray = new JsonArray();
+                for (String value : entry.getValue()) {
+                    entryArray.add(value);
+                }
+                extra.put(entry.getKey(), entryArray);
+            }
+            spec.put("extra", extra);
         }
     }
 
     @Override
-    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewPath(String user, String path, String verb) {
+    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewPath(TokenReview tokenReview, String path, String verb) {
         if (client.isAdaptable(OkHttpClient.class)) {
             JsonObject body = new JsonObject();
 
@@ -110,7 +160,8 @@ public class KubeAuthApi implements AuthApi {
             nonResourceAttributes.put("verb", verb);
 
             spec.put("nonResourceAttributes", nonResourceAttributes);
-            spec.put("user", user);
+
+            putCommonSpecAttributes(spec, tokenReview);
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);
@@ -123,14 +174,14 @@ public class KubeAuthApi implements AuthApi {
                 Boolean allowedMaybe = status.getBoolean("allowed");
                 allowed = allowedMaybe == null ? false : allowedMaybe;
             }
-            return new io.enmasse.api.auth.SubjectAccessReview(user, allowed);
+            return new io.enmasse.api.auth.SubjectAccessReview(tokenReview.getUserName(), allowed);
         } else {
-            return new SubjectAccessReview(user, false);
+            return new SubjectAccessReview(tokenReview.getUserName(), false);
         }
     }
 
     @Override
-    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewResource(String user, String namespace, String resource, String verb, String apiGroup) {
+    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewResource(TokenReview tokenReview, String namespace, String resource, String verb, String apiGroup) {
         if (client.isAdaptable(OkHttpClient.class)) {
             JsonObject body = new JsonObject();
 
@@ -146,7 +197,8 @@ public class KubeAuthApi implements AuthApi {
             resourceAttributes.put("verb", verb);
 
             spec.put("resourceAttributes", resourceAttributes);
-            spec.put("user", user);
+
+            putCommonSpecAttributes(spec, tokenReview);
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);
@@ -159,9 +211,9 @@ public class KubeAuthApi implements AuthApi {
                 Boolean allowedMaybe = status.getBoolean("allowed");
                 allowed = allowedMaybe == null ? false : allowedMaybe;
             }
-            return new io.enmasse.api.auth.SubjectAccessReview(user, allowed);
+            return new io.enmasse.api.auth.SubjectAccessReview(tokenReview.getUserName(), allowed);
         } else {
-            return new SubjectAccessReview(user, false);
+            return new SubjectAccessReview(tokenReview.getUserName(), false);
         }
     }
 

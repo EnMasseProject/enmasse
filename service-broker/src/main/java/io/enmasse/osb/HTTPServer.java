@@ -6,6 +6,7 @@
 package io.enmasse.osb;
 
 import io.enmasse.api.auth.AllowAllAuthInterceptor;
+import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
@@ -68,7 +69,7 @@ public class HTTPServer extends AbstractVerticle {
 
         if (enableRbac) {
             log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, path ->
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG, path ->
                     path.startsWith(HttpHealthService.BASE_URI) ||
                     path.startsWith(HttpConsoleService.BASE_URI)));
         } else {

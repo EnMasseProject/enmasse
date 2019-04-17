@@ -54,13 +54,13 @@ public class RbacSecurityContext implements SecurityContext {
         if ("path".equals(type)) {
             String path = data.getString("path");
             String verb = data.getString("verb");
-            accessReview = authApi.performSubjectAccessReviewPath(tokenReview.getUserName(), path, verb);
+            accessReview = authApi.performSubjectAccessReviewPath(tokenReview, path, verb);
         } else if ("resource".equals(type)) {
             String namespace = data.getString("namespace");
             String verb = data.getString("verb");
             String resource = data.getString("resource");
             String apiGroup = data.getString("apiGroup");
-            accessReview = authApi.performSubjectAccessReviewResource(tokenReview.getUserName(), namespace, resource, verb, apiGroup);
+            accessReview = authApi.performSubjectAccessReviewResource(tokenReview, namespace, resource, verb, apiGroup);
         } else {
             throw new IllegalArgumentException("Unknown role type " + type);
         }
