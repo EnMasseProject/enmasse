@@ -123,18 +123,14 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         log.info("Subscribe receiver");
         String receiverId = cliApiClient.sendAndGetId(receiver);
 
-        if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(new ArtemisManagement(), sharedAddressSpace, dest.getSpec().getAddress(), 1);
-        } else {
-            Thread.sleep(30_000); //mqtt connection is not in console
-        }
+        Thread.sleep(30_000); //mqtt connection is not in console
 
         log.info("Send messages");
         JsonObject response = cliApiClient.sendAndGetStatus(sender);
         assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
                 response.getInteger("ecode"), is(0));
 
-        Thread.sleep(10_000);
+        Thread.sleep(30_000);
 
         log.info("Check if subscriber received messages");
         response = cliApiClient.getClientInfo(receiverId);
