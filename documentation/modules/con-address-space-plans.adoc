@@ -24,7 +24,7 @@ The following fields are required:
 * `spec.addressSpaceType`
 * `spec.infraConfigRef`
 
-The other fields are used by the {ProductName} Console UI. Note the field `spec.infraConfigRef`, which
+The other fields are used by the {ConsoleName} UI. Note the field `spec.infraConfigRef`, which
 points to an infrastructure configuration that must exist when an address space using this plan is created.
 For more information about infrastructure configurations, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#infrastructure-configuration-messaging[Infrastructure configuration].
 
