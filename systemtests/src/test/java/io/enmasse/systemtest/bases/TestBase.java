@@ -607,7 +607,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         try {
             SeleniumManagement.deployFirefoxApp();
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, defaultCredentials);
+            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
 
