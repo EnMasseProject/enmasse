@@ -11,7 +11,7 @@ You can create a new address space using the {ConsoleName}.
 
 . Log in to the {ConsoleName}.
 +
-For more information about how to access the {ConsoleName}, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ProductName} Console].
+For more information about how to access the {ConsoleName}, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
 
 . Click *Create*. The Create an instance wizard opens.
 

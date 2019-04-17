@@ -7,7 +7,7 @@
 = Managing addresses
 
 {ProductName} is configured to support managing addresses using the {KubePlatform} command-line tools
-and the {ProductName} Console. `Address` resources can be managed like any other {KubePlatform}
+and the {ConsoleName}. `Address` resources can be managed like any other {KubePlatform}
 API resource using `{cmdcli}`.
 
 include::../modules/con-address.adoc[leveloffset=+1]
