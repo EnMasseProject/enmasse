@@ -4,24 +4,33 @@
  */
 package io.enmasse.api.auth;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class TokenReview {
     private final String userName;
     private final String userId;
-    private final List<String> groups;
+    private final Set<String> groups;
     private final Map<String, List<String>> extra;
 
     private final boolean isAuthenticated;
 
-    public TokenReview(String userName, String userId, List<String> groups, Map<String, List<String>> extra, boolean isAuthenticated) {
+    public TokenReview(String userName, String userId, Set<String> groups, Map<String, List<String>> extra, boolean isAuthenticated) {
         this.userName = userName;
         this.userId = userId;
-        this.groups = groups;
-        this.extra = extra;
         this.isAuthenticated = isAuthenticated;
+        if (groups != null) {
+            this.groups = new HashSet<>(groups);
+        } else {
+            this.groups = null;
+        }
+        if (extra != null) {
+            this.extra = new HashMap<>();
+            for (Map.Entry<String, List<String>> entry : extra.entrySet()) {
+                this.extra.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+            }
+        } else {
+            this.extra = null;
+        }
     }
 
     public String getUserName() {
@@ -36,7 +45,7 @@ public class TokenReview {
         return isAuthenticated;
     }
 
-    public List<String> getGroups() {
+    public Set<String> getGroups() {
         return groups;
     }
 

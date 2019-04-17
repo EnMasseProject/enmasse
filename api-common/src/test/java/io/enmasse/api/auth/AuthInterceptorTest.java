@@ -120,7 +120,7 @@ public class AuthInterceptorTest {
     @Test
     public void testCertAuthorization() {
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("me", true);
-        TokenReview tokenReview = new TokenReview("me", "", Collections.singletonList("system:authenticated"), Map.of("custom-header", Collections.singletonList("customvalue")), true);
+        TokenReview tokenReview = new TokenReview("me", "", Collections.singleton("system:authenticated"), Map.of("custom-header", Collections.singletonList("customvalue")), true);
         when(mockAuthApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
         when(mockRequestContext.getHeaderString("X-Remote-Group")).thenReturn("system:authenticated");

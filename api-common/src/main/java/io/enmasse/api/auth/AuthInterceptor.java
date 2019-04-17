@@ -65,7 +65,7 @@ public class AuthInterceptor implements ContainerRequestFilter {
             try {
                 connection.peerCertificateChain();
                 log.debug("Client certificates trusted... impersonating {}", userName);
-                requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview(userName, "", Collections.singletonList(group), extras, true), authApi, requestContext.getUriInfo()));
+                requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview(userName, "", Collections.singleton(group), extras, true), authApi, requestContext.getUriInfo()));
             } catch (SSLPeerUnverifiedException e) {
                 log.debug("Peer certificate not valid, proceeding as anonymous");
                 requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview("system:anonymous", "", null, null, false), authApi, requestContext.getUriInfo()));

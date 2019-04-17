@@ -79,7 +79,7 @@ public class KubeAuthApi implements AuthApi {
             boolean authenticated = false;
             String userName = null;
             String userId = null;
-            List<String> groups = null;
+            Set<String> groups = null;
             Map<String, List<String>> extra = null;
             if (status != null) {
                 Boolean auth = status.getBoolean("authenticated");
@@ -90,7 +90,7 @@ public class KubeAuthApi implements AuthApi {
                     userId = user.getString("uid");
                     JsonArray groupArray = user.getJsonArray("groups");
                     if (groupArray != null) {
-                        groups = new ArrayList<>();
+                        groups = new HashSet<>();
                         for (int i = 0; i < groupArray.size(); i++) {
                             groups.add(groupArray.getString(i));
                         }
@@ -117,6 +117,34 @@ public class KubeAuthApi implements AuthApi {
         }
     }
 
+    private static void putCommonSpecAttributes(JsonObject spec, TokenReview tokenReview) {
+        if (tokenReview.getUserName() != null && !tokenReview.getUserName().isEmpty()) {
+            spec.put("user", tokenReview.getUserName());
+        }
+        if (tokenReview.getUserId() != null && !tokenReview.getUserId().isEmpty()) {
+            spec.put("uid", tokenReview.getUserId());
+        }
+        if (tokenReview.getGroups() != null && !tokenReview.getGroups().isEmpty()) {
+            JsonArray groups = new JsonArray();
+            for (String group : tokenReview.getGroups()) {
+                groups.add(group);
+            }
+            spec.put("groups", groups);
+        }
+
+        if (tokenReview.getExtra() != null && !tokenReview.getExtra().isEmpty()) {
+            JsonObject extra = new JsonObject();
+            for (Map.Entry<String, List<String>> entry : tokenReview.getExtra().entrySet()) {
+                JsonArray entryArray = new JsonArray();
+                for (String value : entry.getValue()) {
+                    entryArray.add(value);
+                }
+                extra.put(entry.getKey(), entryArray);
+            }
+            spec.put("extra", extra);
+        }
+    }
+
     @Override
     public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewPath(TokenReview tokenReview, String path, String verb) {
         if (client.isAdaptable(OkHttpClient.class)) {
@@ -132,29 +160,8 @@ public class KubeAuthApi implements AuthApi {
             nonResourceAttributes.put("verb", verb);
 
             spec.put("nonResourceAttributes", nonResourceAttributes);
-            spec.put("user", tokenReview.getUserName());
-            if (tokenReview.getUserId() != null && !tokenReview.getUserId().isEmpty()) {
-                spec.put("uid", tokenReview.getUserId());
-            }
-            if (tokenReview.getGroups() != null && !tokenReview.getGroups().isEmpty()) {
-                JsonArray groups = new JsonArray();
-                for (String group : tokenReview.getGroups()) {
-                    groups.add(group);
-                }
-                spec.put("groups", groups);
-            }
 
-            if (tokenReview.getExtra() != null && !tokenReview.getExtra().isEmpty()) {
-                JsonObject extra = new JsonObject();
-                for (Map.Entry<String, List<String>> entry : tokenReview.getExtra().entrySet()) {
-                    JsonArray entryArray = new JsonArray();
-                    for (String value : entry.getValue()) {
-                        entryArray.add(value);
-                    }
-                    extra.put(entry.getKey(), entryArray);
-                }
-                spec.put("extra", extra);
-            }
+            putCommonSpecAttributes(spec, tokenReview);
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);
@@ -190,29 +197,8 @@ public class KubeAuthApi implements AuthApi {
             resourceAttributes.put("verb", verb);
 
             spec.put("resourceAttributes", resourceAttributes);
-            spec.put("user", tokenReview.getUserName());
-            if (tokenReview.getUserId() != null && !tokenReview.getUserId().isEmpty()) {
-                spec.put("uid", tokenReview.getUserId());
-            }
-            if (tokenReview.getGroups() != null && !tokenReview.getGroups().isEmpty()) {
-                JsonArray groups = new JsonArray();
-                for (String group : tokenReview.getGroups()) {
-                    groups.add(group);
-                }
-                spec.put("groups", groups);
-            }
 
-            if (tokenReview.getExtra() != null && !tokenReview.getExtra().isEmpty()) {
-                JsonObject extra = new JsonObject();
-                for (Map.Entry<String, List<String>> entry : tokenReview.getExtra().entrySet()) {
-                    JsonArray entryArray = new JsonArray();
-                    for (String value : entry.getValue()) {
-                        entryArray.add(value);
-                    }
-                    extra.put(entry.getKey(), entryArray);
-                }
-                spec.put("extra", extra);
-            }
+            putCommonSpecAttributes(spec, tokenReview);
 
             body.put("spec", spec);
             log.debug("Subject access review request: {}", body);

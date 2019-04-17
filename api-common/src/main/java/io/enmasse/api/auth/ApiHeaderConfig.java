@@ -4,6 +4,7 @@
  */
 package io.enmasse.api.auth;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,9 +19,9 @@ public class ApiHeaderConfig {
             Collections.singletonList("X-Remote-Extra-"));
 
     public ApiHeaderConfig(List<String> userHeaders, List<String> groupHeaders, List<String> extraHeadersPrefix) {
-        this.userHeaders = userHeaders;
-        this.groupHeaders = groupHeaders;
-        this.extraHeadersPrefix = extraHeadersPrefix;
+        this.userHeaders = new ArrayList<>(userHeaders);
+        this.groupHeaders = new ArrayList<>(groupHeaders);
+        this.extraHeadersPrefix = new ArrayList<>(extraHeadersPrefix);
     }
 
     public List<String> getUserHeaders() {
