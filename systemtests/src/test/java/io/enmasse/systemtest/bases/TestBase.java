@@ -424,9 +424,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return getUserApiClient().updateUser(addressSpace.getMetadata().getName(), user);
     }
 
+    protected void removeUser(String addressSpace, String username) throws Exception {
+        log.info("User {} in address space {} will be removed", username, addressSpace);
+        getUserApiClient().deleteUser(addressSpace, username);
+    }
+
     protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
-        log.info("User {} in address space {} will be removed", username, addressSpace.getMetadata().getName());
-        getUserApiClient().deleteUser(addressSpace.getMetadata().getName(), username);
+        removeUser(addressSpace.getMetadata().getName(), username);
     }
 
     protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
