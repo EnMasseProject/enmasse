@@ -6,7 +6,7 @@
 [id='con-user-model-{context}']
 = User model
 
-You can create users to specify authentication and authorization policies for your messaging clients,
+A messaging client connects using a MessagingUser. A MessagingUser specifies an authorization policy that controls which addresses may be used and the operations that may be performed on those addresses.
 
 Users are configured as `MessagingUser` resources. Users can be created, deleted, read, updated, and listed.
 
@@ -29,11 +29,7 @@ The `spec.authentication` object defines how the user is authenticated, whereas
 
 == Authentication
 
-The supported values for the authentication type are `password` and `serviceaccount`. When using the
-`password` authentication type, you specify the username and password to be used by your messaging
-client when connecting. With the `serviceaccount` authentication type, you use the special string
-`@@serviceaccount@@` as the username, and a {KubePlatform} service account token as the password.
-
+The supported values for the authentication type are `password` and `serviceaccount`. When using the `password` authentication type, you specify the username and password to be used by your messaging client when connecting. With the `serviceaccount` authentication type, you use the special string `@@serviceaccount@@` as the username, and a {KubePlatform} service account token as the password.
 
 === Password authentication type
 
@@ -50,9 +46,7 @@ bXktcGFzc3dvcmQ=
 
 === Serviceaccount authentication type
 
-For the `serviceaccount` type, the `username` field must contain the {KubePlatform} serviceaccount
-name that will be used to authenticate. When connecting with the messaging client, use the string
-`@@serviceaccount@@` as the username, and the service account token as the password.
+For the `serviceaccount` type, the `username` field must contain the {KubePlatform} serviceaccount name that will be used to authenticate. When connecting with the messaging client, use the string `@@serviceaccount@@` as the username, and the service account token as the password.
 
 == Authorization
 

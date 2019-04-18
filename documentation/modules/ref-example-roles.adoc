@@ -1,28 +1,14 @@
 // Module included in the following assemblies:
 //
-// assembly-tenant-guide.adoc
-// using master.adoc
+// assembly-configuring.adoc
 
 [id='ref-example-roles-{context}']
-= {ProductName} resources and {ProductName} example roles
+= {ProductName} example roles
 
-The following table describes the {ProductName} resources.
+{ProductName} provides the following example roles that you can use directly or use as models to create your own roles.
 
-.{ProductName} resources table
-[cols="50%a,50%a",options="header",subs="attributes"]
-|===
-|Resource |Description
-|`addresses`|
-|`addressplans`|
-|`addressspaceplans`|
-|`addressspaces`|
-|`addressspaceschemas`|
-|`brokeredinfraconfigs`|Specifies the infrastructure configuration for brokered address spaces?
-|`messagingusers`|
-|`standardinfraconfigs`|Specifies the infrastructure configuration for standard address spaces?
-|===
-
-{ProductName} provides the following example roles, which you can use directly or use as models to create your own roles.
+For more information about service administrator resources, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-resources-table-service-admin-messaging[{ProductName} service administrator resources table].
+For more information about messaging tenant resources, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-resources-table-messaging-tenant-messaging[{ProductName} messaging tenant resources table].
 
 .{ProductName} example roles table
 [cols="40%a,60%a",options="header",subs="attributes"]
@@ -33,4 +19,5 @@ The following table describes the {ProductName} resources.
 |`service-admin` cluster role|Specifies `create`, `get`, `update`, `delete`, `list`, `watch`, and `patch` permissions for `addressplans`, `addressspaceplans`, `brokeredinfraconfigs`, and `standardinfraconfigs`
 |===
 
+:context: {parent-context}
 

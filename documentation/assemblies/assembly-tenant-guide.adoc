@@ -22,6 +22,7 @@ include::../modules/con-user-model.adoc[leveloffset=+1]
 
 include::assembly-managing-users.adoc[leveloffset=+1]
 
+:context: tenant
 include::../modules/ref-example-roles.adoc[leveloffset=+1]
 
 //Connecting applications

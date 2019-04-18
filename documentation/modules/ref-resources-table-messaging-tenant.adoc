@@ -1,0 +1,20 @@
+// Module included in the following assemblies:
+//
+// master-kubernetes.adoc
+// master-openshift.adoc
+// Using master.adoc
+
+[id='ref-resources-table-messaging-tenant-{context}']
+= {ProductName} resources for messaging tenants
+
+The following table describes the {ProductName} resources that pertain to the messaging tenant role.
+
+.{ProductName} messaging tenant resources table
+[cols="50%a,50%a",options="header",subs="attributes"]
+|===
+|Resource |Description
+|`addresses`|Specifies the address.
+|`addressspaces`|Specifies the address space.
+|`messagingusers`|Specifies the authorization policy that controls which addresses may be used and the operations that may be performed on those addresses.
+|===
+
