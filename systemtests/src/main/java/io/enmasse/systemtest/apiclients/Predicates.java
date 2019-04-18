@@ -37,6 +37,11 @@ public final class Predicates {
     }
 
     @SafeVarargs
+    public static <T> Predicate<T> notIn(final T...values) {
+        return in(Arrays.asList(values)).negate();
+    }
+
+    @SafeVarargs
     public static <T> Predicate<T> in(final T...values) {
         return in(Arrays.asList(values));
     }
