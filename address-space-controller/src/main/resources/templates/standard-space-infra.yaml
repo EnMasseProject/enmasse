@@ -93,6 +93,12 @@ objects:
         host: 127.0.0.1
         port: 7777
         authenticatePeer: no
+      }
+
+      listener {
+        host: 127.0.0.1
+        port: 7770
+        authenticatePeer: no
         http: true
         metrics: false
         healthz: true
@@ -282,7 +288,7 @@ objects:
             initialDelaySeconds: 30
             httpGet:
               path: /healthz
-              port: local
+              port: local-http
               scheme: HTTP
           readinessProbe:
             initialDelaySeconds: 60
@@ -305,6 +311,9 @@ objects:
             protocol: TCP
           - containerPort: 7777
             name: local
+            protocol: TCP
+          - containerPort: 7770
+            name: local-http
             protocol: TCP
           - containerPort: 8080
             name: http
