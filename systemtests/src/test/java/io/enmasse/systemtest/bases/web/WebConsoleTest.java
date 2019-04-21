@@ -741,7 +741,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.next();
 
         // assert new address is Topic
-        assertEquals(AddressType.TOPIC.toString(), consoleWebPage.getAddressItem(destTopic).getType(),
+        assertEquals(AddressType.TOPIC.toString(),
+                ((AddressWebItem) selenium.waitUntilItemPresent(60, () -> consoleWebPage.getAddressItem(destTopic))).getType(),
                 "Console failed, expected TOPIC type");
 
         waitForDestinationsReady(sharedAddressSpace, destTopic);
