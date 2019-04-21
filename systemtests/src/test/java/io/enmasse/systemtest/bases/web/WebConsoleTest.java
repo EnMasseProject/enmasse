@@ -623,6 +623,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace), 
                     sharedAddressSpace, credentials);
             consoleWebPage.openWebConsolePage();
+            consoleWebPage.openAddressesPageWebConsole();
             log.info(String.format("User %s successfully authenticated", credentials));
             consoleWebPage.openAddressesPageWebConsole();
         } catch (IllegalAccessException | org.openqa.selenium.WebDriverException ex) {
