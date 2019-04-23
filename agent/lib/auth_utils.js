@@ -278,6 +278,7 @@ module.exports.auth_handler = function (authz, env, handler, auth_context, opens
         let u = url.parse(request.url, true);
         if (u.pathname === path) {
             var token = get_from_session(request, "token");
+            expunge_session(sessions, request, response);
             if (token) {
                 token.revokeAll().catch(() => {
                     log.warn("Failed to revoke access token");
