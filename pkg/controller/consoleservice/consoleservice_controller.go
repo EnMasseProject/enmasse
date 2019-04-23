@@ -569,6 +569,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			return err
 		}
 
+		install.ApplyEnvSimple(container, "OPENSHIFT_AVAILABLE", strconv.FormatBool(util.IsOpenshift()))
+
 		if consoleservice.Spec.Scope != nil {
 			install.ApplyEnv(container, "OAUTH2_SCOPE", func(envvar *corev1.EnvVar) {
 				envvar.Value = *consoleservice.Spec.Scope

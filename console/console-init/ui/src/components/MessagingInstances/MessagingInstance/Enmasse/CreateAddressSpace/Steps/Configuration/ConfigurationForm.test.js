@@ -19,6 +19,7 @@ describe('< Configuration Form />', () => {
   };
 
   beforeEach(() => {
+    window.env = {OPENSHIFT_AVAILABLE: 'true'};
     wrapper = shallow(<ConfigurationForm newInstance={newInstance} isValid={()=>{}}/>);
   });
 
