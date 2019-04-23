@@ -12,7 +12,6 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
 import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.slf4j.Logger;
@@ -52,7 +51,7 @@ public class IoTUtils {
             }
         }
         if (!isReady) {
-            String jsonStatus = config != null ? config.getStatus().getState() : "";
+            String jsonStatus = config != null && config.getStatus() != null ? config.getStatus().getState() : "";
             throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 

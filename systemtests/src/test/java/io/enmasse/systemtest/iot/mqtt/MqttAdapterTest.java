@@ -22,6 +22,7 @@ import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,12 +36,14 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.WaitPhase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -92,7 +95,18 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
                 .endpoint(mqttAdapterEndpoint)
                 .mqttConnectionOptions(mqttOptions)
                 .create();
-        adapterClient.connect();
+
+        TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {
+            try {
+                adapterClient.connect();
+                return true;
+            }catch(MqttException mqttException) {
+                if(phase == WaitPhase.LAST_TRY) {
+                    log.error("Error waiting to connect mqtt adapter", mqttException);
+                }
+                return false;
+            }
+        }, new TimeoutBudget(1, TimeUnit.MINUTES));
 
         log.info("Connection to mqtt adapter succeeded");
 
@@ -122,8 +136,10 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         credentialsClient.getCredentials(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         registryClient.deleteDeviceRegistration(tenantId(), deviceId);
         registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
-        adapterClient.disconnect();
-        adapterClient.close();
+        if(adapterClient.isConnected()) {
+            adapterClient.disconnect();
+            adapterClient.close();
+        }
         businessApplicationClient.close();
         removeUser(getAddressSpace(), businessApplicationUsername);
     }
