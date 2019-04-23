@@ -1,0 +1,77 @@
+== Overview
+
+This document describes a resource for defining authentication services available to messaging
+tenants.
+
+== Design
+
+The authentication services are defined by a `AuthenticationService` resource, created by the
+EnMasse system admin:
+
+```
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: myauth
+spec:
+  type: external
+  realm: // Optional: By default this will be the current "realm" as defined by namespace + address space. Specifying this allows to 'share' the authentication service realm between multiple address spaces.
+    host: // Hostname for authentication service 
+    port: // SASL-AMQPS port for authentication service
+    caCertSecret: // Optional: Only needed if auth service does not use a trusted CA
+    clientSecret: // Optional: Only needed if need to do client cert auth against auth service
+```
+
+The authentication service is referenced from the `AddressSpace` resource, created by the EnMasse
+messaging tenants:
+
+```
+apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  authenticationService:
+    name: myauth
+```
+
+The `AuthenticationService` resources are watched by the `address-space-controller` and validated
+when loaded.
+
+When an address space is created, the `address-space-controller` will try to find the
+`AuthenticationService` referenced in the `AddressSpace` resource, and configure the infrastructure
+accordingly.
+
+Changing the authentication service of an address space, or changing the authentication service
+resource in use by an address space is not supported, and is prevented through validation
+webhooks.
+
+The legacy format with `type` set to `standard` or `none` will map to `AuthenticationService`
+resources named `standard` and `none`.
+
+If the `authenticationService` field is not defined, the `address-space-controller` will attempt to
+find the `standard` `AuthenticationService`, and if that fails, the `none` `AuthenticationService`.
+
+The available authentication services may be requested by granting read access to the
+`AuthenticationService` resource type in the EnMasse infra namespace.
+
+A standard authentication service are defined like this:
+
+```
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard
+spec:
+  type: standard
+  standard:
+    credentialsSecret:
+      name: keycloak-credentials
+```
+
+The `enmasse-operator` component watches `AuthenticationService` resources, and creates the authentication service as specified by the resource. It will for instance:
+
+* Setup admin credentials for keycloak
+* Create keycloak deployment
+* Create the route for external access (not needed once console work to auth against openshift is completed)
+* Create the persistent volume claims needed

@@ -9,6 +9,7 @@ For end-user documentation, go to our link:http://enmasse.io[website].
 
 * link:overview/architecture.adoc[Architecture]
 * link:ci/README.adoc[Continuous Integration]
+* link:authentication/authentication-service.adoc[Authentication Service]
 * link:topics/design.adoc[Topics]
 * link:mqtt-over-amqp/README.adoc[MQTT to AMQP protocol mapping]
 
