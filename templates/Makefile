@@ -6,6 +6,7 @@ BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
+HASHMARK = $(shell echo "\#")
 
 IOT_MODULES=\
 	iot/api \
@@ -119,8 +120,15 @@ $(IOT_BUNDLE): replace_images
 OLM=$(PACKAGE_INSTALL_DIR)/olm/enmasse
 $(OLM): replace_images
 	mkdir -p $(OLM)
-	for i in crds csv; do \
+	for i in csv; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(OLM)/; \
+	done
+	for i in crds; do \
+		for file in $(BUILDDIR)/replaced/$$i/*.yaml; do \
+		    b=`basename $$file`; \
+			newfile=$${b$(HASHMARK)010-}; \
+			cp $$file $(OLM)/$${newfile}; \
+		done \
 	done
 
 install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
