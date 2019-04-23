@@ -170,7 +170,7 @@ public abstract class IoTTestBase extends TestBase {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        }, new TimeoutBudget(2, TimeUnit.MINUTES));
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
 
         log.info("First "+type.name().toLowerCase()+" message accepted");
     }
