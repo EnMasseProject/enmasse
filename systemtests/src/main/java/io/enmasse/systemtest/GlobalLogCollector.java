@@ -123,6 +123,13 @@ public class GlobalLogCollector {
                 Optional.of("qdr-proxy"));
     }
 
+    public void collectMqttAdapterQdrProxyState() {
+        log.info("Collecting qdr-proxy router state in namespace {}", namespace);
+        collectRouterState("mqttAdapterQdrProxyState", System.currentTimeMillis(),
+                kubernetes.listPods(Map.of("component", "iot", "name", "iot-mqtt-adapter")).stream(),
+                Optional.of("qdr-proxy"));
+    }
+
     public void collectRouterState(String operation) {
         log.info("Collecting router state in namespace {}", namespace);
         collectRouterState(operation, System.currentTimeMillis(),
