@@ -160,6 +160,14 @@ metadata:
             "name": "default"
           },
           "spec": {}
+        },
+        {
+          "apiVersion": "enmasse.io/v1beta1",
+          "kind": "AddressSpaceSchema",
+          "metadata": {
+            "name": "undefined"
+          },
+          "spec": {}
         }
       ]
 
@@ -737,6 +745,14 @@ spec:
           path: phase
           x-descriptors:
             - 'urn:alm:descriptor:text'
+    - group: enmasse.io
+      version: v1beta1
+      kind: AddressSpaceSchema
+      name: addressspaceschemas
+      displayName: AddressSpaceSchema
+      description: A resource representing the available schema of plans and authentication services
+      deploymentName: api-server
+      containerPort: 8443
     - group: user.enmasse.io
       version: v1beta1
       kind: MessagingUser
