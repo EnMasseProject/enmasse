@@ -7,10 +7,13 @@ package io.enmasse.systemtest;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.apiclients.AdminApiClient;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class AdminResourcesManager {
 
@@ -160,9 +163,19 @@ public class AdminResourcesManager {
             adminApiClient.createAuthService(authenticationService);
             authServices.add(authenticationService);
         }
-        TestUtils.waitUntilCondition("Auth service is deployed: " + authenticationService.getMetadata().getName(), (phase) ->
-                        TestUtils.listReadyPods(Kubernetes.getInstance()).stream().filter(pod ->
-                                pod.getMetadata().getName().contains(authenticationService.getMetadata().getName())).count() == 1,
+        String desiredPodName = authenticationService.getMetadata().getName();
+        TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
+                    List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance());
+                    long matching = pods.stream().filter(pod ->
+                            pod.getMetadata().getName().contains(desiredPodName)).count();
+                    if (matching != 1) {
+                        List<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toList());
+                        log.info("Still awaiting pod with name : {}, matching : {}, current pods  {}",
+                                desiredPodName, matching, podNames);
+                    }
+
+                    return matching == 1;
+        },
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
