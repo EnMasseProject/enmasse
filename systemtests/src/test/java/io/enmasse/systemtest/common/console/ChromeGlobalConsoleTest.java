@@ -13,8 +13,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.isolated;
+import static io.enmasse.systemtest.TestTag.nonPR;
 
 @Tag(isolated)
+@Tag(nonPR)
 class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumProviderChrome {
 
     @Test
@@ -77,6 +79,11 @@ class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumProv
     @Test
     void testViewAddressSpaceCreatedByApi() throws Exception {
         doTestViewAddressSpace();
+    }
+
+    @Test
+    void testCreateAddrSpaceNonClusterAdmin() throws Exception {
+        doTestCreateAddrSpaceNonClusterAdmin();
     }
 }
 

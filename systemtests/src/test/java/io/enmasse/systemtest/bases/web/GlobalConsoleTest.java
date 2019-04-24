@@ -8,10 +8,12 @@ package io.enmasse.systemtest.bases.web;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
@@ -122,5 +124,40 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
         assertEquals("Active", ((AddressSpaceWebItem) selenium.waitUntilItemPresent(30, ()
                 -> globalConsolePage.getAddressSpaceItem(addressSpace))).getStatus());
         globalConsolePage.deleteAddressSpace(addressSpace);
+    }
+
+    protected void doTestCreateAddrSpaceNonClusterAdmin() throws Exception {
+        String namespace = "test-namespace";
+        UserCredentials user = new UserCredentials("pepan", "pepan");
+        try {
+            KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
+            KubeCMDClient.createNamespace(namespace);
+
+            AddressSpace addressSpace = new AddressSpaceBuilder()
+                    .withNewMetadata()
+                    .withName("test-addr-space-api")
+                    .withNamespace(namespace)
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(AddressSpaceType.BROKERED.toString())
+                    .withPlan(AddressSpacePlans.BROKERED)
+                    .withNewAuthenticationService()
+                    .withName("standard-authservice")
+                    .endAuthenticationService()
+                    .endSpec()
+                    .build();
+
+            globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), user);
+            globalConsolePage.openGlobalConsolePage();
+            globalConsolePage.createAddressSpace(addressSpace);
+            assertEquals("Active", ((AddressSpaceWebItem) selenium.waitUntilItemPresent(30, ()
+                    -> globalConsolePage.getAddressSpaceItem(addressSpace))).getStatus());
+            globalConsolePage.deleteAddressSpace(addressSpace);
+
+        } finally {
+            KubeCMDClient.loginUser(environment.getApiToken());
+            KubeCMDClient.switchProject(environment.namespace());
+            kubernetes.deleteNamespace(namespace);
+        }
     }
 }
