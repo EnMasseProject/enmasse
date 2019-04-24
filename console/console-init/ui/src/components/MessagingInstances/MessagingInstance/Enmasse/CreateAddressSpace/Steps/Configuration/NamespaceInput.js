@@ -20,19 +20,20 @@ const namespaceInput = (props) => {
     name="form-namespace"
   >
     {
+      props.namespaces &&
       props.namespaces.map((option, index) => (
-        <FormSelectOption key={index} value={option}
-                          label={option}/>
-      ))
+        <FormSelectOption key={index} value={option} label={option}/>
+        ))
     }
   </FormSelect>;
+
 
   return (
     <FormGroup
       isRequired
       label="Namespace"
       fieldId="form-namespace">
-      {props.namespaces.length >0 ? selectBox : textField}
+      {props.namespaces && props.namespaces.length >0 ? selectBox : textField}
     </FormGroup>
   );
 }

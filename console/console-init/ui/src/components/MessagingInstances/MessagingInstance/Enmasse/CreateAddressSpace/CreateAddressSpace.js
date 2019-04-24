@@ -4,18 +4,12 @@ import {Button, BackgroundImageSrc, Wizard} from '@patternfly/react-core';
 import ConfigurationForm from './Steps/Configuration/ConfigurationForm';
 import Review from './Steps/Review';
 import {
-  createNewAddressSpace,
-  loadBrokeredAddressPlans,
-  loadStandardAddressPlans,
-  loadStandardAuthenticationServices,
-  loadBrokeredAuthenticationServices
+  createNewAddressSpace
 } from '../EnmasseAddressSpaces';
-import InstanceLoader from '../../InstanceLoader';
 import {NotificationConsumer, NotificationProvider} from '../../../../../context/notification-manager';
 
 
 class CreateAddressSpace extends React.Component {
-
 
   initialState = {
     isOpen: false,
@@ -27,62 +21,10 @@ class CreateAddressSpace extends React.Component {
       typeBrokered: '',
       plan: '',
       authenticationService: '',
-    },
-    brokeredPlans: [],
-    standardPlans: [],
-    namespaces: [],
-    brokeredAuthenticationServices: [],
-    standardAuthenticationServices: []
+    }
   };
 
   state = {...this.initialState};
-
-  componentDidMount() {
-    loadStandardAddressPlans()
-      .then(plans => {
-        this.state.standardPlans = plans;
-      })
-      .catch(error => {
-        console.log("Couldn't set the standard plans: " + error);
-      });
-    loadBrokeredAddressPlans()
-      .then(plans => {
-        this.state.brokeredPlans = plans;
-      })
-      .catch(error => {
-        console.log("Couldn't set the brokered plans: " + error);
-      });
-    loadStandardAuthenticationServices()
-      .then(authenticationServices => {
-        this.state.standardAuthenticationServices = authenticationServices;
-      })
-      .catch(error => {
-        console.log("Couldn't set the authenticationServices: " + error);
-      });
-    loadBrokeredAuthenticationServices()
-      .then(authenticationServices => {
-        this.state.brokeredAuthenticationServices = authenticationServices;
-      })
-      .catch(error => {
-        console.log("Couldn't set the authenticationServices: " + error);
-      });
-    InstanceLoader.loadNamespaces()
-      .then(namespaces => {
-        this.setState({namespaces: namespaces});
-        if (!this.state.newInstance.namespace
-          || !namespaces.includes(this.state.newInstance.namespace)) {
-          this.setState(state => {
-            var newInstance = {...state.newInstance};
-            newInstance.namespace = namespaces[0];
-            return {newInstance: newInstance};
-          });
-          this.initialState.newInstance.namespace = namespaces[0];
-        }
-      })
-      .catch(error => {
-        console.log("Couldn't set the namespaces instances: " + error);
-      });
-  };
 
   resetConfiguration = () => {
     this.state.newInstance.namespace = this.initialState.newInstance.namespace;
@@ -141,12 +83,7 @@ class CreateAddressSpace extends React.Component {
         name: 'Configuration',
         component: (<ConfigurationForm newInstance={newInstance}
                                        isConfigurationFormValid={isConfigurationFormValid}
-                                       onChange={this.onConfigurationFormChange}
-                                       standardPlans={this.state.standardPlans}
-                                       brokeredPlans={this.state.brokeredPlans}
-                                       standardAuthenticationServices={this.state.standardAuthenticationServices}
-                                       brokeredAuthenticationServices={this.state.brokeredAuthenticationServices}
-                                       namespaces={this.state.namespaces}/>),
+                                       onChange={this.onConfigurationFormChange}/>),
         enableNext: isConfigurationFormValid
       },
       {
