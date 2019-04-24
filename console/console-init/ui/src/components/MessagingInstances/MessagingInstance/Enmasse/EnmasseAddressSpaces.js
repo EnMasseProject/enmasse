@@ -50,8 +50,8 @@ export function loadMessagingInstance(namespace) {
     });
 }
 
-export function loadStandardAuthenticationServices() {
-  return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/standard')
+export function loadStandardAuthenticationServices(namespace) {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/'+namespace+'/addressspaceschemas/standard')
     .then(response => getAuthenticationServices(response.data))
     .catch(error => {
       console.log(error);
@@ -59,8 +59,8 @@ export function loadStandardAuthenticationServices() {
     });
 }
 
-export function loadBrokeredAuthenticationServices() {
-  return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/brokered')
+export function loadBrokeredAuthenticationServices(namespace) {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/'+namespace+'/addressspaceschemas/brokered')
     .then(response => getAuthenticationServices(response.data))
     .catch(error => {
       console.log(error);
@@ -68,8 +68,8 @@ export function loadBrokeredAuthenticationServices() {
     });
 }
 
-export function loadStandardAddressPlans() {
-  return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/standard')
+export function loadStandardAddressPlans(namespace) {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/'+namespace+'/addressspaceschemas/standard')
     .then(response => getPlanNames(response.data))
     .catch(error => {
       console.log(error);
@@ -77,8 +77,8 @@ export function loadStandardAddressPlans() {
     });
 }
 
-export function loadBrokeredAddressPlans() {
-  return axios.get('apis/enmasse.io/v1beta1/namespaces/enmasse-infra/addressspaceschemas/brokered')
+export function loadBrokeredAddressPlans(namespace) {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/'+namespace+'/addressspaceschemas/brokered')
     .then(response => getPlanNames(response.data))
     .catch(error => {
       console.log(error);
