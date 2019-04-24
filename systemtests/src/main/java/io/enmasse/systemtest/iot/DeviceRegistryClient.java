@@ -84,6 +84,7 @@ public class DeviceRegistryClient extends ApiClient {
         log.info("DELETE-device: path {};", requestPath);
         client.delete(endpoint.getPort(), endpoint.getHost(), requestPath)
             .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_NO_CONTENT, "Error deleting device registration"));
+        responsePromise.get(150000, TimeUnit.SECONDS);
     }
 
 }
