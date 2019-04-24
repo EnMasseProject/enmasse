@@ -24,7 +24,6 @@ import org.apache.qpid.proton.message.Message;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -122,7 +121,6 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     }
 
     @Test
-    @Disabled
     void testOneShotCommand() throws Exception {
 
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
@@ -141,7 +139,6 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     }
 
     @Test
-    @Disabled
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();
