@@ -5,6 +5,14 @@
 - name: Base64 encode Alertmanager config
   register: config
   shell: cat {{ playbook_dir }}/install/alertmanager/010-Config-alertmanager | base64 -w0
+  when: ansible_facts['os_family'] != "Darwin"
+
+- name: Base64 encode Alertmanager config
+  register: config
+  shell: cat {{ playbook_dir }}/install/alertmanager/010-Config-alertmanager | base64 -b0
+  when: ansible_facts['os_family'] == "Darwin"
+
+
 
 - name: Create Alertmanager config secret
   lineinfile:
