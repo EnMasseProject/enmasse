@@ -91,6 +91,7 @@ public class CredentialsRegistryClient extends ApiClient {
         log.info("DELETE-credentials: path {}", requestPath);
         client.delete(endpoint.getPort(), endpoint.getHost(), requestPath)
             .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_NO_CONTENT, "Error deleting all credentials of device"));
+        responsePromise.get(150000, TimeUnit.SECONDS);
     }
 
     private JsonObject createCredentialsObject(String deviceId, String authId, String password, Instant notAfter) {
