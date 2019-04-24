@@ -26,6 +26,7 @@ go:
 jobs:
   include:
     - stage: build
+      dist: xenial
       before_install:
         - pip install --user requests[security] ansible
         - gem install asciidoctor
