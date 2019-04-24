@@ -1,0 +1,177 @@
+== Overview
+
+This document describes the design of the `kafka` address space type and how it integrates with
+EnMasse.
+
+== Design
+
+
+A tenant creates a kafka address space by specifying the `kafka` address space type when creating an
+`AddressSpace`. 
+
+A service admin creates `KafkaConfig` resources describing the Kafka cluster setup, and
+`AddressSpacePlan` resources referencing those resources.
+
+An address space plan referencing a `KafkaConfig` will look like this:
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: kafka-small
+spec:
+  infraConfigRef: kafka-config
+  addressSpaceType: kafka
+  resourceLimits:
+    kafka: 1.0
+----
+
+The `KafkaConfig` resource is a configuration template just like `StandardInfraConfig` and `BrokeredInfraConfig`. The `KafkaConfig` resource uses the schema of the `Kafka` resource in Strimzi and may look like the following:
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: KafkaConfig
+metadata:
+  name: kafka-config
+spec:
+  version: 0.28.0
+  template:
+    kafka:
+      version: 2.1.0
+      replicas: 1
+      listeners:
+        plain: {}
+        tls: {}
+      config:
+        offsets.topic.replication.factor: 1
+        transaction.state.log.replication.factor: 1
+        transaction.state.log.min.isr: 1
+        log.message.format.version: "2.1"
+      storage:
+        type: persistent-claim
+        size: 100Gi
+        deleteClaim: false
+    zookeeper:
+      replicas: 1
+      storage:
+        type: persistent-claim
+        size: 100Gi
+        deleteClaim: false
+    entityOperator:
+      topicOperator: {}
+      userOperator: {}
+----
+
+Creating this resource will not create a Kafka cluster, but it will prepare the `address-space-controller` with the configuration needed to create one when a tenant creates an `AddressSpace` of the `kafka` type. Moreover, settings that are applied on a per-address-space basis will be ignored and set based on the `AddressSpace` definition instead. The following settings are ignored/overridden:
+
+* kafka.spec.listeners
+
+When a tenant creates a kafka address space, the `address-space-controller` will use the `KafkaConfig` resource to create a new `Kafka` Strimzi resource using a name based on the address space name and namespace.
+
+==== Endpoints
+
+For the Kafka address space, the `AddressSpace` endpoints provides the endpoints of the Kafka bootstrap servers. An example address space for a `kafka` address space type that has been created may look like this:
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  type: kafka
+  plan: kafka-small
+  endpoints:
+  - name: kafka
+    service: kafka
+    cert:
+      provider: certBundle
+      tlsKey: // Base64-encoded string
+      tlsCert: // Base64-encoded string
+   expose:
+     type: route
+status:
+  endpointStatuses:
+  - name: kafka
+    serviceHost: kafka-bootstrap-6bf3d9b.enmasse-infra.svc
+----
+
+The implementation will attempt to map the endpoint specification to the `Kafka` resource listener definitions. 
+
+Kafka clients may only authenticate using SASL in the initial version of the Kafka address space. 
+
+==== Authentication services
+
+Kafka integrates with authentication services by adding support for SASL forwarding/plugin to Kafka. EnMasse will automatically configure the Kafka cluster with information how to connect to the authentication service.
+
+
+==== Addresses
+
+EnMasse `Address` resources maps to `KafkaTopic` resources using the `topic` address type, and `AddressPlan` resources describing the amount of the cluster a topic uses. Address properties can be specified as part of the `AddressPlan` or the `Address`. The simplest form is to use defaults and settings from the plan:
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+  name: myspace.mytopic
+spec:
+  type: topic
+  plan: kafka-topic-small
+----
+
+The `AddressPlan` may look like this:
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: kafka-topic-small
+spec:
+  addressType: topic
+  resources:
+    kafka: 0.01
+  allowPropertiesOverride: true
+  properties:
+    partitions: 1
+    replicas: 2
+     retention.ms: 10000
+     segment.bytes: 65536
+----
+
+The `api-server` will create a Strimzi `KafkaTopic` based on the `Address` and `AddressPlan`.
+
+A more advanced `Address` where a greater set of Kafka topic features are exposed:
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+  name: myspace.mytopic
+spec:
+  type: topic
+  plan: kafka-topic-small
+  properties:
+    partitions: 3
+    replicas: 2
+    retention.ms: 7200000
+    segment.bytes: 1073741824
+----
+
+==== Impact on other address spaces
+
+To align on a common syntax, the `partitions` attribute under .spec should be moved to `properties` object to capture the 'bag of properties' concept that may be different for different address spaces sharing the same address space type.
+
+The `retention.ms` property should also be available in `standard` and `brokered` address space, and translates directly to message expiration in the broker for  queues and topics.
+
+== Testing
+
+The `Kafka` address space type is tested by creating address spaces of that type and using Kafka clients that uses the `AddressSpace` endpoint information to connect to the cluster. The tests should ensure that the various properties in the `AddressSpace` endpoint list is working as expected, and that `AuthenticationService` types can be used with the `kafka` address space.
+
+== Documentation
+
+The `Kafka` address space is documented as part of the service admin and tenant admin guides as is the case for other address space types.
