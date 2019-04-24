@@ -135,7 +135,7 @@ install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE
 	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
-	tar -czf build/$(INSTALLNAME).tgz --exclude="*/preview-bundles" -C build $(INSTALLNAME)
+	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
 
 coverage:
 
