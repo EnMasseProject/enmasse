@@ -10,7 +10,6 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AdminResourcesManager;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -21,14 +20,11 @@ import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class GlobalConsoleTest extends TestBase implements ISeleniumProvider {
 
-    private static Logger log = CustomLogger.getLogger();
     private GlobalConsolePage globalConsolePage;
     private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 

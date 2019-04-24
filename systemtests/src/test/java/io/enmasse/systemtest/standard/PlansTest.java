@@ -10,7 +10,6 @@ import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -20,8 +19,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +31,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     @BeforeEach

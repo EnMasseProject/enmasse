@@ -8,7 +8,6 @@ package io.enmasse.systemtest.bases.web;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
@@ -16,13 +15,10 @@ import io.enmasse.systemtest.selenium.page.RheaWebPage;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
-
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class WebSocketBrowserTest extends TestBaseWithShared implements ISeleniumProvider {
 
-    private static Logger log = CustomLogger.getLogger();
     private RheaWebPage rheaWebPage;
 
     @BeforeEach

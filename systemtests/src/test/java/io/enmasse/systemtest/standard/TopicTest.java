@@ -295,7 +295,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
 
         log.info("Receiving messages from second subscription");
-        List<String> allmessages = new ArrayList(batch1);
+        List<String> allmessages = new ArrayList<>(batch1);
         allmessages.addAll(batch2);
         AmqpClient client2 = amqpClientFactory.createTopicClient();
         recvResults = client2.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription2), allmessages.size());

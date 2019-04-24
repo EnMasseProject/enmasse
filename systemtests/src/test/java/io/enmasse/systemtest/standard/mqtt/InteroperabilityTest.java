@@ -6,7 +6,6 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -20,8 +19,6 @@ import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +36,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStandard {
     private static final String MQTT_AMQP_TOPIC = "mqtt-amqp-topic";
     private static final String AMQP_MQTT_TOPIC = "amqp-mqtt-topic";
-    private static Logger log = CustomLogger.getLogger();
 
     @Override
     public boolean skipDummyAddress() {

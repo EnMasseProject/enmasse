@@ -6,7 +6,6 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -16,8 +15,6 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Tests related to publish messages via MQTT
  */
 public class SessionTest extends TestBaseWithShared implements ITestBaseStandard {
-    private static Logger log = CustomLogger.getLogger();
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";
