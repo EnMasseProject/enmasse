@@ -26,7 +26,7 @@ spec:
   serviceMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
   containers:
-  - image: ${OAUTH_PROXY_IMAGE}
+  - image: ${CONSOLE_PROXY_OPENSHIFT_IMAGE}
     imagePullPolicy: ${IMAGE_PULL_POLICY}
     name: oauth-proxy
     ports:
