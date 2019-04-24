@@ -224,45 +224,46 @@ class CertProviderTest extends TestBase {
         boolean testSucceeded = false;
         try {
             SystemtestsKubernetesApps.deployOpenshiftCertValidator(appNamespace, kubernetes);
-            OpenshiftCertValidatorApiClient client = new OpenshiftCertValidatorApiClient(kubernetes, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, kubernetes));
+            try (var client = new OpenshiftCertValidatorApiClient(kubernetes, SystemtestsKubernetesApps.getOpenshiftCertValidatorEndpoint(appNamespace, kubernetes))) {
 
-            JsonObject request = new JsonObject();
-            request.put("username", user.getUsername());
-            request.put("password", user.getPassword());
+                JsonObject request = new JsonObject();
+                request.put("username", user.getUsername());
+                request.put("password", user.getPassword());
 
-            Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
-            request.put("messagingHost", messagingEndpoint.getHost());
-            request.put("messagingPort", messagingEndpoint.getPort());
+                Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
+                request.put("messagingHost", messagingEndpoint.getHost());
+                request.put("messagingPort", messagingEndpoint.getPort());
 
-            Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
-            request.put("mqttHost", mqttEndpoint.getHost());
-            request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
+                Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
+                request.put("mqttHost", mqttEndpoint.getHost());
+                request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
 
-            Endpoint consoleEndpoint = kubernetes.getEndpoint("console-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
-            request.put("consoleHost", consoleEndpoint.getHost());
-            request.put("consolePort", consoleEndpoint.getPort());
+                Endpoint consoleEndpoint = kubernetes.getEndpoint("console-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
+                request.put("consoleHost", consoleEndpoint.getHost());
+                request.put("consolePort", consoleEndpoint.getPort());
 
-            TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
-            Exception lastException = null;
-            while (!timeout.timeoutExpired()) {
-                try {
-                    log.info("Making request to openshift-cert-validator {}", request);
-                    JsonObject response = client.test(request);
-                    if (response.containsKey("error")) {
-                        fail("Error testing openshift provider " + response.getString("error"));
-                    } else {
-                        testSucceeded = true;
-                        return;
+                TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
+                Exception lastException = null;
+                while (!timeout.timeoutExpired()) {
+                    try {
+                        log.info("Making request to openshift-cert-validator {}", request);
+                        JsonObject response = client.test(request);
+                        if (response.containsKey("error")) {
+                            fail("Error testing openshift provider " + response.getString("error"));
+                        } else {
+                            testSucceeded = true;
+                            return;
+                        }
+                    } catch (Exception e) {
+                        lastException = e;
                     }
-                } catch (Exception e) {
-                    lastException = e;
+                    log.debug("next iteration, remaining time: {}", timeout.timeLeft());
+                    Thread.sleep(5000);
                 }
-                log.debug("next iteration, remaining time: {}", timeout.timeLeft());
-                Thread.sleep(5000);
-            }
-            log.error("Timeout expired");
-            if (lastException != null) {
-                throw lastException;
+                log.error("Timeout expired");
+                if (lastException != null) {
+                    throw lastException;
+                }
             }
         } finally {
             if (!testSucceeded) {

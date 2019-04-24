@@ -236,6 +236,7 @@ public class ApiServerTest extends TestBase {
                 receivedCount, is(messages.size()));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     void testRestApiAddressResourceParams() throws Exception {
         AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-rest-api-addr-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
@@ -388,18 +389,22 @@ public class ApiServerTest extends TestBase {
 
             log.info("-------------------- User part -----------------------");
 
-            UserApiClient userApiClient1 = new UserApiClient(kubernetes, namespace1);
-            UserApiClient userApiClient2 = new UserApiClient(kubernetes, namespace2);
+            try (
+                    var userApiClient1 = new UserApiClient(kubernetes, namespace1);
+                    var userApiClient2 = new UserApiClient(kubernetes, namespace2);
+                    ) {
 
-            UserCredentials cred = new UserCredentials("pepa", "novak");
+                UserCredentials cred = new UserCredentials("pepa", "novak");
 
-            userApiClient1.createUser(brokered.getMetadata().getName(), cred);
-            userApiClient2.createUser(standard.getMetadata().getName(), cred);
+                userApiClient1.createUser(brokered.getMetadata().getName(), cred);
+                userApiClient2.createUser(standard.getMetadata().getName(), cred);
 
-            assertThat("Get all users does not contain 2 password users",
-                    UserUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
-                            .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).collect(Collectors.toList()).size(),
-                    is(2));
+                assertThat("Get all users does not contain 2 password users",
+                        UserUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
+                                .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).collect(Collectors.toList()).size(),
+                        is(2));
+            }
+
         } finally {
             nameSpaceClient1.close();
             nameSpaceClient2.close();
