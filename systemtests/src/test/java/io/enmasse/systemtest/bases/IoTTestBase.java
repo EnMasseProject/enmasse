@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.bases;
@@ -134,23 +134,26 @@ public abstract class IoTTestBase extends TestBase {
         String message = "First successful " + type.name().toLowerCase() + " message";
         TestUtils.waitUntilCondition(message, (phase) -> {
             try {
-                if (type == MessageType.EVENT) {
-                    var response = adapterClient.sendEvent(json, any());
-                    logResponseIfLastTryFailed(phase, response, message);
-                    return response.statusCode() == HTTP_ACCEPTED;
-                } else if (type == MessageType.TELEMETRY) {
-                    var response = adapterClient.sendTelemetry(json, any());
-                    logResponseIfLastTryFailed(phase, response, message);
-                    return response.statusCode() == HTTP_ACCEPTED;
-                } else {
-                    return true;
+                switch(type) {
+                    case EVENT: {
+                        var response = adapterClient.sendEvent(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    case TELEMETRY: {
+                        var response = adapterClient.sendTelemetry(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    default:
+                        return true;
                 }
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }, new TimeoutBudget(3, TimeUnit.MINUTES));
 
-        log.info("First " + type.name().toLowerCase() + " message accepted");
+        log.info("First {} message accepted", type.name().toLowerCase());
     }
 
     private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
