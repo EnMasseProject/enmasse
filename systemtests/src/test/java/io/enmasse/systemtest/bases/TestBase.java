@@ -453,8 +453,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected boolean userExist(AddressSpace addressSpace, String username) throws Exception {
+        return userExist(getUserApiClient(), addressSpace, username);
+    }
+
+    protected boolean userExist(UserApiClient client, AddressSpace addressSpace, String username) throws Exception {
         String id = String.format("%s.%s", addressSpace.getMetadata().getName(), username);
-        JsonObject response = getUserApiClient().getUserList(addressSpace.getMetadata().getName());
+        JsonObject response = client.getUserList(addressSpace.getMetadata().getName());
         log.info("User list for {}: {}", addressSpace.getMetadata().getName(), response.toString());
         JsonArray users = response.getJsonArray("items");
         for (Object user : users) {
