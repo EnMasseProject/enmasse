@@ -26,6 +26,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import io.enmasse.address.model.AddressSpace;
@@ -95,7 +96,10 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
     }
 
     @AfterEach
-    void cleanEnv() throws Exception {
+    void cleanEnv(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) { //test failed
+            logCollector.collectHttpAdapterQdrProxyState();
+        }
         credentialsClient.deleteAllCredentials(tenantId(), deviceId);
         credentialsClient.getCredentials(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         registryClient.deleteDeviceRegistration(tenantId(), deviceId);

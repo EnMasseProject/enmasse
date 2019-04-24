@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class GlobalLogCollector {
     private final static Logger log = CustomLogger.getLogger();
@@ -115,21 +116,42 @@ public class GlobalLogCollector {
         }
     }
 
+    public void collectHttpAdapterQdrProxyState() {
+        log.info("Collecting qdr-proxy router state in namespace {}", namespace);
+        collectRouterState("httpAdapterQdrProxyState", System.currentTimeMillis(),
+                kubernetes.listPods(Map.of("component", "iot", "name", "iot-http-adapter")).stream(),
+                Optional.of("qdr-proxy"));
+    }
+
+    public void collectMqttAdapterQdrProxyState() {
+        log.info("Collecting qdr-proxy router state in namespace {}", namespace);
+        collectRouterState("mqttAdapterQdrProxyState", System.currentTimeMillis(),
+                kubernetes.listPods(Map.of("component", "iot", "name", "iot-mqtt-adapter")).stream(),
+                Optional.of("qdr-proxy"));
+    }
+
     public void collectRouterState(String operation) {
         log.info("Collecting router state in namespace {}", namespace);
-        long timestamp = System.currentTimeMillis();
-        kubernetes.listPods(Collections.singletonMap("capability", "router")).stream().filter(pod -> pod.getStatus().getPhase().equals("Running")).forEach(pod -> {
-            collectRouterInfo(pod, "." + operation + ".autolinks." + timestamp, "qdmanage", "QUERY", "--type=autoLink");
-            collectRouterInfo(pod, "." + operation + ".links." + timestamp, "qdmanage", "QUERY", "--type=link");
-            collectRouterInfo(pod, "." + operation + ".connections." + timestamp, "qdmanage", "QUERY", "--type=connection");
-            collectRouterInfo(pod, "." + operation + ".qdstat_a." + timestamp, "qdstat", "-a");
-            collectRouterInfo(pod, "." + operation + ".qdstat_l." + timestamp, "qdstat", "-l");
-            collectRouterInfo(pod, "." + operation + ".qdstat_n." + timestamp, "qdstat", "-n");
-            collectRouterInfo(pod, "." + operation + ".qdstat_c." + timestamp, "qdstat", "-c");
+        collectRouterState(operation, System.currentTimeMillis(),
+                kubernetes.listPods(Collections.singletonMap("capability", "router")).stream(),
+                Optional.of("router"));
+    }
+
+    private void collectRouterState(String operation, long timestamp, Stream<Pod> podsStream, Optional<String> container) {
+        podsStream.filter(pod -> pod.getStatus().getPhase().equals("Running"))
+        .forEach(pod -> {
+            collectRouterInfo(pod, container, "." + operation + ".autolinks." + timestamp, "qdmanage", "QUERY", "--type=autoLink");
+            collectRouterInfo(pod, container, "." + operation + ".links." + timestamp, "qdmanage", "QUERY", "--type=link");
+            collectRouterInfo(pod, container, "." + operation + ".connections." + timestamp, "qdmanage", "QUERY", "--type=connection");
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_a." + timestamp, "qdstat", "-a");
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_l." + timestamp, "qdstat", "-l");
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_n." + timestamp, "qdstat", "-n");
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_c." + timestamp, "qdstat", "-c");
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_linkroutes." + timestamp, "qdstat", "--linkroutes");
         });
     }
 
-    private void collectRouterInfo(Pod pod, String filesuffix, String command, String... args) {
+    private void collectRouterInfo(Pod pod, Optional<String> container, String filesuffix, String command, String... args) {
         List<String> allArgs = new ArrayList<>();
         allArgs.add(command);
         allArgs.add("--sasl-mechanisms=EXTERNAL");
@@ -144,7 +166,7 @@ public class GlobalLogCollector {
         String output = KubeCMDClient.runOnPod(
                 pod.getMetadata().getNamespace(),
                 pod.getMetadata().getName(),
-                Optional.of("router"),
+                container,
                 allArgs.toArray(new String[0])).getStdOut();
         try {
             Path routerAutoLinks = resolveLogFile(pod.getMetadata().getName() + filesuffix);
