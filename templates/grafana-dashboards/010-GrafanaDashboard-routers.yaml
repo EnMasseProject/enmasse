@@ -38,7 +38,7 @@ spec:
           },
           "id": 4,
           "panels": [],
-          "title": "Row title",
+          "title": "Number of Routers",
           "type": "row"
         },
         {

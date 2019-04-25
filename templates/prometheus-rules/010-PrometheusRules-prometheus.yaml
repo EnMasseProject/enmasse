@@ -5,7 +5,7 @@ metadata:
     monitoring-key: middleware
     prometheus: k8s
     role: alert-rules
-  name: prometheus-k8s-rules
+  name: enmasse
 spec:
   groups:
   - name: ComponentHealth

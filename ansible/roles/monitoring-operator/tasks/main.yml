@@ -1,0 +1,15 @@
+---
+- name: Deploy Kube-state-metrics
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/kube-state-metrics
+
+- name: Create project namespace
+  shell: oc new-project {{ monitoring_namespace }} --description="EnMasse Monitoring"
+  register: namespace_exists
+  failed_when: namespace_exists.stderr != '' and 'already exists' not in namespace_exists.stderr
+  changed_when: namespace_exists.rc == 0
+
+- name: Select monitoring namespace
+  shell: oc project {{ monitoring_namespace }}
+
+- name: Deploy the Application Monitoring Operator
+  shell: oc apply -n {{ monitoring_namespace }} -f {{ playbook_dir }}/install/monitoring-operator

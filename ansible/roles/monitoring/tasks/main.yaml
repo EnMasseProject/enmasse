@@ -1,0 +1,12 @@
+---
+- name: Select project namespace
+  shell: oc project {{ namespace }}
+
+- name: Apply Service Monitors
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/service-monitors
+
+- name: Apply Prometheus Rules
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/prometheus-rules
+
+- name: Apply Grafana Dashboards
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana-dashboards

@@ -1,0 +1,17 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-service-admin-guide.adoc
+
+:parent-context: {context}
+[id='ops-procedures-{context}']
+
+= Operation procedures for {ProductName}
+
+include::../modules/proc-restart-component.adoc[leveloffset=+1]
+
+include::../modules/proc-get-logs-router.adoc[leveloffset=+1]
+
+include::../modules/proc-get-logs-broker.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

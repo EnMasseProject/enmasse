@@ -1,0 +1,41 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring.adoc
+
+[id='deploy-kube-state-metrics-{context}']
+= (Optional) the kube-state-metrics agent
+
+The `kube-state-metrics` agent allows you to monitor {ProductName} pods.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a user with `cluster-admin` privileges:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} login -u system:admin
+----
+
+. Select the `{ProductNamespace}` project:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Select the `{ProductNamespace}` namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} config set-context $(kubectl config current-context) --namespace=_{ProductNamespace}_
+----
+endif::[]
+
+. Deploy the `kube-state-metrics` component:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/kube-state-metrics
+----

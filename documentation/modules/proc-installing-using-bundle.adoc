@@ -72,6 +72,13 @@ endif::[]
 {cmdcli} apply -f install/components/example-plans
 ----
 
+. (Optional) Install example roles
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/example-roles
+----
+
 . (Optional) Install the `standard` authentication service:
 +
 [options="nowrap",subs="attributes"]

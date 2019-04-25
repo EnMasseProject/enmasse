@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: application-monitoring-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: application-monitoring-operator
+  template:
+    metadata:
+      labels:
+        name: application-monitoring-operator
+    spec:
+      serviceAccountName: application-monitoring-operator
+      containers:
+        - name: application-monitoring-operator
+          image: ${APPLICATION_MONITORING_OPERATOR_IMAGE}
+          ports:
+            - containerPort: 60000
+              name: metrics
+          command:
+            - application-monitoring-operator
+          imagePullPolicy: Always
+          readinessProbe:
+            exec:
+              command:
+                - stat
+                - /tmp/operator-sdk-ready
+            initialDelaySeconds: 4
+            periodSeconds: 10
+            failureThreshold: 1
+          env:
+            - name: TEMPLATE_PATH
+              value: /usr/local/bin/templates
+            - name: MONITORING_KEY
+              value: middleware
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "application-monitoring-operator"

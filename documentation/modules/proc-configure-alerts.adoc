@@ -1,34 +1,66 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring.adoc
+
 [id='config-alerts-{context}']
 
-= Alerts
+= Conguring alert notifications
 
-You can enable alerts regarding the health of {ProductName} resources.
+In order to configure alert notifications, such as emails, you must change the default configuration of Alertmanager.
+
+.Prerequisites
+
+* Create an Alertmanager configuration file following the link:https://prometheus.io/docs/alerting/configuration/[Alertmanager documentation^]. An example configuration for emails notifications is shown below:
+
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: enmasse
+  name: alertmanager-config
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      smtp_smarthost: localhost
+      smtp_from: alerts@localhost
+      smtp_auth_username: admin
+      smtp_auth_password: password
+    route:
+      group_by: ['alertname']
+      group_wait: 60s
+      group_interval: 60s
+      repeat_interval: 1h
+      receiver: 'sysadmins'
+    receivers:
+    - name: 'sysadmins'
+      email_configs:
+      - to: sysadmin@localhost
+    inhibit_rules:
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname']
+----
+
+* Your Alertmanager configuration file must be called `alertmanager.yaml` in order for it to be read by the Prometheus Operator
 
 .Procedure
 
-. Add the following rules to your Prometheus Rules configuration:
+. Delete the secret containing the default configuration:
 +
-[source,yaml,options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-  - alert: Component_Health
-    annotations:
-      description: '{{ $labels.summary }}'
-      value: "{{ $value }}"
-      severity: warning
-    expr: health == 1
-    for: 60s
-  - alert: Address_Space_Health
-    annotations:
-      description: '{{ $labels.summary }}'
-      value: "{{ $value }}"
-      severity: warning
-    expr: address_spaces_not_ready_total > 0
-    for: 300s
-  - alert: Address_Health
-    annotations:
-      description: '{{ $labels.summary }}'
-      value: "{{ $value }}"
-      severity: warning
-    expr: addresses_not_ready_total > 0
-    for: 300s
+{cmdcli} delete secret alertmanager-application-monitoring
+----
+
+. Create a secret containing your new configuration:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} create secret generic alertmanager-application-monitoring --from-file=alertmanager.yaml
 ----

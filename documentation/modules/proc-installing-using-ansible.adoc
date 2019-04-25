@@ -30,14 +30,9 @@ The following Ansible configuration settings are supported:
 |register_api_server|Specifies whether to register the API server with {KubePlatform} master|False |no
 |secure_api_server|Specifies whether to enable mutual TLS for the API server|False |no
 |install_example_plans|Specifies whether to install example plans and infrastructure configurations|True|no
-|monitoring_infrastructure|Specifies whether to install full monitoring infrastructure|Not applicable|no
-|service_monitors|Specifies whether to install the service monitors for monitoring {ProductName}|Not applicable|no
-|alerting|Specifies whether to install Prometheus rules that configure alerting for {ProductName}|Not applicable|no
-|smtp_server|Specifies the SMTP server used to send alert emails|Not applicable|no
-|smtp_username|Specifies the username used to authenticate to the SMTP server|Not applicable|no
-|smtp_password|Specifies the password used to authenticate to the SMTP server|Not applicable|no
-|smtp_from_address|Specifies the from address displayed in alert emails|Not applicable|no
-|sysadmin_email|Specifies the email address to which alerts are sent|Not applicable|no
+|monitoring_namespace|Specifies the namespace where the {ProductName} monitoring is installed.|Not applicable |yes
+|monitoring_operator|Specifies whether to install the monitoring infrastructure|Not applicable|no
+|monitoring|Specifies whether to install the service monitors, Prometheus rules, and Grafana dashboards for monitoring {ProductName}|Not applicable|no
 |===
 
 

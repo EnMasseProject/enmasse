@@ -1,3 +1,0 @@
----
-- name: Apply Service Monitors
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/service-monitors
