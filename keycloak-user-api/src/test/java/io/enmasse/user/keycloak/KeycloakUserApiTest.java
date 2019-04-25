@@ -21,15 +21,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.enmasse.user.model.v1.*;
 import org.junit.jupiter.api.Test;
 import org.keycloak.representations.idm.GroupRepresentation;
 import org.keycloak.representations.idm.RealmRepresentation;
 import org.keycloak.representations.idm.UserRepresentation;
-
-import io.enmasse.user.model.v1.Operation;
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthenticationType;
-import io.enmasse.user.model.v1.UserAuthorization;
 
 public class KeycloakUserApiTest {
     @Test
@@ -46,11 +42,11 @@ public class KeycloakUserApiTest {
 
         GroupRepresentation sendQueue1 = new GroupRepresentation();
         sendQueue1.setId("sq1");
-        sendQueue1.setName("send_queue1");
+        sendQueue1.setName("send_queue_1");
 
         GroupRepresentation recvQueue1 = new GroupRepresentation();
         recvQueue1.setId("rq1");
-        recvQueue1.setName("recv_queue1");
+        recvQueue1.setName("recv_queue_1");
 
         GroupRepresentation allDirect1 = new GroupRepresentation();
         allDirect1.setId("mg");
@@ -65,6 +61,13 @@ public class KeycloakUserApiTest {
         assertEquals(UserAuthenticationType.password, user.getSpec().getAuthentication().getType());
 
         assertEquals(2, user.getSpec().getAuthorization().size());
+        assertAuthorizations(Arrays.asList(new UserAuthorizationBuilder()
+                .addToAddresses("queue_1")
+                .addToOperations(Operation.send, Operation.recv)
+                .build(), new UserAuthorizationBuilder()
+                .addToOperations(Operation.manage)
+                .addToAddresses()
+                .build()), user.getSpec().getAuthorization());
     }
 
     private static UserRepresentation mockUser(String name, String namespace, String addressSpaceName) {
@@ -271,7 +274,7 @@ public class KeycloakUserApiTest {
     public void testDesiredGroupsTransformation2() {
 
         final List<UserAuthorization> auth = Arrays.asList(
-                new UserAuthorization(Arrays.asList("foo/bar", "bar/baz/#"),
+                new UserAuthorization(Arrays.asList("foo/bar", "bar/baz/#", "baz_quux"),
                         Arrays.asList(Operation.recv, Operation.send)),
                 new UserAuthorization(Arrays.asList("fuu/*"), Arrays.asList(Operation.view)),
                 new UserAuthorization(Arrays.asList("faa/#"), Arrays.asList(Operation.manage)));
@@ -280,7 +283,7 @@ public class KeycloakUserApiTest {
 
         assertGroups(result,
                 "recv_foo%2Fbar", "send_foo%2Fbar", "recv_bar%2Fbaz%2F%23", "send_bar%2Fbaz%2F%23",
-                "monitor", "manage");
+                "monitor", "manage", "send_baz_quux", "recv_baz_quux");
     }
 
     @Test

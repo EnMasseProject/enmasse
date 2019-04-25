@@ -45,6 +45,15 @@ public class UserAuthorization {
         return operations;
     }
 
+
+    @Override
+    public String toString() {
+        return "UserAuthorization{" +
+                "addresses=" + addresses +
+                ", operations=" + operations +
+                '}';
+    }
+
     public void validate() {
         Objects.requireNonNull(operations, "'operations' field must be set");
         if (operations.contains(Operation.send) || operations.contains(Operation.view) || operations.contains(Operation.recv)) {
