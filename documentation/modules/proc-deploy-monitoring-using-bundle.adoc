@@ -1,0 +1,46 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring.adoc
+
+[id='deploy-monitoring-bundle-{context}']
+= Deploying monitoring using a Yaml bundle
+
+The simplest way to deploy monitoring is to use a predefined YAML bundle.
+
+.Prerequisites
+
+* The link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#deploy-monitoring-operator-messaging[Application Monitoring Operator^] or an operator managing the same resources should be installed.
+
+.Procedure
+
+. Label the _{ProductNamespace}_ namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} label namespace _{ProductNamespace}_ monitoring-key=middleware
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Select the `{ProductNamespace}` project:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} project {ProductNamespace}
+----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Select the `{ProductNamespace}` namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} config set-context $(kubectl config current-context) --namespace={ProductNamespace}
+----
+endif::[]
+
+. Deploy the `monitoring` bundle:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/bundles/monitoring
+----
+

@@ -24,11 +24,10 @@ MODULES=\
 	iot/examples \
 	api-server \
 	api-service \
-	grafana \
-	prometheus \
+	monitoring-operator \
+	grafana-dashboards \
 	service-broker \
 	cluster-service-broker \
-	alertmanager \
 	kube-state-metrics \
 	service-monitors \
 	prometheus-rules \
@@ -67,9 +66,7 @@ replace_images: prepare
 					  -e 's,\$${AGENT_IMAGE},$(AGENT_IMAGE),g' \
 					  -e 's,\$${MQTT_GATEWAY_IMAGE},$(MQTT_GATEWAY_IMAGE),g' \
 					  -e 's,\$${MQTT_LWT_IMAGE},$(MQTT_LWT_IMAGE),g' \
-					  -e 's,\$${PROMETHEUS_IMAGE},$(PROMETHEUS_IMAGE),g' \
-					  -e 's,\$${ALERTMANAGER_IMAGE},$(ALERTMANAGER_IMAGE),g' \
-					  -e 's,\$${GRAFANA_IMAGE},$(GRAFANA_IMAGE),g' \
+					  -e 's,\$${APPLICATION_MONITORING_OPERATOR_IMAGE},$(APPLICATION_MONITORING_OPERATOR_IMAGE),g' \
 					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
 					  -e 's,\$${QDROUTERD_BASE_IMAGE},$(QDROUTERD_BASE_IMAGE),g' \
@@ -107,7 +104,7 @@ $(ENMASSE_BUNDLE): replace_images
 MONITORING_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/monitoring
 $(MONITORING_BUNDLE): replace_images
 	mkdir -p $(MONITORING_BUNDLE)
-	for i in alertmanager grafana kube-state-metrics prometheus service-monitors prometheus-rules; do \
+	for i in grafana-dashboards service-monitors prometheus-rules; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(MONITORING_BUNDLE)/; \
 	done
 

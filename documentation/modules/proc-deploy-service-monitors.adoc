@@ -14,16 +14,26 @@ You must deploy the service monitors to enable Prometheus to monitor {ProductNam
 
 .Procedure
 
-. Select the {ProductName} namespace:
+ifeval::["{cmdcli}" == "oc"]
+. Select the `{ProductMonitoringNamespace}` project:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} project _{ProductNamespace}_
+{cmdcli} project {ProductMonitoringNamespace}
 ----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Select the `{ProductMonitoringNamespace}` namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} config set-context $(kubectl config current-context) --namespace={ProductMonitoringNamespace}
+----
+endif::[]
 
 . Deploy the `service-monitors`:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} apply -f /install/components/service-monitors
+{cmdcli} apply -f install/components/service-monitors
 ----

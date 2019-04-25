@@ -17,6 +17,20 @@
     regexp: "enmasse-infra"
     replace: "{{ namespace }}"
   with_items: "{{ yamls.files }}"
+- name: Find all monitoring yaml files
+  find:
+    paths: "{{ playbook_dir }}/install/monitoring-operator/"
+    patterns: "*.yaml"
+    recurse: yes
+  register: monitoring_yamls
+  when: monitoring_operator
+- name: Replace monitoring namespace in configuration
+  replace:
+    dest: "{{item.path}}"
+    regexp: "enmasse-monitoring"
+    replace: "{{ monitoring_namespace }}"
+  with_items: "{{ monitoring_yamls.files }}"
+  when: monitoring_operator
 - import_role:
     name: crds
 - import_role:
@@ -51,14 +65,8 @@
     name: iot
   when: enable_iot
 - import_role:
-    name: monitoring-infrastructure
-  when: monitoring_infrastructure
+    name: monitoring-operator
+  when: monitoring_operator
 - import_role:
-    name: service-monitors
-  when: service_monitors
-- import_role:
-    name: grafana-dashboards
-  when: service_monitors
-- import_role:
-    name: alerting
-  when: alerting
+    name: monitoring
+  when: monitoring

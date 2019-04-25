@@ -18,6 +18,7 @@
 :ProductLongName: EnMasse
 :ProductName: EnMasse
 :ProductNamespace: enmasse-infra
+:ProductMonitoringNamespace: enmasse-monitoring
 :ProductVersion: 
 :ProductMajorVersion: 
 :ProductBundleName: enmasse

@@ -9,19 +9,15 @@
 
 You can monitor {ProductName} by deploying built-in monitoring tools or using your pre-existing monitoring infrastructure by deploying the required service monitors and Prometheus rules.
 
-include::../modules/proc-deploy-monitoring-infrastructure.adoc[leveloffset=+1]
+include::../modules/proc-deploy-monitoring-operator.adoc[leveloffset=+1]
 
-include::../modules/proc-deploy-service-monitors.adoc[leveloffset=+1]
+include::../modules/proc-deploy-kube-state-metrics.adoc[leveloffset=+1]
 
-include::../modules/proc-deploy-prometheus-rules.adoc[leveloffset=+1]
+include::../modules/proc-deploy-monitoring-using-bundle.adoc[leveloffset=+1]
 
-include::../modules/proc-deploy-grafana-dashboards.adoc[leveloffset=+1]
+include::../modules/proc-deploy-monitoring-using-ansible.adoc[leveloffset=+1]
 
-include::../modules/proc-restart-component.adoc[leveloffset=+1]
-
-include::../modules/proc-get-logs-router.adoc[leveloffset=+1]
-
-include::../modules/proc-get-logs-broker.adoc[leveloffset=+1]
+include::../modules/proc-configure-alerts.adoc[leveloffset=+1]
 
 :context: {parent-context}
 

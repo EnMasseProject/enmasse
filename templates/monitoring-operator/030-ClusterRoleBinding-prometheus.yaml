@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-application-monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-application-monitoring
+subjects:
+- kind: ServiceAccount
+  name: prometheus-application-monitoring
+  namespace: enmasse-monitoring
+userNames:
+- system:serviceaccount:enmasse-monitoring:prometheus-application-monitoring

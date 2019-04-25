@@ -1,0 +1,52 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring.adoc
+
+[id='deploy-monitoring-operator-{context}']
+= (Optional) Deploying the Application Monitoring Operator
+
+To monitor {ProductName}, an operator that acts on the monitoring Custom Resource Definitions must
+be deployed. You may skip this step if you have such an operator installed on your {KubePlatform}
+cluster.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a user with `cluster-admin` privileges:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} login -u system:admin
+----
+
+. (Optional) If you want to deploy to a namespace other than `{ProductMonitoringNamespace}` you must run the following command and substitute `{ProductMonitoringNamespace}` in subsequent steps:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+sed -i 's/{ProductMonitoringNamespace}/_my-namespace_/' install/bundles/{ProductBundleName}/*.yaml
+----
+
+ifeval::["{cmdcli}" == "oc"]
+. Create the {ProductMonitoringNamespace} namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} new-project _{ProductMonitoringNamespace}_
+----
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+. Create the {ProductMonitoringNamespace} namespace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} create namespace _{ProductMonitoringNamespace}_
+{cmdcli} config set-context $(kubectl config current-context) --namespace=_{ProductMonitoringNamespace}_
+----
+endif::[]
+
+. Deploy the `monitoring-operator` component:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/monitoring-operator
+----

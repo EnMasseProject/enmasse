@@ -1,3 +1,0 @@
----
-- name: Apply the Grafana Dashboards
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/grafana
