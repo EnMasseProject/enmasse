@@ -586,7 +586,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
             } else if (groupRep.getName().contains("_")) {
                 String[] parts = groupRep.getName().split("_", 2);
                 Operation operation = Operation.valueOf(parts[0]);
-                String address = parts[1];
+                String address = decodePart(parts[1]);
                 operationsByAddress.computeIfAbsent(address, k -> new LinkedHashSet<>())
                         .add(operation);
             }
