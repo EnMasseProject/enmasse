@@ -268,7 +268,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return newSsoCookieDomain, nil
 	})
 
-	return reconcile.Result{Requeue: requeue}, nil
+	return reconcile.Result{Requeue: requeue}, err
 }
 
 type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
@@ -701,7 +701,8 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		}
 
 		if len(route.Status.Ingress) == 0 {
-			return reconcile.Result{}, nil, nil
+			log.Info("Console route has no ingress, can't set up OAuth redirects yet.", "routeName", consoleservice.Name)
+			return reconcile.Result{Requeue: true}, nil, nil
 		}
 
 		redirects := make([]url.URL, 0)
@@ -716,7 +717,7 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 		//_ = opts.SetLabelSelector("app=enmasse")
 		err = r.client.List(context.TODO(), opts, list)
 		if err != nil {
-			return reconcile.Result{}, nil, nil
+			return reconcile.Result{}, nil, err
 		}
 
 		for _, item := range list.Items {
