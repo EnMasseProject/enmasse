@@ -26,8 +26,6 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
-import org.slf4j.Logger;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(isolated)
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
-    private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     private ConsoleWebPage consoleWebPage;

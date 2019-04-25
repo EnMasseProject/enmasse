@@ -85,96 +85,98 @@ class DeviceRegistryTest extends IoTTestBaseWithShared {
     @Test
     void testDeviceCredentials() throws Exception {
 
-        CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
-        client.registerDevice(tenantId(), DUMMY_DEVICE_ID);
+            client.registerDevice(tenantId(), DUMMY_DEVICE_ID);
 
-        String authId = "sensor1234";
-        String password = "password1234";
-        credentialsClient.addCredentials(tenantId(), DUMMY_DEVICE_ID, authId, password);
+            String authId = "sensor1234";
+            String password = "password1234";
+            credentialsClient.addCredentials(tenantId(), DUMMY_DEVICE_ID, authId, password);
 
-        JsonObject result = credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID);
-        assertNotNull(result);
-        assertEquals(1, result.getInteger("total"));
-        JsonArray credentials = result.getJsonArray("credentials");
-        assertNotNull(credentials);
-        assertEquals(1, credentials.size());
-        JsonObject credential = credentials.getJsonObject(0);
-        assertNotNull(credential);
-        assertEquals(DUMMY_DEVICE_ID, credential.getString("device-id"));
-        assertEquals(authId, credential.getString("auth-id"));
-        assertEquals(true, credential.getBoolean("enabled"));
-        //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
+            JsonObject result = credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID);
+            assertNotNull(result);
+            assertEquals(1, result.getInteger("total"));
+            JsonArray credentials = result.getJsonArray("credentials");
+            assertNotNull(credentials);
+            assertEquals(1, credentials.size());
+            JsonObject credential = credentials.getJsonObject(0);
+            assertNotNull(credential);
+            assertEquals(DUMMY_DEVICE_ID, credential.getString("device-id"));
+            assertEquals(authId, credential.getString("auth-id"));
+            assertEquals(true, credential.getBoolean("enabled"));
+            //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
 
-        checkCredentials(authId, password, false);
+            checkCredentials(authId, password, false);
 
-        credentialsClient.deleteAllCredentials(tenantId(), DUMMY_DEVICE_ID);
-        credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
+            credentialsClient.deleteAllCredentials(tenantId(), DUMMY_DEVICE_ID);
+            credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
 
-        client.deleteDeviceRegistration(tenantId(), DUMMY_DEVICE_ID);
-        client.getDeviceRegistration(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
+            client.deleteDeviceRegistration(tenantId(), DUMMY_DEVICE_ID);
+            client.getDeviceRegistration(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
+
+        }
     }
 
     @Test
     void testSetExpiryForCredentials() throws Exception {
-        CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+            client.registerDevice(tenantId(), DUMMY_DEVICE_ID);
 
-        client.registerDevice(tenantId(), DUMMY_DEVICE_ID);
+            String authId = "sensor1234";
+            String password = "password1234";
+            credentialsClient.addCredentials(tenantId(), DUMMY_DEVICE_ID, authId, password);
 
-        String authId = "sensor1234";
-        String password = "password1234";
-        credentialsClient.addCredentials(tenantId(), DUMMY_DEVICE_ID, authId, password);
+            checkCredentials(authId, password, false);
 
-        checkCredentials(authId, password, false);
+            int expirySeconds = 30;
+            Instant notAfter = Instant.now().plusSeconds(expirySeconds);
+            String newPassword = "new-password1234";
+            credentialsClient.updateCredentials(tenantId(), DUMMY_DEVICE_ID, authId, newPassword, notAfter);
 
-        int expirySeconds = 30;
-        Instant notAfter = Instant.now().plusSeconds(expirySeconds);
-        String newPassword = "new-password1234";
-        credentialsClient.updateCredentials(tenantId(), DUMMY_DEVICE_ID, authId, newPassword, notAfter);
+            JsonObject result = credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID);
+            assertNotNull(result);
+            assertEquals(1, result.getInteger("total"));
+            JsonArray credentials = result.getJsonArray("credentials");
+            assertNotNull(credentials);
+            assertEquals(1, credentials.size());
+            JsonObject credential = credentials.getJsonObject(0);
+            assertNotNull(credential);
+            assertEquals(DUMMY_DEVICE_ID, credential.getString("device-id"));
+            assertEquals(authId, credential.getString("auth-id"));
+            assertEquals(true, credential.getBoolean("enabled"));
+            JsonArray secrets = credential.getJsonArray("secrets");
+            assertNotNull(secrets);
+            assertEquals(1, secrets.size());
+            JsonObject secret = secrets.getJsonObject(0);
+            assertNotNull(secret);
+            Instant actualNotAfter = secret.getInstant("not-after");
+            assertEquals(notAfter, actualNotAfter);
+            //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
 
-        JsonObject result = credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID);
-        assertNotNull(result);
-        assertEquals(1, result.getInteger("total"));
-        JsonArray credentials = result.getJsonArray("credentials");
-        assertNotNull(credentials);
-        assertEquals(1, credentials.size());
-        JsonObject credential = credentials.getJsonObject(0);
-        assertNotNull(credential);
-        assertEquals(DUMMY_DEVICE_ID, credential.getString("device-id"));
-        assertEquals(authId, credential.getString("auth-id"));
-        assertEquals(true, credential.getBoolean("enabled"));
-        JsonArray secrets = credential.getJsonArray("secrets");
-        assertNotNull(secrets);
-        assertEquals(1, secrets.size());
-        JsonObject secret = secrets.getJsonObject(0);
-        assertNotNull(secret);
-        Instant actualNotAfter = secret.getInstant("not-after");
-        assertEquals(notAfter, actualNotAfter);
-        //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
+            checkCredentials(authId, newPassword, false);
+            log.info("Waiting " + expirySeconds + " seconds for credentials to expire");
+            Thread.sleep((expirySeconds + 1) * 1000);
+            checkCredentials(authId, newPassword, true);
 
-        checkCredentials(authId, newPassword, false);
-        log.info("Waiting " + expirySeconds + " seconds for credentials to expire");
-        Thread.sleep((expirySeconds + 1) * 1000);
-        checkCredentials(authId, newPassword, true);
+            credentialsClient.deleteAllCredentials(tenantId(), DUMMY_DEVICE_ID);
+            credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
 
-        credentialsClient.deleteAllCredentials(tenantId(), DUMMY_DEVICE_ID);
-        credentialsClient.getCredentials(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
-
-        client.deleteDeviceRegistration(tenantId(), DUMMY_DEVICE_ID);
-        client.getDeviceRegistration(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
+            client.deleteDeviceRegistration(tenantId(), DUMMY_DEVICE_ID);
+            client.getDeviceRegistration(tenantId(), DUMMY_DEVICE_ID, HttpURLConnection.HTTP_NOT_FOUND);
+        }
     }
 
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {
-        HttpAdapterClient httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId + "@" + tenantId(), password);
-        JsonObject payload = new JsonObject(Map.of("data", "dummy"));
+        try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId + "@" + tenantId(), password)) {
+            JsonObject payload = new JsonObject(Map.of("data", "dummy"));
 
-        var expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE, HTTP_ACCEPTED);
-        log.info("Sending event data expected response: {}", expectedResponse);
-        httpAdapterClient.sendEvent(payload, expectedResponse );
+            var expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE, HTTP_ACCEPTED);
+            log.info("Sending event data expected response: {}", expectedResponse);
+            httpAdapterClient.sendEvent(payload, expectedResponse );
 
-        log.info("Sending telemetry data expected response: {}", expectedResponse);
-        httpAdapterClient.sendTelemetry(payload, expectedResponse);
-
+            log.info("Sending telemetry data expected response: {}", expectedResponse);
+            httpAdapterClient.sendTelemetry(payload, expectedResponse);
+        }
     }
 
 }

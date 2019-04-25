@@ -174,7 +174,6 @@ class UserApiTest extends TestBase {
         assertThat(KubeCMDClient.createCR(kubernetes.getNamespace(), userDefinitionPayload.toString()).getRetCode(), is(true));
         assertThat(KubeCMDClient.getUser(kubernetes.getNamespace(), brokered.getMetadata().getName(), cred.getUsername()).getRetCode(), is(true));
 
-        UserCredentials updatedCred = new UserCredentials("pepanatestovani", null);
         testUser = new DoneableUser(testUser)
                 .editSpec()
                 .editFirstAuthorization()

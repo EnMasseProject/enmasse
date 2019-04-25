@@ -20,8 +20,6 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import java.io.IOException;
@@ -37,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
-    private static Logger log = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach
@@ -126,6 +123,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         List<Address> addresses = new ArrayList<>();
         queues.forEach(queue -> addresses.add(AddressUtils.createQueueAddressObject(queue, DestinationPlan.STANDARD_SMALL_QUEUE)));
 
+        @SuppressWarnings("unused")
         AmqpClient client = amqpClientFactory.createQueueClient();
         for (Address address : addresses) {
             setAddresses(address, destExtra);

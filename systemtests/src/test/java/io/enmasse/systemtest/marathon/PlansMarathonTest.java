@@ -20,8 +20,6 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,7 +27,6 @@ import java.util.List;
 
 class PlansMarathonTest extends MarathonTestBase {
 
-    private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
 
     @BeforeEach

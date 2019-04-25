@@ -6,7 +6,6 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -16,8 +15,6 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -35,7 +32,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class PublishTest extends TestBaseWithShared implements ITestBaseStandard {
     private static final String MYTOPIC = "mytopic";
-    private static Logger log = CustomLogger.getLogger();
 
     @Override
     public boolean skipDummyAddress() {
