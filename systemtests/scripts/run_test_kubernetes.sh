@@ -16,16 +16,11 @@ API_TOKEN=$(kubectl describe secret $(kubectl get serviceaccount default -o json
 
 export KUBERNETES_API_URL=${KUBERNETES_API_URL:-${API_URL}}
 export KUBERNETES_API_TOKEN=${KUBERNETES_API_TOKEN:-${API_TOKEN}}
-export KUBERNETES_NAMESPACE=${KUBERNETES_NAMESPACE:-enmasseci}
 export TEST_LOGDIR=${TEST_LOGDIR:-/tmp/testlogs}
 export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
 export DEFAULT_AUTHSERVICE=standard
 export USE_MINIKUBE=true
-
-SANITIZED_NAMESPACE=${KUBERNETES_NAMESPACE}
-SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//_/-}
-SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//\//-}
-export KUBERNETES_NAMESPACE=${SANITIZED_NAMESPACE}
+export KUBERNETES_NAMESPACE=enmasse-infra
 
 kubectl create namespace ${KUBERNETES_NAMESPACE}
 kubectl config set-context $(kubectl config current-context) --namespace=${KUBERNETES_NAMESPACE}
@@ -34,7 +29,6 @@ mkdir -p api-server-cert/
 openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-server.${KUBERNETES_NAMESPACE}.svc.cluster.local" -out api-server-cert/tls.crt -keyout api-server-cert/tls.key
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 
-sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
 kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/bundles/enmasse
 kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/example-plans
 kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/example-roles
@@ -71,7 +65,6 @@ EOF
 
 if [[ "${DEPLOY_IOT}" == "true" ]]; then
     echo "Deploying IoT components"
-    sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*/*.yaml
 
     NAMESPACE="${KUBERNETES_NAMESPACE}" "${BASE_DIR}/iot/examples/k8s-tls/create"
     NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
