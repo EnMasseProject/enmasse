@@ -1,8 +1,7 @@
 import React from 'react';
 import {
   Badge,
-  Card, CardBody, CardHeader,
-  Pagination, PaginationVariant,
+  PageSection, PageSectionVariants, Pagination, PaginationVariant,
   Text,
   Toolbar, ToolbarGroup, ToolbarItem
 } from '@patternfly/react-core';
@@ -49,8 +48,6 @@ class MessagingInstances extends React.Component {
       deleteInstances: [],
       allMessagingInstances: props.messagingInstances
     };
-    //this.onMessagingInstanceSelect = this.onMessagingInstanceSelect.bind(this);
-
   };
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -222,8 +219,7 @@ class MessagingInstances extends React.Component {
             />
           )}
         </NotificationConsumer>
-        <Card>
-          <CardHeader>
+        <PageSection variant={PageSectionVariants.light}>
             <Toolbar className={"pf-u-justify-content-space-between pf-u-mx-xl pf-u-my-md"}>
               <ToolbarGroup>
                 <ToolbarItem className={css(spacingStyles.mxMd)}>
@@ -251,8 +247,6 @@ class MessagingInstances extends React.Component {
                 </ToolbarItem>
               </ToolbarGroup>
             </Toolbar>
-          </CardHeader>
-          <CardBody>
             <Table id="table-instances" aria-label="table of messaging instances" onSelect={this.onMessagingInstanceSelect}
                    cells={columns} rows={rows} actions={actions}>
               <TableHeader id="table-header"/>
@@ -275,8 +269,7 @@ class MessagingInstances extends React.Component {
                 </ToolbarItem>
               </ToolbarGroup>
             </Toolbar>
-          </CardBody>
-        </Card>
+        </PageSection>
       </React.Fragment>
     );
   }
