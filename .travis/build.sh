@@ -21,7 +21,7 @@ fi
 echo "Building EnMasse with tag $TAG, version $VERSION from $BRANCH. PR: $PULL_REQUEST"
 make clean
 
-time make
+time make SKIP_TESTS=true
 
 time make docker_build
 
