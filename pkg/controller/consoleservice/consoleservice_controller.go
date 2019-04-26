@@ -168,8 +168,8 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{}, err
 	}
 
-	err = applyConsoleServiceDefaults(ctx, r.client, r.scheme, consoleservice)
-	if err != nil {
+	rewritten, err := applyConsoleServiceDefaults(ctx, r.client, r.scheme, consoleservice)
+	if err != nil || rewritten {
 		return reconcile.Result{}, err
 	}
 
@@ -215,6 +215,13 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	}
 	requeue = requeue || result.Requeue
 
+	// sso secret
+	result, err = r.reconcileSsoCookieSecret(ctx, consoleservice)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	requeue = requeue || result.Requeue
+
 	// oauthclient
 	result, redirects, err := r.reconcileOauthClient(ctx, consoleservice)
 	if err != nil {
@@ -240,12 +247,8 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		return nil
 	}, func() (*string, error) {
 
-		if consoleservice.Annotations != nil {
-			if sval, ok := consoleservice.Annotations["enmasse.io/disable-autocompute-sso-cookie-domain"]; ok {
-				if bval, ok := strconv.ParseBool(sval); ok == nil && bval {
-					return consoleservice.Spec.SsoCookieDomain, nil
-				}
-			}
+		if getBooleanAnnotationValue(consoleservice.Annotations, "enmasse.io/disable-autocompute-sso-cookie-domain") {
+			return consoleservice.Spec.SsoCookieDomain, nil
 		}
 
 		hosts := make([]string, len(redirects))
@@ -293,16 +296,17 @@ func (r *ReconcileConsoleService) updateService(ctx context.Context, consoleserv
 
 		consoleservice.Spec.SsoCookieDomain = newSsoCookieDomain
 		consoleservice.Status = newStatus
+		log.Info("Updating console service")
 		err := r.client.Update(ctx, consoleservice)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		return reconcile.Result{Requeue: true}, nil
+		return reconcile.Result{Requeue: false}, nil
 	}
 	return reconcile.Result{}, nil
 }
 
-func applyConsoleServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, consoleservice *v1beta1.ConsoleService) error {
+func applyConsoleServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, consoleservice *v1beta1.ConsoleService) (bool, error) {
 	var dirty = false
 
 	if consoleservice.Spec.CertificateSecret == nil {
@@ -320,7 +324,7 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 				return util.GenerateSelfSignedCertSecret(cn, nil, nil, secret)
 			})
 			if err != nil {
-				return err
+				return false, err
 			}
 		}
 	}
@@ -328,21 +332,7 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 	if consoleservice.Spec.SsoCookieSecret == nil {
 		dirty = true
 		secretName := consoleservice.Name + "-sso-cookie-secret"
-		consoleservice.Spec.SsoCookieSecret = &corev1.SecretReference{
-			Name: secretName,
-		}
-
-		err := util.CreateSecret(ctx, client, scheme, consoleservice.Namespace, secretName, consoleservice, func(secret *corev1.Secret) error {
-			install.ApplyDefaultLabels(&secret.ObjectMeta, "consoleservice", secretName)
-
-			secret.Data = make(map[string][]byte)
-			password, err := util.GeneratePassword(32)
-			secret.Data["cookie-secret"] = []byte(password)
-			return err
-		})
-		if err != nil {
-			return err
-		}
+		consoleservice.Spec.SsoCookieSecret = &corev1.SecretReference{Name: secretName}
 	}
 
 	if consoleservice.Spec.OauthClientSecret == nil {
@@ -364,14 +354,14 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 
 			openshiftUri, rewritten, err := util.OpenshiftUri()
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			if rewritten {
 				// The well known metadata will be unusable
 				metadata, err := util.WellKnownOauthMetadata()
 				if err != nil {
-					return err
+					return false, err
 				}
 
 				keys := []string{
@@ -392,7 +382,7 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 
 				metadata_bytes, err := json.Marshal(metadata)
 				if err != nil {
-					return err
+					return false, err
 				}
 
 				discoveryURL = "data:application/json;base64," + base64.StdEncoding.EncodeToString(metadata_bytes)
@@ -410,11 +400,12 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 
 	if dirty {
 		// address-space-controller needs to know the default values, so we rewrite the object.
+		log.Info("Materializing console service defaults.")
 		err := client.Update(ctx, consoleservice)
-		return err
+		return true, err
 	}
 
-	return nil
+	return false, nil
 }
 
 func (r *ReconcileConsoleService) reconcileService(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
@@ -516,6 +507,34 @@ func applyRoute(consoleservice *v1beta1.ConsoleService, route *routev1.Route, ca
 	return nil
 }
 
+func (r *ReconcileConsoleService) reconcileSsoCookieSecret(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+	secretref := consoleservice.Spec.SsoCookieSecret
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: secretref.Name},
+	}
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, secret, func(existing runtime.Object) error {
+		secret = existing.(*corev1.Secret)
+		if err := controllerutil.SetControllerReference(consoleservice, secret, r.scheme); err != nil {
+			return err
+		}
+
+		if getBooleanAnnotationValue(consoleservice.Annotations, "enmasse.io/disable-sso-cookie") {
+			secret.Data = nil
+			return nil
+		} else {
+			return applySsoCookieSecret(secret)
+		}
+	})
+
+	if err != nil {
+		log.Error(err, "Failed reconciling SSO Cookie Secret")
+		return reconcile.Result{}, err
+	}
+
+	return reconcile.Result{}, nil
+}
+
 func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
@@ -569,7 +588,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 
 		if consoleservice.Spec.SsoCookieSecret != nil {
-			install.ApplyEnvSecret(container, "SSO_COOKIE_SECRET", "cookie-secret", consoleservice.Spec.SsoCookieSecret.Name)
+			b := true
+			install.ApplyEnvOptionalSecret(container, "SSO_COOKIE_SECRET", "cookie-secret", consoleservice.Spec.SsoCookieSecret.Name, &b)
 		}
 
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
@@ -805,6 +825,24 @@ func applyOauthSecret(secret *corev1.Secret) error {
 	return nil
 }
 
+func applySsoCookieSecret(secret *corev1.Secret) error {
+
+	if secret.Data == nil {
+		secret.Data = make(map[string][]byte)
+	}
+
+	if _, hassecret := secret.Data["cookie-secret"]; !hassecret {
+		password, err := util.GeneratePassword(32)
+		if err != nil {
+			return err
+		}
+
+		secret.Data["cookie-secret"] = []byte(password)
+	}
+
+	return nil
+}
+
 func ensureSingletonConsoleService(ctx context.Context, objectMeta metav1.ObjectMeta, c client.Client) error {
 
 	consoleservice := &v1beta1.ConsoleService{
@@ -829,4 +867,15 @@ func ensureSingletonConsoleService(ctx context.Context, objectMeta metav1.Object
 	}
 
 	return err
+}
+
+func getBooleanAnnotationValue(Annotations map[string]string, name string) bool {
+	if Annotations != nil {
+		if sval, ok := Annotations[name]; ok {
+			if bval, ok := strconv.ParseBool(sval); ok == nil && bval {
+				return bval
+			}
+		}
+	}
+	return false
 }
