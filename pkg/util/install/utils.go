@@ -382,6 +382,10 @@ func ApplyEnvSimple(container *corev1.Container, name string, value string) {
 }
 
 func ApplyEnvSecret(container *corev1.Container, name string, secretKey string, secretName string) {
+	ApplyEnvOptionalSecret(container, name, secretKey, secretName, nil)
+}
+
+func ApplyEnvOptionalSecret(container *corev1.Container, name string, secretKey string, secretName string, optional *bool) {
 	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
 		envvar.Value = ""
 		envvar.ValueFrom = &corev1.EnvVarSource{
@@ -390,6 +394,7 @@ func ApplyEnvSecret(container *corev1.Container, name string, secretKey string, 
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: secretName,
 				},
+				Optional: optional,
 			},
 		}
 	})
