@@ -25,7 +25,6 @@ const translateAddressSpaces = addressSpaces => {
 }
 
 const getAuthenticationServices = authenticationServices => {
-  console.log(authenticationServices);
   return authenticationServices.spec.authenticationServices;
 }
 

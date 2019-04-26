@@ -23,7 +23,7 @@
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/preset-env": "^7.1.6",
     "@babel/preset-react": "^7.0.0",
-    "@patternfly/react-core": "^2.10.9",
+    "@patternfly/react-core": "^3.16.10",
     "axios-mock-adapter": "^1.16.0",
     "babel-jest": "^24.7.1",
     "babel-loader": "^8.0.5",
@@ -31,8 +31,8 @@
     "enzyme": "^3.7.0",
     "enzyme-adapter-react-16": "^1.7.0",
     "enzyme-to-json": "^3.3.5",
-    "eslint": "^4.19.1",
-    "eslint-plugin-patternfly-react": "^0.2.0",
+    "eslint": "^5.16.0",
+    "eslint-plugin-patternfly-react": "^0.2.3",
     "file-loader": "^2.0.0",
     "html-webpack-plugin": "^3.2.0",
     "imagemin": "^6.x",
@@ -61,8 +61,8 @@
     "webpack-merge": "^4.1.4"
   },
   "dependencies": {
-    "@patternfly/patternfly": "^1.0.250",
-    "@patternfly/react-table": "^1.4.10",
+    "@patternfly/patternfly": "^2.6.8",
+    "@patternfly/react-table": "^2.1.6",
     "@zalando/oauth2-client-js": "^0.0.18",
     "axios": "^0.18.0",
     "moment": "^2.24.0"

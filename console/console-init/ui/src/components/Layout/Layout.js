@@ -152,12 +152,9 @@ class Layout extends React.Component {
     return (
       <Aux>
         <Page header={Header} >
-          {/*<PageSection variant={PageSectionVariants.darker} className='navSection'>{PageNav}</PageSection>*/}
-          <PageSection variant={PageSectionVariants.light}>
+          <PageSection>
             <About handleAboutModalToggle={this.handleAboutModalToggle} isAboutModalOpen={isAboutModalOpen}/>
-            <TextContent>
               {this.props.children}
-            </TextContent>
           </PageSection>
         </Page>
       </Aux>
