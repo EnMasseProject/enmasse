@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:11-0
+FROM enmasseproject/java-base:11-1
 
 RUN yum -y install which libaio python hostname iputils && yum clean all -y && mkdir -p /var/run/artemis/
 

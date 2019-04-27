@@ -1,4 +1,4 @@
-FROM enmasseproject/java-base:11-0
+FROM enmasseproject/java-base:11-1
 
 ARG version
 ARG maven_version
