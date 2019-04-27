@@ -56,7 +56,7 @@ This can be run at the top level or within each module. You can also run the 'bu
 #### Full build and pushing docker images to a registry
 
     export DOCKER_ORG=myorg
-    export DOCKER_REGISTRY=docker.io
+    export DOCKER_REGISTRY=quay.io
     export TAG=v1.0.3 # Optional: 'latest' by default
 
     docker login -u myuser -p mypassword $DOCKER_REGISTRY
@@ -180,8 +180,8 @@ only consumed by some tasks:
    * `KUBERNETES_API_URL`   - URL to Kubernetes master. Consumed by `systemtests` target
    * `KUBERNETES_API_TOKEN` - Kubernetes API token. Consumed by `systemtests` target
    * `KUBERNETES_NAMESPACE` - Kubernetes namespace for EnMasse. Consumed by `systemtests` targets
-   * `DOCKER_ORG`           - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasseproject`
-   * `DOCKER_REGISTRY`      - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `docker.io`
+   * `DOCKER_ORG`           - Docker organization for EnMasse images. Consumed by `build`, `package`, `docker*` targets. tasks. Defaults to `enmasse`
+   * `DOCKER_REGISTRY`      - Docker registry for EnMasse images. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets. Defaults to `quay.io`
    * `TAG`                  - Tag used as docker image tag in snapshots and in the generated templates. Consumed by `build`, `package`, `docker_tag` and `docker_push` targets.
 
 ## Debugging
