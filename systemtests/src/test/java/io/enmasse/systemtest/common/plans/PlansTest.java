@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.common.plans;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
@@ -17,16 +16,20 @@ import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -41,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
     void setUp() throws Exception {
@@ -87,8 +90,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace weakAddressSpace = AddressSpaceUtils.createAddressSpaceObject("weak-address-space", AddressSpaceType.STANDARD,
-                weakSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace weakAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("weak-plan-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(weakSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(weakAddressSpace);
 
         //deploy destinations
@@ -97,14 +111,14 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         setAddresses(weakAddressSpace, weakQueueDest, weakTopicDest);
 
         //get destinations
-        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getMetadata().getName()));
-        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getMetadata().getName()));
+        Address getWeakQueue = kubernetes.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakQueueDest.getMetadata().getName()).get();
+        Address getWeakTopic = kubernetes.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakTopicDest.getMetadata().getName()).get();
 
         String assertMessage = "Queue plan wasn't set properly";
         assertAll("Both destination should contain right addressPlan",
-                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
+                () -> assertEquals(getWeakQueue.getSpec().getPlan(),
                         weakQueuePlan.getMetadata().getName(), assertMessage),
-                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
+                () -> assertEquals(getWeakTopic.getSpec().getPlan(),
                         weakTopicPlan.getMetadata().getName(), assertMessage));
 
         //simple send/receive
@@ -157,8 +171,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-pooled-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(addressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
@@ -236,8 +261,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-quota-sharded-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(addressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
         createUser(addressSpace, user);
@@ -326,8 +362,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         Thread.sleep(30_000);
 
         //create address space plan with new plan
-        AddressSpace partitioned = AddressSpaceUtils.createAddressSpaceObject("partitioned", AddressSpaceType.STANDARD,
-                partitionedAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace partitioned = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("partitioned")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(partitionedAddressesPlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(partitioned);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
@@ -364,15 +411,15 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         // Increase to too many partitions
         address.getSpec().setPlan(manyPartitionedQueue.getMetadata().getName());
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
-        AddressUtils.replaceAddress(addressApiClient, partitioned, address, false, budget);
+        AddressUtils.replaceAddress(partitioned, address, false, budget);
         Address replaced = null;
         while (!budget.timeoutExpired()) {
-            replaced = getAddressesObjects(partitioned, Optional.of(address.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
+            replaced = kubernetes.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
             if (replaced.getStatus().getMessages().contains("Quota exceeded")) {
                 break;
             }
         }
-        replaced = getAddressesObjects(partitioned, Optional.of(address.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
+        replaced = kubernetes.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
         assertNotNull(replaced);
         assertTrue(replaced.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
     }
@@ -395,8 +442,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
-        AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
-                manyAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace manyAddressesSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("many-addresses-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(manyAddressesPlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
@@ -447,8 +505,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
-                scaleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace messagePersistAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("persist-plan-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(scaleSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(messagePersistAddressSpace);
 
         //deploy destinations
@@ -480,85 +549,18 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         //remove addresses from first pod and wait for scale down
         deleteAddresses(messagePersistAddressSpace, queue1, queue2);
-        TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, messagePersistAddressSpace, 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
+        TestUtils.waitForNBrokerReplicas(messagePersistAddressSpace, 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         //validate count of addresses
-        Future<List<String>> addresses = getAddresses(messagePersistAddressSpace, Optional.empty());
-        List<String> addressNames = addresses.get(15, TimeUnit.SECONDS);
-        assertThat(String.format("Unexpected count of destinations, got following: %s", addressNames),
-                addressNames.size(), is(2));
+        List<Address> addresses = AddressUtils.getAddresses(messagePersistAddressSpace);
+        assertThat(String.format("Unexpected count of destinations, got following: %s", addresses),
+                addresses.size(), is(2));
 
         //receive messages from remaining addresses
         Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getSpec().getAddress(), msgs.size());
         Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getSpec().getAddress(), msgs.size());
         assertThat("Incorrect count of messages received", recvResult3.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-    }
-
-    @Test
-    @Disabled("test disabled due to issue: #1136")
-    void testMessagePersistenceAfterChangePlan() throws Exception {
-        List<ResourceRequest> addressResourcesQueueDistributed = Arrays.asList(new ResourceRequest("broker", 2.0), new ResourceRequest("router", 0));
-        List<ResourceRequest> addressResourcesSharded = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0));
-
-        AddressPlan queuePlanDistributed = PlanUtils.createAddressPlanObject("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
-        adminManager.createAddressPlan(queuePlanDistributed);
-
-        AddressPlan queuePlanSharded = PlanUtils.createAddressPlanObject("sharded-standard-queue", AddressType.QUEUE, addressResourcesSharded);
-        adminManager.createAddressPlan(queuePlanSharded);
-
-        //define and create address space plan
-        List<ResourceAllowance> resources = Arrays.asList(
-                new ResourceAllowance("broker", 5.0),
-                new ResourceAllowance("router", 5.0),
-                new ResourceAllowance("aggregate", 5.0));
-        List<AddressPlan> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
-        AddressSpacePlan scaleSpacePlan = PlanUtils.createAddressSpacePlanObject("scale-plan",
-                "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        adminManager.createAddressSpacePlan(scaleSpacePlan);
-
-        //create address space plan with new plan
-        AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
-                scaleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
-        createAddressSpace(messagePersistAddressSpace);
-
-        //deploy destinations
-        Address queue = AddressUtils.createQueueAddressObject("distributed-queue", queuePlanDistributed.getMetadata().getName());
-        setAddresses(messagePersistAddressSpace, queue);
-
-        //pod should have 2 replicas
-        TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, messagePersistAddressSpace, 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
-
-        //send 100000 messages to queue
-        UserCredentials user = new UserCredentials("test-change-plan-user", "test_change_plan_pswd");
-        createUser(messagePersistAddressSpace, user);
-
-        AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
-        queueClient.getConnectOptions().setCredentials(user);
-
-        List<String> msgs = TestUtils.generateMessages(100_000);
-        Future<Integer> sendResult1 = queueClient.sendMessages(queue.getSpec().getAddress(), msgs);
-        assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
-
-        //replace original plan in address by another
-        adminManager.replaceAddressPlan(queuePlanSharded);
-
-        assertEquals(getAddressesObjects(
-                messagePersistAddressSpace,
-                Optional.of(queue.getMetadata().getName())).get(10, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
-                queuePlanSharded.getMetadata().getName(),
-                "New plan wasn't set correctly");
-
-        //wait until address will be scaled down to 1 pod
-        TestUtils.waitForNBrokerReplicas(
-                addressApiClient,
-                kubernetes,
-                messagePersistAddressSpace, 1, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
-        //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
-
-        //receive messages
-        Future<List<Message>> recvResult = queueClient.recvMessages(queue.getSpec().getAddress(), msgs.size());
-        assertThat("Incorrect count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     @Test
@@ -621,8 +623,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(pooledAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
-                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(beforeAddressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
@@ -673,7 +686,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(beforeQueuePlan));
 
-        AddressSpacePlan afterAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-standard-plan",
+        AddressSpacePlan afterAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-brokered-plan",
                 "default", AddressSpaceType.BROKERED,
                 Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(afterQueuePlan));
@@ -682,8 +695,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.BROKERED,
-                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-brokered-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withPlan(beforeAddressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
@@ -741,8 +765,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
-                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-sharded-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(beforeAddressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
@@ -760,12 +795,11 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace, false);
 
-        JsonObject data = addressApiClient.getAddressSpace(addressSpace.getMetadata().getName());
         assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
-                data.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan"));
+                addressSpace.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
         assertEquals(String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
                 afterQueuePlan.getMetadata().getName(), environment.namespace(), addressSpace.getMetadata().getName()),
-                data.getJsonObject("status").getJsonArray("messages").getString(0));
+                addressSpace.getStatus().getMessages().get(0));
     }
 
     @Test
@@ -789,8 +823,20 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         adminManager.createAddressSpacePlan(addressPlan);
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
-                addressPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-pooled-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(addressPlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(addressSpace);
         UserCredentials cred = new UserCredentials("test-user", "test-password");
         createUser(addressSpace, cred);
@@ -822,19 +868,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     private void checkLimits(AddressSpace addressSpace, List<Address> allowedDest, List<Address> notAllowedDest, UserCredentials credentials)
             throws Exception {
+        var client = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace());
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
                 Arrays.toString(allowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)),
                 Arrays.toString(notAllowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)));
 
-        setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Address[0]));
-        List<Future<List<Address>>> getAddresses = new ArrayList<>();
+        setAddresses(addressSpace, allowedDest.toArray(new Address[0]));
+        List<Address> getAddresses = new ArrayList<>();
         for (Address dest : allowedDest) {
-            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
+            getAddresses.add(client.withName(dest.getMetadata().getName()).get());
         }
 
-        for (Future<List<Address>> getAddress : getAddresses) {
-            Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
+        for (Address address : getAddresses) {
             log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
             String assertMessage = String.format("Address from allowed %s is not ready", address.getMetadata().getName());
             assertEquals(Phase.Active, address.getStatus().getPhase(), assertMessage);
@@ -853,11 +899,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             }
 
             for (Address dest : notAllowedDest) {
-                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
+                getAddresses.add(client.withName(dest.getMetadata().getName()).get());
             }
 
-            for (Future<List<Address>> getAddress : getAddresses) {
-                Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
+            for (Address address : getAddresses) {
                 log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
                 String assertMessage = String.format("Address from notAllowed %s is ready", address.getMetadata().getName());
                 assertEquals(Phase.Pending, address.getStatus().getPhase(), assertMessage);

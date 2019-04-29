@@ -6,11 +6,7 @@ package io.enmasse.systemtest.selenium.page;
 
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.AddressSpacePlans;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.enmasse.systemtest.selenium.resources.ProvisionedServiceItem;
@@ -35,13 +31,11 @@ public class OpenshiftWebPage implements IWebPage {
     String ocRoute;
     UserCredentials credentials;
     OpenshiftLoginWebPage loginPage;
-    AddressApiClient addressApiClient;
 
-    public OpenshiftWebPage(SeleniumProvider selenium, AddressApiClient addressApiClient, String ocRoute, UserCredentials credentials) {
+    public OpenshiftWebPage(SeleniumProvider selenium, String ocRoute, UserCredentials credentials) {
         this.selenium = selenium;
         this.ocRoute = ocRoute;
         this.credentials = credentials;
-        this.addressApiClient = addressApiClient;
         this.loginPage = new OpenshiftLoginWebPage(selenium);
     }
 
@@ -254,7 +248,7 @@ public class OpenshiftWebPage implements IWebPage {
         waitForRedirectToService();
         String serviceId = getProvisionedServiceItem().getId();
         waitUntilServiceIsReady();
-        addressSpace = AddressSpaceUtils.getAddressSpaceObject(addressApiClient, addressSpace.getMetadata().getName(), addressSpace.getMetadata().getNamespace());
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         return serviceId;
     }
 

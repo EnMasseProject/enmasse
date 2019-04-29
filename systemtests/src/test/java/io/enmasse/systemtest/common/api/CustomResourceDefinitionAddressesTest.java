@@ -7,14 +7,13 @@ package io.enmasse.systemtest.common.api;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
@@ -22,8 +21,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
-import java.util.concurrent.Future;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
@@ -36,7 +36,19 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @BeforeEach
     void setUpSelenium() throws Exception {
-        brokered = AddressSpaceUtils.createAddressSpaceObject("crd-address-test", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("crd-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(brokered);
         userCredentials = new UserCredentials("test", "test");
         createUser(brokered, userCredentials);
@@ -74,17 +86,13 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         });
 
 
-        HashMap<String, String> queryParams = new HashMap<>();
-        queryParams.put("address", dest1.getSpec().getAddress());
-        Future<List<Address>> addressesObjects = getAddressesObjects(brokered, Optional.empty(), Optional.of(queryParams));
-        List<Address> dest1Response = addressesObjects.get(11, TimeUnit.SECONDS);
-        assertEquals(1, dest1Response.size(), String.format("Received unexpected count of addresses! got following addresses %s",
-                dest1Response.stream().map(address -> address.getMetadata().getName()).reduce("", String::concat)));
+        Address addressesObjects = kubernetes.getAddressClient(brokered.getMetadata().getNamespace()).withName(dest1.getMetadata().getName()).get();
+        assertNotNull(addressesObjects, "Didn't receive address from api server");
 
         // Patch new label
-        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), dest1Response.get(0).getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
+        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), dest1.getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
 
-        KubeCMDClient.deleteAddress(environment.namespace(), dest1Response.get(0).getMetadata().getName());
+        KubeCMDClient.deleteAddress(environment.namespace(), dest1.getMetadata().getName());
         KubeCMDClient.deleteAddress(environment.namespace(), AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2));
 
         TestUtils.waitUntilCondition(() -> {

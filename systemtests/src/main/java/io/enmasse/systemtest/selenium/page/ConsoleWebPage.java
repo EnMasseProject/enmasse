@@ -10,7 +10,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.*;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -383,8 +382,8 @@ public class ConsoleWebPage implements IWebPage {
         selenium.getDriver().get(consoleRoute);
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if (new AdminResourcesManager(Kubernetes.getInstance()).getAuthService(defaultAddressSpace.getSpec()
-                .getAuthenticationService().getName()).getSpec().getType().equals(AuthenticationServiceType.standard)) {
+        if (Kubernetes.getInstance().getAuthenticationServiceClient().withName(defaultAddressSpace.getSpec()
+                .getAuthenticationService().getName()).get().getSpec().getType().equals(AuthenticationServiceType.standard)) {
             if (!login(credentials.getUsername(), credentials.getPassword()))
                 throw new IllegalAccessException("Cannot login");
         }
@@ -397,12 +396,6 @@ public class ConsoleWebPage implements IWebPage {
         toolbarType = ToolbarType.ADDRESSES;
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         log.info("Addresses page opened");
-    }
-
-    public void openDashboardPageWebConsole() throws Exception {
-        selenium.clickOnItem(getLeftMenuItemWebConsole("Dashboard"));
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
-        log.info("Dashboard page opened");
     }
 
     public void openConnectionsPageWebConsole() throws Exception {
@@ -674,8 +667,7 @@ public class ConsoleWebPage implements IWebPage {
         assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
 
         if (waitForReady)
-            AddressUtils.waitForDestinationsReady(new AddressApiClient(Kubernetes.getInstance(), defaultAddressSpace.getMetadata().getNamespace()), defaultAddressSpace,
-                    new TimeoutBudget(5, TimeUnit.MINUTES), destination);
+            AddressUtils.waitForDestinationsReady(defaultAddressSpace, new TimeoutBudget(5, TimeUnit.MINUTES), destination);
     }
 
     /**

@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.standard.infra;
 
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
@@ -12,7 +12,6 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -63,8 +62,20 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         adminManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.STANDARD,
-                exampleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        exampleAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("example-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(exampleSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(exampleAddressSpace);
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));

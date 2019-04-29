@@ -19,16 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AmqpClientFactory {
     private static Logger log = CustomLogger.getLogger();
-    private final Kubernetes kubernetes;
-    private final Environment environment;
     private final AddressSpace defaultAddressSpace;
     private final String defaultUsername;
     private final String defaultPassword;
     private final List<AmqpClient> clients = new ArrayList<>();
 
-    public AmqpClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, UserCredentials credentials) {
-        this.kubernetes = kubernetes;
-        this.environment = environment;
+    public AmqpClientFactory(AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this.defaultAddressSpace = defaultAddressSpace;
         this.defaultUsername = credentials.getUsername();
         this.defaultPassword = credentials.getPassword();
@@ -88,7 +84,7 @@ public class AmqpClientFactory {
         Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
         if (messagingEndpoint == null) {
             String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging");
-            messagingEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            messagingEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         }
         Endpoint clientEndpoint;
         ProtonClientOptions clientOptions = new ProtonClientOptions();

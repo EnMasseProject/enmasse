@@ -74,10 +74,6 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
             dest.add(AddressUtils.createAnycastAddressObject("medium-anycast-" + i, "standard-medium-anycast"));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
         }
         setAddresses(dest.toArray(new Address[0]));
-//        TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getAddressPlanConfig(DestinationPlan.STANDARD_SMALL_ANYCAST()).getRequiredCreditFromResource("router");
-//        int replicasCount = (int) (destCount * requiredCredit);
-//        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
         waitForRouterReplicas(sharedAddressSpace, 3);
 

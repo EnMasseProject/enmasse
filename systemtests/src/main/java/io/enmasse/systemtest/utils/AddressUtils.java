@@ -10,18 +10,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
-import java.net.HttpURLConnection;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class AddressUtils {
     private static final String QUEUE = "queue";
@@ -34,7 +31,7 @@ public class AddressUtils {
     private static DoneableAddress createAddressResource(String name, String address, String type, String plan) {
         return new DoneableAddress(new AddressBuilder()
                 .withNewMetadata()
-                .withName(name)
+                .withName(sanitizeAddress(name))
                 .endMetadata()
                 .withNewSpec()
                 .withAddress(sanitizeAddress(address))
@@ -95,14 +92,6 @@ public class AddressUtils {
         return createAddressResource(name, name, ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST).done();
     }
 
-    public static Address createSubscriptionAddressObject(String name, String topic) {
-        return createAddressResource(name, name, SUBSCRIPTION, DestinationPlan.STANDARD_SMALL_ANYCAST)
-                .editSpec()
-                .withTopic(topic)
-                .endSpec()
-                .done();
-    }
-
     public static Address createAddressObject(AddressType type, String address, String plan, Optional<String> topic) {
         switch (type) {
             case QUEUE:
@@ -118,6 +107,11 @@ public class AddressUtils {
             default:
                 throw new IllegalStateException(String.format("Address type %s does not exists", type.toString()));
         }
+    }
+
+    public static List<Address> getAddresses(AddressSpace addressSpace) {
+        return Kubernetes.getInstance().getAddressClient().inAnyNamespace().list().getItems().stream()
+                .filter(address -> address.getMetadata().getName().split("\\.")[0].equals(addressSpace.getMetadata().getName())).collect(Collectors.toList());
     }
 
     public static JsonObject addressToJson(Address address) throws Exception {
@@ -169,69 +163,47 @@ public class AddressUtils {
         return address != null ? address.toLowerCase().replaceAll("[^a-z0-9.\\-]", "") : address;
     }
 
-    public static void delete(AddressApiClient apiClient, AddressSpace addressSpace, Address... destinations) throws Exception {
+    public static void delete(Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
-        apiClient.deleteAddresses(addressSpace, destinations);
+        Arrays.stream(destinations).forEach(address -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).delete(address));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int expectedCode, Address... addresses) throws Exception {
+    public static void setAddresses(TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Address... addresses) throws Exception {
+        var client = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace());
         log.info("Addresses {} in address space {} will be created", addresses, addressSpace.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
-        apiClient.setAddresses(addressSpace, expectedCode, addresses);
+        client.delete(getAddresses(addressSpace));
+        for (Address address : addresses) {
+            address = client.create(new DoneableAddress(address).editMetadata().withName(addressSpace.getMetadata().getName() + "." + address.getMetadata().getName()).endMetadata().done());
+            log.info("Address {} created", address.getMetadata().getName());
+        }
         if (wait) {
-            if (addressSpace.getSpec().getType().equals("standard")) {
-                if (addresses.length == 0) {
-                    TestUtils.waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getSpec().getPlan()), budget);
-                }
-            }
-            waitForDestinationsReady(apiClient, addressSpace, budget, addresses);
+            waitForDestinationsReady(addressSpace, budget, addresses);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void setAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Address... addresses) throws Exception {
-        setAddresses(apiClient, kubernetes, budget, addressSpace, wait, HttpURLConnection.HTTP_CREATED, addresses);
-    }
-
-    public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Address... destinations) throws Exception {
+    public static void appendAddresses(TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Address... destinations) throws Exception {
+        var client = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace());
         log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
-        apiClient.appendAddresses(addressSpace, destinations);
+        client.create(destinations);
         if (wait) {
-            if (addressSpace.getSpec().getType().toString().equals("standard")) {
-                if (destinations.length == 0) {
-                    TestUtils.waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getSpec().getPlan()), budget);
-                }
-            }
-            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+            waitForDestinationsReady(addressSpace, budget, destinations);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
 
-    public static void replaceAddress(AddressApiClient addressApiClient, AddressSpace addressSpace, Address destination, boolean wait, TimeoutBudget timeoutBudget) throws Exception {
+    public static void replaceAddress(AddressSpace addressSpace, Address destination, boolean wait, TimeoutBudget timeoutBudget) throws Exception {
         log.info("Address {} in address space {} will be replaced", destination, addressSpace.getMetadata().getName());
+        var client = Kubernetes.getInstance().getAddressClient();
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
-        addressApiClient.replaceAddress(addressSpace.getMetadata().getName(), destination, 200);
+        client.createOrReplace(destination);
         if (wait) {
-            waitForDestinationsReady(addressApiClient, addressSpace, timeoutBudget, destination);
-            waitForDestinationPlanApplied(addressApiClient, addressSpace, timeoutBudget, destination);
-        }
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    public static void appendAddresses(AddressApiClient apiClient, Kubernetes kubernetes, TimeoutBudget budget, AddressSpace addressSpace, boolean wait, int batchSize, io.enmasse.address.model.Address... destinations) throws Exception {
-        log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getMetadata().getName());
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
-        apiClient.appendAddresses(addressSpace, batchSize, destinations);
-        if (wait) {
-            if (addressSpace.getSpec().getType().toString().equals("standard")) {
-                if (destinations.length == 0) {
-                    TestUtils.waitForExpectedReadyPods(kubernetes, addressSpace, kubernetes.getExpectedPods(addressSpace.getSpec().getPlan()), budget);
-                }
-            }
-            waitForDestinationsReady(apiClient, addressSpace, budget, destinations);
+            waitForDestinationsReady(addressSpace, timeoutBudget, destination);
+            waitForDestinationPlanApplied(addressSpace, timeoutBudget, destination);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -301,33 +273,34 @@ public class AddressUtils {
     }
 
     interface AddressListMatcher {
-        Map<String, Address> matchAddresses(AddressList addressList);
+        Map<String, Address> matchAddresses(List<Address> addressList);
     }
 
-    public static void waitForDestinationsReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
+    public static void waitForDestinationsReady(AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
-        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
+        waitForAddressesMatched(addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForDestinationPlanApplied(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
+    public static void waitForDestinationPlanApplied(AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_PLAN_CHANGE);
-        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::isPlanSynced, destinations));
+        waitForAddressesMatched(addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::isPlanSynced, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForBrokersDrained(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
+    public static void waitForBrokersDrained(AddressSpace addressSpace, TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_BROKER_DRAINED);
-        waitForAddressesMatched(apiClient, addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::areBrokersDrained, destinations));
+        waitForAddressesMatched(addressSpace, budget, destinations.length, addressList -> checkAddressesMatching(addressList, AddressUtils::areBrokersDrained, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void waitForAddressesMatched(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget timeoutBudget, int totalDestinations, AddressListMatcher addressListMatcher) throws Exception {
+    private static void waitForAddressesMatched(AddressSpace addressSpace, TimeoutBudget timeoutBudget, int totalDestinations, AddressListMatcher addressListMatcher) throws Exception {
         Map<String, Address> notMatched = new HashMap<>();
 
         while (timeoutBudget.timeLeft() >= 0) {
-            AddressList addressList = jsonToAddressList(apiClient.getAddresses(addressSpace, Optional.empty()));
+            List<Address> addressList = getAddresses(addressSpace);
             notMatched = addressListMatcher.matchAddresses(addressList);
+            log.info("Waiting until addresses ready: {}", notMatched.values().stream().map(address -> address.getMetadata().getName()).collect(Collectors.toList()));
             if (notMatched.isEmpty()) {
                 Thread.sleep(5000); //TODO: remove this sleep after fix for ready check will be available
                 break;
@@ -336,14 +309,14 @@ public class AddressUtils {
         }
 
         if (!notMatched.isEmpty()) {
-            AddressList addressList = jsonToAddressList(apiClient.getAddresses(addressSpace, Optional.empty()));
+            List<Address> addressList = getAddresses(addressSpace);
             notMatched = addressListMatcher.matchAddresses(addressList);
             throw new IllegalStateException(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
         }
     }
 
-    private static Address lookupAddress(AddressList addressList, String address) {
-        for (Address addr : addressList.getItems()) {
+    private static Address lookupAddress(List<Address> addressList, String address) {
+        for (Address addr : addressList) {
             if (addr.getSpec().getAddress().equals(address)) {
                 return addr;
             }
@@ -351,7 +324,7 @@ public class AddressUtils {
         return null;
     }
 
-    private static Map<String, Address> checkAddressesMatching(AddressList addressList, Predicate<Address> predicate, Address... destinations) {
+    private static Map<String, Address> checkAddressesMatching(List<Address> addressList, Predicate<Address> predicate, Address... destinations) {
         Map<String, Address> notMatchingAddresses = new HashMap<>();
         for (Address destination : destinations) {
             Address addressObject = lookupAddress(addressList, destination.getSpec().getAddress());
@@ -362,31 +335,6 @@ public class AddressUtils {
             }
         }
         return notMatchingAddresses;
-    }
-
-
-    public static Future<List<String>> getAddresses(AddressApiClient apiClient, AddressSpace addressSpace,
-                                                    Optional<String> addressName, List<String> skipAddresses) throws Exception {
-        JsonObject response = apiClient.getAddresses(addressSpace, addressName);
-        CompletableFuture<List<String>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response, String.class, object -> !skipAddresses.contains(object.getJsonObject("spec").getString("address"))));
-        return listOfAddresses;
-    }
-
-    public static Future<List<Address>> getAddressesObjects(AddressApiClient apiClient, AddressSpace addressSpace,
-                                                            Optional<String> addressName, Optional<HashMap<String, String>> queryParams,
-                                                            List<String> skipAddresses) throws Exception {
-        JsonObject response = apiClient.getAddresses(addressSpace, addressName, queryParams);
-        CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response, Address.class, object -> !skipAddresses.contains(object.getJsonObject("spec").getString("address"))));
-        return listOfAddresses;
-    }
-
-    public static Future<List<Address>> getAllAddressesObjects(AddressApiClient apiClient) throws Exception {
-        JsonObject response = apiClient.getAllAddresses();
-        CompletableFuture<List<Address>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(convertToListAddress(response, Address.class, x -> true));
-        return listOfAddresses;
     }
 
     public static String getTopicPrefix(boolean topicSwitch) {

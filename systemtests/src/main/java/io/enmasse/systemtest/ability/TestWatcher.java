@@ -22,6 +22,10 @@ import java.nio.file.Paths;
 public class TestWatcher implements AfterTestExecutionCallback {
     private static final Logger log = CustomLogger.getLogger();
 
+    public void pepa() {
+        log.info("pepa");
+    }
+
     @Override
     public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
         Method testMethod = extensionContext.getRequiredTestMethod();
@@ -48,7 +52,7 @@ public class TestWatcher implements AfterTestExecutionCallback {
                             }
                     );
                 });
-                Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getNamespace()).getStdOut().getBytes());
+                Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
                 log.info("Pod logs and describe successfully stored into {}", path.toString());
             } catch (Exception ex) {
                 log.warn("Cannot save pod logs and info: {}", ex.getMessage());

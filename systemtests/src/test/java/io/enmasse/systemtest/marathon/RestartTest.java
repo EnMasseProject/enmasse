@@ -6,11 +6,11 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
@@ -46,8 +46,32 @@ class RestartTest extends MarathonTestBase {
     void testRandomDeletePods() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
-        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("ttest-restart-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        AddressSpace brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-restart-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpaceList(standard, brokered);
         createUser(brokered, user);
         createUser(standard, user);
@@ -83,7 +107,19 @@ class RestartTest extends MarathonTestBase {
     void testHAqdrouter() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-ha-routers")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpaceList(standard);
         createUser(standard, user);
 

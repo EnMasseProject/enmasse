@@ -6,14 +6,16 @@ package io.enmasse.systemtest.bases;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.systemtest.*;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -32,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class TestBaseWithShared extends TestBase {
     private static final String defaultAddressTemplate = "-shared-";
-    private static final Address dummyAddress = AddressUtils.createQueueAddressObject("dummy-address", DestinationPlan.STANDARD_SMALL_QUEUE);
     protected static AddressSpace sharedAddressSpace;
     private static Logger log = CustomLogger.getLogger();
     private static Map<String, Integer> spaceCountMap = new HashMap<>();
@@ -48,25 +49,28 @@ public abstract class TestBaseWithShared extends TestBase {
     @BeforeEach
     public void setupShared() throws Exception {
         spaceCountMap.putIfAbsent(getAddressSpaceType().toString().toLowerCase(), 0);
-        sharedAddressSpace = AddressSpaceUtils.createAddressSpaceObject(
-                getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType().toString().toLowerCase()),
-                getAddressSpaceType(),
-                AuthenticationServiceType.STANDARD);
+        sharedAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType().toString().toLowerCase()))
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(getAddressSpaceType().toString())
+                .withPlan(getAddressSpaceType().equals(AddressSpaceType.BROKERED) ? AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(sharedAddressSpace);
-        if (environment.useDummyAddress() && !skipDummyAddress()) {
-            if (!addressExists(dummyAddress)) {
-                log.info("'{}' address doesn't exist and will be created", dummyAddress);
-                super.setAddresses(sharedAddressSpace, dummyAddress);
-            }
-        }
         defaultCredentials.setUsername("test").setPassword("test");
         createUser(sharedAddressSpace, defaultCredentials);
 
         this.managementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
         createUser(sharedAddressSpace, this.managementCredentials);
 
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials);
-        mqttClientFactory = new MqttClientFactory(kubernetes, environment, sharedAddressSpace, defaultCredentials);
+        amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, defaultCredentials);
+        mqttClientFactory = new MqttClientFactory(sharedAddressSpace, defaultCredentials);
     }
 
     @AfterEach
@@ -97,56 +101,13 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     /**
-     * get all addresses except 'dummy-address'
-     */
-    protected Future<List<String>> getAddresses(Optional<String> addressName) throws Exception {
-        return AddressUtils.getAddresses(addressApiClient, sharedAddressSpace, addressName, Collections.singletonList(dummyAddress.getSpec().getAddress()));
-    }
-
-    /**
-     * check if address exists
-     */
-    private boolean addressExists(Address destination) throws Exception {
-        Future<List<String>> addresses = AddressUtils.getAddresses(addressApiClient, sharedAddressSpace, Optional.empty(),
-                new ArrayList<>());
-        List<String> address = addresses.get(20, TimeUnit.SECONDS);
-        log.info("found addresses");
-        address.forEach(addr -> log.info("- address '{}'", addr));
-        log.info("looking for '{}' address", destination.getSpec().getAddress());
-        return address.contains(destination.getSpec().getAddress());
-    }
-
-    protected Future<List<Address>> getAddressesObjects(Optional<String> addressName, Optional<HashMap<String, String>> requestParams) throws Exception {
-        return AddressUtils.getAddressesObjects(addressApiClient, sharedAddressSpace, addressName, requestParams, Collections.singletonList(dummyAddress.getSpec().getAddress()));
-    }
-
-    protected Future<List<Address>> getAddressesObjects(Optional<String> addressName) throws Exception {
-        return getAddressesObjects(addressName, Optional.empty());
-    }
-
-    /**
-     * delete all addresses except 'dummy-address' and append new addresses
+     * delete all addresses except and append new addresses
      *
      * @param destinations destinations to create
      * @throws Exception address not ready
      */
     protected void setAddresses(Address... destinations) throws Exception {
-        if (isBrokered(sharedAddressSpace) || !environment.useDummyAddress()) {
-            setAddresses(sharedAddressSpace, destinations);
-        } else {
-            List<Address> inShared = getAddressesObjects(Optional.empty())
-                    .get(10, TimeUnit.SECONDS);
-            if (inShared.size() > 0) {
-                deleteAddresses(inShared.toArray(new Address[0]));
-            }
-            if (destinations.length > 0) {
-                appendAddresses(destinations);
-            }
-        }
-    }
-
-    protected void setAddresses(int expectedCode, Address... destinations) throws Exception {
-        super.setAddresses(sharedAddressSpace, expectedCode, destinations);
+        setAddresses(sharedAddressSpace, destinations);
     }
 
     /**
@@ -161,16 +122,6 @@ public abstract class TestBaseWithShared extends TestBase {
 
     protected void appendAddresses(Address... destinations) throws Exception {
         appendAddresses(true, destinations);
-    }
-
-    protected void appendAddresses(boolean wait, int batchSize, Address... destinations) throws Exception {
-        TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
-        AddressUtils.appendAddresses(addressApiClient, kubernetes, timeout, sharedAddressSpace, wait, batchSize, destinations);
-        logCollector.collectConfigMaps();
-    }
-
-    protected void appendAddresses(int batchSize, Address... destinations) throws Exception {
-        appendAddresses(true, batchSize, destinations);
     }
 
     /**

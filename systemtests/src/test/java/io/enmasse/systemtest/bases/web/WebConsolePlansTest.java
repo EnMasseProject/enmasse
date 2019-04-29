@@ -7,12 +7,15 @@ package io.enmasse.systemtest.bases.web;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
@@ -20,12 +23,12 @@ import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(isolated)
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     private ConsoleWebPage consoleWebPage;
 
@@ -84,8 +87,20 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         adminManager.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
-        AddressSpace consoleAddrSpace = AddressSpaceUtils.createAddressSpaceObject("console-plan-instance", AddressSpaceType.STANDARD,
-                consolePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace consoleAddrSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("console-plan-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(consolePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(consoleAddrSpace);
 
         //create new user
@@ -106,7 +121,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         assertEquals(q3.getSpec().getPlan(), consoleWebPage.getAddressItem(q3).getPlan(), assertMessage);
 
         //simple send/receive
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, consoleAddrSpace, user);
+        amqpClientFactory = new AmqpClientFactory(consoleAddrSpace, user);
         AmqpClient queueClient = amqpClientFactory.createQueueClient(consoleAddrSpace);
         queueClient.getConnectOptions().setCredentials(user);
 

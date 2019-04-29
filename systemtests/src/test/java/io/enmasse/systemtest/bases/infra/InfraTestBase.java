@@ -37,7 +37,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
             "kubernetes.io/portworx-volume", "kubernetes.io/rbd");
 
-    protected static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    protected static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     protected InfraConfig testInfra;
     protected AddressPlan exampleAddressPlan;

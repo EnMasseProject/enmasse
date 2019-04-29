@@ -73,7 +73,7 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
     void testShardedTopic() throws Exception {
         Address t1 = AddressUtils.createTopicAddressObject("shardedTopic1", DestinationPlan.STANDARD_LARGE_TOPIC);
         Address t2 = AddressUtils.createAddressObject("shardedTopic2", null, sharedAddressSpace.getMetadata().getName(), "sharded_addr_2", AddressType.TOPIC.toString(), DestinationPlan.STANDARD_LARGE_TOPIC);
-        addressApiClient.createAddress(t2);
+        setAddresses(t2);
 
         appendAddresses(t1);
         waitForDestinationsReady(t2);

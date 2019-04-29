@@ -90,7 +90,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);
-        adapterClient = new MqttClientFactory(kubernetes, environment, null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
+        adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
                 .build()
                 .clientId(deviceId)
                 .endpoint(mqttAdapterEndpoint)
@@ -120,7 +120,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
                         .withOperations(Operation.recv)
                         .build()));
 
-        AddressSpace addressSpace = getAddressSpace(sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
 
         createUser(addressSpace, businessApplicationUser);
 

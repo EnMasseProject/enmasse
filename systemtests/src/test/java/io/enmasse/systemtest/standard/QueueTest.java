@@ -95,7 +95,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     void testShardedQueues() throws Exception {
         Address q1 = AddressUtils.createQueueAddressObject("shardedQueue1", DestinationPlan.STANDARD_LARGE_QUEUE);
         Address q2 = AddressUtils.createAddressObject("shardedQueue2", null, sharedAddressSpace.getMetadata().getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
-        addressApiClient.createAddress(q2);
+        kubernetes.getAddressClient().create(q2);
 
         appendAddresses(q1);
         waitForDestinationsReady(q2);
@@ -112,35 +112,6 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         Address q2 = AddressUtils.createQueueAddressObject("queue2", getDefaultPlan(AddressType.QUEUE));
 
         runRestApiTest(sharedAddressSpace, q1, q2);
-    }
-
-    @Test
-    @Tag(nonPR)
-    void testCreateDeleteQueue() throws Exception {
-        List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
-        Address destExtra = AddressUtils.createQueueAddressObject("ext-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
-
-        List<Address> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(AddressUtils.createQueueAddressObject(queue, DestinationPlan.STANDARD_SMALL_QUEUE)));
-
-        @SuppressWarnings("unused")
-        AmqpClient client = amqpClientFactory.createQueueClient();
-        for (Address address : addresses) {
-            setAddresses(address, destExtra);
-            Thread.sleep(20_000);
-
-            //runQueueTest(client, address, 1); //TODO! commented due to issue #429
-
-            deleteAddresses(address);
-            Future<List<String>> response = getAddresses(Optional.empty());
-            assertThat("Extra destination was not created ",
-                    response.get(20, TimeUnit.SECONDS), is(Collections.singletonList(destExtra.getSpec().getAddress())));
-            deleteAddresses(destExtra);
-            response = getAddresses(Optional.empty());
-            assertThat("No destinations are expected",
-                    response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
-            Thread.sleep(20_000);
-        }
     }
 
     @Test
@@ -248,7 +219,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
 
         // Ensure there are no brokers in Draining state
-        AddressUtils.waitForBrokersDrained(addressApiClient, getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
+        AddressUtils.waitForBrokersDrained(getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
 
         // Ensure send and receive works after all brokers are drained
         assertThat("Wrong count of messages sent", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
@@ -284,7 +255,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             {
                 try {
                     int messageCount = 43;
-                    appendAddresses(false, -1, destinations);
+                    appendAddresses(false, destinations);
                     doMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
                 } catch (Exception e) {
                     e.printStackTrace();

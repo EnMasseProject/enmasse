@@ -4,23 +4,11 @@
  */
 package io.enmasse.systemtest.bases;
 
-import static io.enmasse.systemtest.apiclients.Predicates.any;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
-
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.WaitPhase;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageType;
@@ -30,6 +18,17 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 
 public abstract class IoTTestBase extends TestBase {
 
@@ -49,8 +48,6 @@ public abstract class IoTTestBase extends TestBase {
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
             kubernetes.createNamespace(iotProjectNamespace);
         }
-        //additional clients that need to query against the namespace where iotprojects are created
-        addressApiClient = new AddressApiClient(kubernetes, iotProjectNamespace);
         setUserApiClient(new UserApiClient(kubernetes, iotProjectNamespace));
     }
 
@@ -63,7 +60,7 @@ public abstract class IoTTestBase extends TestBase {
                 for (IoTProject project : iotProjects) {
                     var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
                     if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
-                        IoTUtils.deleteIoTProjectAndWait(kubernetes, project, addressApiClient);
+                        IoTUtils.deleteIoTProjectAndWait(kubernetes, project);
                     } else {
                         log.info("IoTProject '" + project.getMetadata().getName() + "' doesn't exists!");
                     }
@@ -136,7 +133,7 @@ public abstract class IoTTestBase extends TestBase {
                 iotProjects.add(project);
             }
         }
-        IoTUtils.waitForIoTProjectReady(kubernetes, addressApiClient, project);
+        IoTUtils.waitForIoTProjectReady(kubernetes, project);
         IoTUtils.syncIoTProject(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -147,14 +144,14 @@ public abstract class IoTTestBase extends TestBase {
 
     protected void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
         JsonObject json = new JsonObject(Map.of("a", "b"));
-        String message = "First successful "+type.name().toLowerCase()+" message";
+        String message = "First successful " + type.name().toLowerCase() + " message";
         TestUtils.waitUntilCondition(message, (phase) -> {
             try {
-                if(type == MessageType.EVENT) {
+                if (type == MessageType.EVENT) {
                     var response = adapterClient.sendEvent(json, any());
                     logResponseIfLastTryFailed(phase, response, message);
                     return response.statusCode() == HTTP_ACCEPTED;
-                } else if(type == MessageType.TELEMETRY) {
+                } else if (type == MessageType.TELEMETRY) {
                     var response = adapterClient.sendTelemetry(json, any());
                     logResponseIfLastTryFailed(phase, response, message);
                     return response.statusCode() == HTTP_ACCEPTED;
@@ -166,11 +163,11 @@ public abstract class IoTTestBase extends TestBase {
             }
         }, new TimeoutBudget(3, TimeUnit.MINUTES));
 
-        log.info("First "+type.name().toLowerCase()+" message accepted");
+        log.info("First " + type.name().toLowerCase() + " message accepted");
     }
 
     private void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
-        if(phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
+        if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
             log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
         }
     }

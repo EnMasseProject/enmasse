@@ -32,15 +32,11 @@ public class MqttClientFactory {
 
     private final Set<IMqttClient> connectedClients = new HashSet<>();
 
-    private final Kubernetes kubernetes;
-    private final Environment environment;
     private final AddressSpace defaultAddressSpace;
     private final String username;
     private final String password;
 
-    public MqttClientFactory(Kubernetes kubernetes, Environment environment, AddressSpace defaultAddressSpace, UserCredentials credentials) {
-        this.kubernetes = kubernetes;
-        this.environment = environment;
+    public MqttClientFactory(AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this.defaultAddressSpace = defaultAddressSpace;
         this.username = credentials.getUsername();
         this.password = credentials.getPassword();
@@ -108,7 +104,7 @@ public class MqttClientFactory {
             mqttEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
             if (mqttEndpoint == null) {
                 String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-                mqttEndpoint = kubernetes.getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+                mqttEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
             }
         } else {
             mqttEndpoint = endpoint;

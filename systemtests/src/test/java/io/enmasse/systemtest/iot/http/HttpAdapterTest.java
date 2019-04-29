@@ -81,7 +81,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                         .withOperations(Operation.recv)
                         .build()));
 
-        AddressSpace addressSpace = getAddressSpace(sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
 
         createUser(addressSpace, businessApplicationUser);
 

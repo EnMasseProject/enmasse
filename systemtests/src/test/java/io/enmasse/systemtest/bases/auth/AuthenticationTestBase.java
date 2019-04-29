@@ -6,13 +6,12 @@ package io.enmasse.systemtest.bases.auth;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 
@@ -60,8 +59,32 @@ public abstract class AuthenticationTestBase extends TestBase {
 
     protected void testNoneAuthenticationServiceGeneral(AddressSpaceType type, String emptyUser, String emptyPassword) throws Exception {
         String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED;
-        AddressSpace s3standard = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s3", type, plan, AuthenticationServiceType.NONE);
-        AddressSpace s4standard = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s4", type, plan, AuthenticationServiceType.STANDARD);
+        AddressSpace s3standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(type.toString().toLowerCase() + "-s3")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(type.toString().toLowerCase())
+                .withPlan(plan)
+                .withNewAuthenticationService()
+                .withName("none-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        AddressSpace s4standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(type.toString().toLowerCase() + "-s4")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(type.toString().toLowerCase())
+                .withPlan(plan)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpaceList(s3standard, s4standard);
 
         assertCanConnect(s3standard, new UserCredentials(emptyUser, emptyPassword), amqpAddressList);
@@ -75,8 +98,32 @@ public abstract class AuthenticationTestBase extends TestBase {
 
     protected void testStandardAuthenticationServiceGeneral(AddressSpaceType type) throws Exception {
         String plan = type.equals(AddressSpaceType.STANDARD) ? AddressSpacePlans.STANDARD_SMALL : AddressSpacePlans.BROKERED;
-        AddressSpace s1brokered = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s1", type, plan, AuthenticationServiceType.STANDARD);
-        AddressSpace s2brokered = AddressSpaceUtils.createAddressSpaceObject(type.toString().toLowerCase() + "-s2", type, plan, AuthenticationServiceType.STANDARD);
+        AddressSpace s1brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(type.toString().toLowerCase() + "-s1")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(type.toString().toLowerCase())
+                .withPlan(plan)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        AddressSpace s2brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(type.toString().toLowerCase() + "-s2")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(type.toString().toLowerCase())
+                .withPlan(plan)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpaceList(s1brokered, s2brokered);
 
         // Validate unsuccessful authentication with enmasse authentication service with no credentials

@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.brokered.infra;
 
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
@@ -12,14 +12,12 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +39,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
         adminManager.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan", AddressType.TOPIC,
-                Arrays.asList(new ResourceRequest("broker", 1.0)));
+                Collections.singletonList(new ResourceRequest("broker", 1.0)));
 
         adminManager.createAddressPlan(exampleAddressPlan);
 
@@ -53,8 +51,20 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         adminManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.BROKERED,
-                exampleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        exampleAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("example-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withPlan(exampleSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(exampleAddressSpace);
 
         setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));

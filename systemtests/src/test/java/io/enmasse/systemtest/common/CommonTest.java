@@ -6,11 +6,10 @@ package io.enmasse.systemtest.common;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -33,7 +32,19 @@ class CommonTest extends TestBase {
 
     @Test
     void testAccessLogs() throws Exception {
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard-addr-space-logs", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(standard);
 
         Address dest = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
@@ -56,8 +67,32 @@ class CommonTest extends TestBase {
         labels.add(new Label("name", "address-space-controller"));
 
         UserCredentials user = new UserCredentials("frantisek", "dobrota");
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
-        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        AddressSpace brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("space-restart-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("space-restart-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpaceList(standard, brokered);
         createUser(brokered, user);
         createUser(standard, user);
@@ -91,7 +126,7 @@ class CommonTest extends TestBase {
         KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
         Thread.sleep(180_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        AddressUtils.waitForDestinationsReady(addressApiClient, standard, new TimeoutBudget(10, TimeUnit.MINUTES),
+        AddressUtils.waitForDestinationsReady(standard, new TimeoutBudget(10, TimeUnit.MINUTES),
                 standardAddresses.toArray(new Address[0]));
         assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
 
@@ -104,7 +139,19 @@ class CommonTest extends TestBase {
 
     @Test
     void testMonitoringTools() throws Exception {
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard-addr-space-monitor", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-space-monitor")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(standard);
         createUser(standard, new UserCredentials("jenda", "cenda"));
         setAddresses(standard, getAllStandardAddresses().toArray(new Address[0]));

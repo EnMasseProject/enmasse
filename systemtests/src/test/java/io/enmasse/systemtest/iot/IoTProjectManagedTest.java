@@ -10,6 +10,7 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -65,7 +66,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
     private void assertManaged(IoTProject project) throws Exception {
         //address space s
-        AddressSpace addressSpace = getAddressSpace(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals("standard", addressSpace.getSpec().getType());
         assertEquals("standard-unlimited", addressSpace.getSpec().getPlan());
@@ -73,7 +74,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
         //addresses
         //{event/control/telemetry}/"project-namespace"."project-name"
         String addressSuffix = "/" + project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
-        List<Address> addresses = getAddressesObjects(addressSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
+        List<Address> addresses = AddressUtils.getAddresses(addressSpace);
         assertEquals(3, addresses.size());
         assertEquals(3, addresses.stream()
                 .map(Address::getMetadata)

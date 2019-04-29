@@ -31,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
     void setUp() {
@@ -67,10 +67,10 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         int replicasCount = (int) (destCount * requiredCredit);
         waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
-        Future<List<Address>> standardAddresses = getAddressesObjects(Optional.empty()); //get all addresses
+        List<Address> standardAddresses = kubernetes.getAddressClient().inAnyNamespace().list().getItems(); //get all addresses
         for (int i = 0; i < destCount; i++) {
             assertThat("Queue plan wasn't set properly",
-                    standardAddresses.get(20, TimeUnit.SECONDS).get(i).getSpec().getPlan(), is(weakQueuePlan.getMetadata().getName()));
+                    standardAddresses.get(i).getSpec().getPlan(), is(weakQueuePlan.getMetadata().getName()));
         }
     }
 
