@@ -44,7 +44,7 @@ public class OpenShift extends Kubernetes {
 
     public Endpoint getKeycloakEndpoint() {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        Route route = openShift.routes().inNamespace(globalNamespace).withName("keycloak").get();
+        Route route = openShift.routes().inNamespace(infraNamespace).withName("keycloak").get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         log.info("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {
@@ -58,7 +58,7 @@ public class OpenShift extends Kubernetes {
     @Override
     public Endpoint getExternalEndpoint(String endpointName) {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        Route route = openShift.routes().inNamespace(globalNamespace).withName(endpointName).get();
+        Route route = openShift.routes().inNamespace(infraNamespace).withName(endpointName).get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         log.info("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {

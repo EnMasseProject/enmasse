@@ -30,8 +30,4 @@ public interface ITestBaseBrokered extends ITestBase {
         return null;
     }
 
-    @Override
-    default boolean skipDummyAddress() {
-        return true;
-    }
 }

@@ -5,13 +5,13 @@
 package io.enmasse.systemtest.brokered.auth;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -28,11 +28,23 @@ class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrok
     @Test
     void testStandardAuthenticationServiceRestartBrokered() throws Exception {
         log.info("testStandardAuthenticationServiceRestartBrokered");
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("keycloak-restart-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("keycloak-restart")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials credentials = new UserCredentials("pavel", "novak");
-        createUser(addressSpace, credentials);
+        createOrUpdateUser(addressSpace, credentials);
 
         assertCanConnect(addressSpace, credentials, amqpAddressList);
 

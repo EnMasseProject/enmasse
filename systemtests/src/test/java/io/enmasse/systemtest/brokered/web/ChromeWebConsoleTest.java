@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.brokered.web;
 
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
@@ -22,13 +23,33 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createQueueAddressObject("test-queue", getDefaultPlan(AddressType.QUEUE)));
+        doTestCreateDeleteAddress(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createTopicAddressObject("test-topic", getDefaultPlan(AddressType.TOPIC)));
+        doTestCreateDeleteAddress(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-topic")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build());
     }
 
     @Test
@@ -147,10 +168,26 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, 
     @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
-                        getDefaultPlan(AddressType.QUEUE)),
-                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
-                        getDefaultPlan(AddressType.QUEUE)));
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue1")
+                        .withPlan(getDefaultPlan(AddressType.QUEUE))
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue2")
+                        .withPlan(getDefaultPlan(AddressType.QUEUE))
+                        .endSpec()
+                        .build());
     }
 
     @Test

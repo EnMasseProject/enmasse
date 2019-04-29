@@ -6,6 +6,7 @@ package io.enmasse.systemtest.bases.web;
 
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
@@ -15,18 +16,18 @@ import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
 import io.enmasse.systemtest.selenium.resources.AddressSpaceWebItem;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class GlobalConsoleTest extends TestBase implements ISeleniumProvider {
 
     private GlobalConsolePage globalConsolePage;
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
@@ -77,11 +78,19 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
         adminManager.createAuthService(standardAuth);
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-addr-space",
-                kubernetes.getNamespace(),
-                standardAuth.getMetadata().getName(),
-                AddressSpaceType.BROKERED,
-                AddressSpacePlans.BROKERED);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-custom-auth")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         addToAddressSpacess(addressSpace);
 
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
@@ -92,10 +101,19 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
     }
 
     protected void doTestViewAddressSpace() throws Exception {
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-addr-space-api",
-                kubernetes.getNamespace(),
-                AddressSpaceType.BROKERED,
-                AddressSpacePlans.BROKERED);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-view-console")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
         createAddressSpace(addressSpace);
 

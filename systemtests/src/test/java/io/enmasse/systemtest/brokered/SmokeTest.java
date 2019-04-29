@@ -5,17 +5,17 @@
 package io.enmasse.systemtest.brokered;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.systemtest.AddressAlreadyExistsException;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.standard.QueueTest;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
@@ -29,32 +29,66 @@ import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static io.enmasse.systemtest.TestTag.smoke;
-import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(nonPR)
 @Tag(smoke)
-class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
+class SmokeTest extends TestBase implements ITestBaseBrokered {
 
-    /**
-     * related github issue: #335
-     */
     @Test
     void testAddressTypes() throws Exception {
-        Address queueA = AddressUtils.createQueueAddressObject("brokeredQueueA", getDefaultPlan(AddressType.QUEUE));
-        setAddresses(queueA);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("smoke-space-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
-        AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(sharedAddressSpace);
+        Address queueA = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "brokeredqueuea"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("brokeredqueueq")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+        createAddressSpace(addressSpace);
+        setAddresses(queueA);
+        UserCredentials cred = new UserCredentials("test", "test");
+        createOrUpdateUser(addressSpace, cred);
+
+        AmqpClient amqpQueueCli = amqpClientFactory.createQueueClient(addressSpace);
+        amqpQueueCli.getConnectOptions().setCredentials(cred);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
         amqpQueueCli.close();
 
-        Address topicB = AddressUtils.createTopicAddressObject("brokeredTopicB", getDefaultPlan(AddressType.TOPIC));
+        Address topicB = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "brokeredtopicb"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("brokeredtopicb")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
         setAddresses(topicB);
 
-        AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(sharedAddressSpace);
+        AmqpClient amqpTopicCli = amqpClientFactory.createTopicClient(addressSpace);
+        amqpTopicCli.getConnectOptions().setCredentials(cred);
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getSpec().getAddress(), 1000),
                 amqpTopicCli.recvMessages(topicB.getSpec().getAddress(), 1000));
@@ -75,32 +109,72 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
                         recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())));
     }
 
-    /**
-     * related github issue: #334
-     */
     @Test
     void testCreateDeleteAddressSpace() throws Exception {
-        AddressSpace addressSpaceA = AddressSpaceUtils.createAddressSpaceObject("brokered-create-delete-a", AddressSpaceType.BROKERED,
-                AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpaceA = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("smoke-space-brokered-a")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
-        AddressSpace addressSpaceC = AddressSpaceUtils.createAddressSpaceObject("brokered-create-delete-c", AddressSpaceType.BROKERED,
-                AuthenticationServiceType.STANDARD);
-        createAddressSpaceList(addressSpaceA, addressSpaceC);
+        AddressSpace addressSpaceB = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("smoke-space-brokered-b")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        createAddressSpaceList(addressSpaceA, addressSpaceB);
 
-        Address queueB = AddressUtils.createQueueAddressObject("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
-        setAddresses(addressSpaceA, queueB);
+        Address queueA = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpaceA.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpaceA, "queue-a"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue-a")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        Address queueB = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpaceB.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpaceB, "queue-b"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue-b")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+        setAddresses(queueA, queueB);
         UserCredentials user = new UserCredentials("test", "test");
-        createUser(addressSpaceA, user);
+        createOrUpdateUser(addressSpaceA, user);
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setCredentials(user);
-        QueueTest.runQueueTest(amqpQueueCliA, queueB);
+        QueueTest.runQueueTest(amqpQueueCliA, queueA);
         amqpQueueCliA.close();
 
-        setAddresses(addressSpaceC, queueB);
-        createUser(addressSpaceC, user);
+        createOrUpdateUser(addressSpaceB, user);
 
-        AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
+        AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceB);
         amqpQueueCliC.getConnectOptions().setCredentials(user);
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
         amqpQueueCliC.close();
@@ -108,16 +182,5 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         deleteAddressSpace(addressSpaceA);
 
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
-    }
-
-    @Test
-    void testCreateAlreadyExistingAddress() throws Exception {
-        String addr_name = "brokeredAddrA";
-        Address queueA = AddressUtils.createQueueAddressObject(addr_name, getDefaultPlan(AddressType.QUEUE));
-        setAddresses(queueA);
-
-        Address topicA = AddressUtils.createTopicAddressObject(addr_name, getDefaultPlan(AddressType.TOPIC));
-        assertThrows(AddressAlreadyExistsException.class, () -> setAddresses(HTTP_CONFLICT, topicA),
-                "setAddresses does not throw right exception");
     }
 }

@@ -61,11 +61,6 @@ public class Environment {
     }
 
     /**
-     * Create dummy address in shared address-spaces due to faster deploy of next addresses
-     */
-    private final boolean useDummyAddress = Boolean.parseBoolean(System.getenv("USE_DUMMY_ADDRESS"));
-
-    /**
      * Skip removing address-spaces
      */
     private final boolean skipCleanup = Boolean.parseBoolean(System.getenv("SKIP_CLEANUP"));
@@ -102,10 +97,6 @@ public class Environment {
 
     public boolean useMinikube() {
         return useMinikube;
-    }
-
-    public boolean useDummyAddress() {
-        return useDummyAddress;
     }
 
     public boolean skipCleanup() {

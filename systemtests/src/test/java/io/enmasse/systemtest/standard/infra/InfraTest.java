@@ -4,7 +4,8 @@
  */
 package io.enmasse.systemtest.standard.infra;
 
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
@@ -12,7 +13,6 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,35 +40,88 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
         PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
         PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
         PodTemplateSpec routerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "router"), "myrouternode", "router");
-        testInfra = PlanUtils.createStandardInfraConfigObject("test-infra-1",
-                PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi", brokerTemplateSpec),
-                PlanUtils.createStandardAdminResourceObject("512Mi", adminTemplateSpec),
-                PlanUtils.createStandardRouterResourceObject("256Mi", routerTemplateSpec),
-                environment.enmasseVersion());
+        testInfra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-1-standard")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .withStorage("1Gi")
+                        .endResources()
+                        .withPodTemplate(brokerTemplateSpec)
+                        .build())
+                .withRouter(new StandardInfraConfigSpecRouterBuilder()
+                        .withNewResources()
+                        .withMemory("256Mi")
+                        .endResources()
+                        .withPodTemplate(routerTemplateSpec)
+                        .build())
+                .withAdmin(new StandardInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .endResources()
+                        .withPodTemplate(adminTemplateSpec)
+                        .build())
+                .endSpec()
+                .build();
         adminManager.createInfraConfig(testInfra);
 
-        exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan", AddressType.TOPIC, Arrays.asList(
-                new ResourceRequest("broker", 1.0),
-                new ResourceRequest("router", 1.0)));
+        exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
+                Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
 
         adminManager.createAddressPlan(exampleAddressPlan);
 
-        AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan",
-                testInfra.getMetadata().getName(),
-                AddressSpaceType.STANDARD,
-                Arrays.asList(
+        AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("example-space-plan-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
+                .withShortDescription("Custom systemtests defined address space plan")
+                .withInfraConfigRef(testInfra.getMetadata().getName())
+                .withResourceLimits(Arrays.asList(
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
-                        new ResourceAllowance("aggregate", 5.0)),
-                Collections.singletonList(exampleAddressPlan));
-
+                        new ResourceAllowance("aggregate", 5.0))
+                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
+                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .endSpec()
+                .build();
         adminManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.STANDARD,
-                exampleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        exampleAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("example-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(exampleSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(exampleAddressSpace);
 
-        setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
+        setAddresses(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressType.QUEUE.toString())
+                .withAddress("example-queue")
+                .withPlan(exampleAddressPlan.getMetadata().getName())
+                .endSpec()
+                .build());
 
         assertInfra("512Mi", "1Gi", brokerTemplateSpec, 1, "256Mi", routerTemplateSpec, "512Mi", adminTemplateSpec);
     }
@@ -87,21 +141,47 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
-        InfraConfig infra = PlanUtils.createStandardInfraConfigObject("test-infra-2",
-                PlanUtils.createStandardBrokerResourceObject(brokerMemory, brokerStorage, updatePersistentVolumeClaim),
-                PlanUtils.createStandardAdminResourceObject(adminMemory, null),
-                PlanUtils.createStandardRouterResourceObject(routerMemory, 200, routerReplicas),
-                environment.enmasseVersion());
-
+        InfraConfig infra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-2-standard")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
+                        .withNewResources()
+                        .withMemory(brokerMemory)
+                        .withStorage(brokerStorage)
+                        .endResources()
+                        .build())
+                .withRouter(PlanUtils.createStandardRouterResourceObject(routerMemory, 200, routerReplicas))
+                .withAdmin(new StandardInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory(adminMemory)
+                        .endResources()
+                        .build())
+                .endSpec()
+                .build();
         adminManager.createInfraConfig(infra);
 
-        AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan-2",
-                infra.getMetadata().getName(), AddressSpaceType.STANDARD,
-                Arrays.asList(
+        AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("example-space-plan-2-standard")
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
+                .withShortDescription("Custom systemtests defined address space plan")
+                .withInfraConfigRef(infra.getMetadata().getName())
+                .withResourceLimits(Arrays.asList(
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
-                        new ResourceAllowance("aggregate", 5.0)),
-                Collections.singletonList(exampleAddressPlan));
+                        new ResourceAllowance("aggregate", 5.0))
+                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
+                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .endSpec()
+                .build();
         adminManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
@@ -122,11 +202,27 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
 
     @Test
     void testReadInfra() throws Exception {
-        testInfra = PlanUtils.createStandardInfraConfigObject("test-infra-1",
-                PlanUtils.createStandardBrokerResourceObject("512Mi", "1Gi", null),
-                PlanUtils.createStandardAdminResourceObject("512Mi", null),
-                PlanUtils.createStandardRouterResourceObject("256Mi", 200, 2),
-                environment.enmasseVersion());
+        testInfra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-3-standard")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .withStorage("1Gi")
+                        .endResources()
+                        .build())
+                .withRouter(PlanUtils.createStandardRouterResourceObject("256Mi", 200, 2))
+                .withAdmin(new StandardInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .endResources()
+                        .build())
+                .endSpec()
+                .build();
         adminManager.createInfraConfig(testInfra);
 
         StandardInfraConfig actualInfra = adminManager.getStandardInfraConfig(testInfra.getMetadata().getName());

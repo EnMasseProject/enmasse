@@ -88,4 +88,13 @@ public class User extends AbstractHasMetadata<User> {
         Objects.requireNonNull(namespace, "'namespace' must be set");
 
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("metadata=").append(getMetadata()).append(",");
+        sb.append("spec=").append(spec);
+        sb.append("}");
+        return sb.toString();
+    }
 }

@@ -6,15 +6,15 @@
 package io.enmasse.systemtest.common.api;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
@@ -22,12 +22,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
-import java.util.concurrent.Future;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.isolated;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
 public class CustomResourceDefinitionAddressesTest extends TestBase implements ISeleniumProviderChrome {
@@ -36,10 +38,22 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @BeforeEach
     void setUpSelenium() throws Exception {
-        brokered = AddressSpaceUtils.createAddressSpaceObject("crd-address-test", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("crd-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(brokered);
         userCredentials = new UserCredentials("test", "test");
-        createUser(brokered, userCredentials);
+        createOrUpdateUser(brokered, userCredentials);
         if (selenium.getDriver() == null) {
             selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
         } else {
@@ -49,43 +63,46 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @Test
     void testAddressCreateViaAgentApiRemoveViaCmd() throws Exception {
-        Address dest1 = AddressUtils.createTopicAddressObject("mytopic-agent", DestinationPlan.BROKERED_TOPIC);
-        Address dest2 = AddressUtils.createTopicAddressObject("mytopic-api", DestinationPlan.BROKERED_TOPIC);
+        Address dest1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(brokered.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(brokered, "mytopic-agent"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("mytopic-agent")
+                .withPlan(DestinationPlan.BROKERED_TOPIC)
+                .endSpec()
+                .build();
+        Address dest2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(brokered.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(brokered, "mytopic-api"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("mytopic-api")
+                .withPlan(DestinationPlan.BROKERED_TOPIC)
+                .endSpec()
+                .build();
 
         ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.createAddressWebConsole(dest1, false);
 
-        appendAddresses(brokered, false, dest2);
-        waitForDestinationsReady(brokered, dest1, dest2);
+        appendAddresses(false, dest2);
+        waitForDestinationsReady(dest1, dest2);
 
-        ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
-        String output = addresses.getStdOut().trim();
-
-
-        assertAll(() -> {
-            assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1))),
-                    String.format("Get all addresses should contains '%s'; but contains only: %s",
-                            AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1), output));
-            assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2))),
-                    String.format("Get all addresses should contains '%s'; but contains only: %s",
-                            AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2), output));
-        });
-
-
-        HashMap<String, String> queryParams = new HashMap<>();
-        queryParams.put("address", dest1.getSpec().getAddress());
-        Future<List<Address>> addressesObjects = getAddressesObjects(brokered, Optional.empty(), Optional.of(queryParams));
-        List<Address> dest1Response = addressesObjects.get(11, TimeUnit.SECONDS);
-        assertEquals(1, dest1Response.size(), String.format("Received unexpected count of addresses! got following addresses %s",
-                dest1Response.stream().map(address -> address.getMetadata().getName()).reduce("", String::concat)));
+        Address addressFromConsole = kubernetes.getAddressClient(brokered.getMetadata().getNamespace()).list().getItems()
+                .stream().filter(address -> address.getSpec().getAddress().equals(dest1.getSpec().getAddress())).findFirst().orElse(null);
+        assertNotNull(addressFromConsole, "Didn't receive address from api server");
 
         // Patch new label
-        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), dest1Response.get(0).getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
+        assertTrue(KubeCMDClient.patchCR(Address.KIND.toLowerCase(), addressFromConsole.getMetadata().getName(), "{\"metadata\":{\"annotations\":{\"mylabel\":\"myvalue\"}}}").getRetCode());
 
-        KubeCMDClient.deleteAddress(environment.namespace(), dest1Response.get(0).getMetadata().getName());
-        KubeCMDClient.deleteAddress(environment.namespace(), AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2));
+        KubeCMDClient.deleteAddress(environment.namespace(), addressFromConsole.getMetadata().getName());
+        KubeCMDClient.deleteAddress(environment.namespace(), dest2.getMetadata().getName());
 
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
@@ -95,23 +112,40 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @Test
     void testAddressCreateViaCmdRemoveViaAgentApi() throws Exception {
-        Address dest1 = AddressUtils.createAddressObject("myqueue1", null, brokered.getMetadata().getName(), "myqueue1",
-                AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
-        Address dest2 = AddressUtils.createAddressObject("myqueue2", null, brokered.getMetadata().getName(), "myqueue2",
-                AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
+        Address dest1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(brokered.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(brokered, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
 
-        JsonObject address1 = AddressUtils.addressToJson(brokered.getMetadata().getName(), dest1);
-        String address2 = AddressUtils.addressToYaml(brokered.getMetadata().getName(), dest2);
+        Address dest2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(brokered.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(brokered, "myqueue2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue2")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+
+        JsonObject address1 = AddressUtils.addressToJson(dest1);
+        String address2 = AddressUtils.addressToYaml(dest2);
 
         ExecutionResultData result = KubeCMDClient.createCR(address1.toString());
         String output = result.getStdOut().trim();
 
-        String addressString = "%s \"%s.%s\" created";
-        String address2String = "%s/%s.%s created";
+        String addressString = "%s/%s created";
         List<String> dest1Expected = Arrays.asList(
-                String.format(addressString, "address", brokered.getMetadata().getName(), dest1.getMetadata().getName()),
-                String.format(addressString, "address.enmasse.io", brokered.getMetadata().getName(), dest1.getMetadata().getName()),
-                String.format(address2String, "address.enmasse.io", brokered.getMetadata().getName(), dest1.getMetadata().getName()));
+                String.format(addressString, "address", dest1.getMetadata().getName()),
+                String.format(addressString, "address.enmasse.io", dest1.getMetadata().getName()));
         assertTrue(dest1Expected.contains(output),
                 String.format("Unexpected response on create custom resource '%s': %s", address1.toString(), output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address1.toString()));
@@ -120,30 +154,29 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         output = result.getStdOut().trim();
 
         List<String> dest2Expected = Arrays.asList(
-                String.format(addressString, "address", brokered.getMetadata().getName(), dest2.getMetadata().getName()),
-                String.format(addressString, "address.enmasse.io", brokered.getMetadata().getName(), dest2.getMetadata().getName()),
-                String.format(address2String, "address.enmasse.io", brokered.getMetadata().getName(), dest2.getMetadata().getName()));
+                String.format(addressString, "address", dest2.getMetadata().getName()),
+                String.format(addressString, "address.enmasse.io", dest2.getMetadata().getName()));
         assertTrue(dest2Expected.contains(output),
                 String.format("Unexpected response on create custom resource '%s': %s", address2, output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address2));
 
-        waitForDestinationsReady(brokered, dest1, dest2);
+        waitForDestinationsReady(dest1, dest2);
 
         result = KubeCMDClient.getAddress(environment.namespace(), "-a");
         output = result.getStdOut().trim();
 
-        assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1))),
+        assertTrue(output.contains(Objects.requireNonNull(dest1.getMetadata().getName())),
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
-                        AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest1), output));
-        assertTrue(output.contains(Objects.requireNonNull(AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2))),
+                        dest1.getMetadata().getName(), output));
+        assertTrue(output.contains(Objects.requireNonNull(dest2.getMetadata().getName())),
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
-                        AddressUtils.generateAddressMetadataName(brokered.getMetadata().getName(), dest2), output));
+                        dest2.getMetadata().getName(), output));
 
         ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.deleteAddressWebConsole(dest1);
-        deleteAddresses(brokered, dest2);
+        deleteAddresses(dest2);
 
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace(), "-a");

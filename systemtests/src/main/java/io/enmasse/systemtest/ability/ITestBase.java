@@ -15,8 +15,4 @@ public interface ITestBase {
     default String getDefaultPlan(AddressType addressType) {
         return null;
     }
-
-    default boolean skipDummyAddress() {
-        return true;
-    }
 }

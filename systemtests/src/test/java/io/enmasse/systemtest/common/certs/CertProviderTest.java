@@ -4,46 +4,9 @@
  */
 package io.enmasse.systemtest.common.certs;
 
-import static io.enmasse.systemtest.TestTag.isolated;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
-
 import io.enmasse.address.model.*;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CertBundle;
-import io.enmasse.systemtest.CertProvider;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.DestinationPlan;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.VertxFactory;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.OpenshiftCertValidatorApiClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -57,6 +20,33 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.slf4j.Logger;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.security.KeyStore;
+import java.security.SecureRandom;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+import static io.enmasse.systemtest.TestTag.isolated;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(isolated)
 class CertProviderTest extends TestBase {
@@ -105,7 +95,7 @@ class CertProviderTest extends TestBase {
                 .setSsl(true)
                 .setTrustAll(false)
                 .setPemTrustOptions(new PemTrustOptions()
-                          .addCertValue(Buffer.buffer(caCert)))
+                        .addCertValue(Buffer.buffer(caCert)))
                 .setVerifyHost(false));
 
         testConsole(webClient);
@@ -123,7 +113,7 @@ class CertProviderTest extends TestBase {
                         .getSpec()
                         .getEndpoints()
                         .stream()
-                        .filter(e->e.getService().equals("console"))
+                        .filter(e -> e.getService().equals("console"))
                         .findFirst()
                         .get()
                         .getCert()
@@ -133,7 +123,7 @@ class CertProviderTest extends TestBase {
                 .setSsl(true)
                 .setTrustAll(false)
                 .setPemTrustOptions(new PemTrustOptions()
-                          .addCertValue(Buffer.buffer(endpointCert)))
+                        .addCertValue(Buffer.buffer(endpointCert)))
                 .setVerifyHost(false));
 
         testConsole(webClient);
@@ -151,8 +141,8 @@ class CertProviderTest extends TestBase {
 
         AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
         amqpClient.getConnectOptions()
-            .setCredentials(user)
-            .getProtonClientOptions()
+                .setCredentials(user)
+                .getProtonClientOptions()
                 .setSsl(true)
                 .setHostnameVerificationAlgorithm("")
                 .setPemTrustOptions(new PemTrustOptions()
@@ -217,8 +207,8 @@ class CertProviderTest extends TestBase {
     @DisabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "true")
     void testOpenshiftCertProvider() throws Exception {
         createTestEnv(new CertSpecBuilder()
-                .withProvider(CertProvider.openshift.name())
-                .build(),
+                        .withProvider(CertProvider.openshift.name())
+                        .build(),
                 false);
         String appNamespace = "certificate-validator-ns";
         boolean testSucceeded = false;
@@ -230,15 +220,15 @@ class CertProviderTest extends TestBase {
                 request.put("username", user.getUsername());
                 request.put("password", user.getPassword());
 
-                Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
+                Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
                 request.put("messagingHost", messagingEndpoint.getHost());
                 request.put("messagingPort", messagingEndpoint.getPort());
 
-                Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
+                Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
                 request.put("mqttHost", mqttEndpoint.getHost());
                 request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
 
-                Endpoint consoleEndpoint = kubernetes.getEndpoint("console-"+AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
+                Endpoint consoleEndpoint = kubernetes.getEndpoint("console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "https");
                 request.put("consoleHost", consoleEndpoint.getHost());
                 request.put("consolePort", consoleEndpoint.getPort());
 
@@ -279,20 +269,54 @@ class CertProviderTest extends TestBase {
     }
 
     private void createTestEnv(CertSpec endpointCert, boolean createAddresses) throws Exception {
-        addressSpace = AddressSpaceUtils.createAddressSpaceObject("cert-provider-addr-space", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
-        addressSpace.getSpec().setEndpoints(Arrays.asList(
-                createEndpointSpec("messaging", "amqps", endpointCert),
-                createEndpointSpec("console", "https", endpointCert),
-                createEndpointSpec("mqtt", "secure-mqtt", endpointCert)));
+        addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-cert-provider-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .withEndpoints(Arrays.asList(
+                        createEndpointSpec("messaging", "amqps", endpointCert),
+                        createEndpointSpec("console", "https", endpointCert),
+                        createEndpointSpec("mqtt", "secure-mqtt", endpointCert)
+                ))
+                .endSpec()
+                .build();
+
         createAddressSpace(addressSpace);
 
         user = new UserCredentials("user1", "password1");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         if (createAddresses) {
-            queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
-            topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
-            setAddresses(addressSpace, queue, topic);
+            queue = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress("test-queue")
+                    .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                    .endSpec()
+                    .build();
+            topic = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-topic"))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("topic")
+                    .withAddress("test-topic")
+                    .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                    .endSpec()
+                    .build();
+            setAddresses(queue, topic);
         }
     }
 
@@ -301,11 +325,11 @@ class CertProviderTest extends TestBase {
                 .withName(ENDPOINT_PREFIX + service)
                 .withService(service)
                 .withExpose(
-                new ExposeSpecBuilder()
-                .withRouteServicePort(servicePort)
-                .withType(ExposeType.route)
-                .withRouteTlsTermination(TlsTermination.passthrough)
-                .build())
+                        new ExposeSpecBuilder()
+                                .withRouteServicePort(servicePort)
+                                .withType(ExposeType.route)
+                                .withRouteTlsTermination(TlsTermination.passthrough)
+                                .build())
                 .withCert(endpointCert)
                 .build();
     }
@@ -331,9 +355,7 @@ class CertProviderTest extends TestBase {
         });
 
         Optional<Throwable> optError = promise.get();
-        if (optError.isPresent()) {
-            fail(optError.get());
-        }
+        optError.ifPresent(Assertions::fail);
     }
 
     private SSLSocketFactory getSocketFactory(InputStream caCrtFile) throws Exception {

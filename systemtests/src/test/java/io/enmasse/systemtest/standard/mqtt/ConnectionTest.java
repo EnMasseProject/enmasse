@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -33,7 +34,17 @@ public class ConnectionTest extends TestBaseWithShared implements ITestBaseStand
      */
     @Test
     public void newSessionDisconnectsExisting() throws Exception {
-        Address dest = AddressUtils.createTopicAddressObject(MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, MQTT_TOPIC))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress(MQTT_TOPIC)
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();

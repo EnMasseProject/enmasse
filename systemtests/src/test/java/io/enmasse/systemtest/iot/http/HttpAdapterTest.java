@@ -4,35 +4,11 @@
  */
 package io.enmasse.systemtest.iot.http;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.net.HttpURLConnection;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.qpid.proton.amqp.Binary;
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.Predicates;
 import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
@@ -46,6 +22,30 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
+import org.apache.qpid.proton.amqp.Binary;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
+import java.net.HttpURLConnection;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.enmasse.systemtest.TestTag.sharedIot;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(sharedIot)
 public class HttpAdapterTest extends IoTTestBaseWithShared {
@@ -72,23 +72,27 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
         registryClient.registerDevice(tenantId(), deviceId);
         credentialsClient.addCredentials(tenantId(), deviceId, deviceAuthId, devicePassword);
 
-        User businessApplicationUser = UserUtils.createUserObject(businessApplicationUsername, businessApplicationPassword,
-                Collections.singletonList(new UserAuthorizationBuilder()
-                        .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + tenantId(),
-                                IOT_ADDRESS_TELEMETRY + "/" + tenantId() + "/*",
-                                IOT_ADDRESS_EVENT + "/" + tenantId(),
-                                IOT_ADDRESS_EVENT + "/" + tenantId() + "/*")
-                        .withOperations(Operation.recv)
-                        .build()));
+        User businessApplicationUser = UserUtils.createUserResource(new UserCredentials(businessApplicationUsername, businessApplicationPassword))
+                .editSpec()
+                .withAuthorization(
+                        Collections.singletonList(new UserAuthorizationBuilder()
+                                .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + tenantId(),
+                                        IOT_ADDRESS_TELEMETRY + "/" + tenantId() + "/*",
+                                        IOT_ADDRESS_EVENT + "/" + tenantId(),
+                                        IOT_ADDRESS_EVENT + "/" + tenantId() + "/*")
+                                .withOperations(Operation.recv)
+                                .build()))
+                .endSpec()
+                .done();
 
-        AddressSpace addressSpace = getAddressSpace(sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
 
-        createUser(addressSpace, businessApplicationUser);
+        createOrUpdateUser(addressSpace, businessApplicationUser);
 
         businessApplicationClient = amqpClientFactory.createQueueClient(addressSpace);
         businessApplicationClient.getConnectOptions()
-            .setUsername(businessApplicationUsername)
-            .setPassword(businessApplicationPassword);
+                .setUsername(businessApplicationUsername)
+                .setPassword(businessApplicationPassword);
 
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         adapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId + "@" + tenantId(), devicePassword);
@@ -114,7 +118,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
         log.info("Consuming one telemetry message in business application");
         CountDownLatch latch = new CountDownLatch(1);
-        businessApplicationClient.recvMessages(IOT_ADDRESS_TELEMETRY + "/" + tenantId(), msg ->{
+        businessApplicationClient.recvMessages(IOT_ADDRESS_TELEMETRY + "/" + tenantId(), msg -> {
             latch.countDown();
             return true;
         });
@@ -138,7 +142,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
         waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
 
         log.info("Sending telemetry messages");
-        for ( int i = 0; i < messagesToSend; i++ ) {
+        for (int i = 0; i < messagesToSend; i++) {
             JsonObject json = new JsonObject();
             json.put("i", i);
             sendWithRetry(MessageType.TELEMETRY, json);
@@ -149,7 +153,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             futureReceivedMessages.get(60, TimeUnit.SECONDS);
             assertEquals(messagesToSend, receivedMessagesCounter.get());
             log.info("Telemetry successfully consumed");
-        }catch(TimeoutException e) {
+        } catch (TimeoutException e) {
             log.error("Timeout receiving telemetry, messages received: {} error:", receivedMessagesCounter.get(), e);
             throw e;
         }
@@ -163,7 +167,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
         log.info("Consuming one event in business application");
         CountDownLatch latch = new CountDownLatch(1);
-        businessApplicationClient.recvMessages(IOT_ADDRESS_EVENT + "/" + tenantId(), msg ->{
+        businessApplicationClient.recvMessages(IOT_ADDRESS_EVENT + "/" + tenantId(), msg -> {
             latch.countDown();
             return true;
         });
@@ -180,7 +184,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
         int eventsToSend = 5;
         log.info("Sending events");
-        for ( int i = 0; i < eventsToSend; i++ ) {
+        for (int i = 0; i < eventsToSend; i++) {
             JsonObject json = new JsonObject();
             json.put("i", i);
             sendWithRetry(MessageType.EVENT, json);
@@ -195,7 +199,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             status.get(60, TimeUnit.SECONDS);
             assertEquals(eventsToSend, receivedMessagesCounter.get());
             log.info("Events successfully consumed");
-        }catch(TimeoutException e) {
+        } catch (TimeoutException e) {
             log.error("Timeout receiving events, messages received: {} error:", receivedMessagesCounter.get(), e);
             throw e;
         }
@@ -203,11 +207,11 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
     }
 
     private Future<List<Message>> setUpMessagingConsumer(String type, AtomicInteger receivedMessagesCounter, int expectedMessages) {
-        return businessApplicationClient.recvMessages(type + "/" + tenantId(), msg ->{
-            if(msg.getBody() instanceof Data) {
+        return businessApplicationClient.recvMessages(type + "/" + tenantId(), msg -> {
+            if (msg.getBody() instanceof Data) {
                 Binary value = ((Data) msg.getBody()).getValue();
                 JsonObject json = new JsonObject(Buffer.buffer(value.getArray()));
-                if(json.containsKey("i")) {
+                if (json.containsKey("i")) {
                     return receivedMessagesCounter.incrementAndGet() == expectedMessages;
                 }
             }
@@ -221,9 +225,9 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
         }
         var timeout = new TimeoutBudget(30, TimeUnit.SECONDS);
         var sendOk = false;
-        while(!timeout.timeoutExpired() && !sendOk) {
+        while (!timeout.timeoutExpired() && !sendOk) {
             var response = messageType == MessageType.TELEMETRY ? adapterClient.sendTelemetry(json, Predicates.any()) : adapterClient.sendEvent(json, Predicates.any());
-            if(Predicates.notIn(HTTP_ACCEPTED, HTTP_UNAVAILABLE).test(response.statusCode())) {
+            if (Predicates.notIn(HTTP_ACCEPTED, HTTP_UNAVAILABLE).test(response.statusCode())) {
                 log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), "Error sending " + messageType.name().toLowerCase() + " data");
                 throw new RuntimeException("Status " + response.statusCode() + " body: " + (response.body() != null ? response.body().toString() : null));
             }

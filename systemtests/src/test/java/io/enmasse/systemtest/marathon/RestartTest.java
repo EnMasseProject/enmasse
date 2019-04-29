@@ -6,11 +6,11 @@ package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
@@ -46,17 +46,41 @@ class RestartTest extends MarathonTestBase {
     void testRandomDeletePods() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
-        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("ttest-restart-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        AddressSpace brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-restart-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpaceList(standard, brokered);
-        createUser(brokered, user);
-        createUser(standard, user);
+        createOrUpdateUser(brokered, user);
+        createOrUpdateUser(standard, user);
 
-        List<Address> brokeredAddresses = getAllBrokeredAddresses();
-        List<Address> standardAddresses = getAllStandardAddresses();
+        List<Address> brokeredAddresses = getAllBrokeredAddresses(brokered);
+        List<Address> standardAddresses = getAllStandardAddresses(standard);
 
-        setAddresses(brokered, brokeredAddresses.toArray(new Address[0]));
-        setAddresses(standard, standardAddresses.toArray(new Address[0]));
+        setAddresses(brokeredAddresses.toArray(new Address[0]));
+        setAddresses(standardAddresses.toArray(new Address[0]));
 
         assertCanConnect(brokered, user, brokeredAddresses);
         assertCanConnect(standard, user, standardAddresses);
@@ -83,13 +107,25 @@ class RestartTest extends MarathonTestBase {
     void testHAqdrouter() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
-        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("addr-space-restart-standard", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-ha-routers")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpaceList(standard);
-        createUser(standard, user);
+        createOrUpdateUser(standard, user);
 
-        List<Address> standardAddresses = getAllStandardAddresses();
+        List<Address> standardAddresses = getAllStandardAddresses(standard);
 
-        setAddresses(standard, standardAddresses.toArray(new Address[0]));
+        setAddresses(standardAddresses.toArray(new Address[0]));
 
         assertCanConnect(standard, user, standardAddresses);
 
@@ -115,8 +151,8 @@ class RestartTest extends MarathonTestBase {
         log.info("Check if system works");
         TestUtils.runUntilPass(60, () -> getAddressSpace(brokered.getMetadata().getName()));
         TestUtils.runUntilPass(60, () -> getAddressSpace(standard.getMetadata().getName()));
-        TestUtils.runUntilPass(60, () -> createUser(brokered, new UserCredentials("jenda", "cenda")));
-        TestUtils.runUntilPass(60, () -> createUser(standard, new UserCredentials("jura", "fura")));
+        TestUtils.runUntilPass(60, () -> createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));
+        TestUtils.runUntilPass(60, () -> createOrUpdateUser(standard, new UserCredentials("jura", "fura")));
         TestUtils.runUntilPass(60, () -> {
             assertCanConnect(brokered, existingUser, brAddresses);
             return true;

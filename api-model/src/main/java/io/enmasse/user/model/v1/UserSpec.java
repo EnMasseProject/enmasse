@@ -71,4 +71,14 @@ public class UserSpec {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("{");
+        sb.append("username=").append(username).append(",");
+        sb.append("authentication=").append(authentication).append(",");
+        sb.append("authorization=").append(authorization);
+        sb.append("}");
+        return sb.toString();
+    }
 }

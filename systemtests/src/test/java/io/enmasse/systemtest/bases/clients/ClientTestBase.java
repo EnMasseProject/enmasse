@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
@@ -81,8 +82,17 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createQueueAddressObject("message-basic" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.QUEUE));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "message-basic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("message-basic" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket).toString());
@@ -115,8 +125,17 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver, receiver2));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createQueueAddressObject("receiver-round-robin" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.QUEUE));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "round-robin"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("round-robin" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
@@ -161,8 +180,17 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, subscriber, subscriber2));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createTopicAddressObject("topic-subscribe" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.TOPIC));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "topic-sub"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("topic-sub" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
@@ -203,8 +231,17 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver_browse, receiver_receive));
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createQueueAddressObject("message-browse" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.QUEUE));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "browse"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("browse" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
@@ -235,8 +272,17 @@ public abstract class ClientTestBase extends TestBaseWithShared {
     }
 
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
-        Address dest = AddressUtils.createQueueAddressObject("drain-queue" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.QUEUE));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "drain"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("drain" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();;
         setAddresses(dest);
 
         clients.addAll(Arrays.asList(sender, receiver));
@@ -266,8 +312,17 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         int expectedMsgCount = 10;
 
         clients.addAll(Arrays.asList(sender, receiver));
-        Address queue = AddressUtils.createQueueAddressObject("selector-queue" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.QUEUE));
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "selector-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("selector-queue" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
         setAddresses(queue);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
@@ -330,8 +385,17 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, sender2, subscriber, subscriber2));
         int expectedMsgCount = 5;
 
-        Address topic = AddressUtils.createTopicAddressObject("selector-topic" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.TOPIC));
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "selector-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("selector-topic" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
         setAddresses(topic);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());

@@ -40,14 +40,9 @@ public abstract class ApiClient implements AutoCloseable {
     protected Supplier<Endpoint> endpointSupplier;
     protected String authzString;
     protected String apiVersion;
-    private final int initRetry = 10;
 
     protected ApiClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion) {
         initializeAddressClient(kubernetes, endpointSupplier, apiVersion, "");
-    }
-
-    protected ApiClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion, String authzString) {
-        initializeAddressClient(kubernetes, endpointSupplier, apiVersion, authzString);
     }
 
     private void initializeAddressClient(Kubernetes kubernetes, Supplier<Endpoint> endpointSupplier, String apiVersion, String token) {
@@ -142,105 +137,5 @@ public abstract class ApiClient implements AutoCloseable {
             }
             return fn.call();
         }, reconnect);
-    }
-
-    public String getApiVersion() {
-        return apiVersion;
-    }
-
-    protected JsonObject getResource(String type, String basePath, String name) throws Exception {
-        return getResource(type, basePath, name, HTTP_OK);
-    }
-
-    protected JsonObject getResource(String type, String basePath, String name, int expectedCode) throws Exception {
-        String path = basePath + "/" + name;
-        log.info("GET: path {}", path);
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-
-        return doRequestNTimes(initRetry, () -> {
-                    client.get(endpoint.getPort(), endpoint.getHost(), path)
-                            .as(BodyCodec.jsonObject())
-                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
-                            .send(ar -> responseHandler(ar,
-                                    responsePromise,
-                                    expectedCode,
-                                    String.format("Error: get %s %s", type, name)));
-                    return responsePromise.get(30, TimeUnit.SECONDS);
-                },
-                Optional.of(endpointSupplier),
-                Optional.empty());
-    }
-
-    protected void createResource(String type, String basePath, JsonObject data) throws Exception {
-        createResource(type, basePath, data, HTTP_CREATED);
-    }
-
-    protected void createResource(String type, String basePath, JsonObject data, int expectedCode) throws Exception {
-        log.info("POST-{}: path {}; body {}", type, basePath, data.toString());
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-
-        doRequestNTimes(initRetry, () -> {
-                    client.post(endpoint.getPort(), endpoint.getHost(), basePath)
-                            .timeout(20_000)
-                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
-                            .as(BodyCodec.jsonObject())
-                            .sendJsonObject(data, ar -> {
-                                responseHandler(ar,
-                                        responsePromise,
-                                        expectedCode,
-                                        String.format("Error: create %s '%s'", type, basePath));
-                            });
-                    return responsePromise.get(30, TimeUnit.SECONDS);
-                },
-                Optional.of(endpointSupplier),
-                Optional.empty());
-    }
-
-    protected void replaceResource(String type, String basePath, String name, JsonObject data) throws Exception {
-        replaceResource(type, basePath, name, data, HTTP_OK);
-    }
-
-    protected void replaceResource(String type, String basePath, String name, JsonObject data, int expectedCode) throws Exception {
-
-        String path = basePath + "/" + name;
-        log.info("PUT-{}: path {}; body {}", type, path, data.toString());
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-
-        doRequestNTimes(initRetry, () -> {
-                    client.put(endpoint.getPort(), endpoint.getHost(), path)
-                            .timeout(20_000)
-                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
-                            .as(BodyCodec.jsonObject())
-                            .sendJsonObject(data, ar -> responseHandler(ar,
-                                    responsePromise,
-                                    expectedCode,
-                                    String.format("Error: create %s '%s'", type, name)));
-                    return responsePromise.get(30, TimeUnit.SECONDS);
-                },
-                Optional.of(endpointSupplier),
-                Optional.empty());
-    }
-
-    protected void deleteResource(String type, String basePath, String name) throws Exception {
-        deleteResource(type, basePath, name, HTTP_OK);
-    }
-
-    protected void deleteResource(String type, String basePath, String name, int expectedCode) throws Exception {
-        String path = basePath + "/" + name;
-        log.info("DELETE-{}: path '{}'", type, path);
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        doRequestNTimes(initRetry, () -> {
-                    client.delete(endpoint.getPort(), endpoint.getHost(), path)
-                            .as(BodyCodec.jsonObject())
-                            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
-                            .timeout(20_000)
-                            .send(ar -> responseHandler(ar,
-                                    responsePromise,
-                                    expectedCode,
-                                    String.format("Error: delete %s '%s'", type, name)));
-                    return responsePromise.get(2, TimeUnit.MINUTES);
-                },
-                Optional.of(endpointSupplier),
-                Optional.empty());
     }
 }

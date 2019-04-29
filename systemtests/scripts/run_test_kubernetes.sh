@@ -103,8 +103,7 @@ echo "Running test profile: ${TEST_PROFILE}"
 #execute test
 case "${TEST_PROFILE}" in
 "smoke")
-    run_test shared-brokered "**.SmokeTest" || failure=$(($failure + 1))
-    run_test shared-standard "**.SmokeTest" || failure=$(($failure + 1))
+    run_test smoke "" || failure=$(($failure + 1))
     ;;
 "smoke-iot")
     run_test smoke-iot "" || failure=$(($failure + 1))

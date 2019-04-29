@@ -27,7 +27,7 @@ public class PlanUtils {
                 .withName(name)
                 .endMetadata()
                 .withNewSpec()
-                .withAddressSpaceType(type.toString().toLowerCase())
+                .withAddressSpaceType(type.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(infraConfigName)
                 .withResourceLimits(resources.stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
@@ -43,166 +43,15 @@ public class PlanUtils {
                 .endMetadata()
                 .withNewSpec()
                 .withShortDescription("Custom systemtests defined address plan")
-                .withAddressType(type.toString().toLowerCase())
+                .withAddressType(type.toString())
                 .withResources(addressResources.stream().collect(Collectors.toMap(ResourceRequest::getName, ResourceRequest::getCredit)))
                 .endSpec()
                 .build();
     }
 
-    public static StandardInfraConfig createStandardInfraConfigObject(String name, StandardInfraConfigSpecBroker broker,
-                                                                      StandardInfraConfigSpecAdmin admin, StandardInfraConfigSpecRouter router, String version) {
-        return new StandardInfraConfigBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .endMetadata()
-                .withNewSpec()
-                .withVersion(version)
-                .withBroker(broker)
-                .withRouter(router)
-                .withAdmin(admin)
-                .endSpec()
-                .build();
-    }
-
-    public static BrokeredInfraConfig createBrokeredInfraConfigObject(String name, BrokeredInfraConfigSpecBroker broker,
-                                                                      BrokeredInfraConfigSpecAdmin admin, String version) {
-        return new BrokeredInfraConfigBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .endMetadata()
-                .withNewSpec()
-                .withVersion(version)
-                .withBroker(broker)
-                .withAdmin(admin)
-                .endSpec()
-                .build();
-    }
-
-    //////////////////////////////////////////////////////////////////////////////
-    // Resources brokered
-    //////////////////////////////////////////////////////////////////////////////
-
-    public static BrokeredInfraConfigSpecBroker createBrokeredBrokerResourceObject(String addressFullPolicy, String storageClassName, Boolean updatePersistentVolumeClaim, String memory, String storage) {
-        return new BrokeredInfraConfigSpecBrokerBuilder()
-                .withAddressFullPolicy(addressFullPolicy)
-                .withStorageClassName(storageClassName)
-                .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
-                .withNewResources()
-                .withMemory(memory)
-                .withStorage(storage)
-                .endResources()
-                .build();
-    }
-
-    public static BrokeredInfraConfigSpecBroker createBrokeredBrokerResourceObject(String memory, String storage, PodTemplateSpec templateSpec) {
-        BrokeredInfraConfigSpecBrokerBuilder builder = new BrokeredInfraConfigSpecBrokerBuilder()
-                .withAddressFullPolicy("FAIL")
-                .withNewResources()
-                .withMemory(memory)
-                .withStorage(storage)
-                .endResources();
-
-        if (templateSpec != null) {
-            builder.withPodTemplate(templateSpec);
-        }
-        return builder.build();
-    }
-
-    public static BrokeredInfraConfigSpecBroker createBrokeredBrokerResourceObject(String memory, String storage, boolean updatePersistentVolumeClaim) {
-        return new BrokeredInfraConfigSpecBrokerBuilder()
-                .withAddressFullPolicy("FAIL")
-                .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
-                .withNewResources()
-                .withMemory(memory)
-                .withStorage(storage)
-                .endResources()
-                .build();
-    }
-
-    public static BrokeredInfraConfigSpecAdmin createBrokeredAdminResourceObject(String memory, PodTemplateSpec podTemplateSpec) {
-        BrokeredInfraConfigSpecAdminBuilder builder = new BrokeredInfraConfigSpecAdminBuilder()
-                .withNewResources()
-                .withMemory(memory)
-                .endResources();
-        if (podTemplateSpec != null) {
-            builder.withPodTemplate(podTemplateSpec);
-        }
-        return builder.build();
-    }
-
-
     //////////////////////////////////////////////////////////////////////////////
     // Resources standard
     //////////////////////////////////////////////////////////////////////////////
-
-
-    public static StandardInfraConfigSpecBroker createStandardBrokerResourceObject(String addressFullPolicy, String storageClassName, Boolean updatePersistentVolumeClaim, String memory, String storage) {
-        return new StandardInfraConfigSpecBrokerBuilder()
-                .withAddressFullPolicy(addressFullPolicy)
-                .withStorageClassName(storageClassName)
-                .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
-                .withNewResources()
-                .withMemory(memory)
-                .withStorage(storage)
-                .endResources()
-                .build();
-    }
-
-    public static StandardInfraConfigSpecBroker createStandardBrokerResourceObject(String memory, String storage, PodTemplateSpec templateSpec) {
-        StandardInfraConfigSpecBrokerBuilder builder = new StandardInfraConfigSpecBrokerBuilder()
-                .withAddressFullPolicy("FAIL")
-                .withNewResources()
-                .withMemory(memory)
-                .withStorage(storage)
-                .endResources();
-        if (templateSpec != null) {
-            builder.withPodTemplate(templateSpec);
-        }
-        return builder.build();
-    }
-
-    public static StandardInfraConfigSpecBroker createStandardBrokerResourceObject(String memory, String storage, boolean updatePersistentVolumeClaim) {
-        return new StandardInfraConfigSpecBrokerBuilder()
-                .withAddressFullPolicy("FAIL")
-                .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
-                .withNewResources()
-                .withMemory(memory)
-                .withStorage(storage)
-                .endResources()
-                .build();
-    }
-
-
-    public static StandardInfraConfigSpecAdmin createStandardAdminResourceObject(String memory, PodTemplateSpec templateSpec) {
-        StandardInfraConfigSpecAdminBuilder builder = new StandardInfraConfigSpecAdminBuilder()
-                .withNewResources()
-                .withMemory(memory)
-                .endResources();
-        if (templateSpec != null) {
-            builder.withPodTemplate(templateSpec);
-        }
-        return builder.build();
-    }
-
-    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, PodTemplateSpec templateSpec) {
-        StandardInfraConfigSpecRouterBuilder builder = new StandardInfraConfigSpecRouterBuilder()
-                .withNewResources()
-                .withMemory(memory)
-                .endResources();
-        if (templateSpec != null) {
-            builder.withPodTemplate(templateSpec);
-        }
-        return builder.build();
-    }
-
-    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, int linkCapacity) {
-        return new StandardInfraConfigSpecRouterBuilder()
-                .withLinkCapacity(linkCapacity)
-                .withNewResources()
-                .withMemory(memory)
-                .endResources()
-                .build();
-    }
 
     public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, int linkCapacity, int minReplicas) {
         return new StandardInfraConfigSpecRouterBuilder()

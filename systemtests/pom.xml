@@ -166,27 +166,27 @@
             <id>shared-brokered-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>shared-brokered &amp; !nonPR &amp; !smoke &amp; !marathon</groups>
+                <groups>shared-brokered &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot</groups>
             </properties>
         </profile>
         <profile>
             <id>shared-standard-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>shared-standard &amp; !nonPR &amp; !smoke &amp; !marathon</groups>
+                <groups>shared-standard &amp; !nonPR &amp; !smoke &amp; !marathon &amp; !shared-iot</groups>
             </properties>
         </profile>
         <profile>
             <id>isolated-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon</groups>
+                <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot</groups>
             </properties>
         </profile>
         <profile>
             <id>isolated</id>
             <properties>
-                <groups>isolated &amp; !marathon</groups>
+                <groups>isolated &amp; !marathon  &amp; !shared-iot</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

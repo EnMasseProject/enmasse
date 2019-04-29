@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.CustomLogger;
@@ -19,22 +20,22 @@ import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.marathon;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @Tag(marathon)
 abstract class MarathonTestBase extends TestBase {
@@ -101,7 +102,7 @@ abstract class MarathonTestBase extends TestBase {
             UserCredentials cred = new UserCredentials("david", "kornelius");
             AddressSpace addressSpace = supplier.get();
             createAddressSpace(addressSpace);
-            createUser(addressSpace, cred);
+            createOrUpdateUser(addressSpace, cred);
 
             log.info("Address space created");
 
@@ -118,42 +119,11 @@ abstract class MarathonTestBase extends TestBase {
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("test-user", "test-user");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
                     "test-queue-createdelete-auth-brokered-%d", user);
-        });
-    }
-
-    void doTestCreateHighAddressCountCheckStatusDeleteLong(AddressSpace addressSpace) throws Exception {
-        String notReadyString = "\"isReady\":false";
-        createAddressSpace(addressSpace);
-
-        UserCredentials user = new UserCredentials("test-user", "test-user");
-        createUser(addressSpace, user);
-
-        List<Address> queueList = new ArrayList<>();
-        int queueCount = 1500;
-
-        IntStream.range(0, queueCount).forEach(i ->
-                queueList.add(AddressUtils.createQueueAddressObject(String.format("test-queue-status-%d", i), getDefaultPlan(AddressType.QUEUE)))
-        );
-
-        runTestInLoop(60, () -> {
-            //create addresses
-            setAddresses(addressSpace, queueList.toArray(new Address[0]));
-
-            //get addresses from API server request
-            List<String> response = getAddresses(addressSpace, Optional.empty()).get(10, TimeUnit.SECONDS);
-            log.info("{}", (Object) response.toArray(new String[0]));
-            JsonObject res = addressApiClient.getAddresses(addressSpace, Optional.empty());
-
-            //check addresses are in ready state
-            assertCanConnect(addressSpace, user, queueList);
-            assertFalse(res.toString().contains(notReadyString));
-
-            deleteAddresses(addressSpace, queueList.toArray(new Address[0]));
         });
     }
 
@@ -169,14 +139,24 @@ abstract class MarathonTestBase extends TestBase {
 
         //create queues
         for (int i = 0; i < queueCount; i++) {
-            queueList.add(AddressUtils.createQueueAddressObject(String.format("test-queue-sendreceive-%d", i), getDefaultPlan(AddressType.QUEUE)));
+            queueList.add(new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-sendreceive-" + i))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress("queue-sendreceive-" + i)
+                    .withPlan(getDefaultPlan(AddressType.QUEUE))
+                    .endSpec()
+                    .build());
         }
-        setAddresses(addressSpace, queueList.toArray(new Address[0]));
+        setAddresses(queueList.toArray(new Address[0]));
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
-        createUser(addressSpace, credentials);
+        createOrUpdateUser(addressSpace, credentials);
 
         runTestInLoop(30, () -> {
             //create client
@@ -203,50 +183,38 @@ abstract class MarathonTestBase extends TestBase {
         });
     }
 
-    void doTestCreateDeleteUsersLong(AddressSpace addressSpace) throws Exception {
-        log.info("testCreateDeleteUsersLong start");
-        createAddressSpace(addressSpace);
-        log.info("Address space '{}'created", addressSpace);
-
-        Address queue = AddressUtils.createQueueAddressObject("test-create-delete-users-queue", getDefaultPlan(AddressType.QUEUE));
-        Address topic = AddressUtils.createTopicAddressObject("test-create-delete-users-topic", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(addressSpace, queue, topic);
-        log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
-
-        final String prefixUser = "test-user";
-        final String prefixPswd = "test-user";
-
-        AtomicInteger from = new AtomicInteger(0);
-        AtomicInteger to = new AtomicInteger(100);
-        int iteration = 100;
-        int step = 10;
-
-        runTestInLoop(30, () -> {
-            createUsers(addressSpace, prefixUser, prefixPswd, from.get(), to.get());
-            log.info("Users <{};{}> successfully created", from.get(), to.get());
-            for (int i = from.get(); i < to.get(); i += step) {
-                assertCanConnect(addressSpace, new UserCredentials(prefixUser + i, prefixPswd + i), Arrays.asList(queue, topic));
-            }
-            removeUsers(addressSpace, prefixUser, from.get(), to.get() - step);
-            log.info("Users <{};{}> successfully removed", from.get(), to.get() - step);
-            from.set(from.get() + iteration);
-            to.set(to.get() + iteration);
-        });
-        log.info("testCreateDeleteUsersLong finished");
-    }
-
     void doTestAuthSendReceiveLong(AddressSpace addressSpace) throws Exception {
         log.info("testAuthSendReceiveLong start");
         createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-auth-send-receive-queue", getDefaultPlan(AddressType.QUEUE));
-        Address topic = AddressUtils.createTopicAddressObject("test-auth-send-receive-topic", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(addressSpace, queue, topic);
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-auth-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-auth-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-auth-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-auth-topic")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
+        setAddresses(queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
 
         UserCredentials user = new UserCredentials("test-user", "test-user");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
@@ -266,14 +234,24 @@ abstract class MarathonTestBase extends TestBase {
 
         //create queues
         for (int i = 0; i < topicCount; i++) {
-            topicList.add(AddressUtils.createTopicAddressObject(String.format("test-topic-pubsub-%d", i), getDefaultPlan(AddressType.TOPIC)));
+            topicList.add(new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-topic-pubsub-" + i))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("topic")
+                    .withAddress("test-topic-pubsub-" + i)
+                    .withPlan(getDefaultPlan(AddressType.TOPIC))
+                    .endSpec()
+                    .build());
         }
-        setAddresses(addressSpace, topicList.toArray(new Address[0]));
+        setAddresses(topicList.toArray(new Address[0]));
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
-        createUser(addressSpace, credentials);
+        createOrUpdateUser(addressSpace, credentials);
         runTestInLoop(30, () -> {
             AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
             client.getConnectOptions().setCredentials(credentials);
@@ -304,10 +282,10 @@ abstract class MarathonTestBase extends TestBase {
         SeleniumManagement.deployFirefoxApp();
 
         UserCredentials user = new UserCredentials("test", "test");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         int addressCount = 5;
-        ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
 
         runTestInLoop(30, () -> {
             SeleniumProvider selenium = new SeleniumProvider();
@@ -343,15 +321,35 @@ abstract class MarathonTestBase extends TestBase {
         int destinationCount = 20;
 
         for (int i = 0; i < destinationCount; i++) {
-            queueList.add(AddressUtils.createQueueAddressObject(String.format(queuePattern, i), getDefaultPlan(AddressType.QUEUE)));
-            topicList.add(AddressUtils.createTopicAddressObject(String.format(topicPattern, i), getDefaultPlan(AddressType.TOPIC)));
+            queueList.add(new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, queuePattern + i))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress("queue-via-web")
+                    .withPlan(getDefaultPlan(AddressType.QUEUE))
+                    .endSpec()
+                    .build());
+            topicList.add(new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, topicPattern + i))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("topic")
+                    .withAddress(topicPattern + i)
+                    .withPlan(getDefaultPlan(AddressType.TOPIC))
+                    .endSpec()
+                    .build());
         }
 
         AmqpClient queueClient;
         AmqpClient topicClient;
 
-        setAddresses(addressSpace, queueList.toArray(new Address[0]));
-        appendAddresses(addressSpace, topicList.toArray(new Address[0]));
+        setAddresses(queueList.toArray(new Address[0]));
+        appendAddresses(topicList.toArray(new Address[0]));
 
         queueClient = amqpClientFactory.createQueueClient(addressSpace);
         queueClient.getConnectOptions().setCredentials(credentials);
@@ -369,8 +367,8 @@ abstract class MarathonTestBase extends TestBase {
             TopicTest.runTopicTest(topicClient, topic, 1024);
         }
 
-        deleteAddresses(addressSpace, queueList.toArray(new Address[0]));
-        deleteAddresses(addressSpace, topicList.toArray(new Address[0]));
+        deleteAddresses(queueList.toArray(new Address[0]));
+        deleteAddresses(topicList.toArray(new Address[0]));
         Thread.sleep(15000);
     }
 }

@@ -4,13 +4,14 @@
  */
 package io.enmasse.systemtest.common.console;
 
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.bases.web.GlobalConsoleTest;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
 import static io.enmasse.systemtest.TestTag.isolated;
 
 @Tag(isolated)
@@ -23,16 +24,49 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumPro
 
     @Test
     void testCreateDeleteAddressSpace() throws Exception {
-        doTestCreateAddressSpace(AddressSpaceUtils.createAddressSpaceObject("test-address-space-brokered",
-                kubernetes.getNamespace(), AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED));
-        doTestCreateAddressSpace(AddressSpaceUtils.createAddressSpaceObject("test-address-space-standard",
-                kubernetes.getNamespace(), AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL));
+        doTestCreateAddressSpace(new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build());
+        doTestCreateAddressSpace(new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build());
     }
 
     @Test
     void testConnectToAddressSpaceConsole() throws Exception {
-        doTestConnectToAddressSpaceConsole(AddressSpaceUtils.createAddressSpaceObject("test-address-space-console",
-                kubernetes.getNamespace(), AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED));
+        doTestConnectToAddressSpaceConsole(new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-console")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build());
     }
 
     @Test
