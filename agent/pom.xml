@@ -188,16 +188,6 @@
               <arguments>run test</arguments>
             </configuration>
           </execution>
-          <execution>
-            <id>npm coverage</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>coverage</phase>
-            <configuration>
-              <arguments>run coverage --quiet</arguments>
-            </configuration>
-          </execution>
         </executions>
       </plugin>
 		  <plugin>

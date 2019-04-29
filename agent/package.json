@@ -16,7 +16,7 @@
         "ws": "*"
     },
     "devDependencies": {
-        "eslint": "",
+        "eslint": "5.16.0",
         "istanbul": "",
         "mocha": "^6.1.2",
         "mocha-junit-reporter": ""
