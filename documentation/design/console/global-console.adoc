@@ -34,8 +34,6 @@ There is support for a multi page create workflow that will allow the user to cr
 
 It will be possible for the user to click through from the the managed resource to the existing Console of that resource. To enable this, the resource will expose a console URL. EnMasse's Console will be improved to allow back navigation. Authentication will be seem-less as the existing OAUTH session will be valid for the old Console too.
 
-The mast head of the application will present a summary of the number of resources of each type current visible to the user, cluster-wide. In the first version, it will present only the number of brokered and standard addressspaces, separately.
-
 There are no new authorisation requirements. Existing RBAC controls on managed resources will be sufficient to protect access.
 
 The resources of the Global Console will be installed by the EnMasse Operator.
