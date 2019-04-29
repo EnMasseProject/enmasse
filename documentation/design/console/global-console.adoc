@@ -26,11 +26,11 @@ Authentication is delegated to the Oauth-proxy component.
 - For OpenShift, OpenShift Oauth-Proxy is configured to authenticate against the OAuth2 server of OpenShift itself.
 - For Kubernetes, Pusher Oauth-Proxy is configued with Open ID Connect (OIDC).  This needs to be the same OIDC instance that Kubernetes is configured to use itself.
 
-The UI will use the Kubernetes API to list and control the resources that it needs to expose for Management. This part of the UI will be extensible so that the ability to control other resources can be enabled. In the first the phase the two resource types exposed for management will be EnMasse's standard addressspace and brokered addressspace. The UI will send the Bearer token in order that the server side may authorise the requests.
+The UI will use the Kubernetes API to list and control the resources that it needs to expose for Management. This part of the UI will be extensible so that the ability to control other resources can be enabled. In the first the phase the two resource types exposed for management will be EnMasse's standard addressspace and brokered addressspace.
 
 Initially the UI will periodically poll the API for the list of resources (standard address space and brokered address space). Later this will evolve to utilise watch for a more responsive UI with fewer overheads.
 
-There will be support for a multi page create workflow that will allow the user to create new instances of managed resources. The HTML and JS supporting this workflow will be implementations of a pluggable API exposed by the Console itself.
+There is support for a multi page create workflow that will allow the user to create new instances of managed resources. The HTML and JS supporting this workflow will be implementations of a pluggable API exposed by the Console itself.
 
 It will be possible for the user to click through from the the managed resource to the existing Console of that resource. To enable this, the resource will expose a console URL. EnMasse's Console will be improved to allow back navigation. Authentication will be seem-less as the existing OAUTH session will be valid for the old Console too.
 
