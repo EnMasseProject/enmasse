@@ -2,9 +2,13 @@
 
 ifeval::["{cmdcli}" == "oc"]
 :http-adapter: $(oc -n enmasse-infra get routes iot-http-adapter --template='{{ .spec.host }}')
+:mqtt-adapter: $(oc -n enmasse-infra get routes iot-mqtt-adapter --template='{{ .spec.host }}')
+:mqtt-port: 443
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 :http-adapter: $(kubectl -n enmasse-infra get service iot-http-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):30443
+:mqtt-adapter: $(kubectl -n enmasse-infra get service iot-mqtt-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname})
+:mqtt-port: 30883
 endif::[]
 
 = Sending and receiving {api} data
@@ -61,11 +65,16 @@ mvn spring-boot:run -Drun.arguments=--hono.client.host=$MESSAGING_HOST,--hono.cl
 
 == Sending {api} data
 
-. Send {api} message using HTTP:
+. Send a message using HTTP protocol:
 +
 [options="nowrap",subs="attributes"]
 ----
 curl --insecure -X POST -i -u sensor1@myapp.iot:hono-secret -H 'Content-Type: application/json' --data-binary '{"temp": 5}' https://{http-adapter}/{api}
 ----
 
-// TODO cover using MQTT here
+. Send a message using MQTT protocol:
++
+[options="nowrap",subs="attributes"]
+----
+mosquitto_pub -d -h {mqtt-adapter} -p {mqtt-port} -u 'sensor1@myapp.iot' -P hono-secret -t {api} -m '{"temp": 5}' -i 4711 --cafile install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-fullchain.pem
+----

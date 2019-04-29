@@ -30,9 +30,19 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 ./install/components/iot/examples/k8s-tls/create
 {cmdcli} create secret tls iot-mqtt-adapter-tls --key=install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-key.pem --cert=install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-fullchain.pem
-{cmdcli} create secret generic iot-service-ca --from-file=service-ca.crt=install/components/iot/examples/k8s-tls/build/trusted-certs.pem
 ----
 endif::[]
+
++
+[NOTE]
+====
+If your cluster is not running on the `localhost`, you need to specify the cluster hostname when creating certificates. For example:
+[options="nowrap",subs="attributes"]
+----
+CLUSTER=x.x.x.x.nip.io install/components/iot/examples/k8s-tls/create
+----
+This will allow external clients (like MQTT) to properly connect to the appropriate services.
+====
 
 . Install an example IoT infrastructure configuration:
 +
