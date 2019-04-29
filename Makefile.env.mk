@@ -1,6 +1,6 @@
 # Docker env
-DOCKER_REGISTRY ?= docker.io
-DOCKER_ORG      ?= enmasseproject
+DOCKER_REGISTRY ?= quay.io
+DOCKER_ORG      ?= enmasse
 DOCKER          ?= docker
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
