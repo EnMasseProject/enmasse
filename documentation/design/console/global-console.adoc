@@ -3,7 +3,7 @@
 
 == Overview
 
-The Console is EnMasse comprises two separate web-applications that are hyperlinked together.
+The Console in EnMasse comprises two separate web-applications that are hyperlinked together.
 
 * Global Console - that allows the viewing and management of address spaces.
 * Address Space Console - that allows the viewing and management of:
@@ -13,7 +13,7 @@ The Console is EnMasse comprises two separate web-applications that are hyperlin
 
 In the long term, the desire is that current responsibilities of the Address Space Console will be migrated into the Global Console and the separate Address Space Consoles will be retired completed.
 
-In addition it is desired that the Global Console is extensible to manage other Custom Resources too. The use-case here is to manage the Custom Resources that correspond to other messaging infrastructure for instance Apache Strimzi. Th architecture will allow the view and the control of the Custom Resource to be plugged in. This will allow the UI to present a multi-stage create workflow targeted to the Resource in question.
+In addition it is desired that the Global Console is extensible to manage other Custom Resources too. The use-case here is to manage the Custom Resources that correspond to other messaging infrastructure for instance Apache Strimzi. The architecture will allow the view and the control of the Custom Resource to be plugged in. This will allow the UI to present a multi-stage create workflow targeted to the Resource in question.
 
 In the long term, the Global Console will also present key statistics about each managed resource. This will allow the user to understand a glance the state of the whole system. The statistics being presented will vary depending on the resource in question. Statistic won't be included in the first phase.
 
@@ -99,7 +99,7 @@ The Operator uses the information in the Console Service CR to create and keep s
 
 On OpenShift, when an address space is added or removed, the operator updates the OAuthClient redircect uris with the route of the new Address Space Console.
 
-== Gloabl Console Diagram
+== Global Console Diagram
 
 image:images/global-console-high-level-flow.png[]
 
