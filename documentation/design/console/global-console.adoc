@@ -3,7 +3,7 @@
 
 == Overview
 
-The Console is EnMasse actally comprises two separate web-applications that are hyperlinked together.
+The Console is EnMasse comprises two separate web-applications that are hyperlinked together.
 
 * Global Console - that allows the viewing and management of address spaces.
 * Address Space Console - that allows the viewing and management of:
