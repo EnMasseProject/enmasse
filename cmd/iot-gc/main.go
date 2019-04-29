@@ -52,7 +52,7 @@ func main() {
 		klog.Fatalf("Error building EnMasse client: %v", err.Error())
 	}
 
-	gc := gc.NewGarbageCollector()
-	gc.AddCollector(project.NewProjectCollector(enmasseClient, namespace))
-	gc.Run(stopCh)
+	collectors := gc.NewGarbageCollector()
+	collectors.AddCollector(project.NewProjectCollector(enmasseClient, namespace))
+	collectors.Run(stopCh)
 }
