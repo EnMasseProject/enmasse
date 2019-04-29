@@ -37,7 +37,7 @@ fi
 if use_external_registry
 then
     echo "Logging in to Docker Hub"
-    docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+    docker login -u ${DOCKER_USER} -p ${DOCKER_PASS} ${DOCKER_REGISTRY}
     echo "Pushing images to Docker Hub"
     make docker_push
     make TAG=${VERSION} docker_push
