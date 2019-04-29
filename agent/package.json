@@ -16,14 +16,12 @@
         "ws": "*"
     },
     "devDependencies": {
-        "eslint": "",
-        "istanbul": "",
+        "eslint": "5.16.0",
         "mocha": "^6.1.2",
-        "mocha-junit-reporter": ""
+        "mocha-junit-reporter": "^1.22.0"
     },
     "scripts": {
         "lint": "eslint lib/*.js",
-        "test": "mocha ${MOCHA_ARGS} --exit",
-        "coverage": "istanbul cover _mocha"
+        "test": "mocha ${MOCHA_ARGS} --exit"
     }
 }
