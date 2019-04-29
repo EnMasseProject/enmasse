@@ -3,7 +3,7 @@
 # License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
 #
 
-FROM enmasseproject/qdrouterd-base:1.5-rc2
+FROM quay.io/enmasse/qdrouterd-base:1.7.0
 
 ARG version
 ARG maven_version

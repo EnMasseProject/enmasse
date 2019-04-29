@@ -1,4 +1,4 @@
-FROM enmasseproject/nodejs-base:10-1
+FROM quay.io/enmasse/nodejs-base:10-1
 
 RUN mkdir -p /opt/app-root/src/
 WORKDIR /opt/app-root/src/

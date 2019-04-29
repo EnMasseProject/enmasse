@@ -1,4 +1,4 @@
-FROM enmasseproject/qdrouterd-base:1.7.0-rc1
+FROM quay.io/enmasse/qdrouterd-base:1.7.0
 ARG version
 ARG maven_version
 ARG commit
