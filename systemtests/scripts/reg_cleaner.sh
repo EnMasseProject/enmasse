@@ -8,7 +8,7 @@ DOCKER_PASS=${2}
 REGISTRY_URL=${3}
 
 oc login --insecure-skip-tls-verify --token ${DOCKER_PASS} ${REGISTRY_URL}
-oc project "enmasseproject"
+oc project "enmasse"
 
 DATE_FORMAT='+%Y-%m-%dT%H:%M:%SZ'
 TARGET_DATE="$(date -d "-${HOURS} hours")" #now - hours
