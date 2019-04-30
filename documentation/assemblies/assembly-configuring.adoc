@@ -4,6 +4,20 @@
 [id='configuring-{context}']
 = Configuring {ProductName}
 
+The service operator configures {ProductName} by defining resources constituting the "service configuration". This configuration contains instances of the following resource types:
+
+* `AuthenticationService`  - Describes an authentication service instance used to authenticate messaging clients.
+* `AddressSpacePlan` - Describes the messaging resources available for address spaces using this plan, such as the available address plans, the amount of router and broker resources that can be used.
+* `AddressPlan` - Describes the messaging resources consumed by a particular address using this plan, such as what fraction of routers and brokers an address will use and other properties that should be set for multiple addresses.
+* `StandardInfraConfig` - Describes the router and broker configuration for the `standard` address space type such as memory limits, storage capacity, affinity and more.
+* `BrokeredInfraConfig` - Describes the broker configuration for the `brokered` address space type such as memory limits, storage capacity, affainity and more.
+
+When created, these resources defines the configuration that are available to the messaging tenants.
+
+The following diagram illustrates the relationship between the different service configuration resources (green) and how they are referenced by the messaging tenant resources (blue).
+
+image::enmasse-entities.svg[{ProductName} entities]
+
 include::../modules/proc-minimal-service-configuration.adoc[leveloffset=+1]
 
 include::../modules/con-address-space-plans.adoc[leveloffset=+1]

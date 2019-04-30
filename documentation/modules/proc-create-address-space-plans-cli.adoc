@@ -28,7 +28,26 @@ endif::[]
 +
 [source,yaml,options="nowrap"]
 ----
-include::../common/restrictive-plan.yaml[]
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: restrictive-plan
+  labels:
+    app: enmasse
+spec:
+  displayName: Restrictive Plan
+  displayOrder: 0
+  infraConfigRef: default
+  shortDescription: A plan with restrictive quotas
+  longDescription: A plan with restrictive quotas for the standard address space
+  addressSpaceType: standard
+  addressPlans:
+  - small-queue
+  - small-anycast
+  resourceLimits:
+    router: 2.0
+    broker: 2.0
+    aggregate: 2.0
 ----
 
 . Create the address space plan:

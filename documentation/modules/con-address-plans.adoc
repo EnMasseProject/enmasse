@@ -15,14 +15,28 @@ In the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-pla
 
 [source,yaml,options="nowrap"]
 ----
-include::../common/small-queue-plan.yaml[]
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: small-queue
+  labels:
+    app: enmasse
+spec:
+  displayName: Small queue plan
+  displayOrder: 0
+  shortDescription: A plan for small queues
+  longDescription: A plan for small queues that consume little resources
+  addressType: queue <1>
+  resources: <2>
+    router: 0.2
+    broker: 0.3
+  partitions: 1 <3>
 ----
+<1> The address type this plan applies to.
+<2> The resources consumed by addresses using this plan. The `router` field is optional for address plans referenced by a `brokered` address space plan.
+<3> The number of partitions that should be created for queues using this plan. Only available in the `standard` address space.
 
-The following fields are required:
-
-* `metadata.name`
-* `requiredResources`
-* `addressType`
+The other fields are used by the {ConsoleName} UI.
 
 A single router can support five instances of addresses and broker can support three instances of addresses with this plan. If the number of addresses with this plan increases to four, another broker is created. If it increases further to six, another router is created as well.
 
@@ -37,8 +51,16 @@ The `small-anycast` plan does not consume any broker resources, and can provisio
 
 [source,yaml,options="nowrap"]
 ----
-include::../common/small-anycast-plan.yaml[]
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: small-anycast
+  labels:
+    app: enmasse
+spec:
+  addressType: anycast
+  resources:
+    router: 0.2
 ----
 
 With this plan, up to 10 addresses can be created.
-
