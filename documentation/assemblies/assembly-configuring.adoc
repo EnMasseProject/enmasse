@@ -12,7 +12,7 @@ The service operator configures {ProductName} by defining resources constituting
 * `StandardInfraConfig` - Describes the router and broker configuration for the `standard` address space type such as memory limits, storage capacity, affinity, and more.
 * `BrokeredInfraConfig` - Describes the broker configuration for the `brokered` address space type such as memory limits, storage capacity, affinity, and more.
 
-When created, these resources defines the configuration that are available to the messaging tenants.
+When created, these resources define the configuration that is available to the messaging tenants.
 
 The following diagram illustrates the relationship between the different service configuration resources (green) and how they are referenced by the messaging tenant resources (blue).
 
