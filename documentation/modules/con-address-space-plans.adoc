@@ -37,7 +37,7 @@ spec:
 <1> A reference to the `StandardInfraConfig` (for the `standard` address space type) or the `BrokeredInfraConfig` (for the `brokered` address space type) describing the infrastructure deployed for address spaces using this plan.
 <2> The address space type this plan applies to, either `standard` or `brokered`.
 <3> A list of address plans available to address spaces using this plan.
-<4> The max amount of `router` and `broker` for address spaces using this plan. For the `brokered` address space type, only the `broker` field is required.
+<4> The maximum number of routers (`router`) and brokers (`broker`) for address spaces using this plan. For the `brokered` address space type, only the `broker` field is required.
 
 The other fields are used by the {ConsoleName} UI. Note the field `spec.infraConfigRef`, which
 points to an infrastructure configuration that must exist when an address space using this plan is created.
