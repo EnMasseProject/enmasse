@@ -4,9 +4,13 @@
  */
 package io.enmasse.systemtest.bases;
 
+import io.enmasse.iot.model.v1.DoneableIoTConfig;
+import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
@@ -14,6 +18,9 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -63,7 +70,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         }
 
         if (sharedProject == null) {
-            sharedProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", this.addressSpace);
+            sharedProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", this.addressSpace, this.iotProjectNamespace);
             createIoTProject(sharedProject);
         }
 
@@ -89,15 +96,17 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         if (context.getExecutionException().isPresent()) { //test failed
             if (!environment.skipCleanup()) {
                 log.info("Shared IoTProject will be removed");
-                if (iotProjectApiClient.existsIoTProject(sharedProject.getMetadata().getName())) {
-                    IoTUtils.deleteIoTProjectAndWait(kubernetes, iotProjectApiClient, sharedProject, addressApiClient);
+                MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> iotProjectApiClient = kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
+                if (iotProjectApiClient.withName(sharedProject.getMetadata().getName()).get() != null) {
+                    IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedProject, addressApiClient);
                 } else {
                     log.info("IoTProject '" + sharedProject.getMetadata().getName() + "' doesn't exists!");
                 }
                 sharedProject = null;
                 log.info("Shared IoTConfig will be removed");
-                if (iotConfigApiClient.existsIoTConfig(sharedConfig.getMetadata().getName())) {
-                    iotConfigApiClient.deleteIoTConfig(sharedConfig.getMetadata().getName());
+                MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> iotConfigApiClient = kubernetes.getIoTConfigClient();
+                if (iotConfigApiClient.withName(sharedConfig.getMetadata().getName()).get() != null) {
+                    iotConfigApiClient.delete(sharedConfig);
                 } else {
                     log.info("IoTConfig '" + sharedConfig.getMetadata().getName() + "' doesn't exists!");
                 }

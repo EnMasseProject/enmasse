@@ -12,7 +12,6 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -130,7 +129,7 @@ class SimpleK8sDeployTest {
 
     @Test
     void testDeploy() throws Exception {
-        IoTUtils.waitForIoTConfigReady(new IoTConfigApiClient(client), client, config);
+        IoTUtils.waitForIoTConfigReady(client, config);
     }
 
 }

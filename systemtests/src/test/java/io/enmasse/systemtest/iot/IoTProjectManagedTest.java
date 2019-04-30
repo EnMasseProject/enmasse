@@ -6,8 +6,10 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -17,6 +19,9 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorization;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -45,11 +50,12 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
         String addressSpaceName = "managed-address-space";
 
-        IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName);
+        IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName, this.iotProjectNamespace);
 
         createIoTProject(project);// waiting until ready
 
-        IoTProject created = iotProjectApiClient.getIoTProject(project.getMetadata().getName());
+        MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        IoTProject created = iotProjectApiClient.withName(project.getMetadata().getName()).get();
 
         assertNotNull(created);
         assertEquals(iotProjectNamespace, created.getMetadata().getNamespace());
