@@ -573,7 +573,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 		if consoleservice.ObjectMeta.GetAnnotations() != nil {
 			install.ApplyEnv(container, "ITEM_REFRESH_RATE", func(envvar *corev1.EnvVar) {
-				envvar.Value = consoleservice.ObjectMeta.GetAnnotations()["refreshRate"]
+				envvar.Value = consoleservice.ObjectMeta.GetAnnotations()["enmasse.io/console-refresh-rate"]
 			})
 		}
 
