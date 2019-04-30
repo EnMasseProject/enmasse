@@ -51,8 +51,13 @@ spec:
     - alert: RestartingPods
       annotations:
         description: Pod {{ $labels.pod }} has restarted over 5 times in the last 10 minutes
-        severity: warning
+        severity: critical
       expr: rate(kube_pod_container_status_restarts_total[10m]) * 600 > 5
+    - alert: RestartingPods
+      annotations:
+        description: Pod {{ $labels.pod }} has restarted over 5 times in the last 24 hours
+        severity: warning
+      expr: rate(kube_pod_container_status_restarts_total[1d]) * (86400) > 5
     - alert: PendingPods
       annotations:
         description: Pod {{ $labels.pod }} has been in a pending phase for over 5 minutes.
