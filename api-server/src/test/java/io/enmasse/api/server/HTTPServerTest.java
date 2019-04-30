@@ -83,7 +83,7 @@ public class HTTPServerTest {
         ApiServerOptions options = new ApiServerOptions();
         options.setVersion("1.0");
         options.setCertDir("/doesnotexist");
-        vertx.deployVerticle(new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, options, null, null, Clock.systemUTC(), 0), context.succeeding(arg -> context.completeNow()));
+        vertx.deployVerticle(new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, options, null, null, Clock.systemUTC(), 8080), context.succeeding(arg -> context.completeNow()));
     }
 
     @AfterEach
