@@ -5,7 +5,7 @@
 [id='con-address-space-plans-{context}']
 = Address space plans
 
-Address space plans are used to configure quotas and control the resources consumed by address spaces. Address space plans are configured by the {ProductName} service operator and are selected when creating an address space.
+Address space plans are used to configure quotas and control the resources consumed by address spaces. Address space plans are configured by the {ProductName} service operator and are selected by the messaging tenant when creating an address space. 
 
 {ProductName} includes a default set of plans that are sufficient for most use cases.
 
@@ -13,16 +13,31 @@ Plans are configured as custom resources. The following example shows a plan for
 
 [source,yaml,options="nowrap"]
 ----
-include::../common/restrictive-plan.yaml[]
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: restrictive-plan
+  labels:
+    app: enmasse
+spec:
+  displayName: Restrictive Plan
+  displayOrder: 0
+  infraConfigRef: default <1>
+  shortDescription: A plan with restrictive quotas
+  longDescription: A plan with restrictive quotas for the standard address space
+  addressSpaceType: standard <2>
+  addressPlans: <3>
+  - small-queue
+  - small-anycast
+  resourceLimits: <4>
+    router: 2.0
+    broker: 2.0
+    aggregate: 2.0
 ----
-
-The following fields are required:
-
-* `metadata.name`
-* `spec.resourceLimits`
-* `spec.addressPlans`
-* `spec.addressSpaceType`
-* `spec.infraConfigRef`
+<1> A reference to the `StandardInfraConfig` (for the `standard` address space type) or the `BrokeredInfraConfig` (for the `brokered` address space type) describing the infrastructure deployed for address spaces using this plan.
+<2> The address space type this plan applies to, either `standard` or `brokered`.
+<3> A list of address plans available to address spaces using this plan.
+<4> The maximum number of routers (`router`) and brokers (`broker`) for address spaces using this plan. For the `brokered` address space type, only the `broker` field is required.
 
 The other fields are used by the {ConsoleName} UI. Note the field `spec.infraConfigRef`, which
 points to an infrastructure configuration that must exist when an address space using this plan is created.

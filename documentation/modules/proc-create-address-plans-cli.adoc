@@ -28,7 +28,16 @@ endif::[]
 +
 [source,yaml,options="nowrap"]
 ----
-include::../common/small-anycast-plan.yaml[]
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: small-anycast
+  labels:
+    app: enmasse
+spec:
+  addressType: anycast
+  resources:
+    router: 0.2
 ----
 
 . Create the address plan:
