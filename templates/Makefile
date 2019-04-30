@@ -24,7 +24,11 @@ GRAFANA_IMAGE ?= "grafana/grafana:5.3.1"
 KUBE_STATE_METRICS_IMAGE ?= "quay.io/coreos/kube-state-metrics:v1.4.0"
 OAUTH_PROXY_IMAGE ?= "openshift/oauth-proxy:latest"
 DEFAULT_PROJECT ?= "enmasse-infra"
+ifeq ($(TAG),latest)
 IMAGE_PULL_POLICY ?= "Always"
+else
+IMAGE_PULL_POLICY ?= "IfNotPresent"
+endif
 
 PACKAGE_DOCS_DIR=$(TOPDIR)/documentation/html
 PACKAGE_ANSIBLE_DIR=$(TOPDIR)/ansible
