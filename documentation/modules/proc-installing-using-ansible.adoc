@@ -8,7 +8,7 @@
 Installing {ProductName} using Ansible requires creating an inventory file with the variables for
 configuring the system. Example inventory files can be found in the `ansible/inventory` folder.
 
-An example inventory file that enables both the API server and service broker integration:
+An example inventory file that enables a minimal installation of {ProductName}:
 
 [source,options="nowrap"]
 ----
