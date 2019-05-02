@@ -15,7 +15,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	"k8s.io/klog"
 
 	clientset "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
 	iotinformers "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/iot/v1alpha1"
@@ -60,20 +59,20 @@ func NewConfigurator(
 		ephermalCertBase: ephermalCertBase,
 	}
 
-	klog.Info("Setting up event handlers")
+	log.Info("Setting up event handlers")
 
 	// listen for events on the project resource
 	projectInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
-			klog.V(2).Infof("Add: %v", obj)
+			log.V(2).Info("Add", "object", obj)
 			controller.enqueueProject(obj)
 		},
 		UpdateFunc: func(old, new interface{}) {
-			klog.V(2).Infof("Update - old: %v, new: %v", old, new)
+			log.V(2).Info("Update", "old", old, "new", new)
 			controller.enqueueProject(new)
 		},
 		DeleteFunc: func(obj interface{}) {
-			klog.V(2).Infof("Deleted: %v", obj)
+			log.V(2).Info("Deleted", "object", obj)
 			controller.enqueueProject(obj)
 		},
 	})
@@ -98,27 +97,27 @@ func (c *Configurator) Run(threadiness int, stopCh <-chan struct{}) error {
 	defer runtime.HandleCrash()
 	defer c.workqueue.ShutDown()
 
-	klog.Info("Starting IoTProjects controller")
+	log.Info("Starting IoTProjects controller")
 
 	// prepare the caches
 
-	klog.Info("Waiting for informer caches to sync")
+	log.Info("Waiting for informer caches to sync")
 	if ok := cache.WaitForCacheSync(stopCh, c.projectsSynced); !ok {
 		return fmt.Errorf("failed to wait for caches to sync")
 	}
 
 	// start the workers
 
-	klog.Infof("Starting %v worker(s)", threadiness)
+	log.Info("Starting workers", "numberOfWorkers", threadiness)
 	for i := 0; i < threadiness; i++ {
 		go wait.Until(c.runWorker, time.Second, stopCh)
 	}
 
 	// wait for shutdown
 
-	klog.Info("Started workers")
+	log.Info("Started workers")
 	<-stopCh
-	klog.Info("Shutting down workers")
+	log.Info("Shutting down workers")
 
 	// return
 
@@ -167,7 +166,7 @@ func (c *Configurator) processNextWorkItem() bool {
 		// handled successfully, drop from work queue
 
 		c.workqueue.Forget(obj)
-		klog.Infof("Successfully synced '%v'", key)
+		log.Info("Successfully synced", "key", key)
 
 		return nil
 	}(obj)
@@ -204,7 +203,7 @@ func (c *Configurator) syncHandler(key string) error {
 
 			// we didn't find the object
 
-			klog.Info("Item got deleted. Deleting configuration.")
+			log.Info("Item got deleted. Deleting configuration.")
 
 			err = c.deleteProject(&metav1.ObjectMeta{
 				Namespace: namespace,

@@ -7,9 +7,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
-	"runtime"
+
+	"github.com/enmasseproject/enmasse/pkg/logs"
 
 	enmasse "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
 	"github.com/enmasseproject/enmasse/pkg/gc"
@@ -23,19 +23,12 @@ import (
 
 var log = logf.Log.WithName("cmd")
 
-func printVersion() {
-	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-}
-
 func main() {
 
 	flag.Parse()
 
-	development := os.Getenv("DEVELOPMENT") == "true"
-	logf.SetLogger(logf.ZapLogger(development))
-
-	printVersion()
+	logs.InitLog()
+	logs.PrintVersions(log)
 
 	namespace, _ := os.LookupEnv(k8sutil.WatchNamespaceEnvVar)
 

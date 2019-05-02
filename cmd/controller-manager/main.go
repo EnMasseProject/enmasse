@@ -7,21 +7,16 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
-	"runtime"
 
-	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/logs"
 
 	"github.com/openshift/api"
-
-	"github.com/enmasseproject/enmasse/version"
 
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 	"k8s.io/client-go/kubernetes/scheme"
 
 	"github.com/enmasseproject/enmasse/pkg/controller"
-	sdkVersion "github.com/operator-framework/operator-sdk/version"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -31,24 +26,15 @@ import (
 
 var log = logf.Log.WithName("cmd")
 
-func printVersion() {
-	log.Info(fmt.Sprintf("Go Version: %s", runtime.Version()))
-	log.Info(fmt.Sprintf("Go OS/Arch: %s/%s", runtime.GOOS, runtime.GOARCH))
-	log.Info(fmt.Sprintf("operator-sdk Version: %v", sdkVersion.Version))
-	log.Info(fmt.Sprintf("EnMasse Version: %v", version.Version))
-	log.Info(fmt.Sprintf("OpenShift?: %v", util.IsOpenshift()))
-}
-
 func main() {
 	flag.Parse()
 
-	development := os.Getenv("DEVELOPMENT") == "true"
-	logf.SetLogger(logf.ZapLogger(development))
+	logs.InitLog()
+	logs.PrintVersions(log)
+
 	namespace := os.Getenv("NAMESPACE")
 
 	log.Info("Watching on namespace", "namespace", namespace)
-
-	printVersion()
 
 	cfg, err := config.GetConfig()
 	if err != nil {
