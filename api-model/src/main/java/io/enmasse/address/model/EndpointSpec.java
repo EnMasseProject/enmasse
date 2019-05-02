@@ -4,21 +4,17 @@
  */
 package io.enmasse.address.model;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
-import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
-import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
-
-import java.util.List;
 
 /**
  * An endpoint

@@ -85,7 +85,6 @@ public class ServiceMapping {
 
     private Map<AddressSpaceType, Service> populateServices(Schema schema) {
         Map<AddressSpaceType, Service> services = new LinkedHashMap<>();
-        MessageFormat messageFormat = new MessageFormat(SERVICE_NAME_PATTERN);
 
         for(AddressSpaceType addressSpaceType : schema.getAddressSpaceTypes()) {
             Service service = new Service(getUuidForAddressSpaceType(addressSpaceType),

@@ -16,10 +16,6 @@ import java.util.*;
 public class ExportsController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(ExportsController.class.getName());
 
-    private static final String KIND_SERVICE = "Service";
-    private static final String KIND_CONFIGMAP = "ConfigMap";
-    private static final String KIND_SECRET = "Secret";
-
     private final KubernetesClient client;
 
     public ExportsController(KubernetesClient client) {

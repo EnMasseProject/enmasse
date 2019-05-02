@@ -4,13 +4,36 @@
  */
 package io.enmasse.k8s.api;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.config.LabelKeys;
-import io.enmasse.config.AnnotationKeys;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.common.model.AbstractHasMetadataFluent.MetadataNested;
-import io.enmasse.k8s.api.cache.*;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.k8s.api.cache.CacheWatcher;
+import io.enmasse.k8s.api.cache.Controller;
+import io.enmasse.k8s.api.cache.EventCache;
+import io.enmasse.k8s.api.cache.HasMetadataFieldExtractor;
+import io.enmasse.k8s.api.cache.ListOptions;
+import io.enmasse.k8s.api.cache.ListerWatcher;
+import io.enmasse.k8s.api.cache.Reflector;
+import io.enmasse.k8s.api.cache.WorkQueue;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
@@ -18,16 +41,6 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.time.Clock;
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Implements the AddressApi using config maps.

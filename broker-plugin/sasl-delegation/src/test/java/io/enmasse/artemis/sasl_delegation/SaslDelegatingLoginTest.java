@@ -53,6 +53,7 @@ public class SaslDelegatingLoginTest {
     private int port;
     private AuthServer authServer;
     private Vertx vertx;
+    @SuppressWarnings("unused")
     private String verticleId;
     private String mechName;
     private SaslGroupBasedSecuritySettingsPlugin securityPlugin = new SaslGroupBasedSecuritySettingsPlugin();

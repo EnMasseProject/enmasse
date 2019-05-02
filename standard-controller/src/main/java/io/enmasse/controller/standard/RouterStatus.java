@@ -4,11 +4,12 @@
  */
 package io.enmasse.controller.standard;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.config.AnnotationKeys;
-
-import java.util.*;
 
 class RouterStatus {
     private final String routerId;

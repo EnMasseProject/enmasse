@@ -4,16 +4,24 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
-import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+
+import io.enmasse.address.model.AddressSpaceTypeBuilder;
+import io.enmasse.address.model.AddressTypeBuilder;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.Schema;
+import io.enmasse.address.model.SchemaBuilder;
+import io.enmasse.admin.model.v1.AddressPlanBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
+import io.enmasse.admin.model.v1.ResourceAllowanceBuilder;
+import io.enmasse.admin.model.v1.ResourceRequestBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecBuilder;
+import io.enmasse.config.AnnotationKeys;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 
 public class TestSchemaApi implements SchemaApi {
     public Schema getSchema() {

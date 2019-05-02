@@ -4,7 +4,51 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.*;
+import static io.enmasse.address.model.Phase.Active;
+import static io.enmasse.address.model.Phase.Configuring;
+import static io.enmasse.address.model.Phase.Pending;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.internal.util.collections.Sets;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressPlanStatus;
+import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.BrokerStatusBuilder;
+import io.enmasse.address.model.Phase;
+import io.enmasse.address.model.StatusBuilder;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
@@ -12,25 +56,6 @@ import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.internal.util.collections.Sets;
-
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import static io.enmasse.address.model.Phase.Active;
-import static io.enmasse.address.model.Phase.Configuring;
-import static io.enmasse.address.model.Phase.Pending;
-import static java.util.Collections.singleton;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.not;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 public class AddressProvisionerTest {
     private BrokerSetGenerator generator;
@@ -325,7 +350,7 @@ public class AddressProvisionerTest {
     }
 
     private Address createQueue(String address, String plan) {
-        return createQueue(address, plan, null);
+        return createQueue(address, plan, (BrokerStatus[])null);
     }
 
     private Address createQueue(String address, String plan, BrokerStatus ... brokerStatuses) {
@@ -334,7 +359,7 @@ public class AddressProvisionerTest {
 
 
     private static Address createAddress(String address, String type, String plan) {
-        return createAddress(address, type, plan, null);
+        return createAddress(address, type, plan, (BrokerStatus[])null);
     }
 
     private BrokerStatus createPooledBrokerStatus(String clusterId) {
@@ -730,7 +755,7 @@ public class AddressProvisionerTest {
         assertThat(neededMap.keySet().size(), is(3));
         assertThat(AddressProvisioner.sumTotalNeeded(neededMap), is(2));
 
-        List<BrokerCluster> brokerClusters = new ArrayList<BrokerCluster>(Arrays.asList(createCluster("broker", 1)));
+        List<BrokerCluster> brokerClusters = new ArrayList<>(Arrays.asList(createCluster("broker", 1)));
 
         when(generator.generateCluster(eq(provisioner.getShardedClusterId(t1)), anyInt(), eq(t1), any(), any())).thenReturn(new BrokerCluster(provisioner.getShardedClusterId(t1), new KubernetesList()));
         provisioner.provisionResources(createDeployment(1), brokerClusters, neededMap, addressSet);

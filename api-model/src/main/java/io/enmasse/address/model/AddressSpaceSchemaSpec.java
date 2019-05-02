@@ -7,7 +7,6 @@ package io.enmasse.address.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -16,7 +15,6 @@ import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
-import io.sundr.shaded.org.apache.velocity.util.ArrayListWrapper;
 
 @Buildable(
         editableEnabled = false,

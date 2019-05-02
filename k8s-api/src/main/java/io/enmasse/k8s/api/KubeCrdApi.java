@@ -4,7 +4,17 @@
  */
 package io.enmasse.k8s.api;
 
-import io.enmasse.k8s.api.cache.*;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.ArrayList;
+
+import io.enmasse.k8s.api.cache.Controller;
+import io.enmasse.k8s.api.cache.EventCache;
+import io.enmasse.k8s.api.cache.HasMetadataFieldExtractor;
+import io.enmasse.k8s.api.cache.ListOptions;
+import io.enmasse.k8s.api.cache.ListerWatcher;
+import io.enmasse.k8s.api.cache.Reflector;
+import io.enmasse.k8s.api.cache.WorkQueue;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
@@ -12,11 +22,6 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.util.ArrayList;
 
 public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList, DT extends Doneable<T>> implements CrdApi<T>, ListerWatcher<T, LT> {
 

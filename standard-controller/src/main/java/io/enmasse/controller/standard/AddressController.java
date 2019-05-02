@@ -47,7 +47,7 @@ public class AddressController implements Watcher<Address> {
     private final Metrics metrics;
     private final BrokerIdGenerator brokerIdGenerator;
     private final BrokerClientFactory brokerClientFactory;
-    private static int routerCheckFailures;
+    private int routerCheckFailures;
 
     public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
         this.options = options;
