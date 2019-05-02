@@ -46,7 +46,14 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
     @AfterAll
     public void tearDownAll() {
-        SystemtestsKubernetesApps.deleteMessagingClientApp(environment.namespace(), kubernetes);
+        try {
+            SystemtestsKubernetesApps.deleteMessagingClientApp(environment.namespace(), kubernetes);
+        } finally {
+            if (cliApiClient != null) {
+                cliApiClient.close();
+                cliApiClient = null;
+            }
+        }
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) throws Exception {
