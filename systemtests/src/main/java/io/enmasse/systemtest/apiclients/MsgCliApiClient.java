@@ -6,6 +6,7 @@ package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -76,6 +77,10 @@ public class MsgCliApiClient extends ApiClient {
      * @throws TimeoutException
      */
     public JsonObject getClientInfo(String uuid) throws InterruptedException, ExecutionException, TimeoutException {
+        return getClientInfo(uuid, new TimeoutBudget(150000, TimeUnit.SECONDS));
+    }
+
+    public JsonObject getClientInfo(String uuid, TimeoutBudget timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         JsonObject request = new JsonObject();
         request.put("id", uuid);
@@ -85,7 +90,17 @@ public class MsgCliApiClient extends ApiClient {
                 .timeout(120000)
                 .sendJson(request,
                         ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error getting messaging clients info"));
-        return responsePromise.get(150000, TimeUnit.SECONDS);
+        JsonObject info = responsePromise.get(150000, TimeUnit.SECONDS);
+        Boolean isRunning = info.getBoolean("isRunning");
+        if(isRunning != null && isRunning) {
+            if(timeout.timeoutExpired()) {
+                log.info(info.toString());
+                throw new IllegalStateException("Timeout expired waiting for client isRunning=false");
+            }
+            return getClientInfo(uuid, timeout);
+        } else {
+            return info;
+        }
 
     }
 

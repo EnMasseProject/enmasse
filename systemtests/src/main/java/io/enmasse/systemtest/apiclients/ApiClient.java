@@ -121,7 +121,7 @@ public abstract class ApiClient implements AutoCloseable {
                     promise.complete(ar.result().body());
                 }
             } else {
-                log.warn(warnMessage);
+                log.warn("Request failed: {}", warnMessage, ar.cause());
                 promise.completeExceptionally(ar.cause());
             }
         } catch (io.vertx.core.json.DecodeException decEx) {
