@@ -4,7 +4,6 @@
  */
 package io.enmasse.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.k8s.util.JULInitializingTest;
 import io.enmasse.model.CustomResourceDefinitions;
@@ -24,7 +23,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ExportsControllerTest extends JULInitializingTest {
-    private static final ObjectMapper mapper = new ObjectMapper();
     private OpenShiftClient client;
 
     public OpenShiftServer openShiftServer = new OpenShiftServer(false, true);

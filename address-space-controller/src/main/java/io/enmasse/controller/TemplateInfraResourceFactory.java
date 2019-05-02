@@ -42,14 +42,12 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private final Kubernetes kubernetes;
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final Map<String, String> env;
-    private final boolean openShift;
     private final SchemaProvider schemaProvider;
 
     public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceRegistry authenticationServiceRegistry, Map<String, String> env, boolean openShift, SchemaProvider schemaProvider) {
         this.kubernetes = kubernetes;
         this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.env = env;
-        this.openShift = openShift;
         this.schemaProvider = schemaProvider;
     }
 

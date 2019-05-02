@@ -19,11 +19,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
-import javax.validation.ConstraintViolationException;
 import javax.validation.ValidationException;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;

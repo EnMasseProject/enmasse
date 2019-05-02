@@ -7,7 +7,6 @@ package io.enmasse.address.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
-import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.model.validation.ValidBase64;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;

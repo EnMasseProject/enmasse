@@ -5,30 +5,35 @@
 
 package io.enmasse.api.v1.http;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
-import io.enmasse.address.model.*;
-import io.enmasse.api.server.TestSchemaProvider;
-import io.enmasse.k8s.api.AddressApi;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.k8s.util.TimeUtil;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.SecurityContext;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.UUID;
-
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Collections;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.mergepatch.JsonMergePatch;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.api.server.TestSchemaProvider;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.k8s.util.TimeUtil;
 
 public class HttpAddressServiceTest {
 
@@ -131,7 +136,6 @@ public class HttpAddressServiceTest {
     public void patchImmutableIgnored() throws Exception {
         addressApi.createAddress(address1);
 
-        String brokerId = UUID.randomUUID().toString();
         final JsonPatch patch = mapper.readValue("[" +
                 "{\"op\":\"replace\",\"path\":\"/metadata/name\",\"value\":\"newname\"}," +
                 "{\"op\":\"replace\",\"path\":\"/metadata/namespace\",\"value\":\"newnamespace\"}," +

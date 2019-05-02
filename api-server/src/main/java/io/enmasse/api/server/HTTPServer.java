@@ -5,19 +5,45 @@
 
 package io.enmasse.api.server;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.time.Clock;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
+
+import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
+import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.enmasse.api.auth.AllowAllAuthInterceptor;
 import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.AuthInterceptor;
 import io.enmasse.api.common.DefaultExceptionMapper;
+import io.enmasse.api.v1.http.HttpAddressService;
+import io.enmasse.api.v1.http.HttpAddressSpaceService;
+import io.enmasse.api.v1.http.HttpApiRootService;
+import io.enmasse.api.v1.http.HttpClusterAddressService;
+import io.enmasse.api.v1.http.HttpClusterAddressSpaceService;
+import io.enmasse.api.v1.http.HttpClusterUserService;
+import io.enmasse.api.v1.http.HttpHealthService;
+import io.enmasse.api.v1.http.HttpMetricsService;
+import io.enmasse.api.v1.http.HttpNestedAddressService;
+import io.enmasse.api.v1.http.HttpOpenApiService;
+import io.enmasse.api.v1.http.HttpRootService;
+import io.enmasse.api.v1.http.HttpSchemaService;
+import io.enmasse.api.v1.http.HttpUserService;
+import io.enmasse.api.v1.http.SwaggerSpecEndpoint;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
-import io.enmasse.api.v1.http.*;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -27,16 +53,6 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemTrustOptions;
-import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
-import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.*;
-import java.time.Clock;
-import java.util.Deque;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
 
 /**
  * HTTP server for deploying address config

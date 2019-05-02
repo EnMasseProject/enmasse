@@ -4,25 +4,24 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.k8s.api.*;
+import java.time.Clock;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.enmasse.k8s.api.CachingSchemaProvider;
+import io.enmasse.k8s.api.ConfigMapAddressApi;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.KubeEventLogger;
+import io.enmasse.k8s.api.KubeSchemaApi;
+import io.enmasse.k8s.api.LogEventLogger;
+import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.fabric8.openshift.client.DefaultOpenShiftClient;
-import io.fabric8.openshift.client.NamespacedOpenShiftClient;
 import io.vertx.core.Vertx;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.time.Clock;
-import java.util.Map;
 
 
 /**

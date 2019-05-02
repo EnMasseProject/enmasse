@@ -27,7 +27,6 @@ import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 public class ControllerChain implements Watcher<AddressSpace> {
     private static final Logger log = LoggerFactory.getLogger(ControllerChain.class.getName());
 
-    private final Kubernetes kubernetes;
     private final AddressSpaceApi addressSpaceApi;
 
     private Watch watch;
@@ -48,7 +47,6 @@ public class ControllerChain implements Watcher<AddressSpace> {
                            Metrics metrics,
                            String version, Duration recheckInterval,
                            Duration resyncInterval) {
-        this.kubernetes = kubernetes;
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.eventLogger = eventLogger;
