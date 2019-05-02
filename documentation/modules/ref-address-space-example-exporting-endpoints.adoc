@@ -1,0 +1,68 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='ref-address-space-example-exporting-endpoints-{context}']
+= Exporting address space information into the application namespace
+
+This address space example shows how you can export the endpoint information of an `AddressSpace`
+resource to a `ConfigMap`, `Secret`, or `Service` in the same namespace as the messaging
+application.
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  type: standard
+  plan: standard-unlimited
+  authenticationService:
+    name: standard-authservice
+  endpoints:
+  - name: messaging
+    service: messaging
+    exports:
+    - kind: ConfigMap <1>
+      name: my-config <2>
+----
+<1> (Required) The export type. The resulting `ConfigMap` contains the values in the format
+shown in link:link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format]. For `Secret`, the same keys are used, but the values are base64-encoded. For
+`Service`, a {KubePlatform} service of the type `ExternalName` is created. This provides applications running on {KubePlatform} with a way to
+inject endpoint information or provide a proxy service in the same namespace as the application. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format].
+<2> (Required) The name of the resource to create and update.
+
+When exporting endpoint information, the {ProductName} `address-space-controller` service account
+running in the {ProductName} namespace must be granted privileges to create, update, and delete the
+configmap specified in the exports list. You can do this by creating an RBAC role and role-binding
+such as this one:
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: rbac
+rules:
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    verbs: [ "create" ]
+  - apiGroups: [ "" ]
+    resources: [ "configmaps" ]
+    resourceNames: [ "my-config" ]
+    verbs: [ "get", "update", "patch" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rbac-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: rbac
+subjects:
+- kind: ServiceAccount
+  name: address-space-controller
+  namespace: _{ProductNamespace}_
+----

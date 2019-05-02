@@ -1,0 +1,17 @@
+// Module included in the following assemblies:
+//
+// assembly-address-space-examples.adoc
+
+[id='address-space-examples-{context}']
+= Address space examples
+
+include::../modules/ref-address-space-example.adoc[leveloffset=+1]
+
+include::../modules/ref-address-space-example-auth-service.adoc[leveloffset=+1]
+
+include::../modules/ref-address-space-example-exposing-endpoints.adoc[leveloffset=+1]
+
+include::../modules/ref-address-space-example-cert-providers.adoc[leveloffset=+1]
+
+include::../modules/ref-address-space-example-exports.adoc[leveloffset=+1]
+
