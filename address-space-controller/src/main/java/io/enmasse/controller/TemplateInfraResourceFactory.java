@@ -258,14 +258,14 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getAdmin().getPodTemplate();
-            Deployment adminDeployment = lookupResource("Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
+            Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
             PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
 
         if (standardInfraConfig.getSpec().getRouter() != null && standardInfraConfig.getSpec().getRouter().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getRouter().getPodTemplate();
-            StatefulSet routerSet = lookupResource("StatefulSet", KubeUtil.getRouterSetName(addressSpace), items);
+            StatefulSet routerSet = lookupResource(StatefulSet.class, "StatefulSet", KubeUtil.getRouterSetName(addressSpace), items);
             PodTemplateSpec actualPodTemplate = routerSet.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
@@ -374,14 +374,14 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getAdmin().getPodTemplate();
-            Deployment adminDeployment = lookupResource("Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
+            Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
             PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }
 
         if (brokeredInfraConfig.getSpec().getBroker() != null && brokeredInfraConfig.getSpec().getBroker().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getBroker().getPodTemplate();
-            Deployment brokerDeployment = lookupResource("Deployment", KubeUtil.getBrokeredBrokerSetName(addressSpace), items);
+            Deployment brokerDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getBrokeredBrokerSetName(addressSpace), items);
             PodTemplateSpec actualPodTemplate = brokerDeployment.getSpec().getTemplate();
             applyPodTemplate(actualPodTemplate, podTemplate);
         }

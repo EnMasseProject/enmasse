@@ -111,10 +111,10 @@ public final class KubeUtil {
         return "broker." + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
     }
 
-    public static <T extends HasMetadata> T lookupResource(String kind, String name, List<HasMetadata> items) {
+    public static <T extends HasMetadata> T lookupResource(Class<T> clazz, String kind, String name, List<HasMetadata> items) {
         for (HasMetadata item : items) {
             if (item != null && item.getKind().equals(kind) && item.getMetadata().getName().equals(name)) {
-                return (T) item;
+                return clazz.cast(item);
             }
         }
         throw new IllegalStateException("Unable to find resource of kind '" + kind + "' and name '" + name + "'");
