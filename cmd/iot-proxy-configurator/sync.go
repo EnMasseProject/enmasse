@@ -22,7 +22,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"go.uber.org/multierr"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog"
 )
 
 func (c *Configurator) syncResource(currentPointer interface{}, resource interface{}) (bool, error) {
@@ -42,13 +41,13 @@ func (c *Configurator) syncResourceWithCreator(currentPointer interface{}, resou
 		return false, err
 	}
 
-	klog.V(4).Infof("Found: %v", found)
-	klog.V(3).Infof("Current: %v", currentPointer)
-	klog.V(3).Infof("Request: %v", resource)
+	log.V(4).Info("Found", "object", found)
+	log.V(3).Info("Current", "object", currentPointer)
+	log.V(3).Info("Request", "object", resource)
 
 	if found {
 		equals := reflect.DeepEqual(currentPointer, resource)
-		klog.V(2).Infof("Resource equals: %v", equals)
+		log.V(2).Info("Resource equals", "equals", equals)
 		if equals {
 			return false, nil
 		}
@@ -115,12 +114,12 @@ func (c *Configurator) deleteCertificatesForProject(object metav1.Object) error 
 		return err
 	}
 
-	klog.Infof("Cleaning up certificates for: %v", object)
+	log.Info("Cleaning up certificates for", "object", object)
 
 	for _, f := range files {
-		klog.V(2).Infof("Checking file: %v", f.Name())
+		log.V(2).Info("Checking file", "file", f.Name())
 		if strings.HasPrefix(f.Name(), prefix) {
-			klog.Infof("Deleting file: %v", f.Name())
+			log.Info("Deleting file", "file", f.Name())
 			removeErr := os.Remove(filepath.Join(c.ephermalCertBase, f.Name()))
 			if !os.IsNotExist(removeErr) {
 				err = multierr.Append(err, removeErr)
@@ -185,7 +184,7 @@ func (c *Configurator) syncSslProfile(object metav1.Object, certificate []byte) 
 	}
 
 	certFile := c.certificatePath(object, certificate)
-	klog.V(2).Infof("Certificate path: %v", certFile)
+	log.V(2).Info("Certificate path", "path", certFile)
 
 	if !hasCert && c.ephermalCertBase != "" {
 
@@ -224,7 +223,7 @@ func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 	connectorName := resourceName(project, "connector")
 	sslProfileName := ""
 
-	klog.V(2).Infof("Create project: %v", project)
+	log.V(2).Info("Create project", "project", project)
 
 	m := util.MultiTool{}
 
@@ -288,7 +287,7 @@ func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 
 func (c *Configurator) deleteProject(object metav1.Object) error {
 
-	klog.Infof("Delete project: %v", object)
+	log.Info("Delete project", "project", object)
 
 	m := util.MultiTool{}
 
