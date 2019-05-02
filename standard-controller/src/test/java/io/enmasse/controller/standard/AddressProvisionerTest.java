@@ -350,7 +350,7 @@ public class AddressProvisionerTest {
     }
 
     private Address createQueue(String address, String plan) {
-        return createQueue(address, plan, null);
+        return createQueue(address, plan, (BrokerStatus[])null);
     }
 
     private Address createQueue(String address, String plan, BrokerStatus ... brokerStatuses) {
@@ -359,7 +359,7 @@ public class AddressProvisionerTest {
 
 
     private static Address createAddress(String address, String type, String plan) {
-        return createAddress(address, type, plan, null);
+        return createAddress(address, type, plan, (BrokerStatus[])null);
     }
 
     private BrokerStatus createPooledBrokerStatus(String clusterId) {
