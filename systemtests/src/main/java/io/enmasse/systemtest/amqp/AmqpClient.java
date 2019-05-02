@@ -145,6 +145,7 @@ public class AmqpClient implements AutoCloseable {
 
         CompletableFuture<List<ProtonDelivery>> resultPromise = new CompletableFuture<>();
         Vertx vertx = VertxFactory.create();
+        clients.add(vertx);
         String containerId = "systemtest-sender-" + address;
         CompletableFuture<Void> connectPromise = new CompletableFuture<>();
         vertx.deployVerticle(new SingleSender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), connectPromise, resultPromise, containerId, message));
