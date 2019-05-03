@@ -20,7 +20,7 @@ metadata:
           "apiVersion": "admin.enmasse.io/v1beta1",
           "kind": "StandardInfraConfig",
           "metadata": {
-            "name": "my-standard-infra"
+            "name": "default"
           },
           "spec": {
             "broker": {
@@ -42,7 +42,7 @@ metadata:
           "apiVersion": "admin.enmasse.io/v1beta1",
           "kind": "BrokeredInfraConfig",
           "metadata": {
-            "name": "my-brokered-infra"
+            "name": "default"
           },
           "spec": {
             "broker": {
@@ -75,7 +75,7 @@ metadata:
           },
           "spec": {
             "addressSpaceType": "standard",
-            "infraConfigRef": "my-standard-infra",
+            "infraConfigRef": "default",
             "shortDescription": "Small Address Space Plan",
             "resourceLimits": {
               "router": 1.0,
@@ -83,7 +83,7 @@ metadata:
               "aggregate": 2.0
             },
             "addressPlans": [
-              "small-standard-queue"
+              "standard-small-queue"
             ]
           }
         },
@@ -116,7 +116,7 @@ metadata:
           },
           "spec": {
             "address": "myqueue",
-            "plan": "small-standard-queue",
+            "plan": "standard-small-queue",
             "type": "queue"
           }
         },
