@@ -20,7 +20,7 @@ metadata:
           "apiVersion": "admin.enmasse.io/v1beta1",
           "kind": "StandardInfraConfig",
           "metadata": {
-            "name": "my-standard-infra"
+            "name": "default"
           },
           "spec": {
             "broker": {
@@ -42,7 +42,7 @@ metadata:
           "apiVersion": "admin.enmasse.io/v1beta1",
           "kind": "BrokeredInfraConfig",
           "metadata": {
-            "name": "my-brokered-infra"
+            "name": "default"
           },
           "spec": {
             "broker": {
@@ -75,7 +75,7 @@ metadata:
           },
           "spec": {
             "addressSpaceType": "standard",
-            "infraConfigRef": "my-standard-infra",
+            "infraConfigRef": "default",
             "shortDescription": "Small Address Space Plan",
             "resourceLimits": {
               "router": 1.0,
@@ -83,7 +83,7 @@ metadata:
               "aggregate": 2.0
             },
             "addressPlans": [
-              "small-standard-queue"
+              "standard-small-queue"
             ]
           }
         },
@@ -96,6 +96,22 @@ metadata:
           "spec": {
             "type": "none"
           }
+        },
+        {
+          "apiVersion": "admin.enmasse.io/v1beta1",
+          "kind": "ConsoleService",
+          "metadata": {
+            "name": "console"
+          },
+          "spec": {}
+        },
+        {
+          "apiVersion": "iot.enmasse.io/v1alpha1",
+          "kind": "IoTConfig",
+          "metadata": {
+            "name": "default"
+          },
+          "spec": {}
         },
         {
           "apiVersion": "enmasse.io/v1beta1",
@@ -116,7 +132,7 @@ metadata:
           },
           "spec": {
             "address": "myqueue",
-            "plan": "small-standard-queue",
+            "plan": "standard-small-queue",
             "type": "queue"
           }
         },
@@ -144,22 +160,6 @@ metadata:
             ],
             "username": "user"
           }
-        },
-        {
-          "apiVersion": "admin.enmasse.io/v1beta1",
-          "kind": "ConsoleService",
-          "metadata": {
-            "name": "console"
-          },
-          "spec": {}
-        },
-        {
-          "apiVersion": "iot.enmasse.io/v1alpha1",
-          "kind": "IoTConfig",
-          "metadata": {
-            "name": "default"
-          },
-          "spec": {}
         },
         {
           "apiVersion": "enmasse.io/v1beta1",
@@ -781,18 +781,6 @@ spec:
     owned:
       - group: admin.enmasse.io
         version: v1beta1
-        kind: AuthenticationService
-        name: authenticationservices.admin.enmasse.io
-        displayName: Authentication Service
-        description: Authentication service configuration available to address spaces.
-        specDescriptors:
-          - description: The type of authentication service
-            displayName: Type
-            path: type
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-      - group: admin.enmasse.io
-        version: v1beta1
         kind: StandardInfraConfig
         name: standardinfraconfigs.admin.enmasse.io
         displayName: Standard Infra Config
@@ -872,6 +860,33 @@ spec:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
         version: v1beta2
+        kind: AddressPlan
+        name: addressplans.admin.enmasse.io
+        displayName: Address Plan
+        description: Plan describing the resource usage of a given address type
+        specDescriptors:
+          - description: The name to be displayed in the console UI.
+            displayName: Display Name
+            path: displayName
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The description to be shown in the console UI.
+            displayName: Short Description
+            path: shortDescription
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The broker resource usage.
+            displayName: Broker Usage
+            path: resources.broker
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+          - description: The router resource usage.
+            displayName: Router Usage
+            path: resources.router
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:label'
+      - group: admin.enmasse.io
+        version: v1beta2
         kind: AddressSpacePlan
         name: addressspaceplans.admin.enmasse.io
         displayName: Address Space Plan
@@ -908,38 +923,17 @@ spec:
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
       - group: admin.enmasse.io
-        version: v1beta2
-        kind: AddressPlan
-        name: addressplans.admin.enmasse.io
-        displayName: Address Plan
-        description: Plan describing the resource usage of a given address type
+        version: v1beta1
+        kind: AuthenticationService
+        name: authenticationservices.admin.enmasse.io
+        displayName: Authentication Service
+        description: Authentication service configuration available to address spaces.
         specDescriptors:
-          - description: The name to be displayed in the console UI.
-            displayName: Display Name
-            path: displayName
+          - description: The type of authentication service
+            displayName: Type
+            path: type
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
-          - description: The description to be shown in the console UI.
-            displayName: Short Description
-            path: shortDescription
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-          - description: The broker resource usage.
-            displayName: Broker Usage
-            path: resources.broker
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-          - description: The router resource usage.
-            displayName: Router Usage
-            path: resources.router
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
-      - group: iot.enmasse.io
-        version: v1alpha1
-        kind: IoTConfig
-        name: iotconfigs.iot.enmasse.io
-        displayName: IoT Config
-        description: IoT Infrastructure Configuration Singleton
       - group: admin.enmasse.io
         version: v1beta1
         kind: ConsoleService
@@ -972,3 +966,9 @@ spec:
             path: host
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
+      - group: iot.enmasse.io
+        version: v1alpha1
+        kind: IoTConfig
+        name: iotconfigs.iot.enmasse.io
+        displayName: IoT Config
+        description: IoT Infrastructure Configuration Singleton

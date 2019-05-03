@@ -20,7 +20,7 @@ apiVersion: admin.enmasse.io/v1beta1
 kind: StandardInfraConfig
 metadata:
   name: default
-spec:
+spec: {}
 ---
 apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
