@@ -121,7 +121,6 @@
         <module>api-server</module>
         <module>keycloak-plugin</module>
         <module>systemtests</module>
-        <module>artemis</module>
         <module>broker-plugin</module>
         <module>service-broker</module>
         <module>bundle</module>
