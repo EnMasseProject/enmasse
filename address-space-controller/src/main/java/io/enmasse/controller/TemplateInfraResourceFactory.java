@@ -220,7 +220,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
             if (standardInfraConfig.getSpec().getRouter().getPolicy() != null) {
                 try {
-                    String vhostPolicyJson = createVhostPolicyJson("$default", standardInfraConfig.getSpec().getRouter().getPolicy());
+                    String vhostPolicyName = "public";
+                    String vhostPolicyJson = createVhostPolicyJson(vhostPolicyName, standardInfraConfig.getSpec().getRouter().getPolicy());
+                    parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_NAME, vhostPolicyName);
                     parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_JSON, vhostPolicyJson);
                     parameters.put(TemplateParameter.ROUTER_ENABLE_VHOST_POLICY, "true");
                 } catch (Exception e) {

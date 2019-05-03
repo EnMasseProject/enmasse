@@ -114,6 +114,7 @@ objects:
         idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
         initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
+        policyVhost: ${ROUTER_VHOST_POLICY_NAME}
       }
 
       listener {
@@ -136,6 +137,7 @@ objects:
         authenticatePeer: yes
         idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
+        policyVhost: ${ROUTER_VHOST_POLICY_NAME}
       }
 
       sslProfile {
@@ -154,6 +156,7 @@ objects:
         idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
         linkCapacity: ${ROUTER_LINK_CAPACITY}
         initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
+        policyVhost: ${ROUTER_VHOST_POLICY_NAME}
       }
 
       sslProfile {
@@ -769,6 +772,9 @@ parameters:
 - description: Router worker threads
   name: ROUTER_WORKER_THREADS
   value: '4'
+- description: Router listener vhost policy name
+  name: ROUTER_VHOST_POLICY_NAME
+  value: '$default'
 - description: Enable router vhost policies
   name: ROUTER_ENABLE_VHOST_POLICY
   value: 'false'
