@@ -10,8 +10,6 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
-import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.slf4j.Logger;
@@ -39,11 +37,12 @@ public class IoTUtils {
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
 
-    public static void waitForIoTConfigReady(IoTConfigApiClient apiClient, Kubernetes kubernetes, IoTConfig config) throws Exception {
+    public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        var iotConfigClient = kubernetes.getIoTConfigClient();
         while (budget.timeLeft() >= 0 && !isReady) {
-            config = apiClient.getIoTConfig(config.getMetadata().getName());
+            config = iotConfigClient.withName(config.getMetadata().getName()).get();
             isReady = config.getStatus() != null && config.getStatus().isInitialized();
             if (!isReady) {
                 log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
@@ -67,11 +66,12 @@ public class IoTUtils {
         return Arrays.equals(deployments, EXPECTED_DEPLOYMENTS);
     }
 
-    public static void waitForIoTProjectReady(IoTProjectApiClient apiClient, AddressApiClient addressSpaceApiClient, IoTProject project) throws Exception {
+    public static void waitForIoTProjectReady(Kubernetes kubernetes, AddressApiClient addressSpaceApiClient, IoTProject project) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        var iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         while (budget.timeLeft() >= 0 && !isReady) {
-            project = apiClient.getIoTProject(project.getMetadata().getName());
+            project = iotProjectClient.withName(project.getMetadata().getName()).get();
             isReady = project.getStatus() != null && project.getStatus().isReady();
             if (!isReady) {
                 log.info("Waiting until IoTProject: '{}' will be in ready state", project.getMetadata().getName());
@@ -111,31 +111,32 @@ public class IoTUtils {
         return kubernetes.getCRD("iotprojects.iot.enmasse.io") != null;
     }
 
-    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProjectApiClient iotProjectApiClient, IoTProject project, AddressApiClient addressApiClient) throws Exception {
+    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project, AddressApiClient addressApiClient) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
-        iotProjectApiClient.deleteIoTProject(project.getMetadata().getName());
+        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).delete(project);
         IoTUtils.waitForIoTProjectDeleted(kubernetes, addressApiClient, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void syncIoTProject(IoTProject project, IoTProjectApiClient apiClient) throws Exception {
-        IoTProject result = apiClient.getIoTProject(project.getMetadata().getName());
+    public static void syncIoTProject(Kubernetes kubernetes, IoTProject project) throws Exception {
+        IoTProject result = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).get();
         project.setMetadata(result.getMetadata());
         project.setSpec(result.getSpec());
         project.setStatus(result.getStatus());
     }
 
-    public static void syncIoTConfig(IoTConfig config, IoTConfigApiClient apiClient) throws Exception {
-        IoTConfig result = apiClient.getIoTConfig(config.getMetadata().getName());
+    public static void syncIoTConfig(Kubernetes kubernetes, IoTConfig config) throws Exception {
+        IoTConfig result = kubernetes.getIoTConfigClient().withName(config.getMetadata().getName()).get();
         config.setMetadata(result.getMetadata());
         config.setSpec(result.getSpec());
         config.setStatus(result.getStatus());
     }
 
-    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName) {
+    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName, String namespace) {
         return new IoTProjectBuilder()
                 .withNewMetadata()
                 .withName(name)
+                .withNamespace(namespace)
                 .endMetadata()
                 .withNewSpec()
                 .withNewDownstreamStrategy()

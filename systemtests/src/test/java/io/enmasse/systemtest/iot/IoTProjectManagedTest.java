@@ -45,11 +45,12 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
         String addressSpaceName = "managed-address-space";
 
-        IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName);
+        IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName, this.iotProjectNamespace);
 
         createIoTProject(project);// waiting until ready
 
-        IoTProject created = iotProjectApiClient.getIoTProject(project.getMetadata().getName());
+        var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        IoTProject created = iotProjectApiClient.withName(project.getMetadata().getName()).get();
 
         assertNotNull(created);
         assertEquals(iotProjectNamespace, created.getMetadata().getNamespace());

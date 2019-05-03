@@ -63,7 +63,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         }
 
         if (sharedProject == null) {
-            sharedProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", this.addressSpace);
+            sharedProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", this.addressSpace, this.iotProjectNamespace);
             createIoTProject(sharedProject);
         }
 
@@ -89,15 +89,17 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         if (context.getExecutionException().isPresent()) { //test failed
             if (!environment.skipCleanup()) {
                 log.info("Shared IoTProject will be removed");
-                if (iotProjectApiClient.existsIoTProject(sharedProject.getMetadata().getName())) {
-                    IoTUtils.deleteIoTProjectAndWait(kubernetes, iotProjectApiClient, sharedProject, addressApiClient);
+                var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
+                if (iotProjectApiClient.withName(sharedProject.getMetadata().getName()).get() != null) {
+                    IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedProject, addressApiClient);
                 } else {
                     log.info("IoTProject '" + sharedProject.getMetadata().getName() + "' doesn't exists!");
                 }
                 sharedProject = null;
                 log.info("Shared IoTConfig will be removed");
-                if (iotConfigApiClient.existsIoTConfig(sharedConfig.getMetadata().getName())) {
-                    iotConfigApiClient.deleteIoTConfig(sharedConfig.getMetadata().getName());
+                var iotConfigApiClient = kubernetes.getIoTConfigClient();
+                if (iotConfigApiClient.withName(sharedConfig.getMetadata().getName()).get() != null) {
+                    iotConfigApiClient.delete(sharedConfig);
                 } else {
                     log.info("IoTConfig '" + sharedConfig.getMetadata().getName() + "' doesn't exists!");
                 }

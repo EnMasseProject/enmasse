@@ -4,6 +4,14 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.address.model.CoreCrd;
+import io.enmasse.iot.model.v1.DoneableIoTConfig;
+import io.enmasse.iot.model.v1.DoneableIoTProject;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigList;
+import io.enmasse.iot.model.v1.IoTCrd;
+import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTProjectList;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -16,6 +24,8 @@ import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import okhttp3.Response;
 import org.slf4j.Logger;
 
@@ -96,6 +106,26 @@ public abstract class Kubernetes {
     public abstract Endpoint getKeycloakEndpoint();
 
     public abstract Endpoint getExternalEndpoint(String name);
+
+    public MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> getIoTConfigClient() {
+        return getIoTConfigClient(globalNamespace);
+    }
+
+    public MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> getIoTConfigClient(String namespace) {
+        return (MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>>) client.customResources(IoTCrd.config(), IoTConfig.class, IoTConfigList.class, DoneableIoTConfig.class).inNamespace(namespace);
+    }
+
+    public MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> getNonNamespacedIoTProjectClient() {
+        return getIoTProjectClient(null);
+    }
+
+    public MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> getIoTProjectClient(String namespace) {
+        if(namespace == null) {
+            return client.customResources(CoreCrd.addresseSpaces(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
+        }else {
+            return (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class).inNamespace(namespace);
+        }
+    }
 
     public UserCredentials getKeycloakCredentials() {
         Secret creds = client.secrets().inNamespace(globalNamespace).withName("keycloak-credentials").get();
