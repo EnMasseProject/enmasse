@@ -8,6 +8,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.vertx.core.VertxException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
@@ -77,31 +78,47 @@ public class MsgCliApiClient extends ApiClient {
      * @throws TimeoutException
      */
     public JsonObject getClientInfo(String uuid) throws InterruptedException, ExecutionException, TimeoutException {
-        return getClientInfo(uuid, new TimeoutBudget(150000, TimeUnit.SECONDS));
+        return getClientInfo(uuid, new TimeoutBudget(300000, TimeUnit.MILLISECONDS));
     }
 
-    public JsonObject getClientInfo(String uuid, TimeoutBudget timeout) throws InterruptedException, ExecutionException, TimeoutException {
+    private JsonObject getClientInfo(String uuid, TimeoutBudget timeout) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         JsonObject request = new JsonObject();
         request.put("id", uuid);
 
-        client.get(endpoint.getPort(), endpoint.getHost(), "")
-                .as(BodyCodec.jsonObject())
-                .timeout(120000)
-                .sendJson(request,
-                        ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error getting messaging clients info"));
-        JsonObject info = responsePromise.get(150000, TimeUnit.SECONDS);
-        Boolean isRunning = info.getBoolean("isRunning");
-        if(isRunning != null && isRunning) {
-            if(timeout.timeoutExpired()) {
-                log.info(info.toString());
-                throw new IllegalStateException("Timeout expired waiting for client isRunning=false");
-            }
-            return getClientInfo(uuid, timeout);
-        } else {
-            return info;
-        }
+        long allowed = 300000;
+        do {
+            long start = System.currentTimeMillis();
 
+            client.get(endpoint.getPort(), endpoint.getHost(), "")
+                    .as(BodyCodec.jsonObject())
+                    .timeout(allowed)
+                    .sendJson(request,
+                            ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, String.format("Error getting messaging clients info for %s", uuid)));
+            try {
+                JsonObject info = responsePromise.get(allowed, TimeUnit.MILLISECONDS);
+                Boolean isRunning = info.getBoolean("isRunning");
+                if(isRunning != null && isRunning) {
+                    if(timeout.timeoutExpired()) {
+                        log.info(info.toString());
+                        throw new IllegalStateException("Timeout expired waiting for client isRunning=false");
+                    }
+                    log.info("retrying getClientInfo because client is still running");
+                    return getClientInfo(uuid, timeout);
+                } else {
+                    return info;
+                }
+            } catch (ExecutionException ee) {
+                if (ee.getCause() != null && ee.getCause() instanceof VertxException && "Connection was closed".equalsIgnoreCase(ee.getCause().getMessage())) {
+                    log.warn("Failed to get response from {}:{}", ee);
+                    allowed -= System.currentTimeMillis() - start;
+                } else {
+                    throw ee;
+                }
+            }
+        } while (allowed > 0);
+
+        throw new IllegalStateException(String.format("Timed out getting messaging clients info for %s", uuid));
     }
 
     /**
