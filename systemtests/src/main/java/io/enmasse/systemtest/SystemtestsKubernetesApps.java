@@ -24,6 +24,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "openshift-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
+    public static final String INFINISPAN_SERVER = "infinispan-server";
 
     public static void deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
         kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(MESSAGING_CLIENTS, 4242));
@@ -133,6 +134,21 @@ public class SystemtestsKubernetesApps {
             kubeCli.deleteConfigmap(namespace, POSTGRES_APP);
             kubeCli.deleteDeployment(namespace, POSTGRES_APP);
             kubeCli.deleteSecret(namespace, POSTGRES_APP);
+        }
+    }
+
+    public static Endpoint deployInfinispanServer(String namespace) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource(INFINISPAN_SERVER, 11222));
+        kubeCli.createDeploymentFromResource(namespace, getInfinispanDeployment());
+        return kubeCli.getEndpoint(INFINISPAN_SERVER, "http");
+    }
+
+    public static void deleteInfinispanServer(String namespace) {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        if(kubeCli.deploymentExists(namespace, INFINISPAN_SERVER)) {
+            kubeCli.deleteService(namespace, INFINISPAN_SERVER);
+            kubeCli.deleteDeployment(namespace, INFINISPAN_SERVER);
         }
     }
 
@@ -392,6 +408,34 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .addToData("database-user", Base64.getEncoder().encodeToString("darthvader".getBytes(StandardCharsets.UTF_8)))
                 .addToData("database-password", Base64.getEncoder().encodeToString("anakinisdead".getBytes(StandardCharsets.UTF_8)))
+                .build();
+    }
+
+    private static Deployment getInfinispanDeployment() {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(INFINISPAN_SERVER)
+                .addToLabels("app", INFINISPAN_SERVER)
+                .addToLabels("template", INFINISPAN_SERVER)
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", INFINISPAN_SERVER)
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", INFINISPAN_SERVER)
+                .endMetadata()
+                .withNewSpec()
+                .addNewContainer()
+                .withName(INFINISPAN_SERVER)
+                .withImage("jboss/infinispan-server:9.4.11.Final")
+                .withImagePullPolicy("IfNotPresent")
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
                 .build();
     }
 }

@@ -8,6 +8,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.GlobalLogCollector;
 import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.apiclients.IoTConfigApiClient;
 import io.enmasse.systemtest.apiclients.IoTProjectApiClient;
@@ -72,6 +73,8 @@ public class ExecutionListener implements TestExecutionListener {
                             e.printStackTrace();
                         }
                     });
+                    log.info("Infinispan server will be removed");
+                    SystemtestsKubernetesApps.deleteInfinispanServer(kube.getNamespace());
                 }catch(Exception e) {
                     e.printStackTrace();
                 }

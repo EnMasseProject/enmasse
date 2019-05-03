@@ -9,7 +9,9 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
@@ -40,12 +42,20 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
         if (sharedConfig == null) {
+            Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getNamespace());
             CertBundle certBundle = CertificateUtils.createCertBundle();
             sharedConfig = new IoTConfigBuilder()
                     .withNewMetadata()
                     .withName("default")
                     .endMetadata()
                     .withNewSpec()
+                    .withNewServices()
+                    .withNewDeviceRegistry()
+                    .withNewInfinispan()
+                    .withInfinispanServerAddress(infinispanEndpoint.toString())
+                    .endInfinispan()
+                    .endDeviceRegistry()
+                    .endServices()
                     .withNewAdapters()
                     .withNewMqtt()
                     .withNewEndpoint()
@@ -101,6 +111,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                 } else {
                     log.info("IoTConfig '" + sharedConfig.getMetadata().getName() + "' doesn't exists!");
                 }
+                log.info("Infinispan server will be removed");
+                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getNamespace());
                 sharedConfig = null;
             } else {
                 log.warn("Remove shared iotproject when test failed - SKIPPED!");
