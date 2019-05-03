@@ -9,7 +9,6 @@ GO_DIRS = \
 DOCKER_DIRS = \
 	agent \
 	topic-forwarder \
-	artemis \
 	broker-plugin \
 	api-server \
 	address-space-controller \
