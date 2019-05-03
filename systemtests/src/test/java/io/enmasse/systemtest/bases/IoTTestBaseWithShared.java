@@ -4,13 +4,9 @@
  */
 package io.enmasse.systemtest.bases;
 
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
@@ -18,9 +14,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -96,7 +89,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         if (context.getExecutionException().isPresent()) { //test failed
             if (!environment.skipCleanup()) {
                 log.info("Shared IoTProject will be removed");
-                MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> iotProjectApiClient = kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
+                var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
                 if (iotProjectApiClient.withName(sharedProject.getMetadata().getName()).get() != null) {
                     IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedProject, addressApiClient);
                 } else {
@@ -104,7 +97,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                 }
                 sharedProject = null;
                 log.info("Shared IoTConfig will be removed");
-                MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> iotConfigApiClient = kubernetes.getIoTConfigClient();
+                var iotConfigApiClient = kubernetes.getIoTConfigClient();
                 if (iotConfigApiClient.withName(sharedConfig.getMetadata().getName()).get() != null) {
                     iotConfigApiClient.delete(sharedConfig);
                 } else {

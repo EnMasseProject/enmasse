@@ -4,9 +4,6 @@
  */
 package io.enmasse.systemtest.ability;
 
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.GlobalLogCollector;
@@ -15,9 +12,6 @@ import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
-
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
@@ -65,7 +59,7 @@ public class ExecutionListener implements TestExecutionListener {
                             e.printStackTrace();
                         }
                     });
-                    MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> iotConfigClient = kube.getIoTConfigClient();
+                    var iotConfigClient = kube.getIoTConfigClient();
                     iotConfigClient.list().getItems().forEach(config -> {
                         log.info("iot config '{}' will be removed", config.getMetadata().getName());
                         try {

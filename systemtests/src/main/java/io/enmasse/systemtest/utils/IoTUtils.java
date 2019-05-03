@@ -5,20 +5,13 @@
 package io.enmasse.systemtest.utils;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
-import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
-
 import org.slf4j.Logger;
 
 import static io.enmasse.systemtest.utils.AddressSpaceUtils.jsonToAdressSpace;
@@ -47,7 +40,7 @@ public class IoTUtils {
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
-        MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> iotConfigClient = kubernetes.getIoTConfigClient();
+        var iotConfigClient = kubernetes.getIoTConfigClient();
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigClient.withName(config.getMetadata().getName()).get();
             isReady = config.getStatus() != null && config.getStatus().isInitialized();
@@ -76,7 +69,7 @@ public class IoTUtils {
     public static void waitForIoTProjectReady(Kubernetes kubernetes, AddressApiClient addressSpaceApiClient, IoTProject project) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        var iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         while (budget.timeLeft() >= 0 && !isReady) {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();
             isReady = project.getStatus() != null && project.getStatus().isReady();
