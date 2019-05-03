@@ -62,7 +62,7 @@ public class AuthInterceptor implements ContainerRequestFilter {
             String userName = findUserName(requestContext);
             String group = findGroup(requestContext);
             Map<String, List<String>> extras = findExtra(requestContext);
-            log.info("Found username {}, group {}, extra {}", userName, group, extras);
+            log.debug("Found username {}, group {}, extra {}", userName, group, extras);
             try {
                 connection.peerCertificateChain();
                 log.debug("Client certificates trusted... impersonating {}", userName);
