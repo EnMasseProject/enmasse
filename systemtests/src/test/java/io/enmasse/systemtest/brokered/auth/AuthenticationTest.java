@@ -34,7 +34,7 @@ class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrok
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withType(AddressSpaceType.BROKERED.toString())
                 .withPlan(AddressSpacePlans.BROKERED)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")

@@ -70,7 +70,7 @@ class PlansMarathonTest extends MarathonTestBase {
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(manyAddressesPlan.getMetadata().getName())
                 .withNewAuthenticationService()
                 .withName("standard-authservice")

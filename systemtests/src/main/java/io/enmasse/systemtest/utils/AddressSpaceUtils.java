@@ -21,119 +21,6 @@ import java.util.stream.Collectors;
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
 
-    public static AddressSpace createAddressSpaceObject(String name) {
-        return createAddressSpaceObject(name, null, AddressSpaceType.STANDARD, AuthenticationServiceType.NONE);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, null, AddressSpaceType.STANDARD, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type) {
-        return createAddressSpaceObject(name, null, type, AuthenticationServiceType.NONE);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, AuthenticationServiceType.NONE);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, String plan) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, plan);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, String plan, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, plan, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan) {
-        return createAddressSpaceObject(name, null, type, plan);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, String plan) {
-        return createAddressSpaceObject(name, namespace, type, plan, AuthenticationServiceType.STANDARD);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type) {
-        return createAddressSpaceResource(name, type, AuthenticationServiceType.NONE)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, AuthenticationServiceType authService) {
-        return createAddressSpaceResource(name, type, authService)
-                .editMetadata()
-                .endMetadata()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, AuthenticationServiceType authService) {
-        return createAddressSpaceResource(name, type, authService)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, String authServiceName, AddressSpaceType type, String plan) {
-        return createAddressSpaceResource(name, type, authServiceName)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .editSpec()
-                .withPlan(plan)
-                .endSpec()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, String plan, AuthenticationServiceType authService) {
-        return createAddressSpaceResource(name, type, authService)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .editSpec()
-                .withPlan(plan)
-                .endSpec()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, null, type, plan, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan, String authServiceName) {
-        return createAddressSpaceResource(name, type, authServiceName)
-                .editSpec()
-                .withPlan(plan)
-                .endSpec()
-                .done();
-    }
-
-    private static DoneableAddressSpace createAddressSpaceResource(String name, AddressSpaceType type, AuthenticationServiceType auth) {
-        return createAddressSpaceResource(name, type, auth.equals(AuthenticationServiceType.STANDARD) ? "standard-authservice" : "none-authservice");
-    }
-
-    private static DoneableAddressSpace createAddressSpaceResource(String name, AddressSpaceType type, String authServiceName) {
-        return new DoneableAddressSpace(new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withType(type.toString())
-                .withPlan(type.equals(AddressSpaceType.BROKERED) ? AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
-                .withNewAuthenticationService()
-                .withName(authServiceName)
-                .endAuthenticationService()
-                .endSpec()
-                .build());
-    }
-
     public static void syncAddressSpaceObject(AddressSpace addressSpace) {
         AddressSpace data = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace())
                 .withName(addressSpace.getMetadata().getName()).get();
@@ -144,10 +31,6 @@ public class AddressSpaceUtils {
 
     public static JsonObject addressSpaceToJson(AddressSpace addressSpace) throws Exception {
         return new JsonObject(new ObjectMapper().writeValueAsString(addressSpace));
-    }
-
-    public static AddressSpace jsonToAdressSpace(JsonObject addressSpace) throws Exception {
-        return new ObjectMapper().readValue(addressSpace.toString(), AddressSpace.class);
     }
 
     public static String getAddressSpaceInfraUuid(AddressSpace addressSpace) {

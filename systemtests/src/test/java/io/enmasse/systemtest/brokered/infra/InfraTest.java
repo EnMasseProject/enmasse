@@ -57,7 +57,7 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withType(AddressSpaceType.BROKERED.toString())
                 .withPlan(exampleSpacePlan.getMetadata().getName())
                 .withNewAuthenticationService()
                 .withName("standard-authservice")

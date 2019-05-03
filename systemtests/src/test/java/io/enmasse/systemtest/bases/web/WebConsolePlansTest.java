@@ -93,7 +93,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(consolePlan.getMetadata().getName())
                 .withNewAuthenticationService()
                 .withName("standard-authservice")

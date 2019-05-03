@@ -42,7 +42,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString().toLowerCase())
+                .withType(AddressSpaceType.BROKERED.toString())
                 .withPlan(AddressSpacePlans.BROKERED)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")

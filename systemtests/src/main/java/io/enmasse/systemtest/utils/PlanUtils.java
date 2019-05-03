@@ -27,7 +27,7 @@ public class PlanUtils {
                 .withName(name)
                 .endMetadata()
                 .withNewSpec()
-                .withAddressSpaceType(type.toString().toLowerCase())
+                .withAddressSpaceType(type.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(infraConfigName)
                 .withResourceLimits(resources.stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
@@ -43,7 +43,7 @@ public class PlanUtils {
                 .endMetadata()
                 .withNewSpec()
                 .withShortDescription("Custom systemtests defined address plan")
-                .withAddressType(type.toString().toLowerCase())
+                .withAddressType(type.toString())
                 .withResources(addressResources.stream().collect(Collectors.toMap(ResourceRequest::getName, ResourceRequest::getCredit)))
                 .endSpec()
                 .build();

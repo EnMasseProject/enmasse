@@ -68,7 +68,7 @@ class InfraTest extends InfraTestBase implements ITestBaseStandard {
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(exampleSpacePlan.getMetadata().getName())
                 .withNewAuthenticationService()
                 .withName("standard-authservice")

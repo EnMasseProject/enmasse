@@ -129,10 +129,6 @@ public class AddressUtils {
                 .done()));
     }
 
-    public static AddressList jsonToAddressList(JsonObject addressList) throws Exception {
-        return new ObjectMapper().readValue(addressList.toString(), AddressList.class);
-    }
-
     public static Address jsonToAddress(JsonObject addressJsonObject) throws Exception {
         log.info("Got address object: {}", addressJsonObject.toString());
         return new ObjectMapper().readValue(addressJsonObject.toString(), Address.class);

@@ -275,7 +275,7 @@ class CertProviderTest extends TestBase {
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString().toLowerCase())
+                .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
