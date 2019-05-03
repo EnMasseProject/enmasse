@@ -195,7 +195,7 @@ type FileBasedDeviceRegistry struct {
 }
 
 type InfinispanDeviceRegistry struct {
-	InfinispanServerAddress string `json:"InfinispanServerAddress"`
+	InfinispanServerAddress string `json:"infinispanServerAddress"`
 
 	Container *ContainerConfig `json:"container,omitempty"`
 }
