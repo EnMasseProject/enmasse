@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.bases;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
@@ -70,8 +71,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         this.iotAmqpClientFactory = createAmqpClientFactory();
     }
 
-    public String getAddressSpace() {
-        return this.addressSpace;
+    public AddressSpace getAddressSpace() {
+        return getAddressSpace(this.addressSpace);
     }
 
     /**

@@ -468,7 +468,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch1 + receiversBatch2),
                     consoleWebPage.getConnectionItems(receiversBatch1 + receiversBatch2).size(), is(receiversBatch1 + receiversBatch2));
         } finally {
-            removeUser(sharedAddressSpace.getMetadata().getName(), pavel.getUsername());
+            removeUser(sharedAddressSpace, pavel.getUsername());
             stopClients(receiversTest);
             stopClients(receiversPavel);
         }

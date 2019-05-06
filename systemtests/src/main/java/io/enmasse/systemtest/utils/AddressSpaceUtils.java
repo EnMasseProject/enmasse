@@ -5,8 +5,9 @@
 package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.*;
-import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
@@ -15,7 +16,9 @@ import org.slf4j.Logger;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 public class AddressSpaceUtils {
@@ -63,10 +66,10 @@ public class AddressSpaceUtils {
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: '{}' will be in ready state", addressSpace.getMetadata().getName());
+            log.info("Waiting until Address space: '{}' messages {} will be in ready state", addressSpace.getMetadata().getName(), addressSpace.getStatus().getMessages());
         }
         if (!isReady) {
-            String status = addressSpace != null ? addressSpace.getStatus().toString() : "";
+            String status = addressSpace.getStatus().toString();
             throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout: " + status);
         }
         log.info("Address space {} is ready for use", addressSpace);

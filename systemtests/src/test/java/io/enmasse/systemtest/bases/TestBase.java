@@ -355,15 +355,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).delete(user);
     }
 
-    protected void removeUser(String addressSpace, String userName) {
-        log.info("User {} in address space {} will be removed", userName, addressSpace);
-        kubernetes.getUserClient(addressSpace).delete(getUser(getAddressSpace(addressSpace), userName));
+    protected void removeUser(AddressSpace addressSpace, String userName) {
+        log.info("User {} in address space {} will be removed", userName, addressSpace.getMetadata().getName());
+        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).delete(getUser(addressSpace, userName));
     }
 
     protected User getUser(AddressSpace addressSpace, String username) {
         String id = String.format("%s.%s", addressSpace.getMetadata().getName(), username);
         List<User> response = kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).list().getItems();
-        log.info("User list for {}: {}", addressSpace.getMetadata().getName(), response.toString());
+        log.info("User list for {}: {}", addressSpace.getMetadata().getName(), response);
         for (User user : response) {
             if (user.getMetadata().getName().equals(id)) {
                 log.info("User {} in addressspace {} already exists", username, addressSpace.getMetadata().getName());

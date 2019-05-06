@@ -328,7 +328,7 @@ class UserApiTest extends TestBase {
         UserCredentials cred4 = new UserCredentials("user_pepinator", "password");
         User testUser4 = UserUtils.createUserResource(cred4)
                 .editMetadata()
-                .withName(brokered.getMetadata().getName() + "." + "user-pepinator")
+                .withName(brokered.getMetadata().getName() + "." + "testuser")
                 .endMetadata()
                 .editSpec()
                 .withAuthorization(Collections.singletonList(

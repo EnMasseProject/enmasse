@@ -267,7 +267,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         //once one of the doMessaging method is finished  then remove appropriate users
         for (Map.Entry<CompletableFuture<Void>, List<UserCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
-            customer.getValue().stream().forEach(user -> removeUser(sharedAddressSpace.getMetadata().getName(), user.getUsername()));
+            customer.getValue().stream().forEach(user -> removeUser(sharedAddressSpace, user.getUsername()));
         }
     }
 
