@@ -23,13 +23,9 @@ include::../modules/con-tenant-address-space-plans.adoc[leveloffset=+1]
 
 include::../modules/proc-list-available-address-space-plans.adoc[leveloffset=+1]
 
-include::../modules/ref-address-space-example.adoc[leveloffset=+1]
-
-include::../modules/ref-address-space-example-auth-service.adoc[leveloffset=+1]
-
 include::../modules/proc-list-available-auth-services.adoc[leveloffset=+1]
 
-include::../modules/ref-address-space-example-exports.adoc[leveloffset=+1]
+include::assembly-address-space-examples.adoc[leveloffset=+1]
 
 include::../modules/ref-example-address-space-output.adoc[leveloffset=+1]
 
