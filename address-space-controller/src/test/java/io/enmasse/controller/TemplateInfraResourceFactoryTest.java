@@ -217,7 +217,6 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
 
     @Test
     public void testVhostPolicyGen() throws JsonProcessingException {
-        String vhost = "$default";
         RouterPolicySpec policySpec = new RouterPolicySpecBuilder()
                 .withMaxConnections(1000)
                 .withMaxConnectionsPerHost(10)
@@ -227,8 +226,8 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .withMaxSessionsPerConnection(5)
                 .build();
 
-        String policyJson = TemplateInfraResourceFactory.createVhostPolicyJson(vhost, policySpec);
-        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"maxSessions\":5,\"sources\":\"*\",\"maxSenders\":5,\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"maxReceivers\":5,\"targets\":\"*\"}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
+        String policyJson = TemplateInfraResourceFactory.createVhostPolicyJson(policySpec);
+        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"sources\":\"*\",\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"targets\":\"*\"}}},{\"hostname\":\"public\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"maxSessions\":5,\"sources\":\"*\",\"maxSenders\":5,\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"maxReceivers\":5,\"targets\":\"*\"}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
         assertEquals(expected, policyJson);
     }
 

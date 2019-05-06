@@ -220,7 +220,8 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
             if (standardInfraConfig.getSpec().getRouter().getPolicy() != null) {
                 try {
-                    String vhostPolicyJson = createVhostPolicyJson("$default", standardInfraConfig.getSpec().getRouter().getPolicy());
+                    String vhostPolicyJson = createVhostPolicyJson(standardInfraConfig.getSpec().getRouter().getPolicy());
+                    parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_NAME, "public");
                     parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_JSON, vhostPolicyJson);
                     parameters.put(TemplateParameter.ROUTER_ENABLE_VHOST_POLICY, "true");
                 } catch (Exception e) {
@@ -282,46 +283,62 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
     }
 
-    static String createVhostPolicyJson(String vhost, RouterPolicySpec policy) throws JsonProcessingException {
-        Map<String, Object> defaultGroupPolicy = new HashMap<>();
-        defaultGroupPolicy.put("remoteHosts", "*");
-        defaultGroupPolicy.put("sources", "*");
-        defaultGroupPolicy.put("targets", "*");
-        defaultGroupPolicy.put("allowDynamicSource", true);
-        defaultGroupPolicy.put("allowAnonymousSender", true);
+    static String createVhostPolicyJson(RouterPolicySpec policy) throws JsonProcessingException {
+        // Public settings derived from infra config settings
+        Map<String, Object> publicGroupPolicy = new HashMap<>();
+        publicGroupPolicy.put("remoteHosts", "*");
+        publicGroupPolicy.put("sources", "*");
+        publicGroupPolicy.put("targets", "*");
+        publicGroupPolicy.put("allowDynamicSource", true);
+        publicGroupPolicy.put("allowAnonymousSender", true);
+
         if (policy.getMaxSessionsPerConnection() != null) {
-            defaultGroupPolicy.put("maxSessions", policy.getMaxSessionsPerConnection());
+            publicGroupPolicy.put("maxSessions", policy.getMaxSessionsPerConnection());
         }
 
         if (policy.getMaxSendersPerConnection() != null) {
-            defaultGroupPolicy.put("maxSenders", policy.getMaxSendersPerConnection());
+            publicGroupPolicy.put("maxSenders", policy.getMaxSendersPerConnection());
         }
 
         if (policy.getMaxReceiversPerConnection() != null) {
-            defaultGroupPolicy.put("maxReceivers", policy.getMaxReceiversPerConnection());
+            publicGroupPolicy.put("maxReceivers", policy.getMaxReceiversPerConnection());
         }
 
-        Map<String, Object> defaultVhostPolicy = new HashMap<>();
-        defaultVhostPolicy.put("hostname", vhost);
-        defaultVhostPolicy.put("allowUnknownUser", true);
+        Map<String, Object> publicVhostPolicy = new HashMap<>();
+        publicVhostPolicy.put("hostname", "public");
+        publicVhostPolicy.put("allowUnknownUser", true);
 
         if (policy.getMaxConnections() != null) {
-            defaultVhostPolicy.put("maxConnections", policy.getMaxConnections());
+            publicVhostPolicy.put("maxConnections", policy.getMaxConnections());
         }
 
         if (policy.getMaxConnectionsPerHost() != null) {
-            defaultVhostPolicy.put("maxConnectionsPerHost", policy.getMaxConnectionsPerHost());
+            publicVhostPolicy.put("maxConnectionsPerHost", policy.getMaxConnectionsPerHost());
         }
 
         if (policy.getMaxConnectionsPerUser() != null) {
-            defaultVhostPolicy.put("maxConnectionsPerUser", policy.getMaxConnectionsPerUser());
+            publicVhostPolicy.put("maxConnectionsPerUser", policy.getMaxConnectionsPerUser());
         }
 
-        defaultVhostPolicy.put("groups", Collections.singletonMap(vhost, defaultGroupPolicy));
+        publicVhostPolicy.put("groups", Collections.singletonMap("$default", publicGroupPolicy));
+
+        // Internal settings, used by internal components
+        Map<String, Object> internalGroupPolicy = new HashMap<>();
+        internalGroupPolicy.put("remoteHosts", "*");
+        internalGroupPolicy.put("sources", "*");
+        internalGroupPolicy.put("targets", "*");
+        internalGroupPolicy.put("allowDynamicSource", true);
+        internalGroupPolicy.put("allowAnonymousSender", true);
+
+        Map<String, Object> internalVhostPolicy = new HashMap<>();
+        internalVhostPolicy.put("hostname", "$default");
+        internalVhostPolicy.put("allowUnknownUser", true);
+        internalVhostPolicy.put("groups", Collections.singletonMap("$default", internalGroupPolicy));
 
         List<Object> values = new ArrayList<>();
         values.add("vhost");
-        values.add(defaultVhostPolicy);
+        values.add(internalVhostPolicy);
+        values.add(publicVhostPolicy);
         return mapper.writeValueAsString(Collections.singletonList(values));
     }
 
