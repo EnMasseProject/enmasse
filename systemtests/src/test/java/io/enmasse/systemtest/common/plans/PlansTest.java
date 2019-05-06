@@ -123,7 +123,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         //simple send/receive
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
-        createUser(weakAddressSpace, user);
+        createOrUpdateUser(weakAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(weakAddressSpace);
         queueClient.getConnectOptions().setCredentials(user);
@@ -186,7 +186,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .build();
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         //check router limits
         checkLimits(addressSpace,
@@ -276,7 +276,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .build();
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         //check broker limits
         checkLimits(addressSpace,
@@ -378,7 +378,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(partitioned);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
-        createUser(partitioned, cred);
+        createOrUpdateUser(partitioned, cred);
 
         Address address = new AddressBuilder()
                 .editOrNewMetadata()
@@ -458,7 +458,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
-        createUser(manyAddressesSpace, cred);
+        createOrUpdateUser(manyAddressesSpace, cred);
 
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 4;
@@ -531,7 +531,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         //send 1000 messages to each queue
         UserCredentials user = new UserCredentials("test-scale-user-name", "test_scale_user_pswd");
-        createUser(messagePersistAddressSpace, user);
+        createOrUpdateUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
         queueClient.getConnectOptions().setCredentials(user);
@@ -639,7 +639,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         Address queue = AddressUtils.createQueueAddressObject("test-queue", beforeQueuePlan.getMetadata().getName());
         Address topic = AddressUtils.createTopicAddressObject("test-topic", beforeTopicPlan.getMetadata().getName());
@@ -711,7 +711,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         Address queue = AddressUtils.createQueueAddressObject("test-queue", beforeQueuePlan.getMetadata().getName());
 
@@ -781,7 +781,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         List<Address> queues = Arrays.asList(
                 AddressUtils.createQueueAddressObject("test-queue-1", beforeQueuePlan.getMetadata().getName()),
@@ -839,7 +839,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         createAddressSpace(addressSpace);
         UserCredentials cred = new UserCredentials("test-user", "test-password");
-        createUser(addressSpace, cred);
+        createOrUpdateUser(addressSpace, cred);
 
         List<Address> queues = IntStream.range(0, 8).boxed().map(i ->
                 AddressUtils.createQueueAddressObject("queue-" + i, beforeQueuePlan.getMetadata().getName()))

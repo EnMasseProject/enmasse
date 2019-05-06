@@ -94,8 +94,8 @@ class CommonTest extends TestBase {
                 .endSpec()
                 .build();
         createAddressSpaceList(standard, brokered);
-        createUser(brokered, user);
-        createUser(standard, user);
+        createOrUpdateUser(brokered, user);
+        createOrUpdateUser(standard, user);
 
         List<Address> brokeredAddresses = getAllBrokeredAddresses();
         List<Address> standardAddresses = getAllStandardAddresses();
@@ -153,7 +153,7 @@ class CommonTest extends TestBase {
                 .endSpec()
                 .build();
         createAddressSpace(standard);
-        createUser(standard, new UserCredentials("jenda", "cenda"));
+        createOrUpdateUser(standard, new UserCredentials("jenda", "cenda"));
         setAddresses(standard, getAllStandardAddresses().toArray(new Address[0]));
 
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
@@ -171,8 +171,8 @@ class CommonTest extends TestBase {
         assertCanConnect(brokered, existingUser, brAddresses);
         getAddressSpace(brokered.getMetadata().getName());
         getAddressSpace(standard.getMetadata().getName());
-        createUser(brokered, new UserCredentials("jenda", "cenda"));
-        createUser(standard, new UserCredentials("jura", "fura"));
+        createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda"));
+        createOrUpdateUser(standard, new UserCredentials("jura", "fura"));
     }
 
     private class Label {

@@ -250,10 +250,14 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
             //===========================
 
             UserCredentials cred = new UserCredentials("pepanatestovani", "pepaNaTestovani");
-            User testUser = UserUtils.createUserObject(cred, Collections.singletonList(
-                    new UserAuthorizationBuilder()
-                            .withAddresses("*")
-                            .withOperations(Operation.send, Operation.recv).build()));
+            User testUser = UserUtils.createUserResource(cred)
+                    .editSpec()
+                    .withAuthorization(Collections.singletonList(
+                            new UserAuthorizationBuilder()
+                                    .withAddresses("*")
+                                    .withOperations(Operation.send, Operation.recv).build()))
+                    .endSpec()
+                    .done();
 
             //create user
             assertThat(KubeCMDClient.createCR(namespace, UserUtils.userToJson(brokered.getMetadata().getName(), testUser).toString()).getRetCode(), is(true));

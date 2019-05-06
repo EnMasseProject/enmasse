@@ -15,7 +15,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -64,10 +63,10 @@ public abstract class TestBaseWithShared extends TestBase {
                 .build();
         createAddressSpace(sharedAddressSpace);
         defaultCredentials.setUsername("test").setPassword("test");
-        createUser(sharedAddressSpace, defaultCredentials);
+        createOrUpdateUser(sharedAddressSpace, defaultCredentials);
 
         this.managementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
-        createUser(sharedAddressSpace, this.managementCredentials);
+        createOrUpdateUser(sharedAddressSpace, this.managementCredentials);
 
         amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(sharedAddressSpace, defaultCredentials);
@@ -196,11 +195,15 @@ public abstract class TestBaseWithShared extends TestBase {
         String sufix = isBrokered(sharedAddressSpace) ? "#" : "*";
         users.forEach((user) -> {
             try {
-                createUser(sharedAddressSpace,
-                        UserUtils.createUserObject(user, Collections.singletonList(
-                                new UserAuthorizationBuilder()
-                                        .withAddresses(String.format("%s.%s.%s", destNamePrefix, customerIndex, sufix))
-                                        .withOperations(Operation.send, Operation.recv).build())));
+                createOrUpdateUser(sharedAddressSpace,
+                        UserUtils.createUserResource(user)
+                                .editSpec()
+                                .withAuthorization(Collections.singletonList(
+                                        new UserAuthorizationBuilder()
+                                                .withAddresses(String.format("%s.%s.%s", destNamePrefix, customerIndex, sufix))
+                                                .withOperations(Operation.send, Operation.recv).build()))
+                                .endSpec()
+                                .done());
                 AmqpClient queueClient = amqpClientFactory.createQueueClient();
                 queueClient.getConnectOptions().setCredentials(user);
                 clients.add(queueClient);

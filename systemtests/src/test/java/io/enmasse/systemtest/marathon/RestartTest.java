@@ -73,8 +73,8 @@ class RestartTest extends MarathonTestBase {
                 .endSpec()
                 .build();
         createAddressSpaceList(standard, brokered);
-        createUser(brokered, user);
-        createUser(standard, user);
+        createOrUpdateUser(brokered, user);
+        createOrUpdateUser(standard, user);
 
         List<Address> brokeredAddresses = getAllBrokeredAddresses();
         List<Address> standardAddresses = getAllStandardAddresses();
@@ -121,7 +121,7 @@ class RestartTest extends MarathonTestBase {
                 .endSpec()
                 .build();
         createAddressSpaceList(standard);
-        createUser(standard, user);
+        createOrUpdateUser(standard, user);
 
         List<Address> standardAddresses = getAllStandardAddresses();
 
@@ -151,8 +151,8 @@ class RestartTest extends MarathonTestBase {
         log.info("Check if system works");
         TestUtils.runUntilPass(60, () -> getAddressSpace(brokered.getMetadata().getName()));
         TestUtils.runUntilPass(60, () -> getAddressSpace(standard.getMetadata().getName()));
-        TestUtils.runUntilPass(60, () -> createUser(brokered, new UserCredentials("jenda", "cenda")));
-        TestUtils.runUntilPass(60, () -> createUser(standard, new UserCredentials("jura", "fura")));
+        TestUtils.runUntilPass(60, () -> createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));
+        TestUtils.runUntilPass(60, () -> createOrUpdateUser(standard, new UserCredentials("jura", "fura")));
         TestUtils.runUntilPass(60, () -> {
             assertCanConnect(brokered, existingUser, brAddresses);
             return true;

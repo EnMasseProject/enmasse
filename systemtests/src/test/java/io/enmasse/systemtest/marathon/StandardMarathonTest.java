@@ -68,24 +68,6 @@ class StandardMarathonTest extends MarathonTestBase implements ITestBaseStandard
     }
 
     @Test
-    void testCreateDeleteUsersLong() throws Exception {
-        doTestCreateDeleteUsersLong(
-                new AddressSpaceBuilder()
-                        .withNewMetadata()
-                        .withName("test-create-delete-users-standard")
-                        .withNamespace(kubernetes.getInfraNamespace())
-                        .endMetadata()
-                        .withNewSpec()
-                        .withType(AddressSpaceType.STANDARD.toString())
-                        .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
-                        .withNewAuthenticationService()
-                        .withName("standard-authservice")
-                        .endAuthenticationService()
-                        .endSpec()
-                        .build());
-    }
-
-    @Test
     void testAuthSendReceiveLong() throws Exception {
         doTestAuthSendReceiveLong(
                 new AddressSpaceBuilder()

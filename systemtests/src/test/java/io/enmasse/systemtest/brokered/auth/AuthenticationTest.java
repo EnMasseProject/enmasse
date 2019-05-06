@@ -44,7 +44,7 @@ class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrok
         createAddressSpace(addressSpace);
 
         UserCredentials credentials = new UserCredentials("pavel", "novak");
-        createUser(addressSpace, credentials);
+        createOrUpdateUser(addressSpace, credentials);
 
         assertCanConnect(addressSpace, credentials, amqpAddressList);
 

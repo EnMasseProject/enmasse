@@ -103,7 +103,7 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         Address queueB = AddressUtils.createQueueAddressObject("brokeredQueueB", getDefaultPlan(AddressType.QUEUE));
         setAddresses(addressSpaceA, queueB);
         UserCredentials user = new UserCredentials("test", "test");
-        createUser(addressSpaceA, user);
+        createOrUpdateUser(addressSpaceA, user);
 
         AmqpClient amqpQueueCliA = amqpClientFactory.createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setCredentials(user);
@@ -111,7 +111,7 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
         amqpQueueCliA.close();
 
         setAddresses(addressSpaceC, queueB);
-        createUser(addressSpaceC, user);
+        createOrUpdateUser(addressSpaceC, user);
 
         AmqpClient amqpQueueCliC = amqpClientFactory.createQueueClient(addressSpaceC);
         amqpQueueCliC.getConnectOptions().setCredentials(user);

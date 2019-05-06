@@ -79,7 +79,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
      */
     private AmqpClientFactory createAmqpClientFactory() throws Exception {
 
-        getUserApiClient().createUser(this.addressSpace, this.credentials);
+        createOrUpdateUser(this.addressSpace, this.credentials);
         return new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
 
     }

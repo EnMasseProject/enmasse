@@ -17,7 +17,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
-import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -36,8 +35,6 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.*;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Matchers;
@@ -59,6 +56,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -85,7 +83,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
-    private UserApiClient userApiClient;
     private boolean reuseAddressSpace;
 
     @BeforeEach
@@ -294,97 +291,90 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //======================================= User methods ===========================================
     //================================================================================================
 
-    protected UserApiClient getUserApiClient() throws Exception {
-        if (userApiClient == null) {
-            userApiClient = new UserApiClient(kubernetes);
-        }
-        return userApiClient;
+    protected User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) {
+        User user = new UserBuilder()
+                .withNewMetadata()
+                .withName(addressSpace.getMetadata().getName() + "." + credentials.getUsername())
+                .endMetadata()
+                .withNewSpec()
+                .withUsername(credentials.getUsername())
+                .withNewAuthentication()
+                .withType(UserAuthenticationType.password)
+                .withNewPassword(UserUtils.passwordToBase64(credentials.getPassword()))
+                .endAuthentication()
+                .addNewAuthorization()
+                .withAddresses("*")
+                .addToOperations(Operation.send)
+                .addToOperations(Operation.recv)
+                .endAuthorization()
+                .addNewAuthorization()
+                .addToOperations(Operation.manage)
+                .endAuthorization()
+                .endSpec()
+                .build();
+        return createOrUpdateUser(addressSpace, user);
     }
 
-    protected void setUserApiClient(UserApiClient apiClient) {
-        this.userApiClient = apiClient;
-    }
-
-    protected JsonObject createUser(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
-        log.info("User {} in address space {} will be created", credentials, addressSpace.getMetadata().getName());
-        if (!userExist(addressSpace, credentials.getUsername())) {
-            return getUserApiClient().createUser(addressSpace.getMetadata().getName(), credentials);
-        }
-        return new JsonObject();
-    }
-
-    protected JsonObject createUser(AddressSpace addressSpace, User user) throws Exception {
+    protected User createOrUpdateUser(AddressSpace addressSpace, User user) {
         log.info("User {} in address space {} will be created", user, addressSpace.getMetadata().getName());
-        if (!userExist(addressSpace, user.getSpec().getUsername())) {
-            return getUserApiClient().createUser(addressSpace.getMetadata().getName(), user);
+        if (user.getMetadata().getName() == null || !user.getMetadata().getName().contains(addressSpace.getMetadata().getName())) {
+            user.getMetadata().setName(addressSpace.getMetadata().getName() + "." + user.getSpec().getUsername());
         }
-        return new JsonObject();
+        return kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).createOrReplace(user);
     }
 
-    protected JsonObject createUserServiceAccount(AddressSpace addressSpace, UserCredentials credentials, String namespace) throws Exception {
-        User user = UserUtils.createUserObject(UserAuthenticationType.serviceaccount, credentials);
-        return createUserServiceaccount(addressSpace, user, namespace);
+    protected User createOrUpdateUser(String addressSpace, UserCredentials cred) {
+        return createOrUpdateUser(getAddressSpace(addressSpace), cred);
     }
 
-    protected JsonObject createUserServiceaccount(AddressSpace addressSpace, User user, String namespace) throws Exception {
-        log.info("ServiceAccount user {} in address space {} will be created", user.getSpec().getUsername(), addressSpace.getMetadata().getName());
-        if (!userExist(addressSpace, user.getSpec().getUsername())) {
-            String serviceaccountName = kubernetes.createServiceAccount(user.getSpec().getUsername(), namespace);
-            user = new DoneableUser(user).editSpec().withUsername(serviceaccountName).endSpec().done();
-            return getUserApiClient().createUser(addressSpace.getMetadata().getName(), user);
-        }
-        return new JsonObject();
+    protected User createUserServiceaccount(AddressSpace addressSpace, UserCredentials cred) {
+        log.info("ServiceAccount user {} in address space {} will be created", cred.getUsername(), addressSpace.getMetadata().getName());
+        String serviceaccountName = kubernetes.createServiceAccount(cred.getUsername(), addressSpace.getMetadata().getNamespace());
+        User user = new UserBuilder()
+                .withNewMetadata()
+                .withName(String.format("%s.%s", addressSpace.getMetadata().getName(),
+                        Pattern.compile(".*:").matcher(serviceaccountName).replaceAll("")))
+                .endMetadata()
+                .withNewSpec()
+                .withUsername(serviceaccountName)
+                .withNewAuthentication()
+                .withType(UserAuthenticationType.serviceaccount)
+                .endAuthentication()
+                .addNewAuthorization()
+                .withAddresses("*")
+                .addToOperations(Operation.send)
+                .addToOperations(Operation.recv)
+                .endAuthorization()
+                .endSpec()
+                .build();
+        return createOrUpdateUser(addressSpace, user);
     }
 
-    protected JsonObject updateUser(AddressSpace addressSpace, User user) throws Exception {
-        log.info("User {} in address space {} will be updated", user, addressSpace.getMetadata().getName());
-        return getUserApiClient().updateUser(addressSpace.getMetadata().getName(), user);
+    protected void removeUser(AddressSpace addressSpace, User user) {
+        log.info("User {} in address space {} will be removed", user.getMetadata().getName(), addressSpace.getMetadata().getName());
+        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).delete(user);
     }
 
-    protected void removeUser(String addressSpace, String username) throws Exception {
-        log.info("User {} in address space {} will be removed", username, addressSpace);
-        getUserApiClient().deleteUser(addressSpace, username);
+    protected void removeUser(String addressSpace, String userName) {
+        log.info("User {} in address space {} will be removed", userName, addressSpace);
+        kubernetes.getUserClient(addressSpace).delete(getUser(getAddressSpace(addressSpace), userName));
     }
 
-    protected void removeUser(AddressSpace addressSpace, String username) throws Exception {
-        removeUser(addressSpace.getMetadata().getName(), username);
-    }
-
-    protected void createUsers(AddressSpace addressSpace, String prefixName, String prefixPswd, int from, int to)
-            throws Exception {
-        for (int i = from; i < to; i++) {
-            createUser(addressSpace, new UserCredentials(prefixName + i, prefixPswd + i));
-        }
-    }
-
-    protected void removeUsers(AddressSpace addressSpace, List<String> users) throws Exception {
-        for (String user : users) {
-            removeUser(addressSpace, user);
-        }
-    }
-
-    protected void removeUsers(AddressSpace addressSpace, String prefixName, int from, int to) throws Exception {
-        for (int i = from; i < to; i++) {
-            removeUser(addressSpace, prefixName + i);
-        }
-    }
-
-    protected boolean userExist(AddressSpace addressSpace, String username) throws Exception {
-        return userExist(getUserApiClient(), addressSpace, username);
-    }
-
-    protected boolean userExist(UserApiClient client, AddressSpace addressSpace, String username) throws Exception {
+    protected User getUser(AddressSpace addressSpace, String username) {
         String id = String.format("%s.%s", addressSpace.getMetadata().getName(), username);
-        JsonObject response = client.getUserList(addressSpace.getMetadata().getName());
+        List<User> response = kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).list().getItems();
         log.info("User list for {}: {}", addressSpace.getMetadata().getName(), response.toString());
-        JsonArray users = response.getJsonArray("items");
-        for (Object user : users) {
-            if (((JsonObject) user).getJsonObject("metadata").getString("name").equals(id)) {
+        for (User user : response) {
+            if (user.getMetadata().getName().equals(id)) {
                 log.info("User {} in addressspace {} already exists", username, addressSpace.getMetadata().getName());
-                return true;
+                return user;
             }
         }
-        return false;
+        return null;
+    }
+
+    protected boolean userExist(AddressSpace addressSpace, String username) {
+        return getUser(addressSpace, username) != null;
     }
 
     //================================================================================================
@@ -837,38 +827,53 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected List<User> createUsersWildcard(AddressSpace addressSpace, Operation operation) throws
             Exception {
         List<User> users = new ArrayList<>();
-        users.add(UserUtils.createUserObject("user1", "password",
-                Collections.singletonList(new UserAuthorizationBuilder()
+        users.add(UserUtils.createUserResource(new UserCredentials("user1", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
                         .withAddresses("*")
                         .withOperations(operation)
-                        .build())));
+                        .build()))
+                .endSpec()
+                .done());
 
-        users.add(UserUtils.createUserObject("user2", "password",
-                Collections.singletonList(new UserAuthorizationBuilder()
+        users.add(UserUtils.createUserResource(new UserCredentials("user2", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
                         .withAddresses("queue/*")
                         .withOperations(operation)
-                        .build())));
+                        .build()))
+                .endSpec()
+                .done());
 
-        users.add(UserUtils.createUserObject("user3", "password",
-                Collections.singletonList(new UserAuthorizationBuilder()
+        users.add(UserUtils.createUserResource(new UserCredentials("user3", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
                         .withAddresses("topic/*")
                         .withOperations(operation)
-                        .build())));
+                        .build()))
+                .endSpec()
+                .done());
 
-        users.add(UserUtils.createUserObject("user4", "password",
-                Collections.singletonList(new UserAuthorizationBuilder()
+        users.add(UserUtils.createUserResource(new UserCredentials("user4", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
                         .withAddresses("queueA*")
                         .withOperations(operation)
-                        .build())));
+                        .build()))
+                .endSpec()
+                .done());
 
-        users.add(UserUtils.createUserObject("user5", "password",
-                Collections.singletonList(new UserAuthorizationBuilder()
+        users.add(UserUtils.createUserResource(new UserCredentials("user5", "password"))
+                .editSpec()
+                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
                         .withAddresses("topicA*")
                         .withOperations(operation)
-                        .build())));
+                        .build()))
+                .endSpec()
+                .done());
 
         for (User user : users) {
-            createUser(addressSpace, user);
+            createOrUpdateUser(addressSpace, user);
         }
         return users;
     }

@@ -144,8 +144,8 @@ class UpgradeTest extends TestBase {
             log.info("Before upgrade phase");
             createAddressSpaceList(brokered, standard);
 
-            createUser(brokered, cred);
-            createUser(standard, cred);
+            createOrUpdateUser(brokered, cred);
+            createOrUpdateUser(standard, cred);
 
             setAddresses(brokered, brokeredAddresses.toArray(new Address[0]));
             setAddresses(standard, standardAddresses.toArray(new Address[0]));

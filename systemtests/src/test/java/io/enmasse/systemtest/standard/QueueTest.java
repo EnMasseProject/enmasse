@@ -20,13 +20,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
@@ -267,7 +267,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         //once one of the doMessaging method is finished  then remove appropriate users
         for (Map.Entry<CompletableFuture<Void>, List<UserCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
-            removeUsers(sharedAddressSpace, customer.getValue().stream().map(UserCredentials::getUsername).collect(Collectors.toList()));
+            customer.getValue().stream().forEach(user -> removeUser(sharedAddressSpace.getMetadata().getName(), user.getUsername()));
         }
     }
 

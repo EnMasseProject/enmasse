@@ -5,12 +5,9 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
@@ -58,24 +55,6 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
                 new AddressSpaceBuilder()
                         .withNewMetadata()
                         .withName("test-send-receive-brokered")
-                        .withNamespace(kubernetes.getInfraNamespace())
-                        .endMetadata()
-                        .withNewSpec()
-                        .withType(AddressSpaceType.BROKERED.toString())
-                        .withPlan(AddressSpacePlans.BROKERED)
-                        .withNewAuthenticationService()
-                        .withName("standard-authservice")
-                        .endAuthenticationService()
-                        .endSpec()
-                        .build());
-    }
-
-    @Test
-    void testCreateDeleteUsersLong() throws Exception {
-        doTestCreateDeleteUsersLong(
-                new AddressSpaceBuilder()
-                        .withNewMetadata()
-                        .withName("test-create-delete-users-brokered")
                         .withNamespace(kubernetes.getInfraNamespace())
                         .endMetadata()
                         .withNewSpec()

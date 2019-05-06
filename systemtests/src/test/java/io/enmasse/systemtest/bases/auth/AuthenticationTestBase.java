@@ -131,10 +131,10 @@ public abstract class AuthenticationTestBase extends TestBase {
         assertCannotConnect(s1brokered, new UserCredentials("bob", "s1pass"), amqpAddressList);
 
         UserCredentials s1Bob = new UserCredentials("bob", "s1pass");
-        createUser(s1brokered, s1Bob);
+        createOrUpdateUser(s1brokered, s1Bob);
 
         UserCredentials s1Carol = new UserCredentials("carol", "s2pass");
-        createUser(s1brokered, s1Carol);
+        createOrUpdateUser(s1brokered, s1Carol);
 
         assertCannotConnect(s1brokered, new UserCredentials(null, null), amqpAddressList);
 
@@ -149,11 +149,11 @@ public abstract class AuthenticationTestBase extends TestBase {
 
 
         UserCredentials s2Bob = new UserCredentials("bob", "s2pass");
-        createUser(s2brokered, s2Bob);
+        createOrUpdateUser(s2brokered, s2Bob);
 
         //create user with the same credentials in different address spaces
         UserCredentials s2Carol = new UserCredentials("carol", "s2pass");
-        createUser(s2brokered, s1Carol);
+        createOrUpdateUser(s2brokered, s1Carol);
 
         assertCanConnect(s1brokered, s1Bob, amqpAddressList);
         assertCanConnect(s1brokered, s2Carol, amqpAddressList);

@@ -433,7 +433,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         consoleWebPage.openConnectionsPageWebConsole();
 
         UserCredentials pavel = new UserCredentials("pavel", "enmasse");
-        createUser(sharedAddressSpace, pavel);
+        createOrUpdateUser(sharedAddressSpace, pavel);
         List<AbstractClient> receiversPavel = null;
         List<AbstractClient> receiversTest = null;
         try {
@@ -468,7 +468,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch1 + receiversBatch2),
                     consoleWebPage.getConnectionItems(receiversBatch1 + receiversBatch2).size(), is(receiversBatch1 + receiversBatch2));
         } finally {
-            removeUser(sharedAddressSpace, pavel.getUsername());
+            removeUser(sharedAddressSpace.getMetadata().getName(), pavel.getUsername());
             stopClients(receiversTest);
             stopClients(receiversPavel);
         }

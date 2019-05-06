@@ -13,7 +13,6 @@ import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -25,7 +24,6 @@ import io.enmasse.systemtest.standard.AnycastTest;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
-import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -170,7 +168,7 @@ public class ApiServerTest extends TestBase {
         createAddressSpace(addressSpace);
 
         UserCredentials luckyUser = new UserCredentials("lucky", "luckyPswd");
-        createUser(addressSpace, luckyUser);
+        createOrUpdateUser(addressSpace, luckyUser);
 
         //try to get all external endpoints
         kubernetes.getExternalEndpoint(endpointPrefix + "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
@@ -451,21 +449,16 @@ public class ApiServerTest extends TestBase {
 
             log.info("-------------------- User part -----------------------");
 
-            try (
-                    var userApiClient1 = new UserApiClient(kubernetes, namespace1);
-                    var userApiClient2 = new UserApiClient(kubernetes, namespace2);
-            ) {
 
-                UserCredentials cred = new UserCredentials("pepa", "novak");
+            UserCredentials cred = new UserCredentials("pepa", "novak");
 
-                userApiClient1.createUser(brokered.getMetadata().getName(), cred);
-                userApiClient2.createUser(standard.getMetadata().getName(), cred);
+            createOrUpdateUser(brokered, cred);
+            createOrUpdateUser(standard, cred);
 
-                assertThat("Get all users does not contain 2 password users",
-                        (int) UserUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
-                                .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).count(),
-                        is(2));
-            }
+            assertThat("Get all users does not contain 2 password users",
+                    (int) kubernetes.getUserClient().inAnyNamespace().list().getItems()
+                            .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).count(),
+                    is(2));
 
         } finally {
             kubernetes.deleteNamespace(namespace1);
@@ -527,7 +520,7 @@ public class ApiServerTest extends TestBase {
 
         createAddressSpace(addressspace);
         setAddresses(addressspace, dest);
-        createUser(addressspace, cred);
+        createOrUpdateUser(addressspace, cred);
 
         assertCanConnect(addressspace, cred, Collections.singletonList(dest));
 

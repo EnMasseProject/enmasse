@@ -10,7 +10,6 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.MsgCliApiClient;
-import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -194,13 +193,11 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         log.info("Remove binding and check if client cannot connect");
         ocPage.removeBinding(brokered, bindingID);
 
-        try (UserApiClient clientApi = new UserApiClient(kubernetes, brokered.getMetadata().getNamespace())) {
-            long end = System.currentTimeMillis() + 30_000;
-            String username = credentials.getCredentials().getUsername();
-            while (userExist(clientApi, brokered, username) && end > System.currentTimeMillis()) {
-                Thread.sleep(5_000);
-                log.info("Still awaiting user {} to be removed.", username);
-            }
+        long end = System.currentTimeMillis() + 30_000;
+        String username = credentials.getCredentials().getUsername();
+        while (userExist(brokered, username) && end > System.currentTimeMillis()) {
+            Thread.sleep(5_000);
+            log.info("Still awaiting user {} to be removed.", username);
         }
 
         assertCannotConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic));

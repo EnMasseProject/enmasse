@@ -291,7 +291,7 @@ class CertProviderTest extends TestBase {
         createAddressSpace(addressSpace);
 
         user = new UserCredentials("user1", "password1");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         if (createAddresses) {
             queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);

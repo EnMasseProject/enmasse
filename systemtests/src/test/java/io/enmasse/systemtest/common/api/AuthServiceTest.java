@@ -12,8 +12,6 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
-import io.enmasse.systemtest.utils.UserUtils;
-import io.enmasse.user.model.v1.User;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
@@ -64,8 +62,7 @@ class AuthServiceTest extends TestBase {
         setAddresses(addressSpace, queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
     }
@@ -113,12 +110,10 @@ class AuthServiceTest extends TestBase {
         setAddresses(addressSpace2, queue2);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         UserCredentials cred2 = new UserCredentials("david2", "pepinator2");
-        User user2 = UserUtils.createUserObject(cred2);
-        createUser(addressSpace2, user2);
+        createOrUpdateUser(addressSpace2, cred2);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
         assertCanConnect(addressSpace2, cred2, Collections.singletonList(queue2));
@@ -182,8 +177,7 @@ class AuthServiceTest extends TestBase {
         setAddresses(addressSpace, queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
 
@@ -221,8 +215,7 @@ class AuthServiceTest extends TestBase {
         setAddresses(addressSpace, queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
     }

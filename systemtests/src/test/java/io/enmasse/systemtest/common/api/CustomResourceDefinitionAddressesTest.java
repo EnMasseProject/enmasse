@@ -51,7 +51,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 .build();
         createAddressSpace(brokered);
         userCredentials = new UserCredentials("test", "test");
-        createUser(brokered, userCredentials);
+        createOrUpdateUser(brokered, userCredentials);
         if (selenium.getDriver() == null) {
             selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
         } else {

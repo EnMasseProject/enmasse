@@ -105,7 +105,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
 
         //create new user
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
-        createUser(consoleAddrSpace, user);
+        createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);

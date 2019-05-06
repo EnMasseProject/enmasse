@@ -12,7 +12,6 @@ import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
-import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorization;
@@ -22,8 +21,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -99,7 +96,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
         //username "adapter"
         //name "project-address-space"+".adapter"
-        User user = UserUtils.getUserObject(getUserApiClient(), addressSpace.getMetadata().getName(), "adapter");
+        User user = getUser(addressSpace, "adapter");
         assertNotNull(user);
         assertEquals(1, user.getMetadata().getOwnerReferences().size());
         assertTrue(isOwner(project, user.getMetadata().getOwnerReferences().get(0)));

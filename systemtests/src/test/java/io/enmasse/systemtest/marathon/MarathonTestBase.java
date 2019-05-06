@@ -30,7 +30,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -102,7 +101,7 @@ abstract class MarathonTestBase extends TestBase {
             UserCredentials cred = new UserCredentials("david", "kornelius");
             AddressSpace addressSpace = supplier.get();
             createAddressSpace(addressSpace);
-            createUser(addressSpace, cred);
+            createOrUpdateUser(addressSpace, cred);
 
             log.info("Address space created");
 
@@ -119,7 +118,7 @@ abstract class MarathonTestBase extends TestBase {
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("test-user", "test-user");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
             doAddressTest(addressSpace, "test-topic-createdelete-auth-brokered-%d",
@@ -132,7 +131,7 @@ abstract class MarathonTestBase extends TestBase {
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("test-user", "test-user");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         List<Address> queueList = new ArrayList<>();
         int queueCount = 1500;
@@ -175,7 +174,7 @@ abstract class MarathonTestBase extends TestBase {
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
-        createUser(addressSpace, credentials);
+        createOrUpdateUser(addressSpace, credentials);
 
         runTestInLoop(30, () -> {
             //create client
@@ -202,38 +201,6 @@ abstract class MarathonTestBase extends TestBase {
         });
     }
 
-    void doTestCreateDeleteUsersLong(AddressSpace addressSpace) throws Exception {
-        log.info("testCreateDeleteUsersLong start");
-        createAddressSpace(addressSpace);
-        log.info("Address space '{}'created", addressSpace);
-
-        Address queue = AddressUtils.createQueueAddressObject("test-create-delete-users-queue", getDefaultPlan(AddressType.QUEUE));
-        Address topic = AddressUtils.createTopicAddressObject("test-create-delete-users-topic", getDefaultPlan(AddressType.TOPIC));
-        setAddresses(addressSpace, queue, topic);
-        log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
-
-        final String prefixUser = "test-user";
-        final String prefixPswd = "test-user";
-
-        AtomicInteger from = new AtomicInteger(0);
-        AtomicInteger to = new AtomicInteger(100);
-        int iteration = 100;
-        int step = 10;
-
-        runTestInLoop(30, () -> {
-            createUsers(addressSpace, prefixUser, prefixPswd, from.get(), to.get());
-            log.info("Users <{};{}> successfully created", from.get(), to.get());
-            for (int i = from.get(); i < to.get(); i += step) {
-                assertCanConnect(addressSpace, new UserCredentials(prefixUser + i, prefixPswd + i), Arrays.asList(queue, topic));
-            }
-            removeUsers(addressSpace, prefixUser, from.get(), to.get() - step);
-            log.info("Users <{};{}> successfully removed", from.get(), to.get() - step);
-            from.set(from.get() + iteration);
-            to.set(to.get() + iteration);
-        });
-        log.info("testCreateDeleteUsersLong finished");
-    }
-
     void doTestAuthSendReceiveLong(AddressSpace addressSpace) throws Exception {
         log.info("testAuthSendReceiveLong start");
         createAddressSpace(addressSpace);
@@ -245,7 +212,7 @@ abstract class MarathonTestBase extends TestBase {
         log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
 
         UserCredentials user = new UserCredentials("test-user", "test-user");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
@@ -272,7 +239,7 @@ abstract class MarathonTestBase extends TestBase {
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
-        createUser(addressSpace, credentials);
+        createOrUpdateUser(addressSpace, credentials);
         runTestInLoop(30, () -> {
             AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
             client.getConnectOptions().setCredentials(credentials);
@@ -303,7 +270,7 @@ abstract class MarathonTestBase extends TestBase {
         SeleniumManagement.deployFirefoxApp();
 
         UserCredentials user = new UserCredentials("test", "test");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         int addressCount = 5;
         ArrayList<Address> addresses = generateQueueTopicList("via-web", IntStream.range(0, addressCount));

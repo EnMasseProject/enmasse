@@ -81,7 +81,7 @@ class PlansMarathonTest extends MarathonTestBase {
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
-        createUser(manyAddressesSpace, cred);
+        createOrUpdateUser(manyAddressesSpace, cred);
 
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 3900;

@@ -9,7 +9,6 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.WaitPhase;
-import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
@@ -48,7 +47,6 @@ public abstract class IoTTestBase extends TestBase {
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
             kubernetes.createNamespace(iotProjectNamespace);
         }
-        setUserApiClient(new UserApiClient(kubernetes, iotProjectNamespace));
     }
 
     @AfterEach
