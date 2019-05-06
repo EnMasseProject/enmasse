@@ -220,9 +220,8 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
             if (standardInfraConfig.getSpec().getRouter().getPolicy() != null) {
                 try {
-                    String vhostPolicyName = "public";
-                    String vhostPolicyJson = createVhostPolicyJson(vhostPolicyName, standardInfraConfig.getSpec().getRouter().getPolicy());
-                    parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_NAME, vhostPolicyName);
+                    String vhostPolicyJson = createVhostPolicyJson(standardInfraConfig.getSpec().getRouter().getPolicy());
+                    parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_NAME, "public");
                     parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_JSON, vhostPolicyJson);
                     parameters.put(TemplateParameter.ROUTER_ENABLE_VHOST_POLICY, "true");
                 } catch (Exception e) {
@@ -284,7 +283,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
     }
 
-    static String createVhostPolicyJson(String vhost, RouterPolicySpec policy) throws JsonProcessingException {
+    static String createVhostPolicyJson(RouterPolicySpec policy) throws JsonProcessingException {
         Map<String, Object> defaultGroupPolicy = new HashMap<>();
         defaultGroupPolicy.put("remoteHosts", "*");
         defaultGroupPolicy.put("sources", "*");
@@ -304,7 +303,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
 
         Map<String, Object> defaultVhostPolicy = new HashMap<>();
-        defaultVhostPolicy.put("hostname", vhost);
+        defaultVhostPolicy.put("hostname", "public");
         defaultVhostPolicy.put("allowUnknownUser", true);
 
         if (policy.getMaxConnections() != null) {
@@ -319,7 +318,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             defaultVhostPolicy.put("maxConnectionsPerUser", policy.getMaxConnectionsPerUser());
         }
 
-        defaultVhostPolicy.put("groups", Collections.singletonMap(vhost, defaultGroupPolicy));
+        defaultVhostPolicy.put("groups", Collections.singletonMap("$default", defaultGroupPolicy));
 
         List<Object> values = new ArrayList<>();
         values.add("vhost");
