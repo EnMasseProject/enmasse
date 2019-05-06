@@ -73,7 +73,7 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseBrokered {
     void testCreateDeleteAddressSpace() throws Exception {
         AddressSpace addressSpaceA = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withName("add*space-a")
+                .withName("add-space-a")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
