@@ -227,7 +227,7 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 .build();
 
         String policyJson = TemplateInfraResourceFactory.createVhostPolicyJson(policySpec);
-        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"public\":{\"allowDynamicSource\":true,\"maxSessions\":5,\"sources\":\"*\",\"maxSenders\":5,\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"maxReceivers\":5,\"targets\":\"*\"}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
+        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"sources\":\"*\",\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"targets\":\"*\"}}},{\"hostname\":\"public\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"maxSessions\":5,\"sources\":\"*\",\"maxSenders\":5,\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"maxReceivers\":5,\"targets\":\"*\"}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
         assertEquals(expected, policyJson);
     }
 
