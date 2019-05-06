@@ -6,7 +6,10 @@
 package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.eclipse.paho.client.mqttv3.*;
@@ -100,25 +103,25 @@ public class MqttClientFactory {
 
         Endpoint mqttEndpoint;
 
-        if(endpoint == null) {
+        if (endpoint == null) {
             mqttEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
             if (mqttEndpoint == null) {
                 String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-                mqttEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+                mqttEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
             }
         } else {
             mqttEndpoint = endpoint;
         }
 
-        if(options.getSocketFactory()==null) {
+        if (options.getSocketFactory() == null) {
             SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
             sslContext.init(null, new X509TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
 
             SSLSocketFactory sslSocketFactory = new SNISettingSSLSocketFactory(sslContext.getSocketFactory(), mqttEndpoint.getHost());
 
             options.setSocketFactory(sslSocketFactory);
-        }else if(options.getSocketFactory() instanceof SSLSocketFactory) {
-            options.setSocketFactory(new SNISettingSSLSocketFactory((SSLSocketFactory)options.getSocketFactory(), mqttEndpoint.getHost()));
+        } else if (options.getSocketFactory() instanceof SSLSocketFactory) {
+            options.setSocketFactory(new SNISettingSSLSocketFactory((SSLSocketFactory) options.getSocketFactory(), mqttEndpoint.getHost()));
         }
 
         if (!TestUtils.resolvable(mqttEndpoint)) {
