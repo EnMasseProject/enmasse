@@ -10,7 +10,6 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
@@ -124,6 +123,17 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
     @Override
     public IoTProject getSharedIoTProject() {
         return sharedProject;
+    }
+
+    /**
+     * Get the Hono tenant name from the project configuration.
+     */
+    protected String tenantId() {
+        var project = getSharedIoTProject();
+        if (project == null) {
+            return null;
+        }
+        return tenantId(project);
     }
 
 }

@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(sharedIot)
 public class HttpAdapterTest extends IoTTestBaseWithShared {
 
-    private Logger log = CustomLogger.getLogger();
+    private static Logger log = CustomLogger.getLogger();
 
     private Endpoint deviceRegistryEndpoint;
     private DeviceRegistryClient registryClient;
@@ -95,7 +95,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .setPassword(businessApplicationPassword);
 
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        adapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId + "@" + tenantId(), devicePassword);
+        adapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId, tenantId(), devicePassword);
 
     }
 
@@ -132,20 +132,23 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
     @Test
     public void batchTelemetryTest() throws Exception {
+        simpleHttpTelemetryTest(businessApplicationClient, tenantId(), adapterClient);
+    }
 
+    public static void simpleHttpTelemetryTest(AmqpClient amqpClient, String tenantId, HttpAdapterClient httpAdapterClient) throws Exception{
         int messagesToSend = 50;
 
         log.info("Connecting amqp consumer");
         AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
-        Future<List<Message>> futureReceivedMessages = setUpMessagingConsumer(IOT_ADDRESS_TELEMETRY, receivedMessagesCounter, messagesToSend);
+        Future<List<Message>> futureReceivedMessages = setUpMessagingConsumer(amqpClient, IOT_ADDRESS_TELEMETRY, tenantId, receivedMessagesCounter, messagesToSend);
 
-        waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
+        waitForFirstSuccess(httpAdapterClient, MessageType.TELEMETRY);
 
         log.info("Sending telemetry messages");
         for (int i = 0; i < messagesToSend; i++) {
             JsonObject json = new JsonObject();
             json.put("i", i);
-            sendWithRetry(MessageType.TELEMETRY, json);
+            sendWithRetry(httpAdapterClient, MessageType.TELEMETRY, json);
         }
 
         try {
@@ -157,8 +160,8 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             log.error("Timeout receiving telemetry, messages received: {} error:", receivedMessagesCounter.get(), e);
             throw e;
         }
-
     }
+
 
     @Test
     public void basicEventTest() throws Exception {
@@ -179,20 +182,24 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
     @Test
     public void batchEventTest() throws Exception {
+        simpleHttpEventTest(businessApplicationClient, tenantId(), adapterClient);
+    }
 
-        waitForFirstSuccess(adapterClient, MessageType.EVENT);
+    public static void simpleHttpEventTest(AmqpClient amqpClient, String tenantId, HttpAdapterClient httpAdapterClient) throws Exception{
+
+        waitForFirstSuccess(httpAdapterClient, MessageType.EVENT);
 
         int eventsToSend = 5;
         log.info("Sending events");
         for (int i = 0; i < eventsToSend; i++) {
             JsonObject json = new JsonObject();
             json.put("i", i);
-            sendWithRetry(MessageType.EVENT, json);
+            sendWithRetry(httpAdapterClient, MessageType.EVENT, json);
         }
 
         log.info("Consuming events in business application");
         AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
-        Future<List<Message>> status = setUpMessagingConsumer(IOT_ADDRESS_EVENT, receivedMessagesCounter, eventsToSend);
+        Future<List<Message>> status = setUpMessagingConsumer(amqpClient, IOT_ADDRESS_EVENT, tenantId, receivedMessagesCounter, eventsToSend);
 
         try {
             log.info("Waiting to receive events");
@@ -206,9 +213,9 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
     }
 
-    private Future<List<Message>> setUpMessagingConsumer(String type, AtomicInteger receivedMessagesCounter, int expectedMessages) {
-        return businessApplicationClient.recvMessages(type + "/" + tenantId(), msg -> {
-            if (msg.getBody() instanceof Data) {
+    private static Future<List<Message>> setUpMessagingConsumer(AmqpClient amqpClient, String type, String tenantId, AtomicInteger receivedMessagesCounter, int expectedMessages) {
+        return amqpClient.recvMessages(type + "/" + tenantId, msg ->{
+            if(msg.getBody() instanceof Data) {
                 Binary value = ((Data) msg.getBody()).getValue();
                 JsonObject json = new JsonObject(Buffer.buffer(value.getArray()));
                 if (json.containsKey("i")) {
@@ -219,15 +226,15 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
         });
     }
 
-    private void sendWithRetry(MessageType messageType, JsonObject json) throws Exception, InterruptedException {
+    private static void sendWithRetry(HttpAdapterClient httpAdapterClient, MessageType messageType, JsonObject json) throws Exception, InterruptedException {
         if (messageType == MessageType.COMMAND_RESPONSE) {
             return;
         }
         var timeout = new TimeoutBudget(30, TimeUnit.SECONDS);
         var sendOk = false;
-        while (!timeout.timeoutExpired() && !sendOk) {
-            var response = messageType == MessageType.TELEMETRY ? adapterClient.sendTelemetry(json, Predicates.any()) : adapterClient.sendEvent(json, Predicates.any());
-            if (Predicates.notIn(HTTP_ACCEPTED, HTTP_UNAVAILABLE).test(response.statusCode())) {
+        while(!timeout.timeoutExpired() && !sendOk) {
+            var response = messageType == MessageType.TELEMETRY ? httpAdapterClient.sendTelemetry(json, Predicates.any()) : httpAdapterClient.sendEvent(json, Predicates.any());
+            if(Predicates.notIn(HTTP_ACCEPTED, HTTP_UNAVAILABLE).test(response.statusCode())) {
                 log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), "Error sending " + messageType.name().toLowerCase() + " data");
                 throw new RuntimeException("Status " + response.statusCode() + " body: " + (response.body() != null ? response.body().toString() : null));
             }
