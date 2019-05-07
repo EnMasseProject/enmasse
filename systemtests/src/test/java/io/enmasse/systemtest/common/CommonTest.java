@@ -206,13 +206,14 @@ class CommonTest extends TestBase {
                     resultPromise.completeExceptionally(e);
                     return true;
                 }
-                try {
-                    sendMessage(client, address, counter);
-                } catch ( Exception e ) {
-                    e.printStackTrace();
-                    resultPromise.completeExceptionally(e);
-                    return true;
-                }
+                CompletableFuture.runAsync(()->{
+                    try {
+                        sendMessage(client, address, counter);
+                    } catch ( Exception e ) {
+                        e.printStackTrace();
+                        resultPromise.completeExceptionally(e);
+                    }
+                }, runnable -> new Thread(runnable).start());
                 return false;
             });
             try {
