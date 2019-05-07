@@ -421,3 +421,16 @@ func ApplyTlsSecret(secret *corev1.Secret, key []byte, certificate []byte) {
 		"tls.crt": certificate,
 	}
 }
+
+func RemoveEnv(container *corev1.Container, name string) {
+	if container.Env == nil {
+		return
+	}
+
+	for i, e := range container.Env {
+		if e.Name == name {
+			container.Env = append(container.Env[:i], container.Env[i+1:]...)
+			break
+		}
+	}
+}
