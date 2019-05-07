@@ -6,7 +6,6 @@ package io.enmasse.systemtest.iot;
 
 import java.net.HttpURLConnection;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -26,17 +25,17 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.iot.http.HttpAdapterTest;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import io.enmasse.user.model.v1.UserBuilder;
 
 @Tag(TestTag.sharedIot)
 @Tag(TestTag.smoke)
@@ -111,28 +110,20 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     private User configureAmqpUser(IoTProject project, AddressSpace addressSpace) {
         String tenant = tenantId(project);
 
-        User amqpUser = new UserBuilder()
-
-                .withNewMetadata()
-                .withName(String.format("%s.%s", addressSpace.getMetadata().getName(), project.getMetadata().getName()))
-                .endMetadata()
-
-                .withNewSpec()
-                .withUsername(UUID.randomUUID().toString())
-                .withNewAuthentication()
-                .withPassword(Base64.getEncoder().encodeToString(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)))
-                .withType(UserAuthenticationType.password)
-                .endAuthentication()
-                .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
-                        .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + tenant,
-                                IOT_ADDRESS_TELEMETRY + "/" + tenant + "/*",
-                                IOT_ADDRESS_EVENT + "/" + tenant,
-                                IOT_ADDRESS_EVENT + "/" + tenant + "/*")
-                        .withOperations(Operation.recv)
-                        .build()))
+        User amqpUser = UserUtils.createUserResource(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                .editSpec()
+                .withAuthorization(
+                        Collections.singletonList(new UserAuthorizationBuilder()
+                                .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + tenant,
+                                        IOT_ADDRESS_TELEMETRY + "/" + tenant + "/*",
+                                        IOT_ADDRESS_EVENT + "/" + tenant,
+                                        IOT_ADDRESS_EVENT + "/" + tenant + "/*")
+                                .withOperations(Operation.recv)
+                                .build()))
                 .endSpec()
-                .build();
-        kubernetes.getUserClient(project.getMetadata().getNamespace()).create(amqpUser);
+                .done();
+
+        createOrUpdateUser(addressSpace, amqpUser);
 
         return amqpUser;
     }
