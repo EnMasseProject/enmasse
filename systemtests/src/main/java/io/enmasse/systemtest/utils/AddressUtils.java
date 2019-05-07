@@ -12,7 +12,6 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
@@ -171,7 +170,7 @@ public class AddressUtils {
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
         client.delete(getAddresses(addressSpace));
         for (Address address : addresses) {
-            address = client.create(new DoneableAddress(address).editMetadata().withName(addressSpace.getMetadata().getName() + "." + address.getMetadata().getName()).endMetadata().done());
+            address = client.create(new DoneableAddress(address).editMetadata().withName(addressSpace.getMetadata().getName() + "." + address.getSpec().getAddress()).endMetadata().done());
             log.info("Address {} created", address.getMetadata().getName());
         }
         if (wait) {
@@ -180,13 +179,16 @@ public class AddressUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void appendAddresses(TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Address... destinations) throws Exception {
+    public static void appendAddresses(TimeoutBudget budget, AddressSpace addressSpace, boolean wait, Address... addresses) throws Exception {
         var client = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace());
-        log.info("Addresses {} in address space {} will be updated", destinations, addressSpace.getMetadata().getName());
+        log.info("Addresses {} in address space {} will be updated", addresses, addressSpace.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
-        client.create(destinations);
+        for (Address address : addresses) {
+            address = client.create(new DoneableAddress(address).editMetadata().withName(addressSpace.getMetadata().getName() + "." + address.getSpec().getAddress()).endMetadata().done());
+            log.info("Address {} created", address.getMetadata().getName());
+        }
         if (wait) {
-            waitForDestinationsReady(addressSpace, budget, destinations);
+            waitForDestinationsReady(addressSpace, budget, addresses);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -196,48 +198,16 @@ public class AddressUtils {
         log.info("Address {} in address space {} will be replaced", destination, addressSpace.getMetadata().getName());
         var client = Kubernetes.getInstance().getAddressClient();
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
-        client.createOrReplace(destination);
+        client.createOrReplace(new DoneableAddress(destination)
+                .editMetadata()
+                .withName(addressSpace.getMetadata().getName() + "." + destination.getSpec().getAddress())
+                .endMetadata()
+                .done());
         if (wait) {
             waitForDestinationsReady(addressSpace, timeoutBudget, destination);
             waitForDestinationPlanApplied(addressSpace, timeoutBudget, destination);
         }
         TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    public static <T> List<T> convertToListAddress(JsonObject htmlResponse, Class<T> clazz, Predicate<JsonObject> filter) throws Exception {
-        if (htmlResponse != null) {
-            String kind = htmlResponse.getString("kind");
-            List<T> addresses = new ArrayList<>();
-            switch (kind) {
-                case "Address":
-                    if (filter.test(htmlResponse)) {
-                        if (clazz.equals(String.class)) {
-                            addresses.add(clazz.cast(htmlResponse.getJsonObject("spec").getString("address")));
-                        } else if (clazz.equals(Address.class)) {
-                            addresses.add(clazz.cast(AddressUtils.jsonToAddress(htmlResponse)));
-                        }
-                    }
-                    break;
-                case "AddressList":
-                    JsonArray items = htmlResponse.getJsonArray("items");
-                    if (items != null) {
-                        for (int i = 0; i < items.size(); i++) {
-                            if (filter.test(items.getJsonObject(i))) {
-                                if (clazz.equals(String.class)) {
-                                    addresses.add(clazz.cast(items.getJsonObject(i).getJsonObject("spec").getString("address")));
-                                } else if (clazz.equals(Address.class)) {
-                                    addresses.add(clazz.cast(AddressUtils.jsonToAddress(items.getJsonObject(i))));
-                                }
-                            }
-                        }
-                    }
-                    break;
-                default:
-                    throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
-            }
-            return addresses;
-        }
-        throw new IllegalArgumentException("htmlResponse can't be null");
     }
 
 
