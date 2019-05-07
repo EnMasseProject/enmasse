@@ -29,7 +29,6 @@ import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.*;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.fabric8.kubernetes.client.dsl.LogWatch;
@@ -207,7 +206,7 @@ public abstract class Kubernetes {
 
     public MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> getIoTProjectClient(String namespace) {
         if(namespace == null) {
-            return client.customResources(CoreCrd.addresseSpaces(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
+            return client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
         }else {
             return (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class).inNamespace(namespace);
         }

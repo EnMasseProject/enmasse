@@ -167,7 +167,7 @@ class DeviceRegistryTest extends IoTTestBaseWithShared {
     }
 
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {
-        try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId + "@" + tenantId(), password)) {
+        try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantId(), password)) {
             JsonObject payload = new JsonObject(Map.of("data", "dummy"));
 
             var expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE, HTTP_ACCEPTED);

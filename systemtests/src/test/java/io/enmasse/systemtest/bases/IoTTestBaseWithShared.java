@@ -11,7 +11,6 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -82,7 +81,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
     }
 
     public AddressSpace getAddressSpace() {
-        return getAddressSpace(this.addressSpace);
+        return getAddressSpace(this.iotProjectNamespace, this.addressSpace);
     }
 
     /**
@@ -90,7 +89,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
      */
     private AmqpClientFactory createAmqpClientFactory() throws Exception {
 
-        createOrUpdateUser(this.addressSpace, this.credentials);
+        createOrUpdateUser(getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
         return new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
 
     }
@@ -140,6 +139,17 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
     @Override
     public IoTProject getSharedIoTProject() {
         return sharedProject;
+    }
+
+    /**
+     * Get the Hono tenant name from the project configuration.
+     */
+    protected String tenantId() {
+        var project = getSharedIoTProject();
+        if (project == null) {
+            return null;
+        }
+        return tenantId(project);
     }
 
 }
