@@ -3,9 +3,11 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
@@ -50,17 +52,33 @@ func detectOpenshift() bool {
 		return false
 	}
 
-	body, err := routeClient.RESTClient().Get().DoRaw()
+	retries := 10
+	for retries > 0 {
+		body, err := routeClient.RESTClient().Get().DoRaw()
+		log.Info(fmt.Sprintf("Request error: %v", err))
+		log.V(2).Info(fmt.Sprintf("Body: %v", string(body)))
 
-	log.Info(fmt.Sprintf("Request error: %v", err))
-	log.V(2).Info(fmt.Sprintf("Body: %v", string(body)))
+		if err == nil {
+			return true
+		}
 
-	return err == nil
+		se, ok := err.(*errors.StatusError)
+		if ok {
+			code := se.Status().Code
+			log.Info(fmt.Sprintf("Response code: %d", code))
+			return code >= 200 && code < 300
+		}
+
+		retries -= 1
+		time.Sleep(10 * time.Second)
+	}
+
+	return false
 }
 
 func OpenshiftUri() (*url.URL, bool, error) {
 
-	data, err := WellKnownOauthMetadata();
+	data, err := WellKnownOauthMetadata()
 	if err != nil {
 		log.Error(err, "Error getting well-known OAuth metadata: %v")
 		return nil, false, err
