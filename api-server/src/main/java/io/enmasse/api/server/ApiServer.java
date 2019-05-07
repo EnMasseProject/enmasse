@@ -11,6 +11,7 @@ import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
 import io.enmasse.api.auth.KubeAuthApi;
+import io.enmasse.api.common.OpenShift;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
@@ -28,16 +29,11 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -67,7 +63,7 @@ public class ApiServer extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startPromise) throws Exception {
-        boolean isOpenShift = isOpenShift(client);
+        boolean isOpenShift = OpenShift.isOpenShift(client);
         SchemaApi schemaApi = KubeSchemaApi.create(client, client.getNamespace(), options.getVersion(), isOpenShift);
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
@@ -157,30 +153,6 @@ public class ApiServer extends AbstractVerticle {
         } catch (CertificateException e) {
             log.info("Error validating certificate {}. Skipping", id);
             return null;
-        }
-    }
-
-    private static boolean isOpenShift(NamespacedKubernetesClient client) throws InterruptedException {
-        int retries = 10;
-        while (true) {
-            // Need to query the full API path because Kubernetes does not allow GET on /
-            OkHttpClient httpClient = client.adapt(OkHttpClient.class);
-            HttpUrl url = HttpUrl.get(client.getMasterUrl()).resolve("/apis/route.openshift.io");
-            Request.Builder requestBuilder = new Request.Builder()
-                    .url(url)
-                    .get();
-
-            try (Response response = httpClient.newCall(requestBuilder.build()).execute()) {
-                return response.code() >= 200 && response.code() < 300;
-            } catch (IOException e) {
-                retries--;
-                if (retries <= 0) {
-                    throw new UncheckedIOException(e);
-                } else {
-                    log.warn("Exception when checking API availability, retrying {} times", retries, e);
-                }
-            }
-            Thread.sleep(5000);
         }
     }
 
