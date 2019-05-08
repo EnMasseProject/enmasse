@@ -5,8 +5,8 @@ metadata:
 spec:
   services:
     deviceRegistry:
-      file:
-        numberOfDevicesPerTenant: 100000
+      infinispan:
+        infinispanServerAddress: example-infinispan:11222
   adapters:
     mqtt:
       endpoint:
