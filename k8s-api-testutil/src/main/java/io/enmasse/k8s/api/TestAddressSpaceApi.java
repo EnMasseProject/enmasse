@@ -5,7 +5,9 @@
 package io.enmasse.k8s.api;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.k8s.api.cache.CacheWatcher;
+import io.fabric8.kubernetes.client.Watcher;
 
 import static java.util.Optional.ofNullable;
 
@@ -71,6 +73,11 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
+    public AddressSpaceList getAddressSpaces(String namespace, Map<String, String> labels) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels) {
         return null;
     }
@@ -126,6 +133,11 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
         }
 
         return addressApiMap.get(addressSpaceName);
+    }
+
+    @Override
+    public void watch(Watcher<AddressSpace> watcher, String namespace, String resourceVersion, Map<String, String> labels) {
+        throw new UnsupportedOperationException();
     }
 
     public Collection<TestAddressApi> getAddressApis() {

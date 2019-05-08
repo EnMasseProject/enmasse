@@ -14,14 +14,14 @@ import io.enmasse.api.auth.RbacSecurityContext;
 import io.enmasse.api.auth.ResourceVerb;
 import io.enmasse.api.common.CheckedFunction;
 import io.enmasse.api.common.Exceptions;
-import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.api.common.Status;
 import io.enmasse.api.common.UuidGenerator;
 import io.enmasse.api.v1.AddressApiHelper;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.k8s.api.AddressSpaceApi;
+import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.k8s.api.SchemaProvider;
 import io.enmasse.k8s.model.v1beta1.PartialObjectMetadata;
 import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.k8s.model.v1beta1.TableColumnDefinition;
@@ -30,19 +30,27 @@ import io.enmasse.k8s.util.TimeUtil;
 import io.enmasse.model.validation.DefaultValidator;
 import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
 
 @Path(HttpAddressSpaceService.BASE_URI)
 public class HttpAddressSpaceService {
@@ -59,6 +67,7 @@ public class HttpAddressSpaceService {
     private final Clock clock;
 
     public HttpAddressSpaceService(AddressSpaceApi addressSpaceApi, SchemaProvider schemaProvider, Clock clock, AuthenticationServiceRegistry authenticationServiceRegistry) {
+        log.warn("KWDEBUG");
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.clock = clock;
@@ -82,18 +91,93 @@ public class HttpAddressSpaceService {
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
-    public Response getAddressSpaceList(@Context SecurityContext securityContext, @HeaderParam("Accept") String acceptHeader, @PathParam("namespace") String namespace, @QueryParam("labelSelector") String labelSelector) throws Exception {
-        return doRequest("Error getting address space list", () -> {
-            verifyAuthorized(securityContext, namespace, ResourceVerb.list);
-            Instant now = clock.instant();
-            if (labelSelector != null) {
-                Map<String, String> labels = AddressApiHelper.parseLabelSelector(labelSelector);
-                return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.listAddressSpacesWithLabels(namespace, labels)))).build();
-            } else {
-                return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.listAddressSpaces(namespace)))).build();
+    public void getAddressSpaceList(@Context SecurityContext securityContext,
+                                    @HeaderParam("Accept") String acceptHeader,
+                                    @PathParam("namespace") String namespace,
+                                    @QueryParam("labelSelector") String labelSelector,
+                                    @QueryParam("watch") @DefaultValue("false") boolean watch,
+                                    @QueryParam("resourceVersion") String resourceVersion,
+                                    @Suspended AsyncResponse asyncResponse) throws Exception {
+        verifyAuthorized(securityContext, namespace, ResourceVerb.list);
+        final Map<String, String> labels = (labelSelector != null) ? AddressApiHelper.parseLabelSelector(labelSelector) : null;
+
+
+        if (!watch) {
+            try {
+                Response response = doRequest("Error getting address space list", () -> {
+                    Instant now = clock.instant();
+                    return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.getAddressSpaces(namespace, labels)))).build();
+                });
+                asyncResponse.resume(response);
+            } catch (Exception e) {
+                asyncResponse.resume(e);
             }
-        });
+        } else {
+
+            ExecutorService e = Executors.newFixedThreadPool(1);
+            e.execute(() -> {
+                try {
+                    asyncResponse.resume(new StreamingOutput() {
+                        CompletableFuture<Void> future = new CompletableFuture<>();
+                        @Override
+                        public void write(OutputStream output) throws IOException, WebApplicationException {
+                            addressSpaceApi.watch(new Watcher<>() {
+                                @Override
+                                public void eventReceived(Action action, AddressSpace resource) {
+                                    log.warn("KWDEBUG action {} resource {}", action, resource);
+                                    if (resource != null) {
+                                        try {
+                                            Map<String, Object> watchMap = new HashMap<>();
+                                            watchMap.put("object", resource);
+                                            watchMap.put("type", action);
+                                            MAPPER.writeValue(output, watchMap);
+                                            output.flush();
+                                        } catch (IOException e12) {
+                                            throw new UncheckedIOException(e12);
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onClose(KubernetesClientException cause) {
+                                    try {
+                                        output.close();
+                                    } catch (IOException ignored) {
+                                    }
+                                    finally {
+                                        if (cause != null) {
+                                            future.completeExceptionally(cause);
+                                        } else {
+                                            future.complete(null);
+                                        }
+                                    }
+                                }
+                            }, namespace, resourceVersion, labels);
+
+                            try {
+                                future.get();
+                            } catch (InterruptedException e1) {
+                                Thread.currentThread().interrupt();
+                            } catch (ExecutionException e1) {
+                                if (e1.getCause() instanceof IOException) {
+                                    throw ((IOException) e1.getCause());
+                                } else {
+                                    throw new RuntimeException(e1.getCause());
+                                }
+                            }
+                        }
+                    });
+                } finally {
+                    e.shutdown();
+                }
+
+
+            });
+
+        }
     }
+
+
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
@@ -123,6 +207,7 @@ public class HttpAddressSpaceService {
             AddressSpace created = addressSpaceApi.getAddressSpaceWithName(namespace, addressSpace.getMetadata().getName()).orElse(addressSpace);
             UriBuilder builder = uriInfo.getAbsolutePathBuilder();
             builder.path(created.getMetadata().getName());
+
             return Response.created(builder.build()).entity(removeSecrets(created)).build();
         });
     }
@@ -298,6 +383,18 @@ public class HttpAddressSpaceService {
         if (!existing.getLabel(labelKey).equals(addressSpace.getLabel(labelKey))) {
             addressSpace.putLabel(labelKey, existing.getLabel(labelKey));
         }
+    }
+
+    static AddressSpaceList removeSecrets(AddressSpaceList addressSpaceList) {
+
+        final List<AddressSpace> result = new ArrayList<>();
+
+        addressSpaceList.getItems().stream()
+                .map(HttpAddressSpaceService::removeSecrets)
+                .forEachOrdered(result::add);
+
+        addressSpaceList.setItems(result);
+        return addressSpaceList;
     }
 
     static AddressSpaceList removeSecrets(Collection<AddressSpace> addressSpaceList) {
