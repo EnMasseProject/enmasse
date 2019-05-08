@@ -569,27 +569,45 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			return err
 		}
 
+		install.ApplyEnvSimple(container, "OPENSHIFT_AVAILABLE", strconv.FormatBool(util.IsOpenshift()))
+
+		if consoleservice.ObjectMeta.GetAnnotations() != nil {
+			install.ApplyEnv(container, "ITEM_REFRESH_RATE", func(envvar *corev1.EnvVar) {
+				envvar.Value = consoleservice.ObjectMeta.GetAnnotations()["enmasse.io/console-refresh-rate"]
+			})
+		} else {
+			install.RemoveEnv(container, "ITEM_REFRESH_RATE")
+		}
+
 		if consoleservice.Spec.Scope != nil {
 			install.ApplyEnv(container, "OAUTH2_SCOPE", func(envvar *corev1.EnvVar) {
 				envvar.Value = *consoleservice.Spec.Scope
 			})
+		} else {
+			install.RemoveEnv(container, "OAUTH2_SCOPE")
 		}
 
 		if consoleservice.Spec.DiscoveryMetadataURL != nil {
 			install.ApplyEnv(container, "DISCOVERY_METADATA_URL", func(envvar *corev1.EnvVar) {
 				envvar.Value = *consoleservice.Spec.DiscoveryMetadataURL
 			})
+		} else {
+			install.RemoveEnv(container, "DISCOVERY_METADATA_URL")
 		}
 
 		if consoleservice.Spec.SsoCookieDomain != nil {
 			install.ApplyEnv(container, "SSO_COOKIE_DOMAIN", func(envvar *corev1.EnvVar) {
 				envvar.Value = *consoleservice.Spec.SsoCookieDomain
 			})
+		} else {
+			install.RemoveEnv(container, "SSO_COOKIE_DOMAIN")
 		}
 
 		if consoleservice.Spec.SsoCookieSecret != nil {
 			b := true
 			install.ApplyEnvOptionalSecret(container, "SSO_COOKIE_SECRET", "cookie-secret", consoleservice.Spec.SsoCookieSecret.Name, &b)
+		} else {
+			install.RemoveEnv(container, "SSO_COOKIE_SECRET")
 		}
 
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
@@ -623,8 +641,24 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 				Name:          "http",
 			}}
 
-			// Can't define a probe as HTTPD bound to loopback.  Perhaps have oauth-proxy's probes reach through
-			// HTTP and hit whoami?
+			probeHandler := corev1.Handler{
+				Exec: &corev1.ExecAction{
+					Command: []string{"bash",
+						"-c",
+						"curl --fail --show-error --silent " +
+							"--header \"X-Forwarded-Access-Token: $(< /var/run/secrets/kubernetes.io/serviceaccount/token)\" " +
+							"http://localhost:8080/apis/user.openshift.io/v1/users/~"},
+				},
+			}
+			container.LivenessProbe = &corev1.Probe{
+				InitialDelaySeconds: 120,
+				Handler:             probeHandler,
+			}
+
+			container.ReadinessProbe = &corev1.Probe{
+				InitialDelaySeconds: 60,
+				Handler:             probeHandler,
+			}
 
 			return nil
 		}); err != nil {
@@ -652,9 +686,6 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 	}
 
-	deployment.Spec.Strategy = appsv1.DeploymentStrategy{
-		Type: appsv1.RecreateDeploymentStrategyType,
-	}
 	return nil
 }
 
