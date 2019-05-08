@@ -17,8 +17,14 @@
   oc apply -f templates/build/enmasse-latest/install/components/example-plans
   
   oc apply -f templates/build/enmasse-latest/install/preview-bundles/iot
+  ```
+
+* If you want to use the default file-based device registry, deploy the following configuration. 
+
+  ```
   oc apply -f templates/build/enmasse-latest/install/components/iot/examples/iot-config.yaml
   ```
+  See below to deploy a more scalable device registry based on infinispan.
 
 * Wait for the EnMasse installation to succeed. The following command should show all pods to be ready:
 
@@ -93,6 +99,22 @@ In Hono project run
             trusted CA list on a standard RHEL/CentOS machine and will only work when you use a proper (not self-signed) certificate, like from Let's Encrypt.
 
   **Note:** For this to work you will need a Mosquitto CLI version which supports TLS SNI.
+
+## Use Infinispan as data store for device registry
+
+The default implementation for the device registry in enmasse use a file-based persistence solution. 
+As this provide very limited performance we are currently working on a more robust registry built with [infinispan](https://infinispan.org/).
+
+You can try out this solution easily. First, this will deploy an Infinispan service with one node :
+  ```
+  oc apply -f templates/build/enmasse-latest/install/components/iot/examples/infinispan-service.yml
+  ```
+  You can also use the [infinispan operator](https://github.com/infinispan/infinispan-operator) to deploy a cluster.
+  
+  When the infinispan service is available, install the IoT components with the infinispan device registry:
+    ```
+    oc apply -f templates/build/enmasse-latest/install/components/iot/examples/iot-config-infinispan.yaml
+    ```
 
 ## Work with HAT – Hono Admin Tool
 
