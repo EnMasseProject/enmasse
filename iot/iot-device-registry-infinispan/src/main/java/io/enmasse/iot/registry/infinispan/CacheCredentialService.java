@@ -25,7 +25,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.service.credentials.CompleteBaseCredentialsService;
-import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsObject;
 import org.eclipse.hono.util.CredentialsResult;
@@ -87,8 +86,10 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
 
         credentialsCache.withFlags(Flag.FORCE_RETURN_VALUE).putIfAbsentAsync(key, registryCredential).thenAccept(result -> {
             if (result == null) {
+                log.debug("Created credentials [tenant-id: {}, auth-id: {}, type: {}]", tenantId, credentials.getAuthId(), credentials.getType());
                 resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_CREATED)));
             } else {
+                log.debug("Conflict, cannot create credentials [tenant-id: {}, auth-id: {}, type: {}]", tenantId, credentials.getAuthId(), credentials.getType());
                 resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_CONFLICT)));
             }
         });
@@ -128,19 +129,23 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
 
         credentialsCache.getAsync(key).thenAccept(credential -> {
             if (credential == null) {
+                log.debug("Credential not found [tenant-id: {}, auth-id: {}, type: {}]", tenantId, authId, type);
                 resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
             } else if (clientContext != null && !clientContext.isEmpty()) {
                 if (contextMatches(clientContext, new JsonObject(credential.getOriginalJson()))) {
+                    log.debug("Retrieve credential, context matches [tenant-id: {}, auth-id: {}, type: {}]", tenantId, authId, type);
                     resultHandler.handle(Future.succeededFuture(
                             CredentialsResult.from(HttpURLConnection.HTTP_OK,
-                                    JsonObject.mapFrom(credential.getOriginalJson()), CacheDirective.noCacheDirective())));
+                                    new JsonObject(credential.getOriginalJson()))));
                 } else {
+                    log.debug("Context mismatch [tenant-id: {}, auth-id: {}, type: {}]", tenantId, authId, type);
                     resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
                 }
             } else {
+                log.debug("Retrieve credential [tenant-id: {}, auth-id: {}, type: {}]", tenantId, authId, type);
                 resultHandler.handle(Future.succeededFuture(
                         CredentialsResult.from(HttpURLConnection.HTTP_OK,
-                                JsonObject.mapFrom(credential.getOriginalJson()), CacheDirective.noCacheDirective())));
+                                new JsonObject(credential.getOriginalJson()))));
             }
         });
     }
@@ -154,10 +159,12 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
         final CredentialsKey key = new CredentialsKey(tenantId, credentials.getAuthId(), credentials.getType());
         final RegistryCredentialObject registryCredential = new RegistryCredentialObject(credentials, tenantId, otherKeys);
 
-        credentialsCache.replaceAsync(key, registryCredential).thenAccept(result -> {
+        credentialsCache.withFlags(Flag.FORCE_RETURN_VALUE).replaceAsync(key, registryCredential).thenAccept(result -> {
             if (result == null){
+                log.debug("Cannot update credential : not found [tenant-id: {}, auth-id: {}, type: {}]", tenantId, credentials.getAuthId(), credentials.getType());
                 resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
             } else {
+                log.debug("Credential updated [tenant-id: {}, auth-id: {}, type: {}]", tenantId, credentials.getAuthId(), credentials.getType());
                 resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NO_CONTENT)));
             }
         });
@@ -169,8 +176,10 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
         final CredentialsKey key = new CredentialsKey(tenantId, authId, type);
         credentialsCache.withFlags(Flag.FORCE_RETURN_VALUE).removeAsync(key).thenAccept(result -> {
                     if (result == null){
+                        log.debug("Cannot remove credential : not found [tenant-id: {}, auth-id: {}, type: {}]", tenantId, authId, type);
                         resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
                     } else {
+                        log.debug("removed credential : not found [tenant-id: {}, auth-id: {}, type: {}]", tenantId, authId, type);
                         resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NO_CONTENT)));
                     }
                 }
@@ -182,6 +191,7 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
 
         final List<RegistryCredentialObject>  matches = queryAllCredentialsForDevice(tenantId, deviceId);
         if (matches.isEmpty()){
+            log.debug("Cannot remove credentials for device : not found [tenant-id: {}, deviceID {}]", tenantId, deviceId);
             resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
         } else {
             final List<CompletableFuture<RegistryCredentialObject>> futureResultList = new ArrayList();
@@ -192,9 +202,10 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
                         new JsonObject(registryCredential.getOriginalJson()).getString(CredentialsConstants.FIELD_TYPE));
                 futureResultList.add( credentialsCache.removeAsync(key));
             });
-            CompletableFuture.allOf(futureResultList.toArray(new CompletableFuture[futureResultList.size()]))
-                    .thenAccept( r->
-                            resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NO_CONTENT))));
+            CompletableFuture.allOf(futureResultList.toArray(new CompletableFuture[futureResultList.size()])).thenAccept( r-> {
+                log.debug("Removed {} credentials for device [tenant-id: {}, deviceID {}]", matches.size(), tenantId, deviceId);
+                resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NO_CONTENT)));
+            });
         }
     }
 
@@ -208,14 +219,16 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
         });
 
         if (creds.isEmpty()) {
+            log.debug("Cannot retrieve credentials for device : not found [tenant-id: {}, deviceID {}]", tenantId, deviceId);
             resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
         } else {
 
+            log.debug("Retrieved {} credentials for device [tenant-id: {}, deviceID {}]", creds.size(), tenantId, deviceId);
             final JsonObject result = new JsonObject()
                     .put(CredentialsConstants.FIELD_CREDENTIALS_TOTAL, creds.size())
                     .put(CredentialsConstants.CREDENTIALS_ENDPOINT, creds);
             resultHandler.handle(Future.succeededFuture(
-                    CredentialsResult.from(HttpURLConnection.HTTP_OK, result, CacheDirective.noCacheDirective())));
+                    CredentialsResult.from(HttpURLConnection.HTTP_OK, result)));
         }
     }
 
