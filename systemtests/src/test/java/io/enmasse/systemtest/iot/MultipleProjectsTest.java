@@ -11,6 +11,8 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +47,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     private CredentialsRegistryClient credentialsClient;
 
     private int numberOfProjects = 2;
-    private List<MultipleIoTProjectsTestContext> projects = new ArrayList<>();
+    private List<IoTProjectTestContext> projects = new ArrayList<>();
 
     @BeforeEach
     void initEnv() throws Exception {
@@ -75,15 +77,19 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
 
         for(int i=1; i<=numberOfProjects; i++) {
             String projectName = String.format("project-%s", i);
-            IoTProject project = createProject(projectName);
 
-            HttpAdapterClient httpAdapterClient = configureDeviceSide(project);
+            if (!kubernetes.namespaceExists(projectName)) {
+                kubernetes.createNamespace(projectName);
+            }
+            IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName, projectName);
+            createIoTProject(project);
+            IoTProjectTestContext ctx = new IoTProjectTestContext(projectName, project);
 
-            AddressSpace addressSpace = getAddressSpace(project.getMetadata().getNamespace(), project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
-            User amqpUser = configureAmqpUser(project, addressSpace);
-            AmqpClient amqpClient = configureAmqpClient(addressSpace, amqpUser);
+            configureDeviceSide(ctx);
 
-            projects.add(new MultipleIoTProjectsTestContext(project, httpAdapterClient, amqpClient, amqpUser));
+            configureAmqpSide(ctx);
+
+            projects.add(ctx);
         }
     }
 
@@ -93,7 +99,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
             logCollector.collectHttpAdapterQdrProxyState();
         }
 
-        for(MultipleIoTProjectsTestContext ctx : projects) {
+        for(IoTProjectTestContext ctx : projects) {
             cleanDeviceSide(ctx);
             cleanAmqpSide(ctx);
         }
@@ -101,10 +107,27 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     }
 
     @Test
-    void testMultipleProjectsSequentially() throws Exception {
-        for(MultipleIoTProjectsTestContext ctx : projects) {
-            HttpAdapterTest.simpleHttpTelemetryTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getHttpAdapterClient());
-        }
+    void testMultipleProjects() throws Exception {
+        CompletableFuture.allOf(projects.stream()
+                .map(ctx -> {
+                    return CompletableFuture.runAsync(() -> {
+                        try {
+                            HttpAdapterTest.simpleHttpTelemetryTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getHttpAdapterClient());
+                        } catch ( Exception e ) {
+                            log.error("Error running http telemetry test", e);
+                            throw new RuntimeException(e);
+                        }
+                    }, e -> new Thread(e).start());
+                })
+                .toArray(CompletableFuture[]::new)).get(5, TimeUnit.MINUTES);
+    }
+
+    private void configureAmqpSide(IoTProjectTestContext ctx) throws Exception {
+        AddressSpace addressSpace = getAddressSpace(ctx.getNamespace(), ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        User amqpUser = configureAmqpUser(ctx.getProject(), addressSpace);
+        ctx.setAmqpUser(amqpUser);
+        AmqpClient amqpClient = configureAmqpClient(addressSpace, amqpUser);
+        ctx.setAmqpClient(amqpClient);
     }
 
     private User configureAmqpUser(IoTProject project, AddressSpace addressSpace) {
@@ -129,47 +152,38 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     }
 
     private AmqpClient configureAmqpClient(AddressSpace addressSpace, User user) throws Exception {
-        AmqpClient project1AmqpClient = amqpClientFactory.createQueueClient(addressSpace);
-        project1AmqpClient.getConnectOptions()
+        AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
+        amqpClient.getConnectOptions()
             .setUsername(user.getSpec().getUsername())
             .setPassword(new String(Base64.getDecoder().decode(user.getSpec().getAuthentication().getPassword())));
-        return project1AmqpClient;
+        return amqpClient;
     }
 
-    private void cleanAmqpSide(MultipleIoTProjectsTestContext ctx) throws Exception {
+    private void cleanAmqpSide(IoTProjectTestContext ctx) throws Exception {
         ctx.getAmqpClient().close();
-        var userClient = kubernetes.getUserClient(ctx.getProject().getMetadata().getNamespace());
+        var userClient = kubernetes.getUserClient(ctx.getNamespace());
         userClient.delete(userClient.withName(ctx.getAmqpUser().getMetadata().getName()).get());
     }
 
-    private HttpAdapterClient configureDeviceSide(IoTProject project) throws Exception {
-        String tenant = tenantId(project);
-        String deviceId = UUID.randomUUID().toString();
-        String deviceAuthId = UUID.randomUUID().toString();
-        String devicePassword = UUID.randomUUID().toString();
-        registryClient.registerDevice(tenant, deviceId);
-        credentialsClient.addCredentials(tenant, deviceId, deviceAuthId, devicePassword);
+    private void configureDeviceSide(IoTProjectTestContext ctx) throws Exception {
+        String tenant = tenantId(ctx.getProject());
+        ctx.setDeviceId(UUID.randomUUID().toString());
+        ctx.setDeviceAuthId(UUID.randomUUID().toString());
+        ctx.setDevicePassword(UUID.randomUUID().toString());
+        registryClient.registerDevice(tenant, ctx.getDeviceId());
+        credentialsClient.addCredentials(tenant, ctx.getDeviceId(), ctx.getDeviceAuthId(), ctx.getDevicePassword());
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        return new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId, tenant, devicePassword);
+        ctx.setHttpAdapterClient(new HttpAdapterClient(kubernetes, httpAdapterEndpoint, ctx.getDeviceAuthId(), tenant, ctx.getDevicePassword()));
     }
 
-    private void cleanDeviceSide(MultipleIoTProjectsTestContext ctx) throws Exception {
+    private void cleanDeviceSide(IoTProjectTestContext ctx) throws Exception {
         String tenant = tenantId(ctx.getProject());
-        String deviceId = ctx.getProject().getMetadata().getName();
+        String deviceId = ctx.getDeviceId();
         credentialsClient.deleteAllCredentials(tenant, deviceId);
         credentialsClient.getCredentials(tenant, deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         registryClient.deleteDeviceRegistration(tenant, deviceId);
         registryClient.getDeviceRegistration(tenant, deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         ctx.getHttpAdapterClient().close();
-    }
-
-    private IoTProject createProject(String projectName) throws Exception {
-        if (!kubernetes.namespaceExists(projectName)) {
-            kubernetes.createNamespace(projectName);
-        }
-        IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName, projectName);
-        createIoTProject(project);
-        return project;
     }
 
 }
