@@ -138,7 +138,7 @@ public class CacheTenantService extends CompleteBaseTenantService<CacheTenantCon
                 resultHandler.handle(Future.succeededFuture(TenantResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
             } else {
                 resultHandler.handle(Future.succeededFuture(
-                        TenantResult.from(HttpURLConnection.HTTP_OK, JsonObject.mapFrom(registryTenantObject.getTenantObject()))));
+                        TenantResult.from(HttpURLConnection.HTTP_OK, new JsonObject(registryTenantObject.getTenantObject()))));
             }
         });
     }
@@ -156,7 +156,7 @@ public class CacheTenantService extends CompleteBaseTenantService<CacheTenantCon
                 resultHandler.handle(Future.succeededFuture(TenantResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
             } else {
                 resultHandler.handle(Future.succeededFuture(TenantResult.from(HttpURLConnection.HTTP_OK,
-                        JsonObject.mapFrom(searchResult.getTenantObject()))));
+                        new JsonObject(searchResult.getTenantObject()))));
             }
         }
     }
