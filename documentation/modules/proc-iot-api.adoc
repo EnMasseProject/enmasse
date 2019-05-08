@@ -1,3 +1,8 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
 [id='iot-{api}-{context}']
 
 ifeval::["{cmdcli}" == "oc"]
@@ -15,9 +20,9 @@ endif::[]
 
 .Procedure
 
-== Starting {api} consumer
+== Starting the {api} consumer
 
-. In Hono project run:
+. In the Hono project, run:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -36,7 +41,7 @@ mvn package -am
 {cmdcli} -n myapp get addressspace iot -o jsonpath={.status.caCert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
 ----
 
-. Export messaging endpoint host and port:
+. Export the messaging endpoint host and port:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -78,3 +83,4 @@ curl --insecure -X POST -i -u sensor1@myapp.iot:hono-secret -H 'Content-Type: ap
 ----
 mosquitto_pub -d -h {mqtt-adapter} -p {mqtt-port} -u 'sensor1@myapp.iot' -P hono-secret -t {api} -m '{"temp": 5}' -i 4711 --cafile install/components/iot/examples/k8s-tls/build/iot-mqtt-adapter-fullchain.pem
 ----
+

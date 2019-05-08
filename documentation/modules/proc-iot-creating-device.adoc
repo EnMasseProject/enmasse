@@ -1,3 +1,8 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
 [id='iot-creating-device-{context}']
 = Creating an IoT device
 
@@ -23,3 +28,4 @@ curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"
 ----
 curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-plain":"'hono-secret'"}]}' https://{registry}/credentials/myapp.iot
 ----
+

@@ -1,15 +1,15 @@
 // Module included in the following assemblies:
 //
 // assembly-installing-openshift.adoc
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
 
 [id='installing-using-bundle-{context}']
 = Installing {ProductName} using a YAML bundle
 
 The simplest way to install {ProductName} is to use the predefined YAML bundles. 
 
-.Prerequisites
-
-.Procedure 
+.Procedure
 
 ifeval::["{cmdcli}" == "oc"]
 . Log in as a user with `cluster-admin` privileges:
@@ -72,7 +72,7 @@ endif::[]
 {cmdcli} apply -f install/components/example-plans
 ----
 
-. (Optional) Install example roles
+. (Optional) Install example roles:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -85,3 +85,4 @@ endif::[]
 ----
 {cmdcli} apply -f install/components/example-authservices/standard-authservice.yaml
 ----
+

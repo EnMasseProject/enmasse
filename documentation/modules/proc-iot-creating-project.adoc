@@ -1,3 +1,8 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
 [id='iot-creating-project-{context}']
 = Creating an IoT project
 
@@ -7,7 +12,7 @@ ifeval::["{cmdcli}" == "oc"]
 . Change to a non-admin user:
 endif::[]
 
-. Create a _managed_ IoT Project:
+. Create a _managed_ IoT project:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -35,3 +40,4 @@ endif::[]
 ----
 {cmdcli} create -f install/components/iot/examples/iot-user.yaml
 ----
+
