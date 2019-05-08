@@ -200,9 +200,9 @@ class CommonTest extends TestBase {
                     return true;
                 }
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(500);
                 } catch ( InterruptedException e ) {
-                    e.printStackTrace();
+                    log.error("Error waiting between sends", e);
                     resultPromise.completeExceptionally(e);
                     return true;
                 }
@@ -210,7 +210,7 @@ class CommonTest extends TestBase {
                     try {
                         sendMessage(client, address, counter);
                     } catch ( Exception e ) {
-                        e.printStackTrace();
+                        log.error("Error sending message", e);
                         resultPromise.completeExceptionally(e);
                     }
                 }, runnable -> new Thread(runnable).start());
@@ -219,7 +219,7 @@ class CommonTest extends TestBase {
             try {
                 sendMessage(client, address, counter);
             } catch ( Exception e ) {
-                e.printStackTrace();
+                log.error("Error sending message", e);
                 resultPromise.completeExceptionally(e);
             }
         }, runnable -> new Thread(runnable).start());
