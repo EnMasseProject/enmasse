@@ -5,7 +5,9 @@
 [id='ref-address-space-example-exports-{context}']
 = Address space example exports
 
-This example shows the format used by the `ConfigMap` and `Secret` export types:
+== `ConfigMap` and `Secret` type export examples
+
+This example shows the format used by the `ConfigMap` export type. The format of the `Secret` export type uses the same keys as the `ConfigMap` export type, but the values are MD5 encoded.
 
 [source,yaml,options="nowrap"]
 ----
@@ -15,3 +17,18 @@ external.host: external.example.com
 external.port: 5671
 ca.crt: // PEM formatted CA
 ----
+
+== `Service` type export example
+
+This example shows the format used by the `Service` export type. 
+
+[source,yaml,options="nowrap"]
+----
+  externalName:  messaging.svc
+    ports:
+    - name: amqp
+      port: 5672
+      protocol: TCP
+      targetPort: 5672
+----
+
