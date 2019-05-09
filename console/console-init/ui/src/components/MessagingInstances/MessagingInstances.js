@@ -204,6 +204,22 @@ class MessagingInstances extends React.Component {
     });
     this.setState({hasSelectedRows: rows.filter(row => row.selected).length !== 0});
   };
+  createPaginator = () => {
+    if (this.state.allMessagingInstances.length > 0) {
+      return <Pagination
+        id="pagination-bottom"
+        itemCount={this.state.allMessagingInstances.length}
+        perPage={this.state.perPage}
+        page={this.state.page}
+        onSetPage={this.onSetPage}
+        widgetId="pagination-options-menu-bottom"
+        variant={PaginationVariant.bottom}
+        onPerPageSelect={this.onPerPageSelect}
+      />;
+    } else {
+      return null;
+    }
+  };
 
   render() {
 
@@ -239,15 +255,7 @@ class MessagingInstances extends React.Component {
               </ToolbarGroup>
               <ToolbarGroup>
                 <ToolbarItem>
-                  <Pagination
-                    id="pagination-bottom-top"
-                    itemCount={this.state.allMessagingInstances.length}
-                    perPage={this.state.perPage}
-                    page={this.state.page}
-                    onSetPage={this.onSetPage}
-                    widgetId="pagination-options-menu-top"
-                    onPerPageSelect={this.onPerPageSelect}
-                  />
+                  {this.createPaginator()}
                 </ToolbarItem>
               </ToolbarGroup>
             </Toolbar>
@@ -258,20 +266,10 @@ class MessagingInstances extends React.Component {
               <TableHeader id="table-header"/>
               <TableBody id="table-body"/>
             </Table>
-
             <Toolbar className={"pf-u-justify-content-flex-end pf-u-mx-xl pf-u-my-md"}>
               <ToolbarGroup>
                 <ToolbarItem>
-                  <Pagination
-                    id="pagination-bottom"
-                    itemCount={this.state.allMessagingInstances.length}
-                    perPage={this.state.perPage}
-                    page={this.state.page}
-                    onSetPage={this.onSetPage}
-                    widgetId="pagination-options-menu-bottom"
-                    variant={PaginationVariant.bottom}
-                    onPerPageSelect={this.onPerPageSelect}
-                  />
+                  {this.createPaginator()}
                 </ToolbarItem>
               </ToolbarGroup>
             </Toolbar>
