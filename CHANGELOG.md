@@ -1,3 +1,7 @@
+## 0.29.0
+* Upgrade to Apache ActiveMQ Artemis 2.8.0
+
+
 ## 0.28.0
 * New global console for managing address spaces that uses OAUTH/OIDC for console authentication and Kubernetes RBAC for authorization.
 * Change per-address space console to use the same authentication and authorization mechanisms as the global console
