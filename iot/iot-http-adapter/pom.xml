@@ -28,7 +28,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>org.eclipse.hono.adapter.http.vertx.Application</mainClass>
+          <mainClass>org.eclipse.hono.adapter.http.impl.Application</mainClass>
         </configuration>
       </plugin>
     </plugins>

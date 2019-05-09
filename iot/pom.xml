@@ -13,13 +13,13 @@
   <packaging>pom</packaging>
 
   <properties>
-    <hono.version>0.9</hono.version>
+    <hono.version>1.0-M3</hono.version>
     <infinispan.version>9.4.13.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
     <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
-    <micrometer.version>1.0.9</micrometer.version>
+    <micrometer.version>1.1.4</micrometer.version>
     <netty-tcnative.version>2.0.17.Final</netty-tcnative.version>
   </properties>
 
