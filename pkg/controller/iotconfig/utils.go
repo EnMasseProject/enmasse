@@ -61,9 +61,15 @@ func (r *ReconcileIoTConfig) cleanupSecrets(ctx context.Context, config *iotv1al
 }
 
 func deviceRegistryImplementation(config *iotv1alpha1.IoTConfig) DeviceRegistryImplementation {
-	if config.Spec.ServicesConfig.DeviceRegistry.File != nil {
-		return DeviceRegistryFileBased
-	}
 
-	return DeviceRegistryDefault
+	var file = config.Spec.ServicesConfig.DeviceRegistry.File
+	var infinispan = config.Spec.ServicesConfig.DeviceRegistry.Infinispan
+
+	if infinispan != nil && file == nil {
+		return DeviceRegistryInfinispan
+	} else if infinispan == nil && file != nil {
+		return DeviceRegistryFileBased
+	} else {
+		return DeviceRegistryIllegal
+	}
 }

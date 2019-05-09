@@ -1,0 +1,14 @@
+kind: IoTConfig
+apiVersion: iot.enmasse.io/v1alpha1
+metadata:
+  name: default
+spec:
+  services:
+    deviceRegistry:
+      infinispan:
+        infinispanServerAddress: example-infinispan:11222
+  adapters:
+    mqtt:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-mqtt-adapter-tls

@@ -41,6 +41,7 @@ const (
 	DeviceRegistryDefault = iota
 	DeviceRegistryIllegal
 	DeviceRegistryFileBased
+	DeviceRegistryInfinispan
 )
 
 // Gets called by parent "init", adding as to the manager
@@ -174,10 +175,12 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		switch deviceRegistryImplementation(config) {
-		case DeviceRegistryIllegal:
-			return reconcile.Result{}, fmt.Errorf("illegal device registry configuration")
-		default:
+		case DeviceRegistryInfinispan:
+			return r.processInfinispanDeviceRegistry(ctx, config)
+		case DeviceRegistryFileBased:
 			return r.processFileDeviceRegistry(ctx, config)
+		default:
+			return reconcile.Result{}, fmt.Errorf("illegal device registry configuration.")
 		}
 	})
 	rc.Process(func() (reconcile.Result, error) {

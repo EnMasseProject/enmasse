@@ -13,8 +13,8 @@ import (
 
 func TestDeviceRegistryEval(t *testing.T) {
 
-	if deviceRegistryImplementation(&v1alpha1.IoTConfig{}) != DeviceRegistryDefault {
-		t.Errorf("Device registry should be evaluated as 'default' but wasn't")
+	if deviceRegistryImplementation(&v1alpha1.IoTConfig{}) != DeviceRegistryIllegal {
+		t.Errorf("Device registry should be evaluated as 'illegal' but wasn't")
 	}
 
 	if deviceRegistryImplementation(&v1alpha1.IoTConfig{
@@ -26,7 +26,21 @@ func TestDeviceRegistryEval(t *testing.T) {
 			},
 		},
 	}) != DeviceRegistryFileBased {
-		t.Errorf("Device registry should be evaluated as 'default' but wasn't")
+		t.Errorf("Device registry should be evaluated as 'file based' but wasn't")
+	}
+
+	if deviceRegistryImplementation(&v1alpha1.IoTConfig{
+		Spec: v1alpha1.IoTConfigSpec{
+			ServicesConfig: v1alpha1.ServicesConfig{
+				DeviceRegistry: v1alpha1.DeviceRegistryServiceConfig{
+					Infinispan: &v1alpha1.InfinispanDeviceRegistry{
+						InfinispanServerAddress: "127.0.0.1",
+					},
+				},
+			},
+		},
+	}) != DeviceRegistryInfinispan {
+		t.Errorf("Device registry should be evaluated as 'infinispan' but wasn't")
 	}
 
 }

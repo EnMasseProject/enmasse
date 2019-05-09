@@ -24,6 +24,7 @@ DOCKER_DIRS = \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
 	iot/iot-device-registry-file \
+	iot/iot-device-registry-infinispan \
 	iot/iot-http-adapter \
 	iot/iot-mqtt-adapter \
 

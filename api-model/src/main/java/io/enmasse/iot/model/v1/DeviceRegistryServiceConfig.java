@@ -22,11 +22,17 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class DeviceRegistryServiceConfig extends ServiceConfig {
     private FileBasedDeviceRegistry file;
+    private InfinispanDeviceRegistry infinispan;
 
     public FileBasedDeviceRegistry getFile() {
         return file;
     }
     public void setFile(FileBasedDeviceRegistry file) {
         this.file = file;
+    }
+
+    public InfinispanDeviceRegistry getInfinispan(){ return infinispan;}
+    public void setInfinispan(InfinispanDeviceRegistry infinispan) {
+        this.infinispan = infinispan;
     }
 }

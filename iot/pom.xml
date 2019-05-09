@@ -14,6 +14,7 @@
 
   <properties>
     <hono.version>0.9</hono.version>
+    <infinispan.version>9.4.6.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
@@ -31,6 +32,7 @@
     <module>iot-tenant-service</module>
     <module>iot-gc</module>
     <module>iot-proxy-configurator</module>
+    <module>iot-device-registry-infinispan</module>
   </modules>
 
   <dependencyManagement>
@@ -39,6 +41,21 @@
         <groupId>org.eclipse.hono</groupId>
         <artifactId>hono-service-base</artifactId>
         <version>${hono.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.hono</groupId>
+        <artifactId>hono-service-device-registry</artifactId>
+        <version>${hono.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.eclipse.hono</groupId>
+        <artifactId>hono-service-base</artifactId>
+        <version>${hono.version}</version>
+        <classifier>tests</classifier>
+        <type>test-jar</type>
+        <scope>test</scope>
       </dependency>
 
       <dependency>
@@ -65,7 +82,35 @@
         <version>${micrometer.version}</version>
       </dependency>
 
-    </dependencies>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-query</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-client-hotrod</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-remote-query-client</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-server-hotrod</artifactId>
+        <version>${infinispan.version}</version>
+        <scope>test</scope>
+
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-remote-query-server</artifactId>
+        <version>${infinispan.version}</version>
+        <scope>test</scope>
+      </dependency>
+     </dependencies>
   </dependencyManagement>
 
   <build>
