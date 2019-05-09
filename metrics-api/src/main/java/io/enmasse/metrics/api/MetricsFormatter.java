@@ -4,6 +4,7 @@
  */
 package io.enmasse.metrics.api;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface MetricsFormatter {

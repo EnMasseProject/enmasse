@@ -261,7 +261,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "component_health",
+              "expr": "${APP_PREFIX}_component_health",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -358,7 +358,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "version",
+              "expr": "${APP_PREFIX}_version",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -489,7 +489,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "address_spaces_ready_total",
+              "expr": "${APP_PREFIX}_address_spaces_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -578,7 +578,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "address_spaces_not_ready_total",
+              "expr": "${APP_PREFIX}_address_spaces_not_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -627,7 +627,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "addresses_total",
+              "expr": "${APP_PREFIX}_addresses_total",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -764,7 +764,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "addresses_not_ready_total",
+              "expr": "${APP_PREFIX}_addresses_not_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
