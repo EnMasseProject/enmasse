@@ -47,7 +47,7 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
      * @return an RemoteCacheManager bean.
      */
     @Bean
-    public RemoteCache getCache() throws IOException {
+    public <K, V> RemoteCache<K,V> getCache() throws IOException {
 
         final RemoteCacheManager remoteCacheManager = new RemoteCacheManager();
         final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(remoteCacheManager);

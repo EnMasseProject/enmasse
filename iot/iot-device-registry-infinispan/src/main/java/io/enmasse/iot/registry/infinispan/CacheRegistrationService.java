@@ -46,7 +46,7 @@ public class CacheRegistrationService extends CompleteBaseRegistrationService<Ca
     private final RemoteCache<RegistrationKey, String> registrationCache;
 
     @Autowired
-    protected CacheRegistrationService(final RemoteCache cache) {
+    protected CacheRegistrationService(final RemoteCache<RegistrationKey, String> cache) {
         this.registrationCache = cache;
     }
 

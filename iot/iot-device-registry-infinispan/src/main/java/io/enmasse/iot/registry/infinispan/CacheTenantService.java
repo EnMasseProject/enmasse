@@ -55,7 +55,7 @@ public class CacheTenantService extends CompleteBaseTenantService<CacheTenantCon
     private final RemoteCache<String, RegistryTenantObject> tenantsCache;
 
     @Autowired
-    protected CacheTenantService(final RemoteCache cache) {
+    protected CacheTenantService(final RemoteCache<String, RegistryTenantObject> cache) {
         this.tenantsCache = cache;
     }
 
