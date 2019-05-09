@@ -35,7 +35,7 @@ class Review extends React.Component {
                   <Text>{newInstance.namespace}</Text>
                 </FormGroup>
                 <FormGroup isInline label="Type" fieldId="type">
-                  <Text>{newInstance.typeStandard ? 'Standard' : 'Brokered'} Address Plan</Text>
+                  <Text>{newInstance.typeStandard ? 'Standard' : 'Brokered'} address space</Text>
                 </FormGroup>
                 <FormGroup label="Address space plan" fieldId={"plan"}>
                   <Text>{newInstance.plan}</Text>
