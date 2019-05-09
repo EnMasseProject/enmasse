@@ -18,13 +18,14 @@ endif::[]
 
 = Sending and receiving {api} data
 
+== Starting the {api} consumer
+
 .Prerequisites
-*link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[Installed the IoT services] *link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[Created an IoT project]
-*link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-iot[Created an IoT device]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[Installed the IoT services]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[Created an IoT project]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-iot[Created an IoT device]
 
 .Procedure
-
-== Starting the {api} consumer
 
 . In the Hono project, run:
 +
@@ -73,6 +74,8 @@ mvn spring-boot:run -Drun.arguments=--hono.client.host=$MESSAGING_HOST,--hono.cl
 ----
 
 == Sending {api} data
+
+.Procedure
 
 . Send a message using HTTP protocol:
 +

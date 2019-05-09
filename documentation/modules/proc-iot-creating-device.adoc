@@ -16,7 +16,8 @@ ifeval::["{cmdcli}" == "kubectl"]
 endif::[]
 
 .Prerequisites
-*link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[Installed the IoT services] *link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[Created an IoT project]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[Installed the IoT services]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[Created an IoT project]
 
 .Procedure
 
