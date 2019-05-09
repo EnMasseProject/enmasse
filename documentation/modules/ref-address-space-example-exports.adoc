@@ -5,6 +5,11 @@
 [id='ref-address-space-example-exports-{context}']
 = Address space example exports
 
+You can export your address space using the following three export types:
+* `ConfigMap`
+* `Secret`
+* `Service`
+
 == `ConfigMap` and `Secret` type export examples
 
 This example shows the format used by the `ConfigMap` export type. The format of the `Secret` export type uses the same keys as the `ConfigMap` export type, but the values are MD5 encoded.

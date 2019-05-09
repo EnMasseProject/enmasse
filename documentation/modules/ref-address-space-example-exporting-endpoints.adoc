@@ -28,7 +28,7 @@ spec:
       name: my-config <2>
 ----
 <1> (Required) The export type. The resulting `ConfigMap` contains the values in the format
-shown in link:link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format]. For `Secret`, the same keys are used, but the values are base64-encoded. For
+shown in link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format]. For `Secret`, the same keys are used, but the values are base64-encoded. For
 `Service`, a {KubePlatform} service of the type `ExternalName` is created. This provides applications running on {KubePlatform} with a way to
 inject endpoint information or provide a proxy service in the same namespace as the application. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format].
 <2> (Required) The name of the resource to create and update.
@@ -66,3 +66,4 @@ subjects:
   name: address-space-controller
   namespace: _{ProductNamespace}_
 ----
+
