@@ -8,7 +8,7 @@ const plansFormGroup = (props) => {
   return (
     <FormGroup
       isRequired
-      label="Address plan"
+      label="Address space plan"
       fieldId="form-planName">
       <FormSelect
         value={props.plan}
