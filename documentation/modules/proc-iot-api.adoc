@@ -18,6 +18,10 @@ endif::[]
 
 = Sending and receiving {api} data
 
+.Prerequisites
+*link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[Installed the IoT services] *link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[Created an IoT project]
+*link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-iot[Created an IoT device]
+
 .Procedure
 
 == Starting the {api} consumer
@@ -28,7 +32,7 @@ endif::[]
 ----
 cd cli
 ----
-. At least once run:
+. At least once, run:
 +
 [options="nowrap",subs="attributes"]
 ----

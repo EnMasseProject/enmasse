@@ -6,10 +6,20 @@
 [id='iot-creating-project-{context}']
 = Creating an IoT project
 
+After installing the IoT services, you create an IoT project.
+
+.Prerequisites
+*You must have link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[installed the IoT services].
+
 .Procedure
 
 ifeval::["{cmdcli}" == "oc"]
-. Change to a non-admin user:
+. Log in as a messaging tenant:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
 endif::[]
 
 . Create a _managed_ IoT project:

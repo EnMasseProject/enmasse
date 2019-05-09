@@ -6,12 +6,17 @@
 [id='iot-creating-device-{context}']
 = Creating an IoT device
 
+After installing the IoT services and creating an IoT project, you can create an IoT device for the device you want to monitor.
+
 ifeval::["{cmdcli}" == "oc"]
 :registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 :registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
 endif::[]
+
+.Prerequisites
+*You must have link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[installed the IoT services] and link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[created an IoT project].
 
 .Procedure
 

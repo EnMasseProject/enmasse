@@ -6,7 +6,7 @@
 [id='installing-services-{context}']
 = Installing IoT services
 
-You must first install the IoT services. 
+To get started using the IoT feature on {ProductName}, you must first install the IoT services.
 
 .Procedure
 
