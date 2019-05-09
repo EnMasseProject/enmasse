@@ -73,7 +73,7 @@ public abstract class IoTTestBase extends TestBase {
                 var iotConfigApiClient = kubernetes.getIoTConfigClient();
                 for (IoTConfig config : iotConfigs) {
                     if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
-                        iotConfigApiClient.delete(config);
+                        IoTUtils.deleteIoTConfigAndWait(kubernetes, config);
                     } else {
                         log.info("IoTConfig '" + config.getMetadata().getName() + "' doesn't exists!");
                     }
