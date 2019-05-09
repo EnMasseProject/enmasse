@@ -61,7 +61,7 @@ public class IoTUtils {
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception{
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
-        kubernetes.getIoTConfigClient().withName(config.getMetadata().getName()).delete();
+        kubernetes.getIoTConfigClient().withName(config.getMetadata().getName()).cascading(true).delete();
         waitForIoTConfigDeleted(kubernetes, config);
         TimeMeasuringSystem.stopOperation(operationID);
     }

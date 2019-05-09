@@ -99,7 +99,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                 log.info("Shared IoTConfig will be removed");
                 var iotConfigApiClient = kubernetes.getIoTConfigClient();
                 if (iotConfigApiClient.withName(sharedConfig.getMetadata().getName()).get() != null) {
-                    iotConfigApiClient.delete(sharedConfig);
+                    IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedConfig);
                 } else {
                     log.info("IoTConfig '" + sharedConfig.getMetadata().getName() + "' doesn't exists!");
                 }
