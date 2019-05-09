@@ -11,34 +11,35 @@ spec:
   - name: ComponentHealth
     rules:
 
-    - record: address_spaces_ready_total
-      expr: sum(address_space_status_ready) by (service,exported_namespace)
-    - record: address_spaces_not_ready_total
-      expr: sum(address_space_status_not_ready) by (service,exported_namespace)
-    - record: component_health
+    - record: ${APP_PREFIX}_address_spaces_ready_total
+      expr: sum(${APP_PREFIX}_address_space_status_ready) by (service,exported_namespace)
+    - record: ${APP_PREFIX}_address_spaces_not_ready_total
+      expr: sum(${APP_PREFIX}_address_space_status_not_ready) by (service,exported_namespace)
+
+    - record: ${APP_PREFIX}_component_health
       expr: up{job="address-space-controller"} or on(namespace) (1- absent(up{job="address-space-controller"}) )
-    - record: component_health
+    - record: ${APP_PREFIX}_component_health
       expr: up{job="api-server"} or on(namespace) (1- absent(up{job="api-server"}) )
 
     - alert: ComponentHealth
       annotations: 
         description: "{{ $labels.job }} has been down for over 5 minutes"
         severity: critical
-      expr: component_health == 0
+      expr: ${APP_PREFIX}_component_health == 0
       for: 300s
     - alert: AddressSpaceHealth
       annotations:
         description: Address Space(s) have been in a not ready state for over 5 minutes
         value: "{{ $value }}"
         severity: warning
-      expr: address_spaces_not_ready_total > 0
+      expr: ${APP_PREFIX}_address_spaces_not_ready_total > 0
       for: 300s
     - alert: AddressHealth
       annotations:
         description: Address(s) have been in a not ready state for over 5 minutes
         value: "{{ $value }}"
         severity: warning
-      expr: addresses_not_ready_total > 0
+      expr: ${APP_PREFIX}_addresses_not_ready_total > 0
       for: 300s
     - alert: TerminatingPods
       annotations:
