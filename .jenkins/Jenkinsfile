@@ -1,7 +1,5 @@
 #!/usr/bin/env groovy
 
-def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
-
 pipeline {
     environment {
         STANDARD_JOB_NAME = 'enmasse-master-standard'
@@ -9,86 +7,15 @@ pipeline {
         PLANS_JOB_NAME = 'enmasse-master-common'
         UPGRADE_JOB_NAME = 'enmasse-master-upgrade'
         IOT_JOB_NAME = 'enmasse-master-iot'
-        MAILING_LIST = credentials('MAILING_LIST')
     }
 //    parameters {
-//        string(name: 'CLEAN_REGISTRY', defaultValue: 'true', description: 'clean registry')
-//        string(name: 'REGISTRY_AGE', defaultValue: '20', description: 'registry older then REGISTRY_AGE (in hours) will be removed')
-//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
 //        string(name: 'UPGRADE_FROM', defaultValue: '', description: 'upgrade from')
 //    }
     options {
-        timeout(time: 1, unit: 'HOURS')
         ansiColor('xterm')
     }
-    agent {
-        node {
-            label "${params.AGENT_LABEL}"
-        }
-    }
+    agent none
     stages {
-        stage('wait for agent ready') {
-            steps {
-                script {
-                    lib.waitUntilAgentReady()
-                }
-            }
-        }
-        stage('cleanup registry') {
-            environment {
-                REGISTRY_URL = credentials('internal-registry')
-                DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
-                DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
-                DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
-            }
-            when {
-                expression { params.CLEAN_REGISTRY == 'true' }
-            }
-            steps {
-                script {
-                    lib.installOCclient()
-                    sh "./systemtests/scripts/reg_cleaner.sh ${params.REGISTRY_AGE} ${env.DOCKER_PASS} ${env.REGISTRY_URL}"
-                }
-            }
-        }
-        stage('clean') {
-            steps {
-                cleanWs()
-                sh 'docker stop $(docker ps -q) || true'
-                sh 'docker rm $(docker ps -a -q) -f || true'
-                sh 'docker rmi $(docker images -q) -f || true'
-            }
-        }
-        stage('checkout') {
-            steps {
-                checkout scm
-                sh 'echo $(git log --format=format:%H -n1) > actual-commit.file'
-                sh 'rm -rf artifacts && mkdir -p artifacts'
-            }
-        }
-        stage('build') {
-            steps {
-                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                    sh 'TAG=$BUILD_TAG make'
-                }
-            }
-        }
-        stage('build docker image') {
-            steps {
-                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY')]) {
-                    sh 'TAG=$BUILD_TAG make docker_build'
-                }
-            }
-        }
-        stage('push docker image') {
-            steps {
-                withCredentials([string(credentialsId: 'docker-registry-host', variable: 'DOCKER_REGISTRY'), usernamePassword(credentialsId: 'docker-registry-credentials', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    sh 'TAG=$BUILD_TAG make docker_tag'
-                    sh '$DOCKER login -u $DOCKER_USER -p $DOCKER_PASS $DOCKER_REGISTRY'
-                    sh 'TAG=$BUILD_TAG make docker_push'
-                }
-            }
-        }
         stage('execute brokered') {
             environment {
                 ACTUAL_COMMIT = readFile('actual-commit.file')
@@ -149,22 +76,6 @@ pipeline {
                         [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'iot.**'],
                         [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                 ]
-            }
-        }
-    }
-    post {
-        always {
-            //store test results from build and system tests
-            junit '**/TEST-*.xml'
-
-            //archive test results and openshift lofs
-            archive '**/TEST-*.xml'
-            archive 'artifacts/**'
-            archive 'templates/build/**'
-        }
-        failure {
-            script {
-                lib.sendMail(env.MAILING_LIST, env.JOB_NAME, env.BUILD_URL)
             }
         }
     }
