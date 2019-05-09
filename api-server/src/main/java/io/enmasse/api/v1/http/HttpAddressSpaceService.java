@@ -537,7 +537,9 @@ public class HttpAddressSpaceService {
 
     static Object formatResponse(String headerParam, Instant now, AddressSpaceList addressSpaceList) {
         if (isTableFormat(headerParam)) {
-            return new Table(new ListMeta(), tableColumnDefinitions, createRows(now, addressSpaceList.getItems()));
+            ListMeta metadata = addressSpaceList.getMetadata();
+            ListMeta tableMetadata = new ListMeta(metadata.getContinue(), metadata.getResourceVersion(), metadata.getSelfLink());
+            return new Table(tableMetadata, tableColumnDefinitions, createRows(now, addressSpaceList.getItems()));
         } else {
             return addressSpaceList;
         }
