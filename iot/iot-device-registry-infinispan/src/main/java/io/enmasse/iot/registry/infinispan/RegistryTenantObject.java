@@ -19,7 +19,6 @@ package io.enmasse.iot.registry.infinispan;
 
 import io.vertx.core.json.JsonObject;
 import org.eclipse.hono.util.TenantObject;
-import org.hibernate.search.annotations.Field;
 
 import java.io.Serializable;
 import org.infinispan.protostream.annotations.ProtoDoc;
@@ -33,6 +32,8 @@ import org.infinispan.protostream.annotations.ProtoField;
  */
 @ProtoDoc("@Indexed")
 public class RegistryTenantObject implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String tenantId;
     private String trustedCa;

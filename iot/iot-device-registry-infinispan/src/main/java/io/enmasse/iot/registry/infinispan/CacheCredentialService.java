@@ -67,7 +67,7 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
      * @throws NullPointerException if encoder is {@code null}.
      */
     @Autowired
-    protected CacheCredentialService(final RemoteCache cache, final HonoPasswordEncoder pwdEncoder) {
+    protected CacheCredentialService(final RemoteCache<CredentialsKey,RegistryCredentialObject> cache, final HonoPasswordEncoder pwdEncoder) {
         super(pwdEncoder);
         this.credentialsCache = cache;
     }
@@ -194,7 +194,7 @@ public class CacheCredentialService extends CompleteBaseCredentialsService<Cache
             log.debug("Cannot remove credentials for device : not found [tenant-id: {}, deviceID {}]", tenantId, deviceId);
             resultHandler.handle(Future.succeededFuture(CredentialsResult.from(HttpURLConnection.HTTP_NOT_FOUND)));
         } else {
-            final List<CompletableFuture<RegistryCredentialObject>> futureResultList = new ArrayList();
+            final List<CompletableFuture<RegistryCredentialObject>> futureResultList = new ArrayList<>();
             matches.forEach(registryCredential -> {
                 final CredentialsKey key = new CredentialsKey(
                         tenantId,

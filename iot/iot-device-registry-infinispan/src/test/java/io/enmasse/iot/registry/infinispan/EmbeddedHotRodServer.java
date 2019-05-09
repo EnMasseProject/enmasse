@@ -63,11 +63,11 @@ public class EmbeddedHotRodServer {
                     .build(serialCtx);
 
         // register the schema with the server
-        RemoteCache rcache = manager.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
+        RemoteCache<String, String> rcache = manager.getCache(ProtobufMetadataManagerConstants.PROTOBUF_METADATA_CACHE_NAME);
         rcache.put("registry.proto", generatedSchema);
     }
 
-    public RemoteCache getCache(){
+    public <K, V> RemoteCache<K,V> getCache(){
         return manager.getCache(CACHE_NAME);
     }
 

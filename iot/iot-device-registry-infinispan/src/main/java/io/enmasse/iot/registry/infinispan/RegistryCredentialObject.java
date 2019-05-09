@@ -33,6 +33,8 @@ import org.infinispan.protostream.annotations.ProtoField;
 @ProtoDoc("@Indexed")
 public class RegistryCredentialObject implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private String tenantId;
     private String deviceId;
     private String originalJson;
