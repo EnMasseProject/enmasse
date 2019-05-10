@@ -52,7 +52,7 @@ class BrokerStatusCollector {
                         queue);
             }
         }
-        log.info("Queue '{}' on cluster '{}' ({} pod(s)) has depth: {}", queue,  clusterId, pods.size(), totalMessageCount);
+        log.info("Queue '{}' on cluster '{}' ({} replica(s)) has depth: {}", queue,  clusterId, pods.size(), totalMessageCount);
         return totalMessageCount;
     }
 }
