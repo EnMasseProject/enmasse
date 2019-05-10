@@ -89,6 +89,7 @@ class CreateAddressSpace extends React.Component {
       {
         id: 2,
         name: 'Review',
+        nextButtonText: 'Finish',
         component: (<Review newInstance={newInstance}/>)
       }
     ];
@@ -110,7 +111,6 @@ class CreateAddressSpace extends React.Component {
                 onClose={this.toggleOpen}
                 onSave={() => this.onSave(add)}
                 steps={steps}
-                lastStepButtonText="Finish"
               />
             )}
           </NotificationConsumer>
