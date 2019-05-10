@@ -23,12 +23,7 @@ pipeline {
         ANSIBLE_FORCE_COLOR = true
 
         OPENSHIFT_PROJECT = "enmasse-infra"
-        DOCKER_REGISTRY = credentials('docker-registry-host')
-        DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
-        DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
-        DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
-        TAG = "${params.BUILD_TAG}"
-        USE_DUMMY_ADDRESS = true
+        TAG = 'latest'
         SKIP_CLEANUP = "${params.DEBUG}"
     }
     agent {
