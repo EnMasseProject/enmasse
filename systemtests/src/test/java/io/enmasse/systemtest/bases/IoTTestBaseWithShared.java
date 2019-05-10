@@ -26,7 +26,7 @@ import java.util.UUID;
 
 public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
-    protected static Logger log = CustomLogger.getLogger();
+    protected final static Logger log = CustomLogger.getLogger();
 
     private final String addressSpace = "shared-address-space";
 
@@ -98,20 +98,24 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
     public void tearDownSharedIoTProject(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
             if (!environment.skipCleanup()) {
-                log.info("Shared IoTProject will be removed");
-                var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
-                if (iotProjectApiClient.withName(sharedProject.getMetadata().getName()).get() != null) {
-                    IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedProject, addressApiClient);
-                } else {
-                    log.info("IoTProject '" + sharedProject.getMetadata().getName() + "' doesn't exists!");
+                if (sharedProject != null) {
+                    log.info("Shared IoTProject will be removed");
+                    var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
+                    if (iotProjectApiClient.withName(sharedProject.getMetadata().getName()).get() != null) {
+                        IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedProject, addressApiClient);
+                    } else {
+                        log.info("IoTProject '{}' doesn't exists!", sharedProject.getMetadata().getName());
+                    }
+                    sharedProject = null;
                 }
-                sharedProject = null;
-                log.info("Shared IoTConfig will be removed");
-                var iotConfigApiClient = kubernetes.getIoTConfigClient();
-                if (iotConfigApiClient.withName(sharedConfig.getMetadata().getName()).get() != null) {
-                    IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedConfig);
-                } else {
-                    log.info("IoTConfig '" + sharedConfig.getMetadata().getName() + "' doesn't exists!");
+                if (sharedConfig != null) {
+                    log.info("Shared IoTConfig will be removed");
+                    var iotConfigApiClient = kubernetes.getIoTConfigClient();
+                    if (iotConfigApiClient.withName(sharedConfig.getMetadata().getName()).get() != null) {
+                        IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedConfig);
+                    } else {
+                        log.info("IoTConfig '{}' doesn't exists!", sharedConfig.getMetadata().getName());
+                    }
                 }
                 log.info("Infinispan server will be removed");
                 SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getNamespace());
