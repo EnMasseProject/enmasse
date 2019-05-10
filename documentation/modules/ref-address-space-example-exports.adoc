@@ -12,7 +12,7 @@ You can export your address space information using the following three export t
 
 == `ConfigMap` and `Secret` type export examples
 
-This example shows the format used by the `ConfigMap` export type. The format of the `Secret` export type uses the same keys as the `ConfigMap` export type, but the values are MD5 encoded.
+This example shows the format used by the `ConfigMap` export type. The format of the `Secret` export type uses the same keys as the `ConfigMap` export type, but the values are Base64-encoded.
 
 [source,yaml,options="nowrap"]
 ----
