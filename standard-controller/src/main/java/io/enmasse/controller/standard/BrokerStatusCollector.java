@@ -45,15 +45,14 @@ class BrokerStatusCollector {
                     totalMessageCount += queueMessageCount;
                 }
             } else {
-                throw new IllegalStateException(String.format("Broker pod '%s' in cluster '%s' was not ready (%s), cannot get depth for queue '%s' at this time.",
+                log.info("Broker pod '{}' in cluster '{}' is not ready ({}), cannot get depth for queue '{}' at this time.",
                         broker.getMetadata().getName(),
                         clusterId,
                         broker.getStatus(),
-                        queue
-                ));
+                        queue);
             }
         }
-        log.info("Queue '{}' on cluster '{}' ({} shard(s)) has depth: {}", queue,  clusterId, pods.size(), totalMessageCount);
+        log.info("Queue '{}' on cluster '{}' ({} pod(s)) has depth: {}", queue,  clusterId, pods.size(), totalMessageCount);
         return totalMessageCount;
     }
 }
