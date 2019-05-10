@@ -25,9 +25,6 @@ pipeline {
             }
         }
         stage('execute standard') {
-            environment {
-                ACTUAL_COMMIT = readFile('actual-commit.file')
-            }
             steps {
                 build job: env.STANDARD_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
@@ -36,9 +33,6 @@ pipeline {
             }
         }
         stage('execute common') {
-            environment {
-                ACTUAL_COMMIT = readFile('actual-commit.file')
-            }
             steps {
                 build job: env.PLANS_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
@@ -47,9 +41,6 @@ pipeline {
             }
         }
         stage('execute upgrade') {
-            environment {
-                ACTUAL_COMMIT = readFile('actual-commit.file')
-            }
             steps {
                 build job: env.UPGRADE_JOB_NAME, wait: false, parameters: [
                         [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
@@ -59,9 +50,6 @@ pipeline {
             }
         }
         stage('execute iot') {
-            environment {
-                ACTUAL_COMMIT = readFile('actual-commit.file')
-            }
             steps {
                 build job: env.IOT_JOB_NAME, wait: false, parameters: [
                         [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
