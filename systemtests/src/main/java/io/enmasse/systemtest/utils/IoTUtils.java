@@ -62,11 +62,11 @@ public class IoTUtils {
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception{
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
         kubernetes.getIoTConfigClient().withName(config.getMetadata().getName()).cascading(true).delete();
-        waitForIoTConfigDeleted(kubernetes, config);
+        waitForIoTConfigDeleted(kubernetes);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void waitForIoTConfigDeleted(Kubernetes kubernetes, IoTConfig config) throws Exception{
+    private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception{
         TestUtils.waitForNReplicas(kubernetes, 0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(2, TimeUnit.MINUTES), 5000);
     }
 
