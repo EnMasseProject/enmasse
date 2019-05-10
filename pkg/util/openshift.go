@@ -66,7 +66,9 @@ func detectOpenshift() bool {
 		if ok {
 			code := se.Status().Code
 			log.Info(fmt.Sprintf("Response code: %d", code))
-			return code >= 200 && code < 300
+			if code != 503 {
+				return code >= 200 && code < 300
+			}
 		}
 
 		retries -= 1
