@@ -97,62 +97,30 @@ public class HttpAddressSpaceService {
                                     @QueryParam("labelSelector") String labelSelector,
                                     @QueryParam("watch") @DefaultValue("false") boolean watch,
                                     @QueryParam("resourceVersion") String resourceVersion,
-                                    @Suspended AsyncResponse asyncResponse) throws Exception {
+                                    @Suspended AsyncResponse asyncResponse) {
         verifyAuthorized(securityContext, namespace, ResourceVerb.list);
         final Map<String, String> labels = (labelSelector != null) ? AddressApiHelper.parseLabelSelector(labelSelector) : null;
-
 
         if (!watch) {
             try {
                 Response response = doRequest("Error getting address space list", () -> {
                     Instant now = clock.instant();
-                    return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.getAddressSpaces(namespace, labels)))).build();
+                    return Response.ok(formatResponse(acceptHeader, now, removeSecrets(addressSpaceApi.listAddressSpaces(namespace, labels)))).build();
                 });
                 asyncResponse.resume(response);
             } catch (Exception e) {
                 asyncResponse.resume(e);
             }
         } else {
-
             ExecutorService e = Executors.newFixedThreadPool(1);
             e.execute(() -> {
                 try {
                     asyncResponse.resume(new StreamingOutput() {
                         CompletableFuture<Void> future = new CompletableFuture<>();
                         @Override
-                        public void write(OutputStream output) throws IOException, WebApplicationException {
-                            addressSpaceApi.watch(new Watcher<>() {
-                                @Override
-                                public void eventReceived(Action action, AddressSpace resource) {
-                                    log.warn("KWDEBUG action {} resource {}", action, resource);
-                                    if (resource != null) {
-                                        try {
-                                            Map<String, Object> watchMap = new HashMap<>();
-                                            watchMap.put("object", resource);
-                                            watchMap.put("type", action);
-                                            MAPPER.writeValue(output, watchMap);
-                                            output.flush();
-                                        } catch (IOException e12) {
-                                            throw new UncheckedIOException(e12);
-                                        }
-                                    }
-                                }
-
-                                @Override
-                                public void onClose(KubernetesClientException cause) {
-                                    try {
-                                        output.close();
-                                    } catch (IOException ignored) {
-                                    }
-                                    finally {
-                                        if (cause != null) {
-                                            future.completeExceptionally(cause);
-                                        } else {
-                                            future.complete(null);
-                                        }
-                                    }
-                                }
-                            }, namespace, resourceVersion, labels);
+                        public void write(OutputStream output) throws IOException {
+                            Watcher<AddressSpace> watcher = getWatcher(output, future);
+                            addressSpaceApi.watch(watcher, namespace, resourceVersion, labels);
 
                             try {
                                 future.get();
@@ -170,14 +138,9 @@ public class HttpAddressSpaceService {
                 } finally {
                     e.shutdown();
                 }
-
-
             });
-
         }
     }
-
-
 
     @GET
     @Produces({MediaType.APPLICATION_JSON})
@@ -553,6 +516,39 @@ public class HttpAddressSpaceService {
         }
     }
 
+    static Watcher<AddressSpace> getWatcher(OutputStream output, final CompletableFuture<Void> closeFuture) {
+        return new Watcher<>() {
+            @Override
+            public void eventReceived(Action action, AddressSpace resource) {
+                if (resource != null) {
+                    try {
+                        Map<String, Object> watchMap = new HashMap<>();
+                        watchMap.put("object", resource);
+                        watchMap.put("type", action);
+                        MAPPER.writeValue(output, watchMap);
+                        output.flush();
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                }
+            }
+
+            @Override
+            public void onClose(KubernetesClientException cause) {
+                try {
+                    output.close();
+                } catch (IOException ignored) {
+                } finally {
+                    if (cause != null) {
+                        closeFuture.completeExceptionally(cause);
+                    } else {
+                        closeFuture.complete(null);
+                    }
+                }
+            }
+        };
+    }
+
     private static boolean isTableFormat(String acceptHeader) {
         return acceptHeader != null && acceptHeader.contains("as=Table") && acceptHeader.contains("g=meta.k8s.io") && acceptHeader.contains("v=v1beta1");
     }
@@ -582,4 +578,5 @@ public class HttpAddressSpaceService {
                                 .build())))
                 .collect(Collectors.toList());
     }
+
 }

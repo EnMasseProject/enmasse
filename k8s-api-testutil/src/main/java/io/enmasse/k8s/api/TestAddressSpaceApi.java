@@ -11,6 +11,7 @@ import io.fabric8.kubernetes.client.Watcher;
 
 import static java.util.Optional.ofNullable;
 
+import java.io.Closeable;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -73,13 +74,18 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public AddressSpaceList getAddressSpaces(String namespace, Map<String, String> labels) {
-        throw new UnsupportedOperationException();
+    public AddressSpaceList listAddressSpaces(String namespace, Map<String, String> labels) {
+        return new AddressSpaceList(listAddressSpacesWithLabels(namespace, labels));
     }
 
     @Override
     public Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels) {
-        return null;
+        if (throwException) {
+            throw new RuntimeException("foo");
+        }
+        return ofNullable(addressSpaces.get(namespace))
+                .map(as -> new LinkedHashSet<>(as.values()))
+                .orElseGet(LinkedHashSet::new);
     }
 
     @Override
@@ -136,7 +142,12 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
     }
 
     @Override
-    public void watch(Watcher<AddressSpace> watcher, String namespace, String resourceVersion, Map<String, String> labels) {
+    public AddressSpaceList listAllAddressSpaces(Map<String, String> labels) {
+        return new AddressSpaceList(listAllAddressSpaces());
+    }
+
+    @Override
+    public Closeable watch(Watcher<AddressSpace> watcher, String namespace, String resourceVersion, Map<String, String> labels) {
         throw new UnsupportedOperationException();
     }
 
@@ -152,4 +163,5 @@ public class TestAddressSpaceApi implements AddressSpaceApi {
                 .forEach(as -> as.getStatus().setReady(ready));
 
     }
+
 }

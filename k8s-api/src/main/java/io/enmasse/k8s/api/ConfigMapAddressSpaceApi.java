@@ -4,6 +4,7 @@
  */
 package io.enmasse.k8s.api;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.Clock;
@@ -12,6 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import io.enmasse.address.model.AddressSpaceList;
+import io.fabric8.kubernetes.api.model.ListMeta;
 import io.fabric8.kubernetes.client.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,12 +147,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
-    public Set<AddressSpace> listAddressSpaces(String namespace) {
-        return listAddressSpacesWithLabels(namespace, Collections.emptyMap());
-    }
-
-    @Override
-    public AddressSpaceList getAddressSpaces(String namespace, Map<String, String> labels) {
+    public AddressSpaceList listAddressSpaces(String namespace, Map<String, String> labels) {
         Map<String, String> copy = new LinkedHashMap<>(labels == null ? Collections.emptyMap() : labels);
         copy.put(LabelKeys.TYPE, "address-space");
         copy.put(LabelKeys.NAMESPACE, namespace);
@@ -158,33 +155,43 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
+    public Set<AddressSpace> listAddressSpaces(String namespace) {
+        return new LinkedHashSet<>(listAddressSpaces(namespace, null).getItems());
+    }
+
+    @Override
     public Set<AddressSpace> listAddressSpacesWithLabels(String namespace, Map<String, String> labels) {
-        labels = new LinkedHashMap<>(labels);
-        labels.put(LabelKeys.TYPE, "address-space");
-        labels.put(LabelKeys.NAMESPACE, namespace);
-        return new HashSet<>(listAddressSpacesMatching(labels).getItems());
+        return new LinkedHashSet<>(listAddressSpaces(namespace, labels).getItems());
+    }
+
+    @Override
+    public AddressSpaceList listAllAddressSpaces(Map<String, String> labels) {
+        Map<String, String> copy = new LinkedHashMap<>(labels == null ? Collections.emptyMap() : labels);
+        copy.put(LabelKeys.TYPE, "address-space");
+        return listAddressSpacesMatching(copy);
     }
 
     @Override
     public Set<AddressSpace> listAllAddressSpaces() {
-        return listAllAddressSpacesWithLabels(Collections.emptyMap());
+        return new LinkedHashSet<>(listAddressSpacesMatching(null).getItems());
     }
 
     @Override
     public Set<AddressSpace> listAllAddressSpacesWithLabels(Map<String, String> labels) {
-        labels = new LinkedHashMap<>(labels);
-        labels.put(LabelKeys.TYPE, "address-space");
-        return new HashSet<>(listAddressSpacesMatching(labels).getItems());
+        return new LinkedHashSet<>(listAddressSpacesMatching(labels).getItems());
     }
 
     private AddressSpaceList listAddressSpacesMatching(Map<String, String> labels) {
         Set<AddressSpace> instances = new LinkedHashSet<>();
-        ConfigMapList list = client.configMaps().withLabels(labels).list();
-        for (ConfigMap map : list.getItems()) {
+        ConfigMapList l = client.configMaps().withLabels(labels).list();
+        for (ConfigMap map : l.getItems()) {
             instances.add(getAddressSpaceFromConfig(map));
         }
         AddressSpaceList addressSpaceList = new AddressSpaceList(instances);
-        addressSpaceList.getMetadata().setResourceVersion(list.getMetadata().getResourceVersion());
+        ListMeta metadata = addressSpaceList.getMetadata();
+        if (l.getMetadata() != null) {
+            metadata.setResourceVersion(l.getMetadata().getResourceVersion());
+        }
         return addressSpaceList;
     }
 
@@ -250,7 +257,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     }
 
     @Override
-    public void watch(Watcher<AddressSpace> watcher, String namespace, String resourceVersion, Map<String, String> userLabels) {
+    public Closeable watch(Watcher<AddressSpace> watcher, String namespace, String resourceVersion, Map<String, String> userLabels) {
         Map<String, String> labels = new LinkedHashMap<>();
         if (userLabels != null) {
             labels.putAll(userLabels);
@@ -260,7 +267,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
             labels.put(LabelKeys.NAMESPACE, namespace);
         }
 
-        client.configMaps()
+        return client.configMaps()
                 .withLabels(labels)
                 .withResourceVersion(resourceVersion)
                 .watch(new Watcher<>() {
@@ -275,6 +282,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
                            }
                        }
                 );
+
     }
 
     @Override

@@ -8,42 +8,48 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceList;
 import io.enmasse.address.model.EndpointSpecBuilder;
-import io.enmasse.api.common.DefaultExceptionMapper;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
 import io.enmasse.k8s.model.v1beta1.Table;
 import io.enmasse.k8s.util.TimeUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
+import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
 
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 public class HttpClusterAddressSpaceServiceTest {
     private HttpClusterAddressSpaceService addressSpaceService;
     private TestAddressSpaceApi addressSpaceApi;
     private AddressSpace a1;
     private AddressSpace a2;
-    private DefaultExceptionMapper exceptionMapper = new DefaultExceptionMapper();
     private SecurityContext securityContext;
+    private AsyncResponse asyncResponse;
+
+    private ArgumentCaptor<Response> responseArgumentCaptor = ArgumentCaptor.forClass(Response.class);
+    private ArgumentCaptor<Exception> exceptionArgumentCaptor = ArgumentCaptor.forClass(Exception.class);
 
     @BeforeEach
     public void setup() {
         addressSpaceApi = new TestAddressSpaceApi();
         addressSpaceService = new HttpClusterAddressSpaceService(addressSpaceApi, Clock.systemUTC());
         securityContext = mock(SecurityContext.class);
+        asyncResponse = mock(AsyncResponse.class);
         when(securityContext.isUserInRole(any())).thenReturn(true);
 
         a1 = new AddressSpaceBuilder()
@@ -87,19 +93,14 @@ public class HttpClusterAddressSpaceServiceTest {
                 .build();
     }
 
-    private Response invoke(Callable<Response> fn) {
-        try {
-            return fn.call();
-        } catch (Exception e) {
-            return exceptionMapper.toResponse(e);
-        }
-    }
 
     @Test
     public void testList() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null));
+        addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null, false, null, asyncResponse);
+        verify(asyncResponse).resume(this.responseArgumentCaptor.capture());
+        final Response response = this.responseArgumentCaptor.getValue();
         assertThat(response.getStatus(), is(200));
         AddressSpaceList data = (AddressSpaceList) response.getEntity();
 
@@ -113,7 +114,9 @@ public class HttpClusterAddressSpaceServiceTest {
     public void testListTableFormat() {
         addressSpaceApi.createAddressSpace(a1);
         addressSpaceApi.createAddressSpace(a2);
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", null));
+        addressSpaceService.getAddressSpaceList(securityContext, "application/json;as=Table;g=meta.k8s.io;v=v1beta1", null, false, null, asyncResponse);
+        verify(asyncResponse).resume(this.responseArgumentCaptor.capture());
+        final Response response = this.responseArgumentCaptor.getValue();
         assertThat(response.getStatus(), is(200));
         Table data = (Table) response.getEntity();
 
@@ -124,7 +127,10 @@ public class HttpClusterAddressSpaceServiceTest {
     @Test
     public void testListException() {
         addressSpaceApi.throwException = true;
-        Response response = invoke(() -> addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null));
-        assertThat(response.getStatus(), is(500));
+        addressSpaceService.getAddressSpaceList(securityContext, MediaType.APPLICATION_JSON, null, false, null, asyncResponse);
+        verify(asyncResponse).resume(this.exceptionArgumentCaptor.capture());
+        final Exception response = this.exceptionArgumentCaptor.getValue();
+
+        assertThat(response, instanceOf(RuntimeException.class));
     }
 }
