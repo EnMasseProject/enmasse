@@ -17,14 +17,10 @@ pipeline {
     agent none
     stages {
         stage('execute brokered') {
-            environment {
-                ACTUAL_COMMIT = readFile('actual-commit.file')
-            }
             steps {
                 build job: env.BROKERED_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'brokered.**'],
-                                [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
             }
         }
@@ -36,7 +32,6 @@ pipeline {
                 build job: env.STANDARD_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'standard.**'],
-                                [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
             }
         }
@@ -48,7 +43,6 @@ pipeline {
                 build job: env.PLANS_JOB_NAME, wait: false, parameters: [
                                 [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                                 [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.**'],
-                                [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         ]
             }
         }
@@ -60,7 +54,6 @@ pipeline {
                 build job: env.UPGRADE_JOB_NAME, wait: false, parameters: [
                         [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                         [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.upgrade.**'],
-                        [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                         [$class: 'StringParameterValue', name: 'START_VERSION', value: params.UPGRADE_FROM],
                 ]
             }
@@ -74,7 +67,6 @@ pipeline {
                         [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
                         [$class: 'BooleanParameterValue', name: 'DEPLOY_IOT', value: true],
                         [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'iot.**'],
-                        [$class: 'StringParameterValue', name: 'COMMIT_SHA', value: env.ACTUAL_COMMIT],
                 ]
             }
         }

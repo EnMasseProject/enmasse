@@ -8,7 +8,6 @@ pipeline {
 //        string(name: 'TEST_PROFILE', defaultValue: 'systemtests', description: 'maven parameter for executing test from profile')
 //        string(name: 'DEPLOY_IOT', defaultValue: 'false', description: 'deploy iot component')
 //        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
-//        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
 //        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
 //        string(name: 'DEBUG', defaultValue: 'false', description: 'skip post actions')
 //    }
@@ -54,7 +53,6 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh "git checkout ${params.COMMIT_SHA}"
                 sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
