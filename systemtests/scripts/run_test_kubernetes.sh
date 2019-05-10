@@ -73,8 +73,8 @@ if [[ "${DEPLOY_IOT}" == "true" ]]; then
     echo "Deploying IoT components"
     sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*/*.yaml
 
-    NAMESPACE="${KUBERNETES_NAMESPACE}" "${BASE_DIR}/iot/examples/k8s-tls/create"
-    NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${BASE_DIR}/iot/examples/k8s-tls/deploy"
+    NAMESPACE="${KUBERNETES_NAMESPACE}" "${ENMASSE_DIR}/install/components/iot/examples/k8s-tls/create"
+    NAMESPACE="${KUBERNETES_NAMESPACE}" PREFIX="systemtests-" "${ENMASSE_DIR}/install/components/iot/examples/k8s-tls/deploy"
 
     kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/iot/api
     kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/iot/common
