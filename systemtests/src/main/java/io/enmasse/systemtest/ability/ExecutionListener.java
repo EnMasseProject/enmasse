@@ -64,7 +64,7 @@ public class ExecutionListener implements TestExecutionListener {
                     iotConfigClient.list().getItems().forEach(config -> {
                         log.info("iot config '{}' will be removed", config.getMetadata().getName());
                         try {
-                            iotConfigClient.delete(config);
+                            IoTUtils.deleteIoTConfigAndWait(kube, config);
                         } catch ( Exception e ) {
                             e.printStackTrace();
                         }

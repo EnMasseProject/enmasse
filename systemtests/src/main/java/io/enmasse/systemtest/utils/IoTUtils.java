@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import static io.enmasse.systemtest.utils.AddressSpaceUtils.jsonToAdressSpace;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +57,17 @@ public class IoTUtils {
 
         TestUtils.waitUntilCondition("IoT Config to deploy", (phase)->allDeploymentsPresent(kubernetes), budget);
         TestUtils.waitForNReplicas(kubernetes, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+    }
+
+    public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception{
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
+        kubernetes.getIoTConfigClient().withName(config.getMetadata().getName()).cascading(true).delete();
+        waitForIoTConfigDeleted(kubernetes);
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception{
+        TestUtils.waitForNReplicas(kubernetes, 0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(2, TimeUnit.MINUTES), 5000);
     }
 
     private static boolean allDeploymentsPresent(Kubernetes kubernetes) {
@@ -113,7 +125,7 @@ public class IoTUtils {
 
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project, AddressApiClient addressApiClient) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
-        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).delete(project);
+        kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).delete();
         IoTUtils.waitForIoTProjectDeleted(kubernetes, addressApiClient, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }
