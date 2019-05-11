@@ -268,7 +268,7 @@ class CertProviderTest extends TestBase {
         } finally {
             if (!testSucceeded) {
                 logCollector.collectLogsOfPodsByLabels(appNamespace,
-                        Collections.singletonMap("app", SystemtestsKubernetesApps.OPENSHIFT_CERT_VALIDATOR));
+                        null, Collections.singletonMap("app", SystemtestsKubernetesApps.OPENSHIFT_CERT_VALIDATOR));
             }
             SystemtestsKubernetesApps.deleteOpenshiftCertValidator(appNamespace, kubernetes);
         }
