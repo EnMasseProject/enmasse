@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import java.io.IOException;
@@ -229,30 +230,40 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
                         sent.get(3).get(1, TimeUnit.MINUTES), is(numMessages))
         );
 
-        Future<List<Message>> received = client.recvMessages(before.getSpec().getAddress(), numReceiveBeforeDraining);
-        assertThat("Wrong count of messages received",
-                received.get(1, TimeUnit.MINUTES).size(), is(numReceiveBeforeDraining));
+        assertReceive("before replace", numReceiveBeforeDraining, before, client);
 
-
+        CustomLogger.getLogger().info(String.format("Now scaling from '%s' to '%s'", before.getSpec().getPlan(), after.getSpec().getPlan()));
+        logCollector.collectLogsOfPodsByLabels(kubernetes.getNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
         replaceAddress(getSharedAddressSpace(), after);
         // Receive messages sent before address was replaced
-        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numReceivedAfterScaledPhase1).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase1));
+        assertReceive("after replace", numReceivedAfterScaledPhase1, after, client);
 
         Thread.sleep(30_000);
 
         // Give system a chance to do something stupid
-        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numReceivedAfterScaledPhase2).get(1, TimeUnit.MINUTES).size(), is(numReceivedAfterScaledPhase2));
+        assertReceive("after replace, second batch" , numReceivedAfterScaledPhase2, after, client);
 
         // Ensure send and receive works after address was replaced
-        assertThat("Wrong count of messages sent", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
-        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
+        assertThat("Wrong count of messages sent before awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertReceive("before awaiting drain", numMessages, after, client);
 
         // Ensure there are no brokers in Draining state
         AddressUtils.waitForBrokersDrained(addressApiClient, getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
 
         // Ensure send and receive works after all brokers are drained
-        assertThat("Wrong count of messages sent", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
-        assertThat("Wrong count of messages received", client.recvMessages(after.getSpec().getAddress(), numMessages).get(1, TimeUnit.MINUTES).size(), is(numMessages));
+        assertThat("Wrong count of messages sent after awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertReceive("after awaiting drain", numMessages, after, client);
+    }
+
+    private void assertReceive(String phase, int expected, Address addr, AmqpClient client) throws InterruptedException, ExecutionException, TimeoutException {
+        try {
+            Future<List<Message>> listFuture = client.recvMessages(addr.getSpec().getAddress(), expected);
+            int actual = listFuture.get(1, TimeUnit.MINUTES).size();
+            assertThat("Wrong count of messages received " + phase, actual, is(expected));
+        } catch (TimeoutException e) {
+            CustomLogger.getLogger().error("Timed out " + phase);
+            throw e;
+        }
     }
 
     @Test

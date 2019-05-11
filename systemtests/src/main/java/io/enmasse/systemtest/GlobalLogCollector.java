@@ -89,11 +89,12 @@ public class GlobalLogCollector {
         });
     }
 
-    public void collectLogsOfPodsByLabels(String namespace, Map<String, String> labels) {
+    public void collectLogsOfPodsByLabels(String namespace, String discriminator, Map<String, String> labels) {
         log.info("Store logs from all pods in namespace '{}' matching labels {}", namespace, labels);
         kubernetes.getLogsByLables(namespace, labels).forEach((podName, podLogs) -> {
             try {
-                Path podLog = resolveLogFile(namespace + "." + podName + ".log");
+                String filename = discriminator == null ? String.format("%s.%s.log", namespace, podName) : String.format("%s.%s.%s.log", namespace, discriminator, podName);
+                Path podLog = resolveLogFile(filename);
                 log.info("log of '{}' pod will be archived with path: '{}'", podName, podLog);
                 try (BufferedWriter bf = Files.newBufferedWriter(podLog)) {
                     bf.write(podLogs);
