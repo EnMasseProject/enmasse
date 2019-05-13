@@ -54,18 +54,35 @@ public class MsgCliApiClient extends ApiClient {
      * @throws TimeoutException
      */
     public JsonObject startClients(List<String> clientArguments, int count) throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        return startClients(clientArguments, count, new TimeoutBudget(300000, TimeUnit.MILLISECONDS));
+    }
+
+    private JsonObject startClients(List<String> clientArguments, int count, TimeoutBudget timeout) throws InterruptedException, ExecutionException, TimeoutException {
         JsonObject request = new JsonObject();
         request.put("command", new JsonArray(clientArguments));
         request.put("count", count);
 
-        client.post(endpoint.getPort(), endpoint.getHost(), "")
-                .as(BodyCodec.jsonObject())
-                .timeout(120_000)
-                .sendJson(request,
-                        ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error starting messaging clients"));
-        return responsePromise.get(150_000, TimeUnit.SECONDS);
+        do {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            client.post(endpoint.getPort(), endpoint.getHost(), "")
+            .as(BodyCodec.jsonObject())
+            .timeout(120_000)
+            .sendJson(request,
+                    ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error starting messaging clients"));
 
+            try {
+                return responsePromise.get(150_000, TimeUnit.SECONDS);
+            } catch (ExecutionException ee) {
+                if (ee.getCause() != null && ee.getCause() instanceof VertxException && "Connection was closed".equalsIgnoreCase(ee.getCause().getMessage())) {
+                    log.warn("Failed to get response from {}", endpoint, ee);
+                } else {
+                    throw ee;
+                }
+            }
+            log.info("retrying...");
+        } while (!timeout.timeoutExpired());
+
+        throw new IllegalStateException(String.format("Timed out trying to start clients"));
     }
 
     /**
@@ -82,12 +99,11 @@ public class MsgCliApiClient extends ApiClient {
     }
 
     private JsonObject getClientInfo(String uuid, TimeoutBudget timeout) throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         JsonObject request = new JsonObject();
         request.put("id", uuid);
 
         do {
-
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
             client.get(endpoint.getPort(), endpoint.getHost(), "")
                     .as(BodyCodec.jsonObject())
                     .timeout(120000)
@@ -113,6 +129,7 @@ public class MsgCliApiClient extends ApiClient {
                     throw ee;
                 }
             }
+            log.info("retrying...");
         } while (!timeout.timeoutExpired());
 
         throw new IllegalStateException(String.format("Timed out getting messaging clients info for %s", uuid));
