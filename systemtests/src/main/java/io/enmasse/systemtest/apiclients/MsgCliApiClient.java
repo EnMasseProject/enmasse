@@ -118,7 +118,6 @@ public class MsgCliApiClient extends ApiClient {
                         throw new IllegalStateException("Timeout expired waiting for client isRunning=false");
                     }
                     log.info("retrying getClientInfo because client is still running");
-                    return getClientInfo(uuid, timeout);
                 } else {
                     return info;
                 }
