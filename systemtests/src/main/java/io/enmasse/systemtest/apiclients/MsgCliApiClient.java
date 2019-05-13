@@ -86,17 +86,15 @@ public class MsgCliApiClient extends ApiClient {
         JsonObject request = new JsonObject();
         request.put("id", uuid);
 
-        long allowed = 300000;
         do {
-            long start = System.currentTimeMillis();
 
             client.get(endpoint.getPort(), endpoint.getHost(), "")
                     .as(BodyCodec.jsonObject())
-                    .timeout(allowed)
+                    .timeout(120000)
                     .sendJson(request,
                             ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, String.format("Error getting messaging clients info for %s", uuid)));
             try {
-                JsonObject info = responsePromise.get(allowed, TimeUnit.MILLISECONDS);
+                JsonObject info = responsePromise.get(120000, TimeUnit.MILLISECONDS);
                 Boolean isRunning = info.getBoolean("isRunning");
                 if(isRunning != null && isRunning) {
                     if(timeout.timeoutExpired()) {
@@ -110,13 +108,12 @@ public class MsgCliApiClient extends ApiClient {
                 }
             } catch (ExecutionException ee) {
                 if (ee.getCause() != null && ee.getCause() instanceof VertxException && "Connection was closed".equalsIgnoreCase(ee.getCause().getMessage())) {
-                    log.warn("Failed to get response from {}:{}", ee);
-                    allowed -= System.currentTimeMillis() - start;
+                    log.warn("Failed to get response from {}", endpoint, ee);
                 } else {
                     throw ee;
                 }
             }
-        } while (allowed > 0);
+        } while (!timeout.timeoutExpired());
 
         throw new IllegalStateException(String.format("Timed out getting messaging clients info for %s", uuid));
     }
