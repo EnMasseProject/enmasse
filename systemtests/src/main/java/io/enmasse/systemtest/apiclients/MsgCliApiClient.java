@@ -54,18 +54,35 @@ public class MsgCliApiClient extends ApiClient {
      * @throws TimeoutException
      */
     public JsonObject startClients(List<String> clientArguments, int count) throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+        return startClients(clientArguments, count, new TimeoutBudget(300000, TimeUnit.MILLISECONDS));
+    }
+
+    private JsonObject startClients(List<String> clientArguments, int count, TimeoutBudget timeout) throws InterruptedException, ExecutionException, TimeoutException {
         JsonObject request = new JsonObject();
         request.put("command", new JsonArray(clientArguments));
         request.put("count", count);
 
-        client.post(endpoint.getPort(), endpoint.getHost(), "")
-                .as(BodyCodec.jsonObject())
-                .timeout(120_000)
-                .sendJson(request,
-                        ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error starting messaging clients"));
-        return responsePromise.get(150_000, TimeUnit.SECONDS);
+        do {
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
+            client.post(endpoint.getPort(), endpoint.getHost(), "")
+            .as(BodyCodec.jsonObject())
+            .timeout(120_000)
+            .sendJson(request,
+                    ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, "Error starting messaging clients"));
 
+            try {
+                return responsePromise.get(150_000, TimeUnit.SECONDS);
+            } catch (ExecutionException ee) {
+                if (ee.getCause() != null && ee.getCause() instanceof VertxException && "Connection was closed".equalsIgnoreCase(ee.getCause().getMessage())) {
+                    log.warn("Failed to get response from {}", endpoint, ee);
+                } else {
+                    throw ee;
+                }
+            }
+            log.info("retrying...");
+        } while (!timeout.timeoutExpired());
+
+        throw new IllegalStateException(String.format("Timed out trying to start clients"));
     }
 
     /**
@@ -82,21 +99,18 @@ public class MsgCliApiClient extends ApiClient {
     }
 
     private JsonObject getClientInfo(String uuid, TimeoutBudget timeout) throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         JsonObject request = new JsonObject();
         request.put("id", uuid);
 
-        long allowed = 300000;
         do {
-            long start = System.currentTimeMillis();
-
+            CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
             client.get(endpoint.getPort(), endpoint.getHost(), "")
                     .as(BodyCodec.jsonObject())
-                    .timeout(allowed)
+                    .timeout(120000)
                     .sendJson(request,
                             ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_OK, String.format("Error getting messaging clients info for %s", uuid)));
             try {
-                JsonObject info = responsePromise.get(allowed, TimeUnit.MILLISECONDS);
+                JsonObject info = responsePromise.get(120000, TimeUnit.MILLISECONDS);
                 Boolean isRunning = info.getBoolean("isRunning");
                 if(isRunning != null && isRunning) {
                     if(timeout.timeoutExpired()) {
@@ -104,19 +118,18 @@ public class MsgCliApiClient extends ApiClient {
                         throw new IllegalStateException("Timeout expired waiting for client isRunning=false");
                     }
                     log.info("retrying getClientInfo because client is still running");
-                    return getClientInfo(uuid, timeout);
                 } else {
                     return info;
                 }
             } catch (ExecutionException ee) {
                 if (ee.getCause() != null && ee.getCause() instanceof VertxException && "Connection was closed".equalsIgnoreCase(ee.getCause().getMessage())) {
-                    log.warn("Failed to get response from {}:{}", ee);
-                    allowed -= System.currentTimeMillis() - start;
+                    log.warn("Failed to get response from {}", endpoint, ee);
                 } else {
                     throw ee;
                 }
             }
-        } while (allowed > 0);
+            log.info("retrying...");
+        } while (!timeout.timeoutExpired());
 
         throw new IllegalStateException(String.format("Timed out getting messaging clients info for %s", uuid));
     }
