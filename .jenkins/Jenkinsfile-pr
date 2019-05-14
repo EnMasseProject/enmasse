@@ -93,7 +93,6 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     script {
-                        lib.postGithubPrComment("## Hello\\n@kornys")
                         lib.startOpenshift()
                     }
                 }
@@ -193,7 +192,11 @@ pipeline {
             }
         }
         failure {
-            echo "build failed"
+            script {
+                sh "sudo ./systemtests/scripts/get_failures.sh"
+                lib.postGithubPrComment("failures.json")
+                echo "build failed"
+            }
         }
     }
 }
