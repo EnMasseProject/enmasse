@@ -10,14 +10,14 @@ You can use the following {ClientAmqpPythonName} example to connect your applica
 
 [source,python,options="nowrap",subs="+quotes,attributes"]
 ----
-from __future__ import print_function, unicode_literals
+from \_future_ import print_function, unicode_literals
 from proton import Message
 from proton.handlers import MessagingHandler
 from proton.reactor import Container
 
 class HelloWorld(MessagingHandler):
-    def __init__(self, server, address):
-        super(HelloWorld, self).__init__()
+    def \_init_(self, server, address):
+        super(HelloWorld, self).\_init_()
         self.server = server
         self.address = address
 
