@@ -37,9 +37,9 @@ public class HttpAdapterClient extends ApiClient {
 
     protected static Logger log = CustomLogger.getLogger();
 
-    public HttpAdapterClient(Kubernetes kubernetes, Endpoint endpoint, String username, String password) {
+    public HttpAdapterClient(Kubernetes kubernetes, Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
         super(kubernetes, () -> endpoint, "");
-        this.authzString = getBasicAuth(username, password);
+        this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
     }
 
     @Override
@@ -55,6 +55,7 @@ public class HttpAdapterClient extends ApiClient {
                 .setVerifyHost(false));
     }
 
+    @Override
     public void close () {
         this.client.close();
     }

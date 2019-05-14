@@ -7,7 +7,6 @@ package io.enmasse.systemtest.iot.mqtt;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
@@ -35,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(sharedIot)
 public class MqttAdapterTest extends IoTTestBaseWithShared {
 
-    private Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
 
     private Endpoint mqttAdapterEndpoint;
     private Endpoint deviceRegistryEndpoint;
@@ -145,9 +145,12 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
     @Test
     public void basicTelemetryTest() throws Exception {
+        consumeOneTelemetryMessageTest(businessApplicationClient, tenantId(), adapterClient);
+    }
 
+    private static void consumeOneTelemetryMessageTest(AmqpClient amqpClient, String tenantId, IMqttClient mqttClient) throws Exception {
         var timeout = new TimeoutBudget(2, TimeUnit.MINUTES);
-        businessApplicationClient.recvMessages(IOT_ADDRESS_TELEMETRY + "/" + tenantId(), msg -> {
+        amqpClient.recvMessages(IOT_ADDRESS_TELEMETRY + "/" + tenantId, msg -> {
             log.info("First telemetry message accepted");
             timeout.reset(0, TimeUnit.MILLISECONDS);
             return true;
@@ -158,72 +161,115 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             MqttMessage message = new MqttMessage(warmUpMessage.toBuffer().getBytes());
             message.setQos(0);
             log.info("Sending telemetry data");
-            adapterClient.publish(IOT_ADDRESS_TELEMETRY, message);
+            mqttClient.publish(IOT_ADDRESS_TELEMETRY, message);
             Thread.sleep(5000);
         }
-
     }
 
     @Test
     @Disabled
     public void batchTelemetryTest() throws Exception {
+        simpleMqttTelemetryTest(businessApplicationClient, tenantId(), adapterClient);
+    }
+
+    public static void simpleMqttTelemetryTest(AmqpClient amqpClient, String tenantId, IMqttClient mqttClient) throws Exception {
+        int messagesToSend = 50;
+
         log.info("Connecting amqp consumer");
         AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
-        Future<List<Message>> futureReceivedMessages = businessApplicationClient.recvMessages(IOT_ADDRESS_TELEMETRY + "/" + tenantId(), msg -> {
-            if (msg.getBody() instanceof Data) {
-                Binary value = ((Data) msg.getBody()).getValue();
-                JsonObject json = new JsonObject(Buffer.buffer(value.getArray()));
-                if (json.containsKey("i")) {
-                    log.info("Telemetry message received");
-                    receivedMessagesCounter.incrementAndGet();
-                    return json.getBoolean("end");
-                }
-            }
-            return false;
-        });
+        Future<List<Message>> futureReceivedMessages = setUpMessagingConsumer(amqpClient, IOT_ADDRESS_TELEMETRY, tenantId, receivedMessagesCounter, messagesToSend);
 
-        int messagesToSend = 50;
+        log.info("doing first telemetry attemp");
+        consumeOneTelemetryMessageTest(amqpClient, tenantId, mqttClient);
+
         log.info("Sending telemetry messages");
         for (int i = 0; i < messagesToSend; i++) {
             JsonObject json = new JsonObject();
             json.put("i", i);
-            json.put("end", i == (messagesToSend - 1));
             MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
             message.setQos(0);
-            adapterClient.publish(IOT_ADDRESS_TELEMETRY, message);
+            mqttClient.publish(IOT_ADDRESS_TELEMETRY, message);
         }
 
-        log.info("Waiting to receive telemetry data in business application");
-        futureReceivedMessages.get(60, TimeUnit.SECONDS);
-        assertEquals(messagesToSend, receivedMessagesCounter.get());
+        try {
+            log.info("Waiting to receive telemetry data in business application");
+            futureReceivedMessages.get(60, TimeUnit.SECONDS);
+            assertEquals(messagesToSend, receivedMessagesCounter.get());
+            log.info("Telemetry successfully consumed");
+        } catch (TimeoutException e) {
+            log.error("Timeout receiving telemetry, messages received: {} error:", receivedMessagesCounter.get(), e);
+            throw e;
+        }
     }
 
     @Test
     public void basicEventTest() throws Exception {
-
         int messagesToSend = 5;
         log.info("Sending events");
         for (int i = 0; i < messagesToSend; i++) {
             JsonObject json = new JsonObject();
             json.put("i", i);
-            json.put("end", i == (messagesToSend - 1));
             MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
-            message.setQos(1);
+            message.setQos(0);
             adapterClient.publish(IOT_ADDRESS_EVENT, message);
         }
 
+        log.info("Consuming one event in business application");
+        CountDownLatch latch = new CountDownLatch(1);
+        businessApplicationClient.recvMessages(IOT_ADDRESS_EVENT + "/" + tenantId(), msg -> {
+            latch.countDown();
+            return true;
+        });
+
+        latch.await(30, TimeUnit.SECONDS);
+        log.info("Event successfully consumed");
+    }
+
+    @Test
+    @Disabled
+    public void batchEventTest() throws Exception {
+        simpleMqttEventTest(businessApplicationClient, tenantId(), adapterClient);
+    }
+
+    public static void simpleMqttEventTest(AmqpClient amqpClient, String tenantId, IMqttClient mqttClient) throws Exception{
+
+        int eventsToSend = 5;
+        log.info("Sending events");
+        for (int i = 0; i < eventsToSend; i++) {
+            JsonObject json = new JsonObject();
+            json.put("i", i);
+            MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
+            message.setQos(0);
+            mqttClient.publish(IOT_ADDRESS_EVENT, message);
+        }
+
         log.info("Consuming events in business application");
-        ReceiverStatus status = businessApplicationClient.recvMessagesWithStatus(IOT_ADDRESS_EVENT + "/" + tenantId(), 5);
+        AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
+        Future<List<Message>> status = setUpMessagingConsumer(amqpClient, IOT_ADDRESS_EVENT, tenantId, receivedMessagesCounter, eventsToSend);
 
         try {
             log.info("Waiting to receive events");
-            List<Message> messages = status.getResult().get(60, TimeUnit.SECONDS);
-            assertEquals(messagesToSend, messages.size());
+            status.get(60, TimeUnit.SECONDS);
+            assertEquals(eventsToSend, receivedMessagesCounter.get());
+            log.info("Events successfully consumed");
         } catch (TimeoutException e) {
-            log.error("Timeout receiving events, messages received: {} error:", status.getNumReceived(), e);
+            log.error("Timeout receiving events, messages received: {} error:", receivedMessagesCounter.get(), e);
             throw e;
         }
 
+    }
+
+    private static Future<List<Message>> setUpMessagingConsumer(AmqpClient amqpClient, String type, String tenantId, AtomicInteger receivedMessagesCounter, int expectedMessages) {
+        return amqpClient.recvMessages(type + "/" + tenantId, msg ->{
+            if(msg.getBody() instanceof Data) {
+                Binary value = ((Data) msg.getBody()).getValue();
+                JsonObject json = new JsonObject(Buffer.buffer(value.getArray()));
+                if (json.containsKey("i")) {
+                    return receivedMessagesCounter.incrementAndGet() == expectedMessages;
+                }
+            }
+            return false;
+        });
     }
 
 }

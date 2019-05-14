@@ -88,7 +88,7 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
         this.deviceId = UUID.randomUUID().toString();
         this.authId = UUID.randomUUID().toString();
         this.password = UUID.randomUUID().toString();
-        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId + "@" + tenantId(), this.password);
+        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId,  tenantId(), this.password);
 
         // set up new random device
         this.registryClient.registerDevice(tenantId(), this.deviceId);

@@ -32,6 +32,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
@@ -568,5 +569,21 @@ public class TestUtils {
 
     public static String getGlobalConsoleRoute() throws Exception {
         return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
+    }
+
+    public static CompletableFuture<Void> runAsync(ThrowingCallable callable){
+        return CompletableFuture.runAsync(() -> {
+            try {
+                callable.call();
+            } catch ( Exception e ) {
+                log.error("Error running async test", e);
+                throw new RuntimeException(e);
+            }
+        }, e -> new Thread(e).start());
+    }
+
+    @FunctionalInterface
+    public static interface ThrowingCallable {
+        void call() throws Exception;
     }
 }

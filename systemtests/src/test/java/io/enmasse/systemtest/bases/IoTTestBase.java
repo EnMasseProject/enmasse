@@ -91,17 +91,6 @@ public abstract class IoTTestBase extends TestBase {
         return null;
     }
 
-    /**
-     * Get the Hono tenant name from the project configuration.
-     */
-    protected String tenantId() {
-        var project = getSharedIoTProject();
-        if (project == null) {
-            return null;
-        }
-        return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
-    }
-
     protected void createIoTConfig(IoTConfig config) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_CONFIG);
         var iotConfigApiClient = kubernetes.getIoTConfigClient();
@@ -140,7 +129,7 @@ public abstract class IoTTestBase extends TestBase {
         waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
     }
 
-    protected void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+    protected static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
         JsonObject json = new JsonObject(Map.of("a", "b"));
         String message = "First successful " + type.name().toLowerCase() + " message";
         TestUtils.waitUntilCondition(message, (phase) -> {
@@ -164,10 +153,14 @@ public abstract class IoTTestBase extends TestBase {
         log.info("First " + type.name().toLowerCase() + " message accepted");
     }
 
-    private void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
-        if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
+    private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
+        if(phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
             log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
         }
+    }
+
+    public String tenantId(IoTProject project) {
+        return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
 }
