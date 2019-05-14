@@ -43,7 +43,7 @@ public class GlobalConsolePage implements IWebPage {
     // Getters and finders of elements and data
     //================================================================================================
     private WebElement getContentElem() {
-        return selenium.getDriver().findElement(By.className("pf-c-content"));
+        return selenium.getDriver().findElement(By.className("pf-c-page__main-section"));
     }
 
     private WebElement getCreateButton() {
