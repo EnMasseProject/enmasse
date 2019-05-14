@@ -6,6 +6,7 @@
 = Address space example exports
 
 You can export your address space information using the following three export types:
+
 * `ConfigMap`
 * `Secret`
 * `Service`
