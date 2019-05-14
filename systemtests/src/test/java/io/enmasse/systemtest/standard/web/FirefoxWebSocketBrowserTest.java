@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.standard.web;
 
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
@@ -16,11 +17,31 @@ class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestB
 
     @Test
     void testWebSocketSendReceiveQueue() throws Exception {
-        doWebSocketSendReceive(AddressUtils.createQueueAddressObject("websocket-queue", getDefaultPlan(AddressType.QUEUE)));
+        doWebSocketSendReceive(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "ws-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("ws-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
     }
 
     @Test
     void testWebSocketSendReceiveTopic() throws Exception {
-        doWebSocketSendReceive(AddressUtils.createTopicAddressObject("websocket-topic", getDefaultPlan(AddressType.TOPIC)));
+        doWebSocketSendReceive(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "ws-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("ws-topic")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build());
     }
 }

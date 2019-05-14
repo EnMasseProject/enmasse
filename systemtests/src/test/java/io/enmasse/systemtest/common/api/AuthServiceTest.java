@@ -5,15 +5,14 @@
 package io.enmasse.systemtest.common.api;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
-import io.enmasse.systemtest.utils.UserUtils;
-import io.enmasse.user.model.v1.User;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
@@ -25,7 +24,7 @@ import static io.enmasse.systemtest.TestTag.isolated;
 class AuthServiceTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
     void setUp() throws Exception {
@@ -35,7 +34,7 @@ class AuthServiceTest extends TestBase {
     @AfterEach
     void tearDown() throws Exception {
         adminManager.tearDown();
-        SystemtestsKubernetesApps.deletePostgresDB(kubernetes.getNamespace());
+        SystemtestsKubernetesApps.deletePostgresDB(kubernetes.getInfraNamespace());
     }
 
     @Test
@@ -44,19 +43,37 @@ class AuthServiceTest extends TestBase {
         adminManager.createAuthService(standardAuth);
         log.info(AuthServiceUtils.authenticationServiceToJson(adminManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-addr-space-auth",
-                AddressSpaceType.STANDARD,
-                AddressSpacePlans.STANDARD_SMALL,
-                standardAuth.getMetadata().getName());
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-auth")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName(standardAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
         createAddressSpace(addressSpace);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
-        setAddresses(addressSpace, queue);
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+        setAddresses(queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
     }
@@ -67,31 +84,66 @@ class AuthServiceTest extends TestBase {
         adminManager.createAuthService(standardAuth);
         log.info(AuthServiceUtils.authenticationServiceToJson(adminManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-addr-space-ephe",
-                AddressSpaceType.BROKERED,
-                AddressSpacePlans.BROKERED,
-                standardAuth.getMetadata().getName());
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-ephe")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName(standardAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
-        AddressSpace addressSpace2 = AddressSpaceUtils.createAddressSpaceObject("test-addr-space-stauth",
-                AddressSpaceType.BROKERED,
-                AddressSpacePlans.BROKERED,
-                "standard-authservice");
+        AddressSpace addressSpace2 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-sauth")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
         createAddressSpaceList(addressSpace, addressSpace2);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
-        setAddresses(addressSpace, queue);
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
 
-        Address queue2 = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
-        setAddresses(addressSpace2, queue2);
+        Address queue2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace2.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace2, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        setAddresses(queue, queue2);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         UserCredentials cred2 = new UserCredentials("david2", "pepinator2");
-        User user2 = UserUtils.createUserObject(cred2);
-        createUser(addressSpace2, user2);
+        createOrUpdateUser(addressSpace2, cred2);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
         assertCanConnect(addressSpace2, cred2, Collections.singletonList(queue2));
@@ -105,15 +157,34 @@ class AuthServiceTest extends TestBase {
         adminManager.createAuthService(noneAuth);
         log.info(AuthServiceUtils.authenticationServiceToJson(adminManager.getAuthService(noneAuth.getMetadata().getName())).toString());
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-address-space",
-                AddressSpaceType.BROKERED,
-                AddressSpacePlans.BROKERED,
-                noneAuth.getMetadata().getName());
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-custom-auth")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName(noneAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
         createAddressSpace(addressSpace);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
-        setAddresses(addressSpace, queue);
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        setAddresses(queue);
 
         assertCanConnect(addressSpace, new UserCredentials("test-user1", "password"), Collections.singletonList(queue));
         assertCanConnect(addressSpace, new UserCredentials("test-user2", "password"), Collections.singletonList(queue));
@@ -126,19 +197,37 @@ class AuthServiceTest extends TestBase {
         adminManager.createAuthService(standardAuth);
         log.info(AuthServiceUtils.authenticationServiceToJson(adminManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-addr-space-auth",
-                AddressSpaceType.BROKERED,
-                AddressSpacePlans.BROKERED,
-                standardAuth.getMetadata().getName());
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-auth")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName(standardAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
         createAddressSpace(addressSpace);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
-        setAddresses(addressSpace, queue);
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        setAddresses(queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
 
@@ -150,25 +239,43 @@ class AuthServiceTest extends TestBase {
 
     @Test
     void testStandardAuthServiceWithDB() throws Exception {
-        Endpoint endpoint = SystemtestsKubernetesApps.deployPostgresDB(kubernetes.getNamespace());
+        Endpoint endpoint = SystemtestsKubernetesApps.deployPostgresDB(kubernetes.getInfraNamespace());
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-postgres",
                 endpoint.getHost(), endpoint.getPort(), "postgresql", "postgresdb", SystemtestsKubernetesApps.POSTGRES_APP);
         adminManager.createAuthService(standardAuth);
         log.info(AuthServiceUtils.authenticationServiceToJson(adminManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-addr-space-auth-postgres",
-                AddressSpaceType.BROKERED,
-                AddressSpacePlans.BROKERED,
-                standardAuth.getMetadata().getName());
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-auth-postgres")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName(standardAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
 
         createAddressSpace(addressSpace);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
-        setAddresses(addressSpace, queue);
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        setAddresses(queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        User user = UserUtils.createUserObject(cred);
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, cred);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
     }

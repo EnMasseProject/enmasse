@@ -14,7 +14,9 @@ public interface DestinationPlan {
     String STANDARD_XLARGE_QUEUE = "standard-xlarge-queue";
     String STANDARD_XLARGE_TOPIC = "standard-xlarge-topic";
     String STANDARD_SMALL_ANYCAST = "standard-small-anycast";
+    String STANDARD_MEDIUM_ANYCAST = "standard-medium-anycast";
     String STANDARD_SMALL_MULTICAST = "standard-small-multicast";
+    String STANDARD_MEDIUM_MULTICAST = "standard-medium-multicast";
     String STANDARD_SMALL_SUBSCRIPTION = "standard-small-subscription";
     String STANDARD_LARGE_SUBSCRIPTION = "standard-large-subscription";
 }

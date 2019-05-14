@@ -5,6 +5,8 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -14,8 +16,28 @@ class MulticastTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testRestApi() throws Exception {
-        Address m1 = AddressUtils.createMulticastAddressObject("multicastRest1");
-        Address m2 = AddressUtils.createMulticastAddressObject("multicastRest2");
+        Address m1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "multicast1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("multicast1")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build();
+        Address m2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "multicast2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("multicast2")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build();
 
         runRestApiTest(sharedAddressSpace, m1, m2);
     }

@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.common.plans;
 
 import io.enmasse.address.model.*;
-import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
@@ -17,16 +16,20 @@ import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.vertx.core.json.JsonObject;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -41,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     private static Logger log = CustomLogger.getLogger();
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
     void setUp() throws Exception {
@@ -59,11 +62,27 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {
-        StandardInfraConfig infra = PlanUtils.createStandardInfraConfigObject("kornys",
-                PlanUtils.createStandardBrokerResourceObject("750Mi", "2Gi", null),
-                PlanUtils.createStandardAdminResourceObject("1Gi", null),
-                PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1),
-                environment.enmasseVersion());
+        StandardInfraConfig infra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("kornys")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withNewResources()
+                        .withMemory("750Mi")
+                        .withStorage("2Gi")
+                        .endResources()
+                        .build())
+                .withRouter(PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1))
+                .withAdmin(new StandardInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory("1Gi")
+                        .endResources()
+                        .build())
+                .endSpec()
+                .build();
 
         adminManager.createInfraConfig(infra);
 
@@ -87,29 +106,60 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(weakSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace weakAddressSpace = AddressSpaceUtils.createAddressSpaceObject("weak-address-space", AddressSpaceType.STANDARD,
-                weakSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace weakAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("weak-plan-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(weakSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(weakAddressSpace);
 
         //deploy destinations
-        Address weakQueueDest = AddressUtils.createQueueAddressObject("weak-queue", weakQueuePlan.getMetadata().getName());
-        Address weakTopicDest = AddressUtils.createTopicAddressObject("weak-topic", weakTopicPlan.getMetadata().getName());
-        setAddresses(weakAddressSpace, weakQueueDest, weakTopicDest);
+        Address weakQueueDest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(weakAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(weakAddressSpace, "weak-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("weak-queue")
+                .withPlan(weakQueuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        Address weakTopicDest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(weakAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(weakAddressSpace, "weak-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("weak-topic")
+                .withPlan(weakTopicPlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        setAddresses(weakQueueDest, weakTopicDest);
 
         //get destinations
-        Future<List<Address>> getWeakQueue = getAddressesObjects(weakAddressSpace, Optional.of(weakQueueDest.getMetadata().getName()));
-        Future<List<Address>> getWeakTopic = getAddressesObjects(weakAddressSpace, Optional.of(weakTopicDest.getMetadata().getName()));
+        Address getWeakQueue = kubernetes.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakQueueDest.getMetadata().getName()).get();
+        Address getWeakTopic = kubernetes.getAddressClient(weakAddressSpace.getMetadata().getNamespace()).withName(weakTopicDest.getMetadata().getName()).get();
 
         String assertMessage = "Queue plan wasn't set properly";
         assertAll("Both destination should contain right addressPlan",
-                () -> assertEquals(getWeakQueue.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
+                () -> assertEquals(getWeakQueue.getSpec().getPlan(),
                         weakQueuePlan.getMetadata().getName(), assertMessage),
-                () -> assertEquals(getWeakTopic.get(20, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
+                () -> assertEquals(getWeakTopic.getSpec().getPlan(),
                         weakTopicPlan.getMetadata().getName(), assertMessage));
 
         //simple send/receive
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
-        createUser(weakAddressSpace, user);
+        createOrUpdateUser(weakAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(weakAddressSpace);
         queueClient.getConnectOptions().setCredentials(user);
@@ -126,12 +176,6 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         AddressPlan queuePlan = PlanUtils.createAddressPlanObject("queue-pooled-test1", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0.0)));
 
-        AddressPlan queuePlan2 = PlanUtils.createAddressPlanObject("queue-pooled-test2", AddressType.QUEUE,
-                Arrays.asList(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.0)));
-
-        AddressPlan queuePlan3 = PlanUtils.createAddressPlanObject("queue-pooled-test3", AddressType.QUEUE,
-                Arrays.asList(new ResourceRequest("broker", 0.049), new ResourceRequest("router", 0.0)));
-
         AddressPlan topicPlan = PlanUtils.createAddressPlanObject("topic-pooled-test1", AddressType.TOPIC,
                 Arrays.asList(
                         new ResourceRequest("broker", 0.4),
@@ -141,8 +185,6 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 Collections.singletonList(new ResourceRequest("router", 0.3)));
 
         adminManager.createAddressPlan(queuePlan);
-        adminManager.createAddressPlan(queuePlan2);
-        adminManager.createAddressPlan(queuePlan3);
         adminManager.createAddressPlan(topicPlan);
         adminManager.createAddressPlan(anycastPlan);
 
@@ -151,63 +193,158 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 new ResourceAllowance("broker", 2.0),
                 new ResourceAllowance("router", 1.0),
                 new ResourceAllowance("aggregate", 2.0));
-        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, queuePlan2, queuePlan3, topicPlan, anycastPlan);
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan, anycastPlan);
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("quota-limits-pooled-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
         adminManager.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-pooled-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(addressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         //check router limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        AddressUtils.createAnycastAddressObject("a1", anycastPlan.getMetadata().getName()),
-                        AddressUtils.createAnycastAddressObject("a2", anycastPlan.getMetadata().getName()),
-                        AddressUtils.createAnycastAddressObject("a3", anycastPlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "a1"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("anycast")
+                                .withAddress("a1")
+                                .withPlan(anycastPlan.getMetadata().getName())
+                                .endSpec()
+                                .build(),
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "a2"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("anycast")
+                                .withAddress("a2")
+                                .withPlan(anycastPlan.getMetadata().getName())
+                                .endSpec()
+                                .build(),
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "a3"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("anycast")
+                                .withAddress("a3")
+                                .withPlan(anycastPlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ),
                 Collections.singletonList(
-                        AddressUtils.createAnycastAddressObject("a4", anycastPlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "a4"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("anycast")
+                                .withAddress("a4")
+                                .withPlan(anycastPlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ), user);
 
         //check broker limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        AddressUtils.createQueueAddressObject("q1", queuePlan.getMetadata().getName()),
-                        AddressUtils.createQueueAddressObject("q2", queuePlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "q1"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("queue")
+                                .withAddress("q1")
+                                .withPlan(queuePlan.getMetadata().getName())
+                                .endSpec()
+                                .build(),
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "q2"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("queue")
+                                .withAddress("q2")
+                                .withPlan(queuePlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ),
                 Collections.singletonList(
-                        AddressUtils.createQueueAddressObject("q3", queuePlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "q3"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("queue")
+                                .withAddress("q3")
+                                .withPlan(queuePlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ), user);
-
-        checkLimits(addressSpace,
-                Arrays.asList(
-                        AddressUtils.createQueueAddressObject("q1", queuePlan.getMetadata().getName()), // 0.6
-                        AddressUtils.createQueueAddressObject("q2", queuePlan.getMetadata().getName()), // 0.6
-                        AddressUtils.createQueueAddressObject("q3", queuePlan2.getMetadata().getName()), // 0.1
-                        AddressUtils.createQueueAddressObject("q4", queuePlan2.getMetadata().getName()), // 0.1
-                        AddressUtils.createQueueAddressObject("q5", queuePlan2.getMetadata().getName()), // 0.1
-                        AddressUtils.createQueueAddressObject("q6", queuePlan2.getMetadata().getName()), // 0.1
-                        AddressUtils.createQueueAddressObject("q7", queuePlan3.getMetadata().getName()), // 0.049
-                        AddressUtils.createQueueAddressObject("q8", queuePlan3.getMetadata().getName()), // 0.049
-                        AddressUtils.createQueueAddressObject("q9", queuePlan3.getMetadata().getName()), // 0.049
-                        AddressUtils.createQueueAddressObject("q10", queuePlan3.getMetadata().getName()), // 0.049
-                        AddressUtils.createQueueAddressObject("q11", queuePlan3.getMetadata().getName()), // 0.049
-                        AddressUtils.createQueueAddressObject("q12", queuePlan3.getMetadata().getName()) // 0.049
-                ), Collections.emptyList(), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        AddressUtils.createTopicAddressObject("t1", topicPlan.getMetadata().getName()),
-                        AddressUtils.createTopicAddressObject("t2", topicPlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "t1"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("topic")
+                                .withAddress("t1")
+                                .withPlan(topicPlan.getMetadata().getName())
+                                .endSpec()
+                                .build(),
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "t2"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("topic")
+                                .withAddress("t2")
+                                .withPlan(topicPlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ),
                 Collections.singletonList(
-                        AddressUtils.createTopicAddressObject("t3", topicPlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "t3"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("topic")
+                                .withAddress("t3")
+                                .withPlan(topicPlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ), user);
     }
 
@@ -236,30 +373,101 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
-                addressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-quota-sharded-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(addressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         //check broker limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        AddressUtils.createQueueAddressObject("q1", queuePlan.getMetadata().getName()),
-                        AddressUtils.createQueueAddressObject("q2", queuePlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "q1"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("queue")
+                                .withAddress("q1")
+                                .withPlan(queuePlan.getMetadata().getName())
+                                .endSpec()
+                                .build(),
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "q2"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("queue")
+                                .withAddress("q2")
+                                .withPlan(queuePlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ),
                 Collections.singletonList(
-                        AddressUtils.createQueueAddressObject("q3", queuePlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "q3"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("queue")
+                                .withAddress("q3")
+                                .withPlan(queuePlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ), user);
 
         //check aggregate limits
         checkLimits(addressSpace,
                 Arrays.asList(
-                        AddressUtils.createTopicAddressObject("t1", topicPlan.getMetadata().getName()),
-                        AddressUtils.createTopicAddressObject("t2", topicPlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "t1"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("topic")
+                                .withAddress("t1")
+                                .withPlan(topicPlan.getMetadata().getName())
+                                .endSpec()
+                                .build(),
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "t2"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("topic")
+                                .withAddress("t2")
+                                .withPlan(topicPlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ),
                 Collections.singletonList(
-                        AddressUtils.createTopicAddressObject("t3", topicPlan.getMetadata().getName())
+                        new AddressBuilder()
+                                .withNewMetadata()
+                                .withNamespace(addressSpace.getMetadata().getNamespace())
+                                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "t3"))
+                                .endMetadata()
+                                .withNewSpec()
+                                .withType("topic")
+                                .withAddress("t3")
+                                .withPlan(topicPlan.getMetadata().getName())
+                                .endSpec()
+                                .build()
                 ), user);
     }
 
@@ -326,16 +534,28 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         Thread.sleep(30_000);
 
         //create address space plan with new plan
-        AddressSpace partitioned = AddressSpaceUtils.createAddressSpaceObject("partitioned", AddressSpaceType.STANDARD,
-                partitionedAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace partitioned = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("partitioned")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(partitionedAddressesPlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(partitioned);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
-        createUser(partitioned, cred);
+        createOrUpdateUser(partitioned, cred);
 
         Address address = new AddressBuilder()
                 .editOrNewMetadata()
-                .withName("partitioned.myqueue")
+                .withNamespace(partitioned.getMetadata().getNamespace())
+                .withName(partitioned.getMetadata().getName() + "." + "myqueue")
                 .endMetadata()
                 .editOrNewSpec()
                 .withAddress("myqueue")
@@ -343,13 +563,13 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 .withType("queue")
                 .endSpec()
                 .build();
-        appendAddresses(partitioned, address);
+        appendAddresses(address);
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
 
         // Increase number of partitions and expect broker to be created
         address.getSpec().setPlan(partitionedQueue.getMetadata().getName());
-        replaceAddress(partitioned, address);
+        replaceAddress(address);
 
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
@@ -357,22 +577,22 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         // Decrease number of partitions and expect broker to disappear
         address.getSpec().setPlan(simpleQueue.getMetadata().getName());
-        replaceAddress(partitioned, address);
+        replaceAddress(address);
         waitForBrokerReplicas(partitioned, address, 1);
         assertCanConnect(partitioned, cred, Collections.singletonList(address));
 
         // Increase to too many partitions
         address.getSpec().setPlan(manyPartitionedQueue.getMetadata().getName());
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
-        AddressUtils.replaceAddress(addressApiClient, partitioned, address, false, budget);
+        AddressUtils.replaceAddress(address, false, budget);
         Address replaced = null;
         while (!budget.timeoutExpired()) {
-            replaced = getAddressesObjects(partitioned, Optional.of(address.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
+            replaced = kubernetes.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
             if (replaced.getStatus().getMessages().contains("Quota exceeded")) {
                 break;
             }
         }
-        replaced = getAddressesObjects(partitioned, Optional.of(address.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
+        replaced = kubernetes.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
         assertNotNull(replaced);
         assertTrue(replaced.getStatus().getMessages().contains("Quota exceeded"), "No status message is present");
     }
@@ -395,28 +615,49 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
-        AddressSpace manyAddressesSpace = AddressSpaceUtils.createAddressSpaceObject("many-addresses-standard", AddressSpaceType.STANDARD,
-                manyAddressesPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace manyAddressesSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("many-addresses-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(manyAddressesPlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
-        createUser(manyAddressesSpace, cred);
+        createOrUpdateUser(manyAddressesSpace, cred);
 
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 4;
         int toDeleteCount = 2;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createQueueAddressObject("xl-queue-" + i, xlQueuePlan.getMetadata().getName()));
+            dest.add(new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(manyAddressesSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(manyAddressesSpace, "xl-queue-" + i))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress("xl-queue-" + i)
+                    .withPlan(xlQueuePlan.getMetadata().getName())
+                    .endSpec()
+                    .build());
         }
 
-        setAddresses(manyAddressesSpace, dest.toArray(new Address[0]));
+        setAddresses(dest.toArray(new Address[0]));
         for (Address destination : dest) {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
         assertCanConnect(manyAddressesSpace, cred, dest);
 
-        deleteAddresses(manyAddressesSpace, dest.subList(0, toDeleteCount).toArray(new Address[0]));
+        deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (Address destination : dest.subList(toDeleteCount, destCount)) {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
@@ -447,22 +688,73 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(scaleSpacePlan);
 
         //create address space plan with new plan
-        AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
-                scaleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace messagePersistAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("persist-plan-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(scaleSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(messagePersistAddressSpace);
 
         //deploy destinations
-        Address queue1 = AddressUtils.createQueueAddressObject("queue1-beta", queuePlanBeta.getMetadata().getName());
-        Address queue2 = AddressUtils.createQueueAddressObject("queue2-beta", queuePlanBeta.getMetadata().getName());
-        Address queue3 = AddressUtils.createQueueAddressObject("queue3-alpha", queuePlanAlpha.getMetadata().getName());
-        Address queue4 = AddressUtils.createQueueAddressObject("queue4-alpha", queuePlanAlpha.getMetadata().getName());
+        Address queue1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(messagePersistAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(messagePersistAddressSpace, "queue1-beta"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue1-beta")
+                .withPlan(queuePlanBeta.getMetadata().getName())
+                .endSpec()
+                .build();
+        Address queue2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(messagePersistAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(messagePersistAddressSpace, "queue2-beta"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue2-beta")
+                .withPlan(queuePlanBeta.getMetadata().getName())
+                .endSpec()
+                .build();
+        Address queue3 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(messagePersistAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(messagePersistAddressSpace, "queue1-alpha"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue1-alpha")
+                .withPlan(queuePlanAlpha.getMetadata().getName())
+                .endSpec()
+                .build();
+        Address queue4 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(messagePersistAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(messagePersistAddressSpace, "queue2-alpha"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue2-alpha")
+                .withPlan(queuePlanAlpha.getMetadata().getName())
+                .endSpec()
+                .build();
 
-        setAddresses(messagePersistAddressSpace, queue1, queue2);
-        appendAddresses(messagePersistAddressSpace, queue3, queue4);
+        setAddresses(queue1, queue2);
+        appendAddresses(queue3, queue4);
 
         //send 1000 messages to each queue
         UserCredentials user = new UserCredentials("test-scale-user-name", "test_scale_user_pswd");
-        createUser(messagePersistAddressSpace, user);
+        createOrUpdateUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
         queueClient.getConnectOptions().setCredentials(user);
@@ -479,86 +771,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 () -> assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size())));
 
         //remove addresses from first pod and wait for scale down
-        deleteAddresses(messagePersistAddressSpace, queue1, queue2);
-        TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, messagePersistAddressSpace, 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
+        deleteAddresses(queue1, queue2);
+        TestUtils.waitForNBrokerReplicas(messagePersistAddressSpace, 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
 
         //validate count of addresses
-        Future<List<String>> addresses = getAddresses(messagePersistAddressSpace, Optional.empty());
-        List<String> addressNames = addresses.get(15, TimeUnit.SECONDS);
-        assertThat(String.format("Unexpected count of destinations, got following: %s", addressNames),
-                addressNames.size(), is(2));
+        List<Address> addresses = AddressUtils.getAddresses(messagePersistAddressSpace);
+        assertThat(String.format("Unexpected count of destinations, got following: %s", addresses),
+                addresses.size(), is(2));
 
         //receive messages from remaining addresses
         Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getSpec().getAddress(), msgs.size());
         Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getSpec().getAddress(), msgs.size());
         assertThat("Incorrect count of messages received", recvResult3.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
         assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
-    }
-
-    @Test
-    @Disabled("test disabled due to issue: #1136")
-    void testMessagePersistenceAfterChangePlan() throws Exception {
-        List<ResourceRequest> addressResourcesQueueDistributed = Arrays.asList(new ResourceRequest("broker", 2.0), new ResourceRequest("router", 0));
-        List<ResourceRequest> addressResourcesSharded = Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 0));
-
-        AddressPlan queuePlanDistributed = PlanUtils.createAddressPlanObject("distributed-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueDistributed);
-        adminManager.createAddressPlan(queuePlanDistributed);
-
-        AddressPlan queuePlanSharded = PlanUtils.createAddressPlanObject("sharded-standard-queue", AddressType.QUEUE, addressResourcesSharded);
-        adminManager.createAddressPlan(queuePlanSharded);
-
-        //define and create address space plan
-        List<ResourceAllowance> resources = Arrays.asList(
-                new ResourceAllowance("broker", 5.0),
-                new ResourceAllowance("router", 5.0),
-                new ResourceAllowance("aggregate", 5.0));
-        List<AddressPlan> addressPlans = Arrays.asList(queuePlanDistributed, queuePlanSharded);
-        AddressSpacePlan scaleSpacePlan = PlanUtils.createAddressSpacePlanObject("scale-plan",
-                "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        adminManager.createAddressSpacePlan(scaleSpacePlan);
-
-        //create address space plan with new plan
-        AddressSpace messagePersistAddressSpace = AddressSpaceUtils.createAddressSpaceObject("persist-messages-space-standard", AddressSpaceType.STANDARD,
-                scaleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
-        createAddressSpace(messagePersistAddressSpace);
-
-        //deploy destinations
-        Address queue = AddressUtils.createQueueAddressObject("distributed-queue", queuePlanDistributed.getMetadata().getName());
-        setAddresses(messagePersistAddressSpace, queue);
-
-        //pod should have 2 replicas
-        TestUtils.waitForNBrokerReplicas(addressApiClient, kubernetes, messagePersistAddressSpace, 2, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
-
-        //send 100000 messages to queue
-        UserCredentials user = new UserCredentials("test-change-plan-user", "test_change_plan_pswd");
-        createUser(messagePersistAddressSpace, user);
-
-        AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
-        queueClient.getConnectOptions().setCredentials(user);
-
-        List<String> msgs = TestUtils.generateMessages(100_000);
-        Future<Integer> sendResult1 = queueClient.sendMessages(queue.getSpec().getAddress(), msgs);
-        assertThat("Incorrect count of messages sent", sendResult1.get(1, TimeUnit.MINUTES), is(msgs.size()));
-
-        //replace original plan in address by another
-        adminManager.replaceAddressPlan(queuePlanSharded);
-
-        assertEquals(getAddressesObjects(
-                messagePersistAddressSpace,
-                Optional.of(queue.getMetadata().getName())).get(10, TimeUnit.SECONDS).get(0).getSpec().getPlan(),
-                queuePlanSharded.getMetadata().getName(),
-                "New plan wasn't set correctly");
-
-        //wait until address will be scaled down to 1 pod
-        TestUtils.waitForNBrokerReplicas(
-                addressApiClient,
-                kubernetes,
-                messagePersistAddressSpace, 1, queue, new TimeoutBudget(2, TimeUnit.MINUTES));
-        //test failed in command above ^, functionality of test code below wasn't verified :) !TODO
-
-        //receive messages
-        Future<List<Message>> recvResult = queueClient.recvMessages(queue.getSpec().getAddress(), msgs.size());
-        assertThat("Incorrect count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     @Test
@@ -621,17 +846,48 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(pooledAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
-                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(beforeAddressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", beforeQueuePlan.getMetadata().getName());
-        Address topic = AddressUtils.createTopicAddressObject("test-topic", beforeTopicPlan.getMetadata().getName());
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue")
+                .withPlan(beforeQueuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-topic")
+                .withPlan(beforeTopicPlan.getMetadata().getName())
+                .endSpec()
+                .build();
 
-        setAddresses(addressSpace, queue, topic);
+        setAddresses(queue, topic);
 
         sendDurableMessages(addressSpace, queue, user, 16);
 
@@ -640,16 +896,36 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         receiveDurableMessages(addressSpace, queue, user, 16);
 
-        Address afterQueue = AddressUtils.createQueueAddressObject("test-queue-2", afterQueuePlan.getMetadata().getName());
-        appendAddresses(addressSpace, afterQueue);
+        Address afterQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-2")
+                .withPlan(afterQueuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        appendAddresses(afterQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic));
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace);
 
-        Address pooledQueue = AddressUtils.createQueueAddressObject("test-queue-3", pooledQueuePlan.getMetadata().getName());
-        appendAddresses(addressSpace, pooledQueue);
+        Address pooledQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-3"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-3")
+                .withPlan(pooledQueuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        appendAddresses(pooledQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(queue, topic, afterQueue, pooledQueue));
     }
@@ -673,7 +949,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
                 Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(beforeQueuePlan));
 
-        AddressSpacePlan afterAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-standard-plan",
+        AddressSpacePlan afterAddressSpacePlan = PlanUtils.createAddressSpacePlanObject("after-update-brokered-plan",
                 "default", AddressSpaceType.BROKERED,
                 Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(afterQueuePlan));
@@ -682,16 +958,36 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.BROKERED,
-                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-brokered-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(beforeAddressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
-        Address queue = AddressUtils.createQueueAddressObject("test-queue", beforeQueuePlan.getMetadata().getName());
-
-        setAddresses(addressSpace, queue);
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-1")
+                .withPlan(beforeQueuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        setAddresses(queue);
 
         sendDurableMessages(addressSpace, queue, user, 16);
 
@@ -700,8 +996,18 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         receiveDurableMessages(addressSpace, queue, user, 16);
 
-        Address afterQueue = AddressUtils.createQueueAddressObject("test-queue-2", afterQueuePlan.getMetadata().getName());
-        appendAddresses(addressSpace, afterQueue);
+        Address afterQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-2")
+                .withPlan(afterQueuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        appendAddresses(afterQueue);
 
         assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue));
     }
@@ -741,31 +1047,72 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         adminManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-sharded-space", AddressSpaceType.STANDARD,
-                beforeAddressSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-sharded-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(beforeAddressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        createUser(addressSpace, user);
+        createOrUpdateUser(addressSpace, user);
 
         List<Address> queues = Arrays.asList(
-                AddressUtils.createQueueAddressObject("test-queue-1", beforeQueuePlan.getMetadata().getName()),
-                AddressUtils.createQueueAddressObject("test-queue-2", beforeQueuePlan.getMetadata().getName())
-        );
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-1"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue-1")
+                        .withPlan(beforeQueuePlan.getMetadata().getName())
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue-2"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue-2")
+                        .withPlan(beforeQueuePlan.getMetadata().getName())
+                        .endSpec()
+                        .build());
 
 
-        setAddresses(addressSpace, queues.toArray(new Address[0]));
+        setAddresses(queues.toArray(new Address[0]));
         assertCanConnect(addressSpace, user, queues);
 
-        addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
-        replaceAddressSpace(addressSpace, false);
+        AddressSpace replaced = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-sharded-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(afterAddressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        replaceAddressSpace(replaced, false);
 
-        JsonObject data = addressApiClient.getAddressSpace(addressSpace.getMetadata().getName());
         assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
-                data.getJsonObject("metadata").getJsonObject("annotations").getString("enmasse.io/applied-plan"));
+                replaced.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
         assertEquals(String.format("Unable to apply plan [%s] to address space %s:%s: quota exceeded for resource broker",
-                afterQueuePlan.getMetadata().getName(), environment.namespace(), addressSpace.getMetadata().getName()),
-                data.getJsonObject("status").getJsonArray("messages").getString(0));
+                afterQueuePlan.getMetadata().getName(), environment.namespace(), replaced.getMetadata().getName()),
+                replaced.getStatus().getMessages().get(0));
     }
 
     @Test
@@ -789,16 +1136,37 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         adminManager.createAddressSpacePlan(addressPlan);
 
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-pooled-space", AddressSpaceType.STANDARD,
-                addressPlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-pooled-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(addressPlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(addressSpace);
         UserCredentials cred = new UserCredentials("test-user", "test-password");
-        createUser(addressSpace, cred);
+        createOrUpdateUser(addressSpace, cred);
 
         List<Address> queues = IntStream.range(0, 8).boxed().map(i ->
-                AddressUtils.createQueueAddressObject("queue-" + i, beforeQueuePlan.getMetadata().getName()))
-                .collect(Collectors.toList());
-        setAddresses(addressSpace, queues.toArray(new Address[0]));
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-" + i))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("queue-" + i)
+                        .withPlan(beforeQueuePlan.getMetadata().getName())
+                        .endSpec()
+                        .build()).collect(Collectors.toList());
+        setAddresses(queues.toArray(new Address[0]));
 
         assertThat("Failed there are no 2 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(2));
 
@@ -806,8 +1174,18 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             sendDurableMessages(addressSpace, queue, cred, 400);
         }
 
-        Address queueAfter = AddressUtils.createQueueAddressObject("queue-1", afterQueuePlan.getMetadata().getName());
-        replaceAddress(addressSpace, queueAfter);
+        Address queueAfter = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue-1")
+                .withPlan(afterQueuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        replaceAddress(queueAfter);
 
         assertThat("Failed there are no 3 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(3));
 
@@ -822,19 +1200,19 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
     private void checkLimits(AddressSpace addressSpace, List<Address> allowedDest, List<Address> notAllowedDest, UserCredentials credentials)
             throws Exception {
+        var client = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace());
 
         log.info("Try to create {} addresses, and make sure that {} addresses will be not created",
                 Arrays.toString(allowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)),
                 Arrays.toString(notAllowedDest.stream().map(address -> address.getMetadata().getName()).toArray(String[]::new)));
 
-        setAddresses(addressSpace, new TimeoutBudget(10, TimeUnit.MINUTES), allowedDest.toArray(new Address[0]));
-        List<Future<List<Address>>> getAddresses = new ArrayList<>();
+        setAddresses(allowedDest.toArray(new Address[0]));
+        List<Address> getAddresses = new ArrayList<>();
         for (Address dest : allowedDest) {
-            getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
+            getAddresses.add(client.withName(dest.getMetadata().getName()).get());
         }
 
-        for (Future<List<Address>> getAddress : getAddresses) {
-            Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
+        for (Address address : getAddresses) {
             log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
             String assertMessage = String.format("Address from allowed %s is not ready", address.getMetadata().getName());
             assertEquals(Phase.Active, address.getStatus().getPhase(), assertMessage);
@@ -845,7 +1223,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
         getAddresses.clear();
         if (notAllowedDest.size() > 0) {
             try {
-                appendAddresses(addressSpace, new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Address[0]));
+                appendAddresses(new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Address[0]));
             } catch (IllegalStateException ex) {
                 if (!ex.getMessage().contains("addresses are not matched")) {
                     throw ex;
@@ -853,11 +1231,10 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             }
 
             for (Address dest : notAllowedDest) {
-                getAddresses.add(getAddressesObjects(addressSpace, Optional.of(dest.getMetadata().getName())));
+                getAddresses.add(client.withName(dest.getMetadata().getName()).get());
             }
 
-            for (Future<List<Address>> getAddress : getAddresses) {
-                Address address = getAddress.get(20, TimeUnit.SECONDS).get(0);
+            for (Address address : getAddresses) {
                 log.info("Address {} with plan {} is in phase {}", address.getMetadata().getName(), address.getSpec().getPlan(), address.getStatus().getPhase());
                 String assertMessage = String.format("Address from notAllowed %s is ready", address.getMetadata().getName());
                 assertEquals(Phase.Pending, address.getStatus().getPhase(), assertMessage);
@@ -881,6 +1258,6 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             assertThat("Item is not in state Pending", item.getStatus(), is(AddressStatus.PENDING));
         }
 
-        setAddresses(addressSpace);
+        deleteAddresses(addressSpace);
     }
 }

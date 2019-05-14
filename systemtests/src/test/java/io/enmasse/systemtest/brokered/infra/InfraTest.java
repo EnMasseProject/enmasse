@@ -4,7 +4,8 @@
  */
 package io.enmasse.systemtest.brokered.infra;
 
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
@@ -12,16 +13,15 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,31 +33,79 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
     void testCreateInfra() throws Exception {
         PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
         PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");
-        testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
-                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", brokerTemplateSpec),
-                PlanUtils.createBrokeredAdminResourceObject("512Mi", adminTemplateSpec),
-                environment.enmasseVersion());
-
+        testInfra = new BrokeredInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-3-brokered")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new BrokeredInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .withStorage("1Gi")
+                        .endResources()
+                        .withPodTemplate(brokerTemplateSpec)
+                        .build())
+                .withAdmin(new BrokeredInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .endResources()
+                        .withPodTemplate(adminTemplateSpec)
+                        .build())
+                .endSpec()
+                .build();
         adminManager.createInfraConfig(testInfra);
 
-        exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan", AddressType.TOPIC,
-                Arrays.asList(new ResourceRequest("broker", 1.0)));
+        exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-brokered", AddressType.QUEUE,
+                Collections.singletonList(new ResourceRequest("broker", 1.0)));
 
         adminManager.createAddressPlan(exampleAddressPlan);
 
-        AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan",
-                testInfra.getMetadata().getName(),
-                AddressSpaceType.BROKERED,
-                Collections.singletonList(new ResourceAllowance("broker", 3.0)),
-                Collections.singletonList(exampleAddressPlan));
-
+        AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("example-space-plan-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
+                .withShortDescription("Custom systemtests defined address space plan")
+                .withInfraConfigRef(testInfra.getMetadata().getName())
+                .withResourceLimits(Collections.singletonList(new ResourceAllowance("broker", 3.0))
+                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
+                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .endSpec()
+                .build();
         adminManager.createAddressSpacePlan(exampleSpacePlan);
 
-        exampleAddressSpace = AddressSpaceUtils.createAddressSpaceObject("example-address-space", AddressSpaceType.BROKERED,
-                exampleSpacePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        exampleAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("example-address-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(exampleSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(exampleAddressSpace);
 
-        setAddresses(exampleAddressSpace, AddressUtils.createTopicAddressObject("example-queue", exampleAddressPlan.getMetadata().getName()));
+        setAddresses(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressType.QUEUE.toString())
+                .withAddress("example-queue")
+                .withPlan(exampleAddressPlan.getMetadata().getName())
+                .endSpec()
+                .build());
 
         assertInfra("512Mi", "1Gi", brokerTemplateSpec, "512Mi", adminTemplateSpec);
     }
@@ -77,18 +125,44 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
-        BrokeredInfraConfig infra = PlanUtils.createBrokeredInfraConfigObject("test-infra-2",
-                PlanUtils.createBrokeredBrokerResourceObject(brokerMemory, brokerStorage, updatePersistentVolumeClaim),
-                PlanUtils.createBrokeredAdminResourceObject(adminMemory, null),
-                environment.enmasseVersion());
-
+        BrokeredInfraConfig infra = new BrokeredInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-2-brokered")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new BrokeredInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
+                        .withNewResources()
+                        .withMemory(brokerMemory)
+                        .withStorage(brokerStorage)
+                        .endResources()
+                        .build())
+                .withAdmin(new BrokeredInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory(adminMemory)
+                        .endResources()
+                        .build())
+                .endSpec()
+                .build();
         adminManager.createInfraConfig(infra);
 
-        AddressSpacePlan exampleSpacePlan = PlanUtils.createAddressSpacePlanObject("example-space-plan-2",
-                infra.getMetadata().getName(), AddressSpaceType.BROKERED,
-                Collections.singletonList(new ResourceAllowance("broker", 3.0)),
-                Collections.singletonList(exampleAddressPlan));
 
+        AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("example-space-plan2-brokered")
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
+                .withShortDescription("Custom systemtests defined address space plan")
+                .withInfraConfigRef(infra.getMetadata().getName())
+                .withResourceLimits(Collections.singletonList(new ResourceAllowance("broker", 3.0))
+                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
+                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .endSpec()
+                .build();
         adminManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
@@ -101,10 +175,26 @@ class InfraTest extends InfraTestBase implements ITestBaseBrokered {
 
     @Test
     void testReadInfra() throws Exception {
-        testInfra = PlanUtils.createBrokeredInfraConfigObject("test-infra-1",
-                PlanUtils.createBrokeredBrokerResourceObject("512Mi", "1Gi", null),
-                PlanUtils.createBrokeredAdminResourceObject("512Mi", null),
-                environment.enmasseVersion());
+        testInfra = new BrokeredInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("test-infra-1-brokered")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new BrokeredInfraConfigSpecBrokerBuilder()
+                        .withAddressFullPolicy("FAIL")
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .withStorage("1Gi")
+                        .endResources()
+                        .build())
+                .withAdmin(new BrokeredInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .endResources()
+                        .build())
+                .endSpec()
+                .build();
         adminManager.createInfraConfig(testInfra);
 
         BrokeredInfraConfig actualInfra = adminManager.getBrokeredInfraConfig(testInfra.getMetadata().getName());

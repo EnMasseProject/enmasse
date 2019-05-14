@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -19,6 +20,7 @@ import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Test;
+
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,14 +39,19 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
     private static final String MQTT_AMQP_TOPIC = "mqtt-amqp-topic";
     private static final String AMQP_MQTT_TOPIC = "amqp-mqtt-topic";
 
-    @Override
-    public boolean skipDummyAddress() {
-        return true;
-    }
-
     @Test
     void testSendMqttReceiveAmqp() throws Exception {
-        Address mqttTopic = AddressUtils.createTopicAddressObject(MQTT_AMQP_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address mqttTopic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, MQTT_AMQP_TOPIC))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress(MQTT_AMQP_TOPIC)
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp";
@@ -74,7 +81,17 @@ class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStanda
 
     @Test
     void testSendAmqpReceiveMqtt() throws Exception {
-        Address mqttTopic = AddressUtils.createTopicAddressObject(AMQP_MQTT_TOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address mqttTopic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, AMQP_MQTT_TOPIC))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress(AMQP_MQTT_TOPIC)
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
         setAddresses(mqttTopic);
 
         String payloadPrefix = "send amqp, receive mqtt :)";

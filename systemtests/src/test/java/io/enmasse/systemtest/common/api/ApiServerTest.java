@@ -9,12 +9,10 @@ import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.apiclients.UserApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -23,9 +21,11 @@ import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.AnycastTest;
-import io.enmasse.systemtest.utils.*;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.user.model.v1.UserAuthenticationType;
-import io.vertx.core.json.JsonObject;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.AfterEach;
@@ -34,20 +34,15 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.isolated;
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag(isolated)
 public class ApiServerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
     void setUp() {
@@ -83,8 +78,7 @@ public class ApiServerTest extends TestBase {
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         adminManager.createAddressSpacePlan(addressSpacePlan);
 
-        Future<AddressSpaceSchemaList> data = getSchema();
-        AddressSpaceSchemaList schemaData = data.get(20, TimeUnit.SECONDS);
+        AddressSpaceSchemaList schemaData = getSchema();
         log.info("Check if schema object is not null");
         assertThat(schemaData.getItems().size(), not(0));
 
@@ -125,11 +119,20 @@ public class ApiServerTest extends TestBase {
 
     @Test
     void testConsoleMessagingMqttRoutes() throws Exception {
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("routes-space", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
         String endpointPrefix = "test-endpoint-";
 
-        addressSpace = new DoneableAddressSpace(addressSpace)
-                .editSpec()
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+
                 .addNewEndpoint()
                 .withName(endpointPrefix + "messaging")
                 .withService("messaging")
@@ -160,11 +163,11 @@ public class ApiServerTest extends TestBase {
                 .endExpose()
                 .endEndpoint()
                 .endSpec()
-                .done();
+                .build();
         createAddressSpace(addressSpace);
 
         UserCredentials luckyUser = new UserCredentials("lucky", "luckyPswd");
-        createUser(addressSpace, luckyUser);
+        createOrUpdateUser(addressSpace, luckyUser);
 
         //try to get all external endpoints
         kubernetes.getExternalEndpoint(endpointPrefix + "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
@@ -172,8 +175,18 @@ public class ApiServerTest extends TestBase {
         kubernetes.getExternalEndpoint(endpointPrefix + "mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
 
         //messsaging
-        Address anycast = AddressUtils.createAnycastAddressObject("test-routes-anycast");
-        setAddresses(addressSpace, anycast);
+        Address anycast = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-anycast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("test-anycast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build();
+        setAddresses(anycast);
         AmqpClient client1 = amqpClientFactory.createQueueClient(addressSpace);
         client1.getConnectOptions().setCredentials(luckyUser);
         AmqpClient client2 = amqpClientFactory.createQueueClient(addressSpace);
@@ -181,10 +194,19 @@ public class ApiServerTest extends TestBase {
         AnycastTest.runAnycastTest(anycast, client1, client2);
 
         //mqtt
-        Address topic = AddressUtils.createTopicAddressObject("mytopic", DestinationPlan.STANDARD_LARGE_TOPIC);
-        appendAddresses(addressSpace, topic);
-        Thread.sleep(10_000);
-        MqttClientFactory mqttFactory = new MqttClientFactory(kubernetes, environment, addressSpace, luckyUser);
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-topic")
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
+        appendAddresses(topic);
+        MqttClientFactory mqttFactory = new MqttClientFactory(addressSpace, luckyUser);
         IMqttClient mqttClient = mqttFactory.create();
         try {
             mqttClient.connect();
@@ -203,7 +225,7 @@ public class ApiServerTest extends TestBase {
                     selenium,
                     getConsoleRoute(addressSpace),
                     addressSpace,
-                    luckyUser);
+                    clusterUser);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
         } catch (Exception ex) {
@@ -239,59 +261,78 @@ public class ApiServerTest extends TestBase {
     @SuppressWarnings("deprecation")
     @Test
     void testRestApiAddressResourceParams() throws Exception {
-        AddressSpace addressSpace = AddressSpaceUtils.createAddressSpaceObject("test-rest-api-addr-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-        AddressSpace addressSpace2 = AddressSpaceUtils.createAddressSpaceObject("test-rest-api-addr-space2", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-        createAddressSpaceList(addressSpace, addressSpace2);
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("api-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        createAddressSpace(addressSpace);
 
         logWithSeparator(log, "Check if uuid is propagated");
         String uuid = "4bfe49c2-60b5-11e7-a5d0-507b9def37d9";
-        Address dest1 = AddressUtils.createAddressObject("test-rest-api-queue", uuid, addressSpace.getMetadata().getName(),
-                "test-rest-api-queue", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
+        Address dest1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-rest-api-queue"))
+                .withUid(uuid)
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-rest-api-queue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
 
-        setAddresses(addressSpace, dest1);
-        Address dest1AddressObj = getAddressesObjects(addressSpace, Optional.of(dest1.getMetadata().getName())).get(20, TimeUnit.SECONDS).get(0);
+        setAddresses(dest1);
+        Address dest1AddressObj = kubernetes.getAddressClient().list().getItems().get(0);
         assertEquals(uuid, dest1AddressObj.getMetadata().getUid(), "Address uuid is not equal");
 
-        logWithSeparator(log, "Check if name is optional");
-        Address dest2 = AddressUtils.createAddressObject(null, null, addressSpace.getMetadata().getName(),
-                "test-rest-api-queue2", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
-        setAddresses(addressSpace, dest2);
+        Address destWithoutAddress = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        Throwable exception = assertThrows(KubernetesClientException.class, () -> setAddresses(destWithoutAddress));
+        assertTrue(exception.getMessage().contains("spec.address: must not be null"), "Incorrect response from server on missing address!");
 
-        HashMap<String, String> queryParams = new HashMap<>();
-        queryParams.put("address", dest2.getSpec().getAddress());
-        Future<List<Address>> addressesObjects = getAddressesObjects(addressSpace, Optional.empty(), Optional.of(queryParams));
-        Address returnedAddress = addressesObjects.get(30, TimeUnit.SECONDS).get(0);
-        log.info("Got address: {}", returnedAddress.getMetadata().getName());
-        assertTrue(returnedAddress.getMetadata().getName().contains(String.format("%s.%s", addressSpace.getMetadata().getName(), dest2.getSpec().getAddress())),
-                "Address name is wrongly generated");
+        Address destWithoutType = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("test-queue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        exception = assertThrows(KubernetesClientException.class, () -> setAddresses(destWithoutType));
+        assertTrue(exception.getMessage().contains("spec.type: must not be null"), "Incorrect response from server on missing address!");
 
-        logWithSeparator(log, "Check if addressSpace is optional");
-        Address dest3 = AddressUtils.createAddressObject(null, null, null,
-                "test-rest-api-queue3", AddressType.QUEUE.toString(), DestinationPlan.BROKERED_QUEUE);
-        deleteAddresses(addressSpace);
-        setAddresses(addressSpace, dest3);
-
-        Address dest3AddressObj = getAddressesObjects(addressSpace, Optional.empty()).get(20, TimeUnit.SECONDS).get(0);
-        assertEquals(addressSpace.getMetadata().getName(), dest3AddressObj.getSpec().getAddressSpace(), "Addressspace name is empty");
-
-        Address destWithoutAddress = AddressUtils.createQueueAddressObject(null, DestinationPlan.BROKERED_QUEUE);
-        Throwable exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutAddress));
-        JsonObject serverResponse = new JsonObject(exception.getCause().getMessage());
-        assertEquals("spec.address: must not be null", serverResponse.getString("message"),
-                "Incorrect response from server on missing address!");
-
-        Address destWithoutType = AddressUtils.createAddressObject("not-created-address", null, DestinationPlan.BROKERED_QUEUE);
-        exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutType));
-        serverResponse = new JsonObject(exception.getCause().getMessage());
-        assertEquals("spec.type: must not be null", serverResponse.getString("message"),
-                "Incorrect response from server on missing type!");
-
-        Address destWithoutPlan = AddressUtils.createQueueAddressObject("not-created-queue", null);
-        exception = assertThrows(ExecutionException.class, () -> setAddresses(addressSpace, HttpURLConnection.HTTP_BAD_REQUEST, destWithoutPlan));
-
-        serverResponse = new JsonObject(exception.getCause().getMessage());
-        assertEquals("spec.plan: must not be null", serverResponse.getString("message"),
-                "Incorrect response from server on missing plan!");
+        Address destWithoutPlan = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue")
+                .endSpec()
+                .build();
+        exception = assertThrows(KubernetesClientException.class, () -> setAddresses(destWithoutPlan));
+        assertTrue(exception.getMessage().contains("spec.plan: must not be null"), "Incorrect response from server on missing address!");
 
         logWithSeparator(log, "Removing all address spaces");
 
@@ -311,43 +352,86 @@ public class ApiServerTest extends TestBase {
 
     @Test
     void testCreateAddressResource() throws Exception {
-        AddressSpace addrSpace = AddressSpaceUtils.createAddressSpaceObject("create-address-resource-with-a-very-long-name", AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
+        AddressSpace addrSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("create-address-resource-with-a-very-long-name")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
         createAddressSpace(addrSpace);
 
         final Set<String> names = new LinkedHashSet<>();
 
-        Address anycast = AddressUtils.createAddressObject("addr1", null, addrSpace.getMetadata().getName(), "addr_1", AddressType.ANYCAST.toString(), DestinationPlan.STANDARD_SMALL_ANYCAST);
-        names.add(String.format("%s.%s", addrSpace.getMetadata().getName(), anycast.getMetadata().getName()));
-        addressApiClient.createAddress(anycast);
-        List<Address> addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
+        Address anycast = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addrSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addrSpace, "test-anycast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("test-anycast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build();
+        names.add(anycast.getMetadata().getName());
+        setAddresses(anycast);
+        List<Address> addresses = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
         assertThat(addresses.size(), is(1));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
-        Address multicast = AddressUtils.createAddressObject("addr2", null, addrSpace.getMetadata().getName(), "addr_2", AddressType.MULTICAST.toString(), DestinationPlan.STANDARD_SMALL_MULTICAST);
-        names.add(String.format("%s.%s", addrSpace.getMetadata().getName(), multicast.getMetadata().getName()));
-        addressApiClient.createAddress(multicast);
-        addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
+        Address multicast = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addrSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addrSpace, "test-muticast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("test-multicast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build();
+        names.add(multicast.getMetadata().getName());
+        appendAddresses(multicast);
+        addresses = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
         assertThat(addresses.size(), is(2));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
         String uuid = UUID.randomUUID().toString();
-        Address longname = AddressUtils.createAddressObject(addrSpace.getMetadata().getName() + ".myaddressnameisalsoverylonginfact." + uuid, null, addrSpace.getMetadata().getName(), "my_addr_name_is_also_very1long", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
+        Address longname = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addrSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addrSpace, addrSpace.getMetadata().getName() + ".myaddressnameisalsoverylonginfact." + uuid))
+                .withUid(uuid)
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue")
+                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .endSpec()
+                .build();
         names.add(longname.getMetadata().getName());
-        addressApiClient.createAddress(longname);
-        addresses = getAddressesObjects(addrSpace, Optional.empty()).get(30, TimeUnit.SECONDS);
+        appendAddresses(longname);
+        addresses = kubernetes.getAddressClient().list().getItems();
         assertThat(addresses.size(), is(3));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
 
         // ensure that getting all addresses (non-namespaces) returns the same result
 
-        Set<String> allNames = AddressUtils.getAllAddressesObjects(addressApiClient).get(30, TimeUnit.SECONDS)
+        Set<String> allNames = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems()
                 .stream().map(address -> address.getMetadata().getName())
                 .collect(Collectors.toSet());
 
         assertThat(allNames.size(), is(3));
         assertThat(allNames, is(names));
 
-        AddressUtils.waitForDestinationsReady(addressApiClient, addrSpace, new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), anycast, multicast, longname);
     }
 
     @Test
@@ -355,59 +439,112 @@ public class ApiServerTest extends TestBase {
         String namespace1 = "test-namespace-1";
         String namespace2 = "test-namespace-2";
 
-        AddressApiClient nameSpaceClient1 = new AddressApiClient(kubernetes, namespace1);
-        AddressApiClient nameSpaceClient2 = new AddressApiClient(kubernetes, namespace2);
-
         try {
             kubernetes.createNamespace(namespace1);
             kubernetes.createNamespace(namespace2);
 
             log.info("--------------- Address space part -------------------");
 
-            AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("brokered", namespace1, AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-            AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("standard", namespace2, AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_SMALL, AuthenticationServiceType.STANDARD);
+            AddressSpace brokered = new AddressSpaceBuilder()
+                    .withNewMetadata()
+                    .withName("brokered")
+                    .withNamespace(namespace1)
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(AddressSpaceType.BROKERED.toString())
+                    .withPlan(AddressSpacePlans.BROKERED)
+                    .withNewAuthenticationService()
+                    .withName("standard-authservice")
+                    .endAuthenticationService()
+                    .endSpec()
+                    .build();
+            AddressSpace standard = new AddressSpaceBuilder()
+                    .withNewMetadata()
+                    .withName("standard")
+                    .withNamespace(namespace2)
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(AddressSpaceType.STANDARD.toString())
+                    .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                    .withNewAuthenticationService()
+                    .withName("standard-authservice")
+                    .endAuthenticationService()
+                    .endSpec()
+                    .build();
 
-            createAddressSpace(brokered, nameSpaceClient1);
-            createAddressSpace(standard, nameSpaceClient2);
+            createAddressSpaceList(brokered, standard);
 
             assertThat("Get all address spaces does not contain 2 address spaces",
-                    AddressSpaceUtils.getAllAddressSpacesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(2));
+                    kubernetes.getAddressSpaceClient().inAnyNamespace().list().getItems().size(), is(2));
 
             log.info("------------------ Address part ----------------------");
 
-            Address brokeredQueue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
-            Address brokeredTopic = AddressUtils.createTopicAddressObject("test-topic", DestinationPlan.BROKERED_TOPIC);
+            Address brokeredQueue = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace1)
+                    .withName(AddressUtils.generateAddressMetadataName(brokered, "test-queue"))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress("test-queue")
+                    .withPlan(DestinationPlan.BROKERED_QUEUE)
+                    .endSpec()
+                    .build();
+            Address brokeredTopic = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace1)
+                    .withName(AddressUtils.generateAddressMetadataName(brokered, "test-topic"))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("topic")
+                    .withAddress("test-topic")
+                    .withPlan(DestinationPlan.BROKERED_TOPIC)
+                    .endSpec()
+                    .build();
 
-            Address standardQueue = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
-            Address standardTopic = AddressUtils.createTopicAddressObject("test-topic", DestinationPlan.STANDARD_SMALL_TOPIC);
+            Address standardQueue = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace2)
+                    .withName(AddressUtils.generateAddressMetadataName(standard, "test-queue"))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress("test-queue")
+                    .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                    .endSpec()
+                    .build();
+            Address standardTopic = new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace2)
+                    .withName(AddressUtils.generateAddressMetadataName(standard, "test-topic"))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("topic")
+                    .withAddress("test-topic")
+                    .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                    .endSpec()
+                    .build();
 
-            setAddresses(brokered, nameSpaceClient1, brokeredQueue, brokeredTopic);
-            setAddresses(standard, nameSpaceClient2, standardQueue, standardTopic);
+            setAddresses(brokeredQueue, brokeredTopic);
+            setAddresses(standardQueue, standardTopic);
 
             assertThat("Get all addresses does not contain 4 addresses",
-                    AddressUtils.getAllAddressesObjects(addressApiClient).get(1, TimeUnit.MINUTES).size(), is(4));
+                    kubernetes.getAddressClient().inAnyNamespace().list().getItems().size(), is(4));
 
             log.info("-------------------- User part -----------------------");
 
-            try (
-                    var userApiClient1 = new UserApiClient(kubernetes, namespace1);
-                    var userApiClient2 = new UserApiClient(kubernetes, namespace2);
-                    ) {
 
-                UserCredentials cred = new UserCredentials("pepa", "novak");
+            UserCredentials cred = new UserCredentials("pepa", "novak");
 
-                userApiClient1.createUser(brokered.getMetadata().getName(), cred);
-                userApiClient2.createUser(standard.getMetadata().getName(), cred);
+            createOrUpdateUser(brokered, cred);
+            createOrUpdateUser(standard, cred);
 
-                assertThat("Get all users does not contain 2 password users",
-                        UserUtils.getAllUsersObjects(getUserApiClient()).get(1, TimeUnit.MINUTES)
-                                .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).collect(Collectors.toList()).size(),
-                        is(2));
-            }
+            assertThat("Get all users does not contain 2 password users",
+                    (int) kubernetes.getUserClient().inAnyNamespace().list().getItems()
+                            .stream().filter(user -> user.getSpec().getAuthentication().getType().equals(UserAuthenticationType.password)).count(),
+                    is(2));
 
         } finally {
-            nameSpaceClient1.close();
-            nameSpaceClient2.close();
             kubernetes.deleteNamespace(namespace1);
             kubernetes.deleteNamespace(namespace2);
         }
@@ -419,16 +556,27 @@ public class ApiServerTest extends TestBase {
         UserCredentials user = new UserCredentials("jarda", "jarda");
 
         try {
-            String token = KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
+            KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
 
-            AddressSpace addrSpace = AddressSpaceUtils.createAddressSpaceObject("non-admin-addr-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-            AddressApiClient apiClient = new AddressApiClient(kubernetes, namespace, token);
+            AddressSpace addrSpace = new AddressSpaceBuilder()
+                    .withNewMetadata()
+                    .withName("non-admin-addr-space")
+                    .withNamespace(namespace)
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(AddressSpaceType.BROKERED.toString())
+                    .withPlan(AddressSpacePlans.BROKERED)
+                    .withNewAuthenticationService()
+                    .withName("standard-authservice")
+                    .endAuthenticationService()
+                    .endSpec()
+                    .build();
 
-            createAddressSpace(addrSpace, apiClient);
-            waitForAddressSpaceReady(addrSpace, apiClient);
+            createAddressSpace(addrSpace);
+            waitForAddressSpaceReady(addrSpace);
 
-            deleteAddressSpace(addrSpace, apiClient);
+            deleteAddressSpace(addrSpace);
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
@@ -438,30 +586,49 @@ public class ApiServerTest extends TestBase {
 
     @Test
     void testReplaceAddressSpace() throws Exception {
-        AddressSpace addressspace = AddressSpaceUtils.createAddressSpaceObject("test-replace-address-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
-        Address dest = AddressUtils.createQueueAddressObject("test-queue", DestinationPlan.BROKERED_QUEUE);
+        AddressSpace addressspace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-replace-plan")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressspace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressspace, "brokeredqueuea"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("brokeredqueueq")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
         UserCredentials cred = new UserCredentials("david", "password");
 
         createAddressSpace(addressspace);
-        setAddresses(addressspace, dest);
-        createUser(addressspace, cred);
+        setAddresses(dest);
+        createOrUpdateUser(addressspace, cred);
 
         assertCanConnect(addressspace, cred, Collections.singletonList(dest));
 
-        replaceAddressSpace(AddressSpaceUtils.createAddressSpaceObject("test-replace-address-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
+        replaceAddressSpace(addressspace);
 
         assertCanConnect(addressspace, cred, Collections.singletonList(dest));
 
-        addressspace = new DoneableAddressSpace(addressspace).editMetadata().withName("another-name").endMetadata().done();
+        AddressSpace replace = new DoneableAddressSpace(addressspace)
+                .editSpec()
+                .withPlan("no-exists")
+                .endSpec()
+                .done();
 
-        AddressSpace finalAddressspace1 = addressspace;
-        Throwable exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(finalAddressspace1, HTTP_NOT_FOUND));
-        assertTrue(exception.getMessage().contains(String.format("AddressSpace %s not found", addressspace.getMetadata().getName())));
-
-        addressspace = new DoneableAddressSpace(addressspace).editMetadata().withName("test-replace-address-space").endMetadata().editSpec().withPlan("no-exists").endSpec().done();
-
-        AddressSpace finalAddressspace = addressspace;
-        exception = assertThrows(ExecutionException.class, () -> addressApiClient.replaceAddressSpace(finalAddressspace, HTTP_BAD_REQUEST));
+        Exception exception = assertThrows(KubernetesClientException.class, () -> replaceAddressSpace(replace));
         assertTrue(exception.getMessage().contains("Unknown address space plan no-exists"));
     }
 }

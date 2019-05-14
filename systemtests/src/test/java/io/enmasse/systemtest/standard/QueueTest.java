@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -27,7 +28,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
@@ -81,9 +81,39 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testColocatedQueues() throws Exception {
-        Address q1 = AddressUtils.createQueueAddressObject("queue1", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Address q2 = AddressUtils.createQueueAddressObject("queue2", DestinationPlan.STANDARD_SMALL_QUEUE);
-        Address q3 = AddressUtils.createQueueAddressObject("queue3", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address q1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue1")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+        Address q2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue2")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+        Address q3 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue3"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue3")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
         setAddresses(q1, q2, q3);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -94,9 +124,29 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testShardedQueues() throws Exception {
-        Address q1 = AddressUtils.createQueueAddressObject("shardedQueue1", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Address q2 = AddressUtils.createAddressObject("shardedQueue2", null, sharedAddressSpace.getMetadata().getName(), "sharded_addr_2", AddressType.QUEUE.toString(), DestinationPlan.STANDARD_LARGE_QUEUE);
-        addressApiClient.createAddress(q2);
+        Address q1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "sharded-queue-1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("sharded-queue-1")
+                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .endSpec()
+                .build();
+        Address q2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "sharded-queue-2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("sharded_Queue_2")
+                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .endSpec()
+                .build();
+        kubernetes.getAddressClient().create(q2);
 
         appendAddresses(q1);
         waitForDestinationsReady(q2);
@@ -109,44 +159,45 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     @Test
     @Tag(nonPR)
     void testRestApi() throws Exception {
-        Address q1 = AddressUtils.createQueueAddressObject("queue1", getDefaultPlan(AddressType.QUEUE));
-        Address q2 = AddressUtils.createQueueAddressObject("queue2", getDefaultPlan(AddressType.QUEUE));
+        Address q1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue1")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+        Address q2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue2")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
 
         runRestApiTest(sharedAddressSpace, q1, q2);
     }
 
     @Test
-    @Tag(nonPR)
-    void testCreateDeleteQueue() throws Exception {
-        List<String> queues = IntStream.range(0, 16).mapToObj(i -> "queue-create-delete-" + i).collect(Collectors.toList());
-        Address destExtra = AddressUtils.createQueueAddressObject("ext-queue", DestinationPlan.STANDARD_SMALL_QUEUE);
-
-        List<Address> addresses = new ArrayList<>();
-        queues.forEach(queue -> addresses.add(AddressUtils.createQueueAddressObject(queue, DestinationPlan.STANDARD_SMALL_QUEUE)));
-
-        @SuppressWarnings("unused")
-        AmqpClient client = amqpClientFactory.createQueueClient();
-        for (Address address : addresses) {
-            setAddresses(address, destExtra);
-            Thread.sleep(20_000);
-
-            //runQueueTest(client, address, 1); //TODO! commented due to issue #429
-
-            deleteAddresses(address);
-            Future<List<String>> response = getAddresses(Optional.empty());
-            assertThat("Extra destination was not created ",
-                    response.get(20, TimeUnit.SECONDS), is(Collections.singletonList(destExtra.getSpec().getAddress())));
-            deleteAddresses(destExtra);
-            response = getAddresses(Optional.empty());
-            assertThat("No destinations are expected",
-                    response.get(20, TimeUnit.SECONDS), is(java.util.Collections.emptyList()));
-            Thread.sleep(20_000);
-        }
-    }
-
-    @Test
     void testMessagePriorities() throws Exception {
-        Address dest = AddressUtils.createQueueAddressObject("messagePrioritiesQueue", getDefaultPlan(AddressType.QUEUE));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queuepriorities"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue_priorities")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         AmqpClient client = amqpClientFactory.createQueueClient();
@@ -181,9 +232,39 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testScaledown() throws Exception {
-        Address xlarge = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_XLARGE_QUEUE);
-        Address large = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Address small = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address xlarge = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "scalequeue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("scalequeue")
+                .withPlan(DestinationPlan.STANDARD_XLARGE_QUEUE)
+                .endSpec()
+                .build();
+        Address large = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "scalequeue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("scalequeue")
+                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .endSpec()
+                .build();
+        Address small = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "scalequeue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("scalequeue")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
 
         testScale(xlarge, large, true);
         testScale(large, small, false);
@@ -191,9 +272,39 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
     @Test
     void testScaleup() throws Exception {
-        Address xlarge = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_XLARGE_QUEUE);
-        Address large = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_LARGE_QUEUE);
-        Address small = AddressUtils.createQueueAddressObject("scalequeue", DestinationPlan.STANDARD_SMALL_QUEUE);
+        Address xlarge = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "scalequeue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("scalequeue")
+                .withPlan(DestinationPlan.STANDARD_XLARGE_QUEUE)
+                .endSpec()
+                .build();
+        Address large = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "scalequeue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("scalequeue")
+                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .endSpec()
+                .build();
+        Address small = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "scalequeue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("scalequeue")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
 
         testScale(small, large, true);
         testScale(large, xlarge, false);
@@ -232,9 +343,11 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
         assertReceive("before replace", numReceiveBeforeDraining, before, client);
 
+
+        replaceAddress(after);
         CustomLogger.getLogger().info(String.format("Now scaling from '%s' to '%s'", before.getSpec().getPlan(), after.getSpec().getPlan()));
-        logCollector.collectLogsOfPodsByLabels(kubernetes.getNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
-        replaceAddress(getSharedAddressSpace(), after);
+        logCollector.collectLogsOfPodsByLabels(kubernetes.getInfraNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
+        replaceAddress(after);
         // Receive messages sent before address was replaced
         assertReceive("after replace", numReceivedAfterScaledPhase1, after, client);
 
@@ -248,7 +361,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertReceive("before awaiting drain", numMessages, after, client);
 
         // Ensure there are no brokers in Draining state
-        AddressUtils.waitForBrokersDrained(addressApiClient, getSharedAddressSpace(), new TimeoutBudget(3, TimeUnit.MINUTES), after);
+        AddressUtils.waitForBrokersDrained(new TimeoutBudget(3, TimeUnit.MINUTES), after);
 
         // Ensure send and receive works after all brokers are drained
         assertThat("Wrong count of messages sent after awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
@@ -286,7 +399,17 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             //define destinations
             Address[] destinations = new Address[destinationCount];
             for (int destI = 0; destI < destinationCount; destI++) {
-                destinations[destI] = AddressUtils.createQueueAddressObject(String.format("%s.%s.%s", destNamePrefix, i, destI), getDefaultPlan(AddressType.QUEUE));
+                destinations[destI] = new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, String.format("%s.%s.%s", destNamePrefix, i, destI)))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress(String.format("%s.%s.%s", destNamePrefix, i, destI))
+                        .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                        .endSpec()
+                        .build();
             }
 
             //run async: append addresses; create users; send/receive messages
@@ -295,7 +418,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
             {
                 try {
                     int messageCount = 43;
-                    appendAddresses(false, -1, destinations);
+                    appendAddresses(false, destinations);
                     doMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -307,14 +430,24 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         //once one of the doMessaging method is finished  then remove appropriate users
         for (Map.Entry<CompletableFuture<Void>, List<UserCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
-            removeUsers(sharedAddressSpace, customer.getValue().stream().map(UserCredentials::getUsername).collect(Collectors.toList()));
+            customer.getValue().stream().forEach(user -> removeUser(sharedAddressSpace, user.getUsername()));
         }
     }
 
     @Test
     @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
-        Address addressQueue = AddressUtils.createQueueAddressObject("jmsQueue", getDefaultPlan(AddressType.QUEUE));
+        Address addressQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "jms-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("jmsQueue")
+                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .endSpec()
+                .build();
         setAddresses(addressQueue);
 
         connection = jmsProvider.createConnection(getMessagingRoute(sharedAddressSpace).toString(), defaultCredentials,

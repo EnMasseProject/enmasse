@@ -9,12 +9,9 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import org.slf4j.Logger;
-
-import static io.enmasse.systemtest.utils.AddressSpaceUtils.jsonToAdressSpace;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,13 +24,13 @@ public class IoTUtils {
     private static Logger log = CustomLogger.getLogger();
 
     private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
-                    "iot-auth-service",
-                    "iot-device-registry",
-                    "iot-gc",
-                    "iot-http-adapter",
-                    "iot-mqtt-adapter",
-                    "iot-tenant-service",
-            };
+            "iot-auth-service",
+            "iot-device-registry",
+            "iot-gc",
+            "iot-http-adapter",
+            "iot-mqtt-adapter",
+            "iot-tenant-service",
+    };
 
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
@@ -55,8 +52,8 @@ public class IoTUtils {
             throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
-        TestUtils.waitUntilCondition("IoT Config to deploy", (phase)->allDeploymentsPresent(kubernetes), budget);
-        TestUtils.waitForNReplicas(kubernetes, EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes), budget);
+        TestUtils.waitForNReplicas(EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception{
@@ -67,7 +64,7 @@ public class IoTUtils {
     }
 
     private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception{
-        TestUtils.waitForNReplicas(kubernetes, 0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(2, TimeUnit.MINUTES), 5000);
+        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(2, TimeUnit.MINUTES), 5000);
     }
 
     private static boolean allDeploymentsPresent(Kubernetes kubernetes) {
@@ -78,7 +75,7 @@ public class IoTUtils {
         return Arrays.equals(deployments, EXPECTED_DEPLOYMENTS);
     }
 
-    public static void waitForIoTProjectReady(Kubernetes kubernetes, AddressApiClient addressSpaceApiClient, IoTProject project) throws Exception {
+    public static void waitForIoTProjectReady(Kubernetes kubernetes, IoTProject project) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         var iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
@@ -95,26 +92,22 @@ public class IoTUtils {
             throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
-        if ( project.getSpec().getDownstreamStrategy() != null
+        if (project.getSpec().getDownstreamStrategy() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName() != null
-                ) {
+        ) {
             var addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpaceApiClient, jsonToAdressSpace(addressSpaceApiClient.getAddressSpace(addressSpaceName)), budget);
+            AddressSpaceUtils.waitForAddressSpaceReady(Kubernetes.getInstance().getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get(), budget);
         }
     }
 
-    private static void waitForIoTProjectDeleted(Kubernetes kubernetes, AddressApiClient addressApiClient, IoTProject project) throws Exception {
+    private static void waitForIoTProjectDeleted(Kubernetes kubernetes, IoTProject project) throws Exception {
         if (project.getSpec().getDownstreamStrategy().getManagedStrategy() != null) {
             String addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-            AddressSpace addressSpace = AddressSpaceUtils.getAddressSpacesObjects(addressApiClient)
-                    .stream()
-                    .filter(space -> space.getMetadata().getName().equals(addressSpaceName))
-                    .findFirst()
-                    .orElse(null);
+            AddressSpace addressSpace = kubernetes.getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
             if (addressSpace != null) {
-                AddressSpaceUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+                AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
             }
         }
     }
@@ -123,10 +116,10 @@ public class IoTUtils {
         return kubernetes.getCRD("iotprojects.iot.enmasse.io") != null;
     }
 
-    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project, AddressApiClient addressApiClient) throws Exception {
+    public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
         kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).delete();
-        IoTUtils.waitForIoTProjectDeleted(kubernetes, addressApiClient, project);
+        IoTUtils.waitForIoTProjectDeleted(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 

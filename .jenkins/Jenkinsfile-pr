@@ -20,7 +20,7 @@ pipeline {
 //        string(name: 'DEBUG', defaultValue: 'false', description: 'skip post actions')
 //    }
     options {
-        timeout(time: 10, unit: 'HOURS')
+        timeout(time: 15, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {

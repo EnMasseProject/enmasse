@@ -4,11 +4,10 @@
  */
 package io.enmasse.systemtest.marathon;
 
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
@@ -17,54 +16,109 @@ class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered
     @Test
     void testCreateDeleteAddressSpaceLong() throws Exception {
         doTestCreateDeleteAddressSpaceLong(() ->
-                AddressSpaceUtils.createAddressSpaceObject("test-create-delete-brokered-space", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
+                new AddressSpaceBuilder()
+                        .withNewMetadata()
+                        .withName("test-create-delete-addr-space")
+                        .withNamespace(kubernetes.getInfraNamespace())
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(AddressSpaceType.BROKERED.toString())
+                        .withPlan(AddressSpacePlans.BROKERED)
+                        .withNewAuthenticationService()
+                        .withName("standard-authservice")
+                        .endAuthenticationService()
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testCreateDeleteAddressesWithAuthLong() throws Exception {
         doTestCreateDeleteAddressesWithAuthLong(
-                AddressSpaceUtils.createAddressSpaceObject("test-create-delete-addresses-auth-brokered",
-                        AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
-    }
-
-    @Test
-    @Disabled("test failing in ci, using all server resources")
-    void testCreateHighAddressCountCheckStatusDeleteLong() throws Exception {
-        doTestCreateHighAddressCountCheckStatusDeleteLong(
-                AddressSpaceUtils.createAddressSpaceObject("test-create-addresses-check-status-delete",
-                        AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
+                new AddressSpaceBuilder()
+                        .withNewMetadata()
+                        .withName("test-create-delete-addresses")
+                        .withNamespace(kubernetes.getInfraNamespace())
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(AddressSpaceType.BROKERED.toString())
+                        .withPlan(AddressSpacePlans.BROKERED)
+                        .withNewAuthenticationService()
+                        .withName("standard-authservice")
+                        .endAuthenticationService()
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testQueueSendReceiveLong() throws Exception {
         doTestQueueSendReceiveLong(
-                AddressSpaceUtils.createAddressSpaceObject("test-queue-sendreceive-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
-    }
-
-    @Test
-    void testCreateDeleteUsersLong() throws Exception {
-        doTestCreateDeleteUsersLong(
-                AddressSpaceUtils.createAddressSpaceObject("test-create-delete-users-brokered",
-                        AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
+                new AddressSpaceBuilder()
+                        .withNewMetadata()
+                        .withName("test-send-receive-brokered")
+                        .withNamespace(kubernetes.getInfraNamespace())
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(AddressSpaceType.BROKERED.toString())
+                        .withPlan(AddressSpacePlans.BROKERED)
+                        .withNewAuthenticationService()
+                        .withName("standard-authservice")
+                        .endAuthenticationService()
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testAuthSendReceiveLong() throws Exception {
         doTestAuthSendReceiveLong(
-                AddressSpaceUtils.createAddressSpaceObject("test-auth-send-receive-brokered",
-                        AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
+                new AddressSpaceBuilder()
+                        .withNewMetadata()
+                        .withName("test-auth-send-receive-brokered")
+                        .withNamespace(kubernetes.getInfraNamespace())
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(AddressSpaceType.BROKERED.toString())
+                        .withPlan(AddressSpacePlans.BROKERED)
+                        .withNewAuthenticationService()
+                        .withName("standard-authservice")
+                        .endAuthenticationService()
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testTopicPubSubLong() throws Exception {
         doTestTopicPubSubLong(
-                AddressSpaceUtils.createAddressSpaceObject("test-topic-pubsub-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD));
+                new AddressSpaceBuilder()
+                        .withNewMetadata()
+                        .withName("test-topic-pubsub-brokered")
+                        .withNamespace(kubernetes.getInfraNamespace())
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(AddressSpaceType.BROKERED.toString())
+                        .withPlan(AddressSpacePlans.BROKERED)
+                        .withNewAuthenticationService()
+                        .withName("standard-authservice")
+                        .endAuthenticationService()
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testCreateDeleteAddressesViaAgentLong(TestInfo info) throws Exception {
         doTestCreateDeleteAddressesViaAgentLong(
-                AddressSpaceUtils.createAddressSpaceObject("brokered-marathon-web-console",
-                        AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD), info.getTestClass().get().getName(), info.getTestMethod().get().getName());
+                new AddressSpaceBuilder()
+                        .withNewMetadata()
+                        .withName("brokered-marathon-web-console")
+                        .withNamespace(kubernetes.getInfraNamespace())
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(AddressSpaceType.BROKERED.toString())
+                        .withPlan(AddressSpacePlans.BROKERED)
+                        .withNewAuthenticationService()
+                        .withName("standard-authservice")
+                        .endAuthenticationService()
+                        .endSpec()
+                        .build(),
+                info.getTestClass().get().getName(), info.getTestMethod().get().getName());
     }
 }

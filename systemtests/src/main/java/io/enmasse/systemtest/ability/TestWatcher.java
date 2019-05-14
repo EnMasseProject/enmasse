@@ -28,7 +28,7 @@ public class TestWatcher implements AfterTestExecutionCallback {
         Class testClass = extensionContext.getRequiredTestClass();
         if (extensionContext.getExecutionException().isPresent()) {
             try {
-                log.info("Saving pod logs and info...");
+                log.warn("Test failed: Saving pod logs and info...");
                 Kubernetes kube = Kubernetes.getInstance();
                 Path path = Paths.get(
                         Environment.getInstance().testLogDir(),
@@ -48,7 +48,7 @@ public class TestWatcher implements AfterTestExecutionCallback {
                             }
                     );
                 });
-                Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getNamespace()).getStdOut().getBytes());
+                Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
                 log.info("Pod logs and describe successfully stored into {}", path.toString());
             } catch (Exception ex) {
                 log.warn("Cannot save pod logs and info: {}", ex.getMessage());

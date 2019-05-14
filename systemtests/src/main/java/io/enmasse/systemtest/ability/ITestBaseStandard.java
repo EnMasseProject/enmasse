@@ -34,8 +34,4 @@ public interface ITestBaseStandard extends ITestBase {
         return null;
     }
 
-    @Override
-    default boolean skipDummyAddress() {
-        return false;
-    }
 }

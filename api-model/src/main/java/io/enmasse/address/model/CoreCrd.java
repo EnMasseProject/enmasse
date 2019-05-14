@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.address.model;
@@ -25,14 +25,18 @@ public class CoreCrd {
     }
 
     public static void registerCustomCrds() {
-
         KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, Address.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressList.KIND, AddressList.class);
 
         KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressSpace.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressSpaceList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpace.KIND, AddressSpace.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceList.KIND, AddressSpaceList.class);
 
         KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressSpaceSchema.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchema.KIND, AddressSpaceSchema.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchemaList.KIND, AddressSpaceSchemaList.class);
     }
 
     public static CustomResourceDefinition addresses() {

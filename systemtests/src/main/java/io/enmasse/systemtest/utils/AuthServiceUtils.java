@@ -94,8 +94,4 @@ public class AuthServiceUtils {
     public static JsonObject authenticationServiceToJson(AuthenticationService service) throws JsonProcessingException {
         return new JsonObject(new ObjectMapper().writeValueAsString(service));
     }
-
-    public static AuthenticationService jsonToAuthenticationService(JsonObject authService) throws Exception {
-        return new ObjectMapper().readValue(authService.toString(), AuthenticationService.class);
-    }
 }

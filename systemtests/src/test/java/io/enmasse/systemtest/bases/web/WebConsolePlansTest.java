@@ -6,13 +6,17 @@ package io.enmasse.systemtest.bases.web;
 
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
@@ -20,12 +24,12 @@ import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(isolated)
 public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
 
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     private ConsoleWebPage consoleWebPage;
 
@@ -80,24 +84,66 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
                 new ResourceAllowance("aggregate", 8.0));
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
         AddressSpacePlan consolePlan = PlanUtils.createAddressSpacePlanObject("console-plan",
-                "default-with-mqtt", AddressSpaceType.STANDARD, resources, addressPlans);
+                "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
         adminManager.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
-        AddressSpace consoleAddrSpace = AddressSpaceUtils.createAddressSpaceObject("console-plan-instance", AddressSpaceType.STANDARD,
-                consolePlan.getMetadata().getName(), AuthenticationServiceType.STANDARD);
+        AddressSpace consoleAddrSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("console-plan-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(consolePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
         createAddressSpace(consoleAddrSpace);
 
         //create new user
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
-        createUser(consoleAddrSpace, user);
+        createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
-        Address q1 = AddressUtils.createQueueAddressObject("new-queue-instance-1", consoleQueuePlan1.getMetadata().getName());
-        Address t2 = AddressUtils.createTopicAddressObject("new-topic-instance-2", consoleTopicPlan2.getMetadata().getName());
-        Address q3 = AddressUtils.createQueueAddressObject("new-queue-instance-3", consoleQueuePlan3.getMetadata().getName());
+        Address q1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(consoleAddrSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(consoleAddrSpace, "new-queue-instance"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("new-queue-instance")
+                .withPlan(consoleQueuePlan1.getMetadata().getName())
+                .endSpec()
+                .build();
+        Address t2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(consoleAddrSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(consoleAddrSpace, "new-topic-instance-2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("new-topic-instance-2")
+                .withPlan(consoleTopicPlan2.getMetadata().getName())
+                .endSpec()
+                .build();
+        Address q3 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(consoleAddrSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(consoleAddrSpace, "new-queue-instance-3"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("new-queue-instance-3")
+                .withPlan(consoleQueuePlan3.getMetadata().getName())
+                .endSpec()
+                .build();
         consoleWebPage.createAddressesWebConsole(q1, t2, q3);
 
         String assertMessage = "Address plan wasn't set properly";
@@ -106,7 +152,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
         assertEquals(q3.getSpec().getPlan(), consoleWebPage.getAddressItem(q3).getPlan(), assertMessage);
 
         //simple send/receive
-        amqpClientFactory = new AmqpClientFactory(kubernetes, environment, consoleAddrSpace, user);
+        amqpClientFactory = new AmqpClientFactory(consoleAddrSpace, user);
         AmqpClient queueClient = amqpClientFactory.createQueueClient(consoleAddrSpace);
         queueClient.getConnectOptions().setCredentials(user);
 

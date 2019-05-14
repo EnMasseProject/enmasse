@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.bases.clients;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.apiclients.MsgCliApiClient;
@@ -75,8 +76,17 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
     protected void doBasicMessageTest(AbstractClient sender, AbstractClient receiver, boolean websocket) throws Exception {
         int expectedMsgCount = 10;
 
-        Address dest = AddressUtils.createQueueAddressObject("message-basic" + ClientType.getAddressName(sender),
-                getDefaultPlan(AddressType.QUEUE));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "message-basic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("round-robin" + ClientType.getAddressName(sender))
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket, true, false).toString());
@@ -110,8 +120,18 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         AbstractClient sender = new PahoMQTTClientSender();
         AbstractClient receiver = new PahoMQTTClientReceiver();
 
-        Address dest = AddressUtils.createTopicAddressObject("message-basic-mqtt",
-                sharedAddressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC));
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "basic-mqtt"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("basic-mqtt" + ClientType.getAddressName(sender))
+                .withPlan(sharedAddressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
+
         setAddresses(dest);
 
         arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, false, false, true).toString());

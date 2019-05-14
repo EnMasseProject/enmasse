@@ -11,8 +11,6 @@ import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
-import io.enmasse.systemtest.apiclients.AdminApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -55,29 +53,28 @@ public class TestUtils {
             labels.put("infraUuid", infraUuid);
         }
         waitForNReplicas(
-                kubernetes,
                 numReplicas,
                 labels,
                 budget);
     }
 
-    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(kubernetes, expectedReplicas, labelSelector, Collections.emptyMap(), budget);
+    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
 
     /**
      * wait for expected count of Destination replicas in address space
      */
-    public static void waitForNBrokerReplicas(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
+    public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
                                               Address destination, TimeoutBudget budget, long checkInterval) throws Exception {
-        Address address = AddressUtils.jsonToAddress(addressApiClient.getAddresses(addressSpace, Optional.of(destination.getMetadata().getName())));
+        Address address = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).withName(destination.getMetadata().getName()).get();
         Map<String, String> labels = new HashMap<>();
         labels.put("role", "broker");
         labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
 
         for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
             if (brokerStatus.getState().equals(BrokerState.Active)) {
-                waitForNReplicas(kubernetes,
+                waitForNReplicas(
                         expectedReplicas,
                         readyRequired,
                         labels,
@@ -88,22 +85,21 @@ public class TestUtils {
         }
     }
 
-    public static void waitForNBrokerReplicas(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, int expectedReplicas, Address destination, TimeoutBudget budget) throws Exception {
-        waitForNBrokerReplicas(addressApiClient, kubernetes, addressSpace, expectedReplicas, true, destination, budget, 5000);
+    public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, Address destination, TimeoutBudget budget) throws Exception {
+        waitForNBrokerReplicas(addressSpace, expectedReplicas, true, destination, budget, 5000);
     }
 
 
     /**
      * Wait for expected count of replicas
      *
-     * @param kubernetes         client for manipulation with kubernetes cluster
      * @param expectedReplicas   count of expected replicas
      * @param labelSelector      labels on scaled pod
      * @param annotationSelector annotations on sclaed pod
      * @param budget             timeout budget - throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, boolean readyRequired,
+    public static void waitForNReplicas(int expectedReplicas, boolean readyRequired,
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
 
         int actualReplicas;
@@ -113,9 +109,9 @@ public class TestUtils {
             final List<Pod> pods;
 
             if (annotationSelector.isEmpty()) {
-                pods = kubernetes.listPods(labelSelector);
+                pods = Kubernetes.getInstance().listPods(labelSelector);
             } else {
-                pods = kubernetes.listPods(labelSelector, annotationSelector);
+                pods = Kubernetes.getInstance().listPods(labelSelector, annotationSelector);
             }
 
             if (!readyRequired) {
@@ -143,12 +139,12 @@ public class TestUtils {
 
     }
 
-    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        waitForNReplicas(kubernetes, expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
+    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
     }
 
-    public static void waitForNReplicas(Kubernetes kubernetes, int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(kubernetes, expectedReplicas, labelSelector, annotationSelector, budget, 5000);
+    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, labelSelector, annotationSelector, budget, 5000);
     }
 
     /**
@@ -476,7 +472,7 @@ public class TestUtils {
         logCollector.collectRouterState("deleteAddressSpaceCreatedBySC");
         kubernetes.deleteNamespace(addressSpace.getMetadata().getNamespace());
         waitForNamespaceDeleted(kubernetes, addressSpace.getMetadata().getNamespace());
-        AddressSpaceUtils.waitForAddressSpaceDeleted(kubernetes, addressSpace);
+        AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
@@ -543,15 +539,15 @@ public class TestUtils {
             Thread.sleep(5000);
         }
 
-        if(condition.test(WaitPhase.LAST_TRY)) {
+        if (condition.test(WaitPhase.LAST_TRY)) {
             return;
         }
 
         throw new IllegalStateException("Failed to wait for: " + forWhat);
     }
 
-    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final AddressApiClient client, final String name, final String currentResourceVersion) throws Exception {
-        waitForChangedResourceVersion(budget, currentResourceVersion, () -> AddressSpaceUtils.jsonToAdressSpace(client.getAddressSpace(name)).getMetadata().getResourceVersion());
+    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String namespace, final String name, final String currentResourceVersion) throws Exception {
+        waitForChangedResourceVersion(budget, currentResourceVersion, () -> Kubernetes.getInstance().getAddressSpaceClient(namespace).withName(name).get().getMetadata().getResourceVersion());
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
@@ -571,6 +567,6 @@ public class TestUtils {
     }
 
     public static String getGlobalConsoleRoute() throws Exception {
-        return new AdminApiClient(Kubernetes.getInstance()).getConsoleService("console").getStatus().getUrl();
+        return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
     }
 }

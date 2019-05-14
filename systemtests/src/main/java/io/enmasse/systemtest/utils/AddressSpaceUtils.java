@@ -5,150 +5,46 @@
 package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.*;
-import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.apiclients.AddressApiClient;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
 
-    public static AddressSpace createAddressSpaceObject(String name) {
-        return createAddressSpaceObject(name, null, AddressSpaceType.STANDARD, AuthenticationServiceType.NONE);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, null, AddressSpaceType.STANDARD, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type) {
-        return createAddressSpaceObject(name, null, type, AuthenticationServiceType.NONE);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, AuthenticationServiceType.NONE);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, String plan) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, plan);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, String plan, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, namespace, AddressSpaceType.STANDARD, plan, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan) {
-        return createAddressSpaceObject(name, null, type, plan);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, String plan) {
-        return createAddressSpaceObject(name, namespace, type, plan, AuthenticationServiceType.STANDARD);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type) {
-        return createAddressSpaceResource(name, type, AuthenticationServiceType.NONE)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, AuthenticationServiceType authService) {
-        return createAddressSpaceResource(name, type, authService)
-                .editMetadata()
-                .endMetadata()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, AuthenticationServiceType authService) {
-        return createAddressSpaceResource(name, type, authService)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, String authServiceName, AddressSpaceType type, String plan) {
-        return createAddressSpaceResource(name, type, authServiceName)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .editSpec()
-                .withPlan(plan)
-                .endSpec()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, String namespace, AddressSpaceType type, String plan, AuthenticationServiceType authService) {
-        return createAddressSpaceResource(name, type, authService)
-                .editMetadata()
-                .withNamespace(namespace)
-                .endMetadata()
-                .editSpec()
-                .withPlan(plan)
-                .endSpec()
-                .done();
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan, AuthenticationServiceType authService) {
-        return createAddressSpaceObject(name, null, type, plan, authService);
-    }
-
-    public static AddressSpace createAddressSpaceObject(String name, AddressSpaceType type, String plan, String authServiceName) {
-        return createAddressSpaceResource(name, type, authServiceName)
-                .editSpec()
-                .withPlan(plan)
-                .endSpec()
-                .done();
-    }
-
-    private static DoneableAddressSpace createAddressSpaceResource(String name, AddressSpaceType type, AuthenticationServiceType auth) {
-        return createAddressSpaceResource(name, type, auth.equals(AuthenticationServiceType.STANDARD) ? "standard-authservice" : "none-authservice");
-    }
-
-    private static DoneableAddressSpace createAddressSpaceResource(String name, AddressSpaceType type, String authServiceName) {
-        return new DoneableAddressSpace(new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName(name)
-                .endMetadata()
-                .withNewSpec()
-                .withType(type.toString())
-                .withPlan(type.equals(AddressSpaceType.BROKERED) ? AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
-                .withNewAuthenticationService()
-                .withName(authServiceName)
-                .endAuthenticationService()
-                .endSpec()
-                .build());
+    public static void syncAddressSpaceObject(AddressSpace addressSpace) {
+        AddressSpace data = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace())
+                .withName(addressSpace.getMetadata().getName()).get();
+        addressSpace.setMetadata(data.getMetadata());
+        addressSpace.setSpec(data.getSpec());
+        addressSpace.setStatus(data.getStatus());
     }
 
     public static JsonObject addressSpaceToJson(AddressSpace addressSpace) throws Exception {
         return new JsonObject(new ObjectMapper().writeValueAsString(addressSpace));
     }
 
-    public static AddressSpace jsonToAdressSpace(JsonObject addressSpace) throws Exception {
-        return new ObjectMapper().readValue(addressSpace.toString(), AddressSpace.class);
-    }
-
     public static String getAddressSpaceInfraUuid(AddressSpace addressSpace) {
         return addressSpace.getMetadata().getAnnotations().get("enmasse.io/infra-uuid");
     }
 
-    public static boolean existAddressSpace(AddressApiClient apiClient, String addressSpaceName) throws Exception {
-        return apiClient.listAddressSpaces().contains(addressSpaceName);
+    public static boolean existAddressSpace(String namespace, String addressSpaceName) {
+        log.info("Following addressspaces are deployed {} in namespace {}", Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
+                .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()), namespace);
+        return Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
+                .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()).contains(addressSpaceName);
     }
 
     public static boolean isAddressSpaceReady(AddressSpace addressSpace) {
@@ -159,39 +55,39 @@ public class AddressSpaceUtils {
         return received != null && received.getMetadata().getAnnotations().get("enmasse.io/applied-plan").equals(expected.getSpec().getPlan());
     }
 
-    public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
-        return waitForAddressSpaceReady(apiClient, addressSpace, new TimeoutBudget(15, TimeUnit.MINUTES));
+    public static AddressSpace waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
+        return waitForAddressSpaceReady(addressSpace, new TimeoutBudget(15, TimeUnit.MINUTES));
     }
 
-    public static AddressSpace waitForAddressSpaceReady(AddressApiClient apiClient, AddressSpace addressSpace, TimeoutBudget budget) throws Exception {
+    public static AddressSpace waitForAddressSpaceReady(AddressSpace addressSpace, TimeoutBudget budget) throws Exception {
         boolean isReady = false;
-        budget = new TimeoutBudget(15, TimeUnit.MINUTES);
+        var client = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         while (budget.timeLeft() >= 0 && !isReady) {
-            addressSpace = jsonToAdressSpace(apiClient.getAddressSpace(addressSpace.getMetadata().getName()));
+            addressSpace = client.withName(addressSpace.getMetadata().getName()).get();
             isReady = isAddressSpaceReady(addressSpace);
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: '{}' will be in ready state", addressSpace.getMetadata().getName());
+            log.info("Waiting until Address space: '{}' messages {} will be in ready state", addressSpace.getMetadata().getName(), addressSpace.getStatus().getMessages());
         }
         if (!isReady) {
-            String jsonStatus = addressSpace != null ? addressSpace.getStatus().toString() : "";
-            throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout: " + jsonStatus);
+            String status = addressSpace.getStatus().toString();
+            throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout: " + status);
         }
-
+        log.info("Address space {} is ready for use", addressSpace);
         return addressSpace;
     }
 
-    public static void waitForAddressSpacePlanApplied(AddressApiClient apiClient, AddressSpace addressSpace) throws Exception {
+    public static void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
         AddressSpace addressSpaceObject = null;
         TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
 
         boolean isPlanApplied = false;
         while (budget.timeLeft() >= 0 && !isPlanApplied) {
-            addressSpaceObject = AddressSpaceUtils.jsonToAdressSpace(apiClient.getAddressSpace(addressSpace.getMetadata().getName()));
+            addressSpaceObject = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).get();
             isPlanApplied = matchAddressSpacePlan(addressSpaceObject, addressSpace);
             if (!isPlanApplied) {
-                Thread.sleep(1000);
+                Thread.sleep(2000);
             }
             log.info("Waiting until Address space plan will be applied: '{}', current: {}",
                     addressSpace.getSpec().getPlan(),
@@ -205,104 +101,45 @@ public class AddressSpaceUtils {
         log.info("Address plan {} successfully applied", addressSpace.getSpec().getPlan());
     }
 
-    public static AddressSpace getAddressSpaceObject(AddressApiClient apiClient, String addressSpaceName) throws Exception {
-        JsonObject addressSpaceJson = apiClient.getAddressSpace(addressSpaceName);
-        log.info("address space received {}", addressSpaceJson.toString());
-        return convertToAddressSpaceObject(addressSpaceJson).get(0);
-    }
-
-    public static AddressSpace getAddressSpaceObject(AddressApiClient apiClient, String addressSpaceName, String namespace) throws Exception {
-        JsonObject addressSpaceJson = apiClient.getAddressSpace(addressSpaceName, namespace);
-        log.info("address space received {}", addressSpaceJson.toString());
-        return convertToAddressSpaceObject(addressSpaceJson).get(0);
-    }
-
-    public static void syncAddressSpaceObject(AddressSpace addressSpace, AddressApiClient apiClient) throws Exception {
-        JsonObject json = null;
-        if (addressSpace.getMetadata().getNamespace() != null) {
-            json = apiClient.getAddressSpace(addressSpace.getMetadata().getName(), addressSpace.getMetadata().getNamespace());
-        } else {
-            json = apiClient.getAddressSpace(addressSpace.getMetadata().getName());
-        }
-        AddressSpace results = jsonToAdressSpace(json);
-        addressSpace.setSpec(results.getSpec());
-        addressSpace.setMetadata(results.getMetadata());
-        addressSpace.setStatus(results.getStatus());
-    }
-
-
-    public static List<AddressSpace> getAddressSpacesObjects(AddressApiClient apiClient) throws Exception {
-        JsonObject addressSpaceJson = apiClient.listAddressSpacesObjects();
-        return convertToAddressSpaceObject(addressSpaceJson);
-    }
-
-    public static Future<List<AddressSpace>> getAllAddressSpacesObjects(AddressApiClient apiClient) throws Exception {
-        JsonObject response = apiClient.getAllAddresseSpaces();
-        CompletableFuture<List<AddressSpace>> listOfAddresses = new CompletableFuture<>();
-        listOfAddresses.complete(AddressSpaceUtils.convertToAddressSpaceObject(response));
-        return listOfAddresses;
-    }
-
-    public static List<AddressSpace> convertToAddressSpaceObject(JsonObject addressSpaceJson) throws Exception {
-        if (addressSpaceJson == null) {
-            throw new IllegalArgumentException("null response can't be converted to AddressSpace");
-        }
-        String kind = addressSpaceJson.getString("kind");
-        List<AddressSpace> resultAddrSpace = new ArrayList<>();
-        switch (kind) {
-            case "AddressSpace":
-                resultAddrSpace.add(jsonToAdressSpace(addressSpaceJson));
-                break;
-            case "AddressSpaceList":
-                JsonArray items = addressSpaceJson.getJsonArray("items");
-                for (int i = 0; i < items.size(); i++) {
-                    resultAddrSpace.add(jsonToAdressSpace(items.getJsonObject(i)));
-                }
-                break;
-            default:
-                throw new IllegalArgumentException(String.format("Unknown kind: '%s'", kind));
-        }
-        return resultAddrSpace;
-    }
-
-    public static void deleteAddressSpaceAndWait(AddressApiClient addressApiClient, Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
+    public static void deleteAddressSpaceAndWait(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
-        deleteAddressSpace(addressApiClient, addressSpace, logCollector);
-        waitForAddressSpaceDeleted(kubernetes, addressSpace);
+        deleteAddressSpace(addressSpace, logCollector);
+        waitForAddressSpaceDeleted(addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void deleteAddressSpace(AddressApiClient addressApiClient, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
+    private static void deleteAddressSpace(AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         logCollector.collectEvents();
         logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
-        addressApiClient.deleteAddressSpace(addressSpace);
+        Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).delete(addressSpace);
     }
 
-    public static void deleteAllAddressSpaces(AddressApiClient addressApiClient, GlobalLogCollector logCollector) throws Exception {
+    public static void deleteAllAddressSpaces(GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
         logCollector.collectApiServerJmapLog();
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
-        addressApiClient.deleteAddressSpaces(200);
+        Kubernetes.getInstance().getAddressSpaceClient().delete();
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForAddressSpaceDeleted(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
+    public static void waitForAddressSpaceDeleted(AddressSpace addressSpace) throws Exception {
+        Kubernetes kube = Kubernetes.getInstance();
         log.info("Waiting for AddressSpace {} to be deleted", addressSpace.getMetadata().getName());
         TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        waitForItems(addressSpace, budget, () -> kubernetes.listPods(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kubernetes.listConfigMaps(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kubernetes.listServices(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kubernetes.listSecrets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kubernetes.listDeployments(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kubernetes.listStatefulSets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kubernetes.listServiceAccounts(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
-        waitForItems(addressSpace, budget, () -> kubernetes.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listPods(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listConfigMaps(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listServices(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listSecrets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listDeployments(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listStatefulSets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listServiceAccounts(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        waitForItems(addressSpace, budget, () -> kube.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
     }
 
     private static <T> void waitForItems(AddressSpace addressSpace, TimeoutBudget budget, Callable<List<T>> callable) throws Exception {
@@ -371,13 +208,5 @@ public class AddressSpaceUtils {
 
     private static EndpointStatus getEndpointByServiceName(String serviceName, List<EndpointStatus> endpoints) {
         return endpoints.stream().filter(endpointStatus -> endpointStatus.getServiceHost().startsWith(serviceName)).findAny().get();
-    }
-
-    public static Future<AddressSpaceSchemaList> getSchema(AddressApiClient apiClient) throws Exception {
-        JsonObject response = apiClient.getSchema();
-        CompletableFuture<AddressSpaceSchemaList> schema = new CompletableFuture<>();
-        log.info("Got Schema object: {}", response.toString());
-        schema.complete(new ObjectMapper().readValue(response.toString(), AddressSpaceSchemaList.class));
-        return schema;
     }
 }

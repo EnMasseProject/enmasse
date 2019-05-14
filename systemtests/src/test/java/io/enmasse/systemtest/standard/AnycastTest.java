@@ -6,6 +6,8 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -48,7 +50,17 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     void testMultipleReceivers() throws Exception {
-        Address dest = AddressUtils.createAnycastAddressObject("anycastMultipleReceivers");
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "anycast-multiple"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("anycastMultipleReceivers")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build();
         setAddresses(dest);
         AmqpClient client1 = amqpClientFactory.createQueueClient();
         AmqpClient client2 = amqpClientFactory.createQueueClient();
@@ -59,8 +71,28 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
     @Test
     void testRestApi() throws Exception {
-        Address a1 = AddressUtils.createAnycastAddressObject("anycastRest1");
-        Address a2 = AddressUtils.createAnycastAddressObject("anycastRest2");
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "anycastrest"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("anycastrest")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build();
+        Address a2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "anycastrest2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("anycastrest2")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build();
 
         runRestApiTest(sharedAddressSpace, a1, a2);
     }
@@ -71,13 +103,19 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 210;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createAnycastAddressObject("medium-anycast-" + i, "standard-medium-anycast"));//router credit = 0.01 => 210 * 0.01 = 2.1 pods
+            dest.add(new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "medium-anycast" + i))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("anycast")
+                    .withAddress("medium-anycast" + i)
+                    .withPlan(DestinationPlan.STANDARD_MEDIUM_ANYCAST)
+                    .endSpec()
+                    .build());
         }
         setAddresses(dest.toArray(new Address[0]));
-//        TODO once getAddressPlanConfig() method will be implemented
-//        double requiredCredit = getAddressPlanConfig(DestinationPlan.STANDARD_SMALL_ANYCAST()).getRequiredCreditFromResource("router");
-//        int replicasCount = (int) (destCount * requiredCredit);
-//        waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
         waitForRouterReplicas(sharedAddressSpace, 3);
 
@@ -90,7 +128,7 @@ public class AnycastTest extends TestBaseWithShared implements ITestBaseStandard
 
         //remove part of destinations
         int removeCount = 120;
-        deleteAddresses(dest.subList(0, removeCount).toArray(new Address[0])); //router credit =>2.1-1.2 => max(2, 0.90 pods + dummy-address in special case)
+        deleteAddresses(dest.subList(0, removeCount).toArray(new Address[0]));
         waitForRouterReplicas(sharedAddressSpace, 2);
 
         //simple send/receive

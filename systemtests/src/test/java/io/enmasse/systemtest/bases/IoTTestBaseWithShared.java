@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.bases;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
@@ -42,7 +43,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
         if (sharedConfig == null) {
-            Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getNamespace());
+            Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
             CertBundle certBundle = CertificateUtils.createCertBundle();
             sharedConfig = new IoTConfigBuilder()
                     .withNewMetadata()
@@ -80,8 +81,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         this.iotAmqpClientFactory = createAmqpClientFactory();
     }
 
-    public String getAddressSpace() {
-        return this.addressSpace;
+    public AddressSpace getAddressSpace() {
+        return getAddressSpace(this.addressSpace);
     }
 
     /**
@@ -89,8 +90,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
      */
     private AmqpClientFactory createAmqpClientFactory() throws Exception {
 
-        getUserApiClient().createUser(this.addressSpace, this.credentials);
-        return new AmqpClientFactory(kubernetes, Environment.getInstance(), getAddressSpace(this.addressSpace), this.credentials);
+        createOrUpdateUser(this.addressSpace, this.credentials);
+        return new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
 
     }
 
@@ -102,7 +103,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                     log.info("Shared IoTProject will be removed");
                     var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
                     if (iotProjectApiClient.withName(sharedProject.getMetadata().getName()).get() != null) {
-                        IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedProject, addressApiClient);
+                        IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedProject);
                     } else {
                         log.info("IoTProject '{}' doesn't exists!", sharedProject.getMetadata().getName());
                     }
@@ -118,7 +119,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                     }
                 }
                 log.info("Infinispan server will be removed");
-                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getNamespace());
+                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
                 sharedConfig = null;
             } else {
                 log.warn("Remove shared iotproject when test failed - SKIPPED!");

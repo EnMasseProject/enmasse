@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -15,6 +16,7 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -32,11 +34,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class PublishTest extends TestBaseWithShared implements ITestBaseStandard {
     private static final String MYTOPIC = "mytopic";
-
-    @Override
-    public boolean skipDummyAddress() {
-        return true;
-    }
 
     @Test
     void testPublishQoS0() throws Exception {
@@ -76,7 +73,17 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
     @Test
     @Disabled("related issue: #1529")
     void testRetainedMessages() throws Exception {
-        Address topic = AddressUtils.createTopicAddressObject("retained-message-topic", DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic1"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-topic1")
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
         setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
@@ -104,7 +111,17 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
 
     private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
 
-        Address dest = AddressUtils.createTopicAddressObject(MYTOPIC, DestinationPlan.STANDARD_LARGE_TOPIC);
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, MYTOPIC))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress(MYTOPIC)
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
         setAddresses(dest);
 
         IMqttClient client = mqttClientFactory.create();

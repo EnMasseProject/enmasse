@@ -5,12 +5,14 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -31,7 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager(kubernetes);
+    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
     void setUp() {
@@ -59,7 +61,17 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 20;
         for (int i = 0; i < destCount; i++) {
-            dest.add(AddressUtils.createQueueAddressObject("weak-queue-" + i, weakQueuePlan.getMetadata().getName()));
+            dest.add(new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "weak-queue-" + i))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType("queue")
+                    .withAddress("weak-queue-" + i)
+                    .withPlan(weakQueuePlan.getMetadata().getName())
+                    .endSpec()
+                    .build());
         }
         setAddresses(dest.toArray(new Address[0]));
 
@@ -67,10 +79,10 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
         int replicasCount = (int) (destCount * requiredCredit);
         waitForBrokerReplicas(sharedAddressSpace, dest.get(0), replicasCount);
 
-        Future<List<Address>> standardAddresses = getAddressesObjects(Optional.empty()); //get all addresses
+        List<Address> standardAddresses = kubernetes.getAddressClient().inAnyNamespace().list().getItems(); //get all addresses
         for (int i = 0; i < destCount; i++) {
             assertThat("Queue plan wasn't set properly",
-                    standardAddresses.get(20, TimeUnit.SECONDS).get(i).getSpec().getPlan(), is(weakQueuePlan.getMetadata().getName()));
+                    standardAddresses.get(i).getSpec().getPlan(), is(weakQueuePlan.getMetadata().getName()));
         }
     }
 

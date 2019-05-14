@@ -5,17 +5,23 @@
 package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -43,22 +49,93 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Tag(nonPR)
 @Tag(smoke)
-class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
+class SmokeTest extends TestBase implements ITestBaseStandard {
 
-    private Address queue = AddressUtils.createQueueAddressObject("smokeQueue_1", DestinationPlan.STANDARD_SMALL_QUEUE);
-    private Address topic = AddressUtils.createTopicAddressObject("smoketopic", DestinationPlan.STANDARD_SMALL_TOPIC);
-    private Address mqttTopic = AddressUtils.createTopicAddressObject("smokeMqtt_1", DestinationPlan.STANDARD_LARGE_TOPIC);
-    private Address anycast = AddressUtils.createAnycastAddressObject("smokeanycast");
-    private Address multicast = AddressUtils.createMulticastAddressObject("smokemulticast");
-
-    @BeforeEach
-    void createAddresses() throws Exception {
-        setAddresses(queue, topic, mqttTopic, anycast, multicast);
-        Thread.sleep(60_000);
-    }
+    private Address queue;
+    private Address topic;
+    private Address mqttTopic;
+    private Address anycast;
+    private Address multicast;
+    private AddressSpace addressSpace;
+    private UserCredentials cred;
 
     @Test
     void smoketest() throws Exception {
+        addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("smoke-space-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "smoke-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("smoke_queue1")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+        topic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "smoketopic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("smoketopic")
+                .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                .endSpec()
+                .build();
+        mqttTopic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "topicmqtt"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("topicmqtt")
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
+        anycast = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-anycast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("test-anycast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build();
+        multicast = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-multicast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("test-multicast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build();
+        createAddressSpace(addressSpace);
+        setAddresses(queue, topic, mqttTopic, anycast, multicast);
+        Thread.sleep(60_000);
+
+        cred = new UserCredentials("test", "test");
+        createOrUpdateUser(addressSpace, cred);
+
         testAnycast();
         testQueue();
         testMulticast();
@@ -67,13 +144,15 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     private void testQueue() throws Exception {
-        AmqpClient client = amqpClientFactory.createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setCredentials(cred);
 
         QueueTest.runQueueTest(client, queue);
     }
 
     private void testTopic() throws Exception {
-        AmqpClient client = amqpClientFactory.createTopicClient();
+        AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
+        client.getConnectOptions().setCredentials(cred);
         List<String> msgs = TestUtils.generateMessages(1000);
 
         List<Future<List<Message>>> recvResults = Arrays.asList(
@@ -84,8 +163,7 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
                 client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
                 client.recvMessages(topic.getSpec().getAddress(), msgs.size()));
 
-        Thread.sleep(60_000);
-
+        Thread.sleep(10_000);
         assertThat("Wrong count of messages sent",
                 client.sendMessages(topic.getSpec().getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
@@ -109,6 +187,7 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
         List<MqttMessage> messages = Stream.generate(MqttMessage::new).limit(3).collect(Collectors.toList());
         messages.forEach(m -> m.setPayload(UUID.randomUUID().toString().getBytes(StandardCharsets.UTF_8)));
 
+        mqttClientFactory = new MqttClientFactory(addressSpace, cred);
         IMqttClient client = mqttClientFactory.create();
         client.connect();
 
@@ -126,7 +205,8 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     private void testAnycast() throws Exception {
-        AmqpClient client = amqpClientFactory.createQueueClient();
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setCredentials(cred);
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
 
@@ -138,16 +218,15 @@ class SmokeTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     private void testMulticast() throws Exception {
-        AmqpClient client = amqpClientFactory.createBroadcastClient();
+        AmqpClient client = amqpClientFactory.createBroadcastClient(addressSpace);
+        client.getConnectOptions().setCredentials(cred);
         List<String> msgs = Collections.singletonList("foo");
 
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 client.recvMessages(multicast.getSpec().getAddress(), msgs.size()),
                 client.recvMessages(multicast.getSpec().getAddress(), msgs.size()),
                 client.recvMessages(multicast.getSpec().getAddress(), msgs.size()));
-
-        Thread.sleep(60_000);
-
+        Thread.sleep(10_000);
         assertThat("Wrong count of messages sent",
                 client.sendMessages(multicast.getSpec().getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 

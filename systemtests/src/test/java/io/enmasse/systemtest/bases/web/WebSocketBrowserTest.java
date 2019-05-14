@@ -28,7 +28,7 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
         else
             selenium.clearScreenShots();
         rheaWebPage = new RheaWebPage(selenium);
-        super.setAddresses(sharedAddressSpace);
+        deleteAddresses(sharedAddressSpace);
     }
 
     @Override
@@ -43,11 +43,6 @@ public abstract class WebSocketBrowserTest extends TestBaseWithShared implements
         } else {
             return super.getMessagingRoute(addressSpace);
         }
-    }
-
-    @Override
-    public boolean skipDummyAddress() {
-        return true;
     }
 
     //============================================================================================

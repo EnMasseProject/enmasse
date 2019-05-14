@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.standard.web;
 
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
@@ -23,33 +24,116 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createQueueAddressObject("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE),
-                AddressUtils.createQueueAddressObject("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE));
+        doTestCreateDeleteAddress(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-queue2"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue2")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                        .endSpec()
+                        .build());
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
+        doTestCreateDeleteAddress(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic2"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic2")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                        .endSpec()
+                        .build());
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteDurableSubscription() throws Exception {
-        doTestCreateDeleteDurableSubscription(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
+        doTestCreateDeleteDurableSubscription(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic2"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic2")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testCreateDeleteAnycast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createAnycastAddressObject("test-anycast-chrome"));
+        doTestCreateDeleteAddress(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-anycast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("test-anycast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build());
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCreateDeleteMulticast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createMulticastAddressObject("test-multicast-chrome"));
+        doTestCreateDeleteAddress(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-multicast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("test-multicast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build());
     }
 
     @Test
@@ -167,20 +251,33 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
     void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
         doTestCreateAddressWithSymbolsAt61stCharIndex(
-                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
-                        getDefaultPlan(AddressType.QUEUE)),
-                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
-                        getDefaultPlan(AddressType.QUEUE)));
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue10charhere-10charhere-10charhere-10charhere-10charhere-1"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue1")
+                        .withPlan(getDefaultPlan(AddressType.QUEUE))
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "queue10charhere-10charhere-10charhere-10charhere-10charhere.1"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue2")
+                        .withPlan(getDefaultPlan(AddressType.QUEUE))
+                        .endSpec()
+                        .build());
     }
 
     @Test
     @Disabled("Only a few chrome tests are enabled, rest of functionality is covered by firefox")
     void testAddressWithValidPlanOnly() throws Exception {
         doTestAddressWithValidPlanOnly();
-    }
-
-    @Override
-    public boolean skipDummyAddress() {
-        return true;
     }
 }

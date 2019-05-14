@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.standard.web;
 
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
@@ -20,30 +21,113 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createQueueAddressObject("test-queue1", DestinationPlan.STANDARD_SMALL_QUEUE),
-                AddressUtils.createQueueAddressObject("test-queue2", DestinationPlan.STANDARD_LARGE_QUEUE));
-    }
-
-    @Test
-    void testCreateDeleteDurableSubscription() throws Exception {
-        doTestCreateDeleteDurableSubscription(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_XLARGE_TOPIC));
+        doTestCreateDeleteAddress(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-queue2"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue2")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createTopicAddressObject("test-topic1", DestinationPlan.STANDARD_SMALL_TOPIC),
-                AddressUtils.createTopicAddressObject("test-topic2", DestinationPlan.STANDARD_LARGE_TOPIC));
+        doTestCreateDeleteAddress(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic2"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic2")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                        .endSpec()
+                        .build());
+    }
+
+    @Test
+    void testCreateDeleteDurableSubscription() throws Exception {
+        doTestCreateDeleteDurableSubscription(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                        .endSpec()
+                        .build(),
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic2"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic2")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                        .endSpec()
+                        .build());
     }
 
     @Test
     void testCreateDeleteAnycast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createAnycastAddressObject("test-anycast-firefox"));
+        doTestCreateDeleteAddress(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-anycast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("test-anycast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build());
     }
 
     @Test
     void testCreateDeleteMulticast() throws Exception {
-        doTestCreateDeleteAddress(AddressUtils.createMulticastAddressObject("test-multicast-firefox"));
+        doTestCreateDeleteAddress(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-multicast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("test-multicast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build());
     }
 
     @Test
@@ -145,10 +229,50 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
 
     @Test
     void testAddressStatus() throws Exception {
-        doTestAddressStatus(AddressUtils.createQueueAddressObject("test-queue", getDefaultPlan(AddressType.QUEUE)));
-        doTestAddressStatus(AddressUtils.createTopicAddressObject("test-topic", getDefaultPlan(AddressType.TOPIC)));
-        doTestAddressStatus(AddressUtils.createAnycastAddressObject("test-anycast"));
-        doTestAddressStatus(AddressUtils.createMulticastAddressObject("test-multicast"));
+        doTestAddressStatus(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
+        doTestAddressStatus(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-topic")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
+        doTestAddressStatus(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-anycast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("test-anycast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build());
+        doTestAddressStatus(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-multicast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("test-multicast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build());
     }
 
     @Test
@@ -172,23 +296,7 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-    @Disabled("disabled while sdavey changes it with changes to regex in addr names")
-        //TODO(sdavey)
-    void testCreateAddressWithSymbolsAt61stCharIndex() throws Exception {
-        doTestCreateAddressWithSymbolsAt61stCharIndex(
-                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere-1",
-                        getDefaultPlan(AddressType.QUEUE)),
-                AddressUtils.createQueueAddressObject("queue10charHere-10charHere-10charHere-10charHere-10charHere.1",
-                        getDefaultPlan(AddressType.QUEUE)));
-    }
-
-    @Test
     void testAddressWithValidPlanOnly() throws Exception {
         doTestAddressWithValidPlanOnly();
-    }
-
-    @Override
-    public boolean skipDummyAddress() {
-        return true;
     }
 }

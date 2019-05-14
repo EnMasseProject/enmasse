@@ -72,4 +72,9 @@ public class UserAuthentication {
     public void validate() {
         Objects.requireNonNull(type, "'type' must be set");
     }
+
+    @Override
+    public String toString() {
+        return "{" + "type=" + type.toString() + "}";
+    }
 }
