@@ -1,9 +1,12 @@
 // Module included in the following assemblies:
 //
-// assembly-installing-openshift.adoc
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
 
 [id='installing-services-{context}']
 = Installing IoT services
+
+To get started using the IoT feature on {ProductName}, you must first install the IoT services.
 
 .Procedure
 
@@ -24,7 +27,7 @@ ifeval::["{cmdcli}" == "kubectl"]
 endif::[]
 
 ifeval::["{cmdcli}" == "oc"]
-. Create certificates for MQTT protocol adapter. For testing purposes, you can create a self-signed certificate:
+. Create certificates for the MQTT protocol adapter. For testing purposes, you can create a self-signed certificate:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -36,12 +39,11 @@ endif::[]
 +
 [NOTE]
 ====
-If your cluster is not running on the `localhost`, you need to specify the cluster hostname when creating certificates. For example:
+If your cluster is not running on `localhost`, you need to specify the cluster host name when creating certificates to allow external clients (like MQTT) to properly connect to the appropriate services. For example:
 [options="nowrap",subs="attributes"]
 ----
 CLUSTER=x.x.x.x.nip.io install/components/iot/examples/k8s-tls/create
 ----
-This will allow external clients (like MQTT) to properly connect to the appropriate services.
 ====
 
 . Install an example IoT infrastructure configuration:

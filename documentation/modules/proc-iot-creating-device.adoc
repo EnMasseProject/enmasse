@@ -1,5 +1,12 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
 [id='iot-creating-device-{context}']
 = Creating an IoT device
+
+After installing the IoT services and creating an IoT project, you can create an IoT device for the device you want to monitor.
 
 ifeval::["{cmdcli}" == "oc"]
 :registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
@@ -7,6 +14,10 @@ endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 :registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
 endif::[]
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[An IoT project is created].
 
 .Procedure
 
@@ -23,3 +34,4 @@ curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"
 ----
 curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-plain":"'hono-secret'"}]}' https://{registry}/credentials/myapp.iot
 ----
+

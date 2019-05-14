@@ -1,13 +1,28 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
 [id='iot-creating-project-{context}']
 = Creating an IoT project
+
+After installing the IoT services, you create an IoT project.
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[The IoT services are installed].
 
 .Procedure
 
 ifeval::["{cmdcli}" == "oc"]
-. Change to a non-admin user:
+. Log in as a messaging tenant:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
 endif::[]
 
-. Create a _managed_ IoT Project:
+. Create a _managed_ IoT project:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -35,3 +50,4 @@ endif::[]
 ----
 {cmdcli} create -f install/components/iot/examples/iot-user.yaml
 ----
+
