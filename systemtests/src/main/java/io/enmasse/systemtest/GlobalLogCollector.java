@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 public class GlobalLogCollector {
@@ -121,40 +122,54 @@ public class GlobalLogCollector {
         log.info("Collecting qdr-proxy router state in namespace {}", namespace);
         collectRouterState("httpAdapterQdrProxyState", System.currentTimeMillis(),
                 kubernetes.listPods(Map.of("component", "iot", "name", "iot-http-adapter")).stream(),
-                Optional.of("qdr-proxy"));
+                Optional.of("qdr-proxy"),
+                this::qdrProxyCmd);
     }
 
     public void collectMqttAdapterQdrProxyState() {
         log.info("Collecting qdr-proxy router state in namespace {}", namespace);
         collectRouterState("mqttAdapterQdrProxyState", System.currentTimeMillis(),
                 kubernetes.listPods(Map.of("component", "iot", "name", "iot-mqtt-adapter")).stream(),
-                Optional.of("qdr-proxy"));
+                Optional.of("qdr-proxy"),
+                this::qdrProxyCmd);
     }
 
     public void collectRouterState(String operation) {
         log.info("Collecting router state in namespace {}", namespace);
         collectRouterState(operation, System.currentTimeMillis(),
                 kubernetes.listPods(Collections.singletonMap("capability", "router")).stream(),
-                Optional.of("router"));
+                Optional.of("router"),
+                this::enmasseRouterCmd);
     }
 
-    private void collectRouterState(String operation, long timestamp, Stream<Pod> podsStream, Optional<String> container) {
+    private void collectRouterState(String operation, long timestamp, Stream<Pod> podsStream, Optional<String> container,
+            BiFunction<String, String[], String[]> saslMechanismArgsCmdProvider) {
         podsStream.filter(pod -> pod.getStatus().getPhase().equals("Running"))
         .forEach(pod -> {
-            collectRouterInfo(pod, container, "." + operation + ".autolinks." + timestamp, "qdmanage", "QUERY", "--type=autoLink");
-            collectRouterInfo(pod, container, "." + operation + ".links." + timestamp, "qdmanage", "QUERY", "--type=link");
-            collectRouterInfo(pod, container, "." + operation + ".connections." + timestamp, "qdmanage", "QUERY", "--type=connection");
-            collectRouterInfo(pod, container, "." + operation + ".qdstat_a." + timestamp, "qdstat", "-a");
-            collectRouterInfo(pod, container, "." + operation + ".qdstat_l." + timestamp, "qdstat", "-l");
-            collectRouterInfo(pod, container, "." + operation + ".qdstat_n." + timestamp, "qdstat", "-n");
-            collectRouterInfo(pod, container, "." + operation + ".qdstat_c." + timestamp, "qdstat", "-c");
-            collectRouterInfo(pod, container, "." + operation + ".qdstat_linkroutes." + timestamp, "qdstat", "--linkroutes");
+            collectRouterInfo(pod, container, "." + operation + ".autolinks." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[] {"QUERY", "--type=autoLink"}));
+            collectRouterInfo(pod, container, "." + operation + ".links." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[] {"QUERY", "--type=link"}));
+            collectRouterInfo(pod, container, "." + operation + ".connections." + timestamp, saslMechanismArgsCmdProvider.apply("qdmanage", new String[] {"QUERY", "--type=connection"}));
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_a." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[] {"-a"}));
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_l." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[] {"-l"}));
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_n." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[] {"-n"}));
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_c." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[] {"-c"}));
+            collectRouterInfo(pod, container, "." + operation + ".qdstat_linkroutes." + timestamp, saslMechanismArgsCmdProvider.apply("qdstat", new String[] {"--linkroutes"}));
         });
     }
 
-    private void collectRouterInfo(Pod pod, Optional<String> container, String filesuffix, String command, String... args) {
+    private String[] qdrProxyCmd(String cmd, String...extraArgs) {
         List<String> allArgs = new ArrayList<>();
-        allArgs.add(command);
+        allArgs.add(cmd);
+        allArgs.add("--sasl-mechanisms=ANONYMOUS");
+        allArgs.add("-b");
+        allArgs.add("127.0.0.1:5672");
+        allArgs.addAll(Arrays.asList(extraArgs));
+        return allArgs.toArray(String[]::new);
+    }
+
+    private String[] enmasseRouterCmd(String cmd, String... extraArgs) {
+        List<String> allArgs = new ArrayList<>();
+        allArgs.add(cmd);
         allArgs.add("--sasl-mechanisms=EXTERNAL");
         allArgs.add("--ssl-certificate=/etc/enmasse-certs/tls.crt");
         allArgs.add("--ssl-key=/etc/enmasse-certs/tls.key");
@@ -162,13 +177,16 @@ public class GlobalLogCollector {
         allArgs.add("--ssl-disable-peer-name-verify");
         allArgs.add("-b");
         allArgs.add("127.0.0.1:55671");
-        allArgs.addAll(Arrays.asList(args));
+        allArgs.addAll(Arrays.asList(extraArgs));
+        return allArgs.toArray(String[]::new);
+    }
 
+    private void collectRouterInfo(Pod pod, Optional<String> container, String filesuffix, String[] command) {
         String output = KubeCMDClient.runOnPod(
                 pod.getMetadata().getNamespace(),
                 pod.getMetadata().getName(),
                 container,
-                allArgs.toArray(new String[0])).getStdOut();
+                command).getStdOut();
         try {
             Path routerAutoLinks = resolveLogFile(pod.getMetadata().getName() + filesuffix);
             log.info("router info '{}' pod will be archived with path: '{}'", pod.getMetadata().getName(), routerAutoLinks);
