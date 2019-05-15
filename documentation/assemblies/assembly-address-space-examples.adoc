@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-address-space-examples.adoc
+// assembly-managing-address-spaces.adoc
 
 [id='address-space-examples-{context}']
 = Address space examples

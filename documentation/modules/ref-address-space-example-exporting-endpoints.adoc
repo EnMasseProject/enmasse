@@ -3,7 +3,7 @@
 // assembly-managing-address-spaces.adoc
 
 [id='ref-address-space-example-exporting-endpoints-{context}']
-= Exporting address space information into the application namespace
+= Example of exporting address space information into the application namespace
 
 This address space example shows how you can export the endpoint information of an `AddressSpace`
 resource to a `ConfigMap`, `Secret`, or `Service` in the same namespace as the messaging
@@ -27,8 +27,8 @@ spec:
     - kind: ConfigMap <1>
       name: my-config <2>
 ----
-<1> (Required) The export type. The resulting `ConfigMap` contains the values in the format
-shown in link:link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format]. For `Secret`, the same keys are used, but the values are base64-encoded. For
+<1> (Required) The type of export: `ConfigMap`, `Secret`, or `Service`. The resulting `ConfigMap` contains the values in the format
+shown in link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format]. For `Secret`, the same keys are used, but the values are base64-encoded. For
 `Service`, a {KubePlatform} service of the type `ExternalName` is created. This provides applications running on {KubePlatform} with a way to
 inject endpoint information or provide a proxy service in the same namespace as the application. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format].
 <2> (Required) The name of the resource to create and update.
@@ -66,3 +66,4 @@ subjects:
   name: address-space-controller
   namespace: _{ProductNamespace}_
 ----
+

@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-managing-address-spaces.adoc
+// assembly-address-space-examples.adoc
 
 [id='ref-address-space-example-exposing-endpoints-{context}']
 = Address space example exposing endpoints externally 
