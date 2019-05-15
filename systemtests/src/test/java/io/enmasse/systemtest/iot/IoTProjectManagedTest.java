@@ -8,6 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -22,12 +23,12 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Tag(sharedIot)
+@Tag(TestTag.sharedIot)
+@Tag(TestTag.smoke)
 class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
     @Test
