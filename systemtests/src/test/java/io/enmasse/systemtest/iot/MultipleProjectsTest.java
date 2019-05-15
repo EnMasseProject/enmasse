@@ -30,6 +30,7 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.UserCredentials;
@@ -61,12 +62,20 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
 
     @BeforeEach
     void initEnv() throws Exception {
+        Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
         CertBundle certBundle = CertificateUtils.createCertBundle();
         IoTConfig iotConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
                 .endMetadata()
                 .withNewSpec()
+                .withNewServices()
+                .withNewDeviceRegistry()
+                .withNewInfinispan()
+                .withInfinispanServerAddress(infinispanEndpoint.toString())
+                .endInfinispan()
+                .endDeviceRegistry()
+                .endServices()
                 .withNewAdapters()
                 .withNewMqtt()
                 .withNewEndpoint()
@@ -108,6 +117,8 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectHttpAdapterQdrProxyState();
         }
+
+        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
 
         for(IoTProjectTestContext ctx : projects) {
             cleanDeviceSide(ctx);

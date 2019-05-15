@@ -39,6 +39,12 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
                 .endMetadata()
                 .withNewSpec()
                 .withEnableDefaultRoutes(false)
+                .withNewServices()
+                .withNewDeviceRegistry()
+                .withNewFile()
+                .endFile()
+                .endDeviceRegistry()
+                .endServices()
                 .endSpec()
                 .build());
 
