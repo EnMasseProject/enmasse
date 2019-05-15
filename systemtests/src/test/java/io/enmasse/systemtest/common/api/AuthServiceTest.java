@@ -13,11 +13,13 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.util.Collections;
-
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import static io.enmasse.systemtest.TestTag.isolated;
 
 @Tag(isolated)
@@ -35,6 +37,22 @@ class AuthServiceTest extends TestBase {
     void tearDown() throws Exception {
         adminManager.tearDown();
         SystemtestsKubernetesApps.deletePostgresDB(kubernetes.getInfraNamespace());
+    }
+
+    @Test
+    void testCreateDeleteCustomAuthService() throws Exception {
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
+        adminManager.createAuthService(standardAuth);
+        adminManager.removeAuthService(standardAuth);
+        TestUtils.waitForNReplicas(0, false, Map.of("name", "test-standard-authservice"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
+    }
+
+    @Test
+    void testCreateDeleteCustomAuthServiceAssertFail() throws Exception {
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
+        adminManager.createAuthService(standardAuth);
+        kubernetes.getAuthenticationServiceClient().delete(standardAuth);
+        Assertions.assertThrows(RuntimeException.class, ()->TestUtils.waitForNReplicas(0, false, Map.of("name", "test-standard-authservice"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000));
     }
 
     @Test

@@ -54,7 +54,7 @@ public class AdminResourcesManager {
             }
 
             for (AuthenticationService authService : authServices) {
-                Kubernetes.getInstance().getAuthenticationServiceClient().delete(authService);
+                removeAuthService(authService);
                 log.info("AuthService {} deleted", authService.getMetadata().getName());
             }
 
@@ -201,11 +201,11 @@ public class AdminResourcesManager {
     }
 
     public void removeAuthService(AuthenticationService authService) throws Exception {
-        Kubernetes.getInstance().getAuthenticationServiceClient().delete(authService);
+        Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
         authServices.removeIf(authserviceId -> authserviceId.getMetadata().getName().equals(authService.getMetadata().getName()));
         TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), (phase) ->
                         TestUtils.listReadyPods(Kubernetes.getInstance()).stream().noneMatch(pod ->
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),
-                new TimeoutBudget(5, TimeUnit.MINUTES));
+                new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 }
