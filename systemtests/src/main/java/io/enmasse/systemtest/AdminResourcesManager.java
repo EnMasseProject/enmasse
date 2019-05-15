@@ -10,7 +10,9 @@ import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -54,7 +56,8 @@ public class AdminResourcesManager {
             }
 
             for (AuthenticationService authService : authServices) {
-                removeAuthService(authService);
+                Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
+                TestUtils.waitForNReplicas(0, false, Map.of("name", authService.getMetadata().getName()), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
                 log.info("AuthService {} deleted", authService.getMetadata().getName());
             }
 

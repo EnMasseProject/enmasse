@@ -48,14 +48,6 @@ class AuthServiceTest extends TestBase {
     }
 
     @Test
-    void testCreateDeleteCustomAuthServiceAssertFail() throws Exception {
-        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
-        adminManager.createAuthService(standardAuth);
-        kubernetes.getAuthenticationServiceClient().delete(standardAuth);
-        Assertions.assertThrows(RuntimeException.class, ()->TestUtils.waitForNReplicas(0, false, Map.of("name", "test-standard-authservice"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000));
-    }
-
-    @Test
     void testCustomAuthServiceStandard() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
         adminManager.createAuthService(standardAuth);
