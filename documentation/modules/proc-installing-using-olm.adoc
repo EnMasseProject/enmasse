@@ -65,7 +65,7 @@ metadata:
 spec:
   channel: alpha
   name: {OperatorName}
-  source: {OperatorSourceName}
+  source: {OperatorSourceConfigName}
   sourceNamespace: {OperatorNamespace}
 EOF
 ----
