@@ -150,6 +150,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
     }
 
     @Test
+    @Disabled
     public void batchTelemetryTest() throws Exception {
         simpleMqttTelemetryTest(businessApplicationClient, tenantId(), adapterClient);
     }
@@ -175,7 +176,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
         try {
             log.info("Waiting to receive telemetry data in business application");
-            futureReceivedMessages.get(60, TimeUnit.SECONDS);
+            futureReceivedMessages.get(120, TimeUnit.SECONDS);
             assertEquals(messagesToSend, receivedMessagesCounter.get());
             log.info("Telemetry successfully consumed");
         } catch (TimeoutException e) {

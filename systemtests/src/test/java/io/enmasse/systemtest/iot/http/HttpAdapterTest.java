@@ -153,7 +153,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
         try {
             log.info("Waiting to receive telemetry data in business application");
-            futureReceivedMessages.get(60, TimeUnit.SECONDS);
+            futureReceivedMessages.get(90, TimeUnit.SECONDS);
             assertEquals(messagesToSend, receivedMessagesCounter.get());
             log.info("Telemetry successfully consumed");
         } catch (TimeoutException e) {

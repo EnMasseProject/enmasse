@@ -39,7 +39,6 @@ import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.iot.http.HttpAdapterTest;
-import io.enmasse.systemtest.iot.mqtt.MqttAdapterTest;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -118,12 +117,12 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
             logCollector.collectHttpAdapterQdrProxyState();
         }
 
-        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-
         for(IoTProjectTestContext ctx : projects) {
             cleanDeviceSide(ctx);
             cleanAmqpSide(ctx);
         }
+
+        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
 
     }
 
@@ -133,8 +132,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
                 .map(ctx -> {
                     return CompletableFuture.allOf(
                             TestUtils.runAsync(() -> HttpAdapterTest.simpleHttpTelemetryTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getHttpAdapterClient())),
-                            TestUtils.runAsync(() -> HttpAdapterTest.simpleHttpEventTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getHttpAdapterClient())),
-                            TestUtils.runAsync(() -> MqttAdapterTest.simpleMqttTelemetryTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getMqttAdapterClient())));
+                            TestUtils.runAsync(() -> HttpAdapterTest.simpleHttpEventTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getHttpAdapterClient())));
                             //TODO add mqtt adapter tests when mqtt tests are enabled
                 })
                 .toArray(CompletableFuture[]::new)).get(5, TimeUnit.MINUTES);
