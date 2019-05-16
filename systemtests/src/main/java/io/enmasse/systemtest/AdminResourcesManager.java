@@ -36,22 +36,22 @@ public class AdminResourcesManager {
     public void tearDown() throws Exception {
         if (!Environment.getInstance().skipCleanup()) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
-                Kubernetes.getInstance().getAddressSpacePlanClient().delete(addressSpacePlan);
+                Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
                 log.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
             }
 
             for (AddressPlan addressPlan : addressPlans) {
-                Kubernetes.getInstance().getAddressPlanClient().delete(addressPlan);
+                Kubernetes.getInstance().getAddressPlanClient().withName(addressPlan.getMetadata().getName()).cascading(true).delete();
                 log.info("Address plan {} deleted", addressPlan.getMetadata().getName());
             }
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
-                Kubernetes.getInstance().getStandardInfraConfigClient().delete(infraConfigDefinition);
+                Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                 log.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
-                Kubernetes.getInstance().getBrokeredInfraConfigClient().delete(infraConfigDefinition);
+                Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                 log.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
 
@@ -87,7 +87,7 @@ public class AdminResourcesManager {
     }
 
     public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
-        Kubernetes.getInstance().getAddressPlanClient().delete(addressPlan);
+        Kubernetes.getInstance().getAddressPlanClient().withName(addressPlan.getMetadata().getName()).cascading(true).delete();
         addressPlans.removeIf(addressPlanIter -> addressPlanIter.getMetadata().getName().equals(addressPlan.getMetadata().getName()));
     }
 
@@ -120,7 +120,7 @@ public class AdminResourcesManager {
     }
 
     public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
-        Kubernetes.getInstance().getAddressSpacePlanClient().delete(addressSpacePlan);
+        Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
         addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getMetadata().getName().equals(addressSpacePlan.getMetadata().getName()));
     }
 
@@ -157,11 +157,11 @@ public class AdminResourcesManager {
     public void removeInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         if (infraConfigDefinition instanceof StandardInfraConfig) {
             var client = Kubernetes.getInstance().getStandardInfraConfigClient();
-            client.delete((StandardInfraConfig) infraConfigDefinition);
+            client.withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
             standardInfraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
         } else {
             var client = Kubernetes.getInstance().getBrokeredInfraConfigClient();
-            client.delete((BrokeredInfraConfig) infraConfigDefinition);
+            client.withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
             brokeredInfraConfigs.removeIf(infraId -> infraId.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName()));
         }
     }

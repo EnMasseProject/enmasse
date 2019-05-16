@@ -38,7 +38,6 @@ import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.iot.http.HttpAdapterTest;
-import io.enmasse.systemtest.iot.mqtt.MqttAdapterTest;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -176,7 +175,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     private void cleanAmqpSide(IoTProjectTestContext ctx) throws Exception {
         ctx.getAmqpClient().close();
         var userClient = kubernetes.getUserClient(ctx.getNamespace());
-        userClient.delete(userClient.withName(ctx.getAmqpUser().getMetadata().getName()).get());
+        userClient.withName(ctx.getAmqpUser().getMetadata().getName()).cascading(true).delete();
     }
 
     private void configureDeviceSide(IoTProjectTestContext ctx) throws Exception {

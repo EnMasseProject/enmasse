@@ -65,7 +65,7 @@ public class AddressUtils {
 
     public static void delete(Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
-        Arrays.stream(destinations).forEach(address -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).delete(address));
+        Arrays.stream(destinations).forEach(address -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete());
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
