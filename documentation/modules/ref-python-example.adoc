@@ -8,16 +8,16 @@
 
 You can use the following {ClientAmqpPythonName} example to connect your application to {ProductName}. This example assumes you have created an address of type `queue` named `myqueue`.
 
-[source,python,options="nowrap",subs="+quotes,attributes"]
+[source,python,options="nowrap",subs="attributes"]
 ----
-from \_future_ import print_function, unicode_literals
+from __future__ import print_function, unicode_literals
 from proton import Message
 from proton.handlers import MessagingHandler
 from proton.reactor import Container
 
 class HelloWorld(MessagingHandler):
-    def \_init_(self, server, address):
-        super(HelloWorld, self).\_init_()
+    def __init__(self, server, address):
+        super(HelloWorld, self).__init__()
         self.server = server
         self.address = address
 
