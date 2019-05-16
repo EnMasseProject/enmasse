@@ -30,6 +30,7 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.UserCredentials;
@@ -38,7 +39,6 @@ import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.iot.http.HttpAdapterTest;
-import io.enmasse.systemtest.iot.mqtt.MqttAdapterTest;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -61,12 +61,20 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
 
     @BeforeEach
     void initEnv() throws Exception {
+        Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
         CertBundle certBundle = CertificateUtils.createCertBundle();
         IoTConfig iotConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
                 .endMetadata()
                 .withNewSpec()
+                .withNewServices()
+                .withNewDeviceRegistry()
+                .withNewInfinispan()
+                .withInfinispanServerAddress(infinispanEndpoint.toString())
+                .endInfinispan()
+                .endDeviceRegistry()
+                .endServices()
                 .withNewAdapters()
                 .withNewMqtt()
                 .withNewEndpoint()
@@ -113,6 +121,8 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
             cleanDeviceSide(ctx);
             cleanAmqpSide(ctx);
         }
+
+        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
 
     }
 
