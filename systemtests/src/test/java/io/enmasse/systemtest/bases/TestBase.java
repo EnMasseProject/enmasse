@@ -330,10 +330,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).createOrReplace(user);
     }
 
-    protected User createOrUpdateUser(String addressSpace, UserCredentials cred) {
-        return createOrUpdateUser(getAddressSpace(addressSpace), cred);
-    }
-
     protected User createUserServiceaccount(AddressSpace addressSpace, UserCredentials cred) {
         log.info("ServiceAccount user {} in address space {} will be created", cred.getUsername(), addressSpace.getMetadata().getName());
         String serviceaccountName = kubernetes.createServiceAccount(cred.getUsername(), addressSpace.getMetadata().getNamespace());
@@ -359,12 +355,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void removeUser(AddressSpace addressSpace, User user) {
         log.info("User {} in address space {} will be removed", user.getMetadata().getName(), addressSpace.getMetadata().getName());
-        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).delete(user);
+        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
     }
 
     protected void removeUser(AddressSpace addressSpace, String userName) {
         log.info("User {} in address space {} will be removed", userName, addressSpace.getMetadata().getName());
-        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).delete(getUser(addressSpace, userName));
+        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(String.format("%s.%s", addressSpace.getMetadata().getName(), userName)).cascading(true).delete();
     }
 
     protected User getUser(AddressSpace addressSpace, String username) {

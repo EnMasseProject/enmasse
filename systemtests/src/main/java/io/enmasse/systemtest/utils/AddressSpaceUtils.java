@@ -114,7 +114,7 @@ public class AddressSpaceUtils {
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
-        Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).delete(addressSpace);
+        Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).withName(addressSpace.getMetadata().getName()).cascading(true).delete();
     }
 
     public static void deleteAllAddressSpaces(GlobalLogCollector logCollector) throws Exception {

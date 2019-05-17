@@ -186,7 +186,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     private void cleanAmqpSide(IoTProjectTestContext ctx) throws Exception {
         ctx.getAmqpClient().close();
         var userClient = kubernetes.getUserClient(ctx.getNamespace());
-        userClient.delete(userClient.withName(ctx.getAmqpUser().getMetadata().getName()).get());
+        userClient.withName(ctx.getAmqpUser().getMetadata().getName()).cascading(true).delete();
     }
 
     private void configureDeviceSide(IoTProjectTestContext ctx) throws Exception {
