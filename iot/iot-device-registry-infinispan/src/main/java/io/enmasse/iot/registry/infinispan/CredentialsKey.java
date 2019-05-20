@@ -31,6 +31,8 @@ import org.infinispan.protostream.annotations.ProtoField;
 @ProtoDoc("@Indexed")
 public class CredentialsKey implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private String tenantId;
     private String authId;
     private String type;
