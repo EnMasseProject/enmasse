@@ -11,7 +11,7 @@ spec:
   - port: 11222
     targetPort: 11222
   selector:
-deploymentConfig: infinispan-server
+    deploymentConfig: infinispan-server
 ---
 apiVersion: apps/v1beta1
 kind: StatefulSet
