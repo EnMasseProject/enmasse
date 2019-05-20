@@ -77,4 +77,4 @@ spec:
           requests:
             cpu: "0.5"
             memory: 512Mi
-terminationGracePeriodSeconds: 120
+      terminationGracePeriodSeconds: 120
