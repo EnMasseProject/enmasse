@@ -36,57 +36,62 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
     private static Logger log = CustomLogger.getLogger();
-    private final Address queue = new AddressBuilder()
-            .withNewMetadata()
-            .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-            .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-queue"))
-            .endMetadata()
-            .withNewSpec()
-            .withType("queue")
-            .withAddress("authz-queue")
-            .withPlan(getDefaultPlan(AddressType.QUEUE))
-            .endSpec()
-            .build();
 
-    private final Address topic =  new AddressBuilder()
-            .withNewMetadata()
-            .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-            .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-topic"))
-            .endMetadata()
-            .withNewSpec()
-            .withType("topic")
-            .withAddress("authz-topic")
-            .withPlan(getDefaultPlan(AddressType.TOPIC))
-            .endSpec()
-            .build();
-
-    private final Address anycast = new AddressBuilder()
-            .withNewMetadata()
-            .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-            .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-anycast"))
-            .endMetadata()
-            .withNewSpec()
-            .withType("anycast")
-            .withAddress("authz-anycast")
-            .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
-            .endSpec()
-            .build();
-
-    private final Address multicast = new AddressBuilder()
-            .withNewMetadata()
-            .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-            .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-multicast"))
-            .endMetadata()
-            .withNewSpec()
-            .withType("multicast")
-            .withAddress("authz-multicast")
-            .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
-            .endSpec()
-            .build();
-
+    private Address queue;
+    private Address topic;
+    private Address anycast;
+    private Address multicast;
     private List<Address> addresses;
 
     private void initAddresses() throws Exception {
+        queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("authz-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        topic =  new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-topic"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("authz-topic")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
+
+        anycast = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-anycast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("anycast")
+                .withAddress("authz-anycast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                .endSpec()
+                .build();
+
+        multicast = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-multicast"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("multicast")
+                .withAddress("authz-multicast")
+                .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                .endSpec()
+                .build();
+
         addresses = new ArrayList<>();
         addresses.add(queue);
         addresses.add(topic);
