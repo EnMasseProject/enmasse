@@ -3,9 +3,9 @@
 // assembly-monitoring.adoc
 
 [id='deploy-kube-state-metrics-{context}']
-= (Optional) the kube-state-metrics agent
+= (Optional) Deploying the kube-state-metrics agent
 
-The `kube-state-metrics` agent allows you to monitor {ProductName} pods.
+You can monitor {ProductName} pods using the `kube-state-metrics` agent.
 
 .Procedure
 
@@ -39,3 +39,4 @@ endif::[]
 ----
 {cmdcli} apply -f install/components/kube-state-metrics
 ----
+

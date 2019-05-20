@@ -3,14 +3,13 @@
 // assembly-monitoring.adoc
 
 [id='config-alerts-{context}']
+= Configuring alert notifications
 
-= Conguring alert notifications
-
-In order to configure alert notifications, such as emails, you must change the default configuration of Alertmanager.
+To configure alert notifications, such as emails, you must change the default configuration of Alertmanager.
 
 .Prerequisites
 
-* Create an Alertmanager configuration file following the link:https://prometheus.io/docs/alerting/configuration/[Alertmanager documentation^]. An example configuration for emails notifications is shown below:
+* Create an Alertmanager configuration file following the link:https://prometheus.io/docs/alerting/configuration/[Alertmanager documentation^]. An example configuration file for email notifications is shown:
 
 +
 [options="nowrap",subs="+quotes,attributes"]
@@ -47,7 +46,7 @@ data:
         equal: ['alertname']
 ----
 
-* Your Alertmanager configuration file must be called `alertmanager.yaml` in order for it to be read by the Prometheus Operator
+* Your Alertmanager configuration file must be named `alertmanager.yaml` so it can be read by the Prometheus Operator.
 
 .Procedure
 
@@ -64,3 +63,4 @@ data:
 ----
 {cmdcli} create secret generic alertmanager-application-monitoring --from-file=alertmanager.yaml
 ----
+
