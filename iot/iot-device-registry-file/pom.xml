@@ -18,7 +18,6 @@
     <dependency>
       <groupId>org.eclipse.hono</groupId>
       <artifactId>hono-service-device-registry</artifactId>
-      <version>${hono.version}</version>
     </dependency>
   </dependencies>
 
