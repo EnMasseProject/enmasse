@@ -5,7 +5,6 @@
 
 package io.enmasse.iot.registry.infinispan;
 
-import java.io.Serializable;
 import java.util.Objects;
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -17,7 +16,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  *  See {@link CacheCredentialService CacheCredentialService} class.
  */
 @ProtoDoc("@Indexed")
-public class CredentialsKey implements Serializable {
+public class CredentialsKey {
 
     private String tenantId;
     private String authId;
