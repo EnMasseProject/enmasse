@@ -104,12 +104,20 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectHttpAdapterQdrProxyState();
         }
-        credentialsClient.deleteAllCredentials(tenantId(), deviceId);
-        credentialsClient.getCredentials(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
-        registryClient.deleteDeviceRegistration(tenantId(), deviceId);
-        registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
-        businessApplicationClient.close();
-        adapterClient.close();
+        if (credentialsClient != null) {
+            credentialsClient.deleteAllCredentials(tenantId(), deviceId);
+            credentialsClient.getCredentials(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        }
+        if (registryClient != null) {
+            registryClient.deleteDeviceRegistration(tenantId(), deviceId);
+            registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        }
+        if (businessApplicationClient != null) {
+            businessApplicationClient.close();
+        }
+        if (adapterClient != null ) {
+            adapterClient.close();
+        }
         removeUser(getAddressSpace(), businessApplicationUsername);
     }
 
