@@ -6,4 +6,5 @@
 = Deploying monitoring using Ansible
 
 Monitoring can also be deployed during the {ProductName} 
-link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-using-ansible-messaging[installation using Ansible] and the required configuration settings.
+link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-using-ansible-messaging[installation using Ansible] using the required configuration settings.
+

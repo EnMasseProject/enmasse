@@ -3,13 +3,13 @@
 // assembly-monitoring.adoc
 
 [id='deploy-monitoring-bundle-{context}']
-= Deploying monitoring using a Yaml bundle
+= Deploying monitoring using a YAML bundle
 
 The simplest way to deploy monitoring is to use a predefined YAML bundle.
 
 .Prerequisites
 
-* The link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#deploy-monitoring-operator-messaging[Application Monitoring Operator^] or an operator managing the same resources should be installed.
+* The link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#deploy-monitoring-operator-messaging[Application Monitoring Operator^] or an operator managing the same resources must be installed.
 
 .Procedure
 
