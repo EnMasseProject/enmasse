@@ -26,6 +26,21 @@ import java.io.IOException;
 @Configuration
 public class InfinispanRegistryConfig extends ApplicationConfig {
 
+    @Bean
+    public RemoteCache<CredentialsKey, RegistryCredentialObject> getCredentialsCache() throws IOException {
+        return getCache();
+    }
+
+    @Bean
+    public RemoteCache<RegistrationKey, String> getRegistrationCache() throws IOException {
+        return getCache();
+    }
+
+    @Bean
+    public RemoteCache<String, RegistryTenantObject> getTenantCache() throws IOException {
+        return getCache();
+    }
+
     /**
      * Connects to an infinispan server and create a randomly named RemoteCache.
      * The constructor will use the hotrod-client.properties file that must be in the classpath.
@@ -33,8 +48,7 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
      * @throws IOException if the Protobuf spec file cannot be created.
      * @return an RemoteCacheManager bean.
      */
-    @Bean
-    public <K, V> RemoteCache<K,V> getCache() throws IOException {
+    protected <K, V> RemoteCache<K,V> getCache() throws IOException {
 
         final RemoteCacheManager remoteCacheManager = new RemoteCacheManager();
         final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(remoteCacheManager);
