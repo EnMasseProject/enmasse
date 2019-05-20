@@ -5,7 +5,6 @@
 
 package io.enmasse.iot.registry.infinispan;
 
-import java.io.Serializable;
 import java.util.Objects;
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -17,9 +16,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  *  See {@link CacheRegistrationService CacheRegistrationService} class.
  */
 @ProtoDoc("@Indexed")
-public class RegistrationKey implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class RegistrationKey {
 
     private String tenantId;
     private String deviceId;

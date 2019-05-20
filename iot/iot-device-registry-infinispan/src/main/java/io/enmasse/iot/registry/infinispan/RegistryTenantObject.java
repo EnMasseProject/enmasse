@@ -8,7 +8,6 @@ package io.enmasse.iot.registry.infinispan;
 import io.vertx.core.json.JsonObject;
 import org.eclipse.hono.util.TenantObject;
 
-import java.io.Serializable;
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
 
@@ -19,9 +18,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  *  See {@link CacheTenantService CacheTenantService} class.
  */
 @ProtoDoc("@Indexed")
-public class RegistryTenantObject implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class RegistryTenantObject {
 
     private String tenantId;
     private String trustedCa;
