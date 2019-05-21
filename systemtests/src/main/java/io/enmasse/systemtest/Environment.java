@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, EnMasse authors.
+ * Copyright 2016-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -25,6 +25,7 @@ public class Environment {
     public static final String domain = "KUBERNETES_DOMAIN";
     public static final String upgradeTemplatesEnv = "UPGRADE_TEMPLATES";
     public static final String downgradeTemplatesEnv = "DOWNGRADE_TEMPLATES";
+    public static final String skipCleanupEnv = "SKIP_CLEANUP";
 
     private final String token = System.getenv(tokenEnv);
     private final String url = System.getenv(urlEnv);
@@ -51,6 +52,7 @@ public class Environment {
         log.info(debugFormat, urlEnv, url);
         log.info(debugFormat, tokenEnv, token);
         log.info(debugFormat, enmasseVersionProp, enmasseVersion);
+        log.info(debugFormat, skipCleanupEnv, skipCleanup);
     }
 
     public static synchronized Environment getInstance() {
@@ -63,7 +65,7 @@ public class Environment {
     /**
      * Skip removing address-spaces
      */
-    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv("SKIP_CLEANUP"));
+    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv(skipCleanupEnv));
 
     /**
      * Store screenshots every time
