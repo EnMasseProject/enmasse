@@ -29,6 +29,7 @@ spec:
         deploymentConfig: infinispan-server
       name: infinispan-server
     spec:
+      serviceAccount: infinispan
       containers:
       - args:
         - cloud
@@ -78,3 +79,39 @@ spec:
             cpu: "0.5"
             memory: 512Mi
       terminationGracePeriodSeconds: 120
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: infinispan
+  labels:
+    app: enmasse
+    enmasse-component: iot
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: enmasse
+    enmasse-component: iot
+  name: iot.enmasse.io:infinispan
+rules:
+- apiGroups: [ "" ]
+  resources: [ "pods" ]
+  verbs: [ "get", "list", "watch" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: infinispan
+  labels:
+    app: enmasse
+    enmasse-component: iot
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: iot.enmasse.io:infinispan
+subjects:
+- kind: ServiceAccount
+  name: infinispan
+  namespace: ${NAMESPACE}
