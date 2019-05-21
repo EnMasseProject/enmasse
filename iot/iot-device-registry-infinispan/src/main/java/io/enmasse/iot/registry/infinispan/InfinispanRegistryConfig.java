@@ -7,6 +7,8 @@ package io.enmasse.iot.registry.infinispan;
 
 import java.util.UUID;
 import org.eclipse.hono.deviceregistry.ApplicationConfig;
+import org.eclipse.hono.service.tenant.TenantAmqpEndpoint;
+import org.eclipse.hono.service.tenant.TenantHttpEndpoint;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.marshall.ProtoStreamMarshaller;
@@ -14,10 +16,13 @@ import org.infinispan.configuration.cache.ConfigurationBuilder;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.annotations.ProtoSchemaBuilder;
 import org.infinispan.query.remote.client.ProtobufMetadataManagerConstants;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import org.springframework.context.annotation.Scope;
 
 /**
  * Spring Boot configuration for the Device Registry application.
@@ -69,5 +74,31 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
 
         final String cacheName = UUID.randomUUID().toString();
         return remoteCacheManager.administration().createCache(cacheName, new ConfigurationBuilder().build());
+    }
+
+    /**
+     * Creates a new instance of an AMQP 1.0 protocol handler for Hono's <em>Tenant</em> API.
+     *
+     * @return The handler.
+     */
+    @Bean
+    @Override
+    @Scope("prototype")
+    @ConditionalOnBean(name="CacheTenantService")
+    public TenantAmqpEndpoint tenantAmqpEndpoint() {
+        return new TenantAmqpEndpoint(vertx());
+    }
+
+    /**
+     * Creates a new instance of an HTTP protocol handler for Hono's <em>Tenant</em> API.
+     *
+     * @return The handler.
+     */
+    @Bean
+    @Override
+    @Scope("prototype")
+    @ConditionalOnBean(name="CacheTenantService")
+    public TenantHttpEndpoint tenantHttpEndpoint() {
+        return new TenantHttpEndpoint(vertx());
     }
 }
