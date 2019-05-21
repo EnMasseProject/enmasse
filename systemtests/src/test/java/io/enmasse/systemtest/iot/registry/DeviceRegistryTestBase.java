@@ -12,6 +12,7 @@ import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.HttpURLConnection;
 import java.time.Instant;
@@ -52,6 +53,16 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     private DeviceRegistryClient client;
 
     protected abstract IoTConfig provideIoTConfig() throws Exception;
+
+    /**
+     * Test if the enabled flag is set to "enabled".
+     * <br>
+     * The flag is considered "enabled", in case the value is "true" or missing.
+     * @param obj The object to test.
+     */
+    private static void assertDefaultEnabled(final JsonObject obj) {
+        assertTrue(obj.getBoolean("enabled", true));
+    }
 
     protected void removeIoTConfig() throws Exception {
         log.info("Shared IoTConfig will be removed");
@@ -126,7 +137,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         JsonObject result = client.getDeviceRegistration(tenantId(), randomDeviceId);
         assertEquals(randomDeviceId, result.getString("device-id"));
         assertNotNull(result.getJsonObject("data"));
-        assertEquals(true, result.getJsonObject("data").getBoolean("enabled"));
+        assertDefaultEnabled(result.getJsonObject("data"));
 
         client.deleteDeviceRegistration(tenantId(), randomDeviceId);
         client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
@@ -143,6 +154,8 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         JsonObject result = client.getDeviceRegistration(tenantId(), randomDeviceId);
         assertEquals(randomDeviceId, result.getString("device-id"));
         assertNotNull(result.getJsonObject("data"));
+
+        // as we set it explicitly, we expect the explicit value of "false"
         assertEquals(false, result.getJsonObject("data").getBoolean("enabled"));
 
         client.deleteDeviceRegistration(tenantId(), randomDeviceId);
@@ -170,7 +183,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             assertNotNull(credential);
             assertEquals(randomDeviceId, credential.getString("device-id"));
             assertEquals(authId, credential.getString("auth-id"));
-            assertEquals(true, credential.getBoolean("enabled"));
+            assertDefaultEnabled(credential);
             //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
 
             checkCredentials(authId, password, false);
@@ -210,7 +223,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             assertNotNull(credential);
             assertEquals(randomDeviceId, credential.getString("device-id"));
             assertEquals(authId, credential.getString("auth-id"));
-            assertEquals(true, credential.getBoolean("enabled"));
+            assertDefaultEnabled(credential);
             JsonArray secrets = credential.getJsonArray("secrets");
             assertNotNull(secrets);
             assertEquals(1, secrets.size());
