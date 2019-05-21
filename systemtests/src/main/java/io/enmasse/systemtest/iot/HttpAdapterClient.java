@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.iot.MessageType.EVENT;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.time.Duration.ofSeconds;
 
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.apiclients.ApiClient;
+import io.enmasse.systemtest.apiclients.Predicates;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -121,6 +123,19 @@ public class HttpAdapterClient extends ApiClient {
         // the next line gives the timeout a bit extra, as the HTTP timeout should
         // kick in, we would prefer the timeout via the future.
         return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
+    }
+
+    public boolean sendDefault(MessageType type, JsonObject payload) {
+        try {
+            send(type, payload, Predicates.is(HTTP_ACCEPTED));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public HttpResponse<?> send(MessageType type, JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
+        return send(type, payload, expectedCodePredicate, null, ofSeconds(15));
     }
 
     public HttpResponse<?> sendTelemetry(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {

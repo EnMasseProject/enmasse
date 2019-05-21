@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(sharedIot)
 public class MqttAdapterTest extends IoTTestBaseWithShared {
@@ -208,7 +209,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             return true;
         });
 
-        latch.await(30, TimeUnit.SECONDS);
+        assertTrue(latch.await(30, TimeUnit.SECONDS));
         log.info("Event successfully consumed");
     }
 

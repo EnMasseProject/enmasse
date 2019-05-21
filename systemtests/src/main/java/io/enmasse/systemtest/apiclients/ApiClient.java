@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import javax.ws.rs.core.HttpHeaders;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
@@ -13,22 +12,18 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.ext.web.codec.BodyCodec;
 import org.slf4j.Logger;
 
 import java.net.HttpURLConnection;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public abstract class ApiClient implements AutoCloseable {

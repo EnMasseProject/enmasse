@@ -8,7 +8,11 @@ package io.enmasse.systemtest.amqp;
 import io.enmasse.systemtest.Count;
 import io.enmasse.systemtest.VertxFactory;
 import io.vertx.core.Vertx;
+
 import io.vertx.proton.ProtonConnection;
+
+import io.vertx.core.impl.ConcurrentHashSet;
+
 import io.vertx.proton.ProtonDelivery;
 
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -16,8 +20,8 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +31,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AmqpClient implements AutoCloseable {
-    private final List<Vertx> clients = new ArrayList<>();
+    private final Collection<Vertx> clients = new ConcurrentHashSet<>();
+
     private AmqpConnectOptions options;
 
     public AmqpClient(AmqpConnectOptions options) {
@@ -67,6 +72,10 @@ public class AmqpClient implements AutoCloseable {
         return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty()).getResult();
     }
 
+    public ReceiverStatus recvMessagesWithStatus(String address, Predicate<Message> done) {
+        return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty());
+    }
+
     public Future<List<Message>> recvMessages(Source source, String linkName, Predicate<Message> done) {
         return recvMessages(source, done, Optional.of(linkName)).getResult();
     }
@@ -94,6 +103,12 @@ public class AmqpClient implements AutoCloseable {
             @Override
             public int getNumReceived() {
                 return receiver.getNumReceived();
+            }
+
+            @Override
+            public void close () {
+                clients.remove(vertx);
+                vertx.close();
             }
         };
     }
