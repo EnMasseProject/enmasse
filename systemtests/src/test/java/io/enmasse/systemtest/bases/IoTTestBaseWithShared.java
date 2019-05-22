@@ -141,15 +141,4 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         return sharedProject;
     }
 
-    /**
-     * Get the Hono tenant name from the project configuration.
-     */
-    protected String tenantId() {
-        var project = getSharedIoTProject();
-        if (project == null) {
-            return null;
-        }
-        return tenantId(project);
-    }
-
 }

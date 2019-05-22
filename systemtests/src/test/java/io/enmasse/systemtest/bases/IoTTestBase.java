@@ -166,4 +166,12 @@ public abstract class IoTTestBase extends TestBase {
         return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
+    protected String tenantId() {
+        var project = getSharedIoTProject();
+        if (project == null) {
+            return null;
+        }
+        return tenantId(project);
+    }
+
 }
