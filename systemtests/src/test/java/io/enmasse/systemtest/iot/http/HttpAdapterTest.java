@@ -198,8 +198,8 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .execute();
     }
 
-    private boolean send(final MessageSendTester.Type type, final JsonObject payload) throws Exception {
-        return adapterClient.sendDefault(type.type(), payload);
+    private boolean send(final MessageSendTester.Type type, final JsonObject payload, final Duration timeout) throws Exception {
+        return adapterClient.sendDefault(type.type(), payload, timeout);
     }
 
 }

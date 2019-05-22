@@ -125,13 +125,17 @@ public class HttpAdapterClient extends ApiClient {
         return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
     }
 
-    public boolean sendDefault(MessageType type, JsonObject payload) {
+    public boolean sendDefault(MessageType type, JsonObject payload, Duration timeout) {
         try {
-            send(type, payload, Predicates.is(HTTP_ACCEPTED));
+            send(type, payload, Predicates.is(HTTP_ACCEPTED), timeout);
             return true;
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public HttpResponse<?> send(MessageType type, JsonObject payload, Predicate<Integer> expectedCodePredicate, Duration timeout) throws Exception {
+        return send(type, payload, expectedCodePredicate, null, timeout);
     }
 
     public HttpResponse<?> send(MessageType type, JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
@@ -139,11 +143,11 @@ public class HttpAdapterClient extends ApiClient {
     }
 
     public HttpResponse<?> sendTelemetry(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(TELEMETRY, payload, expectedCodePredicate, null, ofSeconds(15));
+        return send(TELEMETRY, payload, expectedCodePredicate);
     }
 
     public HttpResponse<?> sendEvent(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(EVENT, payload, expectedCodePredicate, null, ofSeconds(15));
+        return send(EVENT, payload, expectedCodePredicate);
     }
 
     private String getBasicAuth(final String user, final String password) {

@@ -10,18 +10,17 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
-import org.apache.qpid.proton.amqp.Binary;
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -30,21 +29,19 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.net.HttpURLConnection;
+import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static io.enmasse.systemtest.TestTag.sharedIot;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Testing MQTT message transmission.
+ * <br>
+ * <strong>Note:</strong> we do not test single telemetry with QoS 0 here, as we don't receive any feedback if the message
+ * was accepted or not. So we couldn't re-try and could only assume that a message loss of 100% would be acceptable,
+ * which doesn't test much. For bigger batch sizes we can test with an acceptable message loss rate of e.g. 10%.
+ */
 @Tag(sharedIot)
 public class MqttAdapterTest extends IoTTestBaseWithShared {
 
@@ -54,7 +51,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
     private Endpoint deviceRegistryEndpoint;
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
-    private IMqttClient adapterClient;
+    private IMqttAsyncClient adapterClient;
     private AmqpClient businessApplicationClient;
 
     private final String deviceId = UUID.randomUUID().toString();
@@ -83,12 +80,14 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);
+        // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
+        mqttOptions.setMaxInflight(16*1024);
         adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
                 .build()
                 .clientId(deviceId)
                 .endpoint(mqttAdapterEndpoint)
                 .mqttConnectionOptions(mqttOptions)
-                .create();
+                .createAsync();
 
         TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {
             try {
@@ -145,153 +144,132 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         removeUser(getAddressSpace(), businessApplicationUsername);
     }
 
+    /**
+     * Single telemetry message with attached consumer. QoS 1.
+     * <br>
+     * Sending with QoS 1 is ok.
+     */
     @Test
-    public void basicTelemetryTest() throws Exception {
-        consumeOneMessageTest(IOT_ADDRESS_TELEMETRY, businessApplicationClient, tenantId(), adapterClient);
+    public void testTelemetrySingleQos1() throws Exception {
+        new MessageSendTester()
+                .type(MessageSendTester.Type.TELEMETRY)
+                .delay(Duration.ofSeconds(1))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .sender(this::sendQos1)
+                .amount(1)
+                .consume(MessageSendTester.Consume.BEFORE)
+                .execute();
     }
 
+    /**
+     * Single event message with non-attached consumer.
+     * <br>
+     * This is the normal use case.
+     */
     @Test
-    @Disabled
-    public void batchTelemetryTest() throws Exception {
-        simpleMqttTelemetryTest(businessApplicationClient, tenantId(), adapterClient);
+    public void testEventSingle() throws Exception {
+        new MessageSendTester()
+                .type(MessageSendTester.Type.EVENT)
+                .delay(Duration.ofSeconds(1))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .sender(this::sendQos1)
+                .amount(1)
+                .consume(MessageSendTester.Consume.AFTER)
+                .execute();
     }
 
-    public static void simpleMqttTelemetryTest(AmqpClient amqpClient, String tenantId, IMqttClient mqttClient) throws Exception {
-        int messagesToSend = 50;
+    /**
+     * Batch of telemetry messages with attached consumer. QoS 0.
+     * <br>
+     * Batched version of the normal use case. We do accept message loss of 10% here.
+     */
+    @Test
+    public void testTelemetryBatch50Qos0() throws Exception {
+        new MessageSendTester()
+                .type(MessageSendTester.Type.TELEMETRY)
+                .delay(Duration.ofSeconds(1))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .sender(this::sendQos0)
+                .amount(50)
+                .consume(MessageSendTester.Consume.BEFORE)
+                .acceptableMessageLoss(5) // allow for 10%
+                .execute();
+    }
 
-        log.info("Connecting amqp consumer");
-        AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
-        Future<List<Message>> futureReceivedMessages = setUpMessagingConsumer(amqpClient, IOT_ADDRESS_TELEMETRY, tenantId, receivedMessagesCounter, messagesToSend);
+    /**
+     * Batch of telemetry messages with attached consumer. QoS 1.
+     * <br>
+     * Compared to QoS 0, we do not accept message loss here.
+     */
+    @Test
+    public void testTelemetryBatch50Qos1() throws Exception {
+        new MessageSendTester()
+                .type(MessageSendTester.Type.TELEMETRY)
+                .delay(Duration.ofSeconds(1))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .sender(this::sendQos1)
+                .amount(50)
+                .consume(MessageSendTester.Consume.BEFORE)
+                .execute();
+    }
 
-        log.info("doing first telemetry attemp");
-        consumeOneMessageTest(IOT_ADDRESS_TELEMETRY, amqpClient, tenantId, mqttClient);
+    /**
+     * Batch of event messages with non-attached consumer.
+     * <br>
+     * This sends messages without an attached consumer. The broker is expected
+     * to take care of that. Still we expect to receive the messages later.
+     */
+    @Test
+    public void testEventBatch5After() throws Exception {
+        new MessageSendTester()
+                .type(MessageSendTester.Type.EVENT)
+                .delay(Duration.ofMillis(100))
+                .additionalSendTimeout(Duration.ofSeconds(2))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .sender(this::sendQos1)
+                .amount(5)
+                .consume(MessageSendTester.Consume.AFTER)
+                .execute();
+    }
 
-        log.info("Sending telemetry messages");
-        for (int i = 0; i < messagesToSend; i++) {
-            JsonObject json = new JsonObject();
-            json.put("i", i);
-            MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
-            message.setQos(0);
-            mqttClient.publish(IOT_ADDRESS_TELEMETRY, message);
-        }
+    /**
+     * Batch of event messages with attached consumer.
+     * <br>
+     * This is the normal use case.
+     */
+    @Test
+    public void testEventBatch5Before() throws Exception {
+        new MessageSendTester()
+                .type(MessageSendTester.Type.EVENT)
+                .delay(Duration.ofSeconds(1))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .sender(this::sendQos1)
+                .amount(5)
+                .consume(MessageSendTester.Consume.BEFORE)
+                .execute();
+    }
 
+    private boolean sendQos0(MessageSendTester.Type type, JsonObject json, Duration timeout) {
+        return send(0, type, json, timeout);
+    }
+
+    private boolean sendQos1(MessageSendTester.Type type, JsonObject json, Duration timeout) {
+        return send(1, type, json, timeout);
+    }
+
+    private boolean send(int qos, final MessageSendTester.Type type, final JsonObject json, final Duration timeout) {
+        final MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
+        message.setQos(qos);
         try {
-            log.info("Waiting to receive telemetry data in business application");
-            futureReceivedMessages.get(120, TimeUnit.SECONDS);
-            assertEquals(messagesToSend, receivedMessagesCounter.get());
-            log.info("Telemetry successfully consumed");
-        } catch (TimeoutException e) {
-            log.error("Timeout receiving telemetry, messages received: {} error:", receivedMessagesCounter.get(), e);
-            throw e;
-        }
-    }
-
-    @Test
-    public void basicEventTest1() throws Exception {
-        consumeOneEventMessageTest(businessApplicationClient, tenantId(), adapterClient);
-    }
-
-    private static void consumeOneEventMessageTest(AmqpClient amqpClient, String tenantId, IMqttClient mqttClient) throws Exception {
-        int messagesToSend = 5;
-        log.info("Sending events");
-        for (int i = 0; i < messagesToSend; i++) {
-            JsonObject json = new JsonObject();
-            json.put("i", i);
-            MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
-            message.setQos(0);
-            mqttClient.publish(IOT_ADDRESS_EVENT, message);
-        }
-
-        log.info("Consuming one event in business application");
-        CountDownLatch latch = new CountDownLatch(1);
-        amqpClient.recvMessages(IOT_ADDRESS_EVENT + "/" + tenantId, msg -> {
-            latch.countDown();
-            return true;
-        });
-
-        assertTrue(latch.await(30, TimeUnit.SECONDS));
-        log.info("Event successfully consumed");
-    }
-
-    @Test
-    @Disabled
-    public void basicEventTest2() throws Exception {
-        consumeOneMessageTest(IOT_ADDRESS_EVENT, businessApplicationClient, tenantId(), adapterClient);
-    }
-
-    @Test
-    @Disabled
-    public void batchEventTest() throws Exception {
-        simpleMqttEventTest(businessApplicationClient, tenantId(), adapterClient);
-    }
-
-    public static void simpleMqttEventTest(AmqpClient amqpClient, String tenantId, IMqttClient mqttClient) throws Exception{
-
-        log.info("doing first event attemp");
-        consumeOneEventMessageTest(amqpClient, tenantId, mqttClient);
-
-        int eventsToSend = 5;
-        log.info("Sending events");
-        for (int i = 0; i < eventsToSend; i++) {
-            JsonObject json = new JsonObject();
-            json.put("i", i);
-            MqttMessage message = new MqttMessage(json.toBuffer().getBytes());
-            message.setQos(0);
-            mqttClient.publish(IOT_ADDRESS_EVENT, message);
-        }
-
-        log.info("Consuming events in business application");
-        AtomicInteger receivedMessagesCounter = new AtomicInteger(0);
-        Future<List<Message>> status = setUpMessagingConsumer(amqpClient, IOT_ADDRESS_EVENT, tenantId, receivedMessagesCounter, eventsToSend);
-
-        try {
-            log.info("Waiting to receive events");
-            status.get(60, TimeUnit.SECONDS);
-            assertEquals(eventsToSend, receivedMessagesCounter.get());
-            log.info("Events successfully consumed");
-        } catch (TimeoutException e) {
-            log.error("Timeout receiving events, messages received: {} error:", receivedMessagesCounter.get(), e);
-            throw e;
-        }
-
-    }
-
-    private static Future<List<Message>> setUpMessagingConsumer(AmqpClient amqpClient, String type, String tenantId, AtomicInteger receivedMessagesCounter, int expectedMessages) {
-        return amqpClient.recvMessages(type + "/" + tenantId, msg ->{
-            if(msg.getBody() instanceof Data) {
-                Binary value = ((Data) msg.getBody()).getValue();
-                JsonObject json = new JsonObject(Buffer.buffer(value.getArray()));
-                if (json.containsKey("i")) {
-                    return receivedMessagesCounter.incrementAndGet() == expectedMessages;
-                }
+            final IMqttDeliveryToken token = adapterClient.publish(type.type().address(), message);
+            if (qos <= 0) {
+                return true; // we know nothing with QoS 0
             }
+            token.waitForCompletion(timeout.toMillis());
+        } catch (Exception e) {
             return false;
-        });
-    }
-
-    private static void consumeOneMessageTest(String address, AmqpClient amqpClient, String tenantId, IMqttClient mqttClient) throws Exception {
-        AtomicBoolean success = new AtomicBoolean(false);
-        var timeout = new TimeoutBudget(2, TimeUnit.MINUTES);
-        amqpClient.recvMessages(address + "/" + tenantId, msg -> {
-            log.info("First {} message accepted", address);
-            success.set(true);
-            timeout.reset(0, TimeUnit.MILLISECONDS);
-            return true;
-        });
-
-        var warmUpMessage = new JsonObject(Map.of("a", "b"));
-        while (!timeout.timeoutExpired()) {
-            MqttMessage message = new MqttMessage(warmUpMessage.toBuffer().getBytes());
-            message.setQos(0);
-            log.info("Sending {} data", address);
-            mqttClient.publish(address, message);
-            Thread.sleep(5000);
         }
-        if(!success.get()) {
-            String errorMsg = String.format("Failed waiting for first accepted %s message", address);
-            log.error(errorMsg);
-            Assertions.fail(errorMsg);
-        }
+        return true;
     }
 
 }

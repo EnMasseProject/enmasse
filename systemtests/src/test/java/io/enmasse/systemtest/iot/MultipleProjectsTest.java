@@ -134,7 +134,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
                     .type(MessageSendTester.Type.TELEMETRY)
                     .delay(Duration.ofSeconds(1))
                     .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), tenantId(ctx.getProject())))
-                    .sender((type, payload) -> ctx.getHttpAdapterClient().sendDefault(type.type(), payload))
+                    .sender((type, payload, timeout) -> ctx.getHttpAdapterClient().sendDefault(type.type(), payload, timeout))
                     .amount(50)
                     .consume(MessageSendTester.Consume.BEFORE)
                     .execute();
@@ -143,7 +143,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ofMillis(100))
                     .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), tenantId(ctx.getProject())))
-                    .sender((type, payload) -> ctx.getHttpAdapterClient().sendDefault(type.type(), payload))
+                    .sender((type, payload, timeout) -> ctx.getHttpAdapterClient().sendDefault(type.type(), payload, timeout))
                     .amount(5)
                     .consume(MessageSendTester.Consume.AFTER)
                     .execute();

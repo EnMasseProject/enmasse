@@ -5,7 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Duration;
 import java.util.LinkedList;
@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.message.Message;
+import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import io.enmasse.systemtest.CustomLogger;
@@ -25,6 +26,14 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 
+/**
+ * Run a message send test.
+ * <br>
+ * This is an generic message send tester, which is configured with the send and receive parameters,
+ * timeouts, and the actual sender and consumer instances. When everything is set up, the
+ * {@link #execute()} methods executes the test. This method may be called multiple times. However
+ * it will throws {@link AssertionFailedError}s in case of assertion failures.
+ */
 public class MessageSendTester {
 
     private static final Logger log = CustomLogger.getLogger();
@@ -54,10 +63,11 @@ public class MessageSendTester {
          *
          * @param type the type to send.
          * @param payload the payload to send, may be {@code null}.
+         * @param sendTimeout timeout for the send operation.
          * @return {@code true} if the message was accepted, {@code false} otherwise.
          * @throws Exception In case anything went wrong.
          */
-        public boolean send(Type type, JsonObject payload) throws Exception;
+        public boolean send(Type type, JsonObject payload, Duration sendTimeout) throws Exception;
     }
 
     @FunctionalInterface
@@ -99,60 +109,142 @@ public class MessageSendTester {
     private Duration defaultReceiveSlot = Duration.ofMillis(100);
     private Duration receiveTimeout;
 
+    private int acceptableMessageLoss = 0;
+
     private Sender sender;
     private ConsumerFactory consumerFactory;
 
+    /**
+     * Set the type to send.
+     */
     public MessageSendTester type(final Type type) {
         this.type = type;
         return this;
     }
 
+    /**
+     * Set the repeat factor accepted for messages.
+     */
     public MessageSendTester sendRepeatFactor(final double sendRepeatFactor) {
         this.sendRepeatFactor = sendRepeatFactor;
         return this;
     }
 
+    /**
+     * Add an additional send timeout. This is added on top of the calculated send timeout.
+     */
     public MessageSendTester additionalSendTimeout(final Duration additionalSendTimeout) {
         this.additionalSendTimeout = additionalSendTimeout;
         return this;
     }
 
+    /**
+     * Set the default time slot considered for receiving a single message. Used to calculate the
+     * "receive timeout".
+     */
+    public MessageSendTester defaultReceiveSlot(final Duration defaultReceiveSlot) {
+        this.defaultReceiveSlot = defaultReceiveSlot;
+        return this;
+    }
+
+    /**
+     * Set the number of messages to send.
+     */
     public MessageSendTester amount(final int amount) {
         this.amount = amount;
         return this;
     }
 
+    /**
+     * Set when to start the message consumer.
+     */
     public MessageSendTester consume(final Consume consume) {
         this.consume = consume;
         return this;
     }
 
+    /**
+     * The actual message sender.
+     */
     public MessageSendTester sender(final Sender sender) {
         this.sender = sender;
         return this;
     }
 
+    /**
+     * The delay between sending messages.
+     */
     public MessageSendTester delay(final Duration delay) {
         this.delay = delay;
         return this;
     }
 
+    /**
+     * The overall receive timeout. Overriding the automatically calculated one.
+     */
     public MessageSendTester receiveTimeout(final Duration receiveTimeout) {
         this.receiveTimeout = receiveTimeout;
         return this;
     }
 
+    /**
+     * The factory to create message consumers.
+     */
     public MessageSendTester consumerFactory(final ConsumerFactory consumerFactory) {
         this.consumerFactory = consumerFactory;
         return this;
     }
 
+    /**
+     * Set the number of messages accepted to be lost.
+     */
+    public MessageSendTester acceptableMessageLoss(final int acceptableMessageLoss) {
+        this.acceptableMessageLoss = acceptableMessageLoss;
+        return this;
+    }
+
+    /**
+     * Execute the test.
+     * <br>
+     * This must not change the state of this instance. This method may be called multiple times.
+     */
     public void execute() throws Exception {
         try (Executor executor = new Executor()) {
             executor.execute();
         }
     }
 
+    /**
+     * Calculate the receive timeout.
+     * <br>
+     * If an explicit receive timeout was set using {@link #receiveTimeout(Duration)}, then this value
+     * will be used.
+     * Otherwise, the receive timeout is the {@link #defaultReceiveSlot} times the {@link #amount} of
+     * messages.
+     *
+     * @return The receive timeout.
+     */
+    private Duration calcReceiveTimeout() {
+        if (this.receiveTimeout != null) {
+            return this.receiveTimeout;
+        }
+        return this.defaultReceiveSlot.multipliedBy(this.amount);
+    }
+
+    /**
+     * Calculate the send timeout.
+     * <br>
+     * This is calculated by: {@link #amount} times {@link #sendRepeatFactor} times {@link #delay} plus
+     * {@link #additionalSendTimeout}.
+     */
+    private Duration calcSendTimeout() {
+        var sendDuration = Duration.ofMillis((long) (this.delay.toMillis() * this.amount * this.sendRepeatFactor));
+        return sendDuration.plus(MessageSendTester.this.additionalSendTimeout);
+    }
+
+    /**
+     * A received message.
+     */
     public static class ReceivedMessage {
 
         private Message message;
@@ -205,8 +297,7 @@ public class MessageSendTester {
             }
 
             // duration = amount * delay * factor
-            var sendDuration = Duration.ofMillis((long) (delay * amount * MessageSendTester.this.sendRepeatFactor));
-            sendDuration = sendDuration.plus(MessageSendTester.this.additionalSendTimeout);
+            var sendDuration = calcSendTimeout();
             log.info("Sending messages - total timeout: {}", sendDuration);
             var sendTimeout = TimeoutBudget.ofDuration(sendDuration);
 
@@ -221,13 +312,15 @@ public class MessageSendTester {
                 var payload = new JsonObject();
                 payload.put("test-id", this.testId);
                 payload.put("index", i);
-                if (MessageSendTester.this.sender.send(MessageSendTester.this.type, payload)) {
+                if (MessageSendTester.this.sender.send(MessageSendTester.this.type, payload, Duration.ofSeconds(1))) {
                     i++;
                 }
 
                 Thread.sleep(delay);
 
             }
+
+            log.info("Done sending messages");
 
             // setup consumer (after)
             if (Consume.AFTER == MessageSendTester.this.consume) {
@@ -238,7 +331,7 @@ public class MessageSendTester {
             final Duration receiveTimeout = calcReceiveTimeout();
             log.info("Receive timeout: {}", receiveTimeout);
             var receiveBudget = TimeoutBudget.ofDuration(receiveTimeout);
-            while (!isConsumerReady()) {
+            while (!isConsumerReady(receiveBudget)) {
                 if (receiveBudget.timeoutExpired()) {
                     throw new TimeoutException("Failed to execute message send test due to receive timeout.");
                 }
@@ -252,19 +345,32 @@ public class MessageSendTester {
             assertResult();
         }
 
-        private Duration calcReceiveTimeout() {
-            if ( MessageSendTester.this.receiveTimeout != null ) {
-                return MessageSendTester.this.receiveTimeout;
-            }
-            return MessageSendTester.this.defaultReceiveSlot.multipliedBy(MessageSendTester.this.amount);
-        }
+        private boolean isConsumerReady(final TimeoutBudget receiveBudget) {
 
-        private boolean isConsumerReady() {
-            return this.receivedMessages.size() >= MessageSendTester.this.amount;
+            final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
+
+            if ( missing <= 0 ) {
+                // we received all messages we expected - success
+                return true;
+            }
+
+            if (receiveBudget.timeoutExpired() && missing <= MessageSendTester.this.acceptableMessageLoss) {
+                // we are still waiting for all messages, but the timeout expired and we are in the acceptable loss range - success
+                return true;
+            }
+
+            // need to wait longer
+            return false;
+
         }
 
         private void assertResult() {
-            assertEquals(MessageSendTester.this.amount, this.receivedMessages.size());
+            final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
+            if(missing > MessageSendTester.this.acceptableMessageLoss) {
+                fail(String.format("Unacceptable loss of messages - expected: %s, received: %s, acceptedLoss: %s, actualLoss: %s",
+                        MessageSendTester.this.amount, this.receivedMessages.size(),
+                        MessageSendTester.this.acceptableMessageLoss, missing));
+            }
         }
 
         private void startConsumer() {
