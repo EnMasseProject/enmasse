@@ -42,7 +42,7 @@ import io.vertx.core.json.JsonObject;
 @Tag(smoke)
 public abstract class DeviceRegistryTestBase extends IoTTestBase {
 
-    protected Logger log = CustomLogger.getLogger();
+    private Logger log = CustomLogger.getLogger();
 
     private String randomDeviceId;
     private IoTConfig iotConfig;
