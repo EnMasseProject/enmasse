@@ -6,7 +6,7 @@ spec:
   services:
     deviceRegistry:
       infinispan:
-        infinispanServerAddress: example-infinispan:11222
+        infinispanServerAddress: infinispan-server-hotrod:11222
   adapters:
     mqtt:
       endpoint:
