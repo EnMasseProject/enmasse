@@ -48,7 +48,6 @@ public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase{
     @Override
     protected void removeIoTConfig() throws Exception {
         super.removeIoTConfig();
-        log.info("Infinispan server will be removed");
         SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
     }
 
