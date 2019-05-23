@@ -12,13 +12,11 @@ spec:
     rules:
 
     - record: address_spaces_ready_total
-      expr: sum(address_space_status_ready) by (service,namespace)
+      expr: sum(address_space_status_ready) by (service,exported_namespace)
     - record: address_spaces_not_ready_total
-      expr: sum(address_space_status_not_ready) by (service,namespace)
-
+      expr: sum(address_space_status_not_ready) by (service,exported_namespace)
     - record: component_health
       expr: up{job="address-space-controller"} or on(namespace) (1- absent(up{job="address-space-controller"}) )
-
     - record: component_health
       expr: up{job="api-server"} or on(namespace) (1- absent(up{job="api-server"}) )
 
