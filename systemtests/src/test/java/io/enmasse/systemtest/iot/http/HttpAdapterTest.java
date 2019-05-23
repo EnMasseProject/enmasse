@@ -19,7 +19,6 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -118,7 +117,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
                 .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
-                .sender(this::send)
+                .sender(adapterClient::send)
                 .amount(1)
                 .consume(MessageSendTester.Consume.BEFORE)
                 .execute();
@@ -136,7 +135,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
                 .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
-                .sender(this::send)
+                .sender(adapterClient::send)
                 .amount(1)
                 .consume(MessageSendTester.Consume.AFTER)
                 .execute();
@@ -153,7 +152,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
                 .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
-                .sender(this::send)
+                .sender(adapterClient::send)
                 .amount(50)
                 .consume(MessageSendTester.Consume.BEFORE)
                 .execute();
@@ -173,7 +172,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .delay(Duration.ofMillis(100))
                 .additionalSendTimeout(Duration.ofSeconds(2))
                 .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
-                .sender(this::send)
+                .sender(adapterClient::send)
                 .amount(5)
                 .consume(MessageSendTester.Consume.AFTER)
                 .execute();
@@ -192,14 +191,10 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .delay(Duration.ZERO)
                 .additionalSendTimeout(Duration.ofSeconds(2))
                 .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
-                .sender(this::send)
+                .sender(adapterClient::send)
                 .amount(5)
                 .consume(MessageSendTester.Consume.BEFORE)
                 .execute();
-    }
-
-    private boolean send(final MessageSendTester.Type type, final JsonObject payload, final Duration timeout) throws Exception {
-        return adapterClient.sendDefault(type.type(), payload, timeout);
     }
 
 }

@@ -6,10 +6,6 @@ package io.enmasse.systemtest.iot.registry;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
-import static io.enmasse.systemtest.apiclients.Predicates.in;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
-import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,17 +29,20 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 @Tag(sharedIot)
 @Tag(smoke)
-public abstract class DeviceRegistryTestBase extends IoTTestBase {
+public abstract class DeviceRegistryTestBase extends IoTTestBaseWithShared {
 
     private Logger log = CustomLogger.getLogger();
 
@@ -309,15 +308,23 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     }
 
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {
+
         try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantId(), password)) {
-            JsonObject payload = new JsonObject(Map.of("data", "dummy"));
 
-            var expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE, HTTP_ACCEPTED);
-            log.info("Sending event data expected response: {}", expectedResponse);
-            httpAdapterClient.sendEvent(payload, expectedResponse );
+            new MessageSendTester()
+                .type(Type.TELEMETRY)
+                .amount(1)
+                .consumerFactory(ConsumerFactory.of(iotAmqpClient, tenantId()))
+                .sender(httpAdapterClient::send)
+                .execute();
 
-            log.info("Sending telemetry data expected response: {}", expectedResponse);
-            httpAdapterClient.sendTelemetry(payload, expectedResponse);
+            new MessageSendTester()
+                .type(Type.EVENT)
+                .amount(1)
+                .consumerFactory(ConsumerFactory.of(iotAmqpClient, tenantId()))
+                .sender(httpAdapterClient::send)
+                .execute();
+
         }
     }
 

@@ -28,6 +28,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.apiclients.Predicates;
+import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -125,7 +126,14 @@ public class HttpAdapterClient extends ApiClient {
         return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
     }
 
-    public boolean sendDefault(MessageType type, JsonObject payload, Duration timeout) {
+    /**
+     * Send method suitable for using as {@link Sender}.
+     */
+    public boolean send(MessageSendTester.Type type, JsonObject payload, Duration timeout) {
+        return sendDefault(type.type(), payload, timeout);
+    }
+
+    private boolean sendDefault(MessageType type, JsonObject payload, Duration timeout) {
         try {
             send(type, payload, Predicates.is(HTTP_ACCEPTED), timeout);
             return true;
