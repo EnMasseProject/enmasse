@@ -127,7 +127,7 @@ spec:
               "dateFormat": "YYYY-MM-DD HH:mm:ss",
               "decimals": 2,
               "mappingType": 1,
-              "pattern": "namespace",
+              "pattern": "exported_namespace",
               "thresholds": [],
               "type": "number",
               "unit": "short"
@@ -304,7 +304,7 @@ spec:
               "dateFormat": "YYYY-MM-DD HH:mm:ss",
               "decimals": 2,
               "mappingType": 1,
-              "pattern": "kubernetes_pod_name",
+              "pattern": "name",
               "thresholds": [],
               "type": "string",
               "unit": "short"
@@ -467,7 +467,7 @@ spec:
               "dateFormat": "YYYY-MM-DD HH:mm:ss",
               "decimals": 2,
               "mappingType": 1,
-              "pattern": "namespace",
+              "pattern": "exported_namespace",
               "thresholds": [],
               "type": "number",
               "unit": "short"
@@ -537,7 +537,7 @@ spec:
               "dateFormat": "YYYY-MM-DD HH:mm:ss",
               "decimals": 2,
               "mappingType": 1,
-              "pattern": "namespace",
+              "pattern": "exported_namespace",
               "thresholds": [],
               "type": "number",
               "unit": "short"
@@ -632,7 +632,7 @@ spec:
               "instant": false,
               "interval": "",
               "intervalFactor": 1,
-              "legendFormat": "total {{namespace}}:{{addressspace}}",
+              "legendFormat": "total {{exported_namespace}}:{{addressspace}}",
               "refId": "A"
             }
           ],
@@ -707,7 +707,7 @@ spec:
               "dateFormat": "YYYY-MM-DD HH:mm:ss",
               "decimals": 2,
               "mappingType": 1,
-              "pattern": "namespace",
+              "pattern": "exported_namespace",
               "thresholds": [],
               "type": "number",
               "unit": "short"
