@@ -421,7 +421,7 @@ public class TestUtils {
      *
      * @param retry count of remaining retries
      * @param fn    request function
-     * @return
+     * @return The value from the first successful call to the callable
      */
     public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
         for (int i = 0; i < retry; i++) {
@@ -435,6 +435,19 @@ public class TestUtils {
             Thread.sleep(1000);
         }
         throw new IllegalStateException(String.format("Command wasn't pass in %s attempts", retry));
+    }
+
+    /**
+     * Repeat command n-times.
+     *
+     * @param retries Number of retries.
+     * @param callable Code to execute.
+     */
+    public static void runUntilPass(int retries, ThrowingCallable callable) throws InterruptedException {
+        runUntilPass(retries, () -> {
+            callable.call();
+            return null;
+        });
     }
 
     /**
@@ -551,7 +564,7 @@ public class TestUtils {
             throws Exception {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
 
-        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, (phase) -> {
+        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, phase -> {
             try {
                 final String newVersion = provideNewResourceVersion.get();
                 return !currentResourceVersion.equals(newVersion);

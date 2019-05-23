@@ -11,6 +11,7 @@ import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
@@ -167,9 +168,11 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
 
         // send the reply to the command
 
-        this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("foo", "bar"), is(HTTP_ACCEPTED), request -> {
-            request.putHeader("hono-cmd-status", "202" /* accepted */);
-        }, Duration.ofSeconds(5));
+        TestUtils.runUntilPass(5, () -> {
+            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("foo", "bar"), is(HTTP_ACCEPTED), request -> {
+                request.putHeader("hono-cmd-status", "202" /* accepted */);
+            }, Duration.ofSeconds(5));
+        });
 
         assertCloudTelemetryMessage(f1);
         assertCommandMessageDeliveries(sentFuture.get());
@@ -190,10 +193,12 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
 
         // consumer link should be ready now ... send telemetry with "ttd"
 
-        var response = this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
-            // set "time to disconnect"
-            request.putHeader("hono-ttd", Integer.toString(this.ttd));
-        }, Duration.ofSeconds(this.ttd + 5));
+        var response = TestUtils.runUntilPass(5, () -> {
+            return this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
+                // set "time to disconnect"
+                request.putHeader("hono-ttd", Integer.toString(this.ttd));
+            }, Duration.ofSeconds(this.ttd + 5));
+        });
 
         return response;
 
