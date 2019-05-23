@@ -47,7 +47,6 @@ public interface ITestSeparator {
 
     @AfterEach
     default void afterEachTest(TestInfo testInfo, ExtensionContext context) {
-        TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
         if (context.getExecutionException().isPresent()) { // on failed
             Throwable ex = context.getExecutionException().get();
             if (ex instanceof OutOfMemoryError) {
@@ -57,6 +56,7 @@ public interface ITestSeparator {
                 log.error("Caught exception", ex);
             }
         }
+        TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
         log.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getTestMethod().get().getName()));
         log.info(String.join("", Collections.nCopies(100, separatorChar)));
     }
