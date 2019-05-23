@@ -4,11 +4,10 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-public class ConnectionWebItem extends WebItem implements Comparable {
+public class ConnectionWebItem extends WebItem implements Comparable<Object> {
 
     private String name;
     private String headerText;

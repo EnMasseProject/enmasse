@@ -78,7 +78,7 @@ public class AddressUtils {
     }
 
     public static void setAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be created", addresses);
+        log.info("Addresses {} will be created", new Object[] {addresses});
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
         log.info("Remove addresses in every addresses's address space");
         for (Address address : addresses) {
@@ -96,7 +96,7 @@ public class AddressUtils {
     }
 
     public static void appendAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be appended", addresses);
+        log.info("Addresses {} will be appended", new Object[] {addresses});
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
         for (Address address : addresses) {
             address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);

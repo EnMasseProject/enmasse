@@ -5,20 +5,12 @@
 package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.user.model.v1.*;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 import java.util.regex.Pattern;
 
 public class UserUtils {
