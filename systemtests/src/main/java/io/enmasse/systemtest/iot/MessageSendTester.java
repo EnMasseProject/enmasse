@@ -107,6 +107,7 @@ public class MessageSendTester {
     private double sendRepeatFactor = 4.0; // 4 times each message
 
     private Duration defaultReceiveSlot = Duration.ofMillis(100);
+    private Duration additionalReceiveTimeout = Duration.ofSeconds(1);
     private Duration receiveTimeout;
 
     private int acceptableMessageLoss = 0;
@@ -135,6 +136,14 @@ public class MessageSendTester {
      */
     public MessageSendTester additionalSendTimeout(final Duration additionalSendTimeout) {
         this.additionalSendTimeout = additionalSendTimeout;
+        return this;
+    }
+
+    /**
+     * Add an additional receive timeout. This is added on top of the calculated receive timeout.
+     */
+    public MessageSendTester additionalReceiveTimeout(final Duration additionalReceiveTimeout) {
+        this.additionalReceiveTimeout = additionalReceiveTimeout;
         return this;
     }
 
@@ -220,7 +229,7 @@ public class MessageSendTester {
      * If an explicit receive timeout was set using {@link #receiveTimeout(Duration)}, then this value
      * will be used.
      * Otherwise, the receive timeout is the {@link #defaultReceiveSlot} times the {@link #amount} of
-     * messages.
+     * messages plus {@link #additionalReceiveTimeout(Duration)}.
      *
      * @return The receive timeout.
      */
@@ -228,7 +237,7 @@ public class MessageSendTester {
         if (this.receiveTimeout != null) {
             return this.receiveTimeout;
         }
-        return this.defaultReceiveSlot.multipliedBy(this.amount);
+        return this.defaultReceiveSlot.multipliedBy(this.amount).plus(this.additionalReceiveTimeout);
     }
 
     /**
