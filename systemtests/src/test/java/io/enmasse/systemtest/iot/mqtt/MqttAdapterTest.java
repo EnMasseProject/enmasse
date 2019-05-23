@@ -91,7 +91,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
         TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {
             try {
-                adapterClient.connect();
+                adapterClient.connect().waitForCompletion(5_000);
                 return true;
             } catch (MqttException mqttException) {
                 if (phase == WaitPhase.LAST_TRY) {
