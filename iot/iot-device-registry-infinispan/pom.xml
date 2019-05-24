@@ -53,49 +53,49 @@
 
   <dependencies>
     <dependency>
-        <groupId>org.eclipse.hono</groupId>
-        <artifactId>hono-service-device-registry</artifactId>
+      <groupId>org.eclipse.hono</groupId>
+      <artifactId>hono-service-device-registry</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.eclipse.hono</groupId>
-        <artifactId>hono-service-base</artifactId>
+      <groupId>org.eclipse.hono</groupId>
+      <artifactId>hono-service-base</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-query</artifactId>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-query</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-client-hotrod</artifactId>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-client-hotrod</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-remote-query-client</artifactId>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-remote-query-client</artifactId>
     </dependency>
 
     <!-- Test dependencies -->
     <dependency>
-        <groupId>io.vertx</groupId>
-        <artifactId>vertx-unit</artifactId>
-        <scope>test</scope>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-unit</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <version>4.12</version>
-        <scope>test</scope>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>org.eclipse.hono</groupId>
-        <artifactId>hono-service-base</artifactId>
-        <classifier>tests</classifier>
-        <type>test-jar</type>
-        <scope>test</scope>
+      <groupId>org.eclipse.hono</groupId>
+      <artifactId>hono-service-base</artifactId>
+      <classifier>tests</classifier>
+      <type>test-jar</type>
+      <scope>test</scope>
     </dependency>
     <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-server-hotrod</artifactId>
-        <scope>test</scope>
+      <groupId>org.infinispan</groupId>
+      <artifactId>infinispan-server-hotrod</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.infinispan</groupId>
