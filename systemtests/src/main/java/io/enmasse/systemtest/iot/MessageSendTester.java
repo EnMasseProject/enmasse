@@ -217,7 +217,7 @@ public class MessageSendTester {
      * <br>
      * This must not change the state of this instance. This method may be called multiple times.
      */
-    public void execute() throws Exception {
+    public void execute() throws Exception, AssertionFailedError {
         try (Executor executor = new Executor()) {
             executor.execute();
         }
