@@ -31,9 +31,7 @@ import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.TestTag.nonPR;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
 class CommonTest extends TestBase {
@@ -238,14 +236,14 @@ class CommonTest extends TestBase {
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
-        for(Address addr : brokeredAddresses) {
+        for (Address addr : brokeredAddresses) {
             log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
             for (Label label : labels) {
                 doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
             }
         }
 
-        for(Address addr : standardAddresses) {
+        for (Address addr : standardAddresses) {
             log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
             for (Label label : labels) {
                 doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
@@ -254,60 +252,82 @@ class CommonTest extends TestBase {
 
     }
 
-    private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace brokered, Address addr) throws Exception {
-        log.info("Starting messaging");
-        AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
-        AmqpClient client = amqpClientFactory.createAddressClient(brokered, addressType);
-        client.getConnectOptions().setCredentials(user);
-        AtomicInteger counter = new AtomicInteger(0);
-        CompletableFuture<Object> future = doConcurrentMessaging(client, addr.getSpec().getAddress(), counter);
-        log.info("Restarting {}", label.labelValue);
-        KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
-        TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        if(future.isCompletedExceptionally()) {
-            future.get();
-        }
-        future.complete(new Object());
-        assertTrue(counter.get() > 1, "receive messages did not work");
+    @Test
+    void testMessagePersistent() throws Exception {
+        UserCredentials user = new UserCredentials("frantisek", "dobrota");
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("space-standard-persistent")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        AddressSpace brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("space-brokered-persistent")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        createAddressSpaceList(standard, brokered);
+        createOrUpdateUser(brokered, user);
+        createOrUpdateUser(standard, user);
+
+        Address brokeredQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(standard.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(brokered, "test-queue-brokered"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-brokered")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+
+        Address standardQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(standard.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(standard, "test-queue-standard"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue-standard")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+
+        setAddresses(brokeredQueue, standardQueue);
+
+        int podCount = kubernetes.listPods().size();
+
+        sendDurableMessages(brokered, brokeredQueue, user, 100);
+        sendDurableMessages(standard, standardQueue, user, 30);
+
+        kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
+        Thread.sleep(20_000);
+        TestUtils.waitForExpectedReadyPods(kubernetes, podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
+
+        receiveDurableMessages(brokered, brokeredQueue, user, 100);
+        receiveDurableMessages(standard, standardQueue, user, 30);
     }
 
-    private CompletableFuture<Object> doConcurrentMessaging(AmqpClient client, String address, AtomicInteger counter) {
-
-        CompletableFuture<Object> resultPromise = new CompletableFuture<>();
-
-        CompletableFuture.runAsync(()->{
-            client.recvMessages(address, msg -> {
-                log.info("Message received");
-                if(resultPromise.isDone()) {
-                    return true;
-                }
-                try {
-                    Thread.sleep(500);
-                } catch ( InterruptedException e ) {
-                    log.error("Error waiting between sends", e);
-                    resultPromise.completeExceptionally(e);
-                    return true;
-                }
-                CompletableFuture.runAsync(()->{
-                    try {
-                        sendMessage(client, address, counter);
-                    } catch ( Exception e ) {
-                        log.error("Error sending message", e);
-                        resultPromise.completeExceptionally(e);
-                    }
-                }, runnable -> new Thread(runnable).start());
-                return false;
-            });
-            try {
-                sendMessage(client, address, counter);
-            } catch ( Exception e ) {
-                log.error("Error sending message", e);
-                resultPromise.completeExceptionally(e);
-            }
-        }, runnable -> new Thread(runnable).start());
-
-        return resultPromise;
-    }
+    /////////////////////////////////////////////////////////////////////
+    // help methods
+    /////////////////////////////////////////////////////////////////////
 
     private void sendMessage(AmqpClient client, String address, AtomicInteger counter) throws Exception {
         counter.incrementAndGet();
@@ -343,6 +363,61 @@ class CommonTest extends TestBase {
         String getLabelValue() {
             return labelValue;
         }
+    }
+
+    private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace brokered, Address addr) throws Exception {
+        log.info("Starting messaging");
+        AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
+        AmqpClient client = amqpClientFactory.createAddressClient(brokered, addressType);
+        client.getConnectOptions().setCredentials(user);
+        AtomicInteger counter = new AtomicInteger(0);
+        CompletableFuture<Object> future = doConcurrentMessaging(client, addr.getSpec().getAddress(), counter);
+        log.info("Restarting {}", label.labelValue);
+        KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+        TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+        if (future.isCompletedExceptionally()) {
+            future.get();
+        }
+        future.complete(new Object());
+        assertTrue(counter.get() > 1, "receive messages did not work");
+    }
+
+    private CompletableFuture<Object> doConcurrentMessaging(AmqpClient client, String address, AtomicInteger counter) {
+
+        CompletableFuture<Object> resultPromise = new CompletableFuture<>();
+
+        CompletableFuture.runAsync(() -> {
+            client.recvMessages(address, msg -> {
+                log.info("Message received");
+                if (resultPromise.isDone()) {
+                    return true;
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    log.error("Error waiting between sends", e);
+                    resultPromise.completeExceptionally(e);
+                    return true;
+                }
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        sendMessage(client, address, counter);
+                    } catch (Exception e) {
+                        log.error("Error sending message", e);
+                        resultPromise.completeExceptionally(e);
+                    }
+                }, runnable -> new Thread(runnable).start());
+                return false;
+            });
+            try {
+                sendMessage(client, address, counter);
+            } catch (Exception e) {
+                log.error("Error sending message", e);
+                resultPromise.completeExceptionally(e);
+            }
+        }, runnable -> new Thread(runnable).start());
+
+        return resultPromise;
     }
 }
 
