@@ -19,6 +19,7 @@ import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.core.json.JsonObject;
+
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -54,7 +55,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
     private IMqttAsyncClient adapterClient;
     private AmqpClient businessApplicationClient;
 
-    private final String deviceId = UUID.randomUUID().toString();
+    private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
     private final String deviceAuthId = UUID.randomUUID().toString();
     private final String devicePassword = UUID.randomUUID().toString();
     private final String businessApplicationUsername = UUID.randomUUID().toString();
@@ -91,7 +92,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
 
         TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {
             try {
-                adapterClient.connect().waitForCompletion(5_000);
+                adapterClient.connect().waitForCompletion(10_000);
                 return true;
             } catch (MqttException mqttException) {
                 if (phase == WaitPhase.LAST_TRY) {

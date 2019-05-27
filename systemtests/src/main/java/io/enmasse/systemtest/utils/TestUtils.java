@@ -26,6 +26,8 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
+import com.google.common.io.BaseEncoding;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -42,6 +44,8 @@ import java.util.stream.Stream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
+
+    private static final Random R = new Random();
 
     /**
      * scale up/down specific pod (type: Deployment) in address space
@@ -594,5 +598,16 @@ public class TestUtils {
     @FunctionalInterface
     public static interface ThrowingCallable {
         void call() throws Exception;
+    }
+
+    /**
+     * Return a number of random characters in the range of {@code 0-9a-f}.
+     * @param length the number of characters to return
+     * @return The random string, never {@code null}.
+     */
+    public static String randomCharacters(int length) {
+        var b = new byte[(int) Math.ceil(length/2.0)];
+        R.nextBytes(b);
+        return BaseEncoding.base16().encode(b).substring(length%2);
     }
 }
