@@ -125,7 +125,7 @@ public abstract class IoTTestBase extends TestBase {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
+    protected static void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
         waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
     }
 

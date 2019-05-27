@@ -271,13 +271,17 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
         // assert message - cloud side
 
         // wait for the future of the sent message
-
         var m1 = f1.get(10, TimeUnit.SECONDS);
+
+        // dump messages
+        m1.forEach(m -> log.info("Message: {}", m));
+
+        // we expect two messages, the "test" message and the actual one
         assertThat(m1, hasSize(2));
+        // get the second message, the real one
         var msg = m1.get(1);
 
         // message must have "ttd" set
-
         var ttdValue = msg.getApplicationProperties().getValue().get("ttd");
         assertThat(ttdValue, instanceOf(Number.class));
         assertThat(ttdValue, Is.is(30));
