@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -100,6 +101,36 @@ class CommonTest extends TestBase {
 //        Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
 //        kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
 //        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+    }
+
+    @Test
+    void testMessagePersistent() throws Exception {
+        UserCredentials user = new UserCredentials("frantisek", "dobrota");
+        AddressSpace standard = AddressSpaceUtils.createAddressSpaceObject("space-standard-persistend", AddressSpaceType.STANDARD, AuthenticationServiceType.STANDARD);
+        AddressSpace brokered = AddressSpaceUtils.createAddressSpaceObject("space-standard-brokered", AddressSpaceType.BROKERED, AuthenticationServiceType.STANDARD);
+
+        createAddressSpaceList(standard, brokered);
+        createUser(brokered, user);
+        createUser(standard, user);
+
+        Address brokeredQueue = AddressUtils.createQueueAddressObject("test-queue-brokered", DestinationPlan.BROKERED_QUEUE);
+        Address standardQueue = AddressUtils.createQueueAddressObject("test-queue-standard", DestinationPlan.STANDARD_SMALL_QUEUE);
+
+
+        setAddresses(brokered, brokeredQueue);
+        setAddresses(standard, standardQueue);
+
+        int podCount = kubernetes.listPods().size();
+
+        sendDurableMessages(brokered, brokeredQueue, user, 100);
+        sendDurableMessages(standard, standardQueue, user, 30);
+
+        kubernetes.deletePod(kubernetes.getNamespace(), Collections.singletonMap("role", "broker"));
+        Thread.sleep(20_000);
+        TestUtils.waitForExpectedReadyPods(kubernetes, podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
+
+        receiveDurableMessages(brokered, brokeredQueue, user, 100);
+        receiveDurableMessages(standard, standardQueue, user, 30);
     }
 
     @Test
