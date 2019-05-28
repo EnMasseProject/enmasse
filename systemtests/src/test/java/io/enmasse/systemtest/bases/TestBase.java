@@ -115,7 +115,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 log.warn("Remove address spaces in tear down - SKIPPED!");
             }
         } catch (Exception e) {
-            log.error("Error tearing down test: {}", e.getMessage());
+            log.error("Error tearing down test", e);
 
             throw e;
         }
