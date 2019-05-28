@@ -18,6 +18,7 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 {cmdcli} login -u system:admin
 ----
+endif::[]
 
 . (Optional) If you want to deploy to a namespace other than `{ProductMonitoringNamespace}` you must run the following command and substitute `{ProductMonitoringNamespace}` in subsequent steps:
 +
