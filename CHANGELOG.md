@@ -5,6 +5,7 @@
 * Corrected an Agent defect that could leave a address in an permanently unready state
 * Improve upgrade of pre-0.27 authentication services
 * Console UI corrections (typos/UI improvements)
+* Correct parsing of group header
 
 ## 0.28.0
 * New global console for managing address spaces that uses OAUTH/OIDC for console authentication and Kubernetes RBAC for authorization.
