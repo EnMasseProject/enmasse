@@ -105,6 +105,7 @@ public class HttpAdapterClient extends ApiClient {
             if (!ar.succeeded()) {
                 // ... fail the response promise
                 responsePromise.completeExceptionally(ar.cause());
+                return;
             }
 
             final CompletableFuture<Buffer> nf = new CompletableFuture<>();
