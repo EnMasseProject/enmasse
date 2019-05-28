@@ -141,7 +141,11 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             adapterClient.disconnect();
             adapterClient.close();
         }
-        businessApplicationClient.close();
+        if (businessApplicationClient != null) {
+            businessApplicationClient.close();
+            businessApplicationClient = null;
+        }
+
         removeUser(getAddressSpace(), businessApplicationUsername);
     }
 
