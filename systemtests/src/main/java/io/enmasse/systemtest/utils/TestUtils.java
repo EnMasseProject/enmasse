@@ -433,8 +433,7 @@ public class TestUtils {
                 log.info("Running command, attempt: {}", i);
                 return fn.call();
             } catch (Exception ex) {
-                log.info("Command failed");
-                ex.printStackTrace();
+                log.info("Command failed", ex);
             }
             Thread.sleep(1000);
         }
