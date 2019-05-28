@@ -272,7 +272,13 @@ function process_queue_stats(q) {
 
 Artemis.prototype.listQueues = function () {
     return this._request('broker', 'listQueues', ['{"field":"","operation":"","value":"","sortOrder":"","sortBy":"","sortColumn":""}', 1, 2147483647/*MAX_INT*/]).then(function (result) {
-        var queues = JSON.parse(result).data;
+        var queues = null;
+        try {
+            queues = JSON.parse(result).data;
+        } catch (e) {
+            log.error('Non JSON result from listQueues "%s"', result);
+            throw e;
+        }
         queues.forEach(process_queue_stats);
         return queues;
     });
@@ -303,7 +309,13 @@ function address_to_queue_or_topic(a) {
 
 Artemis.prototype.getAddresses = function () {
     return this._request('broker', 'listAddresses', ['{"field":"","operation":"","value":"","sortOrder":"","sortBy":"","sortColumn":""}', 1, 2147483647/*MAX_INT*/]).then(function (result) {
-        return JSON.parse(result).data.map(address_to_queue_or_topic);
+        try {
+            var map = JSON.parse(result).data.map(address_to_queue_or_topic);
+        } catch (e) {
+            log.error('Non JSON result from listAddresses "%s"', result);
+            throw e;
+        }
+        return map;
     });
 };
 

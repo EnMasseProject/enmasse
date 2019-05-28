@@ -257,6 +257,7 @@ BrokerController.prototype.retrieve_stats = function () {
                 self.emit('connection_stats_retrieved', connection_stats);
             }).catch(function (error) {
                 log.error('[%s] error retrieving stats: %s', self.id, error);
+                log.error('KWDEBUG %s', error.stack);
             });
     } else {
         log.info('Unable to retrieve stats, no broker object');
@@ -456,6 +457,7 @@ BrokerController.prototype.check_broker_addresses = function () {
                 return self.retrieve_stats().then(function () {
                     self.check_in_progress = false;
                 }).catch( function (error) {
+
                     log.error('[%s] error retrieving stats: %s', self.id, error);
                     self.check_in_progress = false;
                 });
