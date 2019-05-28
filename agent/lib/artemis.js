@@ -85,7 +85,7 @@ function as_handler(resolve, reject) {
 
 Artemis.prototype.incoming = function (context) {
     var message = context.message;
-    log.debug('[%s] recv: ', this.id, message);
+    log.debug('[%s] recv: %j', this.id, message);
     var handler = this.handlers.shift();
     if (handler) {
         this.popped++;
@@ -147,6 +147,7 @@ Artemis.prototype._send_pending_requests = function () {
 Artemis.prototype._send_request = function (request) {
     request.application_properties.JMSReplyTo = this.address;
     request.reply_to = this.address;
+    request.correlation_id = amqp.generate_uuid();
     this.sender.send(request);
     log.debug('[%s] sent: %j', this.id, request);
 }
