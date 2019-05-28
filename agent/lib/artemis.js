@@ -75,6 +75,7 @@ function as_handler(resolve, reject) {
                 else resolve(true);
             } catch (e) {
                 log.info('[%s] Error parsing message body: %s: %s' + this.connection.container_id, message, e);
+                // we don't fail???
             }
         } else {
             reject(message.body);
@@ -586,13 +587,24 @@ Artemis.prototype.getConnectorServices = function () {
 
 Artemis.prototype.listConnections = function () {
     return this._request('broker', 'listConnectionsAsJSON', []).then(function (result) {
-        return JSON.parse(result);
+        return getParse(result);
     });
+}
+
+function getParse(result) {
+    var parse = null;
+    try {
+        parse = JSON.parse(result);
+    } catch (e) {
+        log.info("KWDEBUG failed to parse JSON %s %s", result, e.stack);
+        throw e;
+    }
+    return parse;
 }
 
 Artemis.prototype.listSessionsForConnection = function (connection_id) {
     return this._request('broker', 'listSessionsAsJSON', [connection_id]).then(function (result) {
-        return JSON.parse(result);
+        return getParse(result);
     });
 }
 
@@ -610,13 +622,13 @@ Artemis.prototype.listConnectionsWithSessions = function () {
 
 Artemis.prototype.listConsumers = function () {
     return this._request('broker', 'listAllConsumersAsJSON', []).then(function (result) {
-        return JSON.parse(result);
+        return getParse(result);
     });
 }
 
 Artemis.prototype.listProducers = function () {
     return this._request('broker', 'listProducersInfoAsJSON', []).then(function (result) {
-        return JSON.parse(result);
+        return getParse(result);
     });
 }
 
