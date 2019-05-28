@@ -214,6 +214,8 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
 
         var f1 = this.messagingClient.recvMessages(new QueueTerminusFactory().getSource("telemetry/" + tenantId()), msg -> {
 
+            log.info("Received message: {}", msg);
+
             var ttdValue = msg.getApplicationProperties().getValue().get("ttd");
 
             if (ttdValue == null) {
