@@ -21,6 +21,7 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -117,9 +118,17 @@ public class AmqpClient implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        closeVertxAndWait(this.clients);
+        var clients = new ArrayList<>(this.clients);
+        this.clients.clear();
+
+        closeVertxAndWait(clients);
     }
 
+    /**
+     * Close vertx instances and wait.
+     * @param vertx the instances to close.
+     * @throws Exception in case something goes wrong.
+     */
     private static void closeVertxAndWait (final Iterable<Vertx> vertx) throws Exception {
 
         // gather all vertx futures
@@ -137,6 +146,7 @@ public class AmqpClient implements AutoCloseable {
         var await = new CompletableFuture<>();
         CompositeFuture.all(futures).setHandler(ar -> await.complete(null));
         await.get(10, TimeUnit.SECONDS);
+
     }
 
     public CompletableFuture<Integer> sendMessages(String address, List<String> messages) {
