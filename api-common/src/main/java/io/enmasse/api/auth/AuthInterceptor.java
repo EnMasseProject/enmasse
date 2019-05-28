@@ -56,17 +56,17 @@ public class AuthInterceptor implements ContainerRequestFilter {
             } else {
                 throw Exceptions.notAuthorizedException();
             }
-        } else if (request != null && request.isSSL() && findUserName(requestContext) != null) {
+        } else if (request != null && request.isSSL() && findUserName(apiHeaderConfig, requestContext) != null) {
             log.debug("Authenticating using client certificate");
             HttpConnection connection = request.connection();
-            String userName = findUserName(requestContext);
-            String group = findGroup(requestContext);
-            Map<String, List<String>> extras = findExtra(requestContext);
-            log.debug("Found username {}, group {}, extra {}", userName, group, extras);
+            String userName = findUserName(apiHeaderConfig, requestContext);
+            Set<String> groups = findGroups(apiHeaderConfig, requestContext);
+            Map<String, List<String>> extras = findExtra(apiHeaderConfig, requestContext);
+            log.debug("Found username {}, groups {}, extra {}", userName, groups, extras);
             try {
                 connection.peerCertificateChain();
                 log.debug("Client certificates trusted... impersonating {}", userName);
-                requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview(userName, "", Collections.singleton(group), extras, true), authApi, requestContext.getUriInfo()));
+                requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview(userName, "", groups, extras, true), authApi, requestContext.getUriInfo()));
             } catch (SSLPeerUnverifiedException e) {
                 log.debug("Peer certificate not valid, proceeding as anonymous");
                 requestContext.setSecurityContext(new RbacSecurityContext(new TokenReview("system:anonymous", "", null, null, false), authApi, requestContext.getUriInfo()));
@@ -76,7 +76,7 @@ public class AuthInterceptor implements ContainerRequestFilter {
         }
     }
 
-    private Map<String, List<String>> findExtra(ContainerRequestContext requestContext) {
+    static Map<String, List<String>> findExtra(ApiHeaderConfig apiHeaderConfig, ContainerRequestContext requestContext) {
         Map<String, List<String>> extras = new HashMap<>();
         MultivaluedMap<String, String> headers = requestContext.getHeaders();
         if (headers != null) {
@@ -92,7 +92,7 @@ public class AuthInterceptor implements ContainerRequestFilter {
         return extras;
     }
 
-    private String findUserName(ContainerRequestContext requestContext) {
+    static String findUserName(ApiHeaderConfig apiHeaderConfig, ContainerRequestContext requestContext) {
         for (String userHeader : apiHeaderConfig.getUserHeaders()) {
             if (requestContext.getHeaderString(userHeader) != null) {
                 return requestContext.getHeaderString(userHeader);
@@ -101,12 +101,14 @@ public class AuthInterceptor implements ContainerRequestFilter {
         return null;
     }
 
-    private String findGroup(ContainerRequestContext requestContext) {
+    static Set<String> findGroups(ApiHeaderConfig apiHeaderConfig, ContainerRequestContext requestContext) {
+        Set<String> groups = new HashSet<>();
         for (String groupHeader : apiHeaderConfig.getGroupHeaders()) {
             if (requestContext.getHeaderString(groupHeader) != null) {
-                return requestContext.getHeaderString(groupHeader);
+                String grpHeader = requestContext.getHeaderString(groupHeader);
+                groups.addAll(Arrays.asList(grpHeader.split(",")));
             }
         }
-        return null;
+        return groups;
     }
 }
