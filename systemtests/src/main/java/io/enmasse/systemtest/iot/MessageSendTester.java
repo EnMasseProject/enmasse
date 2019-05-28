@@ -340,11 +340,13 @@ public class MessageSendTester {
             final Duration receiveTimeout = calcReceiveTimeout();
             log.info("Receive timeout: {}", receiveTimeout);
             var receiveBudget = TimeoutBudget.ofDuration(receiveTimeout);
+            var receiveSleep = Math.min(receiveTimeout.toMillis()/10, 1_000);
+            log.info("Receive sleep period: {}", receiveSleep);
             while (!isConsumerReady(receiveBudget)) {
                 if (receiveBudget.timeoutExpired()) {
                     throw new TimeoutException("Failed to execute message send test due to receive timeout.");
                 }
-                Thread.sleep(1_000);
+                Thread.sleep(receiveSleep);
             }
 
             // stop consumer
