@@ -20,8 +20,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -145,6 +144,30 @@ public class AuthInterceptorTest {
         RbacSecurityContext rbacSecurityContext = (RbacSecurityContext) context;
         assertThat(RbacSecurityContext.getUserName(rbacSecurityContext.getUserPrincipal()), is("me"));
         assertTrue(rbacSecurityContext.isUserInRole(RbacSecurityContext.rbacToRole("myspace", ResourceVerb.create, "addressspaces", "enmasse.io")));
+    }
+
+    @Test
+    public void testApiHeaderParsing() {
+        ApiHeaderConfig config = ApiHeaderConfig.DEFAULT_HEADERS_CONFIG;
+        when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
+        when(mockRequestContext.getHeaderString("X-Remote-Group")).thenReturn("system:authenticated,system:master");
+        MultivaluedMap<String, String> map = new MultivaluedHashMap<>();
+        map.put("X-Remote-Extra-Custom-Header", Collections.singletonList("customvalue"));
+        map.put("X-Remote-Extra-Custom-Header2", Collections.singletonList("customvalue2"));
+        when(mockRequestContext.getHeaders()).thenReturn(map);
+
+        String user = AuthInterceptor.findUserName(config, mockRequestContext);
+        assertThat(user, is("me"));
+        Set<String> groups = AuthInterceptor.findGroups(config, mockRequestContext);
+        assertThat(groups.size(), is(2));
+        assertTrue(groups.contains("system:authenticated"));
+        assertTrue(groups.contains("system:master"));
+        Map<String, List<String>> extras = AuthInterceptor.findExtra(config, mockRequestContext);
+        assertThat(extras.size(), is(2));
+        assertThat(extras.get("custom-header").size(), is(1));
+        assertThat(extras.get("custom-header").get(0), is("customvalue"));
+        assertThat(extras.get("custom-header2").size(), is(1));
+        assertThat(extras.get("custom-header2").get(0), is("customvalue2"));
     }
 
     @Test
