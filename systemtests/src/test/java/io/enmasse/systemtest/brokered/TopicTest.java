@@ -16,6 +16,7 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -93,6 +94,7 @@ class TopicTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     @Tag(nonPR)
+    @Disabled("issue #2852")
     void testRestApi() throws Exception {
         Address t1 = new AddressBuilder()
                 .withNewMetadata()
