@@ -72,7 +72,7 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR)
+                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR, 'false')
             }
         }
         failure {
