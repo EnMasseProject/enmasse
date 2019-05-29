@@ -23,7 +23,8 @@ var amqp = require('rhea').create_container();
 var Artemis = function (connection) {
     this.connection = connection;
     this.sender = connection.open_sender('activemq.management');
-    this.sender.on('sendable', this.sender_ready.bind(this));
+    this.sender.on('sender_open', this.sender_open.bind(this));
+    this.sender.on('sendable', this._send_pending_requests.bind(this));
     connection.on('receiver_open', this.receiver_ready.bind(this));
     connection.on('message', this.incoming.bind(this));
     connection.on('receiver_error', this.on_receiver_error.bind(this));
@@ -53,7 +54,7 @@ Artemis.prototype.log_info = function (context) {
     }
 };
 
-Artemis.prototype.sender_ready = function () {
+Artemis.prototype.sender_open = function () {
     var tmp_reply_address = 'activemq.management.tmpreply.' + amqp.generate_uuid();
     log.debug('[%s] sender ready, creating reply to address: %s', this.connection.container_id, tmp_reply_address);
     this._create_temp_response_queue(tmp_reply_address);
@@ -71,10 +72,14 @@ function as_handler(resolve, reject) {
         var message = context.message || context;
         if (message.application_properties && message.application_properties._AMQ_OperationSucceeded) {
             try {
-                if (message.body) resolve(JSON.parse(message.body)[0]);
-                else resolve(true);
+                if (message.body) {
+                    resolve(JSON.parse(message.body)[0]);
+                } else {
+                    resolve(true);
+                }
             } catch (e) {
-                log.info('[%s] Error parsing message body: %s: %s' + this.connection.container_id, message, e);
+                log.info('[%s] Error parsing message body: %s : %s', this.connection.container_id, message, e);
+                reject(message.body)
             }
         } else {
             reject(message.body);
@@ -84,7 +89,7 @@ function as_handler(resolve, reject) {
 
 Artemis.prototype.incoming = function (context) {
     var message = context.message;
-    log.debug('[%s] recv: ', this.id, message);
+    log.debug('[%s] recv: %j', this.id || context.connection.container_id, message);
     var handler = this.handlers.shift();
     if (handler) {
         this.popped++;
@@ -146,6 +151,10 @@ Artemis.prototype._send_pending_requests = function () {
 Artemis.prototype._send_request = function (request) {
     request.application_properties.JMSReplyTo = this.address;
     request.reply_to = this.address;
+    if (process.env.AGENT_CORRELATE_MGMT === 'true') {
+        // Aids debug, has no functional effect
+        request.correlation_id = amqp.generate_uuid();
+    }
     this.sender.send(request);
     log.debug('[%s] sent: %j', this.id, request);
 }
