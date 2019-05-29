@@ -31,7 +31,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
-import static io.enmasse.systemtest.TestTag.sharedBrokered;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -106,6 +105,7 @@ class QueueTest extends TestBaseWithShared implements ITestBaseBrokered {
 
     @Test
     @Tag(nonPR)
+    @Disabled("issue #2852")
     void testRestApi() throws Exception {
         Address q1 = new AddressBuilder()
                 .withNewMetadata()
