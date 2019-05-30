@@ -45,7 +45,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ISeleniumP
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
-        selenium.setupDriver(environment, kubernetes, buildDriver());
+        selenium.setupDriver(buildDriver());
         adminManager.setUp();
     }
 
