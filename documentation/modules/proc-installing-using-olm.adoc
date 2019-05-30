@@ -23,7 +23,7 @@ cat <<EOF | {cmdcli} apply -f -
 apiVersion: operators.coreos.com/v1
 kind: OperatorSource
 metadata:
-  name: enmasse-operators
+  name: {OperatorSourceName}
   namespace: {OperatorMarketplaceNamespace}
 spec:
   type: appregistry
@@ -42,7 +42,7 @@ cat <<EOF | {cmdcli} apply -f -
 apiVersion: operators.coreos.com/v1
 kind: CatalogSourceConfig
 metadata:
-  name: installed-enmasse-operators
+  name: {OperatorSourceConfigName}
   namespace: {OperatorMarketplaceNamespace}
 spec:
   csDisplayName: EnMasse Operators
