@@ -58,7 +58,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     @BeforeEach
     void setUpDrivers() throws Exception {
         if (selenium.getDriver() == null) {
-            selenium.setupDriver(environment, kubernetes, buildDriver());
+            selenium.setupDriver(buildDriver());
         } else {
             selenium.clearScreenShots();
         }

@@ -206,10 +206,9 @@ public class ApiServerTest extends TestBase {
                     luckyUser);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
-        } catch (Exception ex) {
-            ex.printStackTrace();
         } finally {
             if (selenium != null) {
+                selenium.saveScreenShots(this.getClass().getName(), "testConsoleMessagingMqttRoutes");
                 selenium.tearDownDrivers();
             }
             SeleniumManagement.removeFirefoxApp();

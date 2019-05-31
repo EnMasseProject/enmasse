@@ -62,7 +62,7 @@ public class MqttClientFactory {
         return new Builder() {
             Endpoint endpoint = null;
             AddressSpace addressSpace = defaultAddressSpace;
-            MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+            MqttConnectOptions mqttConnectOptions;
             String clientId = UUID.randomUUID().toString();
 
             @Override
@@ -91,6 +91,10 @@ public class MqttClientFactory {
 
             @Override
             public IMqttClient create() throws Exception {
+                if (mqttConnectOptions == null) {
+                    mqttConnectOptions = new MqttConnectOptions();
+                    mqttConnectOptions.setAutomaticReconnect(true);
+                }
                 return MqttClientFactory.this.create(endpoint, addressSpace, mqttConnectOptions, clientId);
             }
         };

@@ -8,7 +8,6 @@ package io.enmasse.systemtest.selenium;
 import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -41,8 +40,6 @@ public class SeleniumProvider {
     private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
-    private Environment environment;
-    private Kubernetes kubernetes;
 
 
     public void onFailed(ExtensionContext extensionContext) {
@@ -56,7 +53,7 @@ public class SeleniumProvider {
         try {
             log.info("Saving browser console log...");
             Path path = Paths.get(
-                    environment.testLogDir(),
+                    Environment.getInstance().testLogDir(),
                     webconsoleFolder,
                     className,
                     methodName);
@@ -74,7 +71,7 @@ public class SeleniumProvider {
         try {
             takeScreenShot();
             Path path = Paths.get(
-                    environment.testLogDir(),
+                    Environment.getInstance().testLogDir(),
                     webconsoleFolder,
                     className,
                     methodName);
@@ -91,9 +88,7 @@ public class SeleniumProvider {
         }
     }
 
-    public void setupDriver(Environment environment, Kubernetes kubernetes, WebDriver driver) throws Exception {
-        this.environment = environment;
-        this.kubernetes = kubernetes;
+    public void setupDriver(WebDriver driver) {
         this.driver = driver;
         angularDriver = new NgWebDriver((JavascriptExecutor) driver);
         driverWait = new WebDriverWait(driver, 10);

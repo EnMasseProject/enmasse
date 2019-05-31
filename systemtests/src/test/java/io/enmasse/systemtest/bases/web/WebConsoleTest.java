@@ -50,7 +50,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
         if (selenium.getDriver() == null)
-            selenium.setupDriver(environment, kubernetes, buildDriver());
+            selenium.setupDriver(buildDriver());
         else
             selenium.clearScreenShots();
         super.setAddresses(sharedAddressSpace);
@@ -84,6 +84,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
                 sharedAddressSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         consoleWebPage.openAddressesPageWebConsole();
+
 
         for (Address dest : destinations) {
             //create topic
