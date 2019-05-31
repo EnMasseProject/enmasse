@@ -116,11 +116,11 @@ func tryUpgradeExistingStandardAuthService(ctx context.Context, r *UpgradeAuthen
 			}
 		} else {
 			log.Info("Found existing postgresql deploymentconfig", "NamespacedName", postgresServiceName.String())
+			if len(postgresDeploymentConfig.Spec.Template.Spec.Containers) > 0 {
+				postgresqlContainer = &postgresDeploymentConfig.Spec.Template.Spec.Containers[0]
+			}
 		}
 
-		if len(postgresDeploymentConfig.Spec.Template.Spec.Containers) > 0 {
-			postgresqlContainer = &postgresDeploymentConfig.Spec.Template.Spec.Containers[0]
-		}
 	} else {
 		postgresqlSecret = nil
 		postgresService = nil
