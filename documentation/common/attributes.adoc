@@ -24,6 +24,7 @@
 :ProductBundleName: enmasse
 :OperatorName: enmasse
 :OperatorSourceName: enmasse-operators
+:OperatorSourceConfigName: installed-enmasse-operators
 :AuthProductName: Keycloak
 :AuthProductNameConsole: Keycloak Administration Console
 :QpidJmsVersion: 0.20.0
