@@ -127,18 +127,37 @@ function teardown_test() {
 function create_address_space() {
     NAMESPACE=$1
     ADDRESS_SPACE_NAME=$2
-    cat <<EOF | oc create -f -
-apiVersion: enmasse.io/v1beta1
+    TYPE=$3
+    PLAN=$4
+    AUTH_SERVICE=$5
+    API_VERSION=$6
+    if [[ "${API_VERSION}" == "v1alpha1" ]]; then
+        cat <<EOF | oc create -f -
+apiVersion: enmasse.io/${API_VERSION}
 kind: AddressSpace
 metadata:
     name: ${ADDRESS_SPACE_NAME}
     namespace: ${NAMESPACE}
 spec:
-    type: brokered
-    plan: brokered-single-broker
-    authenticationService:
-        name: standard-authservice
+    type: ${TYPE}
+    plan: ${PLAN}
+authenticationService:
+    type: standard
 EOF
+    else
+        cat <<EOF | oc create -f -
+apiVersion: enmasse.io/${API_VERSION}
+kind: AddressSpace
+metadata:
+    name: ${ADDRESS_SPACE_NAME}
+    namespace: ${NAMESPACE}
+spec:
+    type: ${TYPE}
+    plan: ${PLAN}
+    authenticationService:
+        name: ${AUTH_SERVICE}
+EOF
+    fi
 }
 
 function create_address() {
@@ -148,12 +167,13 @@ function create_address() {
     ADDRESS=$4
     TYPE=$5
     PLAN=$6
+    API_VERSION=$7
 
     cat <<EOF | oc create -f -
-apiVersion: enmasse.io/v1beta1
+apiVersion: enmasse.io/${API_VERSION}
 kind: Address
 metadata:
-    name: $(echo ${ADDRESS_SPACE}.${NAME//_} | sed -e 's/\(.*\)/\L\1/')
+    name: $(echo ${ADDRESS_SPACE}.${NAME//_})
     namespace: ${NAMESPACE}
 spec:
     address: ${ADDRESS}
@@ -167,12 +187,13 @@ function create_user() {
     PASSWORD=$2
     NAMESPACE=$3
     ADDRESS_SPACE_NAME=$4
+    API_VERSION=$5
 
     cat <<EOF | oc create -f -
-apiVersion: user.enmasse.io/v1beta1
+apiVersion: user.enmasse.io/${API_VERSION}
 kind: MessagingUser
 metadata:
-    name: $(echo ${ADDRESS_SPACE}.${USER//_} | sed -e 's/\(.*\)/\L\1/')
+    name: $(echo ${ADDRESS_SPACE_NAME}.${USER//_})
     namespace: ${NAMESPACE}
 spec:
     username: ${USER}

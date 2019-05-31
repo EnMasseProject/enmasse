@@ -55,7 +55,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         userCredentials = new UserCredentials("test", "test");
         createOrUpdateUser(brokered, userCredentials);
         if (selenium.getDriver() == null) {
-            selenium.setupDriver(environment, kubernetes, TestUtils.getChromeDriver());
+            selenium.setupDriver(TestUtils.getChromeDriver());
         } else {
             selenium.clearScreenShots();
         }

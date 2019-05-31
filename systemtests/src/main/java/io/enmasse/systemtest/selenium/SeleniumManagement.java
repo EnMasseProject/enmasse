@@ -59,7 +59,7 @@ public class SeleniumManagement {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void restartSeleniumApp() throws Exception {
+    public static void restartSeleniumApp() {
         List<String> beforeRestart = Kubernetes.getInstance().listPods(SystemtestsKubernetesApps.SELENIUM_PROJECT).stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.toList());
         int attempts = 5;
         for (int i = 1; i <= attempts; i++) {
