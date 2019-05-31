@@ -10,6 +10,8 @@ configuration of the new version will trigger the upgrade to start.
 
 Upgrading {ProductName} is done by applying the YAML files for the new version.
 
+Once {ProductName} is upgraded, the Address Spaces can then be upgraded see link: {BookUrlBase}{BaseProductVersion}{BookNameUrl}#upgrading-address-spaces[Upgrading Address Spaces].
+
 ifeval::["{cmdcli}" == "oc"]
 include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-template.adoc[leveloffset=+1]

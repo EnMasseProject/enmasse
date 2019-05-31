@@ -1,0 +1,38 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-service-admin-guide.adoc
+[id='upgrading-address-spaces']
+= Upgrading Address Spaces
+
+.Prerequisites
+
+* Upgraded to a new release of {ProductName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#upgrading-{context}[Upgrading {ProductName}].
+
+.Procedure
+
+. Log in as a service operator:
++
+[subs="attributes",options="nowrap"]
+----
+oc login -u system:admin
+----
+
+. Select the project where {ProductName} is installed:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+oc project _{ProductNamespace}_
+----
+
+. Review the installed {context} configurations, see link: {BookUrlBase}{BaseProductVersion}{BookNameUrl}#configuring-messaging[Configuring {ProductName}].
+
+. Change the version number in all the Infrastructure Configurations:
++
+[subs="attributes",options="nowrap"]
+----
+oc get StandardInfraConfig -o yaml | sed -e 's/version.*/version: "0.28"/' | oc apply -f -
+oc get BrokeredInfraConfig -o yaml | sed -e 's/version.*/version: "0.28"/' | oc apply -f -
+----
++
+The upgrade should cause all admin pods to be restarted within a couple of minutes.
+
