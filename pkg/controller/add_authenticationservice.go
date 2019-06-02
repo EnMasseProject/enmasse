@@ -7,6 +7,7 @@ package controller
 
 import (
 	"github.com/enmasseproject/enmasse/pkg/controller/authenticationservice"
+	"github.com/enmasseproject/enmasse/pkg/controller/authenticationservice/upgrader"
 	"github.com/enmasseproject/enmasse/pkg/util"
 )
 
@@ -16,5 +17,9 @@ func init() {
 
 	if util.IsModuleEnabled("AUTHENTICATION_SERVICE") {
 		AddToManagerFuncs = append(AddToManagerFuncs, authenticationservice.Add)
+		if util.GetBooleanEnvOrDefault("ENMASSE_AUTHENTICATION_SERVICE_UPGRADE", true) {
+			AddToManagerFuncs = append(AddToManagerFuncs, upgrader.Add)
+		}
+
 	}
 }
