@@ -1,6 +1,13 @@
 ## 0.29.0
 * Upgrade to Apache ActiveMQ Artemis 2.8.0
 
+## 0.28.1
+* Improve the console operator, add readiness/liveness probes to Console's Apache HTTPD
+* Improve Kubernetes/OpenShift detection in Go-based components
+* Guard against unexpected queue depth values (ARTEMIS-1982) when determining if a Broker is drained
+* Corrected an Agent defect that could leave a address in an permanently unready state
+* Improve upgrade of pre-0.27 authentication services
+* Console UI corrections (typos/UI improvements)
 
 ## 0.28.0
 * New global console for managing address spaces that uses OAUTH/OIDC for console authentication and Kubernetes RBAC for authorization.
