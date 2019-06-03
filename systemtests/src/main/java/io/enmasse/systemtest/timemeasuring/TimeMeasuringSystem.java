@@ -155,13 +155,11 @@ public class TimeMeasuringSystem {
         List<String[]> csvData = new LinkedList<>();
 
         //Check if csv file already exists, if yes get data
-        try {
-            BufferedReader reader = Files.newBufferedReader(Paths.get(filePath.toString()));
+        try(BufferedReader reader = Files.newBufferedReader(Paths.get(filePath.toString()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 csvData.add(line.split(","));
             }
-            reader.close();
             loadedData = new LinkedHashMap<>();
             for (int i = 0; i < csvData.get(0).length; i++) {
                 loadedData.put(csvData.get(0)[i], Long.parseLong(csvData.get(1)[i]));
@@ -172,15 +170,17 @@ public class TimeMeasuringSystem {
 
         try {
             Files.createDirectories(logPath);
-            BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
-            writer.write(String.join(",", data.keySet().toArray(new String[0])));
-            writer.newLine();
-            if (loadedData != null) {
-                loadedData.forEach((operation, duration) -> data.put(operation, data.get(operation) + duration));
+            try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
+                writer.write(String.join(",", data.keySet().toArray(new String[0])));
+                writer.newLine();
+                if (loadedData != null) {
+                    loadedData.forEach((operation, duration) -> {
+                        data.put(operation, data.getOrDefault(operation, 0L) + duration);
+                    });
+                }
+                writer.write(String.join(",", data.values().stream().map(value -> Long.toString(value)).toArray(String[]::new)));
+                writer.newLine();
             }
-            writer.write(String.join(",", data.values().stream().map(value -> Long.toString(value)).toArray(String[]::new)));
-            writer.newLine();
-            writer.close();
         } catch (IOException ex) {
             log.warn("Cannot save output of time measuring: " + ex.getMessage());
         }
