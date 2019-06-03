@@ -58,6 +58,8 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ----
 endif::[]
 
+. Change directory to the location of the downloaded release files.
+
 . Deploy using the `{ProductBundleName}` bundle:
 +
 [options="nowrap",subs="attributes"]
@@ -65,14 +67,14 @@ endif::[]
 {cmdcli} apply -f install/bundles/{ProductBundleName}
 ----
 
-. (Optional) Install example plans and infrastructure configuration:
+. (Optional) Install the example plans and infrastructure configuration:
 +
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} apply -f install/components/example-plans
 ----
 
-. (Optional) Install example roles:
+. (Optional) Install the example roles:
 +
 [options="nowrap",subs="attributes"]
 ----
