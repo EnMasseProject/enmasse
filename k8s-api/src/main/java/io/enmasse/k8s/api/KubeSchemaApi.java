@@ -342,13 +342,13 @@ public class KubeSchemaApi implements SchemaApi {
         }
 
         for (StandardInfraConfig standardInfraConfig : standardInfraConfigs) {
-            if (standardInfraConfig.getSpec() != null && standardInfraConfig.getSpec().getVersion() == null) {
+            if (standardInfraConfig.getSpec() != null) {
                 standardInfraConfig.getSpec().setVersion(defaultVersion);
             }
         }
 
         for (BrokeredInfraConfig brokeredInfraConfig : brokeredInfraConfigs) {
-            if (brokeredInfraConfig.getSpec() != null && brokeredInfraConfig.getSpec().getVersion() == null) {
+            if (brokeredInfraConfig.getSpec() != null) {
                 brokeredInfraConfig.getSpec().setVersion(defaultVersion);
             }
         }

@@ -6,6 +6,7 @@
 * Improve upgrade of pre-0.27 authentication services
 * Console UI corrections (typos/UI improvements)
 * Correct parsing of group header
+* Resolve a defect that prevent existing addressspaces working correcting following upgade from earlier version.
 
 ## 0.28.0
 * New global console for managing address spaces that uses OAUTH/OIDC for console authentication and Kubernetes RBAC for authorization.
