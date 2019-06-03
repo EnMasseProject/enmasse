@@ -4,7 +4,7 @@ DOCKER_ORG      ?= enmasse
 DOCKER          ?= docker
 PROJECT_PREFIX  ?= enmasse
 PROJECT_NAME    ?= $(shell basename $(CURDIR))
-COMMIT 			?= $(shell git rev-parse HEAD)
+COMMIT          ?= $(shell git rev-parse HEAD)
 VERSION         ?= $(shell grep "release.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 MAVEN_VERSION   ?= $(shell grep "maven.version" $(TOPDIR)/pom.properties| cut -d'=' -f2)
 TAG             ?= latest
@@ -16,7 +16,7 @@ export GOPATH
 
 # Image settings
 DOCKER_REGISTRY_PREFIX ?= $(DOCKER_REGISTRY)/
-IMAGE_VERSION 		   ?= $(TAG)
+IMAGE_VERSION          ?= $(TAG)
 ADDRESS_SPACE_CONTROLLER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/address-space-controller:$(IMAGE_VERSION)
 API_SERVER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/api-server:$(IMAGE_VERSION)
 STANDARD_CONTROLLER_IMAGE ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/standard-controller:$(IMAGE_VERSION)

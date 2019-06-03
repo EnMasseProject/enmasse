@@ -1,3 +1,10 @@
+include olm.enmasse.env
+
+# WARNING: this file has the be included last, otherwise the whole
+# build silently fails since VERSION (etc) and TOPDIR are defined
+# as a recursive variable and based on the location on the "last"
+# included makefile, which might change over time, processing other
+# makefiles.
 include ../Makefile.common
 
 PACKAGE_DOCS_DIR=$(TOPDIR)/documentation/html
@@ -7,6 +14,7 @@ INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 HASHMARK = $(shell echo "\#")
+
 
 IOT_MODULES=\
 	iot/api \
@@ -85,7 +93,25 @@ replace_images: prepare
 					  -e 's,\$${OAUTH_PROXY_IMAGE},$(OAUTH_PROXY_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_KUBERNETES_IMAGE},$(CONSOLE_PROXY_KUBERNETES_IMAGE),g' \
 					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
-					  -e 's,\$${APP_PREFIX},$(PROJECT_PREFIX),g' > $$i.tmp; \
+					  -e 's,\$${APP_PREFIX},$(PROJECT_PREFIX),g' \
+					  -e 's,\$${ABOUT_URL},$(ABOUT_URL),g' \
+					  -e 's,\$${ABOUT_NAME},$(ABOUT_NAME),g' \
+					  -e $$'s,\$${ADDITIONAL_KEYWORDS},$(ADDITIONAL_KEYWORDS),g' \
+					  -e 's,\$${CONFIGURE_DOC_URL},$(CONFIGURE_DOC_URL),g' \
+					  -e 's,\$${DOC_URL},$(DOC_URL),g' \
+					  -e 's,\$${LOGO_BASE64},$(LOGO_BASE64),g' \
+					  -e 's,\$${LONG_PRODUCT_NAME},$(LONG_PRODUCT_NAME),g' \
+					  -e 's,\$${MAINTAINER},$(MAINTAINER),g' \
+					  -e 's,\$${MAINTAINER_EMAIL},$(MAINTAINER_EMAIL),g' \
+					  -e 's,\$${MATURITY},$(MATURITY),g' \
+					  -e 's,\$${PLATFORM},$(PLATFORM),g' \
+					  -e 's,\$${REPOSITORY},$(REPOSITORY),g' \
+					  -e 's,\$${SHORT_PRODUCT_NAME},$(SHORT_PRODUCT_NAME),g' \
+					  -e 's,\$${VERSIONED_NAME},$(VERSIONED_NAME),g' \
+					  -e 's,\$${TEMPLATE_DIR},$(TEMPLATE_DIR),g' \
+					  -e 's,\$${RESOURCES_DIR},$(RESOURCES_DIR),g' \
+					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
+					> $$i.tmp; \
 		mv $$i.tmp $$i; \
 	done
 
