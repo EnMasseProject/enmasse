@@ -19,10 +19,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +38,7 @@ class CommonTest extends TestBase {
     void testAccessLogs() throws Exception {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withName("brokered")
+                .withName("mystandard")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
@@ -67,9 +64,27 @@ class CommonTest extends TestBase {
                 .build();
         setAddresses(dest);
 
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        List<Pod> unready;
+        do {
+            unready = new ArrayList<>(kubernetes.listPods());
+            unready.removeIf(p -> TestUtils.isPodReady(p, true));
+
+            if (!unready.isEmpty()) {
+                Thread.sleep(1000L);
+            }
+        } while (!unready.isEmpty() && budget.timeLeft() > 0);
+
+        if (!unready.isEmpty()) {
+            fail(String.format(" %d pod(s) still unready", unready.size()));
+        }
+
         kubernetes.listPods().forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
-            log.info("Getting log from pod: {}, for container: {}", pod.getMetadata().getName(), container.getName());
-            assertFalse(kubernetes.getLog(pod.getMetadata().getName(), container.getName()).isEmpty());
+            String podName = pod.getMetadata().getName();
+            String containerName = container.getName();
+            log.info("Getting log from pod: {}, for container: {}", podName, containerName);
+            String log = kubernetes.getLog(podName, containerName);
+            assertFalse(log.isEmpty(), String.format("Log for pod %s container %s was unexpectedly empty", podName, containerName));
         }));
     }
 

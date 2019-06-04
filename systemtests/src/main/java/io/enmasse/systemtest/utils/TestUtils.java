@@ -158,7 +158,7 @@ public class TestUtils {
         return (int) pods.stream().filter(pod -> isPodReady(pod, true)).count();
     }
 
-    private static boolean isPodReady(final Pod pod, final boolean doLog) {
+    public static boolean isPodReady(final Pod pod, final boolean doLog) {
 
         if (!"Running".equals(pod.getStatus().getPhase())) {
             if (doLog) {
