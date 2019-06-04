@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.Count;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.VertxFactory;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Vertx;
@@ -20,6 +21,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +36,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AmqpClient implements AutoCloseable {
+    private static final Logger log = CustomLogger.getLogger();
+
     private final Collection<Vertx> clients = new ConcurrentHashSet<>();
 
     private AmqpConnectOptions options;
@@ -131,6 +135,8 @@ public class AmqpClient implements AutoCloseable {
      */
     private static void closeVertxAndWait (final Iterable<Vertx> vertx) throws Exception {
 
+        log.info("Start closing vertx instances");
+
         // gather all vertx futures
         @SuppressWarnings("rawtypes")
         final List<io.vertx.core.Future> futures = new LinkedList<>();
@@ -144,7 +150,10 @@ public class AmqpClient implements AutoCloseable {
 
         // now wait on the vertx futures ... with the help of Java futures
         var await = new CompletableFuture<>();
-        CompositeFuture.all(futures).setHandler(ar -> await.complete(null));
+        CompositeFuture.all(futures).setHandler(ar -> {
+            await.complete(null);
+            log.info("Close of all vertx instances completed", ar.cause());
+        });
         await.get(10, TimeUnit.SECONDS);
 
     }
