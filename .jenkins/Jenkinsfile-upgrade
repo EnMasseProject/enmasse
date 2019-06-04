@@ -12,7 +12,7 @@ pipeline {
 //        string(name: 'DEBUG', defaultValue: 'false', description: 'skip post actions')
 //    }
     options {
-        timeout(time: 1, unit: 'HOURS')
+        timeout(time: 2, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {
@@ -66,34 +66,35 @@ pipeline {
         }
         stage('download released version') {
             steps {
-                sh "git checkout tags/${params.START_VERSION}"
                 sh "sh ./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
             }
         }
-        stage('deploy enmasse') {
+        stage('install requirements') {
+            steps {
+                script {
+                    sh "ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml"
+                }
+            }
+        }
+        stage('login') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(params.START_VERSION, false, false, false, false)
+                        sh "./systemtests/scripts/login_cluster_user.sh true"
                     }
                 }
             }
         }
         stage('run systemtests upgrade tests') {
             environment {
-                DOCKER_REGISTRY = credentials('docker-registry-host')
-                DOCKER_CREDENTIALS = credentials('docker-registry-credentials')
-                DOCKER_PASS = "${env.DOCKER_CREDENTIALS_PSW}"
-                DOCKER_USER = "${env.DOCKER_CREDENTIALS_USR}"
-                TAG = "${params.BUILD_TAG}"
+                TAG = "latest"
                 USE_DUMMY_ADDRESS = true
                 UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
-                DOWNGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${params.START_VERSION}"
+                START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${params.START_VERSION}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "git checkout ${params.COMMIT_SHA}"
                         sh 'make templates || true'
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
                     }

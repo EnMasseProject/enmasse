@@ -24,8 +24,9 @@ public class Environment {
     public static final String enmasseVersionProp = "enmasse.version";
     public static final String domain = "KUBERNETES_DOMAIN";
     public static final String upgradeTemplatesEnv = "UPGRADE_TEMPLATES";
-    public static final String downgradeTemplatesEnv = "DOWNGRADE_TEMPLATES";
+    public static final String startTemplatesEnv = "START_TEMPLATES";
     public static final String skipCleanupEnv = "SKIP_CLEANUP";
+    public static final String downstreamEnv = "DOWNSTREAM";
 
     private final String token = System.getenv(tokenEnv);
     private final String url = System.getenv(urlEnv);
@@ -37,10 +38,11 @@ public class Environment {
     private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
     private final String enmasseVersion = System.getProperty(enmasseVersionProp);
     private final String kubernetesDomain = System.getenv().getOrDefault(domain, "nip.io");
-    private final String upgradeTemplates = System.getenv().getOrDefault(upgradeTemplatesEnv,
+    private final boolean downstream = Boolean.parseBoolean(System.getenv().getOrDefault(downstreamEnv, "false"));
+    private final String startTemplates = System.getenv().getOrDefault(startTemplatesEnv,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
-    private final String downgradeTemplates = System.getenv().getOrDefault(downgradeTemplatesEnv,
-            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.2").toString());
+    private final String upgradeTemplates = System.getenv().getOrDefault(upgradeTemplatesEnv,
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.5").toString());
 
     private Environment() {
         String debugFormat = "{}:{}";
@@ -125,7 +127,11 @@ public class Environment {
         return upgradeTemplates;
     }
 
-    public String getDowngradeTemplates() {
-        return downgradeTemplates;
+    public String getStartTemplates() {
+        return startTemplates;
+    }
+
+    public boolean isDownstream() {
+        return downstream;
     }
 }

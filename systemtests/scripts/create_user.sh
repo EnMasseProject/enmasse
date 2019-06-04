@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-CURDIR=`readlink -f \`dirname $0\``
+case "$OSTYPE" in
+  darwin*)  READLINK=greadlink;;
+  *)        READLINK=readlink;;
+esac
+
+CURDIR=`${READLINK} -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 
 USER=$1

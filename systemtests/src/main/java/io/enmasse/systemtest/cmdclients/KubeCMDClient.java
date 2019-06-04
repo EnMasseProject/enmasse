@@ -7,7 +7,6 @@ package io.enmasse.systemtest.cmdclients;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.fabric8.kubernetes.api.model.Pod;
-
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -115,9 +114,9 @@ public class KubeCMDClient extends CmdClient {
         return execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
-    public static void dumpPodLogs (final Pod pod) {
+    public static void dumpPodLogs(final Pod pod) {
         // we cannot use --all-containers, since kubectl is too old
-        for ( var c : pod.getStatus().getContainerStatuses() ) {
+        for (var c : pod.getStatus().getContainerStatuses()) {
             execute(DEFAULT_SYNC_TIMEOUT, true, CMD, "logs", pod.getMetadata().getName(), "-c", c.getName());
         }
     }
@@ -282,6 +281,18 @@ public class KubeCMDClient extends CmdClient {
     public static ExecutionResultData createFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return execute(Arrays.asList(CMD, "-n", namespace, "create", "--validate=false", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
+        return execute(Arrays.asList(CMD, "-n", namespace, "create", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static ExecutionResultData applyFromFile(String namespace, Path path) {
+        Objects.requireNonNull(namespace);
+        Objects.requireNonNull(path);
+        return execute(Arrays.asList(CMD, "-n", namespace, "apply", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
+    }
+
+    public static String getMessagingEndpoint(String namespace, String addressspace) {
+        Objects.requireNonNull(namespace);
+        Objects.requireNonNull(addressspace);
+        return execute(Arrays.asList(CMD, "-n", namespace, "get", "addressspace", addressspace, "-o", "jsonpath={.status.endpointStatuses[?(@.name==\"messaging\")].externalHost}"), DEFAULT_SYNC_TIMEOUT, true, false).getStdOut();
     }
 }

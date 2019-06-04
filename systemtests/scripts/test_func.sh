@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
-CURDIR="$(readlink -f $(dirname $0))"
+
+case "$OSTYPE" in
+  darwin*)  READLINK=greadlink;;
+  *)        READLINK=readlink;;
+esac
+
+CURDIR=`${READLINK} -f \`dirname $0\``
 
 source "${CURDIR}/../../scripts/logger.sh"
 
 function download_enmasse() {
     curl -0 https://dl.bintray.com/enmasse/snapshots/enmasse-latest.tgz | tar -zx
-    D=`readlink -f enmasse-latest`
+    D=`${READLINK} -f enmasse-latest`
     echo ${D}
 }
 
@@ -35,6 +41,19 @@ function setup_test_openshift() {
     wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE} ${UPGRADE}
 }
 
+function login_user() {
+    SET_CLUSTER_USER=${1-true}
+
+    export_required_env
+
+    if [[ "${SET_CLUSTER_USER}" == "true" ]]; then
+        oc login system:admin --insecure-skip-tls-verify=true ${KUBERNETES_API_URL} --config $(get_kubeconfig_path)
+        oc adm policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER} --rolebinding-name=cluster-admin --config $(get_kubeconfig_path)
+    fi
+    oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true
+    export KUBERNETES_API_TOKEN=`oc whoami -t`
+}
+
 function export_required_env {
     SANITIZED_NAMESPACE=${OPENSHIFT_PROJECT}
     SANITIZED_NAMESPACE=${SANITIZED_NAMESPACE//_/-}
@@ -50,7 +69,7 @@ function export_required_env {
     export KUBERNETES_NAMESPACE=${KUBERNETES_NAMESPACE:-enmasseci}
     export TEST_LOGDIR=${TEST_LOGDIR:-/tmp/testlogs}
     export ARTIFACTS_DIR=${ARTIFACTS_DIR:-artifacts}
-    export CURDIR=`readlink -f \`dirname $0\``
+    export CURDIR=`${READLINK} -f \`dirname $0\``
     export DEFAULT_AUTHSERVICE=standard
 }
 
@@ -199,7 +218,7 @@ spec:
     username: ${USER}
     authentication:
       type: password
-      password: $(echo ${PASSWORD} | base64)
+      password: $(echo -n ${PASSWORD} | base64)
     authorization:
     - addresses: [ "*" ]
       operations: [ "send", "recv", "view" ]
