@@ -109,6 +109,7 @@ public class HttpAdapterClient extends ApiClient {
             }
 
             final CompletableFuture<Buffer> nf = new CompletableFuture<>();
+            log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage() );
             responseHandler(ar, nf, expectedCodePredicate, "Error sending " + messageType.name().toLowerCase() + " data", false);
 
             // use the result from the responseHandler
