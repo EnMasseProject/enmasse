@@ -315,6 +315,7 @@ public class MessageSendTester {
             while (i < amount) {
 
                 if (sendTimeout.timeoutExpired()) {
+                    log.info("Send timeout");
                     throw new TimeoutException("Failed to execute message send test due to send timeout.");
                 }
 
@@ -344,6 +345,7 @@ public class MessageSendTester {
             log.info("Receive sleep period: {}", receiveSleep);
             while (!isConsumerReady(receiveBudget)) {
                 if (receiveBudget.timeoutExpired()) {
+                    log.info("Receive timeout");
                     throw new TimeoutException("Failed to execute message send test due to receive timeout.");
                 }
                 Thread.sleep(receiveSleep);
@@ -377,7 +379,7 @@ public class MessageSendTester {
 
         private void assertResult() {
             final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
-            if(missing > MessageSendTester.this.acceptableMessageLoss) {
+            if (missing > MessageSendTester.this.acceptableMessageLoss) {
                 fail(String.format("Unacceptable loss of messages - expected: %s, received: %s, acceptedLoss: %s, actualLoss: %s",
                         MessageSendTester.this.amount, this.receivedMessages.size(),
                         MessageSendTester.this.acceptableMessageLoss, missing));
@@ -385,6 +387,9 @@ public class MessageSendTester {
         }
 
         private void startConsumer() {
+            if (this.consumer != null) {
+                throw new IllegalStateException("'startConsumer' called twice");
+            }
             this.consumer = MessageSendTester.this.consumerFactory.start(MessageSendTester.this.type, this::handleMessage);
         }
 

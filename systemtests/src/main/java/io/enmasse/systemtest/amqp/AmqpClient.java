@@ -154,6 +154,7 @@ public class AmqpClient implements AutoCloseable {
             await.complete(null);
             log.info("Close of all vertx instances completed", ar.cause());
         });
+
         await.get(10, TimeUnit.SECONDS);
 
     }
