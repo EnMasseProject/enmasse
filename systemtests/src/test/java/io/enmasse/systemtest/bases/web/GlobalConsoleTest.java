@@ -8,12 +8,13 @@ package io.enmasse.systemtest.bases.web;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.selenium.ISeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
@@ -128,7 +129,7 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
 
     protected void doTestCreateAddrSpaceNonClusterAdmin() throws Exception {
         String namespace = "test-namespace";
-        UserCredentials user = new UserCredentials("pepan", "pepan");
+        UserCredentials user = Credentials.userCredentials();
         try {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);

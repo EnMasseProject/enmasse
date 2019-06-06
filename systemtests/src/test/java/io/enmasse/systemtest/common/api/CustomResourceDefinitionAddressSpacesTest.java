@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.Environment.ocpVersionEnv;
+import static io.enmasse.systemtest.Environment.OCP_VERSION_ENV;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.cmdclients.KubeCMDClient.*;
 import static org.hamcrest.CoreMatchers.containsString;
@@ -174,7 +174,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = ocpVersionEnv, matches = "3.10")
+    @DisabledIfEnvironmentVariable(named = OCP_VERSION_ENV, matches = "3.10")
     void testCliOutput() throws Exception {
         String namespace = "cli-output";
         UserCredentials user = new UserCredentials("pepan", "pepan");

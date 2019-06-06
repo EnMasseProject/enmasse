@@ -9,6 +9,7 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.auth.AuthenticationTestBase;
@@ -18,6 +19,8 @@ import org.slf4j.Logger;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static io.enmasse.systemtest.TestTag.noneAuth;
+
+import java.util.Optional;
 
 class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrokered {
     private static Logger log = CustomLogger.getLogger();
@@ -48,8 +51,16 @@ class AuthenticationTest extends AuthenticationTestBase implements ITestBaseBrok
 
         assertCanConnect(addressSpace, credentials, amqpAddressList);
 
-        scaleKeycloak(0);
-        scaleKeycloak(1);
+        //Get standard-authservice deployment name
+        String standardAuthServiceDeployment = Optional.ofNullable(Kubernetes.getInstance().getAuthenticationServiceClient()
+                .withName("standard-authservice").get()
+                .getSpec()
+                .getStandard()
+                .getAdditionalProperties().get("deploymentName"))
+                .map(Object::toString)
+                .orElse("standard-authservice");
+        scaleDeployment(standardAuthServiceDeployment, 0);
+        scaleDeployment(standardAuthServiceDeployment, 1);
         Thread.sleep(160000);
 
         assertCanConnect(addressSpace, credentials, amqpAddressList);

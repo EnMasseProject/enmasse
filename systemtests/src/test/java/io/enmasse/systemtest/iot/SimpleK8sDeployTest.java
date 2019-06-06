@@ -30,7 +30,7 @@ import static io.enmasse.systemtest.TestTag.smoke;
 
 @Tag(sharedIot)
 @Tag(smoke)
-@EnabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "true")
+@EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
 class SimpleK8sDeployTest {
 
     private static final String NAMESPACE = Environment.getInstance().namespace();

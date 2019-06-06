@@ -71,7 +71,8 @@ public class AddressUtils {
 
     public static void delete(AddressSpace addressSpace) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
-        Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).delete(getAddresses(addressSpace));
+        var client = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace());
+        getAddresses(addressSpace).forEach(addr -> client.withName(addr.getMetadata().getName()).cascading(true).delete());
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
@@ -80,8 +81,7 @@ public class AddressUtils {
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
         log.info("Remove addresses in every addresses's address space");
         for (Address address : addresses) {
-            Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace())
-                    .delete(getAddresses(address.getMetadata().getNamespace(), getAddressSpaceNameFromAddress(address)));
+            Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete();
         }
         for (Address address : addresses) {
             address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
