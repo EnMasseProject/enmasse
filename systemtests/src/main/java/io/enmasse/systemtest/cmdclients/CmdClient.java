@@ -19,12 +19,16 @@ public abstract class CmdClient {
     protected static final Environment env = Environment.getInstance();
 
     protected static ExecutionResultData execute(int timeout, boolean logToOutput, String ...cmd) {
-        return execute(Arrays.asList(cmd),timeout, logToOutput);
+        return execute(Arrays.asList(cmd),timeout, logToOutput, true);
     }
 
     public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput) {
+        return execute(command,timeout, logToOutput, true);
+    }
+
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator) {
         try {
-            Executor executor = new Executor();
+            Executor executor = new Executor(appendLineSeparator);
             int ret = executor.execute(command, timeout);
             synchronized (lock) {
                 if (logToOutput) {
