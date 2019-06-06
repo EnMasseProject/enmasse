@@ -110,7 +110,7 @@ class UpgradeTest extends TestBase {
         } else {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
         }
-        Thread.sleep(30_000);
+        Thread.sleep(300_000);
 
         if (!startVersion.equals("1.0")) {
             // KW: I am seeing an issue in standard where after a Broker with queue depth comes up, sometimes messages
