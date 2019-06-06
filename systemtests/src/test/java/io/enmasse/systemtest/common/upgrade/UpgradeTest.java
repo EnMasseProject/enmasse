@@ -90,6 +90,8 @@ class UpgradeTest extends TestBase {
         createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", "v1alpha1");
         createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", "v1alpha1");
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue", "standard-queue", "standard", "queue", "standard-large-queue", "v1alpha1");
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue", "standard", "queue", "standard-xlarge-queue", "v1alpha1");
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue", "standard", "queue", "standard-small-queue", "v1alpha1");
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-topic", "standard-topic", "standard", "topic", "standard-small-topic", "v1alpha1");
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", "v1alpha1");
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", "v1alpha1");
@@ -100,6 +102,8 @@ class UpgradeTest extends TestBase {
 
         assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue", "pepa", MESSAGE_COUNT, true));
+        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard-small", "test"), "standard-queue", "pepa", MESSAGE_COUNT, true));
+        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard-xlarge", "test"), "standard-queue", "pepa", MESSAGE_COUNT, true));
 
         if (isAnsible) {
             installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
@@ -114,9 +118,15 @@ class UpgradeTest extends TestBase {
             // things.
             assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue", "pepa", 1, true));
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue", 1, true));
+            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", 1, true));
+            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small", 1, true));
+            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", 1, true));
+            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", 1, true));
 
             assertTrue(receiveMessages("brokered", new RheaClientReceiver(), new UserCredentials("test-brokered", "test"), "brokered-queue", MESSAGE_COUNT, true));
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue", MESSAGE_COUNT, true));
+            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small", MESSAGE_COUNT, true));
+            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", MESSAGE_COUNT, true));
         } else {
             createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", "v1alpha1");
             createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", "v1alpha1");
@@ -124,6 +134,8 @@ class UpgradeTest extends TestBase {
 
             assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
             assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue", "pepa", MESSAGE_COUNT, true));
+            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
+            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
         }
     }
 
