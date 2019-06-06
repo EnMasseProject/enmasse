@@ -6,7 +6,6 @@ package upgrader
 
 import (
 	"context"
-	"encoding/base64"
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	v12 "github.com/openshift/api/apps/v1"
@@ -231,25 +230,35 @@ func configurePostgresqlDatasource(ctx context.Context, postgresService *corev1.
 		// TODO could handle the cases where the environment variables refer to different secrets (or don't refer to secrets at all) by creating a new secret.
 		// probably not going to need these cases.
 		log.Info("Existing database username/password details on postgresql deploymentconfig and keycloak deployment refer to different secrets, " +
-			"can't set CredentialsSecret automatically")
+			"can't set datasource.CredentialsSecret automatically")
 	}
 
 	if dbDatabase.Value != "" && dbDatabase.Value == pdbDatabase.Value {
 		datasource.Database = dbDatabase.Value
-	} else if dbDatabase.ValueFrom.SecretKeyRef != nil && dbDatabase.ValueFrom.SecretKeyRef == pdbDatabase.ValueFrom.SecretKeyRef {
+	} else if dbDatabase.ValueFrom.SecretKeyRef != nil &&
+		dbDatabase.ValueFrom.SecretKeyRef.Name == pdbDatabase.ValueFrom.SecretKeyRef.Name {
 		secretKeyRef := dbDatabase.ValueFrom.SecretKeyRef
 		key := client.ObjectKey{Namespace: r.namespace, Name: secretKeyRef.Name}
 		secret := &corev1.Secret{}
 		err := r.client.Get(ctx, key, secret)
 		if err != nil {
+			if errors.IsNotFound(err) {
+				log.Info("Existing secret carrying database-name not found,"+
+					"can't set datasource.Database automatically", "NamespacedName", secretKeyRef.String())
+			} else {
+				return err
+			}
+		} else {
 			if db, ok := secret.Data["database-name"]; ok {
-				data, err := base64.StdEncoding.DecodeString(string(db))
-				if err != nil {
-					return err
-				}
-				datasource.Database = string(data)
+				datasource.Database = string(db)
+			} else {
+				log.Info("Can't find key 'database-name' within secret, "+
+					"can't set datasource.Database automatically", "NamespacedName", secretKeyRef.String())
 			}
 		}
+	} else {
+		log.Info("Existing database database-name details on postgresql deploymentconfig and keycloak deployment refer to different secrets, " +
+			"can't set datasource.Database automatically")
 	}
 
 	datasource.Host = postgresService.Name
