@@ -102,8 +102,8 @@ class UpgradeTest extends TestBase {
 
         assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
         assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue", "pepa", MESSAGE_COUNT, true));
-        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard-small", "test"), "standard-queue", "pepa", MESSAGE_COUNT, true));
-        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard-xlarge", "test"), "standard-queue", "pepa", MESSAGE_COUNT, true));
+        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", MESSAGE_COUNT, true));
+        assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", MESSAGE_COUNT, true));
 
         if (isAnsible) {
             installEnmasseAnsible(Paths.get(Environment.getInstance().getUpgradeTemplates()), true);
