@@ -765,21 +765,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return addresses;
     }
 
-    protected boolean sendMessage(AddressSpace addressSpace, AbstractClient client, UserCredentials
-            credentials, String address, String content, int count, boolean logToOutput) throws Exception {
-        ClientArgumentMap arguments = new ClientArgumentMap();
-        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
-        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
-        arguments.put(ClientArgument.CONN_SSL, "true");
-        arguments.put(ClientArgument.MSG_CONTENT, content);
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(ClientArgument.ADDRESS, address);
-        arguments.put(ClientArgument.COUNT, Integer.toString(count));
-        client.setArguments(arguments);
-
-        return client.run(logToOutput);
-    }
-
     /**
      * attach N receivers into one address with default username/password
      */

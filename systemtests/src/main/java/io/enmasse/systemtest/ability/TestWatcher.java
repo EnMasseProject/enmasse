@@ -8,6 +8,8 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -18,6 +20,7 @@ import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 public class TestWatcher implements AfterTestExecutionCallback {
     private static final Logger log = CustomLogger.getLogger();
@@ -36,19 +39,24 @@ public class TestWatcher implements AfterTestExecutionCallback {
                         testClass.getName(),
                         testMethod.getName());
                 Files.createDirectories(path);
-                kube.listPods().forEach(pod -> {
-                    kube.getContainersFromPod(pod.getMetadata().getName()).forEach(
-                            container -> {
-                                File filePath = new File(path.toString(), String.format("%s_%s.log", pod.getMetadata().getName(), container.getName()));
-                                try {
-                                    Files.write(Paths.get(filePath.toString()), kube.getLog(pod.getMetadata().getName(), container.getName()).getBytes());
-                                } catch (IOException e) {
-                                    log.warn("Cannot write file {}", filePath.getName());
-                                }
+                List<Pod> pods = kube.listPods();
+                for (Pod p : pods) {
+                    try {
+                        List<Container> containers = kube.getContainersFromPod(p.getMetadata().getName());
+                        for (Container c : containers) {
+                            File filePath = new File(path.toString(), String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
+                            try {
+                                Files.write(Paths.get(filePath.toString()), kube.getLog(p.getMetadata().getName(), c.getName()).getBytes());
+                            } catch (IOException e) {
+                                log.warn("Cannot write file {}", filePath.getName());
                             }
-                    );
-                });
+                        }
+                    } catch (Exception ex) {
+                        log.warn("Cannot access logs from container: ", ex);
+                    }
+                }
                 Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getNamespace()).getStdOut().getBytes());
+                Files.write(Paths.get(path.toString(), "events.txt"), KubeCMDClient.getEvents(kube.getNamespace()).getStdOut().getBytes());
                 log.info("Pod logs and describe successfully stored into {}", path.toString());
             } catch (Exception ex) {
                 log.warn("Cannot save pod logs and info: {}", ex.getMessage());

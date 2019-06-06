@@ -26,7 +26,7 @@ pipeline {
     environment {
         DOCKER_REGISTRY = '172.30.1.1:5000'
         DOCKER_ORG = 'enmasseci'
-        TAG = "${BUILD_TAG}"
+        TAG = "latest"
         CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
@@ -122,18 +122,21 @@ pipeline {
                 expression { env.TEST_PROFILE == 'upgrade' }
             }
             steps {
-                sh "git checkout -- agent && git checkout tags/${env.UPGRADE_FROM}"
                 sh "sh ./systemtests/scripts/download_released_enmasse.sh ${env.UPGRADE_FROM}"
             }
         }
-        stage('[upgrade] deploy enmasse') {
-            when {
-                expression { env.TEST_PROFILE == 'upgrade' }
+        stage('[upgrade] install requirements') {
+            steps {
+                script {
+                    sh "ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml"
+                }
             }
+        }
+        stage('[upgrade] login') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.UPGRADE_FROM, false, false, false, false)
+                        sh "./systemtests/scripts/login_cluster_user.sh true"
                     }
                 }
             }
@@ -145,12 +148,11 @@ pipeline {
             environment {
                 USE_DUMMY_ADDRESS = true
                 UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
-                DOWNGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
+                START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "git checkout ${sha1}"
                         sh "make templates || true"
                         lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', 'upgrade.**')
                     }
