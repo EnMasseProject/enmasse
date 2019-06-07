@@ -11,21 +11,24 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class TemplateBrokerSetGeneratorTest {
+    public static final String CONTAINER_NAME = "container1";
     private Kubernetes kubernetes;
     private StandardControllerSchema standardControllerSchema;
     private BrokerSetGenerator generator;
@@ -58,11 +61,7 @@ public class TemplateBrokerSetGeneratorTest {
         BrokerCluster clusterList = generateCluster(dest, captor);
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
-        for (HasMetadata resource : resources) {
-            Map<String, String> annotations = resource.getMetadata().getAnnotations();
-            assertNotNull(annotations.get(AnnotationKeys.CLUSTER_ID));
-            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(dest.getMetadata().getName()));
-        }
+        assertResourcesHaveClusterId(dest.getMetadata().getName(), resources);
         StatefulSet set = (StatefulSet) resources.get(0);
         assertThat(set.getSpec().getVolumeClaimTemplates().get(0).getSpec().getStorageClassName(), is("mysc"));
         assertThat(set.getSpec().getReplicas(), is(1));
@@ -71,6 +70,69 @@ public class TemplateBrokerSetGeneratorTest {
         assertTemplateSpec(set.getSpec().getTemplate(), templateSpec);
         Map<String,String> parameters = captor.getValue();
         assertThat(parameters.size(), is(13));
+    }
+
+    @Test
+    public void testContainerEnv() throws Exception {
+        EnvVar myEnv = new EnvVarBuilder().withName("MYVAR1").withValue("NEWVALUE").build();
+
+        PodTemplateSpec templateSpec = standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null).getSpec().getBroker().getPodTemplate();
+        templateSpec.getSpec().setContainers(Collections.singletonList(new ContainerBuilder()
+                .withName(CONTAINER_NAME)
+                .withEnv(myEnv)
+                .build()));
+
+        Address dest = createAddress("foo.bar", "queue");
+        @SuppressWarnings("unchecked")
+        BrokerCluster clusterList = generateCluster(dest, ArgumentCaptor.<Map<String, String>, Map>forClass(Map.class));
+        List<HasMetadata> resources = clusterList.getResources().getItems();
+        assertThat(resources.size(), is(1));
+        assertResourcesHaveClusterId(dest.getMetadata().getName(), resources);
+        StatefulSet set = (StatefulSet) resources.get(0);
+
+        StatefulSetSpec spec = set.getSpec();
+        List<Container> containers = spec.getTemplate().getSpec().getContainers();
+        assertThat(containers.size(), is(1));
+        List<EnvVar> envVars = containers.get(0).getEnv();
+
+        assertThat(envVars.size(), is(1));
+        assertThat(envVars, hasItem(myEnv));
+    }
+
+    @Test
+    public void testSupplementedContainerEnv() throws Exception {
+        EnvVar original = new EnvVarBuilder().withName("MYVAR1").withValue("ORIGINAL").build();
+        EnvVar replacement = new EnvVarBuilder().withName("MYVAR1").withValue("NEWVALUE").build();
+        EnvVar other = new EnvVarBuilder().withName("OTHER").withValue("OTHERVAL").build();
+
+        PodTemplateSpec templateSpec = standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null).getSpec().getBroker().getPodTemplate();
+        templateSpec.getSpec().setContainers(Collections.singletonList(new ContainerBuilder()
+                .withName(CONTAINER_NAME)
+                .withEnv(replacement)
+                .build()));
+
+        Address dest = createAddress("foo.bar", "queue");
+        @SuppressWarnings("unchecked")
+        BrokerCluster clusterList = generateCluster(dest, ArgumentCaptor.<Map<String, String>, Map>forClass(Map.class), Arrays.asList(original, other));
+        List<HasMetadata> resources = clusterList.getResources().getItems();
+        assertThat(resources.size(), is(1));
+        assertResourcesHaveClusterId(dest.getMetadata().getName(), resources);
+        StatefulSet set = (StatefulSet) resources.get(0);
+
+        StatefulSetSpec spec = set.getSpec();
+        List<Container> containers = spec.getTemplate().getSpec().getContainers();
+        List<EnvVar> envVars = containers.get(0).getEnv();
+
+        assertThat(envVars.size(), is(2));
+        assertThat(envVars, hasItems(replacement, other));
+    }
+
+    private void assertResourcesHaveClusterId(String expectedClusterId, List<HasMetadata> resources) {
+        for (HasMetadata resource : resources) {
+            Map<String, String> annotations = resource.getMetadata().getAnnotations();
+            assertNotNull(annotations.get(AnnotationKeys.CLUSTER_ID));
+            assertThat(annotations.get(AnnotationKeys.CLUSTER_ID), is(expectedClusterId));
+        }
     }
 
     private Address createAddress(String address, String type) {
@@ -89,7 +151,11 @@ public class TemplateBrokerSetGeneratorTest {
                 .build();
     }
 
-    private BrokerCluster generateCluster(Address address, ArgumentCaptor<Map<String,String>> captor) throws Exception {
+    private BrokerCluster generateCluster(Address address, ArgumentCaptor<Map<String, String>> captor) throws Exception {
+        return generateCluster(address, captor, Collections.emptyList());
+    }
+
+    private BrokerCluster generateCluster(Address address, ArgumentCaptor<Map<String, String>> captor, List<EnvVar> envVars) throws Exception {
         when(kubernetes.processTemplate(anyString(), captor.capture())).thenReturn(new KubernetesListBuilder().addNewStatefulSetItem().withNewMetadata().withName("testset").endMetadata().
                 withNewSpec()
                 .withReplicas(0)
@@ -97,6 +163,10 @@ public class TemplateBrokerSetGeneratorTest {
                 .editOrNewMetadata()
                 .endMetadata()
                 .withNewSpec()
+                .addNewContainer()
+                .withName(CONTAINER_NAME)
+                .withEnv(envVars)
+                .endContainer()
                 .endSpec()
                 .endTemplate()
                 .withVolumeClaimTemplates(new PersistentVolumeClaimBuilder()

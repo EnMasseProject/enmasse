@@ -4,16 +4,12 @@
  */
 package io.enmasse.address.model;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PodSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.*;
 
 /**
  * Various static utilities that don't belong in a specific place
@@ -149,9 +145,22 @@ public final class KubeUtil {
 
             for (Container desiredContainer : podSpec.getContainers()) {
                 for (Container actualContainer : actualPodSpec.getContainers()) {
-                    if (actualContainer.getName().equals(desiredContainer.getName())) {
+                    if (actualContainer.getName() != null && actualContainer.getName().equals(desiredContainer.getName())) {
                         if (desiredContainer.getResources() != null) {
                             actualContainer.setResources(desiredContainer.getResources());
+                        }
+
+                        List<EnvVar> desiredEnv = desiredContainer.getEnv();
+                        if (desiredEnv != null && !desiredEnv.isEmpty()) {
+                            if (actualContainer.getEnv() == null || actualContainer.getEnv().isEmpty()) {
+                                actualContainer.setEnv(desiredEnv);
+                            } else {
+                                Set<String> newNames = desiredEnv.stream().map(EnvVar::getName).collect(Collectors.toSet());
+                                List<EnvVar> current = new ArrayList<>(actualContainer.getEnv());
+                                current.removeIf(e -> e.getName() != null && newNames.contains(e.getName()));
+                                current.addAll(desiredEnv);
+                                actualContainer.setEnv(current);
+                            }
                         }
                     }
                 }
