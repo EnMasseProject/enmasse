@@ -1,20 +1,23 @@
 // This assembly is included in the following assemblies:
 //
 // assembly-service-admin-guide.adoc
+
 [id='upgrading-{context}']
 = Upgrading {ProductName}
 
 {ProductName} supports upgrades between minor versions using cloud native tools and the same
-mechanism used to apply configuration changes.  When upgrading, the updated infrastructure
-configuration of the new version will trigger the upgrade to start.
+mechanism used to apply configuration changes. When upgrading, the updated infrastructure
+configuration of the new version triggers the upgrade process to begin.
 
-Upgrading {ProductName} is done by applying the YAML files for the new version.
+Upgrading {ProductName} is accomplished by applying the YAML files for the new version.
 
 ifeval::["{cmdcli}" == "oc"]
 include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-template.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-ansible.adoc[leveloffset=+1]
+include::../modules/proc-upgrading-router-pods.adoc[leveloffset=+1]
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
 endif::[]
+

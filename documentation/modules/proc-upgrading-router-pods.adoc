@@ -1,0 +1,33 @@
+// Module included in the following assemblies:
+//
+// assembly-upgrading.adoc
+
+[id='post-upgrade-step-router-pod-{context}']
+= Upgrading router pods running a previous version of the image
+
+When upgrading, sometimes a router pod is not upgraded. The affected router pod can be identified and restarted to fix this issue.
+
+.Prerequisites
+
+* Completed the upgrading steps to a new release of {ProductName}. For more information on how to upgrade, see:
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#downloading-messaging[Upgrading {ProductName} using a YAML bundle]
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#downloading-messaging[Upgrading {ProductName} using Ansible]
+
+.Procedure
+
+. Find the router pod running the previous version of the image:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+oc get pod -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{range .spec.containers}}{{"\t"}}{{.image}}{{"\n"}}{{end}}{{"\n"}}{{end}}' --selector=capability=router
+----
+
+. Delete the router pod that is running the previous version of the image:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+oc delete pod _<name>_
+----
+
+The pod is automatically restarted.
+
