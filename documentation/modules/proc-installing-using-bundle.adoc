@@ -58,7 +58,7 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 ----
 endif::[]
 
-. Change directory to the location of the downloaded release files.
+. Change the directory to the location of the downloaded release files.
 
 . Deploy using the `{ProductBundleName}` bundle:
 +
