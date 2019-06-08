@@ -7,15 +7,18 @@ package io.enmasse.systemtest.standard.mqtt;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -34,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class PublishTest extends TestBaseWithShared implements ITestBaseStandard {
     private static final String MYTOPIC = "mytopic";
+    private static final Logger log = CustomLogger.getLogger();
 
     @Test
     void testPublishQoS0() throws Exception {
@@ -124,20 +128,31 @@ public class PublishTest extends TestBaseWithShared implements ITestBaseStandard
                 .build();
         setAddresses(dest);
 
-        IMqttClient client = mqttClientFactory.create();
-        client.connect();
+        MqttConnectOptions options = new MqttConnectOptions();
+        options.setConnectionTimeout(options.getConnectionTimeout() * 2);
+        options.setAutomaticReconnect(true);
+        IMqttClient client = mqttClientFactory.build().mqttConnectionOptions(options).create();
+        try {
+            log.info("Connecting");
+            client.connect();
 
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), subscriberQos);
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
 
-        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages published",
-                publishCount, is(messages.size()));
+            List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), subscriberQos);
+            List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
 
-        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages received",
-                receivedCount, is(messages.size()));
+            int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+            assertThat("Incorrect count of messages published",
+                    publishCount, is(messages.size()));
 
-        client.disconnect();
+            int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+            assertThat("Incorrect count of messages received",
+                    receivedCount, is(messages.size()));
+        } finally {
+            log.info("Disconnecting");
+            if (client != null) {
+                client.disconnect();
+            }
+        }
+
     }
 }
