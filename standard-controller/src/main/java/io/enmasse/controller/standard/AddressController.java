@@ -7,6 +7,7 @@ package io.enmasse.controller.standard;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
@@ -98,6 +99,8 @@ public class AddressController implements Watcher<Address> {
                                           a -> new ProvisionState(a.getStatus(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
+        InfraConfig infraConfig = addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
+        boolean withMqtt = isWithMqtt(infraConfig);
 
         long resolvedPlan = System.nanoTime();
 
@@ -139,8 +142,12 @@ public class AddressController implements Watcher<Address> {
         Set<Address> liveAddresses = filterByPhases(addressSet, EnumSet.of(Configuring, Active));
         List<RouterStatus> routerStatusList = checkRouterStatuses();
 
+        Set<String> subserveTopics = Collections.emptySet();
         if (!routerStatusList.isEmpty()) {
-            checkAddressStatuses(liveAddresses, addressResolver, routerStatusList);
+            if (withMqtt) {
+                subserveTopics = checkRegisteredSubserveTopics();
+            }
+            checkAddressStatuses(liveAddresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
         }
 
         long checkStatuses = System.nanoTime();
@@ -186,7 +193,7 @@ public class AddressController implements Watcher<Address> {
         }
 
         long replaceAddresses = System.nanoTime();
-        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList);
+        garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList, subserveTopics, withMqtt);
         long gcTerminating = System.nanoTime();
 
         log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
@@ -223,6 +230,25 @@ public class AddressController implements Watcher<Address> {
 
         metrics.reportMetric(new Metric("standard_controller_router_check_failures_total", "Number of RouterCheckFailures", MetricType.counter, new MetricValue(routerCheckFailures, now, metricLabels)));
 
+    }
+
+    private Set<String> checkRegisteredSubserveTopics() {
+        SubserveStatusCollector statusCollector = new SubserveStatusCollector(vertx, options.getCertDir());
+
+        for (Pod router : kubernetes.listRouters()) {
+            if (Readiness.isPodReady(router)) {
+                try {
+                    return statusCollector.collect(router);
+                } catch (Exception e) {
+                    log.info("Error requesting registered topics from {}. Ignoring", router.getMetadata().getName(), e);
+                }
+            }
+        }
+        return Collections.emptySet();
+    }
+
+    private boolean isWithMqtt(InfraConfig infraConfig) {
+        return infraConfig.getMetadata().getAnnotations() != null && Boolean.parseBoolean(infraConfig.getMetadata().getAnnotations().getOrDefault(AnnotationKeys.WITH_MQTT, "false"));
     }
 
     private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
@@ -330,8 +356,8 @@ public class AddressController implements Watcher<Address> {
                 .collect(Collectors.toSet());
     }
 
-    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList) throws Exception {
-        Map<Address, Integer> okMap = checkAddressStatuses(addresses, addressResolver, routerStatusList);
+    private void garbageCollectTerminating(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList, Set<String> subserveTopics, boolean withMqtt) throws Exception {
+        Map<Address, Integer> okMap = checkAddressStatuses(addresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
         for (Map.Entry<Address, Integer> entry : okMap.entrySet()) {
             if (entry.getValue() == 0) {
                 log.info("Garbage collecting {}", entry.getKey());
@@ -410,7 +436,7 @@ public class AddressController implements Watcher<Address> {
         return routerStatusList;
     }
 
-    private Map<Address, Integer> checkAddressStatuses(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList) throws Exception {
+    private Map<Address, Integer> checkAddressStatuses(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList, Set<String> subserveTopics, boolean withMqtt) throws Exception {
 
         Map<Address, Integer> numOk = new HashMap<>();
         if (addresses.isEmpty()) {
@@ -440,6 +466,9 @@ public class AddressController implements Watcher<Address> {
                         ok += RouterStatus.checkActiveLinkRoute(address, routerStatusList);
                     } else {
                         ok += RouterStatus.checkConnection(address, routerStatusList);
+                        if (withMqtt) {
+                            SubserveStatusCollector.checkTopicRegistration(subserveTopics, address, addressPlan);
+                        }
                     }
                     break;
                 case "anycast":
