@@ -155,6 +155,8 @@ function handle_control_message(context) {
                 Promise.all(subreqs(context.message.body).map(subscribe.bind(null, subscription_id))).then(accept).catch(reject);
             } else if (context.message.subject === 'unsubscribe') {
                 Promise.all(subreqs(context.message.body).map(unsubscribe.bind(null, subscription_id))).then(accept).catch(reject);
+            } else if (context.message.subject === 'list_topics') {
+                reply('topics', Object.keys(topics));
             } else {
                 reject('unrecognised subject ' + context.message.subject, 'amqp:not-implemented');
             }
