@@ -42,7 +42,7 @@ function setup_test_openshift() {
 }
 
 function login_user() {
-    SET_CLUSTER_USER=${1-true}
+    SET_CLUSTER_USER=${1:-true}
 
     export_required_env
 
@@ -51,7 +51,7 @@ function login_user() {
         oc adm policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER} --rolebinding-name=cluster-admin --config $(get_kubeconfig_path)
         oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=enmasseci --config $(get_kubeconfig_path)
     fi
-    oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true
+    oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} ${KUBERNETES_API_URL} --insecure-skip-tls-verify=true
     export KUBERNETES_API_TOKEN=`oc whoami -t`
 }
 
