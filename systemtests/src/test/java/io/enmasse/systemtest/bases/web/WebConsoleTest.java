@@ -854,6 +854,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
         Address destTopic = new AddressBuilder()
                 .withNewMetadata()
+                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "topic-via-web"))
                 .endMetadata()
                 .withNewSpec()
