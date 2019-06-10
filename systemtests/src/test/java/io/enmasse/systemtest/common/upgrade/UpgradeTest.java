@@ -110,15 +110,6 @@ class UpgradeTest extends TestBase {
         Thread.sleep(300_000);
 
         if (!startVersion.equals("1.0")) {
-            // KW: I am seeing an issue in standard where after a Broker with queue depth comes up, sometimes messages
-            // don't flow down the link that the router has established. Sending a single message seems to unblock
-            // things.
-            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue", "pepa", 1, true));
-            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue", 1, true));
-            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-small", "pepa", 1, true));
-            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small", 1, true));
-            assertTrue(sendMessage("standard", new RheaClientSender(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", "pepa", 1, true));
-            assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", 1, true));
 
             assertTrue(receiveMessages("brokered", new RheaClientReceiver(), new UserCredentials("test-brokered", "test"), "brokered-queue", MESSAGE_COUNT, true));
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue", MESSAGE_COUNT, true));
