@@ -53,6 +53,7 @@ import javax.security.sasl.AuthenticationException;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -1133,6 +1134,22 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getSpec().getAddress(), count);
         assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
         client.close();
+    }
+
+    protected void connectAddressSpace(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
+        try (AmqpClient client = amqpClientFactory.createQueueClient(addressSpace)) {
+            client.getConnectOptions().setCredentials(credentials);
+            CompletableFuture<Void> connect = client.connect();
+            try {
+                connect.get(5, TimeUnit.MINUTES);
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof Exception) {
+                    throw ((Exception) e.getCause());
+                } else {
+                    throw new RuntimeException(e.getCause());
+                }
+            }
+        }
     }
 
     //================================================================================================
