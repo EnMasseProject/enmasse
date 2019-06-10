@@ -62,7 +62,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) && mqtt) {
             port = ssl ? 8883 : 1883;
         }
-        return new Endpoint(String.format("%s-%s.%s.svc",
+        return new Endpoint(String.format("%s-%s.%s.svc.cluster.local",
                 (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) && mqtt) ? "mqtt" : "messaging",
                 AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace),
                 environment.namespace()),
