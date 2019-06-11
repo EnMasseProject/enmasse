@@ -226,7 +226,7 @@ class UpgradeTest extends TestBase {
                             .replace("enmasse-controller-manager", "controller-manager"));
                     if (!images.contains(container.getImage()
                             .replaceAll("^.*/", "")
-                            .replace("enmasse-controller-manager", "controller-manager"))) {
+                            .replace("enmasse-controller-manager", "controller-manager")) && !container.getImage().contains("postresql")) {
                         log.warn("Container is not upgraded");
                         ready.set(false);
                     } else {
