@@ -299,4 +299,10 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     void testAddressWithValidPlanOnly() throws Exception {
         doTestAddressWithValidPlanOnly();
     }
+
+    @Test
+    @Disabled("issue 2855")
+    void testOpenConsoleCustomRoute() throws Exception {
+        doTestOpenConsoleCustomRoute();
+    }
 }

@@ -5,8 +5,9 @@
 package io.enmasse.systemtest.bases.web;
 
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -18,6 +19,7 @@ import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -896,6 +898,47 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
         waitForDestinationsReady(destTopic);
 
         assertCanConnect(sharedAddressSpace, defaultCredentials, Collections.singletonList(destTopic));
+    }
+
+    protected void doTestOpenConsoleCustomRoute() throws Exception {
+        String endpointPrefix = "test-endpoint-";
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+
+                .addNewEndpoint()
+                .withName(endpointPrefix + "console")
+                .withService("console")
+                .editOrNewExpose()
+                .withType(ExposeType.route)
+                .withRouteTlsTermination(TlsTermination.reencrypt)
+                .withRouteServicePort("https")
+                .endExpose()
+                .endEndpoint()
+
+                .endSpec()
+                .build();
+        createAddressSpace(addressSpace);
+
+        //try to get all external endpoints
+        kubernetes.getExternalEndpoint(endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+
+        ConsoleWebPage console = new ConsoleWebPage(
+                selenium,
+                getConsoleRoute(addressSpace),
+                addressSpace,
+                clusterUser);
+        console.openWebConsolePage();
+        console.openAddressesPageWebConsole();
     }
 
     //============================================================================================
