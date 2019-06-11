@@ -5,9 +5,11 @@
 [id='upgrading-{context}']
 = Upgrading {ProductName}
 
-{ProductName} supports upgrades between minor versions using cloud native tools and the same
-mechanism used to apply configuration changes. When upgrading, the updated infrastructure
-configuration of the new version triggers the upgrade process to begin.
+{ProductName} supports upgrades between minor versions using cloud-native tools. When upgrading, applying the configuration change automatically triggers the upgrade process to begin.
+
+ifeval::["{cmdcli}" == "oc"]
+It is recommended to use the same method to upgrade that was used to initially install {ProductName}.
+endif::[]
 
 Upgrading {ProductName} is accomplished by applying the YAML files for the new version.
 
