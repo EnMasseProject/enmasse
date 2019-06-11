@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -81,13 +80,39 @@ class CommonTest extends TestBase {
             fail(String.format(" %d pod(s) still unready", unready.size()));
         }
 
+        List<Map.Entry<String, String>> podsContainersWithNoLog = new ArrayList<>();
+
         kubernetes.listPods().forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
             String podName = pod.getMetadata().getName();
             String containerName = container.getName();
             log.info("Getting log from pod: {}, for container: {}", podName, containerName);
-            String log = kubernetes.getLog(podName, containerName);
-            assertFalse(log.isEmpty(), String.format("Log for pod %s container %s was unexpectedly empty", podName, containerName));
+            String podlog = kubernetes.getLog(podName, containerName);
+
+            // Retry - diagnostic code to help understand a sporadic Ci failure.
+            if (podlog.isEmpty()) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                log.info("(Retry) Getting log from pod: {}, for container: {}", podName, containerName);
+                podlog = kubernetes.getLog(podName, containerName);
+            }
+
+            if (podlog.isEmpty()) {
+                podsContainersWithNoLog.add(of(podName, containerName));
+            }
+
         }));
+
+        if (!podsContainersWithNoLog.isEmpty()) {
+            String podContainerNames = podsContainersWithNoLog.stream().map(e -> String.format("%s-%s", e.getKey(), e.getValue())).collect(Collectors.joining(","));
+            fail(String.format("%d pod container(s) had unexpectedly empty logs : %s ", podsContainersWithNoLog.size(), podContainerNames));
+        }
+    }
+
+    private <K, V> Map.Entry<K, V> of (K k, V v) {
+        return new AbstractMap.SimpleEntry<>(k, v);
     }
 
     @Test
