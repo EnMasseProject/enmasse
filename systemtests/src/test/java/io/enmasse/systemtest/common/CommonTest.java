@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import javax.net.ssl.SSLException;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -335,9 +337,30 @@ class CommonTest extends TestBase {
         kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
         Thread.sleep(20_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
+        log.info("Broker pods restarted");
 
+        // Seems that the service/route can sometimes not be immediately available despite the pod being Ready.
+        assertConnectable(brokered, user);
+        assertConnectable(standard, user);
         receiveDurableMessages(brokered, brokeredQueue, user, 100);
         receiveDurableMessages(standard, standardQueue, user, 30);
+    }
+
+    private void assertConnectable(AddressSpace space, UserCredentials user) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        String name = space.getMetadata().getName();
+        do {
+            try {
+                connectAddressSpace(space, user);
+                log.info("Successfully connected to address space : {}", name);
+                return;
+            } catch (IOException e) {
+                log.info("Failed to connect to address space: {} - {}", name, e.getMessage());
+            }
+            Thread.sleep(1000);
+        } while(!budget.timeoutExpired());
+
+        fail(String.format("Failed to assert address space %s connectable within timeout", name));
     }
 
     /////////////////////////////////////////////////////////////////////

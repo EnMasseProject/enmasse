@@ -8,6 +8,7 @@ package io.enmasse.systemtest.amqp;
 import io.enmasse.systemtest.Count;
 import io.enmasse.systemtest.VertxFactory;
 import io.vertx.core.Vertx;
+import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
 
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
@@ -158,6 +159,28 @@ public class AmqpClient implements AutoCloseable {
 
         return resultPromise
                 .whenComplete((res, err) -> vertx.close());
+    }
 
+    public CompletableFuture<Void> connect() {
+        Vertx vertx = VertxFactory.create();
+        clients.add(vertx);
+        String containerId = "systemtest-ping-connection";
+        CompletableFuture<Void> connectPromise = new CompletableFuture<>();
+        CompletableFuture<Void> resultPromise = new CompletableFuture<>();
+        vertx.deployVerticle(new ClientHandlerBase<>(this.options, null, connectPromise, resultPromise, containerId) {
+            @Override
+            protected void connectionOpened(ProtonConnection conn) {
+                connectPromise.complete(null);
+            }
+
+            @Override
+            protected void connectionClosed(ProtonConnection conn) {
+            }
+
+            @Override
+            protected void connectionDisconnected(ProtonConnection conn) {
+            }
+        });
+        return connectPromise;
     }
 }
