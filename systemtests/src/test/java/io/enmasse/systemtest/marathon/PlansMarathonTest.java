@@ -90,6 +90,7 @@ class PlansMarathonTest extends MarathonTestBase {
         for (int i = 0; i < destCount; i++) {
             dest.add(new AddressBuilder()
                     .withNewMetadata()
+                    .withNamespace(kubernetes.getInfraNamespace())
                     .withName(AddressUtils.generateAddressMetadataName(manyAddressesSpace, "xxs-queue-" + i))
                     .endMetadata()
                     .withNewSpec()

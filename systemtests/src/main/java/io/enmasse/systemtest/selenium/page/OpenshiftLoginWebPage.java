@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.selenium.page;
 
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -39,6 +40,10 @@ public class OpenshiftLoginWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.className("alert"));
     }
 
+    private WebElement getHtpasswdButton() {
+        return selenium.getDriver().findElement(By.partialLinkText("htpasswd"));
+    }
+
     public String getAlertMessage() {
         return getAlertContainer().findElement(By.className("kc-feedback-text")).getText();
     }
@@ -63,8 +68,16 @@ public class OpenshiftLoginWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("inputPassword")));
+        if(Environment.getInstance().isOcp4()) {
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlContains("oauth/authorize"));
+        }else {
+            selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("inputPassword")));
+        }
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
+        if(Environment.getInstance().isOcp4()) {
+            selenium.clickOnItem(getHtpasswdButton(), "Htpasswd log in page");
+            selenium.takeScreenShot();
+        }
     }
 }

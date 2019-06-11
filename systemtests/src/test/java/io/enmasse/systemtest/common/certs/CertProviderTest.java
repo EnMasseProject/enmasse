@@ -204,7 +204,7 @@ class CertProviderTest extends TestBase {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = Environment.useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
     void testOpenshiftCertProvider() throws Exception {
         createTestEnv(new CertSpecBuilder()
                         .withProvider(CertProvider.openshift.name())

@@ -94,8 +94,7 @@ class CommonTest extends TestBase {
     void testRestartComponents() throws Exception {
         List<Label> labels = new LinkedList<>();
         labels.add(new Label("component", "api-server"));
-        labels.add(new Label("name", "keycloak"));
-        labels.add(new Label("name", "keycloak-controller"));
+        labels.add(new Label("name", "standard-authservice"));
         labels.add(new Label("name", "address-space-controller"));
         labels.add(new Label("name", "enmasse-operator"));
 

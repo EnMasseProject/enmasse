@@ -156,15 +156,15 @@ public class SeleniumProvider {
         }
     }
 
-    public void clickOnItem(WebElement element) throws Exception {
+    public void clickOnItem(WebElement element) {
         clickOnItem(element, null);
     }
 
-    public void executeJavaScript(String script) throws Exception {
+    public void executeJavaScript(String script) {
         executeJavaScript(script, null);
     }
 
-    public void executeJavaScript(String script, String textToLog, Object... arguments) throws Exception {
+    public void executeJavaScript(String script, String textToLog, Object... arguments) {
         takeScreenShot();
         assertNotNull(script, "Selenium provider failed, script to execute is null");
         log.info("Execute script: " + (textToLog == null ? script : textToLog));
@@ -173,7 +173,7 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
-    public void clickOnItem(WebElement element, String textToLog) throws Exception {
+    public void clickOnItem(WebElement element, String textToLog) {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         logCheckboxValue(element);
@@ -191,7 +191,7 @@ public class SeleniumProvider {
     }
 
 
-    public void fillInputItem(WebElement element, String text) throws Exception {
+    public void fillInputItem(WebElement element, String text) {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         clearInput(element);
@@ -201,7 +201,7 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
-    public void pressEnter(WebElement element) throws Exception {
+    public void pressEnter(WebElement element) {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(Keys.RETURN);
@@ -318,7 +318,7 @@ public class SeleniumProvider {
     //==================================== Checkbox methods ==========================================
     //================================================================================================
 
-    public void setValueOnCheckboxRequestedPermissions(WebElement element, boolean check) throws Exception {
+    public void setValueOnCheckboxRequestedPermissions(WebElement element, boolean check) {
         if (getCheckboxValue(element) != check) {
             clickOnItem(element);
         } else {

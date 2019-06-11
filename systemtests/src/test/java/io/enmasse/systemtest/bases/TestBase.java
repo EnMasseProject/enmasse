@@ -395,10 +395,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return kubernetes.getSchemaClient().list();
     }
 
-    protected void scaleKeycloak(int numReplicas) throws Exception {
-        scaleInGlobal("keycloak", numReplicas);
-    }
-
     /**
      * scale up/down deployment to count of replicas, includes waiting for expected replicas
      *
@@ -406,7 +402,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @param numReplicas count of replicas
      * @throws InterruptedException
      */
-    private void scaleInGlobal(String deployment, int numReplicas) throws InterruptedException {
+    protected void scaleDeployment(String deployment, int numReplicas) throws InterruptedException {
         if (numReplicas >= 0) {
             TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
             TestUtils.setReplicas(kubernetes, null, deployment, numReplicas, budget);
@@ -483,7 +479,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected String getOCConsoleRoute() {
-        return String.format("%s/console", environment.getApiUrl());
+        if (environment.isOcp4()) {
+            return String.format("https://console-openshift-console.%s", environment.kubernetesDomain());
+        } else {
+            return String.format("%s/console", environment.getApiUrl());
+        }
     }
 
     protected String getConsoleRoute(AddressSpace addressSpace) {

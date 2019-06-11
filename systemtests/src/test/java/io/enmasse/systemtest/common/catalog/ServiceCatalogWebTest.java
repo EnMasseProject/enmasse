@@ -37,13 +37,14 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.Environment.useMinikubeEnv;
+import static io.enmasse.systemtest.Environment.USE_MINUKUBE_ENV;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
+@DisabledIfEnvironmentVariable(named=Environment.OCP_VERSION_ENV, matches=Environment.IS_OCP4_REGEXP)
 class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox {
 
     private static Logger log = CustomLogger.getLogger();
@@ -80,7 +81,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testProvisionAddressSpaceBrokered() throws Exception {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -103,7 +104,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testProvisionAddressSpaceStandard() throws Exception {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -126,7 +127,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testCreateDeleteBindings() throws Exception {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -154,7 +155,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -225,7 +226,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -275,7 +276,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testLoginWithOpensShiftCredentials() throws Exception {
         AddressSpace brokeredSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -303,7 +304,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = useMinikubeEnv, matches = "true")
+    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testSendReceiveInsideCluster() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()

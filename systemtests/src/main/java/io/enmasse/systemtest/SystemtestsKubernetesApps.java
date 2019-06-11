@@ -348,7 +348,7 @@ public class SystemtestsKubernetesApps {
                 .addToLabels("app", POSTGRES_APP)
                 .endMetadata()
                 .withNewSpec()
-                .withAccessModes("ReadWriteMany")
+                .withAccessModes("ReadWriteOnce")
                 .withNewResources()
                 .addToRequests("storage", new Quantity("5Gi"))
                 .endResources()

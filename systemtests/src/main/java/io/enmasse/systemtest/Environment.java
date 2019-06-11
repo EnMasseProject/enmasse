@@ -13,48 +13,55 @@ public class Environment {
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
 
-    public static final String useMinikubeEnv = "USE_MINIKUBE";
-    public static final String ocpVersionEnv = "OC_VERSION";
-    public static final String keycloakAdminPasswordEnv = "KEYCLOAK_ADMIN_PASSWORD";
-    public static final String keycloakAdminUserEnv = "KEYCLOAK_ADMIN_USER";
-    public static final String testLogDirEnv = "TEST_LOGDIR";
-    public static final String namespaceEnv = "KUBERNETES_NAMESPACE";
-    public static final String urlEnv = "KUBERNETES_API_URL";
-    public static final String tokenEnv = "KUBERNETES_API_TOKEN";
-    public static final String enmasseVersionProp = "enmasse.version";
-    public static final String domain = "KUBERNETES_DOMAIN";
-    public static final String upgradeTemplatesEnv = "UPGRADE_TEMPLATES";
-    public static final String startTemplatesEnv = "START_TEMPLATES";
-    public static final String skipCleanupEnv = "SKIP_CLEANUP";
-    public static final String downstreamEnv = "DOWNSTREAM";
+    public static final String USE_MINUKUBE_ENV = "USE_MINIKUBE";
+    public static final String OCP_VERSION_ENV = "OC_VERSION";
+    public static final String KEYCLOAK_ADMIN_PASSWORD_ENV = "KEYCLOAK_ADMIN_PASSWORD";
+    public static final String KEYCLOAK_ADMIN_USER_ENV = "KEYCLOAK_ADMIN_USER";
+    public static final String TEST_LOG_DIR_ENV = "TEST_LOGDIR";
+    public static final String K8S_NAMESPACE_ENV = "KUBERNETES_NAMESPACE";
+    public static final String K8S_API_URL_ENV = "KUBERNETES_API_URL";
+    public static final String K8S_API_TOKEN_ENV = "KUBERNETES_API_TOKEN";
+    public static final String ENMASSE_VERSION_SYSTEM_PROPERTY = "enmasse.version";
+    public static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
+    public static final String UPGRADE_TEPLATES_ENV = "UPGRADE_TEMPLATES";
+    public static final String START_TEMPLATES_ENV = "START_TEMPLATES";
+    public static final String SKIP_CLEANUP_ENV = "SKIP_CLEANUP";
+    public static final String DOWNSTREAM_ENV = "DOWNSTREAM";
+    public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
 
-    private final String token = System.getenv(tokenEnv);
-    private final String url = System.getenv(urlEnv);
-    private final String namespace = System.getenv(namespaceEnv);
-    private final String testLogDir = System.getenv().getOrDefault(testLogDirEnv, "/tmp/testlogs");
-    private final String keycloakAdminUser = System.getenv().getOrDefault(keycloakAdminUserEnv, "admin");
-    private final String keycloakAdminPassword = System.getenv(keycloakAdminPasswordEnv);
-    private final boolean useMinikube = Boolean.parseBoolean(System.getenv(useMinikubeEnv));
-    private final String ocpVersion = System.getenv().getOrDefault(ocpVersionEnv, "3.11");
-    private final String enmasseVersion = System.getProperty(enmasseVersionProp);
-    private final String kubernetesDomain = System.getenv().getOrDefault(domain, "nip.io");
-    private final boolean downstream = Boolean.parseBoolean(System.getenv().getOrDefault(downstreamEnv, "false"));
-    private final String startTemplates = System.getenv().getOrDefault(startTemplatesEnv,
+    public static final String IS_OCP4_REGEXP = "4.*";
+
+    private final String token = System.getenv(K8S_API_TOKEN_ENV);
+    private final String url = System.getenv(K8S_API_URL_ENV);
+    private final String namespace = System.getenv(K8S_NAMESPACE_ENV);
+    private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
+    private final String keycloakAdminUser = System.getenv().getOrDefault(KEYCLOAK_ADMIN_USER_ENV, "admin");
+    private final String keycloakAdminPassword = System.getenv(KEYCLOAK_ADMIN_PASSWORD_ENV);
+    private final boolean useMinikube = Boolean.parseBoolean(System.getenv(USE_MINUKUBE_ENV));
+    private final String ocpVersion = System.getenv().getOrDefault(OCP_VERSION_ENV, "3.11");
+    private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
+    private final String kubernetesDomain = System.getenv().getOrDefault(K8S_DOMAIN_ENV, "nip.io");
+    private final boolean downstream = Boolean.parseBoolean(System.getenv().getOrDefault(DOWNSTREAM_ENV, "false"));
+    private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
-    private final String upgradeTemplates = System.getenv().getOrDefault(upgradeTemplatesEnv,
+    private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.5").toString());
 
     private Environment() {
         String debugFormat = "{}:{}";
-        log.info(debugFormat, useMinikubeEnv, useMinikube);
-        log.info(debugFormat, keycloakAdminPasswordEnv, keycloakAdminPassword);
-        log.info(debugFormat, keycloakAdminUserEnv, keycloakAdminUser);
-        log.info(debugFormat, testLogDirEnv, testLogDir);
-        log.info(debugFormat, namespaceEnv, namespace);
-        log.info(debugFormat, urlEnv, url);
-        log.info(debugFormat, tokenEnv, token);
-        log.info(debugFormat, enmasseVersionProp, enmasseVersion);
-        log.info(debugFormat, skipCleanupEnv, skipCleanup);
+        log.info(debugFormat, USE_MINUKUBE_ENV, useMinikube);
+        log.info(debugFormat, KEYCLOAK_ADMIN_PASSWORD_ENV, keycloakAdminPassword);
+        log.info(debugFormat, KEYCLOAK_ADMIN_USER_ENV, keycloakAdminUser);
+        log.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
+        log.info(debugFormat, K8S_NAMESPACE_ENV, namespace);
+        log.info(debugFormat, K8S_API_URL_ENV, url);
+        log.info(debugFormat, K8S_API_TOKEN_ENV, token);
+        log.info(debugFormat, ENMASSE_VERSION_SYSTEM_PROPERTY, enmasseVersion);
+        log.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
+        log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
+        if(!useMinikube) {
+            log.info(debugFormat, OCP_VERSION_ENV, ocpVersion);
+        }
     }
 
     public static synchronized Environment getInstance() {
@@ -67,12 +74,12 @@ public class Environment {
     /**
      * Skip removing address-spaces
      */
-    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv(skipCleanupEnv));
+    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv(SKIP_CLEANUP_ENV));
 
     /**
      * Store screenshots every time
      */
-    private final boolean storeScreenshots = Boolean.parseBoolean(System.getenv("STORE_SCREENSHOTS"));
+    private final boolean storeScreenshots = Boolean.parseBoolean(System.getenv(STORE_SCREENSHOTS_ENV));
 
 
     public String getApiUrl() {
@@ -133,5 +140,9 @@ public class Environment {
 
     public boolean isDownstream() {
         return downstream;
+    }
+
+    public boolean isOcp4() {
+        return !useMinikube && ocpVersion.matches(IS_OCP4_REGEXP);
     }
 }
