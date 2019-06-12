@@ -130,7 +130,7 @@ public class ExportsController implements Controller {
                 .endMetadata()
                 .editOrNewSpec()
                 .withType("ExternalName")
-                .withExternalName(endpointStatus.getServiceHost())
+                .withExternalName(endpointStatus.getServiceHost() + ".cluster.local")
                 .withPorts(ServiceHelper.toServicePortList(endpointStatus.getServicePorts()))
                 .endSpec()
                 .build();

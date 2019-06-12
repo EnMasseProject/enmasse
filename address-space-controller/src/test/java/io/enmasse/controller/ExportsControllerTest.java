@@ -113,7 +113,7 @@ public class ExportsControllerTest extends JULInitializingTest {
         Service service = client.services().inNamespace(addressSpace.getMetadata().getNamespace()).withName("myservice").get();
         assertNotNull(service);
         assertEquals("ExternalName", service.getSpec().getType());
-        assertEquals("messaging.svc", service.getSpec().getExternalName());
+        assertEquals("messaging.svc.cluster.local", service.getSpec().getExternalName());
         assertEquals(2, service.getSpec().getPorts().size());
 
         addressSpace.getStatus().getEndpointStatuses().get(0).setServiceHost("messaging2.svc");
@@ -121,7 +121,7 @@ public class ExportsControllerTest extends JULInitializingTest {
 
         service = client.services().inNamespace(addressSpace.getMetadata().getNamespace()).withName("myservice").get();
         assertNotNull(service);
-        assertEquals("messaging2.svc", service.getSpec().getExternalName());
+        assertEquals("messaging2.svc.cluster.local", service.getSpec().getExternalName());
     }
 
     private AddressSpace createTestSpace(ExportSpec ... exports) {
