@@ -893,6 +893,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), queue, topic);
 
         receiveDurableMessages(addressSpace, queue, user, 16);
 
@@ -913,6 +914,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().done();
         replaceAddressSpace(addressSpace);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), afterQueue, queue, topic);
 
         Address pooledQueue = new AddressBuilder()
                 .withNewMetadata()
