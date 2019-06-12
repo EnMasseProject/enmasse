@@ -241,10 +241,10 @@ public class KubeCMDClient extends CmdClient {
 
     public static ExecutionResultData runQDstat(String podName, String... args) {
         List<String> runCmd = new ArrayList<>();
-        String[] base = new String[]{CMD, "exec", podName, "--", "qdstat"};
+        String[] base = new String[]{CMD, "exec", podName, "--", "qdstat", "-t 20"};
         Collections.addAll(runCmd, base);
         Collections.addAll(runCmd, args);
-        return execute(runCmd, DEFAULT_SYNC_TIMEOUT, true);
+        return execute(runCmd, ONE_MINUTE_TIMEOUT, true);
     }
 
     public static ExecutionResultData copyPodContent(String podName, String source, String destination) {
