@@ -10,7 +10,6 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.OpenshiftCertValidatorApiClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.common.api.ApiServerTest;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -337,7 +336,7 @@ class CertProviderTest extends TestBase {
     private void testCertProvider(AmqpClient amqpClient, IMqttClient mqttClient) throws Exception {
         QueueTest.runQueueTest(amqpClient, queue);
         mqttClient.connect();
-        ApiServerTest.simpleMQTTSendReceive(topic, mqttClient, 3);
+        simpleMQTTSendReceive(topic, mqttClient, 3);
         mqttClient.disconnect();
     }
 
