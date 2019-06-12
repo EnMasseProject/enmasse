@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -122,34 +123,40 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void apply(KubernetesList resources, boolean patchPersistentVolumeClaims) {
+    public void apply(KubernetesList resources, boolean patchPersistentVolumeClaims, Consumer<HasMetadata> appliedResourceConsumer) {
         for (HasMetadata resource : resources.getItems()) {
-            try {
-                if (resource instanceof ConfigMap) {
-                    client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
-                } else if (resource instanceof Secret) {
-                    client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
-                } else if (resource instanceof Deployment) {
-                    client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
-                } else if (resource instanceof StatefulSet) {
-                    client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
-                } else if (resource instanceof Service) {
-                    client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
-                } else if (resource instanceof ServiceAccount) {
-                    client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
-                } else if (resource instanceof PersistentVolumeClaim && patchPersistentVolumeClaims) {
-                    client.persistentVolumeClaims().withName(resource.getMetadata().getName()).patch((PersistentVolumeClaim) resource);
-                }
-            } catch (KubernetesClientException e) {
-                if (e.getCode() == 404) {
-                    // Create it if it does not exist
-                    client.resource(resource).createOrReplace();
-                } else {
-                    throw e;
-                }
+            apply(resource, patchPersistentVolumeClaims);
+            if (appliedResourceConsumer != null) {
+                appliedResourceConsumer.accept(resource);
             }
+        }
+    }
 
-
+    @Override
+    public void apply(HasMetadata resource, boolean patchPersistentVolumeClaims) {
+        try {
+            if (resource instanceof ConfigMap) {
+                client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
+            } else if (resource instanceof Secret) {
+                client.secrets().withName(resource.getMetadata().getName()).patch((Secret) resource);
+            } else if (resource instanceof Deployment) {
+                client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
+            } else if (resource instanceof StatefulSet) {
+                client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
+            } else if (resource instanceof Service) {
+                client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
+            } else if (resource instanceof ServiceAccount) {
+                client.serviceAccounts().withName(resource.getMetadata().getName()).patch((ServiceAccount) resource);
+            } else if (resource instanceof PersistentVolumeClaim && patchPersistentVolumeClaims) {
+                client.persistentVolumeClaims().withName(resource.getMetadata().getName()).patch((PersistentVolumeClaim) resource);
+            }
+        } catch (KubernetesClientException e) {
+            if (e.getCode() == 404) {
+                // Create it if it does not exist
+                client.resource(resource).createOrReplace();
+            } else {
+                throw e;
+            }
         }
     }
 

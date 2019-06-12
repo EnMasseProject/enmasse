@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller.standard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
@@ -13,7 +14,13 @@ import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.*;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.Vertx;
@@ -135,7 +142,8 @@ public class AddressController implements Watcher<Address> {
         RouterCluster routerCluster = kubernetes.getRouterCluster();
         long listClusters = System.nanoTime();
 
-        provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses);
+        StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
+        provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses, desiredConfig);
 
         long provisionResources = System.nanoTime();
 
@@ -163,7 +171,6 @@ public class AddressController implements Watcher<Address> {
         deprovisionUnused(clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
         long deprovisionUnused = System.nanoTime();
 
-        StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
         upgradeClusters(desiredConfig, addressResolver, clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
 
         long upgradeClusters = System.nanoTime();
@@ -253,7 +260,7 @@ public class AddressController implements Watcher<Address> {
 
     private void upgradeClusters(StandardInfraConfig desiredConfig, AddressResolver addressResolver, List<BrokerCluster> clusterList, Set<Address> addresses) throws Exception {
         for (BrokerCluster cluster : clusterList) {
-            StandardInfraConfig currentConfig = cluster.getInfraConfig();
+            final StandardInfraConfig currentConfig = cluster.getInfraConfig();
             if (!desiredConfig.equals(currentConfig)) {
                 if (options.getVersion().equals(desiredConfig.getSpec().getVersion())) {
                     if (!desiredConfig.getUpdatePersistentVolumeClaim() && currentConfig != null && !currentConfig.getSpec().getBroker().getResources().getStorage().equals(desiredConfig.getSpec().getBroker().getResources().getStorage())) {
@@ -289,13 +296,58 @@ public class AddressController implements Watcher<Address> {
                     }
                     log.info("Upgrading broker {}", cluster.getClusterId());
                     cluster.updateResources(upgradedCluster, desiredConfig);
-                    kubernetes.apply(cluster.getResources(), desiredConfig.getUpdatePersistentVolumeClaim());
+                    boolean updatePersistentVolumeClaim = desiredConfig.getUpdatePersistentVolumeClaim();
+                    List<HasMetadata> itemsToBeApplied = new ArrayList<>(cluster.getResources().getItems());
+                    try {
+                        kubernetes.apply(cluster.getResources(), updatePersistentVolumeClaim, itemsToBeApplied::remove);
+                    } catch (KubernetesClientException original) {
+                        // Workaround for #2880 Failure executing: PATCH... Message: Unable to access invalid index: 20.
+                        if (!itemsToBeApplied.isEmpty() && original.getMessage() != null && original.getMessage().contains("Unable to access invalid index")) {
+                            HasMetadata failedResource = itemsToBeApplied.get(0);
+                            if (failedResource instanceof StatefulSet || failedResource instanceof Deployment) {
+                                log.warn("Failed to apply {} for cluster {}, will try #2880 workaround", failedResource, cluster.getClusterId(), original);
+                                try {
+                                    if (failedResource instanceof StatefulSet) {
+                                        StatefulSetSpec spec = ((StatefulSet) failedResource).getSpec();
+                                        stripEnvironmentFromResource(spec.getTemplate());
+                                        spec.setReplicas(0);
+                                    } else {
+                                        DeploymentSpec spec = ((Deployment) failedResource).getSpec();
+                                        stripEnvironmentFromResource(spec.getTemplate());
+                                        spec.setReplicas(0);
+                                    }
+                                    Kubernetes.addObjectAnnotation(failedResource, AnnotationKeys.APPLIED_INFRA_CONFIG, new ObjectMapper().writeValueAsString(currentConfig));
+                                    kubernetes.apply(failedResource, updatePersistentVolumeClaim);
+                                    log.warn("Applied #2880 workaround for {} of {}, next upgrade cycle should complete upgrade.", failedResource.getMetadata(), cluster.getClusterId());
+                                } catch (KubernetesClientException e) {
+                                    log.error("Failed to apply failed resource {} of {} for #2880 workaround. " +
+                                            "Manual intervention may be required to complete upgrade", failedResource.getMetadata(), cluster.getClusterId());
+                                }
+                            } else {
+                                log.warn("Don't know how to work around #2880 for resource type {}", failedResource.getClass());
+                            }
+                        }
+                        throw original;
+                    }
                     eventLogger.log(BrokerUpgraded, "Upgraded broker", Normal, Broker, cluster.getClusterId());
                 } else {
                     log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredConfig.getSpec().getVersion(), options.getVersion());
                 }
             }
         }
+    }
+
+    private void stripEnvironmentFromResource(PodTemplateSpec resource) {
+        resource.getSpec().getContainers().forEach(
+                c -> {
+                    c.setEnv(Collections.emptyList());
+                }
+        );
+        resource.getSpec().getInitContainers().forEach(
+                c -> {
+                    c.setEnv(Collections.emptyList());
+                }
+        );
     }
 
     private void deprovisionUnused(List<BrokerCluster> clusters, Set<Address> addressSet) {

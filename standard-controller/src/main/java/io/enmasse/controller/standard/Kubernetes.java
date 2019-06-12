@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public interface Kubernetes {
     List<BrokerCluster> listClusters();
@@ -46,7 +47,9 @@ public interface Kubernetes {
 
     void create(KubernetesList resources);
 
-    void apply(KubernetesList resources, boolean patchPersistentVolumeClaims);
+    void apply(KubernetesList resources, boolean patchPersistentVolumeClaims, Consumer<HasMetadata> failedResourceSupplier);
+
+    void apply(HasMetadata resource, boolean patchPersistentVolumeClaims);
 
     void delete(KubernetesList resources);
 
