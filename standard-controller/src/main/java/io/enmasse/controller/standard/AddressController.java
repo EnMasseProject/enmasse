@@ -19,7 +19,9 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.internal.readiness.Readiness;
 import io.vertx.core.Vertx;
@@ -307,9 +309,13 @@ public class AddressController implements Watcher<Address> {
                                 log.warn("Failed to apply {} for cluster {}, will try #2880 workaround", failedResource, cluster.getClusterId(), original);
                                 try {
                                     if (failedResource instanceof StatefulSet) {
-                                        stripEnvironmentFromResource(((StatefulSet) failedResource).getSpec().getTemplate());
+                                        StatefulSetSpec spec = ((StatefulSet) failedResource).getSpec();
+                                        stripEnvironmentFromResource(spec.getTemplate());
+                                        spec.setReplicas(0);
                                     } else {
-                                        stripEnvironmentFromResource(((Deployment) failedResource).getSpec().getTemplate());
+                                        DeploymentSpec spec = ((Deployment) failedResource).getSpec();
+                                        stripEnvironmentFromResource(spec.getTemplate());
+                                        spec.setReplicas(0);
                                     }
                                     Kubernetes.addObjectAnnotation(failedResource, AnnotationKeys.APPLIED_INFRA_CONFIG, new ObjectMapper().writeValueAsString(currentConfig));
                                     kubernetes.apply(failedResource, updatePersistentVolumeClaim);
