@@ -3,7 +3,7 @@
 // assembly-upgrading.adoc
 
 [id='post-upgrade-step-router-pod-{context}']
-= Upgrading router pods running a previous version of the image
+= Restarting router pods running a previous version of the image
 
 When upgrading, sometimes a router pod is not automatically restarted by {KubePlatform}. If this issue occurs, it is important to manually restart the affected pod to ensure correct operation of the system.
 
