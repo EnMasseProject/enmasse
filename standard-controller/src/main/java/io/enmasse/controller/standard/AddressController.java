@@ -14,7 +14,6 @@ import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.*;
-import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
@@ -143,7 +142,8 @@ public class AddressController implements Watcher<Address> {
         RouterCluster routerCluster = kubernetes.getRouterCluster();
         long listClusters = System.nanoTime();
 
-        provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses);
+        StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
+        provisioner.provisionResources(routerCluster, clusterList, neededMap, pendingAddresses, desiredConfig);
 
         long provisionResources = System.nanoTime();
 
@@ -171,7 +171,6 @@ public class AddressController implements Watcher<Address> {
         deprovisionUnused(clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
         long deprovisionUnused = System.nanoTime();
 
-        StandardInfraConfig desiredConfig = (StandardInfraConfig) addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
         upgradeClusters(desiredConfig, addressResolver, clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
 
         long upgradeClusters = System.nanoTime();

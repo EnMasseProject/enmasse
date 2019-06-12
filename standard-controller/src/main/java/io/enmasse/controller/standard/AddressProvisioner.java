@@ -10,6 +10,7 @@ import static io.enmasse.controller.standard.ControllerReason.BrokerCreated;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -437,7 +438,7 @@ public class AddressProvisioner {
         return "broker-sharded-" + Long.toHexString(crc32.getValue()) + "-" + infraUuid;
     }
 
-    public void provisionResources(RouterCluster router, List<BrokerCluster> existingClusters, Map<String, Map<String, UsageInfo>> neededMap, Set<Address> addressSet) {
+    public void provisionResources(RouterCluster router, List<BrokerCluster> existingClusters, Map<String, Map<String, UsageInfo>> neededMap, Set<Address> addressSet, StandardInfraConfig desiredInfraConfig) throws IOException {
 
         for (Map.Entry<String, Map<String, UsageInfo>> entry : neededMap.entrySet()) {
             String resourceName = entry.getKey();
@@ -488,13 +489,13 @@ public class AddressProvisioner {
             }
         }
 
-        if (router.hasChanged()) {
+        if (router.hasChanged() && desiredInfraConfig != null && desiredInfraConfig.equals(router.getInfraConfig())) {
             log.info("Scaling router to {} replicas", router.getNewReplicas());
             kubernetes.scaleStatefulSet(router.getName(), router.getNewReplicas());
         }
 
         for (BrokerCluster cluster : existingClusters) {
-            if (cluster.hasChanged()) {
+            if (cluster.hasChanged() && desiredInfraConfig != null && desiredInfraConfig.equals(cluster.getInfraConfig())) {
                 log.info("Scaling broker cluster {} to {} replicas", cluster.getClusterId(), cluster.getNewReplicas());
                 kubernetes.scaleStatefulSet(cluster.getClusterId(), cluster.getNewReplicas());
             }
