@@ -10,19 +10,19 @@ When upgrading, sometimes a router pod is not automatically restarted by {KubePl
 .Prerequisites
 
 * Completed the upgrading steps to a new release of {ProductName}. For more information on how to upgrade, see:
-** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#downloading-messaging[Upgrading {ProductName} using a YAML bundle]
-** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#downloading-messaging[Upgrading {ProductName} using Ansible]
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#upgrading-enmasse-using-bundle-messaging[Upgrading {ProductName} using a YAML bundle]
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#upgrading-enmasse-using-ansible-messaging[Upgrading {ProductName} using Ansible]
 
 .Procedure
 
-. Find the router pod running the previous version of the image:
+. Find the router pod running a previous version of the image:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
 oc get pod -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{range .spec.containers}}{{"\t"}}{{.image}}{{"\n"}}{{end}}{{"\n"}}{{end}}' --selector=capability=router
 ----
 
-. Delete the router pod that is running the previous version of the image:
+. Delete the router pod that is running a previous version of the image:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
