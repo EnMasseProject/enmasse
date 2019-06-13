@@ -119,8 +119,12 @@ class UpgradeTest extends TestBase {
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-small", MESSAGE_COUNT, true));
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", MESSAGE_COUNT, true));
         } else {
-            createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", "v1alpha1");
-            createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", "v1alpha1");
+            if (!KubeCMDClient.getUser(kubernetes.getInfraNamespace(), "brokered", "test-brokered").getRetCode()) {
+                createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", "v1alpha1");
+            }
+            if (!KubeCMDClient.getUser(kubernetes.getInfraNamespace(), "standard", "test-standard").getRetCode()) {
+                createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", "v1alpha1");
+            }
             Thread.sleep(30_000);
 
             assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
@@ -226,7 +230,7 @@ class UpgradeTest extends TestBase {
                             .replace("enmasse-controller-manager", "controller-manager"));
                     if (!images.contains(container.getImage()
                             .replaceAll("^.*/", "")
-                            .replace("enmasse-controller-manager", "controller-manager")) && !container.getImage().contains("postresql")) {
+                            .replace("enmasse-controller-manager", "controller-manager")) && !container.getImage().contains("postgresql")) {
                         log.warn("Container is not upgraded");
                         ready.set(false);
                     } else {
