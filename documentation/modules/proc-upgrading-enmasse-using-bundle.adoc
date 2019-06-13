@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-upgrading-enmasse.adoc
+// assembly-upgrading.adoc
 
 [id='upgrading-enmasse-using-bundle-{context}']
 = Upgrading {ProductName} using a YAML bundle
@@ -49,5 +49,5 @@ endif::[]
 {cmdcli} get pods -w
 ----
 +
-The upgrade should cause all pods to be restarted within a couple of minutes.
+The pods restart and become active within several minutes.
 

@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-upgrading-enmasse.adoc
+// assembly-upgrading.adoc
 
 [id='upgrading-enmasse-using-ansible-{context}']
 = Upgrading {ProductName} using Ansible
