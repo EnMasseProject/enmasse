@@ -251,6 +251,7 @@ class UpgradeTest extends TestBase {
             });
             return ready.get();
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
+        waitUntilDeployed(kubernetes.getInfraNamespace());
     }
 
     private void waitUntilDeployed(String namespace) throws Exception {
