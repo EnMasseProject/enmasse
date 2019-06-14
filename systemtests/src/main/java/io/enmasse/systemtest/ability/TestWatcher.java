@@ -10,8 +10,9 @@ import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
+import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -22,45 +23,43 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class TestWatcher implements AfterTestExecutionCallback {
+public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler {
     private static final Logger log = CustomLogger.getLogger();
 
     @Override
-    public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
+    public void handleTestExecutionException(ExtensionContext extensionContext, Throwable throwable) {
         Method testMethod = extensionContext.getRequiredTestMethod();
         Class testClass = extensionContext.getRequiredTestClass();
-        if (extensionContext.getExecutionException().isPresent()) {
-            try {
-                log.warn("Test failed: Saving pod logs and info...");
-                Kubernetes kube = Kubernetes.getInstance();
-                Path path = Paths.get(
-                        Environment.getInstance().testLogDir(),
-                        "failed_test_logs",
-                        testClass.getName(),
-                        testMethod.getName());
-                Files.createDirectories(path);
-                List<Pod> pods = kube.listPods();
-                for (Pod p : pods) {
-                    try {
-                        List<Container> containers = kube.getContainersFromPod(p.getMetadata().getName());
-                        for (Container c : containers) {
-                            File filePath = new File(path.toString(), String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
-                            try {
-                                Files.write(Paths.get(filePath.toString()), kube.getLog(p.getMetadata().getName(), c.getName()).getBytes());
-                            } catch (IOException e) {
-                                log.warn("Cannot write file {}", filePath.getName());
-                            }
+        try {
+            log.warn("Test failed: Saving pod logs and info...");
+            Kubernetes kube = Kubernetes.getInstance();
+            Path path = Paths.get(
+                    Environment.getInstance().testLogDir(),
+                    "failed_test_logs",
+                    testClass.getName(),
+                    testMethod.getName());
+            Files.createDirectories(path);
+            List<Pod> pods = kube.listPods();
+            for (Pod p : pods) {
+                try {
+                    List<Container> containers = kube.getContainersFromPod(p.getMetadata().getName());
+                    for (Container c : containers) {
+                        File filePath = new File(path.toString(), String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
+                        try {
+                            Files.write(Paths.get(filePath.toString()), kube.getLog(p.getMetadata().getName(), c.getName()).getBytes());
+                        } catch (IOException e) {
+                            log.warn("Cannot write file {}", filePath.getName());
                         }
-                    } catch (Exception ex) {
-                        log.warn("Cannot access logs from container: ", ex);
                     }
+                } catch (Exception ex) {
+                    log.warn("Cannot access logs from container: ", ex);
                 }
-                Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
-                Files.write(Paths.get(path.toString(), "events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
-                log.info("Pod logs and describe successfully stored into {}", path.toString());
-            } catch (Exception ex) {
-                log.warn("Cannot save pod logs and info: {}", ex.getMessage());
             }
+            Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
+            Files.write(Paths.get(path.toString(), "events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
+            log.info("Pod logs and describe successfully stored into {}", path.toString());
+        } catch (Exception ex) {
+            log.warn("Cannot save pod logs and info: {}", ex.getMessage());
         }
     }
 }
