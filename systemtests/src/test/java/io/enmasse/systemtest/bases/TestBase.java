@@ -38,6 +38,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.*;
 import io.vertx.proton.sasl.SaslSystemException;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
@@ -1170,6 +1171,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
         assertThat("Incorrect count of messages received",
                 receivedCount, is(messages.size()));
+    }
+
+    protected List<String> extractBodyAsString(Future<List<Message>> msgs) throws Exception {
+        return msgs.get(1, TimeUnit.MINUTES).stream().map(m -> (String) ((AmqpValue) m.getBody()).getValue()).collect(Collectors.toList());
     }
 
     //================================================================================================

@@ -326,10 +326,6 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
                 received.get(1, TimeUnit.MINUTES).get(0).getGroupId(), is(groupID));
     }
 
-    static List<String> extractBodyAsString(Future<List<Message>> msgs) throws Exception {
-        return msgs.get(1, TimeUnit.MINUTES).stream().map(m -> (String) ((AmqpValue) m.getBody()).getValue()).collect(Collectors.toList());
-    }
-
     @Test
     void testDurableSubscriptionOnPooledTopic() throws Exception {
         Address topic = new AddressBuilder()

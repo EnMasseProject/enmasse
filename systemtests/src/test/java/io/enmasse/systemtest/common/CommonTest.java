@@ -15,11 +15,11 @@ import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
+import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import javax.net.ssl.SSLException;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.TestTag.nonPR;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
@@ -326,12 +328,79 @@ class CommonTest extends TestBase {
                 .endSpec()
                 .build();
 
-        setAddresses(brokeredQueue, standardQueue);
+        Address standardLargeQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(standard.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(standard, "test-large-queue-standard"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-large-queue-standard")
+                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .endSpec()
+                .build();
+
+        Address standardXLargeQueue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(standard.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(standard, "test-xlarge-queue-standard"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-xlarge-queue-standard")
+                .withPlan(DestinationPlan.STANDARD_XLARGE_QUEUE)
+                .endSpec()
+                .build();
+
+        Address standardTopic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(standard.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(standard, "test-topic-standard"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("test-topic-standard")
+                .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                .endSpec()
+                .build();
+
+        Address standardSub = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(standard.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(standard, "test-sub-standard"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("subscription")
+                .withAddress("test-sub-standard")
+                .withTopic(standardTopic.getSpec().getAddress())
+                .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
+                .endSpec()
+                .build();
+
+        setAddresses(brokeredQueue, standardQueue, standardLargeQueue, standardXLargeQueue, standardTopic, standardSub);
 
         int podCount = kubernetes.listPods().size();
 
         sendDurableMessages(brokered, brokeredQueue, user, 100);
         sendDurableMessages(standard, standardQueue, user, 30);
+        sendDurableMessages(standard, standardLargeQueue, user, 30);
+        sendDurableMessages(standard, standardXLargeQueue, user, 30);
+
+        AmqpClient client = amqpClientFactory.createTopicClient();
+        List<String> batch1 = Arrays.asList("one", "two", "three");
+
+        log.info("Receiving first batch");
+        Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(standardSub), batch1.size());
+
+        log.info("Sending first batch");
+        assertThat("Wrong count of messages sent: batch1",
+                client.sendMessages(standardTopic.getSpec().getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
+        assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
+
+        log.info("Sending second batch");
+        List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
+        assertThat("Wrong messages sent: batch2",
+                client.sendMessages(standardTopic.getSpec().getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
 
         kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
         Thread.sleep(20_000);
@@ -343,6 +412,12 @@ class CommonTest extends TestBase {
         assertConnectable(standard, user);
         receiveDurableMessages(brokered, brokeredQueue, user, 100);
         receiveDurableMessages(standard, standardQueue, user, 30);
+        receiveDurableMessages(standard, standardLargeQueue, user, 30);
+        receiveDurableMessages(standard, standardXLargeQueue, user, 30);
+
+        log.info("Receiving second batch");
+        recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(standardSub), batch2.size());
+        assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
     }
 
     private void assertConnectable(AddressSpace space, UserCredentials user) throws Exception {
@@ -357,7 +432,7 @@ class CommonTest extends TestBase {
                 log.info("Failed to connect to address space: {} - {}", name, e.getMessage());
             }
             Thread.sleep(1000);
-        } while(!budget.timeoutExpired());
+        } while (!budget.timeoutExpired());
 
         fail(String.format("Failed to assert address space %s connectable within timeout", name));
     }
