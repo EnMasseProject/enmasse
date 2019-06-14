@@ -46,7 +46,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
                     for (Container c : containers) {
                         File filePath = new File(path.toString(), String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
                         try {
-                            Files.write(Paths.get(filePath.toString()), kube.getLog(p.getMetadata().getName(), c.getName()).getBytes());
+                            Files.write(filePath.toPath(), kube.getLog(p.getMetadata().getName(), c.getName()).getBytes());
                         } catch (IOException e) {
                             log.warn("Cannot write file {}", filePath.getName());
                         }
@@ -55,8 +55,8 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
                     log.warn("Cannot access logs from container: ", ex);
                 }
             }
-            Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
-            Files.write(Paths.get(path.toString(), "events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
+            Files.write(path.resolve("describe.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
+            Files.write(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
             log.info("Pod logs and describe successfully stored into {}", path.toString());
         } catch (Exception ex) {
             log.warn("Cannot save pod logs and info: {}", ex.getMessage());
