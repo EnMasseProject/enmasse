@@ -27,7 +27,31 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     private static final Logger log = CustomLogger.getLogger();
 
     @Override
-    public void handleTestExecutionException(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
+    public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        saveKubernetesState(context, throwable);
+    }
+
+    @Override
+    public void handleBeforeAllMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        saveKubernetesState(context, throwable);
+    }
+
+    @Override
+    public void handleBeforeEachMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        saveKubernetesState(context, throwable);
+    }
+
+    @Override
+    public void handleAfterEachMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        saveKubernetesState(context, throwable);
+    }
+
+    @Override
+    public void handleAfterAllMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
+        saveKubernetesState(context, throwable);
+    }
+
+    private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
         Method testMethod = extensionContext.getRequiredTestMethod();
         Class testClass = extensionContext.getRequiredTestClass();
         try {
