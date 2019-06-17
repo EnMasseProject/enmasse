@@ -153,7 +153,7 @@ public class AddressSpaceUtils {
         }
         resources = callable.call();
         if (resources != null && resources.size() > 0) {
-            throw new TimeoutException("Timed out waiting for namespace " + addressSpace.getMetadata().getName() + " to disappear. Resources left: " + resources);
+            throw new TimeoutException("Timed out waiting for address space " + addressSpace.getMetadata().getName() + " to disappear. Resources left: " + resources);
         }
     }
 

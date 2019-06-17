@@ -188,7 +188,7 @@ public class GlobalConsolePage implements IWebPage {
     }
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        AddressSpaceWebItem item = (AddressSpaceWebItem) selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getCheckBox(), "Select address space to delete");
         selenium.clickOnItem(getAddressSpaceMenu(), "Address space dropdown");
         selenium.clickOnItem(getDeleteButton());
@@ -197,7 +197,7 @@ public class GlobalConsolePage implements IWebPage {
     }
 
     public ConsoleWebPage openAddressSpaceConsolePage(AddressSpace addressSpace) throws Exception {
-        AddressSpaceWebItem item = (AddressSpaceWebItem) selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getConsoleRoute());
         ConsoleWebPage consolePage = new ConsoleWebPage(selenium, addressSpace, credentials);
         consolePage.login();

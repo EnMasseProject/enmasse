@@ -168,7 +168,7 @@ public class SeleniumProvider {
         takeScreenShot();
         assertNotNull(script, "Selenium provider failed, script to execute is null");
         log.info("Execute script: " + (textToLog == null ? script : textToLog));
-        ((JavascriptExecutor) driver).executeScript(script, (Object[]) arguments);
+        ((JavascriptExecutor) driver).executeScript(script, arguments);
         angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
     }
@@ -262,7 +262,7 @@ public class SeleniumProvider {
         return getElement(webElements, 30, count);
     }
 
-    public WebItem waitUntilItemPresent(int timeInSeconds, Supplier<WebItem> item) throws Exception {
+    public <T extends WebItem> T waitUntilItemPresent(int timeInSeconds, Supplier<T> item) throws Exception {
         return waitUntilItem(timeInSeconds, item, true);
     }
 
@@ -270,10 +270,10 @@ public class SeleniumProvider {
         waitUntilItem(timeInSeconds, item, false);
     }
 
-    private WebItem waitUntilItem(int timeInSeconds, Supplier<WebItem> item, boolean present) throws Exception {
+    private <T extends WebItem> T waitUntilItem(int timeInSeconds, Supplier<T> item, boolean present) throws Exception {
         log.info("Waiting for element be present");
         int attempts = 0;
-        WebItem result = null;
+        T result = null;
         while (attempts++ < timeInSeconds) {
             if (present) {
                 try {
