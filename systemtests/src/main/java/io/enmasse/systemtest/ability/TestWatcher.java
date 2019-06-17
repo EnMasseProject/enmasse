@@ -27,7 +27,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     private static final Logger log = CustomLogger.getLogger();
 
     @Override
-    public void handleTestExecutionException(ExtensionContext extensionContext, Throwable throwable) {
+    public void handleTestExecutionException(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
         Method testMethod = extensionContext.getRequiredTestMethod();
         Class testClass = extensionContext.getRequiredTestClass();
         try {
@@ -61,5 +61,6 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
         } catch (Exception ex) {
             log.warn("Cannot save pod logs and info: {}", ex.getMessage());
         }
+        throw throwable;
     }
 }
