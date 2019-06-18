@@ -1114,16 +1114,21 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void sendDurableMessages(AddressSpace addressSpace, Address destination,
                                        UserCredentials credentials, int count) throws Exception {
+        sendDurableMessages(addressSpace, destination.getSpec().getAddress(), credentials, count);
+    }
+
+    protected void sendDurableMessages(AddressSpace addressSpace, String destination,
+                                       UserCredentials credentials, int count) throws Exception {
         AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
         List<Message> listOfMessages = new ArrayList<>();
         IntStream.range(0, count).forEach(num -> {
             Message msg = Message.Factory.create();
-            msg.setAddress(destination.getSpec().getAddress());
+            msg.setAddress(destination);
             msg.setDurable(true);
             listOfMessages.add(msg);
         });
-        Future<Integer> sent = client.sendMessages(destination.getSpec().getAddress(), listOfMessages.toArray(new Message[0]));
+        Future<Integer> sent = client.sendMessages(destination, listOfMessages.toArray(new Message[0]));
         assertThat("Cannot send durable messages to " + destination, sent.get(1, TimeUnit.MINUTES), is(count));
         client.close();
     }

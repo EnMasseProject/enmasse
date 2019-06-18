@@ -386,21 +386,14 @@ class CommonTest extends TestBase {
         sendDurableMessages(standard, standardLargeQueue, user, 30);
         sendDurableMessages(standard, standardXLargeQueue, user, 30);
 
-        AmqpClient client = amqpClientFactory.createTopicClient();
-        List<String> batch1 = Arrays.asList("one", "two", "three");
+        AmqpClient client = amqpClientFactory.createTopicClient(standard);
+        client.getConnectOptions().setCredentials(user);
 
-        log.info("Receiving first batch");
-        Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(standardSub), batch1.size());
-
-        log.info("Sending first batch");
-        assertThat("Wrong count of messages sent: batch1",
-                client.sendMessages(standardTopic.getSpec().getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
-        assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
-
-        log.info("Sending second batch");
-        List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
-        assertThat("Wrong messages sent: batch2",
-                client.sendMessages(standardTopic.getSpec().getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
+        log.info("Subscribe first receiver");
+        Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(standardSub), 30);
+        sendDurableMessages(standard, AddressUtils.getQualifiedSubscriptionAddress(standardSub), user, 30);
+        assertThat("Wrong messages received: ", recvResults.get(1, TimeUnit.MINUTES).size(), is(30));
+        sendDurableMessages(standard, AddressUtils.getQualifiedSubscriptionAddress(standardSub), user, 30);
 
         kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
         Thread.sleep(20_000);
@@ -415,26 +408,9 @@ class CommonTest extends TestBase {
         receiveDurableMessages(standard, standardLargeQueue, user, 30);
         receiveDurableMessages(standard, standardXLargeQueue, user, 30);
 
-        log.info("Receiving second batch");
-        recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(standardSub), batch2.size());
-        assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
-    }
-
-    private void assertConnectable(AddressSpace space, UserCredentials user) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
-        String name = space.getMetadata().getName();
-        do {
-            try {
-                connectAddressSpace(space, user);
-                log.info("Successfully connected to address space : {}", name);
-                return;
-            } catch (IOException e) {
-                log.info("Failed to connect to address space: {} - {}", name, e.getMessage());
-            }
-            Thread.sleep(1000);
-        } while (!budget.timeoutExpired());
-
-        fail(String.format("Failed to assert address space %s connectable within timeout", name));
+        log.info("Subscribe receiver again");
+        recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(standardSub), 30);
+        assertThat("Wrong messages received: batch2", recvResults.get(1, TimeUnit.MINUTES).size(), is(30));
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -530,6 +506,23 @@ class CommonTest extends TestBase {
         }, runnable -> new Thread(runnable).start());
 
         return resultPromise;
+    }
+
+    private void assertConnectable(AddressSpace space, UserCredentials user) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(1, TimeUnit.MINUTES);
+        String name = space.getMetadata().getName();
+        do {
+            try {
+                connectAddressSpace(space, user);
+                log.info("Successfully connected to address space : {}", name);
+                return;
+            } catch (IOException e) {
+                log.info("Failed to connect to address space: {} - {}", name, e.getMessage());
+            }
+            Thread.sleep(1000);
+        } while (!budget.timeoutExpired());
+
+        fail(String.format("Failed to assert address space %s connectable within timeout", name));
     }
 }
 
