@@ -1,24 +1,8 @@
 #!/usr/bin/env groovy
 def lib
-def AGENT = null
-
-node('master') {
-    stage('Set agent label') {
-        AGENT = ghprbCommentBody.contains("debug=true") ? "${params.AGENT_LABEL}-debug" : "${params.AGENT_LABEL}"
-        echo "This agent label will be used: ${AGENT}"
-    }
-}
-
 
 pipeline {
-//    parameters {
-//        //execute all tests as default for each new Pull request
-//        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
-//        string(name: 'TEST_PROFILE', defaultValue: 'systemtests-pr', description: 'maven profile for tests')
-//        string(name: 'UPGRADE_FROM', defaultValue: '0.26.2', description: 'base version which is upgraded')
-//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-//        string(name: 'DEBUG', defaultValue: 'false', description: 'skip post actions')
-//    }
+
     options {
         timeout(time: 15, unit: 'HOURS')
         ansiColor('xterm')
@@ -27,15 +11,13 @@ pipeline {
         DOCKER_REGISTRY = '172.30.1.1:5000'
         DOCKER_ORG = 'enmasseci'
         TAG = "latest"
-        CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         OPENSHIFT_PROJECT = "enmasse-infra"
-        USE_DUMMY_ADDRESS = true
     }
     agent {
         node {
-            label "${AGENT}"
+            label "enmasse"
         }
     }
     stages {
@@ -47,7 +29,6 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
         stage('wait for agent ready') {
@@ -76,16 +57,9 @@ pipeline {
                     } else {
                         env.UPGRADE_FROM = params.UPGRADE_FROM
                     }
-                    if (env.ghprbCommentBody.contains('debug=true')) {
-                        env.DEBUG = 'true'
-                        env.SKIP_CLEANUP = 'true'
-                    } else {
-                        env.DEBUG = params.DEBUG
-                    }
                     echo "TEST_CASE: ${env.TEST_CASE}"
                     echo "TEST_PROFILE: ${env.TEST_PROFILE}"
                     echo "UPGRADE_FROM: ${env.UPGRADE_FROM}"
-                    echo "DEBUG: ${env.DEBUG}"
                 }
             }
         }
@@ -141,7 +115,7 @@ pipeline {
                 }
             }
         }
-        stage('[upgrade] run systemtests before upgrade') {
+        stage('[upgrade] run upgrade test') {
             when {
                 expression { env.TEST_PROFILE == 'upgrade' }
             }
@@ -154,7 +128,7 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh "make templates || true"
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', 'upgrade.**')
+                        lib.runSystemtests('systemtests-upgrade', 'upgrade.**')
                     }
                 }
             }
@@ -181,7 +155,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.runSystemtests(env.CORES_DIR, env.TEST_PROFILE, env.TEST_CASE)
+                        lib.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
                     }
                 }
             }
@@ -190,7 +164,7 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR, env.DEBUG)
+                lib.postAction(env.ARTIFACTS_DIR)
             }
         }
         failure {

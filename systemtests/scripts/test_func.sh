@@ -9,10 +9,15 @@ CURDIR=`${READLINK} -f \`dirname $0\``
 
 source "${CURDIR}/../../scripts/logger.sh"
 
-function download_enmasse() {
-    curl -0 https://dl.bintray.com/enmasse/snapshots/enmasse-latest.tgz | tar -zx
-    D=`${READLINK} -f enmasse-latest`
-    echo ${D}
+function getCommand() {
+    if which oc &> /dev/null; then
+        CMD=oc
+    elif which kubectl &> /dev/null; then
+        CMD=kubectl
+    else
+        err_and_exit "Cannot find oc or kubectl command, please check path to ensure it is installed"
+    fi
+    echo ${CMD}
 }
 
 function setup_test_openshift() {
@@ -232,58 +237,32 @@ function get_kubernetes_info() {
     RESOURCE=${2}
     NAMESPACE=${3}
     SUFIX=${4}
+    CMD=$(getCommand)
     FILE_NAME="openshift-${RESOURCE}-${NAMESPACE}${SUFIX}.log"
-    kubectl get ${RESOURCE} -n ${NAMESPACE} > "${LOG_DIR}/${FILE_NAME}"
-    kubectl get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${LOG_DIR}/${FILE_NAME}"
+    ${CMD} get ${RESOURCE} -n ${NAMESPACE} > "${LOG_DIR}/${FILE_NAME}"
+    ${CMD} get ${RESOURCE} -n ${NAMESPACE} -o yaml >> "${LOG_DIR}/${FILE_NAME}"
 }
 
 #store previous logs from restarted pods
 function get_previous_logs() {
     LOG_DIR=${1}
     ADDRESS_SPACE=${2}
-
-    pods_id=$(kubectl get pods -n ${ADDRESS_SPACE} | awk 'NR >1 {print $1}')
+    CMD=$(getCommand)
+    pods_id=$(${CMD} get pods -n ${ADDRESS_SPACE} | awk 'NR >1 {print $1}')
     for pod_id in ${pods_id}
     do
-        restart_count=$(kubectl get -o json pod -n ${ADDRESS_SPACE} ${pod_id} -o jsonpath={.status.containerStatuses[0].restartCount})
+        restart_count=$(${CMD} get -o json pod -n ${ADDRESS_SPACE} ${pod_id} -o jsonpath={.status.containerStatuses[0].restartCount})
         if (( ${restart_count} > 0 ))
         then
             echo "pod ${pod_id} was restarted"
-            kubectl logs -p ${pod_id} -n ${ADDRESS_SPACE} > "${LOG_DIR}/${pod_id}.previous.log"
+            ${CMD} logs -p ${pod_id} -n ${ADDRESS_SPACE} > "${LOG_DIR}/${pod_id}.previous.log"
         fi
     done
 }
 
 function get_all_events() {
     LOG_DIR=${1}
-    kubectl get events --all-namespaces > ${LOG_DIR}/all_events.log
-}
-
-function replace_docker_log_driver() {
-    local docker="${1}"
-    local docker_config_path="/etc/${docker}/daemon.json"
-    local tmpf="$(mktemp)"
-
-    if [[ "$(jq '."log-driver" == "json-file"' "${docker_config_path}")" == "true" ]]; then
-        info "docker config already contains log-driver set to json-file"
-        return
-    fi
-
-    info "stop docker..."
-    sudo systemctl stop "${docker}"
-    info "create or replace log-driver=json-file in ${docker_config_path}"
-    jq '."log-driver"="json-file"' "${docker_config_path}" >"${tmpf}"
-    sudo cat "${tmpf}" | sudo tee "${docker_config_path}"
-    rm -f "${tmpf}"
-}
-
-function get_docker_info() {
-    ARTIFACTS_DIR=${1}
-    CONTAINER=${2}
-
-    FILENAME_STDOUT="docker_${CONTAINER}.stdout.log"
-    FILENAME_STDERR="docker_${CONTAINER}.stderr.log"
-    docker logs ${CONTAINER} > ${FILENAME_STDOUT} 2> ${FILENAME_STDERR}
+    ${CMD} get events --all-namespaces > ${LOG_DIR}/all_events.log
 }
 
 function stop_and_check_openshift() {
@@ -382,19 +361,6 @@ function get_oc_args() {
         echo $OC_39
     else
         echo $OC_310
-    fi
-}
-
-function is_upgraded() {
-    IMAGE=${1}
-    TAG=${TAG:-"latest"}
-
-    IMAGE_TAG=${IMAGE##*:}
-    TEMPLATES=$(cat ${CURDIR}/../../imageenv.txt)
-    if [[ "${TEMPLATES}" == *"${IMAGE}"* ]]; then
-        echo "true"
-    else
-        echo "false"
     fi
 }
 

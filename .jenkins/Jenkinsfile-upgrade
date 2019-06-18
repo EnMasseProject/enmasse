@@ -3,14 +3,6 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-//    parameters {
-//        string(name: 'TEST_CASE', defaultValue: 'common.upgrade.**', description: 'maven parameter for executing specific tests')
-//        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
-//        string(name: 'COMMIT_SHA', defaultValue: '', description: 'Commit sha1')
-//        string(name: 'START_VERSION', defaultValue: '0.26.2', description: 'Version of enmasse which will be upgraded')
-//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-//        string(name: 'DEBUG', defaultValue: 'false', description: 'skip post actions')
-//    }
     options {
         timeout(time: 2, unit: 'HOURS')
         ansiColor('xterm')
@@ -24,7 +16,7 @@ pipeline {
     }
     agent {
         node {
-            label "${params.AGENT_LABEL}"
+            label "enmasse"
         }
     }
     stages {
@@ -80,7 +72,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "./systemtests/scripts/login_cluster_user.sh true"
+                        lib.loginOCUser(true)
                     }
                 }
             }
@@ -95,8 +87,8 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh 'make templates || true'
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-upgrade', params.TEST_CASE)
+                        sh(script: 'make templates || true')
+                        lib.runSystemtests('systemtests-upgrade', params.TEST_CASE)
                     }
                 }
             }
@@ -105,7 +97,7 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR, params.DEBUG)
+                lib.postAction(env.ARTIFACTS_DIR)
             }
         }
         failure {
