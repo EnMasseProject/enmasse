@@ -12,5 +12,5 @@ spec:
   endpoints:
   - port: health
   namespaceSelector:
-    matchNames:
-    - ${NAMESPACE}
+    matchLabels:
+      app: enmasse
