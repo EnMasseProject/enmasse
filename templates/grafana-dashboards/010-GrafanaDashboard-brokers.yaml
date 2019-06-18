@@ -119,7 +119,7 @@ spec:
               "value": "null"
             }
           ],
-          "valueName": "avg"
+          "valueName": "current"
         },
         {
           "collapsed": false,
