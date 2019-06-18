@@ -391,9 +391,9 @@ class CommonTest extends TestBase {
 
         log.info("Subscribe first receiver");
         Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(standardSub), 30);
-        sendDurableMessages(standard, AddressUtils.getQualifiedSubscriptionAddress(standardSub), user, 30);
+        sendDurableMessages(standard, standardTopic, user, 30);
         assertThat("Wrong messages received: ", recvResults.get(1, TimeUnit.MINUTES).size(), is(30));
-        sendDurableMessages(standard, AddressUtils.getQualifiedSubscriptionAddress(standardSub), user, 30);
+        sendDurableMessages(standard, standardTopic, user, 30);
 
         kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
         Thread.sleep(20_000);
