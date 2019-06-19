@@ -6,6 +6,7 @@ pipeline {
         BROKERED_JOB_NAME = 'enmasse-master-brokered'
         PLANS_JOB_NAME = 'enmasse-master-common'
         UPGRADE_JOB_NAME = 'enmasse-master-upgrade'
+        MULTI_UPGRADE_JOB_NAME = 'enmasse-master-upgrade-multiple'
         IOT_JOB_NAME = 'enmasse-master-iot'
     }
     options {
@@ -39,10 +40,9 @@ pipeline {
         }
         stage('execute upgrade') {
             steps {
-                build job: env.UPGRADE_JOB_NAME, wait: false, parameters: [
-                        [$class: 'StringParameterValue', name: 'BUILD_TAG', value: BUILD_TAG],
-                        [$class: 'StringParameterValue', name: 'TEST_CASE', value: 'common.upgrade.**'],
-                        [$class: 'StringParameterValue', name: 'START_VERSION', value: params.UPGRADE_FROM],
+                build job: env.MULTI_UPGRADE_JOB_NAME, wait: false, parameters: [
+                        [$class: 'StringParameterValue', name: 'UPGRADE_FROM', value: params.UPGRADE_FROM],
+                        [$class: 'StringParameterValue', name: 'UPGRADE_JOB_NAME', value: env.UPGRADE_JOB_NAME],
                 ]
             }
         }
