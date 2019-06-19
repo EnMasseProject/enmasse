@@ -1,5 +1,6 @@
 ## 0.29.0
 * Upgrade to Apache ActiveMQ Artemis 2.8.0
+* Upgrade to Apache Qpid Dispatch Router 1.8.0
 
 ## 0.28.1
 * Improve the console operator, add readiness/liveness probes to Console's Apache HTTPD
