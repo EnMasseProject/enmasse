@@ -17,4 +17,3 @@ do
 done
 
 get_all_events ${INFO_LOG_DIR}
-get_docker_info ${INFO_LOG_DIR} origin

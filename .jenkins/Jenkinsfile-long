@@ -3,23 +3,18 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-//    parameters {
-//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-//    }
     options {
         timeout(time: 20, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {
-        CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
-
         TAG = 'latest'
         OPENSHIFT_PROJECT = "enmasse-infra"
     }
     agent {
         node {
-            label "${params.AGENT_LABEL}"
+            label "enmasse"
         }
     }
     stages {
@@ -63,7 +58,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.runSystemtests(env.CORES_DIR, 'systemtests-marathon', 'marathon.**')
+                        lib.runSystemtests('systemtests-marathon', 'marathon.**')
                     }
                 }
             }
@@ -72,7 +67,7 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR, 'false')
+                lib.postAction(env.ARTIFACTS_DIR)
             }
         }
         failure {

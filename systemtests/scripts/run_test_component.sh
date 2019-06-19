@@ -1,12 +1,5 @@
 #!/usr/bin/env bash
 
-#required environment variables
-#ARTIFACTS_DIR
-
-#optional envirinmnt dir
-#SYSTEMTESTS_UPGRADED
-#ENABLE_RBAC
-
 CURDIR=`readlink -f \`dirname $0\``
 source ${CURDIR}/test_func.sh
 source "${CURDIR}/../../scripts/logger.sh"

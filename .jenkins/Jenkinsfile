@@ -8,9 +8,6 @@ pipeline {
         UPGRADE_JOB_NAME = 'enmasse-master-upgrade'
         IOT_JOB_NAME = 'enmasse-master-iot'
     }
-//    parameters {
-//        string(name: 'UPGRADE_FROM', defaultValue: '', description: 'upgrade from')
-//    }
     options {
         ansiColor('xterm')
     }

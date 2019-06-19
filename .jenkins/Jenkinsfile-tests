@@ -3,31 +3,21 @@
 def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
-//    parameters {
-//        string(name: 'TEST_CASE', defaultValue: '', description: 'maven parameter for executing specific tests')
-//        string(name: 'TEST_PROFILE', defaultValue: 'systemtests', description: 'maven parameter for executing test from profile')
-//        string(name: 'DEPLOY_IOT', defaultValue: 'false', description: 'deploy iot component')
-//        string(name: 'BUILD_TAG', defaultValue: '', description: 'version of images')
-//        string(name: 'AGENT_LABEL', defaultValue: 'enmasse', description: 'label of openstack agent')
-//        string(name: 'DEBUG', defaultValue: 'false', description: 'skip post actions')
-//    }
     options {
-        timeout(time: 5, unit: 'HOURS')
+        timeout(time: 6, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {
         MAILING_LIST = credentials('MAILING_LIST')
-        CORES_DIR = "/tmp/cores"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
 
         OPENSHIFT_PROJECT = "enmasse-infra"
         TAG = 'latest'
-        SKIP_CLEANUP = "${params.DEBUG}"
     }
     agent {
         node {
-            label "${params.AGENT_LABEL}"
+            label "enmasse"
         }
     }
     stages {
@@ -53,7 +43,6 @@ pipeline {
         stage('checkout') {
             steps {
                 checkout scm
-                sh 'rm -rf artifacts && mkdir -p artifacts'
             }
         }
         stage('start openshift') {
@@ -78,7 +67,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.runSystemtests(env.CORES_DIR, params.TEST_PROFILE, params.TEST_CASE)
+                        lib.runSystemtests(params.TEST_PROFILE, params.TEST_CASE)
                     }
                 }
             }
@@ -87,7 +76,7 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.CORES_DIR, env.ARTIFACTS_DIR, params.DEBUG)
+                lib.postAction(env.ARTIFACTS_DIR)
             }
         }
         failure {
