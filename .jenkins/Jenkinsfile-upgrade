@@ -16,7 +16,7 @@ pipeline {
     }
     agent {
         node {
-            label "enmasse"
+            label "${params.AGENT_LABEL}"
         }
     }
     stages {
