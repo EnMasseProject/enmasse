@@ -56,9 +56,13 @@ pipeline {
                 }
             }
         }
-        stage('download released version') {
+        stage('download released versions') {
             steps {
-                sh "sh ./systemtests/scripts/download_released_enmasse.sh ${params.START_VERSION}"
+                script {
+                    for (def startVersion : params.START_VERSION.split(",")) {
+                        sh "sh ./systemtests/scripts/download_released_enmasse.sh ${startVersion}"
+                    }
+                }
             }
         }
         stage('install requirements') {
@@ -78,17 +82,20 @@ pipeline {
             }
         }
         stage('run systemtests upgrade tests') {
-            environment {
-                TAG = "latest"
-                USE_DUMMY_ADDRESS = true
-                UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
-                START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${params.START_VERSION}"
-            }
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        sh(script: 'make templates || true')
-                        lib.runSystemtests('systemtests-upgrade', params.TEST_CASE)
+                withEnv([
+                    "TAG=latest",
+                    "USE_DUMMY_ADDRESS=true",
+                    "UPGRADE_TEMPLATES=${WORKSPACE}/templates/build/enmasse-${env.TAG}",
+                    "START_TEMPLATES=${WORKSPACE}/templates/build/enmasse-${startVersion}"]) {
+                    withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                        script {
+                            for (def startVersion : params.START_VERSION.split(",")) {
+                                println "Starting upgrade tests from version "+startVersion
+                                sh(script: 'make templates || true')
+                                lib.runSystemtests('systemtests-upgrade', params.TEST_CASE)
+                            }
+                        }
                     }
                 }
             }
