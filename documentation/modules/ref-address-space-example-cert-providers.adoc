@@ -3,7 +3,7 @@
 // assembly-managing-address-spaces.adoc
 
 [id='ref-address-space-example-cert-providers-{context}']
-= Configuring an address space certificate provider
+= Address space certificate provider configuration examples
 
 The following address space examples show how you can configure the endpoints of an `AddressSpace` using different certificate providers. The certificate provider determines how certificates are issued for the endpoints of an `AddressSpace`.
 
