@@ -15,4 +15,5 @@ public class TestTag {
     public static final String upgrade = "upgrade";
     public static final String noneAuth = "noneAuth";
     public static final String smoke = "smoke";
+    public static final String olm = "olm";
 }

@@ -30,6 +30,7 @@ public class Environment {
     public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
     public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
     public static final String TAG_ENV = "TAG";
+    public static final String APP_NAME_ENV = "APP_NAME";
 
     public static final String IS_OCP4_REGEXP = "4.*";
 
@@ -50,6 +51,7 @@ public class Environment {
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.5").toString());
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
+    private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
 
     private Environment() {
         String debugFormat = "{}:{}";
@@ -63,6 +65,7 @@ public class Environment {
         log.info(debugFormat, ENMASSE_VERSION_SYSTEM_PROPERTY, enmasseVersion);
         log.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
+        log.info(debugFormat, APP_NAME_ENV, appName);
         if(!useMinikube) {
             log.info(debugFormat, OCP_VERSION_ENV, ocpVersion);
         }
@@ -156,6 +159,10 @@ public class Environment {
 
     public String getTag() {
         return tag;
+    }
+
+    public String getAppName() {
+        return appName;
     }
 
 }

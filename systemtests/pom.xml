@@ -246,5 +246,12 @@
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
+        <profile>
+            <id>olm</id>
+            <properties>
+                <groups>olm &amp; !shared-standard &amp; !shared-brokered &amp; !shared-mqtt  &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !smoke-iot &amp; !isolated</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
     </profiles>
 </project>

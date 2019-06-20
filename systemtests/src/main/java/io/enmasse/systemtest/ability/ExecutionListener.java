@@ -40,11 +40,11 @@ public class ExecutionListener implements TestExecutionListener {
                     try {
                         AddressSpaceUtils.deleteAddressSpaceAndWait(addrSpace, logCollector);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.warn("Cleanup failed or no clean is needed");
                     }
                 });
             } catch (Exception e) {
-                e.printStackTrace();
+                log.warn("Cleanup failed or no clean is needed");
             }
             if (IoTUtils.isIoTInstalled(kube)) {
                 try {
@@ -68,7 +68,7 @@ public class ExecutionListener implements TestExecutionListener {
                     log.info("Infinispan server will be removed");
                     SystemtestsKubernetesApps.deleteInfinispanServer(kube.getInfraNamespace());
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.warn("Cleanup failed or no clean is needed");
                 }
             }
         } else {

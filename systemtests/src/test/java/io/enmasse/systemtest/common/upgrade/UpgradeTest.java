@@ -97,7 +97,7 @@ class UpgradeTest extends TestBase {
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion());
         Thread.sleep(30_000);
 
-        waitUntilDeployed(kubernetes.getInfraNamespace());
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
         Thread.sleep(60_000);
 
         assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
@@ -192,7 +192,7 @@ class UpgradeTest extends TestBase {
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
         }
         Thread.sleep(60_000);
-        waitUntilDeployed(kubernetes.getInfraNamespace());
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
     }
 
     private void upgradeEnmasseBundle(Path templateDir) throws Exception {
@@ -220,7 +220,7 @@ class UpgradeTest extends TestBase {
             Thread.sleep(600_000);
             checkImagesUpdated(getVersionFromTemplateDir(templatePaths));
         } else {
-            waitUntilDeployed(kubernetes.getInfraNamespace());
+            TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
         }
     }
 
@@ -267,26 +267,7 @@ class UpgradeTest extends TestBase {
             });
             return ready.get();
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
-        waitUntilDeployed(kubernetes.getInfraNamespace());
-    }
-
-    private void waitUntilDeployed(String namespace) throws Exception {
-        TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
-            List<Pod> pods = kubernetes.listPods(namespace);
-            for (Pod pod : pods) {
-                List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
-                for (ContainerStatus s : initContainers) {
-                    if (!s.getReady())
-                        return false;
-                }
-                List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
-                for (ContainerStatus s : containers) {
-                    if (!s.getReady())
-                        return false;
-                }
-            }
-            return true;
-        }, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
     }
 
     protected boolean sendMessage(String addressSpace, AbstractClient client, UserCredentials
