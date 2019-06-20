@@ -1,7 +1,4 @@
 ---
-- name: Deploy Kube-state-metrics
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/kube-state-metrics
-
 - name: Create project namespace
   shell: oc new-project {{ monitoring_namespace }} --description="EnMasse Monitoring"
   register: namespace_exists
@@ -13,3 +10,13 @@
 
 - name: Deploy the Application Monitoring Operator
   shell: oc apply -n {{ monitoring_namespace }} -f {{ playbook_dir }}/install/monitoring-operator
+
+- name: ServiceMonitors crd is installed and kube-state-metrics can be installed
+  shell: oc get crd servicemonitors.monitoring.coreos.com
+  register: servicemonitors_crd
+  until: servicemonitors_crd.rc == 0
+  retries: 10
+  delay: 5
+
+- name: Deploy Kube-state-metrics
+  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/kube-state-metrics
