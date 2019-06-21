@@ -1,10 +1,29 @@
 import React, {Component} from 'react';
 import {AboutModal, TextContent, TextList, TextListItem} from '@patternfly/react-core';
-import EmptyImg from '../../assets/images/Empty.svg';
 import Aux from '../../hoc/Aux/Aux';
 
 class About extends Component {
 
+  createPropsWithLogoAndBgImages = (productName) => {
+
+    var imagePrefix = productName.toLowerCase().split(" ")[0];
+    var productIconName = imagePrefix+"_about_logo.svg";
+    var modalImgProps = {};
+
+    let img = require("../../assets/images/"+imagePrefix+"_about_logo.svg");
+
+    var modalImgProps = {
+      brandImageSrc: img,
+      brandImageAlt: productName
+    };
+    try {
+      modalImgProps.backgroundImageSrc=require("../../assets/images/"+imagePrefix+"_about_bg.svg");
+    } catch (err) {
+      //using default provided background image, when none supplied.
+    }
+
+    return modalImgProps;
+  };
 
   render() {
     let productName = process.env.REACT_APP_NAME;
@@ -27,13 +46,15 @@ class About extends Component {
         </Aux>;
     }
 
+    var modalImgProps = this.createPropsWithLogoAndBgImages(productName);
+
     return (
       <AboutModal
+        id="modal-about"
         isOpen={this.props.isAboutModalOpen}
         onClose={this.props.handleAboutModalToggle}
         productName={productName}
-        brandImageSrc={EmptyImg}
-        brandImageAlt=""
+        {...modalImgProps}
       >
         <TextContent>
           <TextList component="dl">
