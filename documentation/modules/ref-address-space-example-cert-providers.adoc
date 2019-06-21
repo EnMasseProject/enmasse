@@ -3,15 +3,15 @@
 // assembly-managing-address-spaces.adoc
 
 [id='ref-address-space-example-cert-providers-{context}']
-= Configuring an address space certificate provider
+= Address space certificate provider configuration examples
 
-This address space example shows how you can configure the endpoints of an `AddressSpace` to be configured using different certificate providers. The certificate provider determines how certificates are issued for the endpoints of an `AddressSpace`.
+The following address space examples show how you can configure the endpoints of an `AddressSpace` using different certificate providers. The certificate provider determines how certificates are issued for the endpoints of an `AddressSpace`.
 
 ifeval::["{cmdcli}" =="oc"]
 == `openshift` provider
 
 The `openshift` certificate provider can be used to configure endpoints with certificates signed by
-the OpenShift Cluster CA.
+the OpenShift cluster certificate authority (CA).
 
 [source,yaml,options="nowrap"]
 ----
@@ -30,7 +30,7 @@ spec:
     cert:
      provider: openshift <1>
 ----
-<1> (Required) The certificate provider type. The available types are `openshift` (on OpenShift only), `certBundle`, and `selfsigned` (default).
+<1> (Required) The certificate provider type. Valid values are `openshift` (on OpenShift only), `certBundle`, and `selfsigned` (default value).
 endif::[]
 
 == `selfsigned` provider
@@ -56,12 +56,12 @@ spec:
     cert:
      provider: selfsigned <1>
 ----
-<1> (Required) The certificate provider type. The available types are `openshift` (on OpenShift only), `certBundle`, and `selfsigned` (default).
+<1> (Required) The certificate provider type. Valid values are `openshift` (on OpenShift only), `certBundle`, and `selfsigned` (default value).
 
 == `certBundle` provider
 
 The `certBundle` certificate provider can be used to configure endpoints with user-supplied
-certificates signed by your own CA. Certificate rotation can be done by updating the `tlsKey` and
+certificates signed by your own CA. Certificate rotation can be performed by updating the `tlsKey` and
 `tlsCert` fields with updated certificates, and then updating the `AddressSpace` resource.
 
 [source,yaml,options="nowrap"]
@@ -83,7 +83,7 @@ spec:
      tlsKey: Y2VydGJ1bmRsZXByb3ZpZGVyY2VydA== <2>
      tlsCert: Y2VydGJ1bmRsZXByb3ZpZGVyY2VydA== <3> 
 ----
-<1> (Required) The certificate provider type. The available types are `openshift` (on OpenShift only), `certBundle`, and `selfsigned` (default).
-<2> (Required) The base64-encoded value of the PEM private key (including the preamble)
-<3> (Required) The base64-encoded value of the PEM certificate (including the preamble)
+<1> (Required) The certificate provider type. Valid values are `openshift` (on OpenShift only), `certBundle`, and `selfsigned` (default value).
+<2> (Required) The base64-encoded value of the PEM private key (including the preamble).
+<3> (Required) The base64-encoded value of the PEM certificate (including the preamble).
 
