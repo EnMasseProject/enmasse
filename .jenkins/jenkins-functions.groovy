@@ -51,8 +51,8 @@ def makeStackedPlot() {
             yaxisMinimum: ''
 }
 
-def runSystemtests(String profile, String testCases) {
-    sh(script: "./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}'")
+def runSystemtests(String profile, String testCases, String envVarsString = "") {
+    sh(script: "${envVarsString} ./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}'")
 }
 
 def startOpenshift() {
