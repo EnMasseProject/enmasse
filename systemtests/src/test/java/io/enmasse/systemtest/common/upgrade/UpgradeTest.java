@@ -79,22 +79,22 @@ class UpgradeTest extends TestBase {
             installEnmasseBundle(Paths.get(Environment.getInstance().getStartTemplates()), startVersion);
         }
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", null, "v1alpha1");
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", null, "v1alpha1");
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null, getApiVersion());
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null, getApiVersion());
         Thread.sleep(30_000);
 
-        createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", "v1alpha1");
-        createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", "v1alpha1");
+        createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", getApiVersion());
+        createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", getApiVersion());
         Thread.sleep(30_000);
 
-        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", "v1alpha1");
-        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", "v1alpha1");
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue", "standard-queue", "standard", "queue", "standard-large-queue", "v1alpha1");
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", "v1alpha1");
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", "v1alpha1");
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-topic", "standard-topic", "standard", "topic", "standard-small-topic", "v1alpha1");
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", "v1alpha1");
-        createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", "v1alpha1");
+        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue", "standard-queue", "standard", "queue", "standard-large-queue", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-topic", "standard-topic", "standard", "topic", "standard-small-topic", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion());
+        createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion());
         Thread.sleep(30_000);
 
         waitUntilDeployed(kubernetes.getInfraNamespace());
@@ -187,6 +187,10 @@ class UpgradeTest extends TestBase {
         KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "bundles", productName));
         Thread.sleep(600_000);
         checkImagesUpdated(getVersionFromTemplateDir(templateDir));
+    }
+
+    private String getApiVersion() {
+        return startVersion.equals("1.0") || startVersion.contains("0.26") ? "v1alpha1" : "v1beta1";
     }
 
     private void installEnmasseAnsible(Path templatePaths, boolean upgrade) throws Exception {
