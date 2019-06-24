@@ -8,6 +8,7 @@
     </appender>
 
     <logger name="org.eclipse.hono" level="DEBUG"/>
+    <logger name="io.enmasse.iot.registry.infinispan" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />
