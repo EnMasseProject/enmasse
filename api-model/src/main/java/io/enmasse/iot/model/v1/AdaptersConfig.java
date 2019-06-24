@@ -6,6 +6,7 @@
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -25,6 +26,9 @@ import io.sundr.builder.annotations.Inline;
 public class AdaptersConfig {
     private AdapterConfig http;
     private AdapterConfig mqtt;
+    private AdapterConfig sigfox;
+    @JsonProperty("lorawan")
+    private AdapterConfig loraWan;
 
     public AdapterConfig getHttp() {
         return http;
@@ -38,5 +42,19 @@ public class AdaptersConfig {
     }
     public void setMqtt(AdapterConfig mqtt) {
         this.mqtt = mqtt;
+    }
+
+    public AdapterConfig getSigfox() {
+        return sigfox;
+    }
+    public void setSigfox(AdapterConfig sigfox) {
+        this.sigfox = sigfox;
+    }
+
+    public AdapterConfig getLoraWan() {
+        return loraWan;
+    }
+    public void setLoraWan(AdapterConfig loraWan) {
+        this.loraWan = loraWan;
     }
 }

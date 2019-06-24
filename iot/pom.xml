@@ -28,7 +28,9 @@
     <module>iot-auth-service</module>
     <module>iot-device-registry-file</module>
     <module>iot-http-adapter</module>
+    <module>iot-lorawan-adapter</module>
     <module>iot-mqtt-adapter</module>
+    <module>iot-sigfox-adapter</module>
     <module>iot-tenant-service</module>
     <module>iot-gc</module>
     <module>iot-proxy-configurator</module>

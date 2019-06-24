@@ -169,6 +169,14 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.I
 	if err != nil {
 		return err
 	}
+	lorawanPassword, err := json.Marshal(config.Status.Adapters["lorawan"].InterServicePassword)
+	if err != nil {
+		return err
+	}
+	sigfoxPassword, err := json.Marshal(config.Status.Adapters["sigfox"].InterServicePassword)
+	if err != nil {
+		return err
+	}
 
 	// create config map data
 
@@ -254,6 +262,16 @@ hono:
 		"mqtt-adapter@HONO":{
 			"mechanism":"PLAIN",
 			"password":` + string(mqttPassword) + `,
+			"authorities":["protocol-adapter"]
+		},
+		"lorawan-adapter@HONO":{
+			"mechanism":"PLAIN",
+			"password":` + string(lorawanPassword) + `,
+			"authorities":["protocol-adapter"]
+		},
+		"sigfox-adapter@HONO":{
+			"mechanism":"PLAIN",
+			"password":` + string(sigfoxPassword) + `,
 			"authorities":["protocol-adapter"]
 		},
 		"device-registry":{

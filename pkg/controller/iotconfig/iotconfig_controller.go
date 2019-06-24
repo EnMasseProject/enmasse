@@ -191,6 +191,12 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processMqttAdapter(ctx, config)
 	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processSigfoxAdapter(ctx, config)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processLoraWanAdapter(ctx, config)
+	})
 
 	return r.updateStatus(ctx, config, rc)
 }
@@ -411,7 +417,7 @@ func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, co
 
 	// ensure we have all adapter status entries we want
 
-	config.Status.Adapters = ensureAdapterStatus(config.Status.Adapters, "mqtt", "http")
+	config.Status.Adapters = ensureAdapterStatus(config.Status.Adapters, "mqtt", "http", "lorawan", "sigfox")
 
 	// generate adapter users
 
