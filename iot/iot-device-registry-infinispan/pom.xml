@@ -75,15 +75,28 @@
 
     <!-- Test dependencies -->
     <dependency>
-      <groupId>io.vertx</groupId>
-      <artifactId>vertx-unit</artifactId>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-junit5</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.hono</groupId>
@@ -111,23 +124,6 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
           <mainClass>io.enmasse.iot.registry.infinispan.InfinispanRegistry</mainClass>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.surefire</groupId>
-            <artifactId>surefire-junit4</artifactId>
-            <version>2.22.0</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <includes>
-            <include>**/*Test.java</include>
-          </includes>
         </configuration>
       </plugin>
 

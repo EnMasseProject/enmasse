@@ -52,7 +52,7 @@ public class EmbeddedHotRodServer {
 
         final SerializationContext serialCtx = ProtoStreamMarshaller.getSerializationContext(manager);
 
-        // genereate the protobuff schema
+        // generate the protobuf schema
         String generatedSchema = new ProtoSchemaBuilder()
                     .addClass(RegistryTenantObject.class)
                     .addClass(RegistryCredentialObject.class)

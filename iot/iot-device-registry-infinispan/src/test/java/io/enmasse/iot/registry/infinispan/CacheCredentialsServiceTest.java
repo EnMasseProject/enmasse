@@ -4,43 +4,34 @@
  */
 package io.enmasse.iot.registry.infinispan;
 
-import io.vertx.ext.unit.junit.VertxUnitRunner;
 import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
 import org.eclipse.hono.service.credentials.AbstractCompleteCredentialsServiceTest;
 import org.eclipse.hono.service.credentials.CompleteCredentialsService;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.rules.Timeout;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import io.vertx.junit5.VertxExtension;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Tests verifying behavior of {@link CacheCredentialService}.
  *
  */
-@Ignore
-@RunWith(VertxUnitRunner.class)
+@Disabled
+@ExtendWith(VertxExtension.class)
 public class CacheCredentialsServiceTest extends AbstractCompleteCredentialsServiceTest {
 
     private static CacheCredentialService service;
     private static EmbeddedHotRodServer server;
 
     /**
-     * Global timeout for all test cases.
-     */
-    @Rule
-    public Timeout globalTimeout = new Timeout(30, TimeUnit.SECONDS);
-
-
-    /**
      * Spin up the service using Infinispan EmbeddedCache.
      */
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
 
         server = new EmbeddedHotRodServer();
@@ -50,7 +41,7 @@ public class CacheCredentialsServiceTest extends AbstractCompleteCredentialsServ
     /**
      * Stop the Embedded Infinispan Server.
      */
-    @After
+    @AfterEach
     public void cleanUp() {
         server.stop();
     }
