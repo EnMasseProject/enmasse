@@ -27,6 +27,8 @@ DOCKER_DIRS = \
 	iot/iot-device-registry-infinispan \
 	iot/iot-http-adapter \
 	iot/iot-mqtt-adapter \
+	iot/iot-lorawan-adapter \
+	iot/iot-sigfox-adapter \
 
 FULL_BUILD       = true
 

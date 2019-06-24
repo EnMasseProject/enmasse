@@ -161,6 +161,7 @@ func (r *ReconcileIoTProject) applyUpdate(ctx context.Context, status *iotv1alph
 	if err != nil {
 
 		if util.IsNotReadyYetError(err) {
+			log.Info("Not ready yet, re-scheduling...")
 			// if the resource is not ready yet, then we retry after a delay
 			return reconcile.Result{Requeue: true, RequeueAfter: time.Minute}, nil
 		}

@@ -145,8 +145,10 @@ type ServicesConfig struct {
 }
 
 type AdaptersConfig struct {
-	HttpAdapterConfig HttpAdapterConfig `json:"http,omitempty"`
-	MqttAdapterConfig MqttAdapterConfig `json:"mqtt,omitempty"`
+	HttpAdapterConfig    HttpAdapterConfig    `json:"http,omitempty"`
+	MqttAdapterConfig    MqttAdapterConfig    `json:"mqtt,omitempty"`
+	SigfoxAdapterConfig  SigfoxAdapterConfig  `json:"sigfox,omitempty"`
+	LoraWanAdapterConfig LoraWanAdapterConfig `json:"lorawan,omitempty"`
 }
 
 type ServiceConfig struct {
@@ -218,6 +220,24 @@ type AuthenticationServiceConfig struct {
 }
 
 type HttpAdapterConfig struct {
+	ServiceConfig `json:",inline"`
+	AdapterConfig `json:",inline"`
+
+	Containers CommonAdapterContainers `json:"containers,omitempty"`
+
+	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+}
+
+type SigfoxAdapterConfig struct {
+	ServiceConfig `json:",inline"`
+	AdapterConfig `json:",inline"`
+
+	Containers CommonAdapterContainers `json:"containers,omitempty"`
+
+	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+}
+
+type LoraWanAdapterConfig struct {
 	ServiceConfig `json:",inline"`
 	AdapterConfig `json:",inline"`
 

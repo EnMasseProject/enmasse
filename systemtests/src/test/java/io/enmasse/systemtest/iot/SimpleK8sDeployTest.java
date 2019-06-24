@@ -95,6 +95,16 @@ class SimpleK8sDeployTest {
                 .withNewContainersLike(commonContainers).endContainers()
                 .endMqtt()
 
+                .withNewSigfox()
+                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-sigfox-adapter-tls").endEndpoint()
+                .withNewContainersLike(commonContainers).endContainers()
+                .endSigfox()
+
+                .withNewLoraWan()
+                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-lorawan-adapter-tls").endEndpoint()
+                .withNewContainersLike(commonContainers).endContainers()
+                .endLoraWan()
+
                 .endAdapters()
 
                 .withNewServices()

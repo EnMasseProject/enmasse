@@ -28,10 +28,11 @@ public class IoTUtils {
             "iot-device-registry",
             "iot-gc",
             "iot-http-adapter",
+            "iot-lorawan-adapter",
             "iot-mqtt-adapter",
+            "iot-sigfox-adapter",
             "iot-tenant-service",
     };
-
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
 
