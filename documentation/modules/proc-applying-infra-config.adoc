@@ -2,13 +2,10 @@
 //
 // assembly-configure-infrastructure-configuration.adoc
 
-[id='applying-infra-config-changes-{context}']
-= Applying infrastructure configuration
+[id='create-edit-infra-config-{context}']
+= Creating and editing infrastructure configurations
 
-You can edit existing configurations or create new ones.
-
-.Prerequisites
-* An infrastructure configuration change that you want to apply. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#infrastructure-configuration-messaging[Infrastructure configuration].
+You can create a new infrastructure configuration or edit an existing one. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#infrastructure-configuration-messaging[Infrastructure configuration].
 
 .Procedure
 
@@ -20,15 +17,15 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} login -u developer
 ----
 
-. Select the project where {ProductName} is installed:
+. Change the project to the project where {ProductName} is installed:
 +
 [subs="attributes",options="nowrap"]
 ----
-{cmdcli} project enmasse
+{cmdcli} project _{ProductNamespace}_
 ----
 endif::[]
 
-. Create infrastructure configuration:
+. For a new infrastructure configuration, create the infrastructure configuration:
 +
 [source,yaml,options="nowrap",subs="attributes"]
 ----
@@ -67,5 +64,5 @@ spec:
 {cmdcli} get pods -w
 ----
 +
-The configuration changes will be applied within a couple of minutes.
+The configuration changes are applied within several minutes.
 
