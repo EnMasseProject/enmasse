@@ -89,11 +89,13 @@ pipeline {
                     "UPGRADE_TEMPLATES=${WORKSPACE}/templates/build/enmasse-latest"]) {
                     withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                         script {
-                            for (def startVersion : params.START_VERSION.split(",")) {
-                                println "Starting upgrade tests from version "+startVersion
-                                sh(script: 'make templates || true')
-                                def envVarsString = "START_TEMPLATES=${WORKSPACE}/templates/build/enmasse-${startVersion}"
-                                lib.runSystemtests('systemtests-upgrade', params.TEST_CASE, envVarsString)
+                            catchError {
+                                for (def startVersion : params.START_VERSION.split(",")) {
+                                    println "Starting upgrade tests from version " + startVersion
+                                    sh(script: 'make templates || true')
+                                    def envVarsString = "START_TEMPLATES=${WORKSPACE}/templates/build/enmasse-${startVersion}"
+                                    lib.runSystemtests('systemtests-upgrade', params.TEST_CASE, envVarsString)
+                                }
                             }
                         }
                     }
