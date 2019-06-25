@@ -26,19 +26,14 @@ public class CoreCrd {
 
     public static void registerCustomCrds() {
         KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, Address.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressList.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressList.KIND, AddressList.class);
 
-        KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressSpace.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressSpaceList.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpace.KIND, AddressSpace.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceList.KIND, AddressSpaceList.class);
 
-        KubernetesDeserializer.registerCustomKind(API_VERSION, Address.KIND, AddressSpaceSchema.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchema.KIND, AddressSpaceSchema.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchemaList.KIND, AddressSpaceSchemaList.class);
     }
-
     public static CustomResourceDefinition addresses() {
         return ADDRESS_CRD;
     }
