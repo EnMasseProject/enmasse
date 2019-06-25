@@ -93,7 +93,7 @@ under the License.
       <address-settings>
          <!--default for catch all-->
          <address-setting match="#">
-            <dead-letter-address>DLQ</dead-letter-address>
+            <max-delivery-attempts>-1</max-delivery-attempts>
             <redelivery-delay>0</redelivery-delay>
             <!-- with -1 only the global-max-size is in use for limiting -->
             <max-size-bytes>-1</max-size-bytes>
