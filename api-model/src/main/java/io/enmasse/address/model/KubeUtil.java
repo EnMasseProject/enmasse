@@ -143,27 +143,69 @@ public final class KubeUtil {
                 actualPodSpec.setTolerations(podSpec.getTolerations());
             }
 
+            for (Container desiredContainer : podSpec.getInitContainers()) {
+                for (Container actualContainer : actualPodSpec.getInitContainers()) {
+                    if (actualContainer.getName() != null && actualContainer.getName().equals(desiredContainer.getName())) {
+                        applyDesiredResources(desiredContainer, actualContainer);
+                        applyDesiredEnvironment(actualContainer, desiredContainer);
+                    }
+                }
+            }
+
             for (Container desiredContainer : podSpec.getContainers()) {
                 for (Container actualContainer : actualPodSpec.getContainers()) {
                     if (actualContainer.getName() != null && actualContainer.getName().equals(desiredContainer.getName())) {
-                        if (desiredContainer.getResources() != null) {
-                            actualContainer.setResources(desiredContainer.getResources());
-                        }
-
-                        List<EnvVar> desiredEnv = desiredContainer.getEnv();
-                        if (desiredEnv != null && !desiredEnv.isEmpty()) {
-                            if (actualContainer.getEnv() == null || actualContainer.getEnv().isEmpty()) {
-                                actualContainer.setEnv(desiredEnv);
-                            } else {
-                                Set<String> newNames = desiredEnv.stream().map(EnvVar::getName).collect(Collectors.toSet());
-                                List<EnvVar> current = new ArrayList<>(actualContainer.getEnv());
-                                current.removeIf(e -> e.getName() != null && newNames.contains(e.getName()));
-                                current.addAll(desiredEnv);
-                                actualContainer.setEnv(current);
-                            }
-                        }
+                        applyDesiredResources(desiredContainer, actualContainer);
+                        applyDesiredEnvironment(actualContainer, desiredContainer);
+                        applyDesiredProbeSettings(actualContainer.getLivenessProbe(), desiredContainer.getLivenessProbe());
+                        applyDesiredProbeSettings(actualContainer.getReadinessProbe(), desiredContainer.getReadinessProbe());
                     }
                 }
+            }
+        }
+    }
+
+    private static void applyDesiredResources(Container desiredContainer, Container actualContainer) {
+        if (desiredContainer.getResources() != null) {
+            actualContainer.setResources(desiredContainer.getResources());
+        }
+    }
+
+    private static void applyDesiredProbeSettings(Probe actualProbe, Probe desiredProbe) {
+        if (actualProbe != null && desiredProbe != null) {
+            if (desiredProbe.getInitialDelaySeconds() != null) {
+                actualProbe.setInitialDelaySeconds(desiredProbe.getInitialDelaySeconds());
+            }
+
+            if (desiredProbe.getPeriodSeconds() != null) {
+                actualProbe.setPeriodSeconds(desiredProbe.getPeriodSeconds());
+            }
+
+            if (desiredProbe.getTimeoutSeconds() != null) {
+                actualProbe.setTimeoutSeconds(desiredProbe.getTimeoutSeconds());
+            }
+
+            if (desiredProbe.getSuccessThreshold() != null) {
+                actualProbe.setSuccessThreshold(desiredProbe.getSuccessThreshold());
+            }
+
+            if (desiredProbe.getFailureThreshold() != null) {
+                actualProbe.setFailureThreshold(desiredProbe.getFailureThreshold());
+            }
+        }
+    }
+
+    private static void applyDesiredEnvironment(Container actualContainer, Container desiredContainer) {
+        List<EnvVar> desiredEnv = desiredContainer.getEnv();
+        if (desiredEnv != null && !desiredEnv.isEmpty()) {
+            if (actualContainer.getEnv() == null || actualContainer.getEnv().isEmpty()) {
+                actualContainer.setEnv(desiredEnv);
+            } else {
+                Set<String> newNames = desiredEnv.stream().map(EnvVar::getName).collect(Collectors.toSet());
+                List<EnvVar> current = new ArrayList<>(actualContainer.getEnv());
+                current.removeIf(e -> e.getName() != null && newNames.contains(e.getName()));
+                current.addAll(desiredEnv);
+                actualContainer.setEnv(current);
             }
         }
     }
