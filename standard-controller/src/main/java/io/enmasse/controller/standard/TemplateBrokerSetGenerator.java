@@ -99,6 +99,7 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
         setIfEnvPresent(paramMap, TemplateParameter.BROKER_IMAGE);
         setIfEnvPresent(paramMap, TemplateParameter.BROKER_PLUGIN_IMAGE);
         setIfEnvPresent(paramMap, TemplateParameter.TOPIC_FORWARDER_IMAGE);
+        setIfEnvPresent(paramMap, TemplateParameter.IMAGE_PULL_POLICY);
 
         if (address != null) {
             paramMap.put(TemplateParameter.ADDRESS, address.getSpec().getAddress());
