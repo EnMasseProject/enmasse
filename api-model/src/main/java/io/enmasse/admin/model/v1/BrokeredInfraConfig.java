@@ -29,7 +29,7 @@ public class BrokeredInfraConfig extends AbstractHasMetadataWithAdditionalProper
 
     public static final String KIND = "BrokeredInfraConfig";
 
-    private BrokeredInfraConfigSpec spec;
+    private BrokeredInfraConfigSpec spec = new BrokeredInfraConfigSpec();
 
     public BrokeredInfraConfig() {
         super(KIND, AdminCrd.API_VERSION_V1BETA1);

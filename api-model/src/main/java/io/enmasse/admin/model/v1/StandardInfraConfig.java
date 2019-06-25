@@ -31,7 +31,7 @@ public class StandardInfraConfig extends AbstractHasMetadataWithAdditionalProper
 
     public static final String KIND = "StandardInfraConfig";
 
-    private StandardInfraConfigSpec spec;
+    private StandardInfraConfigSpec spec = new StandardInfraConfigSpec();
 
     public StandardInfraConfig() {
         super(KIND, AdminCrd.API_VERSION_V1BETA1);
