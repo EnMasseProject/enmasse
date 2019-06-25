@@ -459,7 +459,7 @@ objects:
             value: ${BROKER_PLUGIN_IMAGE}
           - name: TOPIC_FORWARDER_IMAGE
             value: ${TOPIC_FORWARDER_IMAGE}
-          - name: ${IMAGE_PULL_POLICY}
+          - name: IMAGE_PULL_POLICY
             value: ${IMAGE_PULL_POLICY}
           image: ${STANDARD_CONTROLLER_IMAGE}
           imagePullPolicy: ${IMAGE_PULL_POLICY}
