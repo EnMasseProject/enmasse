@@ -301,7 +301,6 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
-    @Disabled("issue 2855")
     void testOpenConsoleCustomRoute() throws Exception {
         doTestOpenConsoleCustomRoute();
     }
