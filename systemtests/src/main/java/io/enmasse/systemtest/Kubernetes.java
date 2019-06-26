@@ -44,6 +44,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public abstract class Kubernetes {
@@ -53,9 +54,9 @@ public abstract class Kubernetes {
     protected final String infraNamespace;
     private static Kubernetes instance;
 
-    protected Kubernetes(KubernetesClient client, String infraNamespace) {
+    protected Kubernetes(String infraNamespace, Supplier<KubernetesClient> clientSupplier) {
         this.environment = Environment.getInstance();
-        this.client = client;
+        this.client = clientSupplier.get();
         this.infraNamespace = infraNamespace;
     }
 
