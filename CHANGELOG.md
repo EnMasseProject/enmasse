@@ -2,6 +2,15 @@
 * Upgrade to Apache ActiveMQ Artemis 2.9.0
 * Upgrade to Apache Qpid Dispatch Router 1.8.0
 
+## 0.28.2
+
+* Respect custom routes when building the redirect list for the oauthclient (#2855) (fixes regression introduced at 0.28.0)
+* Fix a possible NPE, having an empty spec section in the infra configs
+* Turn off Artemis DLQ/max-delivery-attempts (#2927)
+* Ensure that imagePullPolicy to properly propagated to standard address space resources (#2921)
+* Allow liveness/readiness probe timeouts to be configured from the infraconfigs (#2864)
+* Allow broker/router container environment to be overridden from the podspec on the infraconfig. (#2882)
+
 ## 0.28.1
 * Improve the console operator, add readiness/liveness probes to Console's Apache HTTPD
 * Improve Kubernetes/OpenShift detection in Go-based components
