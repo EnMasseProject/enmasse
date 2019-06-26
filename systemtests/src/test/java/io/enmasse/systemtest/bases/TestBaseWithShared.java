@@ -79,22 +79,26 @@ public abstract class TestBaseWithShared extends TestBase {
                 log.info(String.format("test failed: %s.%s",
                         context.getTestClass().get().getName(),
                         context.getTestMethod().get().getName()));
-                log.info("shared address space '{}' will be removed", sharedAddressSpace);
-                try {
-                    deleteSharedAddressSpace(sharedAddressSpace);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                } finally {
-                    spaceCountMap.put(sharedAddressSpace.getSpec().getType().toLowerCase(), spaceCountMap.get(sharedAddressSpace.getSpec().getType()) + 1);
+                if (sharedAddressSpace != null) {
+                    log.info("shared address space '{}' will be removed", sharedAddressSpace);
+                    try {
+                        deleteSharedAddressSpace(sharedAddressSpace);
+                    } catch (Exception ex) {
+                        log.warn("Failed to delete shared address space (ignored)", ex);
+                    } finally {
+                        spaceCountMap.compute(sharedAddressSpace.getSpec().getType().toLowerCase(), (k, count) -> count == null ? null : count + 1);
+                    }
                 }
             } else {
                 log.warn("Remove address spaces when test failed - SKIPPED!");
             }
         } else { //succeed
             try {
-                deleteAddresses(sharedAddressSpace);
+                if (sharedAddressSpace != null) {
+                    deleteAddresses(sharedAddressSpace);
+                }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.warn("Failed to delete addresses from shared address space (ignored)", e);
             }
         }
     }
