@@ -220,17 +220,13 @@ public abstract class Kubernetes {
         return environment.getApiToken();
     }
 
-    public Endpoint getEndpoint(String serviceName, String port) {
-        return getEndpoint(serviceName, infraNamespace, port);
-    }
-
     public Endpoint getEndpoint(String serviceName, String namespace, String port) {
         Service service = client.services().inNamespace(namespace).withName(serviceName).get();
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 
     public Endpoint getOSBEndpoint() {
-        return getEndpoint("service-broker", "https");
+        return getEndpoint("service-broker", infraNamespace, "https");
     }
 
     public abstract Endpoint getMasterEndpoint();
@@ -239,7 +235,14 @@ public abstract class Kubernetes {
 
     public abstract Endpoint getKeycloakEndpoint();
 
+    /**
+     * Assumes infra namespace
+     * @param name
+     * @return
+     */
     public abstract Endpoint getExternalEndpoint(String name);
+
+    public abstract Endpoint getExternalEndpoint(String name, String namespace);
 
     public UserCredentials getKeycloakCredentials() {
         Secret creds = client.secrets().inNamespace(infraNamespace).withName("keycloak-credentials").get();
@@ -668,7 +671,7 @@ public abstract class Kubernetes {
      */
     public void waitUntilPodIsReady(Pod pod) throws InterruptedException {
         log.info("Waiting until pod: {} is ready", pod.getMetadata().getName());
-        client.resource(pod).inNamespace(infraNamespace).waitUntilReady(5, TimeUnit.MINUTES);
+        client.resource(pod).inNamespace(pod.getMetadata().getNamespace()).waitUntilReady(5, TimeUnit.MINUTES);
     }
 
     /***

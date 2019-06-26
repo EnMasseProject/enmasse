@@ -67,7 +67,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
             if (TestUtils.resolvable(messagingEndpoint)) {
                 return messagingEndpoint;
             } else {
-                return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), "https");
+                return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "https");
             }
         } else {
             return getMessagingRoute(addressSpace);

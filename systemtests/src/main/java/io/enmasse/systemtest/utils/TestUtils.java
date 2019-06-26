@@ -211,12 +211,12 @@ public class TestUtils {
      * @param budget      timeout budget - this method throws Exception when timeout is reached
      * @throws InterruptedException
      */
-    public static void waitForExpectedReadyPods(Kubernetes client, int numExpected, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForExpectedReadyPods(Kubernetes client, String namespace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         log.info("Waiting for expected ready pods: {}", numExpected);
-        List<Pod> pods = listReadyPods(client);
+        List<Pod> pods = listReadyPods(client, namespace);
         while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
             Thread.sleep(2000);
-            pods = listReadyPods(client);
+            pods = listReadyPods(client, namespace);
             log.info("Got {} pods, expected: {}", pods.size(), numExpected);
         }
         if (pods.size() != numExpected) {

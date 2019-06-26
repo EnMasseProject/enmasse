@@ -152,14 +152,14 @@ class CommonTest extends TestBase {
             log.info("Restarting {}", label.labelValue);
             KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
-            TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
         log.info("Restarting whole enmasse");
         KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
         Thread.sleep(180_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
                 standardAddresses.toArray(new Address[0]));
         assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
@@ -397,7 +397,7 @@ class CommonTest extends TestBase {
 
         kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
         Thread.sleep(20_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
         log.info("Broker pods restarted");
 
         // Seems that the service/route can sometimes not be immediately available despite the pod being Ready.
@@ -462,7 +462,7 @@ class CommonTest extends TestBase {
         CompletableFuture<Object> future = doConcurrentMessaging(client, addr.getSpec().getAddress(), counter);
         log.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
-        TestUtils.waitForExpectedReadyPods(kubernetes, runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
         if (future.isCompletedExceptionally()) {
             future.get();
         }
