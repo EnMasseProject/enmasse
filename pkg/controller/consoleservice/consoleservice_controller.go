@@ -10,13 +10,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"net"
-	"net/url"
-	"reflect"
-	"strconv"
-	"strings"
-
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	v1beta12 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	oauthv1 "github.com/openshift/api/oauth/v1"
@@ -28,6 +23,9 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"net"
+	"net/url"
+	"reflect"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -36,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	"strconv"
 )
 
 const CONSOLE_NAME = "console"
@@ -92,13 +91,11 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 			return err
 		}
 
-		// Watch for route changes.
+		// Watch for changes in the address spaces so we can update the oauth redirects
 		mapFn := handler.ToRequestsFunc(
 			func(a handler.MapObject) []reconcile.Request {
-
 				reqs := make([]reconcile.Request, 0)
-
-				if strings.HasPrefix(a.Meta.GetName(), "console-") {
+				if t, ok := a.Meta.GetLabels()["type"]; ok && t == "address-space" {
 					list := &v1beta1.ConsoleServiceList{}
 					err = r.client.List(context.TODO(), &client.ListOptions{}, list)
 					if err == nil {
@@ -115,7 +112,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 				}
 				return reqs
 			})
-		err = c.Watch(&source.Kind{Type: &routev1.Route{}}, &handler.EnqueueRequestsFromMapFunc{
+		err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestsFromMapFunc{
 			ToRequests: mapFn,
 		})
 		if err != nil {
@@ -756,31 +753,57 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 			return reconcile.Result{Requeue: true}, nil, nil
 		}
 
+		// Redirect for the global console itself.
 		redirects := make([]url.URL, 0)
-		redirects, err = buildRedirectsFor(*route, redirects)
+		redirects, err = buildRedirectsForRoute(*route, redirects)
 		if err != nil {
 			return reconcile.Result{}, nil, err
 		}
 
-		list := &routev1.RouteList{}
+		// Redirects for the address space console(s)
+		// We currently list of the underlying configmaps.  We can't list addressspace objects because the read caching
+		// API beneath requires that watch is implemented
 
+		list := &corev1.ConfigMapList{}
 		opts := &client.ListOptions{}
-		//_ = opts.SetLabelSelector("app=enmasse")
+		_ = opts.SetLabelSelector("type=address-space")
 		err = r.client.List(context.TODO(), opts, list)
 		if err != nil {
 			return reconcile.Result{}, nil, err
-		}
+		} else {
 
-		for _, item := range list.Items {
-			// TODO it would be better if we could use a label allowed us to identify the routes belonging
-			// to address space console instances.
-			if strings.HasPrefix(item.Name, "console-") {
-				redirects, err = buildRedirectsFor(item, redirects)
-				if err != nil {
-					return reconcile.Result{}, nil, err
+			for _, item := range list.Items {
+				if jas, ok := item.Data["config.json"]; ok {
+					space := v1beta12.AddressSpace{}
+					err = json.Unmarshal([]byte(jas), &space)
+					if err == nil {
+						consoleEndpointName := "console"
+						for _, specEndpoints := range space.Spec.Ednpoints {
+							if specEndpoints.Service == "console" && specEndpoints.Name != "" {
+								consoleEndpointName = specEndpoints.Name
+								break
+							}
+						}
+
+						for _, s := range space.Status.EndpointStatus {
+							if s.Name == consoleEndpointName {
+								for _, p := range s.ExternalPorts {
+									scheme := "http"
+									if p.Name == "https" || p.Port == 443 {
+										scheme = "https"
+									}
+									redirects, err = appendRedirect(scheme, s.ExternalHost, redirects)
+								}
+							}
+						}
+					} else {
+						log.Error(err, "Could not unmarshall config.json of config map as an "+
+							"address space, ignoring..", "name", item.Name)
+					}
 				}
 			}
 		}
+
 		oauth := &oauthv1.OAuthClient{
 			ObjectMeta: metav1.ObjectMeta{Name: secret.Name},
 		}
@@ -805,18 +828,27 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 	return reconcile.Result{}, nil, nil
 }
 
-func buildRedirectsFor(route routev1.Route, redirects []url.URL) ([]url.URL, error) {
+func buildRedirectsForRoute(route routev1.Route, redirect []url.URL) ([]url.URL, error) {
 	scheme := "http"
 	if route.Spec.TLS != nil {
 		scheme = "https"
 	}
+	var err error
 	for _, ingress := range route.Status.Ingress {
-		redirect, err := url.Parse(fmt.Sprintf("%s://%s", scheme, ingress.Host))
+		redirect, err = appendRedirect(scheme, ingress.Host, redirect)
 		if err != nil {
 			return []url.URL{}, err
 		}
-		redirects = append(redirects, *redirect)
 	}
+	return redirect, nil
+}
+
+func appendRedirect(scheme string, host string, redirects []url.URL) ([]url.URL, error) {
+	redirect, err := url.Parse(fmt.Sprintf("%s://%s", scheme, host))
+	if err != nil {
+		return []url.URL{}, err
+	}
+	redirects = append(redirects, *redirect)
 	return redirects, nil
 }
 
