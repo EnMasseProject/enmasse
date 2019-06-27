@@ -7,28 +7,21 @@ package io.enmasse.systemtest.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.BrokerState;
-import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.*;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -160,13 +153,13 @@ public class AddressUtils {
         Map<String, Address> matchAddresses(List<Address> addressList);
     }
 
-    private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>>  getAddressClient(Address... destinations) {
+    private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
         List<String> namespaces = Stream.of(destinations)
                 .map(Address::getMetadata)
                 .map(ObjectMeta::getNamespace)
                 .distinct()
                 .collect(Collectors.toList());
-        if(namespaces.isEmpty() || namespaces.size()>1) {
+        if (namespaces.size() != 1) {
             return Kubernetes.getInstance().getAddressClient().inAnyNamespace();
         } else {
             return Kubernetes.getInstance().getAddressClient(namespaces.get(0));
@@ -198,12 +191,16 @@ public class AddressUtils {
         Map<String, Address> notMatched = new HashMap<>();
 
         while (timeoutBudget.timeLeft() >= 0) {
-            List<Address> addressList = addressClient.list().getItems();
-            notMatched = addressListMatcher.matchAddresses(addressList);
-            notMatched.values().forEach(address ->
-                    log.info("Waiting until address {} ready, message {}", address.getMetadata().getName(), address.getStatus().getMessages()));
-            if (notMatched.isEmpty()) {
-                break;
+            try {
+                List<Address> addressList = addressClient.list().getItems();
+                notMatched = addressListMatcher.matchAddresses(addressList);
+                notMatched.values().forEach(address ->
+                        log.info("Waiting until address {} ready, message {}", address.getMetadata().getName(), address.getStatus().getMessages()));
+                if (notMatched.isEmpty()) {
+                    break;
+                }
+            } catch (KubernetesClientException ex) {
+                log.warn("Client can't read address resources");
             }
             Thread.sleep(5000);
         }
