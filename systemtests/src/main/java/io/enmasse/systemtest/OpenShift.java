@@ -5,22 +5,39 @@
 package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.utils.HttpClientUtils;
 import io.fabric8.openshift.api.model.Route;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
+import io.fabric8.openshift.client.OpenShiftConfig;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import org.slf4j.Logger;
+
+import java.util.Collections;
 
 /**
  * Handles interaction with openshift cluster
  */
 public class OpenShift extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
+    private final Config build = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
+            .withOauthToken(environment.getApiToken())
+            .build();
 
     public OpenShift(Environment environment, String globalNamespace) {
-        super(new DefaultOpenShiftClient(new ConfigBuilder().withMasterUrl(environment.getApiUrl())
-                .withOauthToken(environment.getApiToken())
-                .build()), globalNamespace);
+        super(globalNamespace, () -> {
+            Config config = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
+                    .withOauthToken(environment.getApiToken())
+                    .build();
+
+            OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
+            // Workaround https://github.com/square/okhttp/issues/3146
+            httpClient = httpClient.newBuilder().protocols(Collections.singletonList(Protocol.HTTP_1_1)).build();
+            return new DefaultOpenShiftClient(httpClient, new OpenShiftConfig(config));
+        });
     }
 
     @Override
