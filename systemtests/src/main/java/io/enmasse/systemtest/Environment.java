@@ -28,6 +28,8 @@ public class Environment {
     public static final String SKIP_CLEANUP_ENV = "SKIP_CLEANUP";
     public static final String DOWNSTREAM_ENV = "DOWNSTREAM";
     public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
+    public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
+    public static final String TAG_ENV = "TAG";
 
     public static final String IS_OCP4_REGEXP = "4.*";
 
@@ -46,6 +48,8 @@ public class Environment {
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.5").toString());
+    private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
+    private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
 
     private Environment() {
         String debugFormat = "{}:{}";
@@ -145,4 +149,13 @@ public class Environment {
     public boolean isOcp4() {
         return !useMinikube && ocpVersion.matches(IS_OCP4_REGEXP);
     }
+
+    public String getMonitoringNamespace() {
+        return monitoringNamespace;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
 }

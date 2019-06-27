@@ -123,7 +123,7 @@ public class SystemtestsKubernetesApps {
         kubeCli.createPvc(namespace, getPostgresPVC());
         kubeCli.createConfigmapFromResource(namespace, getPostgresConfigMap());
         kubeCli.createDeploymentFromResource(namespace, getPostgresDeployment());
-        return kubeCli.getEndpoint(POSTGRES_APP, "http");
+        return kubeCli.getEndpoint(POSTGRES_APP, namespace, "http");
     }
 
     public static void deletePostgresDB(String namespace) {
@@ -141,7 +141,7 @@ public class SystemtestsKubernetesApps {
         Kubernetes kubeCli = Kubernetes.getInstance();
         kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource(INFINISPAN_SERVER, 11222));
         kubeCli.createDeploymentFromResource(namespace, getInfinispanDeployment());
-        return kubeCli.getEndpoint(INFINISPAN_SERVER, "http");
+        return kubeCli.getEndpoint(INFINISPAN_SERVER, namespace, "http");
     }
 
     public static void deleteInfinispanServer(String namespace) {

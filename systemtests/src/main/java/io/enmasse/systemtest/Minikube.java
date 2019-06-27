@@ -56,11 +56,16 @@ public class Minikube extends Kubernetes {
 
     @Override
     public Endpoint getExternalEndpoint(String name) {
+        return getExternalEndpoint(name, infraNamespace);
+    }
+
+    @Override
+    public Endpoint getExternalEndpoint(String name, String namespace) {
         String externalName = name;
         if (!name.endsWith("-external")) {
             externalName += "-external";
         }
-        Endpoint endpoint = new Endpoint(getIp(infraNamespace, externalName), Integer.parseInt(getPort(infraNamespace, externalName)));
+        Endpoint endpoint = new Endpoint(getIp(namespace, externalName), Integer.parseInt(getPort(namespace, externalName)));
         log.info("Minikube external endpoint - " + endpoint.toString());
         return endpoint;
     }

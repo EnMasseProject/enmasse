@@ -23,6 +23,7 @@ import java.util.*;
 public class KubeCMDClient extends CmdClient {
     protected static final int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static final int ONE_MINUTE_TIMEOUT = 60000;
+    protected static final int FIVE_MINUTES_TIMEOUT = 300000;
     protected static String CMD = setUpKubernetesCmd();
     private static Logger log = CustomLogger.getLogger();
 
@@ -290,9 +291,20 @@ public class KubeCMDClient extends CmdClient {
         return execute(Arrays.asList(CMD, "-n", namespace, "apply", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
     }
 
+    public static ExecutionResultData deleteFromFile(String namespace, Path path) {
+        Objects.requireNonNull(namespace);
+        Objects.requireNonNull(path);
+        return execute(Arrays.asList(CMD, "-n", namespace, "delete", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
+    }
+
     public static String getMessagingEndpoint(String namespace, String addressspace) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(addressspace);
         return execute(Arrays.asList(CMD, "-n", namespace, "get", "addressspace", addressspace, "-o", "jsonpath={.status.endpointStatuses[?(@.name==\"messaging\")].externalHost}"), DEFAULT_SYNC_TIMEOUT, true, false).getStdOut();
     }
+
+    public static ExecutionResultData deleteNamespace(String name) {
+        return execute(Arrays.asList(CMD, "delete", "namespace", name), FIVE_MINUTES_TIMEOUT, true);
+    }
+
 }

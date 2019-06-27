@@ -28,8 +28,8 @@ public class OpenShift extends Kubernetes {
         return new Endpoint(client.getMasterUrl());
     }
 
+    @Override
     public Endpoint getRestEndpoint() {
-        OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
         Endpoint endpoint = null;
 
         endpoint = new Endpoint(client.getMasterUrl());
@@ -38,10 +38,11 @@ public class OpenShift extends Kubernetes {
             return endpoint;
         } else {
             log.info("Route endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint("api-server", "https");
+            return getEndpoint("api-server", infraNamespace, "https");
         }
     }
 
+    @Override
     public Endpoint getKeycloakEndpoint() {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
         Route route = openShift.routes().inNamespace(infraNamespace).withName("keycloak").get();
@@ -51,14 +52,19 @@ public class OpenShift extends Kubernetes {
             return endpoint;
         } else {
             log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint("standard-authservice", "https");
+            return getEndpoint("standard-authservice", infraNamespace, "https");
         }
     }
 
     @Override
     public Endpoint getExternalEndpoint(String endpointName) {
+        return getExternalEndpoint(endpointName, infraNamespace);
+    }
+
+    @Override
+    public Endpoint getExternalEndpoint(String endpointName, String namespace) {
         OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        Route route = openShift.routes().inNamespace(infraNamespace).withName(endpointName).get();
+        Route route = openShift.routes().inNamespace(namespace).withName(endpointName).get();
         Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
         log.info("Testing endpoint : " + endpoint);
         if (TestUtils.resolvable(endpoint)) {
@@ -80,7 +86,7 @@ public class OpenShift extends Kubernetes {
                     throw new IllegalStateException(String.format("Endpoint '%s' doesn't exist.",
                             endpointName));
             }
-            return getEndpoint(endpointName, port);
+            return getEndpoint(endpointName, namespace, port);
         }
     }
 }

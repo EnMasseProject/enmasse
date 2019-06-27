@@ -475,7 +475,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         if (TestUtils.resolvable(messagingEndpoint)) {
             return messagingEndpoint;
         } else {
-            return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), "amqps");
+            return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "amqps");
         }
     }
 
