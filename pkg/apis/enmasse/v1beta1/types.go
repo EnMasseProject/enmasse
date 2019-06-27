@@ -7,6 +7,7 @@ package v1beta1
 
 import (
 	"encoding/json"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -118,12 +119,34 @@ type AddressSpaceList struct {
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +genclient:noStatus
 
 type Address struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec AddressSpec `json:"spec"`
+	Spec   AddressSpec   `json:"spec"`
+	Status AddressStatus `json:"status,omitempty"`
+}
+
+type AddressStatus struct {
+	IsReady        bool              `json:"isReady"`
+	Phase          string            `json:"phase,omitempty"`
+	Messages       []string          `json:"messages,omitempty"`
+	BrokerStatuses []BrokerStatus    `json:"brokerStatus,omitempty"`
+	PlanStatus     AddressPlanStatus `json:"planStatus,omitempty"`
+}
+
+type BrokerStatus struct {
+	ClusterID   string `json:"clusterId,omitempty"`
+	ContainerID string `json:"containerId,omitempty"`
+	State       string `json:"state,omitempty"`
+}
+
+type AddressPlanStatus struct {
+	Name       string             `json:"name,omitempty"`
+	Partitions int                `json:"partitions,omitempty"`
+	Resources  map[string]float64 `json:"resources,omitempty"`
 }
 
 type AddressSpec struct {
