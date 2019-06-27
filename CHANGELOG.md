@@ -1,6 +1,7 @@
 ## 0.29.0
 * Upgrade to Apache ActiveMQ Artemis 2.9.0
 * Upgrade to Apache Qpid Dispatch Router 1.8.0
+* Fix go tool vet on newer versions of go
 
 ## 0.28.2
 
