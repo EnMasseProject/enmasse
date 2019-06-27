@@ -146,26 +146,10 @@ metadata:
           }
         },
         {
-          "apiVersion": "admin.enmasse.io/v1beta1",
-          "kind": "ConsoleService",
-          "metadata": {
-            "name": "console"
-          },
-          "spec": {}
-        },
-        {
           "apiVersion": "iot.enmasse.io/v1alpha1",
           "kind": "IoTConfig",
           "metadata": {
             "name": "default"
-          },
-          "spec": {}
-        },
-        {
-          "apiVersion": "enmasse.io/v1beta1",
-          "kind": "AddressSpaceSchema",
-          "metadata": {
-            "name": "undefined"
           },
           "spec": {}
         }
@@ -332,6 +316,9 @@ spec:
         - apiGroups: [ "", "route.openshift.io" ]
           resources: [ "routes", "routes/custom-host", "routes/status"]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "apps.openshift.io" ]
+          resources: [ "deploymentconfigs"]
+          verbs: [  "get", "list", "watch" ]
         - apiGroups: [ "admin.enmasse.io" ]
           resources: [ "authenticationservices", "authenticationservices/finalizers", "consoleservices", "consoleservices/finalizers" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch" ]
