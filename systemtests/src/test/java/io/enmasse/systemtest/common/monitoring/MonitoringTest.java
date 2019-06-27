@@ -68,7 +68,13 @@ public class MonitoringTest extends TestBase{
             TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(2, TimeUnit.MINUTES));
         }
 
-        KubeCMDClient.labelResource("namespace", kubernetes.getInfraNamespace(), "monitoring-key", "middleware");
+        Kubernetes.getInstance().getClient().namespaces()
+                .withName(kubernetes.getInfraNamespace())
+                .edit()
+                .editMetadata()
+                .addToLabels("monitoring-key", "middleware")
+                .endMetadata()
+                .done();
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
         KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
 

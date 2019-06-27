@@ -303,10 +303,6 @@ public class KubeCMDClient extends CmdClient {
         return execute(Arrays.asList(CMD, "-n", namespace, "get", "addressspace", addressspace, "-o", "jsonpath={.status.endpointStatuses[?(@.name==\"messaging\")].externalHost}"), DEFAULT_SYNC_TIMEOUT, true, false).getStdOut();
     }
 
-    public static ExecutionResultData labelResource(String resource, String resourceName, String key, String value) {
-        return execute(Arrays.asList(CMD, "label", resource, resourceName, String.format("%s=%s", key, value)), DEFAULT_SYNC_TIMEOUT, true);
-    }
-
     public static ExecutionResultData deleteNamespace(String name) {
         return execute(Arrays.asList(CMD, "delete", "namespace", name), FIVE_MINUTES_TIMEOUT, true);
     }
