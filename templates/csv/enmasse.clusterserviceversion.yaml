@@ -146,10 +146,26 @@ metadata:
           }
         },
         {
+          "apiVersion": "admin.enmasse.io/v1beta1",
+          "kind": "ConsoleService",
+          "metadata": {
+            "name": "console"
+          },
+          "spec": {}
+        },
+        {
           "apiVersion": "iot.enmasse.io/v1alpha1",
           "kind": "IoTConfig",
           "metadata": {
             "name": "default"
+          },
+          "spec": {}
+        },
+        {
+          "apiVersion": "enmasse.io/v1beta1",
+          "kind": "AddressSpaceSchema",
+          "metadata": {
+            "name": "undefined"
           },
           "spec": {}
         }
