@@ -58,7 +58,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.TAG, false, false, true, params.DEPLOY_IOT)
+                        lib.installEnmasse(env.TAG, true, params.DEPLOY_IOT)
                     }
                 }
             }

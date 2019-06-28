@@ -5,6 +5,8 @@
 package io.enmasse.systemtest.messagingclients;
 
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.Executor;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,10 +15,7 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
@@ -29,7 +28,6 @@ public abstract class AbstractClient {
     private final Object lock = new Object();
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
     private Executor executor;
     private ClientType clientType;
@@ -37,6 +35,8 @@ public abstract class AbstractClient {
     private ArrayList<String> arguments = new ArrayList<>();
     private Path logPath;
     private List<String> executable;
+    private String podName;
+    private String podNamespace;
 
     /**
      * Constructor of abstract client
@@ -45,6 +45,8 @@ public abstract class AbstractClient {
      */
     public AbstractClient(ClientType clientType) {
         this.clientType = clientType;
+        this.podName = SystemtestsKubernetesApps.getMessagingAppPodName();
+        this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
         this.fillAllowedArgs();
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
@@ -57,7 +59,10 @@ public abstract class AbstractClient {
      */
     public AbstractClient(ClientType clientType, Path logPath) {
         this.clientType = clientType;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
         this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
+        this.podName = SystemtestsKubernetesApps.getMessagingAppPodName();
+        this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
         this.fillAllowedArgs();
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
@@ -200,6 +205,7 @@ public abstract class AbstractClient {
     private ArrayList<String> prepareCommand() {
         ArrayList<String> command = new ArrayList<>(arguments);
         ArrayList<String> executableCommand = new ArrayList<>();
+        executableCommand.addAll(Arrays.asList(KubeCMDClient.getCMD(), "exec", podName, "-n", podNamespace, "--"));
         executableCommand.addAll(executable);
         executableCommand.addAll(command);
         return executableCommand;

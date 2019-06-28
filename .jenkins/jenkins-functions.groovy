@@ -94,12 +94,12 @@ def postAction(String artifactDir) {
     archiveArtifacts(artifacts: "${artifactDir}/**", onlyIfSuccessful: false)
 }
 
-def installEnmasse(String tag, Boolean skipDependencies, Boolean upgrade, Boolean generateTemplates, Boolean installIoT = false) {
+def installEnmasse(String tag, Boolean generateTemplates, Boolean installIoT = false) {
     if (generateTemplates) {
         sh(script: "make -C templates clean")
         sh(script: 'make templates || true')
     }
-    sh(script: "DEPLOY_IOT=${installIoT} ./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}' ${skipDependencies} ${upgrade}")
+    sh(script: "DEPLOY_IOT=${installIoT} ./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}'")
 }
 
 def sendMail(address, jobName, buildUrl) {
