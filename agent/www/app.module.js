@@ -19,18 +19,15 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
         $scope.navigationItems = [
             {
                 title: "Addresses",
-                iconClass: "fa pficon-topology",
                 uiSref: "addresses",
             },
             {
                 title: "Connections",
-                iconClass : "fa pficon-route",
                 uiSref: "connections",
             }
         ];
         $scope.clickNavigationItem = function (title) {
             var connectionsNavItem = $scope.navigationItems.find(item => item.title === title);
-            var selector = "span."+connectionsNavItem.iconClass.replace(" ", ".");
             $timeout(function() {
                 //If already navigated to the page, the click will only mark the menu item as active.
                 angular.element(selector).parent().click();
