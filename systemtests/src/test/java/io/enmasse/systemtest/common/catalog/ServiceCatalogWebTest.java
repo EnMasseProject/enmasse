@@ -14,6 +14,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -304,6 +305,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     @Test
     @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
+    @ExternalClients
     void testSendReceiveInsideCluster() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -343,30 +345,25 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         consolePage.login(ocTestUser);
         consolePage.createAddressWebConsole(queue, true);
 
-        try {
-            SystemtestsKubernetesApps.deployMessagingClientApp();
+        ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
 
-            ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
+        arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
+        arguments.put(ClientArgument.COUNT, "10");
+        arguments.put(ClientArgument.CONN_RECONNECT, "false");
+        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.TIMEOUT, "10");
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        msgClient.setArguments(arguments);
 
-            ClientArgumentMap arguments = new ClientArgumentMap();
-            arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
-            arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
-            arguments.put(ClientArgument.COUNT, "10");
-            arguments.put(ClientArgument.CONN_RECONNECT, "false");
-            arguments.put(ClientArgument.USERNAME, credentials.getUsername());
-            arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
-            arguments.put(ClientArgument.CONN_SSL, "true");
-            arguments.put(ClientArgument.TIMEOUT, "10");
-            arguments.put(ClientArgument.LOG_MESSAGES, "json");
-            msgClient.setArguments(arguments);
+        assertTrue(msgClient.run());
 
-            assertTrue(msgClient.run());
+        assertEquals(10, msgClient.getMessages().size(),
+                String.format("Expected %d sent messages", 10));
 
-            assertEquals(10, msgClient.getMessages().size(),
-                    String.format("Expected %d sent messages", 10));
-        } finally {
-            SystemtestsKubernetesApps.deleteMessagingClientApp();
-        }
     }
 
     @Test

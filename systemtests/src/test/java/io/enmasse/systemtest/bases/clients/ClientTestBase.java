@@ -7,16 +7,18 @@ package io.enmasse.systemtest.bases.clients;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.ArtemisManagement;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.*;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.function.Executable;
 
 import java.nio.file.Path;
@@ -28,15 +30,11 @@ import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExternalClients
 public abstract class ClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
     protected Path logPath = null;
-
-    @BeforeAll
-    public void deployClient() throws Exception {
-        SystemtestsKubernetesApps.deployMessagingClientApp();
-    }
 
     @BeforeEach
     public void setUpClientBase(TestInfo info) {
@@ -59,11 +57,6 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.clear();
         clients.forEach(AbstractClient::stop);
         clients.clear();
-    }
-
-    @AfterAll
-    public void deleteClient() {
-        SystemtestsKubernetesApps.deleteMessagingClientApp();
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) throws Exception {

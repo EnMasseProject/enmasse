@@ -9,16 +9,11 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.*;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 
@@ -26,14 +21,10 @@ import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExternalClients
 public abstract class ClusterClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private Logger log = CustomLogger.getLogger();
-
-    @BeforeAll
-    public void deployClient() throws Exception {
-        SystemtestsKubernetesApps.deployMessagingClientApp();
-    }
 
     @BeforeEach
     public void setUpClientBase() throws Exception {
@@ -41,11 +32,6 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
         arguments.put(ClientArgument.CONN_SSL, "true");
-    }
-
-    @AfterAll
-    public void tearDownAll() {
-        SystemtestsKubernetesApps.deleteMessagingClientApp();
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) throws Exception {

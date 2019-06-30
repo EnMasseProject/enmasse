@@ -12,6 +12,7 @@ import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -32,6 +33,7 @@ import static io.enmasse.systemtest.TestTag.upgrade;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(upgrade)
+@ExternalClients
 class UpgradeTest extends TestBase {
 
     private static final int MESSAGE_COUNT = 50;
@@ -44,12 +46,6 @@ class UpgradeTest extends TestBase {
         setReuseAddressSpace();
         productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
         startVersion = getVersionFromTemplateDir(Paths.get(Environment.getInstance().getStartTemplates()));
-        SystemtestsKubernetesApps.deployMessagingClientApp();
-    }
-
-    @AfterAll
-    void clearClientsEnv() {
-        SystemtestsKubernetesApps.deleteMessagingClientApp();
     }
 
     @AfterEach

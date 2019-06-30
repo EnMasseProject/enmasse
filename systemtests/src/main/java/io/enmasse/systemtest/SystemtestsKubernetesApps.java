@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -15,7 +16,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 public class SystemtestsKubernetesApps {
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
@@ -29,7 +30,8 @@ public class SystemtestsKubernetesApps {
     public static final String INFINISPAN_SERVER = "infinispan-server";
 
     public static String getMessagingAppPodName() {
-        return Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS)).findAny().get().getMetadata().getName();
+        return Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+                pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }
 
     public static String deployMessagingClientApp() throws Exception {
@@ -37,7 +39,7 @@ public class SystemtestsKubernetesApps {
             Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
         }
         Kubernetes.getInstance().createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
-        Thread.sleep(5000);
+        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
         return getMessagingAppPodName();
     }
 
