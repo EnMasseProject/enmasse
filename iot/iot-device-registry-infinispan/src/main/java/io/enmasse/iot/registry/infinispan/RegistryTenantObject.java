@@ -22,6 +22,7 @@ public class RegistryTenantObject {
 
     private String tenantId;
     private String trustedCa;
+    private String version;
     private String tenantObject;
 
     /**
@@ -65,12 +66,22 @@ public class RegistryTenantObject {
         return trustedCa;
     }
 
+    @ProtoDoc("@Field")
+    @ProtoField(number = 4)
+    public String getVersion(){
+        return String.valueOf(this.hashCode());
+    }
+
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
     }
 
     public void setTrustedCa(String trustedCa) {
         this.trustedCa = trustedCa;
+    }
+
+    public void setVersion(String version){
+        this.version = String.valueOf(this.hashCode());
     }
 
     public void setTenantObject(String tenantObject) {
