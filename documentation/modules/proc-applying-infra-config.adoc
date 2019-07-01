@@ -17,7 +17,7 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} login -u developer
 ----
 
-. Change the project to the project where {ProductName} is installed:
+. Change to the project where {ProductName} is installed:
 +
 [subs="attributes",options="nowrap"]
 ----
