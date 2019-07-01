@@ -8,18 +8,11 @@ import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.iot.model.v1.*;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
-import io.enmasse.address.model.CoreCrd;
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigList;
-import io.enmasse.iot.model.v1.IoTCrd;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectList;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -29,11 +22,7 @@ import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ExecListener;
-import io.fabric8.kubernetes.client.dsl.ExecWatch;
-import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.*;
 import okhttp3.Response;
 import org.slf4j.Logger;
 
@@ -206,9 +195,9 @@ public abstract class Kubernetes {
     }
 
     public MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> getIoTProjectClient(String namespace) {
-        if(namespace == null) {
+        if (namespace == null) {
             return client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
-        }else {
+        } else {
             return (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class).inNamespace(namespace);
         }
     }
@@ -238,6 +227,7 @@ public abstract class Kubernetes {
 
     /**
      * Assumes infra namespace
+     *
      * @param name
      * @return
      */

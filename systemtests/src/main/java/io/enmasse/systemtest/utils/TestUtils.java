@@ -248,8 +248,7 @@ public class TestUtils {
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
         return kubernetes.listPods(Collections.singletonMap("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace))).stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running")
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
@@ -261,8 +260,7 @@ public class TestUtils {
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running")
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
@@ -274,8 +272,7 @@ public class TestUtils {
      */
     public static List<Pod> listReadyPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
-                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady))
                 .collect(Collectors.toList());
     }
 
@@ -287,8 +284,7 @@ public class TestUtils {
      */
     public static List<Pod> listReadyPods(Kubernetes kubernetes, String namespace) {
         return kubernetes.listPods(namespace).stream()
-                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady))
                 .collect(Collectors.toList());
     }
 
@@ -571,11 +567,11 @@ public class TestUtils {
         return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
     }
 
-    public static CompletableFuture<Void> runAsync(ThrowingCallable callable){
+    public static CompletableFuture<Void> runAsync(ThrowingCallable callable) {
         return CompletableFuture.runAsync(() -> {
             try {
                 callable.call();
-            } catch ( Exception e ) {
+            } catch (Exception e) {
                 log.error("Error running async test", e);
                 throw new RuntimeException(e);
             }

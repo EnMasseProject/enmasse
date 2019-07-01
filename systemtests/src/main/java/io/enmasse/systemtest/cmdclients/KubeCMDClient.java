@@ -24,10 +24,10 @@ public class KubeCMDClient extends CmdClient {
     protected static final int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static final int ONE_MINUTE_TIMEOUT = 60000;
     protected static final int FIVE_MINUTES_TIMEOUT = 300000;
-    protected static String CMD = setUpKubernetesCmd();
+    protected static String CMD = getCMD();
     private static Logger log = CustomLogger.getLogger();
 
-    private static String setUpKubernetesCmd() {
+    public static String getCMD() {
         String cmd = CMD;
         if (cmd == null) {
             if (env.useMinikube()) {

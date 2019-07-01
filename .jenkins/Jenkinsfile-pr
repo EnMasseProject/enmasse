@@ -99,13 +99,6 @@ pipeline {
                 sh "sh ./systemtests/scripts/download_released_enmasse.sh ${env.UPGRADE_FROM}"
             }
         }
-        stage('[upgrade] install requirements') {
-            steps {
-                script {
-                    sh "ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml"
-                }
-            }
-        }
         stage('[upgrade] login') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
@@ -143,7 +136,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.TAG, false, false, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
+                        lib.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
                     }
                 }
             }

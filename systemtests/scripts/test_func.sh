@@ -23,13 +23,11 @@ function getCommand() {
 function setup_test_openshift() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
-    SKIP_DEPENDENCIES=${3:-false}
-    UPGRADE=${4:-false}
-    IMAGE_NAMESPACE=${5:-"enmasseci"}
+    IMAGE_NAMESPACE=${3:-"enmasseci"}
 
     export_required_env
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}, iot: ${DEPLOY_IOT}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}, iot: ${DEPLOY_IOT}"
 
     rm -rf ${TEST_LOGDIR}
     mkdir -p ${TEST_LOGDIR}
@@ -39,11 +37,8 @@ function setup_test_openshift() {
     oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=${IMAGE_NAMESPACE}
     export KUBERNETES_API_TOKEN=`oc whoami -t`
 
-    if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
-        ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
-    fi
     ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"enable_iot\": \"${DEPLOY_IOT}\" }"
-    wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE} ${UPGRADE}
+    wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE}
 }
 
 function login_user() {

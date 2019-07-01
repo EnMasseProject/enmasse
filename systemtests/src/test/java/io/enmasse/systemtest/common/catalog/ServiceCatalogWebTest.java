@@ -10,18 +10,17 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.apiclients.MsgCliApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -41,10 +40,11 @@ import static io.enmasse.systemtest.Environment.USE_MINUKUBE_ENV;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
-@DisabledIfEnvironmentVariable(named=Environment.OCP_VERSION_ENV, matches=Environment.IS_OCP4_REGEXP)
+@DisabledIfEnvironmentVariable(named = Environment.OCP_VERSION_ENV, matches = Environment.IS_OCP4_REGEXP)
 class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox {
 
     private static Logger log = CustomLogger.getLogger();
@@ -305,6 +305,7 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
 
     @Test
     @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
+    @ExternalClients
     void testSendReceiveInsideCluster() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -344,32 +345,25 @@ class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox
         consolePage.login(ocTestUser);
         consolePage.createAddressWebConsole(queue, true);
 
-        try {
-            SystemtestsKubernetesApps.deployMessagingClientApp(addressSpace.getMetadata().getNamespace(), kubernetes);
-            try (var client = new MsgCliApiClient(kubernetes, SystemtestsKubernetesApps.getMessagingClientEndpoint(addressSpace.getMetadata().getNamespace(), kubernetes))) {
+        ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
 
-                ProtonJMSClientSender msgClient = new ProtonJMSClientSender();
+        ClientArgumentMap arguments = new ClientArgumentMap();
+        arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
+        arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
+        arguments.put(ClientArgument.COUNT, "10");
+        arguments.put(ClientArgument.CONN_RECONNECT, "false");
+        arguments.put(ClientArgument.USERNAME, credentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
+        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.TIMEOUT, "10");
+        arguments.put(ClientArgument.LOG_MESSAGES, "json");
+        msgClient.setArguments(arguments);
 
-                ClientArgumentMap arguments = new ClientArgumentMap();
-                arguments.put(ClientArgument.BROKER, String.format("%s:%s", credentials.getMessagingHost(), credentials.getMessagingAmqpsPort()));
-                arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
-                arguments.put(ClientArgument.COUNT, "10");
-                arguments.put(ClientArgument.CONN_RECONNECT, "false");
-                arguments.put(ClientArgument.USERNAME, credentials.getUsername());
-                arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
-                arguments.put(ClientArgument.CONN_SSL, "true");
-                arguments.put(ClientArgument.TIMEOUT, "10");
-                arguments.put(ClientArgument.LOG_MESSAGES, "json");
-                msgClient.setArguments(arguments);
+        assertTrue(msgClient.run());
 
-                JsonObject response = client.sendAndGetStatus(msgClient);
+        assertEquals(10, msgClient.getMessages().size(),
+                String.format("Expected %d sent messages", 10));
 
-                assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
-                        response.getInteger("ecode"), is(0));
-            }
-        } finally {
-            SystemtestsKubernetesApps.deleteMessagingClientApp(addressSpace.getMetadata().getNamespace(), kubernetes);
-        }
     }
 
     @Test

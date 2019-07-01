@@ -5,25 +5,20 @@
 package io.enmasse.systemtest.common.upgrade;
 
 
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CmdClient;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -38,6 +33,7 @@ import static io.enmasse.systemtest.TestTag.upgrade;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(upgrade)
+@ExternalClients
 class UpgradeTest extends TestBase {
 
     private static final int MESSAGE_COUNT = 50;
@@ -46,7 +42,7 @@ class UpgradeTest extends TestBase {
     private static String startVersion;
 
     @BeforeAll
-    void prepareUpgradeEnv() {
+    void prepareUpgradeEnv() throws Exception {
         setReuseAddressSpace();
         productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
         startVersion = getVersionFromTemplateDir(Paths.get(Environment.getInstance().getStartTemplates()));

@@ -12,10 +12,7 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.*;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -33,6 +30,7 @@ import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@ExternalClients
 public abstract class ClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
@@ -282,7 +280,8 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 .withAddress("drain" + ClientType.getAddressName(sender))
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
-                .build();;
+                .build();
+        ;
         setAddresses(dest);
 
         clients.addAll(Arrays.asList(sender, receiver));

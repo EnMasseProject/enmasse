@@ -14,11 +14,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class PythonClientReceiver extends AbstractClient {
-    public PythonClientReceiver() {
+    public PythonClientReceiver() throws Exception {
         super(ClientType.CLI_PROTON_PYTHON_RECEIVER);
     }
 
-    public PythonClientReceiver(Path logPath) {
+    public PythonClientReceiver(Path logPath) throws Exception {
         super(ClientType.CLI_PROTON_PYTHON_RECEIVER, logPath);
     }
 
