@@ -15,11 +15,11 @@ import java.util.List;
 
 
 public class PythonClientSender extends AbstractClient {
-    public PythonClientSender() {
+    public PythonClientSender() throws Exception {
         super(ClientType.CLI_PROTON_PYTHON_SENDER);
     }
 
-    public PythonClientSender(Path logPath) {
+    public PythonClientSender(Path logPath) throws Exception {
         super(ClientType.CLI_PROTON_PYTHON_SENDER, logPath);
     }
 

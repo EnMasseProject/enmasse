@@ -481,7 +481,9 @@ public abstract class Kubernetes {
     public void createDeploymentFromResource(String namespace, Deployment resources) throws Exception {
         if (!deploymentExists(namespace, resources.getMetadata().getName())) {
             Deployment depRes = client.apps().deployments().inNamespace(namespace).create(resources);
-            log.info("Deployment {} created", resources.getMetadata().getName());
+            Deployment result = client.apps().deployments().inNamespace(namespace)
+                    .withName(depRes.getMetadata().getName()).waitUntilReady(2, TimeUnit.MINUTES);
+            log.info("Deployment {} created", result.getMetadata().getName());
         } else {
             log.info("Deployment {} already exists", resources.getMetadata().getName());
         }

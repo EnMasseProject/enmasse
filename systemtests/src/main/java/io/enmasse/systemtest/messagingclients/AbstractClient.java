@@ -43,7 +43,7 @@ public abstract class AbstractClient {
      *
      * @param clientType type of client
      */
-    public AbstractClient(ClientType clientType) {
+    public AbstractClient(ClientType clientType) throws Exception {
         this.clientType = clientType;
         this.podName = SystemtestsKubernetesApps.getMessagingAppPodName();
         this.podNamespace = SystemtestsKubernetesApps.MESSAGING_PROJECT;
@@ -57,7 +57,7 @@ public abstract class AbstractClient {
      * @param clientType type of client
      * @param logPath    path where logs will be stored
      */
-    public AbstractClient(ClientType clientType, Path logPath) {
+    public AbstractClient(ClientType clientType, Path logPath) throws Exception {
         this.clientType = clientType;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
         this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));

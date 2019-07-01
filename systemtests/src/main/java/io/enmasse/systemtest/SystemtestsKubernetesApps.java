@@ -29,7 +29,9 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
 
-    public static String getMessagingAppPodName() {
+    public static String getMessagingAppPodName() throws Exception {
+        TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+                pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1, new TimeoutBudget(1, TimeUnit.MINUTES));
         return Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }

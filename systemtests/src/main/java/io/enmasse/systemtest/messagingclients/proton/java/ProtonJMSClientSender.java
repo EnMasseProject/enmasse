@@ -15,11 +15,11 @@ import java.util.List;
 
 
 public class ProtonJMSClientSender extends AbstractClient {
-    public ProtonJMSClientSender() {
+    public ProtonJMSClientSender() throws Exception {
         super(ClientType.CLI_JAVA_PROTON_JMS_SENDER);
     }
 
-    public ProtonJMSClientSender(Path logPath) {
+    public ProtonJMSClientSender(Path logPath) throws Exception {
         super(ClientType.CLI_JAVA_PROTON_JMS_SENDER, logPath);
     }
 

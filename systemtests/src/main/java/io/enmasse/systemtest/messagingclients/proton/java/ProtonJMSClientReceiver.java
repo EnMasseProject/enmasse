@@ -14,11 +14,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ProtonJMSClientReceiver extends AbstractClient {
-    public ProtonJMSClientReceiver() {
+    public ProtonJMSClientReceiver() throws Exception {
         super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER);
     }
 
-    public ProtonJMSClientReceiver(Path logPath) {
+    public ProtonJMSClientReceiver(Path logPath) throws Exception {
         super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER, logPath);
     }
 
