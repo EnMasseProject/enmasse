@@ -7,6 +7,7 @@ package io.enmasse.iot.registry.infinispan;
 
 import java.util.UUID;
 import org.eclipse.hono.deviceregistry.ApplicationConfig;
+import org.eclipse.hono.service.management.tenant.TenantManagementHttpEndpoint;
 import org.eclipse.hono.service.tenant.TenantAmqpEndpoint;
 import org.eclipse.hono.service.tenant.TenantHttpEndpoint;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -76,29 +77,13 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
         return remoteCacheManager.administration().createCache(cacheName, new ConfigurationBuilder().build());
     }
 
-    /**
-     * Creates a new instance of an AMQP 1.0 protocol handler for Hono's <em>Tenant</em> API.
-     *
-     * @return The handler.
-     */
-    @Bean
     @Override
-    @Scope("prototype")
-    @ConditionalOnBean(name="CacheTenantService")
     public TenantAmqpEndpoint tenantAmqpEndpoint() {
-        return new TenantAmqpEndpoint(vertx());
+        return super.tenantAmqpEndpoint();
     }
 
-    /**
-     * Creates a new instance of an HTTP protocol handler for Hono's <em>Tenant</em> API.
-     *
-     * @return The handler.
-     */
-    @Bean
     @Override
-    @Scope("prototype")
-    @ConditionalOnBean(name="CacheTenantService")
-    public TenantHttpEndpoint tenantHttpEndpoint() {
-        return new TenantHttpEndpoint(vertx());
+    public TenantManagementHttpEndpoint tenantHttpEndpoint() {
+        return super.tenantHttpEndpoint();
     }
 }

@@ -8,6 +8,9 @@ package io.enmasse.iot.registry.infinispan;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Verticle;
+
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import org.eclipse.hono.service.AbstractApplication;
 import org.eclipse.hono.service.HealthCheckProvider;
@@ -32,85 +35,45 @@ import org.springframework.context.annotation.Configuration;
 @EnableAutoConfiguration
 public class InfinispanRegistry extends AbstractApplication {
 
-    private AuthenticationService authenticationService;
-    private CredentialsService credentialsService;
-    private RegistrationService registrationService;
+    /**
+     * All the verticles.
+     */
+    private List<Verticle> verticles;
 
     /**
-     * Sets the credentials service implementation this server is based on.
-     *
-     * @param credentialsService The service implementation.
-     * @throws NullPointerException if service is {@code null}.
+     * All the health check providers.
      */
+    private List<HealthCheckProvider> healthCheckProviders;
+
     @Autowired
-    public final void setCredentialsService(final CredentialsService credentialsService) {
-        this.credentialsService = Objects.requireNonNull(credentialsService);
+    public void setVerticles(final List<Verticle> verticles) {
+        this.verticles = verticles;
     }
 
-    /**
-     * Sets the registration service implementation this server is based on.
-     *
-     * @param registrationService The registrationService to set.
-     * @throws NullPointerException if service is {@code null}.
-     */
     @Autowired
-    public final void setRegistrationService(final RegistrationService registrationService) {
-        this.registrationService = Objects.requireNonNull(registrationService);
-    }
-
-    /**
-     * Sets the authentication service implementation this server is based on.
-     *
-     * @param authenticationService The authenticationService to set.
-     * @throws NullPointerException if service is {@code null}.
-     */
-    @Autowired
-    public final void setAuthenticationService(final AuthenticationService authenticationService) {
-        this.authenticationService = Objects.requireNonNull(authenticationService);
+    public void setHealthCheckProviders(final List<HealthCheckProvider> healthCheckProviders) {
+        this.healthCheckProviders = healthCheckProviders;
     }
 
     @Override
-    protected final Future<Void> deployRequiredVerticles(final int maxInstances) {
+    protected final Future<?> deployVerticles() {
 
-        final Future<Void> result = Future.future();
-        CompositeFuture.all(
-                deployAuthenticationService(), // we only need 1 authentication service
-                deployRegistrationService(),
-                deployCredentialsService()).setHandler(ar -> {
-            if (ar.succeeded()) {
-                result.complete();
-            } else {
-                result.fail(ar.cause());
+        return super.deployVerticles().compose(ok -> {
+
+            @SuppressWarnings("rawtypes")
+            final List<Future> futures = new LinkedList<>();
+
+            for (final Verticle verticle : this.verticles) {
+                log.info("Deploying: {}", verticle);
+                final Future<String> result = Future.future();
+                getVertx().deployVerticle(verticle, result);
             }
+
+            return CompositeFuture.all(futures);
+
         });
-        return result;
-    }
 
-    private Future<String> deployCredentialsService() {
-        final Future<String> result = Future.future();
-        log.info("Starting credentials service {}", credentialsService);
-        getVertx().deployVerticle(credentialsService, result.completer());
-        return result;
     }
-
-    private Future<String> deployAuthenticationService() {
-        final Future<String> result = Future.future();
-        if (!Verticle.class.isInstance(authenticationService)) {
-            result.fail("authentication service is not a verticle");
-        } else {
-            log.info("Starting authentication service {}", authenticationService);
-            getVertx().deployVerticle((Verticle) authenticationService, result.completer());
-        }
-        return result;
-    }
-
-    private Future<String> deployRegistrationService() {
-        final Future<String> result = Future.future();
-        log.info("Starting registration service {}", registrationService);
-        getVertx().deployVerticle(registrationService, result.completer());
-        return result;
-    }
-
 
     /**
      * Registers any additional health checks that the service implementation components provide.
@@ -119,16 +82,10 @@ public class InfinispanRegistry extends AbstractApplication {
      */
     @Override
     protected Future<Void> postRegisterServiceVerticles() {
-        if (HealthCheckProvider.class.isInstance(authenticationService)) {
-            registerHealthchecks((HealthCheckProvider) authenticationService);
-        }
-        if (HealthCheckProvider.class.isInstance(credentialsService)) {
-            registerHealthchecks((HealthCheckProvider) credentialsService);
-        }
-        if (HealthCheckProvider.class.isInstance(registrationService)) {
-            registerHealthchecks((HealthCheckProvider) registrationService);
-        }
-        return Future.succeededFuture();
+        return super.postRegisterServiceVerticles().compose(ok -> {
+            this.healthCheckProviders.forEach(this::registerHealthchecks);
+            return Future.succeededFuture();
+        });
     }
 
     /**

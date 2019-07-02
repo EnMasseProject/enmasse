@@ -7,9 +7,12 @@ package io.enmasse.iot.registry.infinispan;
 
 import io.vertx.junit5.VertxExtension;
 
+import org.eclipse.hono.service.management.tenant.TenantManagementService;
 import org.eclipse.hono.service.tenant.AbstractCompleteTenantServiceTest;
+import org.eclipse.hono.service.tenant.AbstractTenantServiceTest;
 import org.eclipse.hono.service.tenant.CompleteTenantService;
 
+import org.eclipse.hono.service.tenant.TenantService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -22,7 +25,7 @@ import java.io.IOException;
  */
 @Disabled
 @ExtendWith(VertxExtension.class)
-public class CacheTenantServiceTest extends AbstractCompleteTenantServiceTest {
+public class CacheTenantServiceTest extends AbstractTenantServiceTest {
 
     private static CacheTenantService service;
     private static EmbeddedHotRodServer server;
@@ -48,7 +51,12 @@ public class CacheTenantServiceTest extends AbstractCompleteTenantServiceTest {
     }
 
     @Override
-    public CompleteTenantService getCompleteTenantService() {
+    public TenantService getTenantService() {
+        return service;
+    }
+
+    @Override
+    public TenantManagementService getTenantManagementService() {
         return service;
     }
 }

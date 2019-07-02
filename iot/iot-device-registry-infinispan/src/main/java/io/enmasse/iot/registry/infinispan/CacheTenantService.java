@@ -31,6 +31,7 @@ import org.eclipse.hono.service.management.tenant.Tenant;
 import org.eclipse.hono.service.management.tenant.TenantBackend;
 import org.eclipse.hono.service.management.tenant.TrustedCertificateAuthority;
 import org.eclipse.hono.tracing.TracingHelper;
+import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.TenantConstants;
 import org.eclipse.hono.util.TenantObject;
 import org.eclipse.hono.util.TenantResult;
@@ -202,7 +203,7 @@ public class CacheTenantService extends AbstractVerticle implements TenantBacken
                 resultHandler.handle(Future.succeededFuture(OperationResult.ok(
                         HTTP_OK,
                         convertTenantObject(registryTenantObject.getTenantObject()),
-                        Optional.ofNullable(Optional.empty()),
+                        Optional.ofNullable(getCacheDirective()),
                         Optional.ofNullable(registryTenantObject.getVersion()))
                 ));
             }
@@ -288,5 +289,10 @@ public class CacheTenantService extends AbstractVerticle implements TenantBacken
     private boolean versionCheck(final RegistryTenantObject tenant, final Optional<String> version) {
 
         return tenant.getVersion().equals(version.orElse(tenant.getVersion()));
+    }
+
+    private CacheDirective getCacheDirective() {
+        //TODO config cache directive
+        return CacheDirective.noCacheDirective();
     }
 }
