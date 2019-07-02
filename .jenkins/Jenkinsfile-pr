@@ -101,7 +101,7 @@ pipeline {
         }
         stage('[upgrade] login') {
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh "./systemtests/scripts/login_cluster_user.sh true"
                     }
@@ -118,7 +118,7 @@ pipeline {
                 START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
             }
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         sh "make templates || true"
                         lib.runSystemtests('systemtests-upgrade', 'upgrade.**')
@@ -134,7 +134,7 @@ pipeline {
                 expression { env.TEST_PROFILE != 'upgrade' }
             }
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         lib.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
                     }
@@ -146,7 +146,7 @@ pipeline {
                 expression { env.TEST_PROFILE != 'upgrade' }
             }
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         lib.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
                     }

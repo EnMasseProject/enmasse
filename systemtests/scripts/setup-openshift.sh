@@ -7,7 +7,6 @@ source "${CURDIR}/test_func.sh"
 #parameters:
 # {1} path to folder with installation scripts, roles,... (usually templates/install)
 SYSTEMTESTS_DIR=${1}
-OPENSHIFT_URL=${OPENSHIFT_URL:-https://localhost:8443}
 DOCKER=${DOCKER:-docker}
 
 
