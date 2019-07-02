@@ -25,7 +25,7 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. Edit the existing infrastructure configuration, or for a new infrastructure configuration, create the infrastructure configuration:
+. Edit the existing infrastructure configuration, or create a new infrastructure configuration using the following example:
 +
 [source,yaml,options="nowrap",subs="attributes"]
 ----
