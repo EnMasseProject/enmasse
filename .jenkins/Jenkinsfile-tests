@@ -46,6 +46,9 @@ pipeline {
             }
         }
         stage('start openshift') {
+            when {
+                expression { params.OC_VERSION != '4' }
+            }
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     script {
@@ -56,7 +59,7 @@ pipeline {
         }
         stage('install enmasse') {
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         lib.installEnmasse(env.TAG, true, params.DEPLOY_IOT)
                     }
@@ -65,7 +68,7 @@ pipeline {
         }
         stage('system tests') {
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         lib.runSystemtests(params.TEST_PROFILE, params.TEST_CASE)
                     }
@@ -77,6 +80,9 @@ pipeline {
         always {
             script {
                 lib.postAction(env.ARTIFACTS_DIR)
+                if (env.OC_VERSION == '4') {
+                    lib.uninstallEnmasse(env.TAG, env.OPENSHIFT_PROJECT)
+                }
             }
         }
         failure {

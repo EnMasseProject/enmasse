@@ -33,11 +33,22 @@ function setup_test_openshift() {
     mkdir -p ${TEST_LOGDIR}
 
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${KUBERNETES_API_URL}
-    oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
-    oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=${IMAGE_NAMESPACE}
+    OC_VERSION=${OC_VERSION:-"3.11"}
+    if [[ ${OC_VERSION} != "4" ]]; then
+        oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
+        oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=${IMAGE_NAMESPACE}
+    fi
     export KUBERNETES_API_TOKEN=`oc whoami -t`
 
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"enable_iot\": \"${DEPLOY_IOT}\" }"
+    if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
+        ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
+    fi
+    INVENTORY_FILE=systemtests.inventory
+    if [[ ${OC_VERSION} == "4" ]]; then
+        echo "using openshift4 ansible inventory file"
+        INVENTORY_FILE=systemtests.ocp4.inventory
+    fi
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/${INVENTORY_FILE} --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"enable_iot\": \"${DEPLOY_IOT}\" }"
     wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE}
 }
 
@@ -80,6 +91,10 @@ function wait_until_enmasse_up() {
     UPGRADE=${3:-false}
 
     expected_pods=7
+    if [[ ${OC_VERSION} == "4" ]]; then
+        # no service catalog nor service broker in ocp4
+        expected_pods=6
+    fi
     if [[ "${DEPLOY_IOT}" == "true" ]]; then
         expected_pods=$(($expected_pods + 1))
     fi

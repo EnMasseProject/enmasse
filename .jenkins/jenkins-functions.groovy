@@ -110,4 +110,8 @@ def loginOCUser(boolean setupClusterUser) {
     sh(script: "./systemtests/scripts/login_cluster_user.sh ${setupClusterUser}")
 }
 
+def uninstallEnmasse(String tag, String namespace) {
+    sh(script: "ansible-playbook templates/build/enmasse-${tag}/ansible/playbooks/openshift/uninstall.yml -i systemtests/ansible/inventory/systemtests.ocp4.inventory -e namespace=${namespace}")
+}
+
 return this
