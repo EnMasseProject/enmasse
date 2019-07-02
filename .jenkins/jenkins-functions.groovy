@@ -55,9 +55,13 @@ def runSystemtests(String profile, String testCases, String envVarsString = "") 
     sh(script: "${envVarsString} ./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}'")
 }
 
-def startOpenshift() {
-    sh(script: './systemtests/scripts/setup-openshift.sh "systemtests"')
-    sh(script: 'sudo chmod -R 777 /var/lib/origin/ || true')
+def startOpenshift(String ocVersion) {
+    if( ocVersion == "4") {
+        sh(script: './systemtests/scripts/setup-oc.sh "systemtests"')
+    } else {
+        sh(script: './systemtests/scripts/setup-openshift.sh "systemtests"')
+        sh(script: 'sudo chmod -R 777 /var/lib/origin/ || true')
+    }
 }
 
 def waitUntilAgentReady() {
