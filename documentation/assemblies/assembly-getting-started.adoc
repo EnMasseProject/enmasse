@@ -29,3 +29,4 @@ include::../modules/proc-send-receive.adoc[leveloffset=+1]
 We have seen how to set up {ProductName} on {KubePlatform}, and how to communicate with it using an AMQP client.
 
 :context: {parent-context}
+

@@ -7,6 +7,13 @@
 
 {ConsoleName} uses the OpenShift RBAC permissions model. For more information about the OpenShift RBAC permissions model, see the link:https://docs.openshift.com/container-platform/3.11/admin_guide/manage_rbac.html[OpenShift documentation^].
 
-To use {ConsoleName}, the OpenShift user requires a role that grants access to `addressspace` and `address` resources. For example, for edit access, `edit` permissions need be to given to the associated role object, and for view-only access, `list` permissions need to be granted. For more information about the {ProductName} example roles, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-example-roles-messaging[{ProductName} example roles].
+To use {ConsoleName}, the OpenShift user requires a role that grants access to `addressspace` and `address` resources. For example, for edit access, `edit` permissions need be to given to the associated role object, and for view-only access, `list` permissions need to be granted. 
 
+ifdef::SingleBookLink[]
+For more information about the {ProductName} example roles, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-example-roles-messaging[{ProductName} example roles].
+endif::SingleBookLink[]
+
+ifndef::SingleBookLink[]
+For more information about the {ProductName} example roles, see link:{BookUrlBase}{BaseProductVersion}/html-single/installing_and_managing_amq_online_on_openshift_container_platform/#ref-example-roles-messaging[{ProductName} example roles].
+endif::SingleBookLink[]
 
