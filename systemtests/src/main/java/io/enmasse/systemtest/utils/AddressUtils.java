@@ -11,6 +11,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.WaitPhase;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -188,28 +189,25 @@ public class AddressUtils {
     }
 
     private static void waitForAddressesMatched(TimeoutBudget timeoutBudget, int totalDestinations, FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> addressClient, AddressListMatcher addressListMatcher) throws Exception {
-        Map<String, Address> notMatched = new HashMap<>();
-
-        while (timeoutBudget.timeLeft() >= 0) {
+        TestUtils.waitUntilCondition(totalDestinations + " match", phase -> {
             try {
                 List<Address> addressList = addressClient.list().getItems();
-                notMatched = addressListMatcher.matchAddresses(addressList);
+                Map<String, Address> notMatched = addressListMatcher.matchAddresses(addressList);
                 notMatched.values().forEach(address ->
                         log.info("Waiting until address {} ready, message {}", address.getMetadata().getName(), address.getStatus().getMessages()));
-                if (notMatched.isEmpty()) {
-                    break;
+                if (!notMatched.isEmpty() && phase == WaitPhase.LAST_TRY) {
+                    log.info(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
                 }
-            } catch (KubernetesClientException ex) {
-                log.warn("Client can't read address resources");
+                return notMatched.isEmpty();
+            } catch (KubernetesClientException e) {
+                if (phase == WaitPhase.LAST_TRY) {
+                    log.error("Client can't read address resources", e);
+                } else {
+                    log.warn("Client can't read address resources");
+                }
+                return false;
             }
-            Thread.sleep(5000);
-        }
-
-        if (!notMatched.isEmpty()) {
-            List<Address> addressList = addressClient.list().getItems();
-            notMatched = addressListMatcher.matchAddresses(addressList);
-            throw new IllegalStateException(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
-        }
+        }, timeoutBudget);
     }
 
     private static Map<String, Address> checkAddressesMatching(List<Address> addressList, Predicate<Address> predicate, Address... destinations) {
