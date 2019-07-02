@@ -14,6 +14,7 @@ pipeline {
 
         OPENSHIFT_PROJECT = "enmasse-infra"
         TAG = 'latest'
+        OC_VERSION = "${params.OC_VERSION}"
     }
     agent {
         node {
@@ -46,13 +47,10 @@ pipeline {
             }
         }
         stage('start openshift') {
-            when {
-                expression { params.OC_VERSION != '4' }
-            }
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     script {
-                        lib.startOpenshift()
+                        lib.startOpenshift(env.OC_VERSION)
                     }
                 }
             }

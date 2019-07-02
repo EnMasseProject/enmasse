@@ -389,6 +389,10 @@ function get_oc_url() {
         echo "https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz"
     elif [[ ${OC_VERSION} == "3.10" ]]; then
         echo "https://github.com/openshift/origin/releases/download/v3.10.0/openshift-origin-client-tools-v3.10.0-dd10d17-linux-64bit.tar.gz"
+    elif [[ ${OC_VERSION} == "4" ]]; then
+        echo "https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz"
+        # workaround because 3.11 tar.gz has a folder inside and 4.1.X tar.gz hasn't, TODO modify systemtests/ansible/playbooks/environment.yml to work with both
+        # echo "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.3/openshift-client-linux-4.1.3.tar.gz"
     fi
 }
 
