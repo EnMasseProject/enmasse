@@ -52,7 +52,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     }
 
     private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
-        Method testMethod = extensionContext.getRequiredTestMethod();
+        Method testMethod = extensionContext.getTestMethod().orElse(null);
         Class testClass = extensionContext.getRequiredTestClass();
         try {
             log.warn("Test failed: Saving pod logs and info...");
@@ -60,8 +60,10 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             Path path = Paths.get(
                     Environment.getInstance().testLogDir(),
                     "failed_test_logs",
-                    testClass.getName(),
-                    testMethod.getName());
+                    testClass.getName());
+            if (testMethod != null) {
+                path = Paths.get(path.toString(), testMethod.getName());
+            }
             Files.createDirectories(path);
             List<Pod> pods = kube.listPods();
             for (Pod p : pods) {
