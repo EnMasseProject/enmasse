@@ -55,7 +55,7 @@ def runSystemtests(String profile, String testCases, String envVarsString = "") 
     sh(script: "${envVarsString} ./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}'")
 }
 
-def startOpenshift(String ocVersion) {
+def startOpenshift(String ocVersion = "3.11") {
     if( ocVersion == "4") {
         sh(script: './systemtests/scripts/setup-oc.sh "systemtests"')
     } else {
