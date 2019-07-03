@@ -18,7 +18,7 @@
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
-    <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
+    <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
     <micrometer.version>1.1.4</micrometer.version>
     <netty-tcnative.version>2.0.17.Final</netty-tcnative.version>
   </properties>
