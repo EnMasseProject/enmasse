@@ -6,24 +6,24 @@
 package iotconfig
 
 import (
-"context"
+	"context"
 
-"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
-"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
-"github.com/enmasseproject/enmasse/pkg/util"
-"github.com/enmasseproject/enmasse/pkg/util/recon"
-routev1 "github.com/openshift/api/route/v1"
+	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/recon"
+	routev1 "github.com/openshift/api/route/v1"
 
-"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-"github.com/enmasseproject/enmasse/pkg/util/install"
-appsv1 "k8s.io/api/apps/v1"
-corev1 "k8s.io/api/core/v1"
-"k8s.io/apimachinery/pkg/api/resource"
+	"github.com/enmasseproject/enmasse/pkg/util/install"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
-iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
 func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
@@ -68,6 +68,8 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			return err
 		}
 
+		container.Args = nil
+
 		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
@@ -93,13 +95,15 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
-			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "JAVA_OPTS", Value: `-Dinfinispanserver=`+config.Spec.ServicesConfig.DeviceRegistry.Infinispan.InfinispanServerAddress},
+			{Name: "JAVA_OPTS", Value: `-Dinfinispanserver=` + config.Spec.ServicesConfig.DeviceRegistry.Infinispan.InfinispanServerAddress},
 		}
+
+		AppendStandardHonoJavaOptions(container)
 
 		// append trust stores
 

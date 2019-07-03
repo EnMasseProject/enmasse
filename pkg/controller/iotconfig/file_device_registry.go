@@ -49,7 +49,7 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 
 	if !util.IsOpenshift() {
 		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameDeviceRegistry + "-external", config, r.reconcileFileDeviceRegistryServiceExternal)
+			return r.processService(ctx, nameDeviceRegistry+"-external", config, r.reconcileFileDeviceRegistryServiceExternal)
 		})
 	}
 
@@ -78,6 +78,8 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 			return err
 		}
 
+		container.Args = nil
+
 		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
@@ -103,12 +105,14 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
-			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 			{Name: "HONO_REGISTRY_SVC_SAVE_TO_FILE", Value: "true"},
 		}
+
+		AppendStandardHonoJavaOptions(container)
 
 		// set max devices per tenant limit
 
@@ -293,7 +297,6 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryRoute(config *iotv1alpha
 
 	return nil
 }
-
 
 func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 

@@ -22,6 +22,45 @@ func SetHonoProbes(container *corev1.Container) {
 	container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 180, "/liveness", 8088)
 }
 
+func FullHostNameForEnvVar(serviceName string) string {
+	return serviceName + ".$(KUBERNETES_NAMESPACE).svc"
+}
+
+// Append a string to the value of an env-var. If the env-var doesn't exist, it will be created with the provided value.
+// A whitespace is added between the existing value and the new value.
+func AppendEnvVarValue(container *corev1.Container, name string, value string) {
+	if container.Env == nil {
+		container.Env = make([]corev1.EnvVar, 0)
+	}
+
+	opts := ""
+
+	for _, env := range container.Env {
+		if env.Name == name {
+			opts = env.Value
+		}
+	}
+
+	if len(opts) > 0 {
+		opts += " "
+	}
+
+	opts += value
+
+	container.Env = append(container.Env, corev1.EnvVar{
+		Name:  name,
+		Value: opts,
+	})
+}
+
+func AppendStandardHonoJavaOptions(container *corev1.Container) {
+	AppendEnvVarValue(
+		container,
+		"JAVA_APP_OPTS",
+		"-Djava.net.preferIPv4Stack=true -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory",
+	)
+}
+
 func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig) {
 	deployment.Spec.Replicas = serviceConfig.Replicas
 }
