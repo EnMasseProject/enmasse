@@ -5,12 +5,15 @@
 package io.enmasse.systemtest.iot;
 
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -98,18 +101,37 @@ public class CredentialsRegistryClient extends ApiClient {
         responsePromise.get(150000, TimeUnit.SECONDS);
     }
 
-    private JsonObject createCredentialsObject(String deviceId, String authId, String password, Instant notAfter) {
+    static JsonObject createCredentialsObject(String deviceId, String authId, String password, Instant notAfter) {
         var body = new JsonObject();
         body.put("device-id", deviceId);
         body.put("type", "hashed-password");
         body.put("auth-id", authId);
 
-        JsonObject secret = new JsonObject(new HashMap<>(Map.of("hash-function", "sha-512", "pwd-plain", password)));
-        if(notAfter != null) {
-            secret.put("not-after", DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(notAfter.atOffset(ZoneOffset.UTC)));
-        }
+        var rnd = new SecureRandom();
+        var salt = new byte[16];
+        rnd.nextBytes(salt);
 
-        body.put("secrets", new JsonArray(List.of(secret)));
-        return body;
+        try {
+            var md = MessageDigest.getInstance("SHA-256");
+            md.update(salt);
+            md.update(password.getBytes(StandardCharsets.UTF_8));
+
+            var hashedPassword = Base64.getEncoder().encodeToString(md.digest());
+
+            var secret = new JsonObject()
+                    .put("hash-function", "sha-256")
+                    .put("salt", Base64.getEncoder().encodeToString(salt))
+                    .put("pwd-hash", hashedPassword);
+
+            if(notAfter != null) {
+                secret.put("not-after", DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(notAfter.atOffset(ZoneOffset.UTC)));
+            }
+
+            body.put("secrets", new JsonArray(List.of(secret)));
+            return body;
+        }
+        catch ( NoSuchAlgorithmException e ) {
+            throw new RuntimeException(e);
+        }
     }
 }
