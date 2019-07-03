@@ -11,7 +11,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
-import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -21,7 +21,8 @@ import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(nonPR)
-public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderChrome {
+@SeleniumChrome
+public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
 
     @Test
     void testCreateDeleteQueue() throws Exception {

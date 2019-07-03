@@ -16,7 +16,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.common.Credentials;
-import io.enmasse.systemtest.selenium.ISeleniumProvider;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -25,23 +25,20 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.Optional;
 
-public abstract class GlobalConsoleTest extends TestBase implements ISeleniumProvider {
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public abstract class GlobalConsoleTest extends TestBase {
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
 
     private static Logger log = CustomLogger.getLogger();
     private GlobalConsolePage globalConsolePage;
     private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
-    public void setUpWebConsoleTests() throws Exception {
+    void setUpAdminManager() {
         adminManager.setUp();
-        if (selenium.getDriver() == null)
-            selenium.setupDriver(buildDriver());
-        else
-            selenium.clearScreenShots();
     }
 
     @AfterEach
@@ -163,7 +160,7 @@ public abstract class GlobalConsoleTest extends TestBase implements ISeleniumPro
     private void waitUntilAddressSpaceActive(AddressSpace addressSpace) throws Exception {
         assertTrue(Optional.ofNullable(selenium.waitUntilItemPresent(30, () -> globalConsolePage.getAddressSpaceItem(addressSpace)))
                 .map(webItem -> webItem.getStatus().contains("Active"))
-                .orElseGet(()-> {
+                .orElseGet(() -> {
                     log.error("AddressSpaceWebItem {} not present", addressSpace.getMetadata().getName());
                     return false;
                 }));

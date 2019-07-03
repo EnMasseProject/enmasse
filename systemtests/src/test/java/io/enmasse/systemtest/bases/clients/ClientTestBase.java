@@ -31,7 +31,7 @@ import java.util.concurrent.Future;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExternalClients
-public abstract class ClientTestBase extends TestBaseWithShared {
+public abstract class  ClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
     protected Path logPath = null;

@@ -507,7 +507,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * selenium provider with Firefox webdriver
      */
     protected SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
-        SeleniumProvider seleniumProvider = new SeleniumProvider();
+        SeleniumProvider seleniumProvider = SeleniumProvider.getInstance();
         seleniumProvider.setupDriver(TestUtils.getFirefoxDriver());
         return seleniumProvider;
     }

@@ -5,10 +5,11 @@
 package io.enmasse.systemtest.common.plans.web;
 
 import io.enmasse.systemtest.bases.web.WebConsolePlansTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import org.junit.jupiter.api.Test;
 
-class FirefoxWebConsolePlansTest extends WebConsolePlansTest implements ISeleniumProviderFirefox {
+@SeleniumFirefox
+class FirefoxWebConsolePlansTest extends WebConsolePlansTest {
 
     @Test
     void testCreateAddressPlan() throws Exception {
