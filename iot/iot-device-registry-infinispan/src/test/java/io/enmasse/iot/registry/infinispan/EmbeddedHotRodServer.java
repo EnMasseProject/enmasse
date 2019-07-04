@@ -7,6 +7,7 @@ package io.enmasse.iot.registry.infinispan;
 
 import java.io.IOException;
 
+import java.util.ArrayList;
 import java.util.UUID;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -33,13 +34,12 @@ public class EmbeddedHotRodServer {
     private final HotRodServer server;
     private final DefaultCacheManager defaultCacheManager;
 
-    private final String CACHE_NAME = UUID.randomUUID().toString();
+    private final ArrayList<String> cachesNames = new ArrayList<>();
 
     public EmbeddedHotRodServer() throws IOException {
 
         org.infinispan.configuration.cache.ConfigurationBuilder embeddedBuilder = new org.infinispan.configuration.cache.ConfigurationBuilder();
         defaultCacheManager = new DefaultCacheManager(embeddedBuilder.build());
-        defaultCacheManager.createCache(CACHE_NAME, embeddedBuilder.build());
 
         HotRodServerConfiguration build = new HotRodServerConfigurationBuilder().build();
         server = new HotRodServer();
@@ -56,6 +56,7 @@ public class EmbeddedHotRodServer {
         String generatedSchema = new ProtoSchemaBuilder()
                     .addClass(RegistryTenantObject.class)
                     .addClass(RegistryCredentialObject.class)
+                    .addClass(RegistryDeviceObject.class)
                     .addClass(CredentialsKey.class)
                     .addClass(RegistrationKey.class)
                     .packageName("registry")
@@ -68,11 +69,22 @@ public class EmbeddedHotRodServer {
     }
 
     public <K, V> RemoteCache<K,V> getCache(){
-        return manager.getCache(CACHE_NAME);
+        org.infinispan.configuration.cache.ConfigurationBuilder embeddedBuilder = new org.infinispan.configuration.cache.ConfigurationBuilder();
+
+        final String cacheName = UUID.randomUUID().toString();
+        cachesNames.add(cacheName);
+        defaultCacheManager.createCache(cacheName, embeddedBuilder.build());
+
+        return manager.getCache(cacheName);
     }
 
+
+
     public void stop() {
-        defaultCacheManager.removeCache(CACHE_NAME);
+        for (String cache : cachesNames) {
+            defaultCacheManager.removeCache(cache);
+        }
+
         manager.stop();
         defaultCacheManager.stop();
         server.stop();

@@ -21,9 +21,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import org.eclipse.hono.auth.BCryptHelper;
-import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.service.credentials.CredentialsService;
 import org.eclipse.hono.service.management.OperationResult;
+import org.eclipse.hono.service.management.Result;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.CredentialsManagementService;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
@@ -39,6 +39,7 @@ import org.infinispan.query.dsl.QueryFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -61,6 +62,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Repository
 @Primary
+@Qualifier("serviceImpl")
 public class CacheCredentialService extends AbstractVerticle
         implements CredentialsManagementService, CredentialsService  {
 
@@ -73,13 +75,11 @@ public class CacheCredentialService extends AbstractVerticle
     /**
      * Creates a new service instance for a password encoder.
      *
-     * @param pwdEncoder The encoder to use for hashing clear text passwords.
      * @throws NullPointerException if encoder is {@code null}.
      */
     @Autowired
     protected CacheCredentialService(final RemoteCache<CredentialsKey,RegistryCredentialObject> cache,
-            final RemoteCache<RegistrationKey, String> versions, final HonoPasswordEncoder pwdEncoder) {
-        super(pwdEncoder);
+            final RemoteCache<RegistrationKey, String> versions) {
         this.credentialsCache = cache;
         this.versions = versions;
     }
@@ -291,10 +291,30 @@ public class CacheCredentialService extends AbstractVerticle
         }
     }
 
-    private void removeAllCredentialsForDevice(final String tenantId, final String deviceId) {
+    /**
+     * Remove all the credentials for the given device ID.
+     * @param tenantId the Id of the tenant which the device belongs to.
+     * @param deviceId the id of the device that is deleted.
+     * @param span The active OpenTracing span for this operation.
+     * @param resultHandler the operation result.
+     */
+    public void remove(final String tenantId, final String deviceId,
+            final Span span, final Handler<AsyncResult<Result<Void>>> resultHandler) {
+        Objects.requireNonNull(tenantId);
+        Objects.requireNonNull(deviceId);
+        Objects.requireNonNull(resultHandler);
+
+        log.debug("removing credentials for device [tenant-id: {}, device-id: {}]", tenantId, deviceId);
+
+        resultHandler.handle(Future.succeededFuture(removeAllCredentialsForDevice(tenantId, deviceId)));
+    }
+
+    private Result<Void> removeAllCredentialsForDevice(final String tenantId, final String deviceId) {
 
         final List<RegistryCredentialObject>  matches = queryAllCredentialsForDevice(tenantId, deviceId);
-        if ( ! matches.isEmpty()){
+        if ( matches.isEmpty()) {
+            return Result.from(HTTP_NOT_FOUND);
+        } else {
             final List<CompletableFuture<RegistryCredentialObject>> futureResultList = new ArrayList<>();
             matches.forEach(registryCredential -> {
                 final CredentialsKey key = new CredentialsKey(
@@ -306,6 +326,7 @@ public class CacheCredentialService extends AbstractVerticle
             CompletableFuture.allOf(futureResultList.toArray(new CompletableFuture[futureResultList.size()])).thenAccept( r-> {
                 log.debug("Removed {} credentials for device [tenant-id: {}, deviceID {}]", matches.size(), tenantId, deviceId);
             });
+            return Result.from(HTTP_NO_CONTENT);
         }
     }
 
@@ -416,6 +437,16 @@ public class CacheCredentialService extends AbstractVerticle
     }
 
     protected int getMaxBcryptIterations() {
-        return getConfig().getMaxBcryptIterations();
+        //fixme
+        //return getConfig().getMaxBcryptIterations();
+        return 10;
+    }
+
+    /**
+     * Removes all credentials from the registry.
+     */
+    public void clear() {
+        credentialsCache.clear();
+        versions.clear();
     }
 }

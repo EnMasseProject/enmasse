@@ -27,7 +27,7 @@ import java.io.IOException;
 @ExtendWith(VertxExtension.class)
 public class CacheTenantServiceTest extends AbstractTenantServiceTest {
 
-    private static CacheTenantService service;
+    private static CacheTenantService tenantService;
     private static EmbeddedHotRodServer server;
 
     /**
@@ -37,7 +37,7 @@ public class CacheTenantServiceTest extends AbstractTenantServiceTest {
     @BeforeEach
     public void setUp() throws IOException {
         server = new EmbeddedHotRodServer();
-        service = new CacheTenantService(server.getCache());
+        tenantService = new CacheTenantService(server.getCache());
     }
 
     /**
@@ -52,11 +52,11 @@ public class CacheTenantServiceTest extends AbstractTenantServiceTest {
 
     @Override
     public TenantService getTenantService() {
-        return service;
+        return tenantService;
     }
 
     @Override
     public TenantManagementService getTenantManagementService() {
-        return service;
+        return tenantService;
     }
 }

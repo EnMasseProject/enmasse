@@ -34,6 +34,7 @@ import org.eclipse.hono.util.RegistrationResult;
 import org.infinispan.client.hotrod.Flag;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -52,6 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Repository
 @Primary
+@Qualifier("serviceImpl")
 public class CacheRegistrationService extends AbstractVerticle implements RegistrationService, DeviceManagementService {
     private final RemoteCache<RegistrationKey, RegistryDeviceObject> registrationCache;
 
@@ -246,5 +248,12 @@ public class CacheRegistrationService extends AbstractVerticle implements Regist
         return new JsonObject()
                 .put(RegistrationConstants.FIELD_PAYLOAD_DEVICE_ID, deviceId)
                 .put("data", data);
+    }
+
+    /**
+     * Removes all credentials from the registry.
+     */
+    public void clear() {
+        registrationCache.clear();
     }
 }

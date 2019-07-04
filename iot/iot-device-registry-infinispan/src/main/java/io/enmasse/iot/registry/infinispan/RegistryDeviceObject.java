@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan;
 
+import io.vertx.core.json.JsonObject;
 import org.eclipse.hono.service.management.device.Device;
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -19,7 +20,7 @@ import org.infinispan.protostream.annotations.ProtoField;
 public class RegistryDeviceObject {
 
     private String version;
-    private Device device;
+    private String device;
 
     /**
      *  Constructor without arguments for the protobuilder.
@@ -33,14 +34,14 @@ public class RegistryDeviceObject {
      */
     public RegistryDeviceObject(final Device device) {
 
-        this.device = device;
+        this.device = JsonObject.mapFrom(device).encode();
         this.setVersion(null);
     }
 
     @ProtoDoc("@Field")
     @ProtoField(number = 1, required = true)
     public Device getDevice() {
-        return device;
+        return new JsonObject(device).mapTo(Device.class);
     }
 
     @ProtoDoc("@Field")
@@ -54,6 +55,6 @@ public class RegistryDeviceObject {
     }
 
     public void setDevice(Device device) {
-        this.device = device;
+        this.device = JsonObject.mapFrom(device).encode();
     }
 }

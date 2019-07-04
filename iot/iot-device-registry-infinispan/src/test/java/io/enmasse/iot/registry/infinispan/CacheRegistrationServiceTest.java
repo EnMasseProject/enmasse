@@ -5,8 +5,10 @@
 
 package io.enmasse.iot.registry.infinispan;
 
-import org.eclipse.hono.service.registration.AbstractCompleteRegistrationServiceTest;
+import org.eclipse.hono.service.management.device.DeviceManagementService;
+import org.eclipse.hono.service.registration.AbstractRegistrationServiceTest;
 import org.eclipse.hono.service.registration.CompleteRegistrationService;
+import org.eclipse.hono.service.registration.RegistrationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -22,9 +24,9 @@ import java.io.IOException;
  */
 @Disabled
 @ExtendWith(VertxExtension.class)
-public class CacheRegistrationServiceTest extends AbstractCompleteRegistrationServiceTest {
+public class CacheRegistrationServiceTest extends AbstractRegistrationServiceTest {
 
-    private static CacheRegistrationService service;
+    private static CacheRegistrationService registrationService;
     private static EmbeddedHotRodServer server;
 
     /**
@@ -35,7 +37,7 @@ public class CacheRegistrationServiceTest extends AbstractCompleteRegistrationSe
     public void setUp() throws IOException {
 
         server = new EmbeddedHotRodServer();
-        service = new CacheRegistrationService(server.getCache());
+        registrationService = new CacheRegistrationService(server.getCache());
     }
 
     /**
@@ -49,9 +51,12 @@ public class CacheRegistrationServiceTest extends AbstractCompleteRegistrationSe
     }
 
     @Override
-    public CompleteRegistrationService getCompleteRegistrationService() {
-        return service;
+    public RegistrationService getRegistrationService() {
+        return registrationService;
     }
 
-
+    @Override
+    public DeviceManagementService getDeviceManagementService() {
+        return this.registrationService;
+    }
 }

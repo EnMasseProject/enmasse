@@ -4,10 +4,13 @@
  */
 package io.enmasse.iot.registry.infinispan;
 
-import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
-import org.eclipse.hono.service.credentials.AbstractCompleteCredentialsServiceTest;
+import org.eclipse.hono.service.credentials.AbstractCredentialsServiceTest;
 import org.eclipse.hono.service.credentials.CompleteCredentialsService;
 
+import org.eclipse.hono.service.credentials.CredentialsService;
+import org.eclipse.hono.service.management.credentials.CredentialsManagementService;
+import org.eclipse.hono.service.management.device.DeviceBackend;
+import org.eclipse.hono.service.management.device.DeviceManagementService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -21,11 +24,12 @@ import java.io.IOException;
  * Tests verifying behavior of {@link CacheCredentialService}.
  *
  */
-@Disabled
+//@Disabled
 @ExtendWith(VertxExtension.class)
-public class CacheCredentialsServiceTest extends AbstractCompleteCredentialsServiceTest {
+public class CacheCredentialsServiceTest extends AbstractCredentialsServiceTest {
 
-    private static CacheCredentialService service;
+    private static CacheCredentialService credentialService;
+    private static CacheRegistrationService registrationService;
     private static EmbeddedHotRodServer server;
 
     /**
@@ -35,7 +39,8 @@ public class CacheCredentialsServiceTest extends AbstractCompleteCredentialsServ
     public void setUp() throws IOException {
 
         server = new EmbeddedHotRodServer();
-        service = new CacheCredentialService(server.getCache(), new SpringBasedHonoPasswordEncoder());
+        credentialService = new CacheCredentialService(server.getCache(), server.getCache());
+        registrationService = new CacheRegistrationService(server.getCache());
     }
 
     /**
@@ -47,7 +52,18 @@ public class CacheCredentialsServiceTest extends AbstractCompleteCredentialsServ
     }
 
     @Override
-    public CompleteCredentialsService getCompleteCredentialsService() {
-        return service;
+    public CredentialsService getCredentialsService() {
+        return this.credentialService;
     }
+
+    @Override
+    public CredentialsManagementService getCredentialsManagementService() {
+        return this.credentialService;
+    }
+
+    @Override
+    public DeviceManagementService getDeviceManagementService() {
+        return this.registrationService;
+    }
+
 }

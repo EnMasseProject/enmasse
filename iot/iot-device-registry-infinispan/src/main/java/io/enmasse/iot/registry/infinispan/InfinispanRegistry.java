@@ -11,12 +11,10 @@ import io.vertx.core.Verticle;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
+
 import org.eclipse.hono.service.AbstractApplication;
 import org.eclipse.hono.service.HealthCheckProvider;
-import org.eclipse.hono.service.auth.AuthenticationService;
-import org.eclipse.hono.service.credentials.CredentialsService;
-import org.eclipse.hono.service.registration.RegistrationService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
