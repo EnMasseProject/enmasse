@@ -49,7 +49,7 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 
 	if !util.IsOpenshift() {
 		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameDeviceRegistry + "-external", config, r.reconcileFileDeviceRegistryServiceExternal)
+			return r.processService(ctx, nameDeviceRegistry+"-external", config, r.reconcileFileDeviceRegistryServiceExternal)
 		})
 	}
 
@@ -71,6 +71,10 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
+
+	// the file based device registry must use the re-create strategy
+	// this is necessary to detach the volume first
+	deployment.Spec.Strategy.Type = appsv1.RecreateDeploymentStrategyType
 
 	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
@@ -293,7 +297,6 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryRoute(config *iotv1alpha
 
 	return nil
 }
-
 
 func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
