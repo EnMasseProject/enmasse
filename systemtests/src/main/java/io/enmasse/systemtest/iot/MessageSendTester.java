@@ -308,7 +308,7 @@ public class MessageSendTester {
 
             // duration = amount * delay * factor
             var sendDuration = calcSendTimeout();
-            log.info("Sending messages - total timeout: {}", sendDuration);
+            log.info("Sending messages - total timeout: {} - delay: {} ms", sendDuration, delay);
             var sendTimeout = TimeoutBudget.ofDuration(sendDuration);
 
             // send
