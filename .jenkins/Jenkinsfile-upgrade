@@ -67,7 +67,7 @@ pipeline {
         }
         stage('login') {
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
                         lib.loginOCUser(true)
                     }
@@ -80,7 +80,7 @@ pipeline {
                         "TAG=latest",
                         "USE_DUMMY_ADDRESS=true",
                         "UPGRADE_TEMPLATES=${WORKSPACE}/templates/build/enmasse-latest"]) {
-                    withCredentials([string(credentialsId: 'openshift-host', variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                         script {
                             for (def startVersion : params.START_VERSION.split(",")) {
                                 catchError {

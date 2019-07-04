@@ -48,16 +48,18 @@ pipeline {
         }
         stage('start openshift') {
             steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    script {
-                        lib.startOpenshift(env.OC_VERSION)
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        script {
+                            lib.startOpenshift(env.OC_VERSION)
+                        }
                     }
                 }
             }
         }
         stage('install enmasse') {
             steps {
-                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER'), string(credentialsId: params.OPENSHIFT_DOMAIN_CREDENTIAL_ID, variable: 'KUBERNETES_DOMAIN')]) {
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER'), string(credentialsId: params.OPENSHIFT_DOMAIN_CREDENTIAL_ID, variable: 'KUBERNETES_DOMAIN')]) {
                     script {
                         lib.installEnmasse(env.TAG, true, params.DEPLOY_IOT)
                     }
@@ -66,7 +68,7 @@ pipeline {
         }
         stage('system tests') {
             steps {
-                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'KUBERNETES_API_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER'), string(credentialsId: params.OPENSHIFT_DOMAIN_CREDENTIAL_ID, variable: 'KUBERNETES_DOMAIN')]) {
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER'), string(credentialsId: params.OPENSHIFT_DOMAIN_CREDENTIAL_ID, variable: 'KUBERNETES_DOMAIN')]) {
                     script {
                         lib.runSystemtests(params.TEST_PROFILE, params.TEST_CASE)
                     }
