@@ -6,6 +6,8 @@
 package io.enmasse.iot.registry.infinispan;
 
 import io.vertx.core.json.JsonObject;
+import org.eclipse.hono.service.management.credentials.CommonCredential;
+import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsObject;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
@@ -33,13 +35,13 @@ public class RegistryCredentialObject {
     /**
      * Create a a RegistryCredentialObject with the credentials details.
      *
-     * @param honoCredential the credential object, in a {@link org.eclipse.hono.util.CredentialsObject Hono CredentialsObject util class}.
+     * @param deviceId the device ID.
      * @param tenantId the tenant ID associated with the credential.
      * @param originalJson the raw JSON object contained in the original creation request.
      */
-    public RegistryCredentialObject(final CredentialsObject honoCredential, final String tenantId, final JsonObject originalJson){
+    public RegistryCredentialObject(final String deviceId, final String tenantId, final JsonObject originalJson){
         this.tenantId = tenantId;
-        this.deviceId = honoCredential.getDeviceId();
+        this.deviceId = deviceId;
         this.originalJson = originalJson.encode();
     }
 
@@ -71,5 +73,9 @@ public class RegistryCredentialObject {
 
     public void setOriginalJson(String originalJson) {
         this.originalJson = originalJson;
+    }
+
+    public String getAuthId(){
+        return new JsonObject(originalJson).getString(CredentialsConstants.FIELD_AUTH_ID);
     }
 }

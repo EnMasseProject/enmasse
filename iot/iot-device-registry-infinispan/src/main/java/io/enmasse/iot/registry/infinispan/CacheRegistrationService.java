@@ -5,7 +5,6 @@
 
 package io.enmasse.iot.registry.infinispan;
 
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
@@ -21,7 +20,6 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.hono.deviceregistry.FileBasedRegistrationService;
 import org.eclipse.hono.service.management.Id;
 import org.eclipse.hono.service.management.OperationResult;
@@ -42,6 +40,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A Registration service that use an Infinispan as a backend service.
@@ -247,10 +246,5 @@ public class CacheRegistrationService extends AbstractVerticle implements Regist
         return new JsonObject()
                 .put(RegistrationConstants.FIELD_PAYLOAD_DEVICE_ID, deviceId)
                 .put("data", data);
-    }
-
-    private boolean versionCheck(final RegistryDeviceObject device, final Optional<String> version) {
-
-        return device.getVersion().equals(version.orElse(device.getVersion()));
     }
 }
