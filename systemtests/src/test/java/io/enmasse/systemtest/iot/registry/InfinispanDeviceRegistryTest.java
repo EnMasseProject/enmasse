@@ -51,5 +51,4 @@ public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase{
         SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
     }
 
-
 }
