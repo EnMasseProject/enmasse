@@ -12,8 +12,8 @@ import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -22,7 +22,7 @@ public class AmqpClientFactory {
     private final AddressSpace defaultAddressSpace;
     private final String defaultUsername;
     private final String defaultPassword;
-    private final List<AmqpClient> clients = new ArrayList<>();
+    private final List<AmqpClient> clients = new CopyOnWriteArrayList<>();
 
     public AmqpClientFactory(AddressSpace defaultAddressSpace, UserCredentials credentials) {
         this.defaultAddressSpace = defaultAddressSpace;
@@ -31,7 +31,7 @@ public class AmqpClientFactory {
     }
 
     public void close() throws Exception {
-        for (AmqpClient client : clients) {
+        for (final AmqpClient client : clients) {
             client.close();
         }
         clients.clear();

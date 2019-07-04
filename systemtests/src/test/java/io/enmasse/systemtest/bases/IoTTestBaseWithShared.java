@@ -129,15 +129,22 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
             }
         }
 
+    }
+
+    @AfterEach
+    public void closeIoTAmqpClient () throws Exception {
         if (this.iotAmqpClient != null) {
             this.iotAmqpClient.close();
             this.iotAmqpClient = null;
         }
+    }
+
+    @AfterEach
+    public void closeIoTAmqpClientFactory() throws Exception {
         if (this.iotAmqpClientFactory != null) {
             this.iotAmqpClientFactory.close();
             this.iotAmqpClientFactory = null;
         }
-
     }
 
     @Override

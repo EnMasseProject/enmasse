@@ -103,6 +103,13 @@ public abstract class TestBaseWithShared extends TestBase {
         }
     }
 
+    @AfterEach
+    public void closeAmqpClientFactory() throws Exception {
+        if ( amqpClientFactory  != null ) {
+            amqpClientFactory.close();
+            amqpClientFactory = null;
+        }
+    }
 
     //================================================================================================
     //====================================== Test help methods =======================================

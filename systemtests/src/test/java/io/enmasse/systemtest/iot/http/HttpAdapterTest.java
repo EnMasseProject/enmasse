@@ -99,13 +99,19 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             registryClient.deleteDeviceRegistration(tenantId(), deviceId);
             registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         }
-        if (businessApplicationClient != null) {
-            businessApplicationClient.close();
-        }
         if (adapterClient != null ) {
             adapterClient.close();
         }
         removeUser(getAddressSpace(), businessApplicationUsername);
+    }
+
+    @AfterEach
+    public void closeClient () throws Exception {
+        // close in a dedicated method to ensure it gets called in any case
+        if (businessApplicationClient != null) {
+            businessApplicationClient.close();
+            businessApplicationClient = null;
+        }
     }
 
     /**

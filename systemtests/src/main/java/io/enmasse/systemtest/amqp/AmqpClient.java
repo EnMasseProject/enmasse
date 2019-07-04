@@ -151,7 +151,12 @@ public class AmqpClient implements AutoCloseable {
         // now wait on the vertx futures ... with the help of Java futures
         var await = new CompletableFuture<>();
         CompositeFuture.all(futures).setHandler(ar -> {
-            await.complete(null);
+            if (ar.succeeded()) {
+                await.complete(null);
+            } else {
+                await.completeExceptionally(ar.cause());
+            }
+
             log.info("Close of all vertx instances completed", ar.cause());
         });
 
