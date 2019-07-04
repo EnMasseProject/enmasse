@@ -58,6 +58,8 @@ def runSystemtests(String profile, String testCases, String envVarsString = "") 
 def startOpenshift(String ocVersion = "3.11") {
     if( ocVersion == "4") {
         sh(script: './systemtests/scripts/setup-oc.sh "systemtests"')
+        env.KUBERNETES_API_URL = env.OPENSHIFT_URL
+        loginOCUser(false)
     } else {
         sh(script: './systemtests/scripts/setup-openshift.sh "systemtests"')
         sh(script: 'sudo chmod -R 777 /var/lib/origin/ || true')
