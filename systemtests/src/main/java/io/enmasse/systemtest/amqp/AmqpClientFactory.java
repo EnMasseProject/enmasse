@@ -12,6 +12,7 @@ import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -31,9 +32,11 @@ public class AmqpClientFactory {
     }
 
     public void close() throws Exception {
+        var clients = new ArrayList<>(this.clients);
         for (final AmqpClient client : clients) {
             client.close();
         }
+        log.info("Closed {} clients", clients.size());
         clients.clear();
     }
 
