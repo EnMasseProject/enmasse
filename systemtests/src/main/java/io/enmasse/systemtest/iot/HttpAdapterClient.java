@@ -89,6 +89,8 @@ public class HttpAdapterClient extends ApiClient {
         var request = client.post(endpoint.getPort(), endpoint.getHost(), path)
                 .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
+                // we send with QoS 1 by default, to get some feedback
+                .putHeader("QoS-Level", "1")
                 .timeout(ms);
 
         // allow to customize request
