@@ -285,6 +285,7 @@ public class MessageSendTester {
 
         private final String testId;
         private final List<ReceivedMessage> receivedMessages = new LinkedList<>();
+        private long sendTime;
 
         private AutoCloseable consumer;
 
@@ -320,6 +321,7 @@ public class MessageSendTester {
                 }
 
                 var payload = new JsonObject();
+                payload.put("timestamp", System.currentTimeMillis());
                 payload.put("test-id", this.testId);
                 payload.put("index", i);
                 if (MessageSendTester.this.sender.send(MessageSendTester.this.type, payload, Duration.ofSeconds(1))) {
@@ -378,6 +380,10 @@ public class MessageSendTester {
         }
 
         private void assertResult() {
+
+            double avgMessageTime = ((double)this.sendTime) / ((double)this.receivedMessages.size());
+            log.info("Average message RTT: {} ms", String.format("%.2f", avgMessageTime));
+
             final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
             if (missing > MessageSendTester.this.acceptableMessageLoss) {
                 fail(String.format("Unacceptable loss of messages - expected: %s, received: %s, acceptedLoss: %s, actualLoss: %s",
@@ -405,17 +411,21 @@ public class MessageSendTester {
 
             var json = new JsonObject(Buffer.buffer(((Data) body).getValue().getArray()));
             var testId = json.getString("test-id");
-            if (!this.testId.equals(testId)) {
+            var timestamp = json.getInteger("timestamp");
+            if (!this.testId.equals(testId) || timestamp == null) {
                 handleInvalidMessage(message);
                 return;
             }
 
-            handleValidMessage(message, json);
+            handleValidMessage(message, timestamp, json);
         }
 
         private void handleInvalidMessage(final Message message) {}
 
-        private void handleValidMessage(final Message message, final JsonObject payload) {
+        private void handleValidMessage(final Message message, int timestamp, final JsonObject payload) {
+            var diff = System.currentTimeMillis() - timestamp;
+            sendTime += diff;
+            log.debug("Received message took {} ms", diff);
             this.receivedMessages.add(new ReceivedMessage(message, payload));
         }
 

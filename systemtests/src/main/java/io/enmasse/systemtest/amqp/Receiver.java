@@ -55,7 +55,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         });
         receiver.openHandler(result -> {
             if (result.succeeded()) {
-                log.info("Receiver link '" + source.getAddress() + "' opened, granting credits");
+                log.info("Receiver link '{}' opened, granting credits", source.getAddress());
                 receiver.flow(1);
                 connectPromise.complete(null);
             } else {
