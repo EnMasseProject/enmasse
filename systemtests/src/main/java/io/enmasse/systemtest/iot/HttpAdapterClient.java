@@ -110,7 +110,19 @@ public class HttpAdapterClient extends ApiClient {
 
             final CompletableFuture<Buffer> nf = new CompletableFuture<>();
             log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage() );
-            responseHandler(ar, nf, expectedCodePredicate, "Error sending " + messageType.name().toLowerCase() + " data", false);
+            if ( ar.failed() ) {
+                log.debug("Request failed", ar.cause());
+                nf.completeExceptionally(ar.cause());
+            } else {
+                var response = ar.result();
+                var code =  response.statusCode();
+                log.info("POST: code {} -> {}", code, response.bodyAsString());
+                if ( !expectedCodePredicate.test(code)) {
+                    nf.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code)));
+                } else {
+                    nf.complete(response.body());
+                }
+            }
 
             // use the result from the responseHandler
             // and map it to the responsePromise
