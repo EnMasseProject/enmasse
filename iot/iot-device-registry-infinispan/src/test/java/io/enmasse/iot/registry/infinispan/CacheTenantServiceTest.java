@@ -22,7 +22,7 @@ import java.io.IOException;
  * Tests verifying behavior of {@link CacheTenantService}.
  *
  */
-@Disabled
+//@Disabled
 @ExtendWith(VertxExtension.class)
 public class CacheTenantServiceTest extends AbstractTenantServiceTest {
 

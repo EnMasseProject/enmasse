@@ -115,6 +115,12 @@
       <artifactId>infinispan-remote-query-server</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
+      <version>5.5.5</version>
+    </dependency>
+
 
   </dependencies>
 

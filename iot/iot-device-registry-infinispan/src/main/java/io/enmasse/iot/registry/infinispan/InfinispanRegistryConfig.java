@@ -63,6 +63,7 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
         String generatedSchema = new ProtoSchemaBuilder()
                 .addClass(RegistryTenantObject.class)
                 .addClass(RegistryCredentialObject.class)
+                .addClass(RegistryDeviceObject.class)
                 .addClass(CredentialsKey.class)
                 .addClass(RegistrationKey.class)
                 .packageName("registry")

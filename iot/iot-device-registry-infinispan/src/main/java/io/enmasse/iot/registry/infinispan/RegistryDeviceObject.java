@@ -40,8 +40,8 @@ public class RegistryDeviceObject {
 
     @ProtoDoc("@Field")
     @ProtoField(number = 1, required = true)
-    public Device getDevice() {
-        return new JsonObject(device).mapTo(Device.class);
+    public String getDevice() {
+        return device;
     }
 
     @ProtoDoc("@Field")
@@ -54,7 +54,7 @@ public class RegistryDeviceObject {
         this.version = String.valueOf(this.hashCode());
     }
 
-    public void setDevice(Device device) {
-        this.device = JsonObject.mapFrom(device).encode();
+    public void setDevice(String device) {
+        this.device = device;
     }
 }

@@ -194,7 +194,7 @@ public class CacheRegistrationService extends AbstractVerticle implements Regist
             } else {
 
                 future.complete(OperationResult.ok(HTTP_OK,
-                        result.getDevice(),
+                        new JsonObject(result.getDevice()).mapTo(Device.class),
                         Optional.empty(),
                         Optional.ofNullable(result.getVersion())
                 ));
