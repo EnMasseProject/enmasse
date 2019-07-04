@@ -7,8 +7,8 @@ package io.enmasse.iot.registry.infinispan;
 
 import org.eclipse.hono.service.management.device.DeviceManagementService;
 import org.eclipse.hono.service.registration.AbstractRegistrationServiceTest;
-import org.eclipse.hono.service.registration.CompleteRegistrationService;
 import org.eclipse.hono.service.registration.RegistrationService;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -41,9 +41,7 @@ public class CacheRegistrationServiceTest extends AbstractRegistrationServiceTes
     }
 
     /**
-     *
-     *
-     * @return
+     * Stop the Embedded Infinispan Server.
      */
     @AfterEach
     public void cleanUp() {

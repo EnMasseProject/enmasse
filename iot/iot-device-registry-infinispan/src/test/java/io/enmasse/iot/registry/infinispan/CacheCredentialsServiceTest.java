@@ -5,18 +5,16 @@
 package io.enmasse.iot.registry.infinispan;
 
 import org.eclipse.hono.service.credentials.AbstractCredentialsServiceTest;
-import org.eclipse.hono.service.credentials.CompleteCredentialsService;
 
 import org.eclipse.hono.service.credentials.CredentialsService;
 import org.eclipse.hono.service.management.credentials.CredentialsManagementService;
-import org.eclipse.hono.service.management.device.DeviceBackend;
 import org.eclipse.hono.service.management.device.DeviceManagementService;
+import io.vertx.junit5.VertxExtension;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
-
-import io.vertx.junit5.VertxExtension;
 
 import java.io.IOException;
 
@@ -24,7 +22,7 @@ import java.io.IOException;
  * Tests verifying behavior of {@link CacheCredentialService}.
  *
  */
-//@Disabled
+@Disabled
 @ExtendWith(VertxExtension.class)
 public class CacheCredentialsServiceTest extends AbstractCredentialsServiceTest {
 

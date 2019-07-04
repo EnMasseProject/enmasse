@@ -5,18 +5,17 @@
 
 package io.enmasse.iot.registry.infinispan;
 
-import io.vertx.junit5.VertxExtension;
-
 import org.eclipse.hono.service.management.tenant.TenantManagementService;
-import org.eclipse.hono.service.tenant.AbstractCompleteTenantServiceTest;
 import org.eclipse.hono.service.tenant.AbstractTenantServiceTest;
-import org.eclipse.hono.service.tenant.CompleteTenantService;
-
 import org.eclipse.hono.service.tenant.TenantService;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import io.vertx.junit5.VertxExtension;
+
 import java.io.IOException;
 
 /**
@@ -26,6 +25,7 @@ import java.io.IOException;
 @Disabled
 @ExtendWith(VertxExtension.class)
 public class CacheTenantServiceTest extends AbstractTenantServiceTest {
+
 
     private static CacheTenantService tenantService;
     private static EmbeddedHotRodServer server;
@@ -41,9 +41,7 @@ public class CacheTenantServiceTest extends AbstractTenantServiceTest {
     }
 
     /**
-     *
-     *
-     * @return
+     * Stop the Embedded Infinispan Server.
      */
     @AfterEach
     public void cleanUp() {
