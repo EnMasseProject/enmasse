@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList> implements Runnable {
+public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<T>> implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(Reflector.class.getName());
     private static final Duration minWatchTimeout = Duration.ofMinutes(5);
 
@@ -149,7 +149,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList>
         }
     }
 
-    public static class Config<T extends HasMetadata, LT extends KubernetesResourceList> {
+    public static class Config<T extends HasMetadata, LT extends KubernetesResourceList<T>> {
         private Clock clock;
         private Duration resyncInterval;
         private ListerWatcher<T, LT> listerWatcher;
