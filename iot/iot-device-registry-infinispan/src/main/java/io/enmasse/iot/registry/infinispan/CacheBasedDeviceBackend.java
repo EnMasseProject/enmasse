@@ -1,15 +1,15 @@
+/*
+ * Copyright 2019, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 package io.enmasse.iot.registry.infinispan;
 
-import com.google.common.base.MoreObjects;
-import io.opentracing.Span;
-import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.json.JsonObject;
 import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import org.eclipse.hono.service.management.Id;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.Result;
@@ -20,29 +20,40 @@ import org.eclipse.hono.util.CredentialsResult;
 import org.eclipse.hono.util.RegistrationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
+
+import io.opentracing.Span;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 
 /**
  * A device backend that keeps all data in memory but is backed by a file. This is done by leveraging and unifying
- * {@link CacheRegistrationService} and {@link CacheCredentialService}
+ * {@link CacheRegistrationService} and {@link CacheCredentialsService}
  */
 @Repository
 @Qualifier("backend")
-public class DeviceCacheBackend implements DeviceBackend {
+@ConditionalOnProperty(name = "hono.app.type", havingValue = "file", matchIfMissing = true)
+public class CacheBasedDeviceBackend implements DeviceBackend {
 
     private final CacheRegistrationService registrationService;
-    private final CacheCredentialService credentialsService;
+    private final CacheCredentialsService credentialsService;
 
     /**
      * Create a new instance.
-     *
+     * 
      * @param registrationService an implementation of registration service.
      * @param credentialsService an implementation of credentials service.
      */
     @Autowired
-    public DeviceCacheBackend(
+    public CacheBasedDeviceBackend(
             @Qualifier("serviceImpl") final CacheRegistrationService registrationService,
-            @Qualifier("serviceImpl") final CacheCredentialService credentialsService) {
+            @Qualifier("serviceImpl") final CacheCredentialsService credentialsService) {
         this.registrationService = registrationService;
         this.credentialsService = credentialsService;
     }
@@ -90,12 +101,12 @@ public class DeviceCacheBackend implements DeviceBackend {
             // pass on the original result
             return f.map(r);
         })
-                .setHandler(resultHandler);
+        .setHandler(resultHandler);
     }
 
     @Override
     public void createDevice(final String tenantId, final Optional<String> deviceId, final Device device,
-            final Span span, final Handler<AsyncResult<OperationResult<Id>>> resultHandler) {
+           final Span span, final Handler<AsyncResult<OperationResult<Id>>> resultHandler) {
 
         final Future<OperationResult<Id>> future = Future.future();
         registrationService.createDevice(tenantId, deviceId, device, span, future);
@@ -202,11 +213,11 @@ public class DeviceCacheBackend implements DeviceBackend {
     }
 
     /**
-     * Creator for {@link MoreObjects.ToStringHelper}.
-     *
+     * Creator for {@link ToStringHelper}.
+     * 
      * @return A new instance for this instance.
      */
-    protected MoreObjects.ToStringHelper toStringHelper() {
+    protected ToStringHelper toStringHelper() {
         return MoreObjects.toStringHelper(this)
                 .add("credentialsService", this.credentialsService)
                 .add("registrationService", this.registrationService);

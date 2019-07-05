@@ -13,7 +13,7 @@ import org.infinispan.protostream.annotations.ProtoField;
  * A custom class to be used as key in the backend key-value storage.
  * This uses the uniques values of a credential to create a unique key to store the credentials details.
  *
- *  See {@link CacheCredentialService CacheCredentialService} class.
+ *  See {@link CacheCredentialsService CacheCredentialService} class.
  */
 @ProtoDoc("@Indexed")
 public class CredentialsKey {

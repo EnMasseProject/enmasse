@@ -19,14 +19,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.io.IOException;
 
 /**
- * Tests verifying behavior of {@link CacheCredentialService}.
+ * Tests verifying behavior of {@link CacheCredentialsService}.
  *
  */
+//fixme : this is disabled due to a bug in infinispan : https://issues.jboss.org/browse/ISPN-10073
 @Disabled
 @ExtendWith(VertxExtension.class)
 public class CacheCredentialsServiceTest extends AbstractCredentialsServiceTest {
 
-    private static CacheCredentialService credentialService;
+    private static CacheCredentialsService credentialService;
     private static CacheRegistrationService registrationService;
     private static EmbeddedHotRodServer server;
 
@@ -37,7 +38,7 @@ public class CacheCredentialsServiceTest extends AbstractCredentialsServiceTest 
     public void setUp() throws IOException {
 
         server = new EmbeddedHotRodServer();
-        credentialService = new CacheCredentialService(server.getCache(), server.getCache());
+        credentialService = new CacheCredentialsService(server.getCache(), server.getCache());
         registrationService = new CacheRegistrationService(server.getCache());
     }
 

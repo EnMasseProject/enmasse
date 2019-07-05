@@ -22,7 +22,8 @@ import java.io.IOException;
  * Tests verifying behavior of {@link CacheTenantService}.
  *
  */
-//@Disabled
+//fixme : this is disabled due to a bug in infinispan : https://issues.jboss.org/browse/ISPN-10073
+@Disabled
 @ExtendWith(VertxExtension.class)
 public class CacheTenantServiceTest extends AbstractTenantServiceTest {
 

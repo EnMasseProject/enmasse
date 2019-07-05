@@ -41,6 +41,7 @@ import org.infinispan.client.hotrod.Search;
 import org.infinispan.query.dsl.Query;
 import org.infinispan.query.dsl.QueryFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -61,6 +62,7 @@ import java.util.UUID;
  */
 @Repository
 @Primary
+@Qualifier("serviceImpl")
 public class CacheTenantService extends AbstractVerticle implements TenantBackend, Verticle {
 
     private final RemoteCache<String, RegistryTenantObject> tenantsCache;
@@ -100,7 +102,7 @@ public class CacheTenantService extends AbstractVerticle implements TenantBacken
                 resultHandler.handle(Future.succeededFuture(OperationResult.empty(HTTP_CONFLICT)));
             }
         });
-
+        System.out.println("returning added tenant :" +tenantId);
     }
 
     @Override

@@ -63,14 +63,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Repository
 @Primary
 @Qualifier("serviceImpl")
-public class CacheCredentialService extends AbstractVerticle
+public class CacheCredentialsService extends AbstractVerticle
         implements CredentialsManagementService, CredentialsService  {
 
     private final RemoteCache<CredentialsKey, RegistryCredentialObject> credentialsCache;
     private final RemoteCache<RegistrationKey, String> versions;
 
     private CacheCredentialConfigProperties config;
-    private static final Logger log = LoggerFactory.getLogger(CacheCredentialService.class);
+    private static final Logger log = LoggerFactory.getLogger(CacheCredentialsService.class);
 
     /**
      * Creates a new service instance for a password encoder.
@@ -78,7 +78,7 @@ public class CacheCredentialService extends AbstractVerticle
      * @throws NullPointerException if encoder is {@code null}.
      */
     @Autowired
-    protected CacheCredentialService(final RemoteCache<CredentialsKey,RegistryCredentialObject> cache,
+    protected CacheCredentialsService(final RemoteCache<CredentialsKey,RegistryCredentialObject> cache,
             final RemoteCache<RegistrationKey, String> versions) {
         this.credentialsCache = cache;
         this.versions = versions;
