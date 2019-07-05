@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandard;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
-import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;

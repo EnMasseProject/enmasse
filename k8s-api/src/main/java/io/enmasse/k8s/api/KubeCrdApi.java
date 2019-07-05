@@ -23,7 +23,7 @@ import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
 import io.fabric8.kubernetes.client.RequestConfigBuilder;
 
-public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList, DT extends Doneable<T>> implements CrdApi<T>, ListerWatcher<T, LT> {
+public class KubeCrdApi<T extends HasMetadata, LT extends KubernetesResourceList<T>, DT extends Doneable<T>> implements CrdApi<T>, ListerWatcher<T, LT> {
 
     private final NamespacedKubernetesClient client;
     private final String namespace;
