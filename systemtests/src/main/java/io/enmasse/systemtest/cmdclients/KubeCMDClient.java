@@ -265,7 +265,11 @@ public class KubeCMDClient extends CmdClient {
     }
 
     public static ExecutionResultData getEvents(String namespace) {
-        List<String> command = Arrays.asList(CMD, "get", "events", "-n", namespace);
+        List<String> command = Arrays.asList(CMD, "get", "events",
+                "--namespace", namespace,
+                "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
+                "--sort-by={.lastTimestamp}");
+
         return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
