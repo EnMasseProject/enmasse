@@ -38,7 +38,12 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
     }
 
     @Bean
-    public RemoteCache<RegistrationKey, String> getRegistrationCache() throws IOException {
+    public RemoteCache<RegistrationKey, String> getCredentialsVersionsCache() throws IOException {
+        return getCache();
+    }
+
+    @Bean
+    public RemoteCache<RegistrationKey, RegistryDeviceObject> getRegistrationCache() throws IOException {
         return getCache();
     }
 
@@ -78,13 +83,13 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
         return remoteCacheManager.administration().createCache(cacheName, new ConfigurationBuilder().build());
     }
 
-    @Override
-    public TenantAmqpEndpoint tenantAmqpEndpoint() {
-        return super.tenantAmqpEndpoint();
-    }
-
-    @Override
-    public TenantManagementHttpEndpoint tenantHttpEndpoint() {
-        return super.tenantHttpEndpoint();
-    }
+//    @Override
+//    public TenantAmqpEndpoint tenantAmqpEndpoint() {
+//        return super.tenantAmqpEndpoint();
+//    }
+//
+//    @Override
+//    public TenantManagementHttpEndpoint tenantHttpEndpoint() {
+//        return super.tenantHttpEndpoint();
+//    }
 }

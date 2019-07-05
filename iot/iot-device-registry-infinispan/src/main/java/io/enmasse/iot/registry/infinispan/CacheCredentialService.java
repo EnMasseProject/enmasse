@@ -84,15 +84,6 @@ public class CacheCredentialService extends AbstractVerticle
         this.versions = versions;
     }
 
-    @Autowired
-    public void setConfig(final CacheCredentialConfigProperties configuration) {
-        this.config = configuration;
-    }
-
-    public CacheCredentialConfigProperties getConfig() {
-        return config;
-    }
-
     /**
      * {@inheritDoc}
      * <p>

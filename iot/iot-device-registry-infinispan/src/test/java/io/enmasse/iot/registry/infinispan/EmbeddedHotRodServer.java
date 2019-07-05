@@ -33,12 +33,13 @@ public class EmbeddedHotRodServer {
     private final RemoteCacheManager manager;
     private final HotRodServer server;
     private final DefaultCacheManager defaultCacheManager;
+    private final org.infinispan.configuration.cache.ConfigurationBuilder embeddedBuilder;
 
     private final ArrayList<String> cachesNames = new ArrayList<>();
 
     public EmbeddedHotRodServer() throws IOException {
 
-        org.infinispan.configuration.cache.ConfigurationBuilder embeddedBuilder = new org.infinispan.configuration.cache.ConfigurationBuilder();
+        embeddedBuilder = new org.infinispan.configuration.cache.ConfigurationBuilder();
         defaultCacheManager = new DefaultCacheManager(embeddedBuilder.build());
 
         HotRodServerConfiguration build = new HotRodServerConfigurationBuilder().build();
@@ -69,12 +70,11 @@ public class EmbeddedHotRodServer {
     }
 
     public <K, V> RemoteCache<K,V> getCache(){
-        org.infinispan.configuration.cache.ConfigurationBuilder embeddedBuilder = new org.infinispan.configuration.cache.ConfigurationBuilder();
 
         final String cacheName = UUID.randomUUID().toString();
         cachesNames.add(cacheName);
-        defaultCacheManager.createCache(cacheName, embeddedBuilder.build());
 
+        defaultCacheManager.createCache(cacheName, embeddedBuilder.build());
         return manager.getCache(cacheName);
     }
 

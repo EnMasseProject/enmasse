@@ -12,7 +12,7 @@ import io.vertx.core.Verticle;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.eclipse.hono.service.AbstractApplication;
+import org.eclipse.hono.service.AbstractBaseApplication;
 import org.eclipse.hono.service.HealthCheckProvider;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = {"org.eclipse.hono.service.auth", "io.enmasse.iot.registry.infinispan"})
 @Configuration
 @EnableAutoConfiguration
-public class InfinispanRegistry extends AbstractApplication {
+public class InfinispanRegistry extends AbstractBaseApplication {
 
     /**
      * All the verticles.
