@@ -46,9 +46,13 @@ public class CredentialsRegistryClient extends ApiClient {
     }
 
     public void addCredentials(String tenantId, String deviceId, String authId, String password) throws Exception {
+        addCredentials(tenantId, deviceId, authId, password, null);
+    }
+
+    public void addCredentials(String tenantId, String deviceId, String authId, String password, Instant notAfter) throws Exception {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         var requestPath = String.format("/%s/%s", CREDENTIALS_PATH, tenantId);
-        var body = createCredentialsObject(deviceId, authId, password, null);
+        var body = createCredentialsObject(deviceId, authId, password, notAfter);
         log.info("POST-credentials: path {}; body {}", requestPath, body.toString());
         client.post(endpoint.getPort(), endpoint.getHost(), requestPath)
             .as(BodyCodec.jsonObject())

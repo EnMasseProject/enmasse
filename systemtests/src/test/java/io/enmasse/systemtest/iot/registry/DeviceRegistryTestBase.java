@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.net.HttpURLConnection;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -197,21 +199,76 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         }
     }
 
+    @Disabled("Caches expire a bit unpredictably")
+    @Test
+    void testCacheExpiryForCredentials() throws Exception {
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+
+           final Duration cacheExpiration = Duration.ofMinutes(3);
+
+            // register device
+
+            client.registerDevice(tenantId(), randomDeviceId);
+
+            final String authId = UUID.randomUUID().toString();
+            final String password = "password1234";
+            credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, password);
+
+            // first test, cache filled
+
+            checkCredentials(authId, password, false);
+
+            // set new password
+
+            final String newPassword = "new-password1234";
+            credentialsClient.updateCredentials(tenantId(), randomDeviceId, authId, newPassword, null);
+
+            JsonObject result = credentialsClient.getCredentials(tenantId(), randomDeviceId);
+            assertNotNull(result);
+            assertEquals(1, result.getInteger("total"));
+            JsonArray credentials = result.getJsonArray("credentials");
+            assertNotNull(credentials);
+            assertEquals(1, credentials.size());
+            JsonObject credential = credentials.getJsonObject(0);
+            assertNotNull(credential);
+            assertEquals(randomDeviceId, credential.getString("device-id"));
+            assertEquals(authId, credential.getString("auth-id"));
+            assertDefaultEnabled(credential);
+            JsonArray secrets = credential.getJsonArray("secrets");
+            assertNotNull(secrets);
+            assertEquals(1, secrets.size());
+            JsonObject secret = secrets.getJsonObject(0);
+            assertNotNull(secret);
+
+            // expect failure due to cached info
+
+            checkCredentials(authId, newPassword, true);
+            log.info("Waiting {} seconds for credentials to expire", cacheExpiration);
+            Thread.sleep(cacheExpiration.toMillis());
+
+            // cache must be expired, new password can be used
+
+            checkCredentials(authId, newPassword, false);
+
+            credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
+            credentialsClient.getCredentials(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+
+            client.deleteDeviceRegistration(tenantId(), randomDeviceId);
+            client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        }
+    }
+
     @Test
     void testSetExpiryForCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
             client.registerDevice(tenantId(), randomDeviceId);
 
-            String authId = "sensor1234";
-            String password = "password1234";
-            credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, password);
+            final String authId = UUID.randomUUID().toString();
+            final Duration expiry = Duration.ofSeconds(30);
+            final Instant notAfter = Instant.now().plus(expiry);
+            final String newPassword = "password1234";
 
-            checkCredentials(authId, password, false);
-
-            int expirySeconds = 30;
-            Instant notAfter = Instant.now().plusSeconds(expirySeconds);
-            String newPassword = "new-password1234";
-            credentialsClient.updateCredentials(tenantId(), randomDeviceId, authId, newPassword, notAfter);
+            credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, newPassword, notAfter);
 
             JsonObject result = credentialsClient.getCredentials(tenantId(), randomDeviceId);
             assertNotNull(result);
@@ -231,11 +288,16 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             assertNotNull(secret);
             Instant actualNotAfter = secret.getInstant("not-after");
             assertEquals(notAfter, actualNotAfter);
-            //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
+
+            // first check, must succeed
 
             checkCredentials(authId, newPassword, false);
-            log.info("Waiting " + expirySeconds + " seconds for credentials to expire");
-            Thread.sleep((expirySeconds + 1) * 1000);
+
+            log.info("Waiting {} for credentials to expire", expiry);
+            Thread.sleep(expiry.toMillis());
+
+            // second check, after expiration, must fail
+
             checkCredentials(authId, newPassword, true);
 
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
