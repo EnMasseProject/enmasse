@@ -15,9 +15,12 @@ import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.slf4j.Logger;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -57,13 +60,8 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
         try {
             log.warn("Test failed: Saving pod logs and info...");
             Kubernetes kube = Kubernetes.getInstance();
-            Path path = Paths.get(
-                    Environment.getInstance().testLogDir(),
-                    "failed_test_logs",
-                    testClass.getName());
-            if (testMethod != null) {
-                path = Paths.get(path.toString(), testMethod.getName());
-            }
+            Path path = getPath(testMethod, testClass);
+
             Files.createDirectories(path);
             List<Pod> pods = kube.listPods();
             for (Pod p : pods) {
@@ -81,6 +79,16 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
                     log.warn("Cannot access logs from container: ", ex);
                 }
             }
+
+            kube.getLogsOfTerminatedPods(kube.getInfraNamespace()).forEach((name, podLogTerminated) -> {
+                File filePath = new File(path.toString(), String.format("%s.terminated.log", name));
+                try {
+                    Files.write(filePath.toPath(), podLogTerminated.getBytes(StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    log.warn("Cannot write file {}", filePath.getName());
+                }
+            });
+
             Files.write(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
             Files.write(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut().getBytes());
             Files.write(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
@@ -89,5 +97,16 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             log.warn("Cannot save pod logs and info: {}", ex.getMessage());
         }
         throw throwable;
+    }
+
+    private Path getPath(Method testMethod, Class testClass) {
+        Path path = Paths.get(
+                Environment.getInstance().testLogDir(),
+                "failed_test_logs",
+                testClass.getName());
+        if (testMethod != null) {
+            path = Paths.get(path.toString(), testMethod.getName());
+        }
+        return path;
     }
 }
