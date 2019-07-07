@@ -752,6 +752,13 @@ class PlansTest extends TestBase {
         setAddresses(queue1, queue2);
         appendAddresses(queue3, queue4);
 
+
+        // Dump address/broker assignment to help understand occasional test failure.
+        kubernetes.getAddressClient().list().getItems().forEach(q -> {
+            Address a = kubernetes.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
+            log.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
+        });
+
         //send 1000 messages to each queue
         UserCredentials user = new UserCredentials("test-scale-user-name", "test_scale_user_pswd");
         createOrUpdateUser(messagePersistAddressSpace, user);
@@ -771,8 +778,17 @@ class PlansTest extends TestBase {
                 () -> assertThat("Incorrect count of messages sent", sendResult4.get(1, TimeUnit.MINUTES), is(msgs.size())));
 
         //remove addresses from first pod and wait for scale down
+        log.info("Deleting beta addresses");
         deleteAddresses(queue1, queue2);
-        TestUtils.waitForNBrokerReplicas(messagePersistAddressSpace, 1, queue4, new TimeoutBudget(2, TimeUnit.MINUTES));
+
+        try {
+            TestUtils.waitForNBrokerReplicas(messagePersistAddressSpace, 1, queue4, new TimeoutBudget(5, TimeUnit.MINUTES));
+        } finally {
+            kubernetes.getAddressClient().list().getItems().forEach(q -> {
+                Address a = kubernetes.getAddressClient(messagePersistAddressSpace.getMetadata().getNamespace()).withName(q.getMetadata().getName()).get();
+                log.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
+            });
+        }
 
         //validate count of addresses
         List<Address> addresses = AddressUtils.getAddresses(messagePersistAddressSpace);
