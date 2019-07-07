@@ -183,6 +183,7 @@ var connection_properties = {product:'subserv', container_id:process.env.HOSTNAM
 log.info("Starting subserv");
 
 var options;
+var server;
 try {
     options = tls_options.get_server_options({port:5672, properties:connection_properties});
 } catch (error) {
@@ -190,8 +191,9 @@ try {
     log.warn('Error setting TLS options ' + error + ' using ' + options);
 }
 amqp.sasl_server_mechanisms.enable_anonymous();
-amqp.listen(options).on('listening', function(server) {
-    log.info("Subserv listening on " + options.port);
+server = amqp.listen(options);
+server.on('listening', function(server) {
+    log.info("Subserv listening on %d", options.port);
 });
 
 var sender;
@@ -212,3 +214,17 @@ if (process.env.MESSAGING_SERVICE_HOST) {
 
 var pod_watcher = require('../lib/pod_watcher.js').watch('role=broker,addresstype=topic');
 pod_watcher.on('updated', topic_tracker(topics, create_topic));
+
+process.on('SIGTERM', function () {
+    log.info('Subserv shutdown started');
+    var exitHandler = function () {
+        process.exit(0);
+    };
+    var timeout = setTimeout(exitHandler, 5000);
+
+    server.close(() => {
+        log.info('Subserv shutdown completed');
+        clearTimeout(timeout);
+        exitHandler();
+    });
+});
