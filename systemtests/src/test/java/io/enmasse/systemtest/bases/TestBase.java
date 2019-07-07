@@ -37,6 +37,8 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.*;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.sasl.MechanismMismatchException;
 import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -438,31 +440,34 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         if (isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
             return defaultValue;
         }
-        AmqpClient client = amqpClientFactory.createAddressClient(addressSpace, addressType);
-        client.getConnectOptions().setCredentials(credentials);
+        try (AmqpClient client = amqpClientFactory.createAddressClient(addressSpace, addressType)) {
+            client.getConnectOptions().setCredentials(credentials);
+            ProtonClientOptions protonClientOptions = client.getConnectOptions().getProtonClientOptions();
+            protonClientOptions.setLogActivity(true);
+            client.getConnectOptions().setProtonClientOptions(protonClientOptions);
 
-        try {
-            Future<List<Message>> received = client.recvMessages(address, 1);
-            Future<Integer> sent = client.sendMessages(address, Collections.singletonList("msg1"));
 
-            int numReceived = received.get(1, TimeUnit.MINUTES).size();
-            int numSent = sent.get(1, TimeUnit.MINUTES);
-            return (numSent == numReceived);
-        } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
-            Throwable cause = ex;
-            if (ex instanceof ExecutionException) {
-                cause = ex.getCause();
+            try {
+                Future<List<Message>> received = client.recvMessages(address, 1);
+                Future<Integer> sent = client.sendMessages(address, Collections.singletonList("msg1"));
+
+                int numReceived = received.get(1, TimeUnit.MINUTES).size();
+                int numSent = sent.get(1, TimeUnit.MINUTES);
+                return (numSent == numReceived);
+            } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
+                Throwable cause = ex;
+                if (ex instanceof ExecutionException) {
+                    cause = ex.getCause();
+                }
+
+                if (cause instanceof AuthenticationException || cause instanceof SaslSystemException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException || cause instanceof MechanismMismatchException) {
+                    log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
+                    return false;
+                } else {
+                    log.warn("canConnectWithAmqpAddress {} ({}) exception", address, addressType, ex);
+                    throw ex;
+                }
             }
-
-            if (cause instanceof AuthenticationException || cause instanceof SaslSystemException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
-                log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
-                return false;
-            } else {
-                log.warn("canConnectWithAmqpAddress {} ({}) exception", address, addressType, ex);
-                throw ex;
-            }
-        } finally {
-            client.close();
         }
     }
 
