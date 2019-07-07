@@ -283,6 +283,10 @@ public class KubeCMDClient extends CmdClient {
         return execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "-n", namespace, "describe", "pods");
     }
 
+    public static ExecutionResultData describeNodes() {
+        return execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "describe", "nodes");
+    }
+
     public static ExecutionResultData createFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
