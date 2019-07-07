@@ -110,26 +110,27 @@ public abstract class Kubernetes {
 
     public Map<String, String> getLogsOfTerminatedPods(String namespace) {
         Map<String, String> terminatedPodsLogs = new HashMap<>();
-        try {
-            client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
-                pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
-                    log.info("pod:'{}' : restart count '{}'",
-                            pod.getMetadata().getName(),
-                            containerStatus.getRestartCount());
-                    if (containerStatus.getRestartCount() > 0) {
+        client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
+            pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
+                log.info("pod:'{}' : restart count '{}'",
+                        pod.getMetadata().getName(),
+                        containerStatus.getRestartCount());
+                if (containerStatus.getRestartCount() > 0) {
+                    String name = String.format("%s_%s", pod.getMetadata().getName(), containerStatus.getName());
+                    try {
+                        String log = client.pods().inNamespace(namespace)
+                                .withName(pod.getMetadata().getName())
+                                .inContainer(containerStatus.getName())
+                                .terminated().getLog();
                         terminatedPodsLogs.put(
-                                pod.getMetadata().getName(),
-                                client.pods().inNamespace(namespace)
-                                        .withName(pod.getMetadata().getName())
-                                        .inContainer(containerStatus.getName())
-                                        .terminated().getLog());
+                                name,
+                                log);
+                    } catch (Exception e) {
+                        log.warn("Failed to gather terminated log for {} with termination count {} (ignored)", name, containerStatus.getRestartCount());
                     }
-                });
+                }
             });
-        } catch (Exception allExceptions) {
-            log.warn("Searching in terminated pods failed! No logs of terminated pods will be stored.");
-            allExceptions.printStackTrace();
-        }
+        });
         return terminatedPodsLogs;
     }
 

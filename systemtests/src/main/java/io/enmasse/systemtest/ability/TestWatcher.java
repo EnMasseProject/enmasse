@@ -14,9 +14,12 @@ import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -55,12 +58,34 @@ public class TestWatcher implements AfterTestExecutionCallback {
                         log.warn("Cannot access logs from container: ", ex);
                     }
                 }
-                Files.write(Paths.get(path.toString(), "describe.txt"), KubeCMDClient.describePods(kube.getNamespace()).getStdOut().getBytes());
-                Files.write(Paths.get(path.toString(), "events.txt"), KubeCMDClient.getEvents(kube.getNamespace()).getStdOut().getBytes());
+
+                kube.getLogsOfTerminatedPods(kube.getNamespace()).forEach((name, podLogTerminated) -> {
+                    File filePath = new File(path.toString(), String.format("%s.terminated.log", name));
+                    try {
+                        Files.write(filePath.toPath(), podLogTerminated.getBytes(StandardCharsets.UTF_8));
+                    } catch (IOException e) {
+                        log.warn("Cannot write file {}", filePath.getName());
+                    }
+                });
+
+                Files.write(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getNamespace()).getStdOut().getBytes());
+                Files.write(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut().getBytes());
+                Files.write(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getNamespace()).getStdOut().getBytes());
                 log.info("Pod logs and describe successfully stored into {}", path.toString());
             } catch (Exception ex) {
                 log.warn("Cannot save pod logs and info: {}", ex.getMessage());
             }
         }
+    }
+
+    private Path getPath(Method testMethod, Class testClass) {
+        Path path = Paths.get(
+                Environment.getInstance().testLogDir(),
+                "failed_test_logs",
+                testClass.getName());
+        if (testMethod != null) {
+            path = Paths.get(path.toString(), testMethod.getName());
+        }
+        return path;
     }
 }
