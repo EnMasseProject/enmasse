@@ -356,7 +356,7 @@ public class ApiServerTest extends TestBase {
 
         AddressApiClient nameSpaceClient1 = new AddressApiClient(kubernetes, namespace1);
         AddressApiClient nameSpaceClient2 = new AddressApiClient(kubernetes, namespace2);
-
+        boolean success = false;
         try {
             kubernetes.createNamespace(namespace1);
             kubernetes.createNamespace(namespace2);
@@ -404,11 +404,22 @@ public class ApiServerTest extends TestBase {
                         is(2));
             }
 
+            success = true;
         } finally {
-            nameSpaceClient1.close();
-            nameSpaceClient2.close();
-            kubernetes.deleteNamespace(namespace1);
-            kubernetes.deleteNamespace(namespace2);
+            try {
+                if (!success) {
+                    kubernetes.getLogsOfTerminatedPods(kubernetes.getNamespace()).forEach((podName, podLogTerminated) -> {
+                        log.info("Terminated log {}", podName);
+                        log.info("{}", podLogTerminated);
+                    });
+                }
+            } finally {
+                nameSpaceClient1.close();
+                nameSpaceClient2.close();
+                kubernetes.deleteNamespace(namespace1);
+                kubernetes.deleteNamespace(namespace2);
+
+            }
         }
     }
 
