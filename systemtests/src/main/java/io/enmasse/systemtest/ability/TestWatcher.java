@@ -81,7 +81,8 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
                     log.warn("Cannot access logs from container: ", ex);
                 }
             }
-            Files.write(path.resolve("describe.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
+            Files.write(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
+            Files.write(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut().getBytes());
             Files.write(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
             log.info("Pod logs and describe successfully stored into {}", path.toString());
         } catch (Exception ex) {
