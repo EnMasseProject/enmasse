@@ -11,14 +11,15 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderFirefox {
+@SeleniumFirefox
+public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
 
     @Test
     void testCreateDeleteQueue() throws Exception {

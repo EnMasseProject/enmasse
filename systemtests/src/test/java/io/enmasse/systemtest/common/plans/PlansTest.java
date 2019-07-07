@@ -11,7 +11,8 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.standard.QueueTest;
@@ -21,6 +22,7 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -41,18 +43,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(isolated)
-class PlansTest extends TestBase implements ISeleniumProviderChrome {
-
+class PlansTest extends TestBase {
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUpAdminManager() {
         adminManager.setUp();
-        if (selenium.getDriver() == null)
-            selenium.setupDriver(TestUtils.getChromeDriver());
-        else
-            selenium.clearScreenShots();
     }
 
     @AfterEach
@@ -171,6 +169,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     }
 
     @Test
+    @SeleniumFirefox
     void testQuotaLimitsPooled() throws Exception {
         //define and create address plans
         AddressPlan queuePlan = PlanUtils.createAddressPlanObject("queue-pooled-test1", AddressType.QUEUE,
@@ -349,6 +348,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
     }
 
     @Test
+    @SeleniumFirefox
     void testQuotaLimitsSharded() throws Exception {
         //define and create address plans
         AddressPlan queuePlan = PlanUtils.createAddressPlanObject("queue-sharded-test1", AddressType.QUEUE,
@@ -1227,7 +1227,7 @@ class PlansTest extends TestBase implements ISeleniumProviderChrome {
             try {
                 appendAddresses(new TimeoutBudget(30, TimeUnit.SECONDS), notAllowedDest.toArray(new Address[0]));
             } catch (IllegalStateException ex) {
-                if (!ex.getMessage().contains("addresses are not matched")) {
+                if (!ex.getMessage().contains("match")) {
                     throw ex;
                 }
             }

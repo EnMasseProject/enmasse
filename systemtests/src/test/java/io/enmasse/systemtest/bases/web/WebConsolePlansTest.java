@@ -20,7 +20,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.selenium.ISeleniumProvider;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.standard.TopicTest;
@@ -37,15 +37,14 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(isolated)
-public abstract class WebConsolePlansTest extends TestBase implements ISeleniumProvider {
-
+public abstract class WebConsolePlansTest extends TestBase {
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static final AdminResourcesManager adminManager = new AdminResourcesManager();
 
     private ConsoleWebPage consoleWebPage;
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
-        selenium.setupDriver(buildDriver());
         adminManager.setUp();
     }
 

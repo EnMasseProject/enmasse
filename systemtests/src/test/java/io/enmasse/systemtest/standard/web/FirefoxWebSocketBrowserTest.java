@@ -8,11 +8,12 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Test;
 
-class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard, ISeleniumProviderFirefox {
+@SeleniumFirefox
+class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard {
 
 
     @Test

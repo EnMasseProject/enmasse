@@ -8,7 +8,7 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.bases.web.GlobalConsoleTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.selenium.SeleniumChrome;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +17,8 @@ import static io.enmasse.systemtest.TestTag.nonPR;
 
 @Tag(isolated)
 @Tag(nonPR)
-class ChromeGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumProviderChrome {
+@SeleniumChrome
+class ChromeGlobalConsoleTest extends GlobalConsoleTest {
 
     @Test
     void testLoginLogout() throws Exception {

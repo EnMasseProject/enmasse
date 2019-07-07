@@ -5,15 +5,25 @@
 package io.enmasse.systemtest.bases.web;
 
 
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.ExposeType;
+import io.enmasse.address.model.TlsTermination;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressStatus;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
-import io.enmasse.systemtest.selenium.ISeleniumProvider;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
@@ -41,10 +51,13 @@ import java.util.stream.IntStream;
 import static org.hamcrest.CoreMatchers.either;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class WebConsoleTest extends TestBaseWithShared implements ISeleniumProvider {
-
+public abstract class WebConsoleTest extends TestBaseWithShared {
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static Logger log = CustomLogger.getLogger();
     private List<AbstractClient> clientsList;
 
@@ -53,10 +66,6 @@ public abstract class WebConsoleTest extends TestBaseWithShared implements ISele
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
-        if (selenium.getDriver() == null)
-            selenium.setupDriver(buildDriver());
-        else
-            selenium.clearScreenShots();
         super.deleteAddresses(sharedAddressSpace);
     }
 

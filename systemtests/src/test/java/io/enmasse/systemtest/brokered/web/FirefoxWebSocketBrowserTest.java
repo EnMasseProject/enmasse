@@ -6,14 +6,14 @@ package io.enmasse.systemtest.brokered.web;
 
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Test;
 
-class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseBrokered, ISeleniumProviderFirefox {
+@SeleniumFirefox
+class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseBrokered {
 
 
     @Test

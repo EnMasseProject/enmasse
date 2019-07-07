@@ -13,7 +13,8 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -32,9 +33,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
-public class CustomResourceDefinitionAddressesTest extends TestBase implements ISeleniumProviderChrome {
+@SeleniumFirefox
+public class CustomResourceDefinitionAddressesTest extends TestBase {
     private AddressSpace brokered;
     private UserCredentials userCredentials;
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
 
     @BeforeEach
     void setUpSelenium() throws Exception {
@@ -54,11 +57,6 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         createAddressSpace(brokered);
         userCredentials = new UserCredentials("test", "test");
         createOrUpdateUser(brokered, userCredentials);
-        if (selenium.getDriver() == null) {
-            selenium.setupDriver(TestUtils.getChromeDriver());
-        } else {
-            selenium.clearScreenShots();
-        }
     }
 
     @Test

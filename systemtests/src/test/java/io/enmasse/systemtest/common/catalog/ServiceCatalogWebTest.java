@@ -16,7 +16,8 @@ import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.OpenshiftWebPage;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
@@ -44,24 +45,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
+@SeleniumFirefox
 @DisabledIfEnvironmentVariable(named = Environment.OCP_VERSION_ENV, matches = Environment.IS_OCP4_REGEXP)
-class ServiceCatalogWebTest extends TestBase implements ISeleniumProviderFirefox {
-
+class ServiceCatalogWebTest extends TestBase {
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static Logger log = CustomLogger.getLogger();
     private List<AddressSpace> provisionedServices = new ArrayList<>();
     private UserCredentials ocTestUser = Credentials.userCredentials();
 
     private String getUserProjectName(String name) {
         return String.format("%s-%s", "service", name);
-    }
-
-    @BeforeEach
-    void setUpDrivers() throws Exception {
-        if (selenium.getDriver() == null) {
-            selenium.setupDriver(buildDriver());
-        } else {
-            selenium.clearScreenShots();
-        }
     }
 
     @AfterEach

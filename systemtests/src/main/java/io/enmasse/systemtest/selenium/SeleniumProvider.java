@@ -11,7 +11,13 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogEntry;
 import org.openqa.selenium.logging.LogType;
@@ -40,6 +46,17 @@ public class SeleniumProvider {
     private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
+    private static SeleniumProvider instance;
+
+    private SeleniumProvider() {
+    }
+
+    public static SeleniumProvider getInstance() {
+        if (instance == null) {
+            instance = new SeleniumProvider();
+        }
+        return instance;
+    }
 
 
     public void onFailed(ExtensionContext extensionContext) {
