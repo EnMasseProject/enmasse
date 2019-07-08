@@ -25,7 +25,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_PROJECT = "systemtests-selenium";
     public static final String MESSAGING_PROJECT = "systemtests-clients";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
-    public static final String OPENSHIFT_CERT_VALIDATOR = "openshift-cert-validator";
+    public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
 
@@ -308,7 +308,7 @@ public class SystemtestsKubernetesApps {
                 .withNewSpec()
                 .addNewContainer()
                 .withName(OPENSHIFT_CERT_VALIDATOR)
-                .withImage("famargon/openshift-cert-validator:latest")
+                .withImage("enmasse/systemtests-cert-validator:latest")
                 .addNewPort()
                 .withContainerPort(8080)
                 .endPort()
