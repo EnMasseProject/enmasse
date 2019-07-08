@@ -6,6 +6,7 @@ const namespaceInput = (props) => {
 
   let textField = <TextInput
     isRequired
+    isReadOnly={props.isReadOnly}
     type="text"
     id="form-namespace"
     name="form-namespace"
@@ -14,6 +15,7 @@ const namespaceInput = (props) => {
   />;
 
   let selectBox = <FormSelect
+    isDisabled={props.isReadOnly}
     value={props.namespace}
     onChange={props.handleNamespaceChange}
     id="form-namespace"
@@ -31,6 +33,7 @@ const namespaceInput = (props) => {
   return (
     <FormGroup
       isRequired
+      isReadOnly={props.isReadOnly}
       label="Namespace"
       fieldId="form-namespace">
       {props.namespaces && props.namespaces.length >0 ? selectBox : textField}

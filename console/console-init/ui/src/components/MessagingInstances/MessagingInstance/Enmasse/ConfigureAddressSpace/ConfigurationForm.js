@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Form,
+  Form, TextInput,
   Title
 } from '@patternfly/react-core';
 
@@ -13,8 +13,8 @@ import {
   loadBrokeredAddressPlans, loadBrokeredAuthenticationServices,
   loadStandardAddressPlans,
   loadStandardAuthenticationServices
-} from "../../../EnmasseAddressSpaces";
-import InstanceLoader from "../../../../InstanceLoader";
+} from "../EnmasseAddressSpaces";
+import InstanceLoader from "../../InstanceLoader";
 
 class ConfigurationForm extends React.Component {
   state = {
@@ -42,11 +42,23 @@ class ConfigurationForm extends React.Component {
     this.loadOptionsForNamespace(namespace);
   }
 
+  componentDidUpdate(prevProps, prevState, snapshot) {
+
+    if (this.props.isReadOnly
+      && this.state.newInstance.name !== this.props.newInstance.name) {
+      this.loadInstance();
+    }
+  }
+
+
   componentDidMount() {
+    this.loadInstance();
+  }
+  loadInstance () {
+    this.state.newInstance = this.props.newInstance;
     InstanceLoader.loadNamespaces()
       .then(namespaces => {
         this.setState({namespaces: namespaces});
-
         if ( (!this.state.standardPlans || this.state.standardPlans.length==0)
           && (!this.state.brokeredPlans || this.state.brokeredPlans.length==0)
           && (!this.state.standardAuthenticationServices || this.state.standardAuthenticationServices.length==0)
@@ -56,7 +68,6 @@ class ConfigurationForm extends React.Component {
             || !namespaces.includes(this.state.newInstance.namespace)) {
             this.setState(state => {
               var newInstance = {...state.newInstance};
-
               newInstance.namespace = namespaces[0];
               this.loadOptionsForNamespace(namespaces[0]);
               return {newInstance: newInstance};
@@ -75,7 +86,7 @@ class ConfigurationForm extends React.Component {
       .then(plans => {
         this.setState({standardPlans: plans});
         if (this.state.newInstance.typeStandard
-          && !this.state.standardPlans.find(plan => plan==newInstance.plan)) {
+          && !this.state.standardPlans.find(plan => plan==this.state.newInstance.plan)) {
           var newInstance = {...this.state.newInstance};
           newInstance.plan = this.state.standardPlans[0];
           this.setState({newInstance: newInstance});
@@ -89,7 +100,7 @@ class ConfigurationForm extends React.Component {
 
         this.setState({brokeredPlans: plans});
         if (this.state.newInstance.typeBrokered
-          && !this.brokeredPlans.find(plan => plan==newInstance.plan)) {
+          && !this.brokeredPlans.find(plan => plan==this.state.newInstance.plan)) {
           var newInstance = {...this.state.newInstance};
           newInstance.plan = this.brokeredPlans[0];
           this.setState({newInstance: newInstance});
@@ -102,7 +113,7 @@ class ConfigurationForm extends React.Component {
       .then(authenticationServices => {
         this.setState({standardAuthenticationServices: authenticationServices});
         if (this.state.newInstance.typeStandard
-          && !this.state.standardAuthenticationServices.find(authService => authService==newInstance.authenticationService)) {
+          && !this.state.standardAuthenticationServices.find(authService => authService==this.state.newInstance.authenticationService)) {
           var newInstance = {...this.state.newInstance};
           newInstance.authenticationService = this.state.standardAuthenticationServices[0];
           this.setState({newInstance: newInstance});
@@ -116,7 +127,7 @@ class ConfigurationForm extends React.Component {
         this.setState({brokeredAuthenticationServices: authenticationServices});
         this.state.brokeredAuthenticationServices = authenticationServices;
         if (this.state.newInstance.typeBrokered
-          && !this.state.brokeredAuthenticationServices.find(authService => authService==newInstance.authenticationService)) {
+          && !this.state.brokeredAuthenticationServices.find(authService => authService==this.state.newInstance.authenticationService)) {
           var newInstance = {...this.state.newInstance};
           newInstance.authenticationService = this.state.brokeredAuthenticationServices[0];
           this.setState({newInstance: newInstance});
@@ -163,7 +174,9 @@ class ConfigurationForm extends React.Component {
   handlePlanChange = plan => {
     var newInstance = {...this.state.newInstance};
     newInstance.plan = plan;
-    this.props.onChange(this.isValid(newInstance), newInstance);
+    if (this.props.onChange !== undefined) {
+      this.props.onChange(this.isValid(newInstance), newInstance);
+    }
     this.setState({newInstance: newInstance});
   }
 
@@ -177,17 +190,20 @@ class ConfigurationForm extends React.Component {
 
     return (
       <Form id="form-configuration">
-        <Title size={"xl"}>Configure your component</Title>
+        <Title size={"xl"}>{this.props.title}</Title>
         <NamespaceInput
           handleNamespaceChange={this.handleNamespaceChange}
           namespace={newInstance.namespace}
           namespaces={this.state.namespaces}
+          isReadOnly={this.props.isReadOnly}
         />
         <NameInput
+          isReadOnly={this.props.isReadOnly}
           newInstance={newInstance}
           handleNameChange={this.handleNameChange}
         />
         <AddressSpaceTypeInput
+          isReadOnly={this.props.isReadOnly}
           newInstance={newInstance}
           handleTypeStandardChange={this.handleTypeStandardChange}
           handleTypeBrokeredChange={this.handleTypeBrokeredChange}
@@ -201,6 +217,7 @@ class ConfigurationForm extends React.Component {
           typeBrokered={newInstance.typeBrokered}
         />
         <AuthenticationServiceInput
+          isReadOnly={this.props.isReadOnly}
           authenticationService={newInstance.authenticationService}
           handleAuthenticationServiceChange={this.handleAuthenticationServiceChange}
           brokeredAuthenticationServices={this.state.brokeredAuthenticationServices}

@@ -16,6 +16,7 @@ const authenticationServiceInput = (props) => {
         onChange={props.handleAuthenticationServiceChange}
         id="form-authservice"
         name="form-authservice"
+        isDisabled={props.isReadOnly}
       >
         {
           authServices.map((option, index) => (
