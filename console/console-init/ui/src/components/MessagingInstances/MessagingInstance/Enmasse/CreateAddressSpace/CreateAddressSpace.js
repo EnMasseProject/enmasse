@@ -1,7 +1,7 @@
 import React from 'react';
-import {Button, BackgroundImageSrc, Wizard} from '@patternfly/react-core';
+import {Button, BackgroundImageSrc, Wizard, Title} from '@patternfly/react-core';
 
-import ConfigurationForm from './Steps/Configuration/ConfigurationForm';
+import ConfigurationForm from '../ConfigureAddressSpace/ConfigurationForm';
 import Review from './Steps/Review';
 import {
   createNewAddressSpace
@@ -83,7 +83,8 @@ class CreateAddressSpace extends React.Component {
         name: 'Configuration',
         component: (<ConfigurationForm newInstance={newInstance}
                                        isConfigurationFormValid={isConfigurationFormValid}
-                                       onChange={this.onConfigurationFormChange}/>),
+                                       onChange={this.onConfigurationFormChange}
+                                       title="Configure your component"/>),
         enableNext: isConfigurationFormValid
       },
       {

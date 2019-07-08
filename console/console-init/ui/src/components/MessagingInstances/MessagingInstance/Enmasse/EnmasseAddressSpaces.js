@@ -1,7 +1,7 @@
 import axios from 'axios';
 import MessagingSpace from '../../MessagingInstance';
 
-const translateAddressSpaces = addressSpaces => {
+const translateMessagingSpaces = addressSpaces => {
 
   let translation = addressSpaces.items.map(namespace => {
 
@@ -24,6 +24,18 @@ const translateAddressSpaces = addressSpaces => {
   return translation;
 }
 
+const translateAddressSpaces = addressSpace => {
+  return {
+    name: addressSpace.metadata.name,
+    namespace: addressSpace.metadata.namespace,
+    typeStandard: (addressSpace.spec.type == 'standard'),
+    typeBrokered: (addressSpace.spec.type == 'brokered'),
+    plan: addressSpace.spec.plan,
+    authenticationService: addressSpace.spec.authenticationService.name};
+
+  return translation;
+}
+
 const getAuthenticationServices = authenticationServices => {
   return authenticationServices.spec.authenticationServices;
 }
@@ -33,16 +45,26 @@ const getPlanNames = plans => plans.spec.plans.map(plan => plan.name);
 //needs tenant-view role
 export function loadMessagingInstances() {
   return axios.get('apis/enmasse.io/v1beta1/addressspaces')
-    .then(response => translateAddressSpaces(response.data))
+    .then(response => translateMessagingSpaces(response.data))
     .catch(error => {
       console.log(error);
       return [];
     });
 }
 
+export function loadAddressSpace(namespace, addressSpace) {
+  return axios.get('apis/enmasse.io/v1beta1/namespaces/'+namespace+'/addressspaces/'+addressSpace)
+    .then(response => translateAddressSpaces(response.data))
+    .catch(error => {
+      console.log(error);
+      return [];
+    });
+
+}
+
 export function loadMessagingInstance(namespace) {
   return axios.get('apis/enmasse.io/v1beta1/namespaces/'+namespace+'/addressspaces')
-    .then(response => translateAddressSpaces(response.data))
+    .then(response => translateMessagingSpaces(response.data))
     .catch(error => {
       console.log(error);
       return [];
@@ -85,8 +107,19 @@ export function loadBrokeredAddressPlans(namespace) {
     });
 }
 
-export function deleteMessagingInstances(name, namespace) {
-  console.log('clicked on delete action, on: ' + name + ' ' + namespace);
+export function editMessagingInstance(name, namespace, newPlan) {
+  return axios.patch('apis/enmasse.io/v1beta1/namespaces/' + namespace + '/addressspaces/' + name,
+    {spec:{plan:newPlan}},
+    { headers: { 'Content-Type': 'application/merge-patch+json', 'Accept': 'application/json' } }
+    )
+    .then(response => console.log('EDIT successful: ', response))
+    .catch(error => {
+      console.log('EDIT FAILED: ', error);
+      throw(error);
+    });
+}
+
+export function deleteMessagingInstance(name, namespace) {
   return axios.delete('apis/enmasse.io/v1beta1/namespaces/' + namespace + '/addressspaces/' + name)
     .then(response => console.log('DELETE successful: ', response))
     .catch(error => {

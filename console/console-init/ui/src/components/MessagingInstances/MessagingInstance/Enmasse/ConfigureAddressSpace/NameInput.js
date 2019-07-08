@@ -13,6 +13,7 @@ const namespaceInput = (props) => {
     >
       <TextInput
         isRequired
+        isReadOnly={props.isReadOnly}
         type="text"
         id="form-name"
         name="form-name"
