@@ -308,7 +308,7 @@ public class SystemtestsKubernetesApps {
                 .withNewSpec()
                 .addNewContainer()
                 .withName(OPENSHIFT_CERT_VALIDATOR)
-                .withImage("enmasse/systemtests-cert-validator:latest")
+                .withImage("quay.io/enmasse/systemtests-cert-validator:latest")
                 .addNewPort()
                 .withContainerPort(8080)
                 .endPort()
