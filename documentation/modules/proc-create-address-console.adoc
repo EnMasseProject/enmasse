@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-using-console.adoc
+// assembly-managing-addresses.adoc
 
 [id='create-address-console-{context}']
 = Creating addresses using the {ConsoleName}
@@ -20,7 +20,7 @@ endif::Supported[]
 
 . Click the address space link for the address space where you want to create a new address.
 
-. Click *New*. The Create new address window opens.
+. Click *Create*. The Create new address window opens.
 
 . Type a name and select the address type. If selecting *subscription*, from the *Topic* list select the topic name to which you want to create a subscription.
 
