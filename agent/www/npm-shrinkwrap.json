@@ -61,7 +61,7 @@
         },
         "lodash": {
           "version": "3.10.1",
-          "resolved": "https://registry.npmjs.org/lodash/-/lodash-3.10.1.tgz",
+          "resolved": "http://registry.npmjs.org/lodash/-/lodash-3.10.1.tgz",
           "integrity": "sha1-W/Rejkm6QYnhfUgnid/RW9FAt7Y="
         },
         "patternfly": {
@@ -97,7 +97,7 @@
           "dependencies": {
             "bootstrap": {
               "version": "3.3.7",
-              "resolved": "https://registry.npmjs.org/bootstrap/-/bootstrap-3.3.7.tgz",
+              "resolved": "http://registry.npmjs.org/bootstrap/-/bootstrap-3.3.7.tgz",
               "integrity": "sha1-WjiTlFSfIzMIdaOxUGVldPip63E="
             },
             "bootstrap-datepicker": {
@@ -258,7 +258,7 @@
             },
             "moment": {
               "version": "2.14.1",
-              "resolved": "https://registry.npmjs.org/moment/-/moment-2.14.1.tgz",
+              "resolved": "http://registry.npmjs.org/moment/-/moment-2.14.1.tgz",
               "integrity": "sha1-s1snxH5X7S3ccAU9awe+zbKRdBw=",
               "optional": true
             },
@@ -292,9 +292,9 @@
       }
     },
     "angular-ui-grid": {
-      "version": "4.0.4",
-      "resolved": "https://registry.npmjs.org/angular-ui-grid/-/angular-ui-grid-4.0.4.tgz",
-      "integrity": "sha1-s9/wI+po8hKZmIh+B4lye+QkRzc=",
+      "version": "4.0.11",
+      "resolved": "https://registry.npmjs.org/angular-ui-grid/-/angular-ui-grid-4.0.11.tgz",
+      "integrity": "sha1-lqp1KkH2CiVMGeBSV2iehMZhhiY=",
       "requires": {
         "angular": ">=1.4.0 1.5.x"
       }
