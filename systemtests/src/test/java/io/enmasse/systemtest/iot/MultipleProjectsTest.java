@@ -61,7 +61,6 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
 
     @BeforeEach
     void initEnv() throws Exception {
-        Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
         CertBundle certBundle = CertificateUtils.createCertBundle();
         IoTConfig iotConfig = new IoTConfigBuilder()
                 .withNewMetadata()
@@ -70,9 +69,9 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
                 .withNewSpec()
                 .withNewServices()
                 .withNewDeviceRegistry()
-                .withNewInfinispan()
-                .withInfinispanServerAddress(infinispanEndpoint.toString())
-                .endInfinispan()
+                .withNewFile()
+                .withNumberOfDevicesPerTenant(10_0000)
+                .endFile()
                 .endDeviceRegistry()
                 .endServices()
                 .withNewAdapters()
