@@ -64,7 +64,7 @@
     "@patternfly/patternfly": "^2.14.0",
     "@patternfly/react-table": "^2.11.1",
     "@zalando/oauth2-client-js": "^0.0.18",
-    "axios": "^0.18.0",
+    "axios": "^0.19.0",
     "moment": "^2.24.0"
   }
 }
