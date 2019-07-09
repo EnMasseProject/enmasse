@@ -35,6 +35,8 @@ include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-space-console.adoc[leveloffset=+1]
 
+include::../modules/proc-change-address-space-plan-console.adoc[leveloffset=+1]
+
 include::../modules/proc-delete-address-space-console.adoc[leveloffset=+1]
 
 include::../modules/ref-retrieving-address-space-information.adoc[leveloffset=+1]
