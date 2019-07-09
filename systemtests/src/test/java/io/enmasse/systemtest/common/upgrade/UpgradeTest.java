@@ -5,6 +5,8 @@
 package io.enmasse.systemtest.common.upgrade;
 
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CmdClient;
@@ -15,6 +17,7 @@ import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -31,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.enmasse.systemtest.TestTag.upgrade;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(upgrade)
 @ExternalClients
@@ -106,7 +110,19 @@ class UpgradeTest extends TestBase {
         } else {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
         }
-        Thread.sleep(300_000);
+
+        AddressSpace brokered = getAddressSpace("brokered");
+        AddressSpace standard = getAddressSpace("standard");
+        Arrays.asList(brokered, standard).forEach(a -> {
+            try {
+                waitForAddressSpaceReady(a);
+            } catch (Exception e) {
+                fail(String.format("Address space didn't return to ready after upgrade : %s", a), e);
+            }
+        });
+
+        waitForDestinationsReady(AddressUtils.getAddresses(brokered).toArray(new Address[0]));
+        waitForDestinationsReady(AddressUtils.getAddresses(standard).toArray(new Address[0]));
 
         if (!startVersion.equals("1.0")) {
 
