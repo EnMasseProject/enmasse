@@ -58,7 +58,6 @@ public class SeleniumProvider {
         return instance;
     }
 
-
     public void onFailed(ExtensionContext extensionContext) {
         String getTestClassName = extensionContext.getTestClass().get().getName();
         String getTestMethodName = extensionContext.getTestMethod().get().getName();
@@ -250,7 +249,7 @@ public class SeleniumProvider {
                     }
                     log.warn("Element was found, but it is not enabled, go to next iteration: {}", i);
                 } else if (result instanceof List) {
-                    if (((List) result).size() == count) {
+                    if (((List<?>) result).size() == count) {
                         break;
                     }
                     log.warn("Elements were not found, go to next iteration: {}", i);
@@ -345,7 +344,7 @@ public class SeleniumProvider {
 
     public boolean getCheckboxValue(WebElement element) {
         if (isCheckbox(element)) {
-            return new Boolean(element.getAttribute("checked"));
+            return Boolean.valueOf(element.getAttribute("checked"));
         }
         throw new IllegalStateException("Requested element is not of type 'checkbox'");
     }

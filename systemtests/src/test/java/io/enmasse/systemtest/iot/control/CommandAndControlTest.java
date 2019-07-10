@@ -11,6 +11,7 @@ import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
@@ -167,9 +168,11 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
 
         // send the reply to the command
 
-        this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("foo", "bar"), is(HTTP_ACCEPTED), request -> {
-            request.putHeader("hono-cmd-status", "202" /* accepted */);
-        }, Duration.ofSeconds(5));
+        TestUtils.runUntilPass(5, () -> {
+            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("data", "command-response"), is(HTTP_ACCEPTED), request -> {
+                request.putHeader("hono-cmd-status", "202" /* accepted */);
+            }, Duration.ofSeconds(5));
+        });
 
         assertCloudTelemetryMessage(f1);
         assertCommandMessageDeliveries(sentFuture.get());
@@ -181,7 +184,7 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
         var responseMsg = responses.get(0);
         assertThat(responseMsg.getCorrelationId(), Is.is(reqId));
         assertThat(responseMsg.getBody(), instanceOf(Data.class));
-        assertThat(new JsonObject(Buffer.buffer(((Data) responseMsg.getBody()).getValue().getArray())), Is.is(new JsonObject().put("foo", "bar")));
+        assertThat(new JsonObject(Buffer.buffer(((Data) responseMsg.getBody()).getValue().getArray())), Is.is(new JsonObject().put("data", "command-response")));
         assertThat(responseMsg.getApplicationProperties().getValue().get("status"), Is.is(202) /* accepted */);
 
     }
@@ -190,10 +193,16 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
 
         // consumer link should be ready now ... send telemetry with "ttd"
 
-        var response = this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
-            // set "time to disconnect"
-            request.putHeader("hono-ttd", Integer.toString(this.ttd));
-        }, Duration.ofSeconds(this.ttd + 5));
+        log.info("Send telemetry with TTD - ttd: {}", this.ttd);
+
+        var response = TestUtils.runUntilPass(5, () -> {
+            return this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
+                // set "time to disconnect"
+                request.putHeader("hono-ttd", Integer.toString(this.ttd));
+            }, Duration.ofSeconds(this.ttd + 5));
+        });
+
+        log.info("Telemetry response: {}: {}", response.statusCode(), response.bodyAsString());
 
         return response;
 
@@ -204,6 +213,8 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
         // setup telemetry consumer
 
         var f1 = this.messagingClient.recvMessages(new QueueTerminusFactory().getSource("telemetry/" + tenantId()), msg -> {
+
+            log.info("Received message: {}", msg);
 
             var ttdValue = msg.getApplicationProperties().getValue().get("ttd");
 
@@ -266,13 +277,17 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
         // assert message - cloud side
 
         // wait for the future of the sent message
-
         var m1 = f1.get(10, TimeUnit.SECONDS);
+
+        // dump messages
+        m1.forEach(m -> log.info("Message: {}", m));
+
+        // we expect two messages, the "test" message and the actual one
         assertThat(m1, hasSize(2));
+        // get the second message, the real one
         var msg = m1.get(1);
 
         // message must have "ttd" set
-
         var ttdValue = msg.getApplicationProperties().getValue().get("ttd");
         assertThat(ttdValue, instanceOf(Number.class));
         assertThat(ttdValue, Is.is(30));

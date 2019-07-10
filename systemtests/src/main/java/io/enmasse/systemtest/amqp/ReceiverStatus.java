@@ -9,7 +9,7 @@ import org.apache.qpid.proton.message.Message;
 import java.util.List;
 import java.util.concurrent.Future;
 
-public interface ReceiverStatus {
+public interface ReceiverStatus extends AutoCloseable {
     Future<List<Message>> getResult();
 
     int getNumReceived();

@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-
 import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
@@ -29,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@SuppressWarnings("unused")
 public class ConsoleWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
@@ -433,7 +433,7 @@ public class ConsoleWebPage implements IWebPage {
     /**
      * common method for switching type of filtering/sorting
      */
-    private void switchFilterOrSort(Enum switchElement, WebElement switchButton, List<WebElement> switchElements) throws Exception {
+    private void switchFilterOrSort(Enum<?> switchElement, WebElement switchButton, List<WebElement> switchElements) throws Exception {
         selenium.clickOnItem(switchButton);
         for (WebElement element : switchElements) {
             if (element.findElement(By.tagName("a")).getText().toUpperCase().equals(switchElement.toString())) {

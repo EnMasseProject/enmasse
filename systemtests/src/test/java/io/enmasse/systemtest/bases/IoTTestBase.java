@@ -35,7 +35,7 @@ public abstract class IoTTestBase extends TestBase {
     protected static final String IOT_ADDRESS_TELEMETRY = "telemetry";
     protected static final String IOT_ADDRESS_CONTROL = "control";
 
-    protected static Logger log = CustomLogger.getLogger();
+    protected static final Logger log = CustomLogger.getLogger();
 
     private List<IoTConfig> iotConfigs = new ArrayList<>();
     private List<IoTProject> iotProjects = new ArrayList<>();
@@ -125,7 +125,7 @@ public abstract class IoTTestBase extends TestBase {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
+    protected static void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
         waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
     }
 

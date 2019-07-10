@@ -102,23 +102,33 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     @AfterEach
     public void teardown() throws Exception {
         try {
-            if (mqttClientFactory != null) {
-                mqttClientFactory.close();
-            }
-            if (amqpClientFactory != null) {
-                amqpClientFactory.close();
-            }
-
             if (!environment.skipCleanup() && !reuseAddressSpace) {
                 deleteAddressspacesFromList();
             } else {
                 log.warn("Remove address spaces in tear down - SKIPPED!");
             }
         } catch (Exception e) {
-            log.error("Error tearing down test: {}", e.getMessage());
+            log.error("Error tearing down test", e);
 
             throw e;
         }
+    }
+
+    @AfterEach
+    public void closeMqttClient () {
+        if (mqttClientFactory != null) {
+            mqttClientFactory.close();
+            mqttClientFactory = null;
+        }
+    }
+
+    @AfterEach
+    public void closeAmqpClient() throws Exception {
+        if (amqpClientFactory != null) {
+            amqpClientFactory.close();
+            amqpClientFactory = null;
+        }
+
     }
 
     protected void setReuseAddressSpace() {

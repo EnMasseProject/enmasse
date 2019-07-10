@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 
 public class Receiver extends ClientHandlerBase<List<Message>> {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
     private final List<Message> messages = new ArrayList<>();
     private final AtomicInteger messageCount = new AtomicInteger();
     private final Predicate<Message> done;
@@ -55,7 +55,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         });
         receiver.openHandler(result -> {
             if (result.succeeded()) {
-                log.info("Receiver link '" + source.getAddress() + "' opened, granting credits");
+                log.info("Receiver link '{}' opened, granting credits", source.getAddress());
                 receiver.flow(1);
                 connectPromise.complete(null);
             } else {
@@ -66,7 +66,7 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver.closeHandler(closed -> {
             if (receiver.getRemoteCondition() != null && LinkError.REDIRECT.equals(receiver.getRemoteCondition().getCondition())) {
                 String relocated = (String) receiver.getRemoteCondition().getInfo().get("address");
-                log.info("Receiver link redirected to '" + relocated + "'");
+                log.info("Receiver link redirected to '{}'", relocated);
                 Source newSource = linkOptions.getSource();
                 newSource.setAddress(relocated);
                 String newLinkName = linkOptions.getLinkName().orElse(UUID.randomUUID().toString());

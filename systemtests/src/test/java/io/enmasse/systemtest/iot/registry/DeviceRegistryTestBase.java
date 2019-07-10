@@ -6,19 +6,17 @@ package io.enmasse.systemtest.iot.registry;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
-import static io.enmasse.systemtest.apiclients.Predicates.in;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
-import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -33,10 +31,16 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -45,7 +49,11 @@ import io.vertx.core.json.JsonObject;
 @Tag(smoke)
 public abstract class DeviceRegistryTestBase extends IoTTestBase {
 
-    private Logger log = CustomLogger.getLogger();
+    private static final String DEVICE_REGISTRY_TEST_ADDRESSSPACE = "device-registry-test-addrspace";
+
+    private static final String DEVICE_REGISTRY_TEST_PROJECT = "device-registry-test-project";
+
+    private static final Logger log = CustomLogger.getLogger();
 
     private String randomDeviceId;
     private IoTConfig iotConfig;
@@ -53,6 +61,12 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     private Endpoint deviceRegistryEndpoint;
     private Endpoint httpAdapterEndpoint;
     private DeviceRegistryClient client;
+
+    private UserCredentials credentials;
+
+    private AmqpClientFactory iotAmqpClientFactory;
+
+    private AmqpClient iotAmqpClient;
 
     protected abstract IoTConfig provideIoTConfig() throws Exception;
 
@@ -83,7 +97,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             createIoTConfig(iotConfig);
         }
         if (iotProject == null) {
-            iotProject = IoTUtils.getBasicIoTProjectObject("device-registry-test-project", "device-registry-test-addrspace", this.iotProjectNamespace);
+            iotProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT, DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace);
             createIoTProject(iotProject);
         }
         if (deviceRegistryEndpoint == null) {
@@ -96,12 +110,25 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             client = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         }
         this.randomDeviceId = UUID.randomUUID().toString();
+
+        this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        createOrUpdateUser(getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        this.iotAmqpClientFactory = new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        this.iotAmqpClient = iotAmqpClientFactory.createQueueClient();
     }
 
     @AfterEach
     public void tearDown(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
             cleanEnv();
+        }
+        if (this.iotAmqpClient != null) {
+            this.iotAmqpClient.close();
+            this.iotAmqpClient = null;
+        }
+        if (this.iotAmqpClientFactory != null) {
+            this.iotAmqpClientFactory.close();
+            this.iotAmqpClientFactory = null;
         }
     }
 
@@ -171,7 +198,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
 
             client.registerDevice(tenantId(), randomDeviceId);
 
-            String authId = "sensor1234";
+            String authId = "sensor-" + UUID.randomUUID().toString();
             String password = "password1234";
             credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, password);
 
@@ -309,15 +336,41 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     }
 
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {
+
         try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantId(), password)) {
-            JsonObject payload = new JsonObject(Map.of("data", "dummy"));
 
-            var expectedResponse = authFail ? in(HTTP_UNAUTHORIZED): in(HTTP_UNAVAILABLE, HTTP_ACCEPTED);
-            log.info("Sending event data expected response: {}", expectedResponse);
-            httpAdapterClient.sendEvent(payload, expectedResponse );
+            try {
+                new MessageSendTester()
+                        .type(Type.TELEMETRY)
+                        .amount(1)
+                        .consumerFactory(ConsumerFactory.of(iotAmqpClient, tenantId()))
+                        .sender(httpAdapterClient::send)
+                        .execute();
+                if (authFail) {
+                    fail("Expected to fail telemetry test");
+                }
+            } catch (TimeoutException e) {
+                if (!authFail) {
+                    throw e;
+                }
+            }
 
-            log.info("Sending telemetry data expected response: {}", expectedResponse);
-            httpAdapterClient.sendTelemetry(payload, expectedResponse);
+            try {
+                new MessageSendTester()
+                        .type(Type.EVENT)
+                        .amount(1)
+                        .consumerFactory(ConsumerFactory.of(iotAmqpClient, tenantId()))
+                        .sender(httpAdapterClient::send)
+                        .execute();
+                if (authFail) {
+                    fail("Expected to fail telemetry test");
+                }
+            } catch (TimeoutException e) {
+                if (!authFail) {
+                    throw e;
+                }
+            }
+
         }
     }
 

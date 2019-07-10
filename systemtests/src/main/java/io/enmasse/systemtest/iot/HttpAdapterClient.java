@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.iot.MessageType.EVENT;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.time.Duration.ofSeconds;
 
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,8 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.apiclients.ApiClient;
+import io.enmasse.systemtest.apiclients.Predicates;
+import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpRequest;
@@ -86,6 +89,8 @@ public class HttpAdapterClient extends ApiClient {
         var request = client.post(endpoint.getPort(), endpoint.getHost(), path)
                 .putHeader(HttpHeaders.AUTHORIZATION, authzString)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
+                // we send with QoS 1 by default, to get some feedback
+                .putHeader("QoS-Level", "1")
                 .timeout(ms);
 
         // allow to customize request
@@ -102,10 +107,24 @@ public class HttpAdapterClient extends ApiClient {
             if (!ar.succeeded()) {
                 // ... fail the response promise
                 responsePromise.completeExceptionally(ar.cause());
+                return;
             }
 
             final CompletableFuture<Buffer> nf = new CompletableFuture<>();
-            responseHandler(ar, nf, expectedCodePredicate, "Error sending " + messageType.name().toLowerCase() + " data", false);
+            log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage() );
+            if ( ar.failed() ) {
+                log.debug("Request failed", ar.cause());
+                nf.completeExceptionally(ar.cause());
+            } else {
+                var response = ar.result();
+                var code =  response.statusCode();
+                log.info("POST: code {} -> {}", code, response.bodyAsString());
+                if ( !expectedCodePredicate.test(code)) {
+                    nf.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code)));
+                } else {
+                    nf.complete(response.body());
+                }
+            }
 
             // use the result from the responseHandler
             // and map it to the responsePromise
@@ -123,12 +142,36 @@ public class HttpAdapterClient extends ApiClient {
         return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Send method suitable for using as {@link Sender}.
+     */
+    public boolean send(MessageSendTester.Type type, JsonObject payload, Duration timeout) {
+        return sendDefault(type.type(), payload, timeout);
+    }
+
+    private boolean sendDefault(MessageType type, JsonObject payload, Duration timeout) {
+        try {
+            send(type, payload, Predicates.is(HTTP_ACCEPTED), timeout);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public HttpResponse<?> send(MessageType type, JsonObject payload, Predicate<Integer> expectedCodePredicate, Duration timeout) throws Exception {
+        return send(type, payload, expectedCodePredicate, null, timeout);
+    }
+
+    public HttpResponse<?> send(MessageType type, JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
+        return send(type, payload, expectedCodePredicate, null, ofSeconds(15));
+    }
+
     public HttpResponse<?> sendTelemetry(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(TELEMETRY, payload, expectedCodePredicate, null, ofSeconds(15));
+        return send(TELEMETRY, payload, expectedCodePredicate);
     }
 
     public HttpResponse<?> sendEvent(JsonObject payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(EVENT, payload, expectedCodePredicate, null, ofSeconds(15));
+        return send(EVENT, payload, expectedCodePredicate);
     }
 
     private String getBasicAuth(final String user, final String password) {

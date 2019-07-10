@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
@@ -21,6 +20,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 public class GlobalConsolePage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();

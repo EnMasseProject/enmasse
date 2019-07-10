@@ -26,6 +26,8 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
+import com.google.common.io.BaseEncoding;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -42,6 +44,8 @@ import java.util.stream.Stream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
+
+    private static final Random R = new Random();
 
     /**
      * scale up/down specific pod (type: Deployment) in address space
@@ -421,7 +425,7 @@ public class TestUtils {
      *
      * @param retry count of remaining retries
      * @param fn    request function
-     * @return
+     * @return The value from the first successful call to the callable
      */
     public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
         for (int i = 0; i < retry; i++) {
@@ -429,12 +433,24 @@ public class TestUtils {
                 log.info("Running command, attempt: {}", i);
                 return fn.call();
             } catch (Exception ex) {
-                log.info("Command failed");
-                ex.printStackTrace();
+                log.info("Command failed", ex);
             }
             Thread.sleep(1000);
         }
         throw new IllegalStateException(String.format("Command wasn't pass in %s attempts", retry));
+    }
+
+    /**
+     * Repeat command n-times.
+     *
+     * @param retries Number of retries.
+     * @param callable Code to execute.
+     */
+    public static void runUntilPass(int retries, ThrowingCallable callable) throws InterruptedException {
+        runUntilPass(retries, () -> {
+            callable.call();
+            return null;
+        });
     }
 
     /**
@@ -551,7 +567,7 @@ public class TestUtils {
             throws Exception {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
 
-        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, (phase) -> {
+        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, phase -> {
             try {
                 final String newVersion = provideNewResourceVersion.get();
                 return !currentResourceVersion.equals(newVersion);
@@ -581,5 +597,16 @@ public class TestUtils {
     @FunctionalInterface
     public static interface ThrowingCallable {
         void call() throws Exception;
+    }
+
+    /**
+     * Return a number of random characters in the range of {@code 0-9a-f}.
+     * @param length the number of characters to return
+     * @return The random string, never {@code null}.
+     */
+    public static String randomCharacters(int length) {
+        var b = new byte[(int) Math.ceil(length/2.0)];
+        R.nextBytes(b);
+        return BaseEncoding.base16().encode(b).substring(length%2);
     }
 }
