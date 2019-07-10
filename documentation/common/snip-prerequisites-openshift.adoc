@@ -14,7 +14,9 @@ on your machine.
 endif::Prereqs[]
 
 ifndef::Prereqs[]
-* To install {ProductName}, the OpenShift client tools are required.
+* To install {ProductName}, the OpenShift Container Platform command-line interface (CLI) is required.
+** For more information about how to install the CLI on OpenShift 3.x, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html/cli_reference/cli-reference-get-started-cli#installing-the-cli[OpenShift Container Platform 3.11 documentation].
+** For more information about how to install the CLI on OpenShift 4.1, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html/cli_reference/cli-getting-started#cli-installing-cli_cli-developer-commands[OpenShift Container Platform 4.1 documentation].
 
 * An OpenShift cluster is required.
 
