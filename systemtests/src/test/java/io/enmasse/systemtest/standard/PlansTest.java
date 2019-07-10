@@ -12,7 +12,6 @@ import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.AdminResourcesManager;
-import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -24,9 +23,6 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
