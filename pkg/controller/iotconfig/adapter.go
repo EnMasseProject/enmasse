@@ -104,23 +104,39 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 	return nil
 }
 
-func AppendHonoAdapterEnvs(container *corev1.Container, username string, password string) {
+func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Container, username string, password string) error {
+
 	container.Env = append(container.Env, []corev1.EnvVar{
 		{Name: "HONO_MESSAGING_HOST", Value: "localhost"},
 		{Name: "HONO_MESSAGING_PORT", Value: "5672"},
 		{Name: "HONO_COMMAND_HOST", Value: "localhost"},
 		{Name: "HONO_COMMAND_PORT", Value: "5672"},
 
-		{Name: "HONO_REGISTRATION_HOST", Value: "iot-device-registry.$(KUBERNETES_NAMESPACE).svc"},
+		{Name: "HONO_REGISTRATION_HOST", Value: FullHostNameForEnvVar("iot-device-registry")},
 		{Name: "HONO_REGISTRATION_USERNAME", Value: username},
 		{Name: "HONO_REGISTRATION_PASSWORD", Value: password},
-		{Name: "HONO_CREDENTIALS_HOST", Value: "iot-device-registry.$(KUBERNETES_NAMESPACE).svc"},
+		{Name: "HONO_CREDENTIALS_HOST", Value: FullHostNameForEnvVar("iot-device-registry")},
 		{Name: "HONO_CREDENTIALS_USERNAME", Value: username},
 		{Name: "HONO_CREDENTIALS_PASSWORD", Value: password},
-		{Name: "HONO_TENANT_HOST", Value: "iot-tenant-service.$(KUBERNETES_NAMESPACE).svc"},
+		{Name: "HONO_DEVICE_CONNECTION_HOST", Value: FullHostNameForEnvVar("iot-device-registry")},
+		{Name: "HONO_DEVICE_CONNECTION_USERNAME", Value: username},
+		{Name: "HONO_DEVICE_CONNECTION_PASSWORD", Value: password},
+		{Name: "HONO_TENANT_HOST", Value: FullHostNameForEnvVar("iot-tenant-service")},
 		{Name: "HONO_TENANT_USERNAME", Value: username},
 		{Name: "HONO_TENANT_PASSWORD", Value: password},
 	}...)
+
+	if err := AppendTrustStores(config, container, []string{
+		"HONO_CREDENTIALS_TRUST_STORE_PATH",
+		"HONO_DEVICE_CONNECTION_TRUST_STORE_PATH",
+		"HONO_REGISTRATION_TRUST_STORE_PATH",
+		"HONO_TENANT_TRUST_STORE_PATH",
+	}); err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {

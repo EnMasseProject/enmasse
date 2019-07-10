@@ -54,6 +54,8 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			return err
 		}
 
+		container.Args = nil
+
 		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
@@ -82,6 +84,8 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 		if err := AppendTrustStores(config, container, []string{"HONO_AUTH_AMQP_TRUST_STORE_PATH"}); err != nil {
 			return err
 		}
+
+		AppendStandardHonoJavaOptions(container)
 
 		// volume mounts
 
@@ -217,6 +221,14 @@ hono:
 			{
 				"operation":"tenant:get",
 				"activities":["EXECUTE"]
+			},
+			{
+				"resource": "device_con/*",
+				"activities": [ "READ", "WRITE" ]
+			},
+			{
+				"operation": "device_con/*:*",
+				"activities": [ "EXECUTE" ]
 			}
 		]
 	},

@@ -53,6 +53,8 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			return err
 		}
 
+		container.Args = nil
+
 		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
@@ -75,11 +77,13 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
-			{Name: "ENMASSE_IOT_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "ENMASSE_IOT_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
 			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: "false"},
 		}
+
+		AppendStandardHonoJavaOptions(container)
 
 		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_AUTH_TRUST_STORE_PATH"}); err != nil {
 			return err
