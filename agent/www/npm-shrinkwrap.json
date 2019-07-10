@@ -15,17 +15,18 @@
       "integrity": "sha1-4OJAxzzZPKF6182PbnAUgDGdAdw="
     },
     "angular-patternfly": {
-      "version": "3.23.2",
-      "resolved": "https://registry.npmjs.org/angular-patternfly/-/angular-patternfly-3.23.2.tgz",
-      "integrity": "sha1-JeeJxU7mPIQROJtD2DGjl9RQy5Y=",
+      "version": "3.26.0",
+      "resolved": "https://registry.npmjs.org/angular-patternfly/-/angular-patternfly-3.26.0.tgz",
+      "integrity": "sha1-kQIBO5bU7oU6UHvxzCsh3tO+iEw=",
       "requires": {
-        "angular": "1.5.11",
-        "angular-animate": "1.5.11",
+        "angular": "1.3.0 - 1.5.*",
+        "angular-animate": "1.3.0 - 1.5.*",
         "angular-drag-and-drop-lists": "2.0.0",
-        "angular-sanitize": "1.5.11",
-        "angular-ui-bootstrap": "0.14.3",
-        "lodash": "3.10.1",
-        "patternfly": "3.23.2"
+        "angular-sanitize": "1.3.0 - 1.5.*",
+        "angular-ui-bootstrap": "0.14.x",
+        "jquery": "^2.2.4",
+        "lodash": "3.x",
+        "patternfly": "~3.31.1"
       },
       "dependencies": {
         "angular": {
@@ -53,36 +54,45 @@
           "resolved": "https://registry.npmjs.org/angular-ui-bootstrap/-/angular-ui-bootstrap-0.14.3.tgz",
           "integrity": "sha1-2WzmBMhLvXBro0qryh1ac3bhi6Y="
         },
+        "jquery": {
+          "version": "2.2.4",
+          "resolved": "https://registry.npmjs.org/jquery/-/jquery-2.2.4.tgz",
+          "integrity": "sha1-LInWiJterFIqfuoywUUhVZxsvwI="
+        },
         "lodash": {
           "version": "3.10.1",
           "resolved": "http://registry.npmjs.org/lodash/-/lodash-3.10.1.tgz",
           "integrity": "sha1-W/Rejkm6QYnhfUgnid/RW9FAt7Y="
         },
         "patternfly": {
-          "version": "3.23.2",
-          "resolved": "https://registry.npmjs.org/patternfly/-/patternfly-3.23.2.tgz",
-          "integrity": "sha1-WtjUvoP6KksOECRKCmQc7R43KmQ=",
+          "version": "3.31.1",
+          "resolved": "https://registry.npmjs.org/patternfly/-/patternfly-3.31.1.tgz",
+          "integrity": "sha1-O+sOEsOGVWEL3BN5FfxWUMmPOmg=",
           "requires": {
-            "bootstrap": "3.3.7",
-            "bootstrap-datepicker": "1.6.4",
-            "bootstrap-select": "1.10.0",
-            "bootstrap-switch": "3.3.2",
-            "bootstrap-touchspin": "3.1.1",
-            "c3": "0.4.11",
-            "d3": "3.5.17",
-            "datatables": "1.10.13",
-            "datatables.net-colreorder": "1.3.2",
-            "datatables.net-colreorder-bs": "1.3.2",
-            "datatables.net-select": "1.2.1",
-            "drmonty-datatables-colvis": "1.1.2",
-            "eonasdan-bootstrap-datetimepicker": "4.15.35",
-            "font-awesome": "4.6.3",
-            "google-code-prettify": "1.0.5",
-            "jquery": "2.1.4",
-            "jquery-match-height": "0.7.0",
-            "moment": "2.14.1",
-            "patternfly-bootstrap-combobox": "1.1.7",
-            "patternfly-bootstrap-treeview": "2.1.1"
+            "bootstrap": "~3.3.7",
+            "bootstrap-datepicker": "~1.6.4",
+            "bootstrap-sass": "^3.3.7",
+            "bootstrap-select": "^1.12.2",
+            "bootstrap-slider": "^9.9.0",
+            "bootstrap-switch": "~3.3.4",
+            "bootstrap-touchspin": "~3.1.1",
+            "c3": "~0.4.11",
+            "d3": "~3.5.17",
+            "datatables.net": "^1.10.15",
+            "datatables.net-colreorder": "~1.3.2",
+            "datatables.net-colreorder-bs": "~1.3.2",
+            "datatables.net-select": "~1.2.0",
+            "drmonty-datatables-colvis": "~1.1.2",
+            "eonasdan-bootstrap-datetimepicker": "^4.17.47",
+            "font-awesome": "^4.7.0",
+            "font-awesome-sass": "^4.7.0",
+            "google-code-prettify": "~1.0.5",
+            "jquery": "~3.2.1",
+            "jquery-match-height": "^0.7.2",
+            "moment": "~2.14.1",
+            "moment-timezone": "^0.4.1",
+            "patternfly-bootstrap-combobox": "~1.1.7",
+            "patternfly-bootstrap-treeview": "~2.1.0"
           },
           "dependencies": {
             "bootstrap": {
@@ -96,26 +106,35 @@
               "integrity": "sha1-iJ6+ztjqov8V7B8nPksHUxzEPaA=",
               "optional": true,
               "requires": {
-                "jquery": "2.1.4"
+                "jquery": ">=1.7.1"
               }
+            },
+            "bootstrap-sass": {
+              "version": "3.3.7",
+              "resolved": "https://registry.npmjs.org/bootstrap-sass/-/bootstrap-sass-3.3.7.tgz",
+              "integrity": "sha1-ZZbHq0D2Y3OTMjqwvIDQZPxjBJg=",
+              "optional": true
             },
             "bootstrap-select": {
-              "version": "1.10.0",
-              "resolved": "http://registry.npmjs.org/bootstrap-select/-/bootstrap-select-1.10.0.tgz",
-              "integrity": "sha1-lJlnnnAATbwAhyUiMi07k6DxMuQ=",
+              "version": "1.12.4",
+              "resolved": "https://registry.npmjs.org/bootstrap-select/-/bootstrap-select-1.12.4.tgz",
+              "integrity": "sha1-fxXTwM6XiGjZwJxw+WYk9V+gLuE=",
               "optional": true,
               "requires": {
-                "jquery": "2.1.4"
+                "jquery": ">=1.8"
               }
             },
+            "bootstrap-slider": {
+              "version": "9.10.0",
+              "resolved": "https://registry.npmjs.org/bootstrap-slider/-/bootstrap-slider-9.10.0.tgz",
+              "integrity": "sha1-EQPWvADPv6jPyaJZmrUYxVZD2j8=",
+              "optional": true
+            },
             "bootstrap-switch": {
-              "version": "3.3.2",
-              "resolved": "https://registry.npmjs.org/bootstrap-switch/-/bootstrap-switch-3.3.2.tgz",
-              "integrity": "sha1-ed20n63DCPtzHiV/lZV69ImW7qc=",
-              "optional": true,
-              "requires": {
-                "jquery": "2.1.4"
-              }
+              "version": "3.3.4",
+              "resolved": "https://registry.npmjs.org/bootstrap-switch/-/bootstrap-switch-3.3.4.tgz",
+              "integrity": "sha1-cOCusqh3wNx2aZHeEI4hcPwpov8=",
+              "optional": true
             },
             "bootstrap-touchspin": {
               "version": "3.1.1",
@@ -124,12 +143,12 @@
               "optional": true
             },
             "c3": {
-              "version": "0.4.11",
-              "resolved": "http://registry.npmjs.org/c3/-/c3-0.4.11.tgz",
-              "integrity": "sha1-Pytse9M1d6NHPdYRdnNVZbTQ884=",
+              "version": "0.4.18",
+              "resolved": "https://registry.npmjs.org/c3/-/c3-0.4.18.tgz",
+              "integrity": "sha512-37TiFeCrbe69gg7SxFpTBOLDwulnk+opKp1AFDi43mONtErpRoUIZfGSimGiSYQmNu6Zh9W2yNOx0066UikqSg==",
               "optional": true,
               "requires": {
-                "d3": "3.5.17"
+                "d3": "~3.5.0"
               }
             },
             "d3": {
@@ -138,62 +157,54 @@
               "integrity": "sha1-vEZ0gAQ3iyGjYMn8fPUjF5B2L7g=",
               "optional": true
             },
-            "datatables": {
-              "version": "1.10.13",
-              "resolved": "https://registry.npmjs.org/datatables/-/datatables-1.10.13.tgz",
-              "integrity": "sha1-m7Lexvfc8CBJoA5PDn0/4AnDk0Y=",
+            "datatables.net": {
+              "version": "1.10.16",
+              "resolved": "https://registry.npmjs.org/datatables.net/-/datatables.net-1.10.16.tgz",
+              "integrity": "sha1-SwUtEIKCQmG2ju2dInQbcR09JGk=",
               "optional": true,
               "requires": {
-                "jquery": "2.1.4"
-              }
-            },
-            "datatables.net": {
-              "version": "1.10.13",
-              "resolved": "https://registry.npmjs.org/datatables.net/-/datatables.net-1.10.13.tgz",
-              "integrity": "sha1-asWEum/C3/EZXlxm0+OwUaS1K5Y=",
-              "requires": {
-                "jquery": "2.1.4"
+                "jquery": ">=1.7"
               }
             },
             "datatables.net-bs": {
-              "version": "1.10.13",
-              "resolved": "https://registry.npmjs.org/datatables.net-bs/-/datatables.net-bs-1.10.13.tgz",
-              "integrity": "sha1-eUq0CiGv34tA/3Yvfqmgbq2fiiw=",
+              "version": "1.10.16",
+              "resolved": "https://registry.npmjs.org/datatables.net-bs/-/datatables.net-bs-1.10.16.tgz",
+              "integrity": "sha1-sIVPWzdPcTrj20FWx86op2DD3nY=",
               "optional": true,
               "requires": {
-                "datatables.net": "1.10.13",
-                "jquery": "2.1.4"
+                "datatables.net": "1.10.16",
+                "jquery": ">=1.7"
               }
             },
             "datatables.net-colreorder": {
-              "version": "1.3.2",
-              "resolved": "https://registry.npmjs.org/datatables.net-colreorder/-/datatables.net-colreorder-1.3.2.tgz",
-              "integrity": "sha1-9moMJ6schi5rqPqtM6kt0AK/eYw=",
+              "version": "1.3.3",
+              "resolved": "https://registry.npmjs.org/datatables.net-colreorder/-/datatables.net-colreorder-1.3.3.tgz",
+              "integrity": "sha1-/HYuNQ+UIkyyzUXCuWImGg//73I=",
               "optional": true,
               "requires": {
-                "datatables.net": "1.10.13",
-                "jquery": "2.1.4"
+                "datatables.net": ">=1.10.9",
+                "jquery": ">=1.7"
               }
             },
             "datatables.net-colreorder-bs": {
-              "version": "1.3.2",
-              "resolved": "https://registry.npmjs.org/datatables.net-colreorder-bs/-/datatables.net-colreorder-bs-1.3.2.tgz",
-              "integrity": "sha1-AhEkgucUy4FjZwvp1kKJmIam3iM=",
+              "version": "1.3.3",
+              "resolved": "https://registry.npmjs.org/datatables.net-colreorder-bs/-/datatables.net-colreorder-bs-1.3.3.tgz",
+              "integrity": "sha1-Op3LCN7r612FQHlZHgbkk615OlM=",
               "optional": true,
               "requires": {
-                "datatables.net-bs": "1.10.13",
-                "datatables.net-colreorder": "1.3.2",
-                "jquery": "2.1.4"
+                "datatables.net-bs": ">=1.10.9",
+                "datatables.net-colreorder": ">=1.2.0",
+                "jquery": ">=1.7"
               }
             },
             "datatables.net-select": {
-              "version": "1.2.1",
-              "resolved": "https://registry.npmjs.org/datatables.net-select/-/datatables.net-select-1.2.1.tgz",
-              "integrity": "sha1-wtD+Wrvyurqus0r3V9QobT5cI50=",
+              "version": "1.2.3",
+              "resolved": "https://registry.npmjs.org/datatables.net-select/-/datatables.net-select-1.2.3.tgz",
+              "integrity": "sha1-fCcugXMqQSFOEBtlb1Ul037Dcog=",
               "optional": true,
               "requires": {
-                "datatables.net": "1.10.13",
-                "jquery": "2.1.4"
+                "datatables.net": "^1.10.15",
+                "jquery": ">=1.7"
               }
             },
             "drmonty-datatables-colvis": {
@@ -202,32 +213,31 @@
               "integrity": "sha1-lque37SGQ8wu3aP4e4iTPN7oEnw=",
               "optional": true,
               "requires": {
-                "jquery": "2.1.4"
+                "jquery": ">=1.7.0"
               }
             },
             "eonasdan-bootstrap-datetimepicker": {
-              "version": "4.15.35",
-              "resolved": "https://registry.npmjs.org/eonasdan-bootstrap-datetimepicker/-/eonasdan-bootstrap-datetimepicker-4.15.35.tgz",
-              "integrity": "sha1-rslpI+lba1HhwEqZnOAXkp1zlvg=",
+              "version": "4.17.47",
+              "resolved": "https://registry.npmjs.org/eonasdan-bootstrap-datetimepicker/-/eonasdan-bootstrap-datetimepicker-4.17.47.tgz",
+              "integrity": "sha1-ekmXAEQGUnbnll79Fvgic1IZ5zU=",
               "optional": true,
               "requires": {
-                "bootstrap": "3.3.7",
-                "jquery": "2.1.4",
-                "moment": "2.8.4"
-              },
-              "dependencies": {
-                "moment": {
-                  "version": "2.8.4",
-                  "resolved": "http://registry.npmjs.org/moment/-/moment-2.8.4.tgz",
-                  "integrity": "sha1-zBdKq7GSI+//VpmpRngFoniYOL8=",
-                  "optional": true
-                }
+                "bootstrap": "^3.3",
+                "jquery": "^1.8.3 || ^2.0 || ^3.0",
+                "moment": "^2.10",
+                "moment-timezone": "^0.4.0"
               }
             },
             "font-awesome": {
-              "version": "4.6.3",
-              "resolved": "https://registry.npmjs.org/font-awesome/-/font-awesome-4.6.3.tgz",
-              "integrity": "sha1-hpM2UVQO4Ah0xmQBf1DyFy9lMaI="
+              "version": "4.7.0",
+              "resolved": "https://registry.npmjs.org/font-awesome/-/font-awesome-4.7.0.tgz",
+              "integrity": "sha1-j6jPBBGhoxr9B7BtKQK7n8gVoTM="
+            },
+            "font-awesome-sass": {
+              "version": "4.7.0",
+              "resolved": "https://registry.npmjs.org/font-awesome-sass/-/font-awesome-sass-4.7.0.tgz",
+              "integrity": "sha1-TtppPpFQCc4Asijglk3F7Km8NOE=",
+              "optional": true
             },
             "google-code-prettify": {
               "version": "1.0.5",
@@ -236,14 +246,14 @@
               "optional": true
             },
             "jquery": {
-              "version": "2.1.4",
-              "resolved": "https://registry.npmjs.org/jquery/-/jquery-2.1.4.tgz",
-              "integrity": "sha1-IoveaYoMYUMdwmMKahVPFYkNIxc="
+              "version": "3.2.1",
+              "resolved": "https://registry.npmjs.org/jquery/-/jquery-3.2.1.tgz",
+              "integrity": "sha1-XE2d5lKvbNCncBVKYxu6ErAVx4c="
             },
             "jquery-match-height": {
-              "version": "0.7.0",
-              "resolved": "https://registry.npmjs.org/jquery-match-height/-/jquery-match-height-0.7.0.tgz",
-              "integrity": "sha1-NR5R8WHM733giuZK2oyNxcGJDMo=",
+              "version": "0.7.2",
+              "resolved": "https://registry.npmjs.org/jquery-match-height/-/jquery-match-height-0.7.2.tgz",
+              "integrity": "sha1-+NnzulMU2qsQnPB0CGdL4gS+Xw4=",
               "optional": true
             },
             "moment": {
@@ -252,6 +262,15 @@
               "integrity": "sha1-s1snxH5X7S3ccAU9awe+zbKRdBw=",
               "optional": true
             },
+            "moment-timezone": {
+              "version": "0.4.1",
+              "resolved": "https://registry.npmjs.org/moment-timezone/-/moment-timezone-0.4.1.tgz",
+              "integrity": "sha1-gfWYw61eIs2teWtn7NjYjQ9bqgY=",
+              "optional": true,
+              "requires": {
+                "moment": ">= 2.6.0"
+              }
+            },
             "patternfly-bootstrap-combobox": {
               "version": "1.1.7",
               "resolved": "https://registry.npmjs.org/patternfly-bootstrap-combobox/-/patternfly-bootstrap-combobox-1.1.7.tgz",
@@ -259,13 +278,13 @@
               "optional": true
             },
             "patternfly-bootstrap-treeview": {
-              "version": "2.1.1",
-              "resolved": "http://registry.npmjs.org/patternfly-bootstrap-treeview/-/patternfly-bootstrap-treeview-2.1.1.tgz",
-              "integrity": "sha1-vd4LvrIqlOmbMGnJqURVZK3rEmI=",
+              "version": "2.1.5",
+              "resolved": "https://registry.npmjs.org/patternfly-bootstrap-treeview/-/patternfly-bootstrap-treeview-2.1.5.tgz",
+              "integrity": "sha1-TCnyWC+4ovKPCpKPLw0yTSHWmQ0=",
               "optional": true,
               "requires": {
-                "bootstrap": "3.3.7",
-                "jquery": "2.1.4"
+                "bootstrap": "3.3.x",
+                "jquery": ">= 2.1.x"
               }
             }
           }
@@ -273,19 +292,19 @@
       }
     },
     "angular-ui-grid": {
-      "version": "4.0.4",
-      "resolved": "https://registry.npmjs.org/angular-ui-grid/-/angular-ui-grid-4.0.4.tgz",
-      "integrity": "sha1-s9/wI+po8hKZmIh+B4lye+QkRzc=",
+      "version": "4.0.11",
+      "resolved": "https://registry.npmjs.org/angular-ui-grid/-/angular-ui-grid-4.0.11.tgz",
+      "integrity": "sha1-lqp1KkH2CiVMGeBSV2iehMZhhiY=",
       "requires": {
-        "angular": "1.5.11"
+        "angular": ">=1.4.0 1.5.x"
       }
     },
     "angular-ui-router": {
-      "version": "0.4.2",
-      "resolved": "https://registry.npmjs.org/angular-ui-router/-/angular-ui-router-0.4.2.tgz",
-      "integrity": "sha1-tq7Rymmmg8guOZKJjqvUuhWGhgg=",
+      "version": "0.4.3",
+      "resolved": "https://registry.npmjs.org/angular-ui-router/-/angular-ui-router-0.4.3.tgz",
+      "integrity": "sha512-EGBG7G7ArFVkJPM+ZIgPKuMYuT16UQrr3zj3BEiXHKwxss867bGt3u7QD9g4BxR+K2qQOSWok6JGvgTWXAko3A==",
       "requires": {
-        "angular": "1.5.11"
+        "angular": "^1.0.8"
       }
     }
   }
