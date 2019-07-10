@@ -104,7 +104,6 @@ public class ApiServerTest extends TestBase {
         return null;
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     void testRestApiAddressResourceParams() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()

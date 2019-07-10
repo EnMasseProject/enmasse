@@ -7,6 +7,7 @@ package v1alpha1
 
 import (
 	"encoding/json"
+
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -184,7 +185,7 @@ type CollectorConfig struct {
 type DeviceRegistryServiceConfig struct {
 	ServiceConfig `json:",inline"`
 
-	File *FileBasedDeviceRegistry `json:"file,omitempty"`
+	File       *FileBasedDeviceRegistry  `json:"file,omitempty"`
 	Infinispan *InfinispanDeviceRegistry `json:"infinispan,omitempty"`
 }
 
@@ -195,7 +196,7 @@ type FileBasedDeviceRegistry struct {
 }
 
 type InfinispanDeviceRegistry struct {
-	InfinispanServerAddress string `json:"infinispanServerAddress"`
+	ServerAddress string `json:"serverAddress"`
 
 	Container *ContainerConfig `json:"container,omitempty"`
 }

@@ -15,8 +15,6 @@ import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
-
 import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExternalClients
 public abstract class ClusterClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
-    private Logger log = CustomLogger.getLogger();
 
     @BeforeEach
     public void setUpClientBase() throws Exception {

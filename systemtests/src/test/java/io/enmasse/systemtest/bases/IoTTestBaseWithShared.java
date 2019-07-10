@@ -55,7 +55,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                     .withNewServices()
                     .withNewDeviceRegistry()
                     .withNewInfinispan()
-                    .withInfinispanServerAddress(infinispanEndpoint.toString())
+                    .withServerAddress(infinispanEndpoint.toString())
                     .endInfinispan()
                     .endDeviceRegistry()
                     .endServices()

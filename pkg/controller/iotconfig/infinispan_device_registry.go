@@ -100,7 +100,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "JAVA_OPTS", Value: `-Dinfinispanserver=` + config.Spec.ServicesConfig.DeviceRegistry.Infinispan.InfinispanServerAddress},
+			{Name: "JAVA_OPTS", Value: `-Dinfinispanserver=` + config.Spec.ServicesConfig.DeviceRegistry.Infinispan.ServerAddress},
 		}
 
 		AppendStandardHonoJavaOptions(container)
