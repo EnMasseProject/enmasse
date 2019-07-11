@@ -82,7 +82,7 @@ Use this [procedure](https://github.com/operator-framework/community-operators/b
 new Operator Bundle version within the [EnMasse application registry](https://quay.io/new/?namespace=enmasse) and test it
 in OperatorHub on both Kubernetes and OpenShift.
 
-When versioing the bundle, use an `PACKAGE_VERSION` in the form `<EnMasseVersionNumber>-<Sequence Number>` e.g. 0.28.2-0.   If it is necessary
+When versioning the bundle, use a `PACKAGE_VERSION` in the form `<EnMasseVersionNumber>-<Sequence Number>` e.g. 0.28.2-0.   If it is necessary
 to republish the bundle, simply increment the sequence number.  Note it is currently not possible to remove versions from the application
 registry on Quay.
 
