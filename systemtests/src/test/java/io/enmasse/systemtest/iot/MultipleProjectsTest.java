@@ -241,7 +241,6 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
         String tenant = tenantId(ctx.getProject());
         String deviceId = ctx.getDeviceId();
         credentialsClient.deleteAllCredentials(tenant, deviceId);
-        credentialsClient.getCredentials(tenant, deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         registryClient.deleteDeviceRegistration(tenant, deviceId);
         registryClient.getDeviceRegistration(tenant, deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         ctx.getHttpAdapterClient().close();

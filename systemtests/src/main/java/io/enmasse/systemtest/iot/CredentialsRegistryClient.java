@@ -65,20 +65,6 @@ public class CredentialsRegistryClient extends ApiClient {
         responsePromise.get(150000, TimeUnit.SECONDS);
     }
 
-    public JsonObject getCredentials(String tenantId, String deviceId) throws Exception {
-        return getCredentials(tenantId, deviceId, HttpURLConnection.HTTP_OK);
-    }
-
-    public JsonObject getCredentials(String tenantId, String deviceId, int expectedCode) throws Exception {
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        var requestPath = String.format("/%s/%s/%s", CREDENTIALS_PATH, tenantId, deviceId);
-        log.info("GET-credentials: path {};", requestPath);
-        client.get(endpoint.getPort(), endpoint.getHost(), requestPath)
-            .as(BodyCodec.jsonObject())
-            .send(ar -> responseHandler(ar, responsePromise, expectedCode, "Error getting credentials of device", false));
-        return responsePromise.get(150000, TimeUnit.SECONDS);
-    }
-
     public void updateCredentials(String tenantId, String deviceId, String authId, String password, Instant notAfter) throws Exception {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         var requestPath = String.format("/%s/%s/%s/%s", CREDENTIALS_PATH, tenantId, authId, "hashed-password");

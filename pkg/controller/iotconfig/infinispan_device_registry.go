@@ -7,13 +7,14 @@ package iotconfig
 
 import (
 	"context"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"strings"
 
-	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -94,6 +95,8 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 		// environment
 
+		toks := strings.Split(config.Spec.ServicesConfig.DeviceRegistry.Infinispan.ServerAddress, ":")
+
 		container.Env = []corev1.EnvVar{
 			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
@@ -105,7 +108,8 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "JAVA_OPTS", Value: `-Dinfinispanserver=` + config.Spec.ServicesConfig.DeviceRegistry.Infinispan.ServerAddress},
+			{Name: "ENMASSE_IOT_DEVICE_REGISTRY_INFINISPAN_HOST", Value: toks[0]},
+			{Name: "ENMASSE_IOT_DEVICE_REGISTRY_INFINISPAN_PORT", Value: toks[1]},
 		}
 
 		AppendStandardHonoJavaOptions(container)

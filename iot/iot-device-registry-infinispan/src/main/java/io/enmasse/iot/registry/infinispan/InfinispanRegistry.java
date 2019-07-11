@@ -13,6 +13,7 @@ import org.eclipse.hono.service.AbstractApplication;
 import org.eclipse.hono.service.HealthCheckProvider;
 import org.eclipse.hono.service.auth.AuthenticationService;
 import org.eclipse.hono.service.credentials.CredentialsService;
+import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.service.registration.RegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
@@ -20,14 +21,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * A Spring Boot application exposing an AMQP based endpoint that implements Hono's device registry.
- * <p>
- * The application implements Hono's <a href="https://www.eclipse.org/hono/api/Device-Registration-API/">Device Registration API</a>
- * and <a href="https://www.eclipse.org/hono/api/Credentials-API/">Credentials API</a>.
- * </p>
- */
-@ComponentScan(basePackages = {"org.eclipse.hono.service.auth", "io.enmasse.iot.registry.infinispan"})
+@ComponentScan("org.eclipse.hono.service.auth")
+@ComponentScan( "io.enmasse.iot.registry.infinispan")
+@ComponentScan( "io.enmasse.iot.registry.infinispan.config")
 @Configuration
 @EnableAutoConfiguration
 public class InfinispanRegistry extends AbstractApplication {
@@ -35,6 +31,7 @@ public class InfinispanRegistry extends AbstractApplication {
     private AuthenticationService authenticationService;
     private CredentialsService credentialsService;
     private RegistrationService registrationService;
+    private DeviceConnectionService deviceConnectionService;
 
     /**
      * Sets the credentials service implementation this server is based on.
@@ -69,6 +66,11 @@ public class InfinispanRegistry extends AbstractApplication {
         this.authenticationService = Objects.requireNonNull(authenticationService);
     }
 
+    @Autowired
+    public void setDeviceConnectionService(DeviceConnectionService deviceConnectionService) {
+        this.deviceConnectionService = deviceConnectionService;
+    }
+
     @Override
     protected final Future<Void> deployRequiredVerticles(final int maxInstances) {
 
@@ -76,7 +78,9 @@ public class InfinispanRegistry extends AbstractApplication {
         CompositeFuture.all(
                 deployAuthenticationService(), // we only need 1 authentication service
                 deployRegistrationService(),
-                deployCredentialsService()).setHandler(ar -> {
+                deployCredentialsService(),
+                deployDeviceConnectionService()
+            ).setHandler(ar -> {
             if (ar.succeeded()) {
                 result.complete();
             } else {
@@ -86,10 +90,17 @@ public class InfinispanRegistry extends AbstractApplication {
         return result;
     }
 
+    private Future<String> deployDeviceConnectionService() {
+        final Future<String> result = Future.future();
+        log.info("Starting device connection service {}", deviceConnectionService);
+        getVertx().deployVerticle(deviceConnectionService, result);
+        return result;
+    }
+
     private Future<String> deployCredentialsService() {
         final Future<String> result = Future.future();
         log.info("Starting credentials service {}", credentialsService);
-        getVertx().deployVerticle(credentialsService, result.completer());
+        getVertx().deployVerticle(credentialsService, result);
         return result;
     }
 
@@ -99,7 +110,7 @@ public class InfinispanRegistry extends AbstractApplication {
             result.fail("authentication service is not a verticle");
         } else {
             log.info("Starting authentication service {}", authenticationService);
-            getVertx().deployVerticle((Verticle) authenticationService, result.completer());
+            getVertx().deployVerticle((Verticle) authenticationService, result);
         }
         return result;
     }
@@ -107,7 +118,7 @@ public class InfinispanRegistry extends AbstractApplication {
     private Future<String> deployRegistrationService() {
         final Future<String> result = Future.future();
         log.info("Starting registration service {}", registrationService);
-        getVertx().deployVerticle(registrationService, result.completer());
+        getVertx().deployVerticle(registrationService, result);
         return result;
     }
 
@@ -127,6 +138,9 @@ public class InfinispanRegistry extends AbstractApplication {
         }
         if (HealthCheckProvider.class.isInstance(registrationService)) {
             registerHealthchecks((HealthCheckProvider) registrationService);
+        }
+        if (HealthCheckProvider.class.isInstance(deviceConnectionService)) {
+            registerHealthchecks((HealthCheckProvider) deviceConnectionService);
         }
         return Future.succeededFuture();
     }
