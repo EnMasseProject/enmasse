@@ -359,11 +359,12 @@ public class TestUtils {
         for (int i = 0; i < 10; i++) {
             try {
                 InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
-                Thread.sleep(1000);
                 return addresses.length > 0;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             } catch (UnknownHostException ignore) {
+            }
+            try {
+                Thread.sleep(1_000);
+            } catch (InterruptedException e) {
             }
         }
         return false;
