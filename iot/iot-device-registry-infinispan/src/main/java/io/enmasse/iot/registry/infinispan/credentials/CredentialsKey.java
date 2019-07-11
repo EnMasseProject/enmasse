@@ -3,11 +3,10 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.registry.infinispan;
+package io.enmasse.iot.registry.infinispan.credentials;
 
+import java.io.Serializable;
 import java.util.Objects;
-import org.infinispan.protostream.annotations.ProtoDoc;
-import org.infinispan.protostream.annotations.ProtoField;
 
 /**
  * A custom class to be used as key in the backend key-value storage.
@@ -15,8 +14,9 @@ import org.infinispan.protostream.annotations.ProtoField;
  *
  *  See {@link CacheCredentialService CacheCredentialService} class.
  */
-@ProtoDoc("@Indexed")
-public class CredentialsKey {
+public class CredentialsKey implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String tenantId;
     private String authId;
@@ -72,20 +72,14 @@ public class CredentialsKey {
         this.type = type;
     }
 
-    @ProtoDoc("@Field")
-    @ProtoField(number = 1, required = true)
     public String getTenantId() {
         return tenantId;
     }
 
-    @ProtoDoc("@Field")
-    @ProtoField(number = 2, required = true)
     public String getAuthId() {
         return authId;
     }
 
-    @ProtoDoc("@Field")
-    @ProtoField(number = 3, required = true)
     public String getType() {
         return type;
     }

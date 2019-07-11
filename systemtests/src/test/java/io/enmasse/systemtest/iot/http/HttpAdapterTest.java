@@ -93,7 +93,6 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
         }
         if (credentialsClient != null) {
             credentialsClient.deleteAllCredentials(tenantId(), deviceId);
-            credentialsClient.getCredentials(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         }
         if (registryClient != null) {
             registryClient.deleteDeviceRegistration(tenantId(), deviceId);

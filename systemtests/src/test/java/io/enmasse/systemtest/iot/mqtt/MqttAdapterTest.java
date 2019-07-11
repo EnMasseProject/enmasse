@@ -134,7 +134,6 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
             logCollector.collectMqttAdapterQdrProxyState();
         }
         credentialsClient.deleteAllCredentials(tenantId(), deviceId);
-        credentialsClient.getCredentials(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         registryClient.deleteDeviceRegistration(tenantId(), deviceId);
         registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         if (adapterClient.isConnected()) {

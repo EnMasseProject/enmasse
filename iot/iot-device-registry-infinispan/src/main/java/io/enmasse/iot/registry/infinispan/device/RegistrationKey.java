@@ -3,27 +3,24 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.registry.infinispan;
+package io.enmasse.iot.registry.infinispan.device;
 
+import java.io.Serializable;
 import java.util.Objects;
-import org.infinispan.protostream.annotations.ProtoDoc;
-import org.infinispan.protostream.annotations.ProtoField;
 
 /**
  * A custom class to be used as key in the backend key-value storage.
- * This uses the uniques values of a registration to create a unique key to store the registration details.
+ * This uses the unique values of a registration to create a unique key to store the registration details.
  *
  *  See {@link CacheRegistrationService CacheRegistrationService} class.
  */
-@ProtoDoc("@Indexed")
-public class RegistrationKey {
+public class RegistrationKey implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private String tenantId;
     private String deviceId;
 
-    /**
-     * Constructor without arguments for the protobuilder.
-     */
     public RegistrationKey() {
     }
 
@@ -56,8 +53,6 @@ public class RegistrationKey {
         return Objects.hash(tenantId, deviceId);
     }
 
-    @ProtoDoc("@Field")
-    @ProtoField(number = 1, required = true)
     public String getTenantId() {
         return tenantId;
     }
@@ -66,8 +61,6 @@ public class RegistrationKey {
         this.tenantId = tenantId;
     }
 
-    @ProtoDoc("@Field")
-    @ProtoField(number = 2, required = true)
     public String getDeviceId() {
         return deviceId;
     }

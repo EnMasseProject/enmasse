@@ -42,7 +42,6 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.IoTUtils;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 @Tag(sharedIot)
@@ -202,23 +201,9 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             String password = "password1234";
             credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, password);
 
-            JsonObject result = credentialsClient.getCredentials(tenantId(), randomDeviceId);
-            assertNotNull(result);
-            assertEquals(1, result.getInteger("total"));
-            JsonArray credentials = result.getJsonArray("credentials");
-            assertNotNull(credentials);
-            assertEquals(1, credentials.size());
-            JsonObject credential = credentials.getJsonObject(0);
-            assertNotNull(credential);
-            assertEquals(randomDeviceId, credential.getString("device-id"));
-            assertEquals(authId, credential.getString("auth-id"));
-            assertDefaultEnabled(credential);
-            //TODO chech secret[0].pwd-hash matches "password1234" hash, waiting for issue #2569 to be resolved
-
             checkCredentials(authId, password, false);
 
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
-            credentialsClient.getCredentials(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
 
             client.deleteDeviceRegistration(tenantId(), randomDeviceId);
             client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
@@ -250,23 +235,6 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             final String newPassword = "new-password1234";
             credentialsClient.updateCredentials(tenantId(), randomDeviceId, authId, newPassword, null);
 
-            JsonObject result = credentialsClient.getCredentials(tenantId(), randomDeviceId);
-            assertNotNull(result);
-            assertEquals(1, result.getInteger("total"));
-            JsonArray credentials = result.getJsonArray("credentials");
-            assertNotNull(credentials);
-            assertEquals(1, credentials.size());
-            JsonObject credential = credentials.getJsonObject(0);
-            assertNotNull(credential);
-            assertEquals(randomDeviceId, credential.getString("device-id"));
-            assertEquals(authId, credential.getString("auth-id"));
-            assertDefaultEnabled(credential);
-            JsonArray secrets = credential.getJsonArray("secrets");
-            assertNotNull(secrets);
-            assertEquals(1, secrets.size());
-            JsonObject secret = secrets.getJsonObject(0);
-            assertNotNull(secret);
-
             // expect failure due to cached info
 
             checkCredentials(authId, newPassword, true);
@@ -278,7 +246,6 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             checkCredentials(authId, newPassword, false);
 
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
-            credentialsClient.getCredentials(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
 
             client.deleteDeviceRegistration(tenantId(), randomDeviceId);
             client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
@@ -297,25 +264,6 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
 
             credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, newPassword, notAfter);
 
-            JsonObject result = credentialsClient.getCredentials(tenantId(), randomDeviceId);
-            assertNotNull(result);
-            assertEquals(1, result.getInteger("total"));
-            JsonArray credentials = result.getJsonArray("credentials");
-            assertNotNull(credentials);
-            assertEquals(1, credentials.size());
-            JsonObject credential = credentials.getJsonObject(0);
-            assertNotNull(credential);
-            assertEquals(randomDeviceId, credential.getString("device-id"));
-            assertEquals(authId, credential.getString("auth-id"));
-            assertDefaultEnabled(credential);
-            JsonArray secrets = credential.getJsonArray("secrets");
-            assertNotNull(secrets);
-            assertEquals(1, secrets.size());
-            JsonObject secret = secrets.getJsonObject(0);
-            assertNotNull(secret);
-            Instant actualNotAfter = secret.getInstant("not-after");
-            assertEquals(notAfter, actualNotAfter);
-
             // first check, must succeed
 
             checkCredentials(authId, newPassword, false);
@@ -328,7 +276,6 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             checkCredentials(authId, newPassword, true);
 
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
-            credentialsClient.getCredentials(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
 
             client.deleteDeviceRegistration(tenantId(), randomDeviceId);
             client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
