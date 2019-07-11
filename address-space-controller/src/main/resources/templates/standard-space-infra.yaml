@@ -464,6 +464,8 @@ objects:
             value: ${TOPIC_FORWARDER_IMAGE}
           - name: IMAGE_PULL_POLICY
             value: ${IMAGE_PULL_POLICY}
+          - name: FS_GROUP_OVERRIDE
+            value: ${FS_GROUP_OVERRIDE}
           image: ${STANDARD_CONTROLLER_IMAGE}
           imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:
@@ -812,3 +814,5 @@ parameters:
   name: CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME
 - description:
   name: CONSOLE_LINK
+- description:
+  name: FS_GROUP_OVERRIDE

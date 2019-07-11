@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+type ApplyEnvFn func(key string, value string, ok bool) error
+
+func ApplyEnv(key string, consumer ApplyEnvFn) error {
+	value, ok := os.LookupEnv(key)
+	return consumer(key, value, ok)
+}
+
 func GetEnvOrDefault(key string, defaultValue string) string {
 	value, ok := os.LookupEnv(key)
 	if ok {

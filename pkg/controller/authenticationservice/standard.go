@@ -18,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	intstr "k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strconv"
 )
 
 func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, authservice *adminv1beta1.AuthenticationService) error {
@@ -99,6 +100,22 @@ func applyStandardAuthServiceDefaults(ctx context.Context, client client.Client,
 func applyStandardAuthServiceDeployment(authservice *adminv1beta1.AuthenticationService, deployment *appsv1.Deployment) error {
 
 	install.ApplyDeploymentDefaults(deployment, "standard-authservice", *authservice.Spec.Standard.DeploymentName)
+
+	err := util.ApplyEnv("FS_GROUP_OVERRIDE", func(name string, value string, ok bool) error {
+		if ok {
+			fsGroupOverride, err := strconv.ParseInt(value, 10, 0)
+			if deployment.Spec.Template.Spec.SecurityContext == nil {
+				deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{}
+			}
+			deployment.Spec.Template.Spec.SecurityContext.FSGroup = &fsGroupOverride
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
 
 	install.ApplyInitContainer(deployment, "keycloak-plugin", func(container *corev1.Container) {
 		install.ApplyContainerImage(container, "keycloak-plugin", authservice.Spec.Standard.InitImage)
