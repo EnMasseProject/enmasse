@@ -1,5 +1,7 @@
 // Module included in the following assemblies:
 //
+// assembly-getting-started.adoc
+// assembly-getting-started-rh.adoc
 // assembly-managing-users.adoc
 
 [id='proc-creating-users-cli-{context}']
@@ -9,7 +11,13 @@ In {ProductName} users can be created using standard command-line tools.
 
 .Prerequisites
 
-* You must have already created an link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address space].
+ifdef::Prereqs[]
+* You must have already created an link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging-gs[address space].
+endif::Prereqs[]
+
+ifndef::Prereqs[]
+* You must have already created an link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[address space].
+endif::Prereqs[]
 
 .Procedure
 

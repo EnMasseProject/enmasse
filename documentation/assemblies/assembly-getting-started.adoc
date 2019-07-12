@@ -1,3 +1,8 @@
+// This assembly is included in the following assemblies:
+//
+// openshift master.adoc
+// kubernetes master.adoc
+
 :context: {context}-gs
 
 [id='quickstart-{context}']
