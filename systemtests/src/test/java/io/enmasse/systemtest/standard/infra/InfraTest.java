@@ -10,6 +10,7 @@ import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
@@ -22,6 +23,7 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -33,7 +35,8 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(isolated)
-class InfraTest extends InfraTestBase implements ITestBaseStandard {
+class InfraTest extends InfraTestBase {
+    private static Logger log = CustomLogger.getLogger();
 
     @Test
     void testCreateInfra() throws Exception {

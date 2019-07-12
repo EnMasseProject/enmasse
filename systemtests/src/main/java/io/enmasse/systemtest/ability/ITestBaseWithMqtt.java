@@ -10,10 +10,22 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.DestinationPlan;
 import org.junit.jupiter.api.Tag;
 
-import static io.enmasse.systemtest.TestTag.sharedStandard;
+import static io.enmasse.systemtest.TestTag.sharedMqtt;
 
-@Tag(sharedStandard)
-public interface ITestBaseStandard extends ITestBase {
+@Tag(sharedMqtt)
+public interface ITestBaseWithMqtt extends ITestBase {
+
+    @Override
+    default String getDefaultPlan(AddressType addressType) {
+        switch (addressType) {
+            case TOPIC:
+                return DestinationPlan.STANDARD_LARGE_TOPIC;
+            case SUBSCRIPTION:
+                return DestinationPlan.STANDARD_SMALL_SUBSCRIPTION;
+            default:
+                return null;
+        }
+    }
 
     @Override
     default AddressSpaceType getAddressSpaceType() {
@@ -21,27 +33,12 @@ public interface ITestBaseStandard extends ITestBase {
     }
 
     @Override
-    default String getDefaultPlan(AddressType addressType) {
-        switch (addressType) {
-            case QUEUE:
-                return DestinationPlan.STANDARD_SMALL_QUEUE;
-            case TOPIC:
-                return DestinationPlan.STANDARD_SMALL_TOPIC;
-            case ANYCAST:
-                return DestinationPlan.STANDARD_SMALL_ANYCAST;
-            case MULTICAST:
-                return DestinationPlan.STANDARD_SMALL_MULTICAST;
-        }
-        return null;
-    }
-
-    @Override
     default String getDefaultAddressSpacePlan() {
-        return AddressSpacePlans.STANDARD_UNLIMITED;
+        return AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT;
     }
 
     @Override
     default String getDefaultAddrSpaceIdentifier() {
-        return "standard";
+        return "mqtt";
     }
 }

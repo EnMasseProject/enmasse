@@ -4,6 +4,19 @@
  */
 package io.enmasse.systemtest.ability;
 
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
+import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
+import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
+import org.slf4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -13,20 +26,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
-import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Pod;
-
-public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler {
+public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler, BeforeTestExecutionCallback, AfterTestExecutionCallback {
     private static final Logger log = CustomLogger.getLogger();
+
+    @Override
+    public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
+        SharedAddressSpaceManager.getInstance().deleteSharedAddressSpace();
+    }
+
+    @Override
+    public void beforeTestExecution(ExtensionContext extensionContext) throws Exception {
+        SharedAddressSpaceManager.getInstance().setActualTest(extensionContext);
+    }
 
     @Override
     public void handleTestExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
@@ -92,7 +103,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             Files.write(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
             log.info("Pod logs and describe successfully stored into {}", path);
         } catch (Exception ex) {
-            log.warn("Cannot save pod logs and info: {}", ex);
+            log.warn("Cannot save pod logs and info: ", ex);
         }
         throw throwable;
     }

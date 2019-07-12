@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import io.enmasse.systemtest.CustomLogger;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -48,10 +49,12 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
+import org.slf4j.Logger;
 
 @Tag(TestTag.sharedIot)
 @Tag(TestTag.smoke)
 public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStandard {
+    private static Logger log = CustomLogger.getLogger();
 
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;

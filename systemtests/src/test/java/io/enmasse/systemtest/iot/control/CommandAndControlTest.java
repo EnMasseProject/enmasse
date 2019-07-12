@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.iot.control;
 
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.net.HttpURLConnection.HTTP_OK;
@@ -56,6 +58,8 @@ import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
 
 @Tag(sharedIot)
 class CommandAndControlTest extends IoTTestBaseWithShared {
+
+    private static Logger log = CustomLogger.getLogger();
 
     private Endpoint deviceRegistryEndpoint;
     private Endpoint httpAdapterEndpoint;

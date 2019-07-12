@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class InfraTestBase extends TestBase implements ITestBase {
 
-    protected static Logger log = CustomLogger.getLogger();
+    private static Logger log = CustomLogger.getLogger();
 
     private static final List<String> resizingStorageProvisioners = Arrays.asList("kubernetes.io/aws-ebs", "kubernetes.io/gce-pd",
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
