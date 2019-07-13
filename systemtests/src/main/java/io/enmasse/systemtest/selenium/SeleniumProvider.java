@@ -51,7 +51,7 @@ public class SeleniumProvider {
     private SeleniumProvider() {
     }
 
-    public static SeleniumProvider getInstance() {
+    public static synchronized SeleniumProvider getInstance() {
         if (instance == null) {
             instance = new SeleniumProvider();
         }

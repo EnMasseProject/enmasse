@@ -4,7 +4,11 @@
  */
 package io.enmasse.systemtest.ability;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.GlobalLogCollector;
+import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -17,6 +21,12 @@ import java.io.File;
 
 public class ExecutionListener implements TestExecutionListener {
     private static final Logger log = CustomLogger.getLogger();
+
+    @Override
+    public void testPlanExecutionStarted(TestPlan testPlan) {
+        SharedAddressSpaceManager.getInstance().setTestPlan(testPlan);
+        SharedAddressSpaceManager.getInstance().printTestClasses();
+    }
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
@@ -51,7 +61,7 @@ public class ExecutionListener implements TestExecutionListener {
                         log.info("iot config '{}' will be removed", config.getMetadata().getName());
                         try {
                             IoTUtils.deleteIoTConfigAndWait(kube, config);
-                        } catch ( Exception e ) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     });

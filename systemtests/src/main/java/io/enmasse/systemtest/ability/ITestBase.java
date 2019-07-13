@@ -15,4 +15,12 @@ public interface ITestBase {
     default String getDefaultPlan(AddressType addressType) {
         return null;
     }
+
+    default String getDefaultAddressSpacePlan() {
+        return null;
+    }
+
+    default String getDefaultAddrSpaceIdentifier() {
+        return "default";
+    }
 }

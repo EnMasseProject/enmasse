@@ -8,7 +8,7 @@ package io.enmasse.systemtest.standard.mqtt;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.DestinationPlan;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseWithMqtt;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
 import io.enmasse.systemtest.mqtt.MqttMessageArrivedCallback;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * Tests related to publish messages via MQTT
  */
-public class SessionTest extends TestBaseWithShared implements ITestBaseStandard {
+public class SessionTest extends TestBaseWithShared implements ITestBaseWithMqtt {
 
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";

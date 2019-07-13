@@ -27,7 +27,7 @@ import java.util.UUID;
 
 public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
-    protected final static Logger log = CustomLogger.getLogger();
+    private final static Logger log = CustomLogger.getLogger();
 
     private final String addressSpace = "shared-address-space";
 

@@ -7,10 +7,9 @@ package io.enmasse.systemtest.bases;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.AddressSpacePlans;
-import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.ability.SharedAddressSpaceManager;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
@@ -25,7 +24,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -47,21 +50,22 @@ public abstract class TestBaseWithShared extends TestBase {
 
     @BeforeEach
     public void setupShared() throws Exception {
-        spaceCountMap.putIfAbsent(getAddressSpaceType().toString().toLowerCase(), 0);
+        spaceCountMap.putIfAbsent(getDefaultAddrSpaceIdentifier(), 0);
         sharedAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withName(getAddressSpaceType().name().toLowerCase() + defaultAddressTemplate + spaceCountMap.get(getAddressSpaceType().toString().toLowerCase()))
+                .withName(getDefaultAddrSpaceIdentifier() + defaultAddressTemplate + spaceCountMap.get(getDefaultAddrSpaceIdentifier()))
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withType(getAddressSpaceType().toString())
-                .withPlan(getAddressSpaceType().equals(AddressSpaceType.BROKERED) ? AddressSpacePlans.BROKERED : AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
+                .withPlan(getDefaultAddressSpacePlan())
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
                 .endSpec()
                 .build();
         createAddressSpace(sharedAddressSpace);
+        SharedAddressSpaceManager.getInstance().setActualSharedAddressSpace(sharedAddressSpace);
         defaultCredentials.setUsername("test").setPassword("test");
         createOrUpdateUser(sharedAddressSpace, defaultCredentials);
 

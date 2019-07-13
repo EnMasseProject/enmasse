@@ -27,7 +27,7 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(isolated)
-class InfraTest extends InfraTestBase implements ITestBaseBrokered {
+class InfraTest extends InfraTestBase {
 
     @Test
     void testCreateInfra() throws Exception {

@@ -8,7 +8,7 @@ package io.enmasse.systemtest.standard.mqtt;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.DestinationPlan;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseWithMqtt;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttUtils;
@@ -35,7 +35,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Tests related to interoperability mqtt with amqp
  */
-class InteroperabilityTest extends TestBaseWithShared implements ITestBaseStandard {
+class InteroperabilityTest extends TestBaseWithShared implements ITestBaseWithMqtt {
     private static final String MQTT_AMQP_TOPIC = "mqtt-amqp-topic";
     private static final String AMQP_MQTT_TOPIC = "amqp-mqtt-topic";
 
