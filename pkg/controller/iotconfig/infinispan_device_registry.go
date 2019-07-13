@@ -7,8 +7,6 @@ package iotconfig
 
 import (
 	"context"
-	"strconv"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -63,17 +61,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
 
-	err := util.ApplyEnv("FS_GROUP_OVERRIDE", func(name string, value string, ok bool) error {
-		if ok {
-			fsGroupOverride, err := strconv.ParseInt(value, 10, 0)
-			if deployment.Spec.Template.Spec.SecurityContext == nil {
-				deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{}
-			}
-			deployment.Spec.Template.Spec.SecurityContext.FSGroup = &fsGroupOverride
-			return err
-		}
-		return nil
-	})
+	err := install.ApplyFsGroupOverride(deployment)
 
 	if err != nil {
 		return err

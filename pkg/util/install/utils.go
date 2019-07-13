@@ -7,7 +7,9 @@ package install
 
 import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/images"
+	"strconv"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -433,4 +435,22 @@ func RemoveEnv(container *corev1.Container, name string) {
 			break
 		}
 	}
+}
+
+// This is a workaround for a problem that may manifest when EnMasse is deployed into OLM cluster-wide
+// under certain configurations. If https://github.com/operator-framework/operator-lifecycle-manager/issues/927
+// is resolved, this workaround can be removed.
+func ApplyFsGroupOverride(deployment *appsv1.Deployment) error {
+	err := util.ApplyEnv("FS_GROUP_OVERRIDE", func(name string, value string, ok bool) error {
+		if ok {
+			fsGroupOverride, err := strconv.ParseInt(value, 10, 0)
+			if deployment.Spec.Template.Spec.SecurityContext == nil {
+				deployment.Spec.Template.Spec.SecurityContext = &corev1.PodSecurityContext{}
+			}
+			deployment.Spec.Template.Spec.SecurityContext.FSGroup = &fsGroupOverride
+			return err
+		}
+		return nil
+	})
+	return err
 }
