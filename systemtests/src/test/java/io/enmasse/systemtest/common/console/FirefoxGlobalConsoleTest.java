@@ -84,5 +84,10 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest {
     void testCreateAddrSpaceNonClusterAdmin() throws Exception {
         doTestCreateAddrSpaceNonClusterAdmin();
     }
+
+    @Test
+    void testSwitchAddressSpacePlan() throws Exception {
+        doTestSwitchAddressSpacePlan();
+    }
 }
 
