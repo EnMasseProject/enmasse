@@ -19,6 +19,7 @@ import io.enmasse.systemtest.common.Credentials;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +28,7 @@ import org.slf4j.Logger;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class GlobalConsoleTest extends TestBase {
@@ -155,6 +157,31 @@ public abstract class GlobalConsoleTest extends TestBase {
             KubeCMDClient.switchProject(environment.namespace());
             kubernetes.deleteNamespace(namespace);
         }
+    }
+
+    protected void doTestSwitchAddressSpacePlan() throws Exception{
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space-api")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_MEDIUM)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        globalConsolePage.openGlobalConsolePage();
+        globalConsolePage.createAddressSpace(addressSpace);
+        globalConsolePage.switchAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
+        AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
+        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        assertEquals(addressSpace.getSpec().getPlan(),
+                getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
     }
 
     private void waitUntilAddressSpaceActive(AddressSpace addressSpace) throws Exception {
