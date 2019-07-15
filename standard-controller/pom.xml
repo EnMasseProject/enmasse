@@ -11,7 +11,7 @@
   <dependencies>
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactId>api-model</artifactId>
+      <artifactId></artifactId>api-model</artifactId>
     </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>
@@ -110,6 +110,14 @@
                   <mainClass>io.enmasse.controller.standard.StandardController</mainClass>
                 </transformer>
               </transformers>
+              <filters>
+                  <filter>
+                      <artifact>io.fabric8:kubernetes-model</artifact>
+                      <excludes>
+                          <exclude>io/fabric8/kubernetes/internal/KubernetesDeserializer**</exclude>
+                      </excludes>
+                  </filter>
+              </filters>
             </configuration>
           </execution>
         </executions>
