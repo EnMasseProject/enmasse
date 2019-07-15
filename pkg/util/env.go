@@ -10,6 +10,18 @@ import (
 	"strings"
 )
 
+type ApplyEnvFn func(key string, value string, ok bool) error
+
+// ApplyEnv retrieves the value of the environment variable named
+// by the key and applies the key, value (which may be empty) and
+// existence flag to the consumer function. The consumer function
+// is called even if the key is not present in the environment,
+// in which case the existence flag will be false.
+func ApplyEnv(key string, consumer ApplyEnvFn) error {
+	value, ok := os.LookupEnv(key)
+	return consumer(key, value, ok)
+}
+
 func GetEnvOrDefault(key string, defaultValue string) string {
 	value, ok := os.LookupEnv(key)
 	if ok {

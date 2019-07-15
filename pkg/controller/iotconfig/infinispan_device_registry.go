@@ -7,7 +7,6 @@ package iotconfig
 
 import (
 	"context"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -62,7 +61,13 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
 
-	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+	err := install.ApplyFsGroupOverride(deployment)
+
+	if err != nil {
+		return err
+	}
+
+	err = install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
 			return err
