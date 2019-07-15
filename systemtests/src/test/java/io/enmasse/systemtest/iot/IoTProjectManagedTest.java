@@ -8,6 +8,10 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.IoTTestBase;
@@ -72,8 +76,8 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
         //address space s
         AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
-        assertEquals("standard", addressSpace.getSpec().getType());
-        assertEquals("standard-unlimited", addressSpace.getSpec().getPlan());
+        assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
+        assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
 
         //addresses
         //{event/control/telemetry}/"project-namespace"."project-name"
@@ -89,13 +93,13 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
         int correctAddressesCounter = 0;
         for (Address address : addresses) {
             if (address.getSpec().getAddress().equals(IOT_ADDRESS_EVENT + addressSuffix)) {
-                assertEquals("queue", address.getSpec().getType());
-                assertEquals("standard-small-queue", address.getSpec().getPlan());
+                assertEquals(AddressType.QUEUE.toString(), address.getSpec().getType());
+                assertEquals(DestinationPlan.STANDARD_SMALL_QUEUE, address.getSpec().getPlan());
                 correctAddressesCounter++;
             } else if (address.getSpec().getAddress().equals(IOT_ADDRESS_CONTROL + addressSuffix)
                     || address.getSpec().getAddress().equals(IOT_ADDRESS_TELEMETRY + addressSuffix)) {
-                assertEquals("anycast", address.getSpec().getType());
-                assertEquals("standard-small-anycast", address.getSpec().getPlan());
+                assertEquals(AddressType.ANYCAST.toString(), address.getSpec().getType());
+                assertEquals(DestinationPlan.STANDARD_SMALL_ANYCAST, address.getSpec().getPlan());
                 correctAddressesCounter++;
             }
         }
