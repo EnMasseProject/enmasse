@@ -1,0 +1,15 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-service-admin-guide.adoc
+// Installing master.adoc
+
+[id='assembly-uninstalling-{context}']
+= Uninstalling {ProductName}
+
+You must uninstall {ProductName} using the same method that you used to install {ProductName}.
+
+include::../modules/proc-uninstalling.adoc[leveloffset=+1]
+
+include::../modules/proc-uninstalling-using-ansible.adoc[leveloffset=+1]
+
+
