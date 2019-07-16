@@ -37,12 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag(isolated)
 public class ApiServerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
-
-    @BeforeEach
-    void setUp() {
-        adminManager.setUp();
-    }
+    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     @AfterEach
     void tearDown() throws Exception {

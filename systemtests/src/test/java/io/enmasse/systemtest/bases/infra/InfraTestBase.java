@@ -7,8 +7,8 @@ package io.enmasse.systemtest.bases.infra;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.InfraConfig;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
@@ -16,7 +16,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
@@ -37,16 +36,11 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",
             "kubernetes.io/portworx-volume", "kubernetes.io/rbd");
 
-    protected static final AdminResourcesManager adminManager = new AdminResourcesManager();
+    protected static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     protected InfraConfig testInfra;
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
-
-    @BeforeEach
-    void setUp() throws Exception {
-        adminManager.setUp();
-    }
 
     @AfterEach
     void tearDown() throws Exception {

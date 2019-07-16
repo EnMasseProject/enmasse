@@ -23,7 +23,6 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 
 import java.util.Optional;
@@ -36,12 +35,7 @@ public abstract class GlobalConsoleTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
     private GlobalConsolePage globalConsolePage;
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
-
-    @BeforeEach
-    void setUpAdminManager() {
-        adminManager.setUp();
-    }
+    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     @AfterEach
     public void tearDown() throws Exception {
