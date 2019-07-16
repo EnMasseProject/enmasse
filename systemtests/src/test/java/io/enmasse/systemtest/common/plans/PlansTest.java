@@ -748,14 +748,14 @@ class PlansTest extends TestBase {
             log.info("Address {} => {}", q.getMetadata().getName(), a.getStatus().getBrokerStatuses());
         });
 
-        //send 1000 messages to each queue
+        //send 500 messages to each queue
         UserCredentials user = new UserCredentials("test-scale-user-name", "test_scale_user_pswd");
         createOrUpdateUser(messagePersistAddressSpace, user);
 
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
         queueClient.getConnectOptions().setCredentials(user);
 
-        List<String> msgs = TestUtils.generateMessages(1000);
+        List<String> msgs = TestUtils.generateMessages(500);
         Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getSpec().getAddress(), msgs);
         Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getSpec().getAddress(), msgs);
         Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getSpec().getAddress(), msgs);
