@@ -58,7 +58,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertNotNull(numSent, "Sending messages didn't start");
         int actual = 0;
         try {
-            actual = numSent.get(1, TimeUnit.MINUTES);
+            actual = numSent.get(90, TimeUnit.SECONDS);
         } catch (TimeoutException t) {
             logCollector.collectRouterState("runQueueTestSend");
             fail("Sending messages timed out after sending " + predicate.actual());
@@ -69,7 +69,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), predicate);
         actual = 0;
         try {
-            actual = received.get(1, TimeUnit.MINUTES).size();
+            actual = received.get(90, TimeUnit.SECONDS).size();
         } catch (TimeoutException t) {
             logCollector.collectRouterState("runQueueTestRecv");
             fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
