@@ -30,7 +30,6 @@ class AuthServiceTest extends TestBase {
 
     @AfterEach
     void tearDown() throws Exception {
-        adminManager.tearDown();
         SystemtestsKubernetesApps.deletePostgresDB(kubernetes.getInfraNamespace());
     }
 

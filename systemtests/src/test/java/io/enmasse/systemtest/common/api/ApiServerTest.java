@@ -39,11 +39,6 @@ public class ApiServerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
-    @AfterEach
-    void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
-
     @Test
     void testRestApiGetSchema() throws Exception {
         AddressPlan queuePlan = PlanUtils.createAddressPlanObject("test-schema-rest-api-addr-plan", AddressType.QUEUE,

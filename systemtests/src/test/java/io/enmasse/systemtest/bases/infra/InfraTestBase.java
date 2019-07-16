@@ -42,11 +42,6 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
 
-    @AfterEach
-    void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
-
     protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec) {
         log.info("Checking broker infra");
         List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);

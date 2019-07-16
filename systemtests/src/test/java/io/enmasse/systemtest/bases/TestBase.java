@@ -12,6 +12,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSchemaList;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.BrokerManagement;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
@@ -134,6 +135,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         try {
             if (!environment.skipCleanup() && !reuseAddressSpace) {
                 deleteAddressspacesFromList();
+                AdminResourcesManager.getInstance().tearDown();
             } else {
                 log.warn("Remove address spaces in tear down - SKIPPED!");
             }

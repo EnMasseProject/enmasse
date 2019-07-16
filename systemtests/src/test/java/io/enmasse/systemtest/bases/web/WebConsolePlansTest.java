@@ -46,7 +46,6 @@ public abstract class WebConsolePlansTest extends TestBase {
     @AfterEach
     public void tearDownDrivers() throws Exception {
         selenium.tearDownDrivers();
-        adminManager.tearDown();
     }
 
     //============================================================================================

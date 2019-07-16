@@ -36,9 +36,6 @@ class PlansMarathonTest extends MarathonTestBase {
     void tearDown() throws Exception {
         logCollector.collectRouterState("planMarathonTearDown");
         logCollector.collectConfigMaps("plansMarathonTearDown");
-        if (!environment.skipCleanup()) {
-            adminManager.tearDown();
-        }
     }
 
     @Test

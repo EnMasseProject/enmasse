@@ -42,7 +42,7 @@ public class AdminResourcesManager {
     //------------------------------------------------------------------------------------------------
 
 
-    public static AdminResourcesManager getInstance() {
+    public static synchronized AdminResourcesManager getInstance() {
         if (managerInstance == null) {
             managerInstance = new AdminResourcesManager();
         }

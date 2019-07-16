@@ -30,11 +30,6 @@ class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
-    @AfterEach
-    void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
-
     @Test
     @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")
     void testAppendAddressPlan() throws Exception {

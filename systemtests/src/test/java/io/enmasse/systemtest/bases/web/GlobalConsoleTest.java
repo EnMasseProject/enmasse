@@ -37,11 +37,6 @@ public abstract class GlobalConsoleTest extends TestBase {
     private GlobalConsolePage globalConsolePage;
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
-    @AfterEach
-    public void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
-
     //============================================================================================
     //============================ do test methods ===============================================
     //============================================================================================

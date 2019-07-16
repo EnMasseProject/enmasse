@@ -47,11 +47,6 @@ class PlansTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
-    @AfterEach
-    void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
-
     @Test
     void testCreateAddressSpacePlan() throws Exception {
         StandardInfraConfig infra = new StandardInfraConfigBuilder()
