@@ -1,3 +1,7 @@
+/*
+ * Copyright 2018, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
 package io.enmasse.systemtest;
 
 import io.enmasse.admin.model.v1.AddressPlan;
@@ -20,13 +24,12 @@ import java.util.stream.Collectors;
 public class AdminResourcesManager {
 
     private static AdminResourcesManager managerInstance = null;
-
+    private static Logger LOGGER;
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
     private ArrayList<StandardInfraConfig> standardInfraConfigs;
     private ArrayList<BrokeredInfraConfig> brokeredInfraConfigs;
     private ArrayList<AuthenticationService> authServices;
-    private static Logger LOGGER;
 
     private AdminResourcesManager() {
         LOGGER = CustomLogger.getLogger();

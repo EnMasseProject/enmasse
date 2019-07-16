@@ -121,6 +121,26 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private boolean reuseAddressSpace;
 
+    protected static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
+        List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
+            MqttMessage m = new MqttMessage();
+            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
+            m.setQos(1);
+            return m;
+        }).collect(Collectors.toList());
+
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
+
+        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages published",
+                publishCount, is(messages.size()));
+
+        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages received",
+                receivedCount, is(messages.size()));
+    }
+
     @BeforeEach
     public void setup() throws Exception {
         if (!reuseAddressSpace) {
@@ -147,7 +167,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     @AfterEach
-    public void closeMqttClient () {
+    public void closeMqttClient() {
         if (mqttClientFactory != null) {
             mqttClientFactory.close();
             mqttClientFactory = null;
@@ -167,14 +187,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         reuseAddressSpace = true;
     }
 
-    protected void unsetReuseAddressSpace() {
-        reuseAddressSpace = false;
-    }
-
 
     //================================================================================================
     //==================================== AddressSpace methods ======================================
     //================================================================================================
+
+    protected void unsetReuseAddressSpace() {
+        reuseAddressSpace = false;
+    }
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
@@ -291,13 +311,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return kubernetes.getAddressSpaceClient().withName(addressSpaceName).get();
     }
 
-    protected AddressSpace getAddressSpace(String namespace, String addressSpaceName) {
-        return kubernetes.getAddressSpaceClient(namespace).withName(addressSpaceName).get();
-    }
-
     //================================================================================================
     //====================================== Address methods =========================================
     //================================================================================================
+
+    protected AddressSpace getAddressSpace(String namespace, String addressSpaceName) {
+        return kubernetes.getAddressSpaceClient(namespace).withName(addressSpaceName).get();
+    }
 
     protected void deleteAddresses(Address... destinations) throws Exception {
         logCollector.collectConfigMaps();
@@ -336,13 +356,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         AddressUtils.setAddresses(budget, true, addresses);
     }
 
-    protected void replaceAddress(Address destination) throws Exception {
-        AddressUtils.replaceAddress(destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
-    }
-
     //================================================================================================
     //======================================= User methods ===========================================
     //================================================================================================
+
+    protected void replaceAddress(Address destination) throws Exception {
+        AddressUtils.replaceAddress(destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
+    }
 
     protected User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) {
         User user = new UserBuilder()
@@ -422,13 +442,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return null;
     }
 
-    protected boolean userExist(AddressSpace addressSpace, String username) {
-        return getUser(addressSpace, username) != null;
-    }
-
     //================================================================================================
     //======================================= Help methods ===========================================
     //================================================================================================
+
+    protected boolean userExist(AddressSpace addressSpace, String username) {
+        return getUser(addressSpace, username) != null;
+    }
 
     /**
      * give you a schema object
@@ -987,8 +1007,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void logWithSeparator(Logger logger, String... messages) {
         logger.info("--------------------------------------------------------------------------------");
-        for (String message : messages)
+        for (String message : messages) {
             logger.info(message);
+        }
     }
 
     /**
@@ -1200,26 +1221,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    protected static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
-        List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
-            MqttMessage m = new MqttMessage();
-            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
-            m.setQos(1);
-            return m;
-        }).collect(Collectors.toList());
-
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
-
-        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages published",
-                publishCount, is(messages.size()));
-
-        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages received",
-                receivedCount, is(messages.size()));
-    }
-
     protected List<String> extractBodyAsString(Future<List<Message>> msgs) throws Exception {
         return msgs.get(1, TimeUnit.MINUTES).stream().map(m -> (String) ((AmqpValue) m.getBody()).getValue()).collect(Collectors.toList());
     }
@@ -1237,18 +1238,20 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list, boolean reverse) {
         log.info("Assert sort reverse: " + reverse);
-        if (!reverse)
+        if (!reverse) {
             assertTrue(Ordering.natural().isOrdered(list), message);
-        else
+        } else {
             assertTrue(Ordering.natural().reverse().isOrdered(list), message);
+        }
     }
 
     protected <T> void assertSorted(String message, Iterable<T> list, boolean reverse, Comparator<T> comparator) {
         log.info("Assert sort reverse: " + reverse);
-        if (!reverse)
+        if (!reverse) {
             assertTrue(Ordering.from(comparator).isOrdered(list), message);
-        else
+        } else {
             assertTrue(Ordering.from(comparator).reverse().isOrdered(list), message);
+        }
     }
 
     protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {
