@@ -83,9 +83,7 @@ pipeline {
         }
         stage('build') {
             when {
-                expression {
-                    env.TEST_ONLY == false
-                }
+                environment name: 'TEST_ONLY', value: 'false'
             }
             steps {
                 script {
@@ -96,9 +94,7 @@ pipeline {
         }
         stage('push docker images') {
             when {
-                expression {
-                    env.TEST_ONLY == false
-                }
+                environment name: 'TEST_ONLY', value: 'false'
             }
             steps {
                 sh 'oc login -u test -p test --server localhost:8443 --insecure-skip-tls-verify'
