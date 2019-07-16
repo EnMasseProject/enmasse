@@ -19,11 +19,11 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} login -u system:admin
 ----
 
-. (Optional) If you want to deploy to a namespace other than `{ProductNamespace}` you must run the following command and substitute `{ProductNamespace}` in subsequent steps:
+. (Optional) If you want to deploy to a project other than `{ProductNamespace}` you must run the following command and substitute `{ProductNamespace}` in subsequent steps:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductNamespace}/_my-namespace_/' install/bundles/{ProductBundleName}/*.yaml
+sed -i 's/{ProductNamespace}/_my-project_/' install/bundles/{ProductBundleName}/*.yaml
 ----
 
 . Create the project where you want to deploy {ProductName}:

@@ -1,0 +1,21 @@
+// Module included in the following assemblies:
+//
+// assembly-uninstalling.adoc
+
+[id='proc-uninstalling-using-ansible-{context}']
+= Uninstalling {ProductName} using Ansible
+
+Uninstalling {ProductName} using Ansible requires using the same inventory file that was used for installing {ProductName}. 
+
+NOTE: The playbook deletes the `{ProductNamespace}` project.
+
+.Procedure
+
+. Run the Ansible playbook, where `_inventory-file_` specifies the inventory file used at installation:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+ansible-playbook -i _inventory-file_ ansible/playbooks/openshift/uninstall.yml
+----
+
+
