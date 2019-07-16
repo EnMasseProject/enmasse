@@ -4,7 +4,12 @@
  */
 package io.enmasse.systemtest;
 
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.InfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
@@ -18,14 +23,16 @@ import java.util.stream.Collectors;
 
 public class AdminResourcesManager {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static AdminResourcesManager managerInstance = null;
+    private static Logger LOGGER;
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
     private ArrayList<StandardInfraConfig> standardInfraConfigs;
     private ArrayList<BrokeredInfraConfig> brokeredInfraConfigs;
     private ArrayList<AuthenticationService> authServices;
 
-    public void setUp() {
+    private AdminResourcesManager() {
+        LOGGER = CustomLogger.getLogger();
         addressPlans = new ArrayList<>();
         addressSpacePlans = new ArrayList<>();
         standardInfraConfigs = new ArrayList<>();
@@ -33,37 +40,50 @@ public class AdminResourcesManager {
         authServices = new ArrayList<>();
     }
 
+    //------------------------------------------------------------------------------------------------
+    // Singleton handling
+    //------------------------------------------------------------------------------------------------
+
+
+    public static synchronized AdminResourcesManager getInstance() {
+        if (managerInstance == null) {
+            managerInstance = new AdminResourcesManager();
+        }
+        return managerInstance;
+    }
+
     public void tearDown() throws Exception {
         if (!Environment.getInstance().skipCleanup()) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
                 Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
-                log.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
+                LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
             }
 
             for (AddressPlan addressPlan : addressPlans) {
                 Kubernetes.getInstance().getAddressPlanClient().withName(addressPlan.getMetadata().getName()).cascading(true).delete();
-                log.info("Address plan {} deleted", addressPlan.getMetadata().getName());
+                LOGGER.info("Address plan {} deleted", addressPlan.getMetadata().getName());
             }
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
                 Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
-                log.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
+                LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
                 Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
-                log.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
+                LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
 
             for (AuthenticationService authService : authServices) {
                 Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
                 TestUtils.waitForNReplicas(0, false, Map.of("name", authService.getMetadata().getName()), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
-                log.info("AuthService {} deleted", authService.getMetadata().getName());
+                LOGGER.info("AuthService {} deleted", authService.getMetadata().getName());
             }
 
             addressPlans.clear();
             addressSpacePlans.clear();
         }
+
     }
 
     //------------------------------------------------------------------------------------------------
@@ -75,7 +95,7 @@ public class AdminResourcesManager {
     }
 
     public void createAddressPlan(AddressPlan addressPlan, boolean replaceExisting) throws Exception {
-        log.info("Address plan {} will be created {}", addressPlan.getMetadata().getName(), addressPlan);
+        LOGGER.info("Address plan {} will be created {}", addressPlan.getMetadata().getName(), addressPlan);
         var client = Kubernetes.getInstance().getAddressPlanClient();
         if (replaceExisting) {
             client.createOrReplace(addressPlan);
@@ -108,7 +128,7 @@ public class AdminResourcesManager {
     }
 
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean replaceExisting) throws Exception {
-        log.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
+        LOGGER.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
         var client = Kubernetes.getInstance().getAddressSpacePlanClient();
         if (replaceExisting) {
             client.createOrReplace(addressSpacePlan);
@@ -141,7 +161,7 @@ public class AdminResourcesManager {
     }
 
     public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
-        log.info("InfraConfig {} will be created {}", infraConfigDefinition.getMetadata().getName(), infraConfigDefinition);
+        LOGGER.info("InfraConfig {} will be created {}", infraConfigDefinition.getMetadata().getName(), infraConfigDefinition);
         if (infraConfigDefinition instanceof StandardInfraConfig) {
             var client = Kubernetes.getInstance().getStandardInfraConfigClient();
             client.createOrReplace((StandardInfraConfig) infraConfigDefinition);
@@ -179,7 +199,7 @@ public class AdminResourcesManager {
     }
 
     public void createAuthService(AuthenticationService authenticationService, boolean replaceExisting) throws Exception {
-        log.info("AuthService {} will be created {}", authenticationService.getMetadata().getName(), authenticationService);
+        LOGGER.info("AuthService {} will be created {}", authenticationService.getMetadata().getName(), authenticationService);
         var client = Kubernetes.getInstance().getAuthenticationServiceClient();
         if (replaceExisting) {
             client.createOrReplace(authenticationService);
@@ -194,7 +214,7 @@ public class AdminResourcesManager {
                             pod.getMetadata().getName().contains(desiredPodName)).count();
                     if (matching != 1) {
                         List<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toList());
-                        log.info("Still awaiting pod with name : {}, matching : {}, current pods  {}",
+                        LOGGER.info("Still awaiting pod with name : {}, matching : {}, current pods  {}",
                                 desiredPodName, matching, podNames);
                     }
 
@@ -211,4 +231,5 @@ public class AdminResourcesManager {
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),
                 new TimeoutBudget(1, TimeUnit.MINUTES));
     }
+
 }

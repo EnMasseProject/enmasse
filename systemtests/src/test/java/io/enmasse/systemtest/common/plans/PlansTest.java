@@ -45,17 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class PlansTest extends TestBase {
     SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static Logger log = CustomLogger.getLogger();
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
-
-    @BeforeEach
-    void setUpAdminManager() {
-        adminManager.setUp();
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
+    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {

@@ -17,7 +17,6 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
@@ -29,17 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
-
-    @BeforeEach
-    void setUp() {
-        adminManager.setUp();
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
+    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     @Test
     @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")
