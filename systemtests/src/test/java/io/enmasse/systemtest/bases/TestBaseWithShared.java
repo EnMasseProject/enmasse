@@ -7,6 +7,12 @@ package io.enmasse.systemtest.bases;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressPlanBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.SharedAddressSpaceManager;
@@ -25,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +82,63 @@ public abstract class TestBaseWithShared extends TestBase {
         amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(sharedAddressSpace, defaultCredentials);
     }
+
+    private AddressSpacePlan createSmallStandardSpacePlan() {
+        AddressSpacePlan standardSmall = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("custom-plan-standard-small")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
+                .withAddressPlans(Arrays.asList(
+                        "standard-small-queue",
+                        "standard-medium-queue",
+                        "standard-small-topic",
+                        "standard-medium-topic"
+                ))
+                .withResourceLimits(Map.of("broker", 0.01, "router", 0.001))
+                .endSpec()
+                .build();
+        return standardSmall;
+    }
+
+    private AddressSpacePlan createLargeStandardSpacePlan() {
+        AddressSpacePlan standardLarge = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("custom-plan-standard-large")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
+                .withAddressPlans(Arrays.asList(
+                        "standard-large-queue",
+                        "standard-large-topic"
+                ))
+                .withResourceLimits(Map.of("broker", 1.00, "router", 0.01))
+                .endSpec()
+                .build();
+        return standardLarge;
+    }
+
+    private AddressSpacePlan createSmallBrokeredSpacePlan() {
+        AddressSpacePlan brokeredSmall = new AddressSpacePlanBuilder()
+                .withNewMetadata()
+                .withName("custom-plan-brokered-small")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
+                .withAddressPlans(Arrays.asList(
+                        "brokered-queue",
+                        "brokered-topic"
+                ))
+                .withResourceLimits(Map.of("broker", 1.00))
+                .endSpec()
+                .build();
+        return brokeredSmall;
+    }
+
 
     @AfterEach
     public void tearDownShared(ExtensionContext context) {
