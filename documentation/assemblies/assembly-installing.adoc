@@ -30,11 +30,11 @@ ifeval::["{cmdcli}" == "oc"]
 
 ifdef::OperatorSource[]
 {ProductName} can be installed by applying the YAML files using the OpenShift Container Platform command-line interface, by using
-the Operator Marketplace, or by running an link:https://www.ansible.com/[Ansible^] playbook.
+the Operator Marketplace, or by running the link:https://www.ansible.com/[Ansible^] playbook.
 endif::OperatorSource[]
 
 ifndef::OperatorSource[]
-{ProductName} can be installed by applying the YAML files using the OpenShift Container Platform command-line interface, or by running an link:https://www.ansible.com/[Ansible^] playbook.
+{ProductName} can be installed by applying the YAML files using the OpenShift Container Platform command-line interface, or by running the link:https://www.ansible.com/[Ansible^] playbook.
 endif::OperatorSource[]
 
 include::../common/snip-prerequisites-openshift.adoc[]
