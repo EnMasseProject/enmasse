@@ -37,7 +37,7 @@ public interface ITestBaseStandard extends ITestBase {
 
     @Override
     default String getDefaultAddressSpacePlan() {
-        return AddressSpacePlans.STANDARD_UNLIMITED;
+        return AddressSpacePlans.CUSTOM_PLAN_BROKERED_SMALL;
     }
 
     @Override

@@ -10,6 +10,7 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.systemtest.ability.SharedAddressSpaceManager;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ public class AdminResourcesManager {
     private ArrayList<StandardInfraConfig> standardInfraConfigs;
     private ArrayList<BrokeredInfraConfig> brokeredInfraConfigs;
     private ArrayList<AuthenticationService> authServices;
+    private SharedAddressSpaceEnv sharedAddressSpaceEnv = null;
 
     private AdminResourcesManager() {
         LOGGER = CustomLogger.getLogger();
@@ -230,6 +232,39 @@ public class AdminResourcesManager {
                         TestUtils.listReadyPods(Kubernetes.getInstance()).stream().noneMatch(pod ->
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),
                 new TimeoutBudget(1, TimeUnit.MINUTES));
+    }
+
+    //------------------------------------------------------------------------------------------------
+    // Shared address space custom config
+    //------------------------------------------------------------------------------------------------
+
+    public void deploySharedAddressSpaceEnv() throws Exception {
+        sharedAddressSpaceEnv = new SharedAddressSpaceEnv();
+        sharedAddressSpaceEnv.setupSharedAddressSpaceEnv();
+
+        createInfraConfig(sharedAddressSpaceEnv.getBrokeredInfraConfig());
+        createInfraConfig(sharedAddressSpaceEnv.getStandardInfraConfig());
+        for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
+            createAddressSpacePlan(addressSpacePlan);
+        }
+    }
+
+    public void teardownSharedSpaceEnv() throws Exception {
+        if (!SharedAddressSpaceManager.getInstance().isNextTextShared()) {
+            removeSharedSpaceEnv();
+        }
+    }
+
+    private void removeSharedSpaceEnv() throws Exception {
+        for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
+            removeAddressSpacePlan(addressSpacePlan);
+        }
+        removeInfraConfig(sharedAddressSpaceEnv.getStandardInfraConfig());
+        removeInfraConfig(sharedAddressSpaceEnv.getBrokeredInfraConfig());
+    }
+
+    public SharedAddressSpaceEnv getSharedAddressSpaceEnv() {
+        return sharedAddressSpaceEnv;
     }
 
 }

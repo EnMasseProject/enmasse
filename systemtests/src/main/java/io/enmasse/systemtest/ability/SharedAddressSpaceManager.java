@@ -67,7 +67,7 @@ public class SharedAddressSpaceManager {
     }
 
     public void deleteSharedAddressSpace() {
-        if (actualAddressSpace != null && isAddressSpaceDeletable()) {
+        if (actualAddressSpace != null && isNextTextShared()) {
             log.info("Shared address {} space will be removed", actualAddressSpace.getMetadata().getName());
             Environment env = Environment.getInstance();
             if (!env.skipCleanup()) {
@@ -89,7 +89,7 @@ public class SharedAddressSpaceManager {
         }
     }
 
-    private boolean isAddressSpaceDeletable() {
+    public boolean isNextTextShared() {
         TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
                 && isSameClass(testIdentifier, actualTest)).findFirst().get();
         int currentTestIndex = tests.indexOf(test);
