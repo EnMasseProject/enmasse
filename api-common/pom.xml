@@ -11,7 +11,7 @@
   <dependencies>
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactIdapi-model</artifactId>
+      <artifactId>api-model</artifactId>
     </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>
