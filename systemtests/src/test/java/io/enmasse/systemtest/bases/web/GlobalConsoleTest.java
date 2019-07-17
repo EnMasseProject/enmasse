@@ -165,10 +165,13 @@ public abstract class GlobalConsoleTest extends TestBase {
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
+        waitUntilAddressSpaceActive(addressSpace);
+        assertEquals(AddressSpacePlans.STANDARD_MEDIUM,
+                getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
         globalConsolePage.switchAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
         AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-        assertEquals(addressSpace.getSpec().getPlan(),
+        assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
                 getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
     }
 
