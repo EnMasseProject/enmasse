@@ -247,6 +247,7 @@ public class AdminResourcesManager {
         for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
             createAddressSpacePlan(addressSpacePlan);
         }
+        Thread.sleep(20000);
     }
 
     public void teardownSharedSpaceEnv() throws Exception {

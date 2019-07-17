@@ -77,14 +77,15 @@ public class SharedAddressSpaceEnv {
         createCustomBrokeredInfra();
         addressSpacePlanList = Arrays.asList(
                 createLargeStandardSpacePlan(),
-                createSmallBrokeredSpacePlan(),
-                createSmallStandardSpacePlan()
+                createSmallStandardSpacePlan(),
+                createSmallBrokeredSpacePlan()
         );
     }
 
     private void createCustomStandardInfra() {
         standardInfraConfig = new StandardInfraConfigBuilder()
                 .withNewMetadata()
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
                 .withName(STANDARD_INFRA)
                 .endMetadata()
                 .withNewSpec()
@@ -97,6 +98,7 @@ public class SharedAddressSpaceEnv {
                         .endResources()
                         .build())
                 .withRouter(new StandardInfraConfigSpecRouterBuilder()
+                        .withMinReplicas(1)
                         .withNewResources()
                         .withMemory("512Mi")
                         .endResources()
@@ -113,6 +115,7 @@ public class SharedAddressSpaceEnv {
     private void createCustomBrokeredInfra() {
             brokeredInfraConfig= new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
                 .withName(BROKERED_INFRA)
                 .endMetadata()
                 .withNewSpec()
@@ -121,7 +124,7 @@ public class SharedAddressSpaceEnv {
                         .withAddressFullPolicy("FAIL")
                         .withNewResources()
                         .withMemory("512Mi")
-                        .withStorage("1Gi")
+                        .withStorage("2Gi")
                         .endResources()
                         .build())
                 .withAdmin(new BrokeredInfraConfigSpecAdminBuilder()
@@ -148,7 +151,7 @@ public class SharedAddressSpaceEnv {
                         DestinationPlan.STANDARD_MEDIUM_TOPIC
                 ))
                 .withResourceLimits(Map.of("broker", 0.01, "router", 0.001))
-                .withInfraConfigRef("")
+                .withInfraConfigRef(STANDARD_INFRA)
                 .endSpec()
                 .build();
         return standardSmall;
@@ -167,6 +170,7 @@ public class SharedAddressSpaceEnv {
                         DestinationPlan.STANDARD_LARGE_TOPIC
                 ))
                 .withResourceLimits(Map.of("broker", 1.00, "router", 0.01))
+                .withInfraConfigRef(STANDARD_INFRA)
                 .endSpec()
                 .build();
         return standardLarge;
@@ -184,7 +188,8 @@ public class SharedAddressSpaceEnv {
                         DestinationPlan.BROKERED_QUEUE,
                         DestinationPlan.BROKERED_TOPIC
                 ))
-                .withResourceLimits(Map.of("broker", 1.00))
+                .withResourceLimits(Map.of("broker", 1.9))
+                .withInfraConfigRef(BROKERED_INFRA)
                 .endSpec()
                 .build();
         return brokeredSmall;

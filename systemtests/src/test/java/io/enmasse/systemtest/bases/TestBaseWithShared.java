@@ -70,7 +70,6 @@ public abstract class TestBaseWithShared extends TestBase {
         if (adminResourcesManager.getSharedAddressSpaceEnv() == null) {
             adminResourcesManager.deploySharedAddressSpaceEnv();
         }
-
         spaceCountMap.putIfAbsent(getDefaultAddrSpaceIdentifier(), 0);
         sharedAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -86,6 +85,7 @@ public abstract class TestBaseWithShared extends TestBase {
                 .endSpec()
                 .build();
         createAddressSpace(sharedAddressSpace);
+        Thread.sleep(10000);
         SharedAddressSpaceManager.getInstance().setActualSharedAddressSpace(sharedAddressSpace);
         defaultCredentials.setUsername("test").setPassword("test");
         createOrUpdateUser(sharedAddressSpace, defaultCredentials);
