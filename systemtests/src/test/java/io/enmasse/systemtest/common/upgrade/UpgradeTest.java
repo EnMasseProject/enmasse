@@ -7,6 +7,7 @@ package io.enmasse.systemtest.common.upgrade;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CmdClient;
@@ -18,7 +19,9 @@ import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.user.model.v1.User;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.*;
@@ -79,8 +82,14 @@ class UpgradeTest extends TestBase {
             installEnmasseBundle(Paths.get(Environment.getInstance().getStartTemplates()), startVersion);
         }
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null, getApiVersion());
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null, getApiVersion());
+        String authServiceName = !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null;
+
+        if (authServiceName != null) {
+            ensurePersistentAuthService(authServiceName);
+        }
+
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion());
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", authServiceName, getApiVersion());
         Thread.sleep(30_000);
 
         createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", getApiVersion());
@@ -123,6 +132,10 @@ class UpgradeTest extends TestBase {
 
         waitForDestinationsReady(AddressUtils.getAddresses(brokered).toArray(new Address[0]));
         waitForDestinationsReady(AddressUtils.getAddresses(standard).toArray(new Address[0]));
+
+        List<User> items = kubernetes.getUserClient().list().getItems();
+        log.info("After upgrade {} user(s)", items.size());
+        items.forEach(u -> log.info("User {}", u.getSpec().getUsername()));
 
         if (!startVersion.equals("1.0")) {
 
@@ -300,5 +313,26 @@ class UpgradeTest extends TestBase {
         client.setArguments(arguments);
 
         return client.run(logToOutput);
+    }
+
+    private void ensurePersistentAuthService(String authServiceName) throws Exception {
+        AuthenticationService authService = kubernetes.getAuthenticationServiceClient().withName(authServiceName).get();
+
+        if (authService.getSpec() != null && authService.getSpec().getStandard() != null) {
+
+            AuthenticationServiceSpecStandardStorage storage = authService.getSpec().getStandard().getStorage();
+            if (storage == null || !AuthenticationServiceSpecStandardType.persistent_claim.equals(storage.getType())) {
+                log.info("Installed auth service {} does not use persistent claim, recreating it ", authServiceName);
+                Boolean delete = kubernetes.getAuthenticationServiceClient().withName(authServiceName).delete();
+                log.info("Deleted {}", delete);
+                AuthenticationService replacement = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true);
+                kubernetes.getAuthenticationServiceClient().create(replacement);
+
+                log.info("Replacement auth service : {}", replacement);
+
+                Thread.sleep(30_000);
+                waitUntilDeployed(kubernetes.getInfraNamespace());
+            }
+        }
     }
 }
