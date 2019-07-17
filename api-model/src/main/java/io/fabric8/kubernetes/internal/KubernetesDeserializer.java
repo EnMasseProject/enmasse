@@ -34,7 +34,7 @@ public class KubernetesDeserializer extends JsonDeserializer<KubernetesResource>
     private static final List<String> PACKAGES;
 
     static {
-        log.warn("Using EnMasse specific KubernetesDeserializer with threadsafe map");
+        log.warn("Using EnMasse specific KubernetesDeserializer with threadsafe map - see https://github.com/fabric8io/kubernetes-client/issues/1634");
 
         //Use service loader to load extension types.
         for (KubernetesResourceMappingProvider provider : ServiceLoader.load(KubernetesResourceMappingProvider.class)) {
