@@ -130,11 +130,6 @@ public abstract class TestBaseWithShared extends TestBase {
     }
 
     @AfterEach
-    public void tearDownSharedEnvConfigs() throws Exception {
-        adminResourcesManager.teardownSharedSpaceEnv();
-    }
-
-    @AfterEach
     public void closeAmqpClientFactory() throws Exception {
         if ( amqpClientFactory  != null ) {
             amqpClientFactory.close();

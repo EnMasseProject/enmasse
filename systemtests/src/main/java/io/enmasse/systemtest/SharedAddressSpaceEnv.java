@@ -150,7 +150,7 @@ public class SharedAddressSpaceEnv {
                         DestinationPlan.STANDARD_SMALL_TOPIC,
                         DestinationPlan.STANDARD_MEDIUM_TOPIC
                 ))
-                .withResourceLimits(Map.of("broker", 0.01, "router", 0.001))
+                .withResourceLimits(Map.of("broker", 2.0, "router", 1.0, "aggregate", 3.0))
                 .withInfraConfigRef(STANDARD_INFRA)
                 .endSpec()
                 .build();
@@ -169,7 +169,7 @@ public class SharedAddressSpaceEnv {
                         DestinationPlan.STANDARD_LARGE_QUEUE,
                         DestinationPlan.STANDARD_LARGE_TOPIC
                 ))
-                .withResourceLimits(Map.of("broker", 1.00, "router", 0.01))
+                .withResourceLimits(Map.of("broker", 2.00, "router", 1.0, "aggregate", 3.0))
                 .withInfraConfigRef(STANDARD_INFRA)
                 .endSpec()
                 .build();
@@ -188,7 +188,7 @@ public class SharedAddressSpaceEnv {
                         DestinationPlan.BROKERED_QUEUE,
                         DestinationPlan.BROKERED_TOPIC
                 ))
-                .withResourceLimits(Map.of("broker", 1.9))
+                .withResourceLimits(Map.of("broker", 2.0, "aggregate", 2.0))
                 .withInfraConfigRef(BROKERED_INFRA)
                 .endSpec()
                 .build();

@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.ability;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.GlobalLogCollector;
@@ -66,22 +67,26 @@ public class SharedAddressSpaceManager {
         }
     }
 
-    public void deleteSharedAddressSpace() {
-        if (actualAddressSpace != null && isNextTextShared()) {
-            log.info("Shared address {} space will be removed", actualAddressSpace.getMetadata().getName());
-            Environment env = Environment.getInstance();
-            if (!env.skipCleanup()) {
-                Kubernetes kube = Kubernetes.getInstance();
-                GlobalLogCollector logCollector = new GlobalLogCollector(kube, new File(env.testLogDir()));
-                try {
-                    AddressSpaceUtils.deleteAddressSpaceAndWait(actualAddressSpace, logCollector);
-                    actualAddressSpace = null;
-                } catch (Exception e) {
-                    e.printStackTrace();
+    public void deleteSharedAddressSpace() throws Exception {
+        if (actualAddressSpace != null && isNextTestShared()) {
+            if (!isNextTestSameSharedTag()) {
+                log.info("Shared address {} space will be removed", actualAddressSpace.getMetadata().getName());
+                Environment env = Environment.getInstance();
+                if (!env.skipCleanup()) {
+                    Kubernetes kube = Kubernetes.getInstance();
+                    GlobalLogCollector logCollector = new GlobalLogCollector(kube, new File(env.testLogDir()));
+                    try {
+                        AddressSpaceUtils.deleteAddressSpaceAndWait(actualAddressSpace, logCollector);
+                        actualAddressSpace = null;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    log.warn("Remove address spaces when test run finished - SKIPPED!");
                 }
-            } else {
-                log.warn("Remove address spaces when test run finished - SKIPPED!");
             }
+            log.info("Shared address space environment going to be removed!");
+            AdminResourcesManager.getInstance().tearDownSharedEnv();
         } else {
             if (actualAddressSpace != null) {
                 log.info("Shared address {} space will be reused", actualAddressSpace.getMetadata().getName());
@@ -89,13 +94,14 @@ public class SharedAddressSpaceManager {
         }
     }
 
-    public boolean isNextTextShared() {
-        TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
-                && isSameClass(testIdentifier, actualTest)).findFirst().get();
-        int currentTestIndex = tests.indexOf(test);
-        if (!(currentTestIndex == tests.size() - 1)) {
-            return !isSameClass(tests.get(currentTestIndex + 1), actualTest)
-                    && !isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
+    public boolean isNextTestShared() {
+        if (!tests.isEmpty()){
+            TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
+                    && isSameClass(testIdentifier, actualTest)).findFirst().get();
+            int currentTestIndex = tests.indexOf(test);
+            if (!(currentTestIndex == tests.size() - 1)) {
+                return !isSameClass(tests.get(currentTestIndex + 1), actualTest);
+            }
         }
         return false;
     }
@@ -110,6 +116,13 @@ public class SharedAddressSpaceManager {
 
     private List<String> getTags(TestIdentifier test) {
         return test.getTags().stream().map(org.junit.platform.engine.TestTag::getName).collect(Collectors.toList());
+    }
+
+    private boolean isNextTestSameSharedTag() {
+        TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
+                && isSameClass(testIdentifier, actualTest)).findFirst().get();
+        int currentTestIndex = tests.indexOf(test);
+        return isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
     }
 
     private boolean isSameSharedTag(TestIdentifier test1, ExtensionContext test2) {

@@ -10,7 +10,6 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.systemtest.ability.SharedAddressSpaceManager;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
@@ -250,13 +249,7 @@ public class AdminResourcesManager {
         Thread.sleep(20000);
     }
 
-    public void teardownSharedSpaceEnv() throws Exception {
-        if (!SharedAddressSpaceManager.getInstance().isNextTextShared()) {
-            removeSharedSpaceEnv();
-        }
-    }
-
-    private void removeSharedSpaceEnv() throws Exception {
+    public void tearDownSharedEnv() throws Exception {
         for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
             removeAddressSpacePlan(addressSpacePlan);
         }

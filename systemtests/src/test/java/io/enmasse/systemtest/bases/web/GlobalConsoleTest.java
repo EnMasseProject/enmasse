@@ -22,7 +22,6 @@ import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.slf4j.Logger;
 
 import java.util.Optional;
@@ -48,7 +47,7 @@ public abstract class GlobalConsoleTest extends TestBase {
     }
 
     protected void doTestCreateAddressSpace(AddressSpace addressSpace) throws Exception {
-        addToAddressSpacess(addressSpace);
+        addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -57,7 +56,7 @@ public abstract class GlobalConsoleTest extends TestBase {
     }
 
     protected void doTestConnectToAddressSpaceConsole(AddressSpace addressSpace) throws Exception {
-        addToAddressSpacess(addressSpace);
+        addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -83,7 +82,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        addToAddressSpacess(addressSpace);
+        addToAddressSpaces(addressSpace);
 
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
