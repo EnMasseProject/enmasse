@@ -331,7 +331,7 @@ class UpgradeTest extends TestBase {
                 log.info("Replacement auth service : {}", replacement);
 
                 Thread.sleep(30_000);
-                waitUntilDeployed(kubernetes.getInfraNamespace());
+                TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
             }
         }
     }
