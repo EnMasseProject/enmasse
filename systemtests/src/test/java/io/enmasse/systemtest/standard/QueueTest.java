@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -36,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
+    private static Logger log = CustomLogger.getLogger();
     private Connection connection;
 
     @AfterEach
@@ -47,18 +49,20 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     }
 
     public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        runQueueTest(client, dest, 1024);
+        runQueueTest(client, dest, 512);
     }
 
     public static void runQueueTest(AmqpClient client, Address dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
+        long timeoutMs = countMessages * 150; //estimate in worst case it takes at most 150ms to send one message
+        log.info("Start sending with "+timeoutMs+" ms timeout");
         Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
 
         assertNotNull(numSent, "Sending messages didn't start");
         int actual = 0;
         try {
-            actual = numSent.get(90, TimeUnit.SECONDS);
+            actual = numSent.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (TimeoutException t) {
             logCollector.collectRouterState("runQueueTestSend");
             fail("Sending messages timed out after sending " + predicate.actual());
@@ -66,10 +70,11 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertThat("Wrong count of messages sent", actual, is(msgs.size()));
 
         predicate = new Count<>(msgs.size());
+        log.info("Start receiving with "+timeoutMs+" ms timeout");
         Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), predicate);
         actual = 0;
         try {
-            actual = received.get(90, TimeUnit.SECONDS).size();
+            actual = received.get(timeoutMs, TimeUnit.MILLISECONDS).size();
         } catch (TimeoutException t) {
             logCollector.collectRouterState("runQueueTestRecv");
             fail("Receiving messages timed out after " + predicate.actual() + " msgs received");
@@ -216,10 +221,10 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
         Future<Integer> sent = client.sendMessages(dest.getSpec().getAddress(),
                 listOfMessages.toArray(new Message[0]));
-        assertThat("Wrong count of messages sent", sent.get(1, TimeUnit.MINUTES), is(msgsCount));
+        assertThat("Wrong count of messages sent", sent.get(150, TimeUnit.SECONDS), is(msgsCount));
 
         Future<List<Message>> received = client.recvMessages(dest.getSpec().getAddress(), msgsCount);
-        assertThat("Wrong count of messages received", received.get(1, TimeUnit.MINUTES).size(), is(msgsCount));
+        assertThat("Wrong count of messages received", received.get(150, TimeUnit.SECONDS).size(), is(msgsCount));
 
         int sub = 1;
         for (Message m : received.get()) {
@@ -332,13 +337,13 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
         assertAll("All sender should send all messages",
                 () -> assertThat("Wrong count of messages sent: sender0",
-                        sent.get(0).get(1, TimeUnit.MINUTES), is(numMessages)),
+                        sent.get(0).get(150, TimeUnit.SECONDS), is(numMessages)),
                 () -> assertThat("Wrong count of messages sent: sender1",
-                        sent.get(1).get(1, TimeUnit.MINUTES), is(numMessages)),
+                        sent.get(1).get(150, TimeUnit.SECONDS), is(numMessages)),
                 () -> assertThat("Wrong count of messages sent: sender2",
-                        sent.get(2).get(1, TimeUnit.MINUTES), is(numMessages)),
+                        sent.get(2).get(150, TimeUnit.SECONDS), is(numMessages)),
                 () -> assertThat("Wrong count of messages sent: sender3",
-                        sent.get(3).get(1, TimeUnit.MINUTES), is(numMessages))
+                        sent.get(3).get(150, TimeUnit.SECONDS), is(numMessages))
         );
 
         assertReceive("before replace", numReceiveBeforeDraining, before, client);
@@ -357,21 +362,21 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         assertReceive("after replace, second batch" , numReceivedAfterScaledPhase2, after, client);
 
         // Ensure send and receive works after address was replaced
-        assertThat("Wrong count of messages sent before awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertThat("Wrong count of messages sent before awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(150, TimeUnit.SECONDS), is(numMessages));
         assertReceive("before awaiting drain", numMessages, after, client);
 
         // Ensure there are no brokers in Draining state
-        AddressUtils.waitForBrokersDrained(new TimeoutBudget(3, TimeUnit.MINUTES), after);
+        AddressUtils.waitForBrokersDrained(new TimeoutBudget(4, TimeUnit.MINUTES), after);
 
         // Ensure send and receive works after all brokers are drained
-        assertThat("Wrong count of messages sent after awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(1, TimeUnit.MINUTES), is(numMessages));
+        assertThat("Wrong count of messages sent after awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(1), numMessages)).get(150, TimeUnit.SECONDS), is(numMessages));
         assertReceive("after awaiting drain", numMessages, after, client);
     }
 
     private void assertReceive(String phase, int expected, Address addr, AmqpClient client) throws InterruptedException, ExecutionException, TimeoutException {
         try {
             Future<List<Message>> listFuture = client.recvMessages(addr.getSpec().getAddress(), expected);
-            int actual = listFuture.get(1, TimeUnit.MINUTES).size();
+            int actual = listFuture.get(150, TimeUnit.SECONDS).size();
             assertThat("Wrong count of messages received " + phase, actual, is(expected));
         } catch (TimeoutException e) {
             CustomLogger.getLogger().error("Timed out " + phase);

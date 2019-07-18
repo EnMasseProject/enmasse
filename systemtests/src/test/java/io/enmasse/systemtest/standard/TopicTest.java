@@ -40,18 +40,20 @@ public class TopicTest extends TestBaseWithShared implements ITestBaseStandard {
 
     private static void runTopicTest(AmqpClient client, Address dest)
             throws InterruptedException, ExecutionException, TimeoutException, IOException {
-        runTopicTest(client, dest, 1024);
+        runTopicTest(client, dest, 512);
     }
 
     public static void runTopicTest(AmqpClient client, Address dest, int msgCount)
             throws InterruptedException, IOException, TimeoutException, ExecutionException {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getSpec().getAddress(), msgCount);
-
+        long timeoutMs = msgCount * 150; //estimate in worst case it takes at most 150ms to send one message
+        log.info("Start sending with "+timeoutMs+" ms timeout");
         assertThat("Wrong count of messages sent",
-                client.sendMessages(dest.getSpec().getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+                client.sendMessages(dest.getSpec().getAddress(), msgs).get(timeoutMs, TimeUnit.MILLISECONDS), is(msgs.size()));
+        log.info("Start receiving with "+timeoutMs+" ms timeout");
         assertThat("Wrong count of messages received",
-                recvMessages.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+                recvMessages.get(timeoutMs, TimeUnit.MILLISECONDS).size(), is(msgs.size()));
     }
 
     @Test
