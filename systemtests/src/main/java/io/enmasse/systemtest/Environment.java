@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest;
 
+import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
 
 import java.nio.file.Paths;
@@ -33,8 +34,8 @@ public class Environment {
 
     public static final String IS_OCP4_REGEXP = "4.*";
 
-    private final String token = System.getenv(K8S_API_TOKEN_ENV);
-    private final String url = System.getenv(K8S_API_URL_ENV);
+    private String token = System.getenv(K8S_API_TOKEN_ENV);
+    private String url = System.getenv(K8S_API_URL_ENV);
     private final String namespace = System.getenv(K8S_NAMESPACE_ENV);
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault(KEYCLOAK_ADMIN_USER_ENV, "admin");
@@ -65,6 +66,12 @@ public class Environment {
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
         if(!useMinikube) {
             log.info(debugFormat, OCP_VERSION_ENV, ocpVersion);
+        }
+        if (token == null || url == null) {
+            Config config = Config.autoConfigure(System.getenv()
+                    .getOrDefault("TEST_CLUSTER_CONTEXT", null));
+            token = config.getOauthToken();
+            url = config.getMasterUrl();
         }
     }
 
