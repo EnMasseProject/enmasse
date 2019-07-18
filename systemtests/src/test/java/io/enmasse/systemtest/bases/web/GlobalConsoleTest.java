@@ -161,7 +161,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        addToAddressSpacess(addressSpace);
+        addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
