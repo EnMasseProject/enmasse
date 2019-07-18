@@ -610,4 +610,44 @@ public class TestUtils {
         R.nextBytes(b);
         return BaseEncoding.base16().encode(b).substring(length%2);
     }
+
+    public static void waitUntilDeployed(String namespace) throws Exception {
+        TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
+            List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
+            for (Pod pod : pods) {
+                List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
+                for (ContainerStatus s : initContainers) {
+                    if (!s.getReady())
+                        return false;
+                }
+                List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
+                for (ContainerStatus s : containers) {
+                    if (!s.getReady())
+                        return false;
+                }
+            }
+            return true;
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
+    }
+
+    public static void cleanAllEnmasseResourcesFromNamespace(String namespace) {
+        Kubernetes kube = Kubernetes.getInstance();
+        var brInfraConfigClient = kube.getBrokeredInfraConfigClient(namespace);
+        var stInfraConfigClient = kube.getStandardInfraConfigClient(namespace);
+        var addressSpaceClient = kube.getAddressSpaceClient(namespace);
+        var addressClient = kube.getAddressClient(namespace);
+        var addrSpacePlanClient = kube.getAddressSpacePlanClient(namespace);
+        var addPlanClient = kube.getAddressPlanClient(namespace);
+        var authServiceClient = kube.getAuthenticationServiceClient(namespace);
+        var consoleClient = kube.getConsoleServiceClient(namespace);
+
+        brInfraConfigClient.list().getItems().forEach(cr -> brInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        stInfraConfigClient.list().getItems().forEach(cr -> stInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addressSpaceClient.list().getItems().forEach(cr -> addressSpaceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addressClient.list().getItems().forEach(cr -> addressClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addrSpacePlanClient.list().getItems().forEach(cr -> addrSpacePlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addPlanClient.list().getItems().forEach(cr -> addPlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        authServiceClient.list().getItems().forEach(cr -> authServiceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        consoleClient.list().getItems().forEach(cr -> consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+    }
 }
