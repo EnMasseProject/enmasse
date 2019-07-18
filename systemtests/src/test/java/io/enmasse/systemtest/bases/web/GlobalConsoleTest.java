@@ -47,7 +47,7 @@ public abstract class GlobalConsoleTest extends TestBase {
     }
 
     protected void doTestCreateAddressSpace(AddressSpace addressSpace) throws Exception {
-        addToAddressSpacess(addressSpace);
+        addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -56,7 +56,7 @@ public abstract class GlobalConsoleTest extends TestBase {
     }
 
     protected void doTestConnectToAddressSpaceConsole(AddressSpace addressSpace) throws Exception {
-        addToAddressSpacess(addressSpace);
+        addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -82,7 +82,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        addToAddressSpacess(addressSpace);
+        addToAddressSpaces(addressSpace);
 
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();

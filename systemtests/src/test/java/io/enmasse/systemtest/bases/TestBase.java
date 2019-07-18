@@ -247,7 +247,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         addressSpaceList.clear();
     }
 
-    protected void addToAddressSpacess(AddressSpace addressSpace) {
+    protected void addToAddressSpaces(AddressSpace addressSpace) {
         this.addressSpaceList.add(addressSpace);
     }
 
