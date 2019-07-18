@@ -8,7 +8,13 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
@@ -21,7 +27,13 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +44,9 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(isolated)
 class CommonTest extends TestBase {
@@ -114,7 +128,7 @@ class CommonTest extends TestBase {
         }
     }
 
-    private <K, V> Map.Entry<K, V> of (K k, V v) {
+    private <K, V> Map.Entry<K, V> of(K k, V v) {
         return new AbstractMap.SimpleEntry<>(k, v);
     }
 
@@ -461,24 +475,6 @@ class CommonTest extends TestBase {
         createOrUpdateUser(standard, new UserCredentials("jura", "fura"));
     }
 
-    private class Label {
-        String labelName;
-        String labelValue;
-
-        Label(String labelName, String labelValue) {
-            this.labelName = labelName;
-            this.labelValue = labelValue;
-        }
-
-        String getLabelName() {
-            return labelName;
-        }
-
-        String getLabelValue() {
-            return labelValue;
-        }
-    }
-
     private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace brokered, Address addr) throws Exception {
         log.info("Starting messaging");
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
@@ -549,6 +545,24 @@ class CommonTest extends TestBase {
         } while (!budget.timeoutExpired());
 
         fail(String.format("Failed to assert address space %s connectable within timeout", name));
+    }
+
+    private class Label {
+        String labelName;
+        String labelValue;
+
+        Label(String labelName, String labelValue) {
+            this.labelName = labelName;
+            this.labelValue = labelValue;
+        }
+
+        String getLabelName() {
+            return labelName;
+        }
+
+        String getLabelValue() {
+            return labelValue;
+        }
     }
 }
 

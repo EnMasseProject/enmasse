@@ -4,27 +4,7 @@
  */
 package io.enmasse.systemtest.common.monitoring;
 
-import static io.enmasse.systemtest.Environment.USE_MINUKUBE_ENV;
-import static io.enmasse.systemtest.TestTag.isolated;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
 import com.google.common.collect.Ordering;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.AddressSpacePlans;
@@ -40,18 +20,33 @@ import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.slf4j.Logger;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import static io.enmasse.systemtest.Environment.USE_MINUKUBE_ENV;
+import static io.enmasse.systemtest.TestTag.isolated;
 
 @Tag(isolated)
 @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "false")
-public class MonitoringTest extends TestBase{
-
-    private static Logger log = CustomLogger.getLogger();
+public class MonitoringTest extends TestBase {
 
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
 
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
-
+    private static Logger log = CustomLogger.getLogger();
     private Path templatesDir = Paths.get(System.getProperty("user.dir"), "..", "templates", "build", String.format("enmasse-%s", environment.getTag()));
     private PrometheusApiClient prometheusApiClient;
 
@@ -93,23 +88,23 @@ public class MonitoringTest extends TestBase{
         TestUtils.waitUntilCondition("Prometheus ready", phase -> {
             try {
                 JsonObject rules = prometheusApiClient.getRules();
-                if(rules.getString("status", "").equals("success")) {
+                if (rules.getString("status", "").equals("success")) {
                     JsonObject data = rules.getJsonObject("data", new JsonObject());
-                    for(Object obj : data.getJsonArray("groups", new JsonArray())) {
+                    for (Object obj : data.getJsonArray("groups", new JsonArray())) {
                         JsonObject group = (JsonObject) obj;
-                        for(Object ruleObj : group.getJsonArray("rules", new JsonArray())) {
+                        for (Object ruleObj : group.getJsonArray("rules", new JsonArray())) {
                             JsonObject rule = (JsonObject) ruleObj;
-                            if(rule.getString("name").equals("enmasse_address_spaces_ready_total")) {
+                            if (rule.getString("name").equals("enmasse_address_spaces_ready_total")) {
                                 return true;
                             }
                         }
                     }
                 }
-                if(phase == WaitPhase.LAST_TRY) {
-                    log.info("Prometheus rules obtained : {}", rules.encodePrettily());
+                if (phase == WaitPhase.LAST_TRY) {
+                    log.info("Prometheus rules obtained", rules == null ? "null" : rules.encodePrettily());
                 }
-            } catch ( Exception e ) {
-                if(phase == WaitPhase.LAST_TRY) {
+            } catch (Exception e) {
+                if (phase == WaitPhase.LAST_TRY) {
                     log.error("Waiting for prometheus to be ready", e);
                 }
             }
@@ -173,9 +168,9 @@ public class MonitoringTest extends TestBase{
             try {
                 validateAddressSpaceQuery(query, addressSpace, expectedValue);
                 return true;
-            } catch ( Exception e ) {
-                if(phase == WaitPhase.LAST_TRY) {
-                    log.error("Exception waiting for query "+query, e);
+            } catch (Exception e) {
+                if (phase == WaitPhase.LAST_TRY) {
+                    log.error("Exception waiting for query " + query, e);
                 }
                 return false;
             }
@@ -187,9 +182,9 @@ public class MonitoringTest extends TestBase{
             try {
                 validateAddressSpaceRangeQuery(query, start, addressSpace, rangeValidator);
                 return true;
-            } catch ( Exception e ) {
-                if(phase == WaitPhase.LAST_TRY) {
-                    log.error("Exception waiting for range query "+query, e);
+            } catch (Exception e) {
+                if (phase == WaitPhase.LAST_TRY) {
+                    log.error("Exception waiting for range query " + query, e);
                 }
                 return false;
             }
@@ -203,7 +198,7 @@ public class MonitoringTest extends TestBase{
             JsonArray valueArray = jsonResult.getJsonArray("value", new JsonArray());
             return valueArray.size() == 2 && valueArray.getString(1).equals(expectedValue);
         });
-        if(validateResult) {
+        if (validateResult) {
             return;
         }
         throw new Exception("Unexpected query result " + queryResult.encodePrettily());
@@ -214,28 +209,28 @@ public class MonitoringTest extends TestBase{
         basicQueryResultValidation(query, queryResult);
         boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, jsonResult -> {
             JsonArray valuesArray = jsonResult.getJsonArray("values", new JsonArray());
-            return rangeValidator.test(valuesArray.stream().map(obj-> (JsonArray)obj).map(array -> array.getString(1)).collect(Collectors.toList()));
+            return rangeValidator.test(valuesArray.stream().map(obj -> (JsonArray) obj).map(array -> array.getString(1)).collect(Collectors.toList()));
         });
-        if(validateResult) {
+        if (validateResult) {
             return;
         }
         throw new Exception("Unexpected query result " + queryResult.encodePrettily());
     }
 
     private void basicQueryResultValidation(String query, JsonObject queryResult) throws Exception {
-        if(queryResult == null) {
-            throw new Exception("Result of query "+query+" is null");
+        if (queryResult == null) {
+            throw new Exception("Result of query " + query + " is null");
         }
-        if(!queryResult.getString("status", "").equals("success")) {
+        if (!queryResult.getString("status", "").equals("success")) {
             throw new Exception("Failed doing query " + queryResult.encodePrettily());
         }
     }
 
     private boolean metricQueryResultValidation(JsonObject queryResult, String metricName, Predicate<JsonObject> resultValidator) {
         JsonObject data = queryResult.getJsonObject("data", new JsonObject());
-        for(Object result : data.getJsonArray("result", new JsonArray())) {
+        for (Object result : data.getJsonArray("result", new JsonArray())) {
             JsonObject jsonResult = (JsonObject) result;
-            if(jsonResult.getJsonObject("metric", new JsonObject()).getString("name", "").equals(metricName)) {
+            if (jsonResult.getJsonObject("metric", new JsonObject()).getString("name", "").equals(metricName)) {
                 return resultValidator.test(jsonResult);
             }
         }

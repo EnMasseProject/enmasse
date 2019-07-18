@@ -24,9 +24,6 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.time.Duration.ofMinutes;
-import static java.util.Collections.singletonMap;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -35,6 +32,8 @@ import java.util.Map;
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
 import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
+import static java.time.Duration.ofMinutes;
+import static java.util.Collections.singletonMap;
 
 @Tag(sharedIot)
 @Tag(smoke)
@@ -43,10 +42,8 @@ class SimpleK8sDeployTest {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleK8sDeployTest.class);
     private static final String NAMESPACE = Environment.getInstance().namespace();
-
-    private Kubernetes client = Kubernetes.getInstance();
-
     private static IoTConfig config;
+    private Kubernetes client = Kubernetes.getInstance();
 
     @BeforeAll
     static void setup() throws Exception {

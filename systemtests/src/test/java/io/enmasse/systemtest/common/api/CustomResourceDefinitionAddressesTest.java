@@ -9,7 +9,11 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
@@ -35,9 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(isolated)
 @SeleniumFirefox
 public class CustomResourceDefinitionAddressesTest extends TestBase {
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private AddressSpace brokered;
     private UserCredentials userCredentials;
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
 
     @BeforeEach
     void setUpSelenium() throws Exception {

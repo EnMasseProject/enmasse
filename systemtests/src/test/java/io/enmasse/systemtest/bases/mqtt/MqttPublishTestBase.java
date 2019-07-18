@@ -4,9 +4,18 @@
  */
 package io.enmasse.systemtest.bases.mqtt;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
+import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -16,19 +25,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.slf4j.Logger;
-
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
-import io.enmasse.systemtest.mqtt.MqttUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class MqttPublishTestBase extends TestBaseWithShared {
 
@@ -145,7 +144,7 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
                     receivedCount, is(messages.size()));
         } finally {
             log.info("Disconnecting");
-            if ( client != null ) {
+            if (client != null) {
                 client.disconnect();
             }
         }

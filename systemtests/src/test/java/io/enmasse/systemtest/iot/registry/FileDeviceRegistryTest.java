@@ -4,14 +4,14 @@
  */
 package io.enmasse.systemtest.iot.registry;
 
-import java.nio.ByteBuffer;
-
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.utils.CertificateUtils;
 
-public class FileDeviceRegistryTest extends DeviceRegistryTestBase{
+import java.nio.ByteBuffer;
+
+public class FileDeviceRegistryTest extends DeviceRegistryTestBase {
 
     @Override
     protected IoTConfig provideIoTConfig() throws Exception {

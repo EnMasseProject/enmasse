@@ -5,9 +5,16 @@
 
 package io.enmasse.systemtest.common.api;
 
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.common.Credentials;
@@ -31,7 +38,9 @@ import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.Environment.OCP_VERSION_ENV;
 import static io.enmasse.systemtest.TestTag.isolated;
-import static io.enmasse.systemtest.cmdclients.KubeCMDClient.*;
+import static io.enmasse.systemtest.cmdclients.KubeCMDClient.createCR;
+import static io.enmasse.systemtest.cmdclients.KubeCMDClient.patchCR;
+import static io.enmasse.systemtest.cmdclients.KubeCMDClient.updateCR;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;

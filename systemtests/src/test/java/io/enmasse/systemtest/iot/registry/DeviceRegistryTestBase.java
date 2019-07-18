@@ -4,29 +4,6 @@
  */
 package io.enmasse.systemtest.iot.registry;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
-import static io.enmasse.systemtest.TestTag.smoke;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.net.HttpURLConnection;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
@@ -43,6 +20,28 @@ import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
+import java.net.HttpURLConnection;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
+
+import static io.enmasse.systemtest.TestTag.sharedIot;
+import static io.enmasse.systemtest.TestTag.smoke;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(sharedIot)
 @Tag(smoke)
@@ -67,17 +66,18 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
 
     private AmqpClient iotAmqpClient;
 
-    protected abstract IoTConfig provideIoTConfig() throws Exception;
-
     /**
      * Test if the enabled flag is set to "enabled".
      * <br>
      * The flag is considered "enabled", in case the value is "true" or missing.
+     *
      * @param obj The object to test.
      */
     private static void assertDefaultEnabled(final JsonObject obj) {
         assertTrue(obj.getBoolean("enabled", true));
     }
+
+    protected abstract IoTConfig provideIoTConfig() throws Exception;
 
     protected void removeIoTConfig() throws Exception {
         log.info("Shared IoTConfig will be removed");
@@ -132,7 +132,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     }
 
     @AfterAll
-    public void cleanAll() throws Exception{
+    public void cleanAll() throws Exception {
         log.info("Cleaning environment, test class completely executed");
         cleanEnv();
     }
@@ -216,7 +216,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     void testCacheExpiryForCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
-           final Duration cacheExpiration = Duration.ofMinutes(3);
+            final Duration cacheExpiration = Duration.ofMinutes(3);
 
             // register device
 

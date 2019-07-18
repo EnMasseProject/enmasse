@@ -57,8 +57,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class WebConsoleTest extends TestBaseWithShared {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static Logger log = CustomLogger.getLogger();
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AbstractClient> clientsList;
 
 

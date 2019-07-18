@@ -7,7 +7,13 @@ package io.enmasse.systemtest.standard;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.Count;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.JmsProvider;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -26,27 +32,32 @@ import org.slf4j.Logger;
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     private static Logger log = CustomLogger.getLogger();
     private Connection connection;
-
-    @AfterEach
-    void tearDown() throws Exception {
-        if (connection != null) {
-            connection.close();
-            connection = null;
-        }
-    }
 
     public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         runQueueTest(client, dest, 512);
@@ -81,6 +92,14 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         }
 
         assertThat("Wrong count of messages received", actual, is(msgs.size()));
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
     }
 
     @Test
@@ -359,7 +378,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
         Thread.sleep(30_000);
 
         // Give system a chance to do something stupid
-        assertReceive("after replace, second batch" , numReceivedAfterScaledPhase2, after, client);
+        assertReceive("after replace, second batch", numReceivedAfterScaledPhase2, after, client);
 
         // Ensure send and receive works after address was replaced
         assertThat("Wrong count of messages sent before awaiting drain", client.sendMessages(after.getSpec().getAddress(), TestUtils.generateMessages(prefixes.get(0), numMessages)).get(150, TimeUnit.SECONDS), is(numMessages));

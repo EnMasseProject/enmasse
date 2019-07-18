@@ -30,6 +30,7 @@ import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
+
 import static io.enmasse.systemtest.TestTag.sharedIot;
 
 @Tag(sharedIot)
@@ -37,18 +38,16 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
 
     @SuppressWarnings("unused")
     private static final Logger log = CustomLogger.getLogger();
-
-    private Endpoint deviceRegistryEndpoint;
-    private DeviceRegistryClient registryClient;
-    private CredentialsRegistryClient credentialsClient;
-    private AmqpClient businessApplicationClient;
-    private HttpAdapterClient adapterClient;
-
     private final String deviceId = UUID.randomUUID().toString();
     private final String deviceAuthId = UUID.randomUUID().toString();
     private final String devicePassword = UUID.randomUUID().toString();
     private final String businessApplicationUsername = UUID.randomUUID().toString();
     private final String businessApplicationPassword = UUID.randomUUID().toString();
+    private Endpoint deviceRegistryEndpoint;
+    private DeviceRegistryClient registryClient;
+    private CredentialsRegistryClient credentialsClient;
+    private AmqpClient businessApplicationClient;
+    private HttpAdapterClient adapterClient;
 
     @BeforeEach
     void initEnv() throws Exception {
@@ -98,14 +97,14 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             registryClient.deleteDeviceRegistration(tenantId(), deviceId);
             registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         }
-        if (adapterClient != null ) {
+        if (adapterClient != null) {
             adapterClient.close();
         }
         removeUser(getAddressSpace(), businessApplicationUsername);
     }
 
     @AfterEach
-    public void closeClient () throws Exception {
+    public void closeClient() throws Exception {
         // close in a dedicated method to ensure it gets called in any case
         if (businessApplicationClient != null) {
             businessApplicationClient.close();

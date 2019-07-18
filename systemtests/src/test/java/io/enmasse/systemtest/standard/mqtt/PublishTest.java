@@ -13,7 +13,6 @@ import io.enmasse.address.model.ExposeType;
 import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseWithMqtt;
@@ -151,7 +150,6 @@ public class PublishTest extends MqttPublishTestBase implements ITestBaseWithMqt
     protected String topicPlan() {
         return DestinationPlan.STANDARD_LARGE_TOPIC;
     }
-
 
 
 }

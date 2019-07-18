@@ -5,7 +5,11 @@
 package io.enmasse.systemtest.iot.mqtt;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.WaitPhase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
@@ -19,13 +23,15 @@ import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.core.json.JsonObject;
-
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -34,6 +40,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
 import static io.enmasse.systemtest.TestTag.sharedIot;
 
 /**
@@ -47,19 +54,17 @@ import static io.enmasse.systemtest.TestTag.sharedIot;
 public class MqttAdapterTest extends IoTTestBaseWithShared {
 
     private static final Logger log = CustomLogger.getLogger();
-
+    private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
+    private final String deviceAuthId = UUID.randomUUID().toString();
+    private final String devicePassword = UUID.randomUUID().toString();
+    private final String businessApplicationUsername = UUID.randomUUID().toString();
+    private final String businessApplicationPassword = UUID.randomUUID().toString();
     private Endpoint mqttAdapterEndpoint;
     private Endpoint deviceRegistryEndpoint;
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
     private IMqttAsyncClient adapterClient;
     private AmqpClient businessApplicationClient;
-
-    private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
-    private final String deviceAuthId = UUID.randomUUID().toString();
-    private final String devicePassword = UUID.randomUUID().toString();
-    private final String businessApplicationUsername = UUID.randomUUID().toString();
-    private final String businessApplicationPassword = UUID.randomUUID().toString();
 
     @BeforeEach
     void initEnv() throws Exception {
@@ -82,7 +87,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);
         // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
-        mqttOptions.setMaxInflight(16*1024);
+        mqttOptions.setMaxInflight(16 * 1024);
         adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
                 .build()
                 .clientId(deviceId)
@@ -145,7 +150,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared {
     }
 
     @AfterEach
-    public void closeClient () throws Exception {
+    public void closeClient() throws Exception {
         // close in a dedicated method to ensure it gets called in any case
         if (businessApplicationClient != null) {
             businessApplicationClient.close();

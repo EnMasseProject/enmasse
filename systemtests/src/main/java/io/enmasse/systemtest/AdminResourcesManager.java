@@ -10,6 +10,7 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.systemtest.ability.SharedAddressSpaceManager;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
@@ -56,8 +57,11 @@ public class AdminResourcesManager {
     public void tearDown() throws Exception {
         if (!Environment.getInstance().skipCleanup()) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
-                Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
-                LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
+                if(!sharedAddressSpaceEnv.getAddressSpacePlanList().contains(addressSpacePlan)) {
+                Kubernetes.getInstance().getAddressSpacePlanClient()
+                        .withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
+                    LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
+                }
             }
 
             for (AddressPlan addressPlan : addressPlans) {
@@ -66,13 +70,21 @@ public class AdminResourcesManager {
             }
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
-                Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
-                LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
+                if (!infraConfigDefinition.getMetadata().getName()
+                        .equals(sharedAddressSpaceEnv.getStandardInfra())) {
+                Kubernetes.getInstance().getStandardInfraConfigClient()
+                        .withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
+                    LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
+                }
             }
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
-                Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
-                LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
+                if (!infraConfigDefinition.getMetadata().getName()
+                        .equals(sharedAddressSpaceEnv.getBrokeredInfra())) {
+                Kubernetes.getInstance().getBrokeredInfraConfigClient()
+                        .withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
+                    LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
+                }
             }
 
             for (AuthenticationService authService : authServices) {
@@ -250,11 +262,17 @@ public class AdminResourcesManager {
     }
 
     public void tearDownSharedEnv() throws Exception {
-        for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
-            removeAddressSpacePlan(addressSpacePlan);
+        if(!SharedAddressSpaceManager.getInstance().isNextTagShared()) {
+            LOGGER.info("Shared env will be deleted");
+            for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
+                LOGGER.info("Address space plan " + addressSpacePlan.getDisplayName() + "is going to be deleted!");
+                removeAddressSpacePlan(addressSpacePlan);
+            }
+            LOGGER.info("Infra config " + sharedAddressSpaceEnv.getStandardInfra() + "is going to be deleted!");
+            removeInfraConfig(sharedAddressSpaceEnv.getStandardInfraConfig());
+            LOGGER.info("Infra config " + sharedAddressSpaceEnv.getBrokeredInfra() + "is going to be deleted!");
+            removeInfraConfig(sharedAddressSpaceEnv.getBrokeredInfraConfig());
         }
-        removeInfraConfig(sharedAddressSpaceEnv.getStandardInfraConfig());
-        removeInfraConfig(sharedAddressSpaceEnv.getBrokeredInfraConfig());
     }
 
     public SharedAddressSpaceEnv getSharedAddressSpaceEnv() {

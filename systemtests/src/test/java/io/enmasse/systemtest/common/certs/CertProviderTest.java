@@ -4,9 +4,29 @@
  */
 package io.enmasse.systemtest.common.certs;
 
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.CertSpecBuilder;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.ExposeSpecBuilder;
+import io.enmasse.address.model.ExposeType;
+import io.enmasse.address.model.TlsTermination;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CertBundle;
+import io.enmasse.systemtest.CertProvider;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.VertxFactory;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.OpenshiftCertValidatorApiClient;
 import io.enmasse.systemtest.bases.TestBase;

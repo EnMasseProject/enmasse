@@ -4,16 +4,15 @@
  */
 package io.enmasse.systemtest.brokered.mqtt;
 
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.mqtt.MqttPublishTestBase;
 import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import org.junit.jupiter.api.Test;
 
-public class PublishTest extends MqttPublishTestBase implements ITestBaseBrokered{
+public class PublishTest extends MqttPublishTestBase implements ITestBaseBrokered {
 
     @Test
     @Override
@@ -48,7 +47,6 @@ public class PublishTest extends MqttPublishTestBase implements ITestBaseBrokere
         }
         mqttClientBuilder.endpoint(messagingEndpoint);
     }
-
 
 
 }

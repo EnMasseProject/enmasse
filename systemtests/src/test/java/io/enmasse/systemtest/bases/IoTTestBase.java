@@ -36,11 +36,42 @@ public abstract class IoTTestBase extends TestBase {
     protected static final String IOT_ADDRESS_CONTROL = "control";
 
     private static Logger log = CustomLogger.getLogger();
-
+    protected String iotProjectNamespace = "iot-project-ns";
     private List<IoTConfig> iotConfigs = new ArrayList<>();
     private List<IoTProject> iotProjects = new ArrayList<>();
 
-    protected String iotProjectNamespace = "iot-project-ns";
+    protected static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+        JsonObject json = new JsonObject(Map.of("a", "b"));
+        String message = "First successful " + type.name().toLowerCase() + " message";
+        TestUtils.waitUntilCondition(message, (phase) -> {
+            try {
+                switch (type) {
+                    case EVENT: {
+                        var response = adapterClient.sendEvent(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    case TELEMETRY: {
+                        var response = adapterClient.sendTelemetry(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    default:
+                        return true;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+
+        log.info("First {} message accepted", type.name().toLowerCase());
+    }
+
+    private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
+        if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
+            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
+        }
+    }
 
     @BeforeEach
     public void setupIoT() throws Exception {
@@ -127,39 +158,6 @@ public abstract class IoTTestBase extends TestBase {
 
     protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
         waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
-    }
-
-    protected static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
-        JsonObject json = new JsonObject(Map.of("a", "b"));
-        String message = "First successful " + type.name().toLowerCase() + " message";
-        TestUtils.waitUntilCondition(message, (phase) -> {
-            try {
-                switch(type) {
-                    case EVENT: {
-                        var response = adapterClient.sendEvent(json, any());
-                        logResponseIfLastTryFailed(phase, response, message);
-                        return response.statusCode() == HTTP_ACCEPTED;
-                    }
-                    case TELEMETRY: {
-                        var response = adapterClient.sendTelemetry(json, any());
-                        logResponseIfLastTryFailed(phase, response, message);
-                        return response.statusCode() == HTTP_ACCEPTED;
-                    }
-                    default:
-                        return true;
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, new TimeoutBudget(3, TimeUnit.MINUTES));
-
-        log.info("First {} message accepted", type.name().toLowerCase());
-    }
-
-    private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
-        if(phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
-            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
-        }
     }
 
     public String tenantId(IoTProject project) {

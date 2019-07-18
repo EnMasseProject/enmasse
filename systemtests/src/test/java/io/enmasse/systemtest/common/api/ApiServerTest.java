@@ -4,40 +4,74 @@
  */
 package io.enmasse.systemtest.common.api;
 
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressPlanDescription;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.AddressSpacePlanDescription;
+import io.enmasse.address.model.AddressSpaceSchema;
+import io.enmasse.address.model.AddressSpaceSchemaList;
+import io.enmasse.address.model.AddressTypeInformation;
+import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.isolated;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
 public class ApiServerTest extends TestBase {
-    private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
+    private static Logger log = CustomLogger.getLogger();
+
+    private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
+        Objects.requireNonNull(converter);
+
+        if (items == null) {
+            return null;
+        }
+
+        return items.stream().map(converter).collect(Collectors.toSet());
+    }
 
     @Test
     void testRestApiGetSchema() throws Exception {
@@ -173,16 +207,6 @@ public class ApiServerTest extends TestBase {
 
         deleteAllAddressSpaces();
 
-    }
-
-    private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
-        Objects.requireNonNull(converter);
-
-        if (items == null) {
-            return null;
-        }
-
-        return items.stream().map(converter).collect(Collectors.toSet());
     }
 
     @Test

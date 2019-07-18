@@ -6,7 +6,11 @@ package io.enmasse.systemtest.bases.authz;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
@@ -56,7 +60,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .endSpec()
                 .build();
 
-        topic =  new AddressBuilder()
+        topic = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-topic"))

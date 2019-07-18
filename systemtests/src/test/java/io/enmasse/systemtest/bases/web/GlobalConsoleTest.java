@@ -30,11 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class GlobalConsoleTest extends TestBase {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
-
-    private static Logger log = CustomLogger.getLogger();
-    private GlobalConsolePage globalConsolePage;
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
+    private static Logger log = CustomLogger.getLogger();
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
+    private GlobalConsolePage globalConsolePage;
 
     //============================================================================================
     //============================ do test methods ===============================================
@@ -147,7 +146,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         }
     }
 
-    protected void doTestSwitchAddressSpacePlan() throws Exception{
+    protected void doTestSwitchAddressSpacePlan() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-api")

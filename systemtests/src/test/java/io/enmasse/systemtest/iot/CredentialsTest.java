@@ -5,10 +5,10 @@
 
 package io.enmasse.systemtest.iot;
 
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import org.junit.jupiter.api.Test;
 
 public class CredentialsTest {
 

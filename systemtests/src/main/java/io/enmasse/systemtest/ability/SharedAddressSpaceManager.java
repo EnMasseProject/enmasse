@@ -120,4 +120,16 @@ public class SharedAddressSpaceManager {
                 || (nextTestTags.contains(TestTag.sharedStandard) && currentTestTags.contains(TestTag.sharedStandard))
                 || (nextTestTags.contains(TestTag.sharedMqtt) && currentTestTags.contains(TestTag.sharedMqtt));
     }
+
+    public boolean isNextTagShared() {
+        TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
+                && isSameClass(testIdentifier, actualTest)).findFirst().get();
+        int currentTestIndex = tests.indexOf(test);
+        if (!(currentTestIndex == tests.size() - 1)) {
+            List<String> nextTags = getTags(tests.get(currentTestIndex + 1));
+            return nextTags.contains(TestTag.sharedBrokered) || nextTags.contains(TestTag.sharedStandard);
+        }
+        return false;
+    }
+
 }

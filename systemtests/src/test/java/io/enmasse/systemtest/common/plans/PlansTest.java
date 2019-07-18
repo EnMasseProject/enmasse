@@ -4,11 +4,29 @@
  */
 package io.enmasse.systemtest.common.plans;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.DoneableAddressSpace;
+import io.enmasse.address.model.Phase;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressPlanBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressStatus;
 import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
@@ -21,8 +39,6 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -39,13 +55,16 @@ import java.util.stream.IntStream;
 import static io.enmasse.systemtest.TestTag.isolated;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(isolated)
 class PlansTest extends TestBase {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
-    private static Logger log = CustomLogger.getLogger();
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
+    private static Logger log = CustomLogger.getLogger();
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {

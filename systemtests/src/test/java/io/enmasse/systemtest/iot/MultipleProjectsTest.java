@@ -4,32 +4,12 @@
  */
 package io.enmasse.systemtest.iot;
 
-import java.net.HttpURLConnection;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import io.enmasse.systemtest.CustomLogger;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
+import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.TestTag;
@@ -49,7 +29,26 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
+
+import java.net.HttpURLConnection;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Tag(TestTag.sharedIot)
 @Tag(TestTag.smoke)
@@ -95,7 +94,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
 
-        for(int i=1; i<=numberOfProjects; i++) {
+        for (int i = 1; i <= numberOfProjects; i++) {
             String projectName = String.format("project-%s", i);
 
             if (!kubernetes.namespaceExists(projectName)) {
@@ -119,7 +118,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
             logCollector.collectHttpAdapterQdrProxyState();
         }
 
-        for(IoTProjectTestContext ctx : projects) {
+        for (IoTProjectTestContext ctx : projects) {
             cleanDeviceSide(ctx);
             cleanAmqpSide(ctx);
         }
@@ -193,8 +192,8 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     private AmqpClient configureAmqpClient(AddressSpace addressSpace, User user) throws Exception {
         AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
         amqpClient.getConnectOptions()
-            .setUsername(user.getSpec().getUsername())
-            .setPassword(new String(Base64.getDecoder().decode(user.getSpec().getAuthentication().getPassword())));
+                .setUsername(user.getSpec().getUsername())
+                .setPassword(new String(Base64.getDecoder().decode(user.getSpec().getAuthentication().getPassword())));
         return amqpClient;
     }
 

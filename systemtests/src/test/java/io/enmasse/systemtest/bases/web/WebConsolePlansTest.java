@@ -37,9 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(isolated)
 public abstract class WebConsolePlansTest extends TestBase {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
-
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private ConsoleWebPage consoleWebPage;
 
 

@@ -12,7 +12,11 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.*;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -28,13 +32,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
-public abstract class  ClientTestBase extends TestBaseWithShared {
+public abstract class ClientTestBase extends TestBaseWithShared {
+    protected Path logPath = null;
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
-    protected Path logPath = null;
 
     @BeforeEach
     public void setUpClientBase(TestInfo info) {

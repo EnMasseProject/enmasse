@@ -33,11 +33,9 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
     protected IoTConfig sharedConfig;
     protected IoTProject sharedProject;
-
-    private UserCredentials credentials;
     protected AmqpClientFactory iotAmqpClientFactory;
-
     protected AmqpClient iotAmqpClient;
+    private UserCredentials credentials;
 
     @BeforeEach
     public void setUpSharedIoTProject() throws Exception {
@@ -132,7 +130,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
     }
 
     @AfterEach
-    public void closeIoTAmqpClient () throws Exception {
+    public void closeIoTAmqpClient() throws Exception {
         if (this.iotAmqpClient != null) {
             this.iotAmqpClient.close();
             this.iotAmqpClient = null;

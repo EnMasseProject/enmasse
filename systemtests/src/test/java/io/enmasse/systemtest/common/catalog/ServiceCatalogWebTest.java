@@ -8,7 +8,12 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpacePlans;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.common.Credentials;
@@ -47,8 +52,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SeleniumFirefox
 @DisabledIfEnvironmentVariable(named = Environment.OCP_VERSION_ENV, matches = Environment.IS_OCP4_REGEXP)
 class ServiceCatalogWebTest extends TestBase {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private static Logger log = CustomLogger.getLogger();
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AddressSpace> provisionedServices = new ArrayList<>();
     private UserCredentials ocTestUser = Credentials.userCredentials();
 
