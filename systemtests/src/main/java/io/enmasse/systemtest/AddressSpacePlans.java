@@ -10,4 +10,7 @@ public interface AddressSpacePlans {
     String STANDARD_MEDIUM = "standard-medium";
     String STANDARD_UNLIMITED = "standard-unlimited";
     String STANDARD_UNLIMITED_WITH_MQTT = "standard-unlimited-with-mqtt";
+    String CUSTOM_PLAN_STANDARD_LARGE = "custom-plan-standard-large";
+    String CUSTOM_PLAN_STANDARD_SMALL = "custom-plan-standard-small";
+    String CUSTOM_PLAN_BROKERED_SMALL = "custom-plan-brokered-small";
 }

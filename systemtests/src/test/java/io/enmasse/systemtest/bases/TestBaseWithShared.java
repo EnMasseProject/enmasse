@@ -7,7 +7,21 @@ package io.enmasse.systemtest.bases;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
+import io.enmasse.admin.model.v1.BrokeredInfraConfigSpecAdminBuilder;
+import io.enmasse.admin.model.v1.BrokeredInfraConfigSpecBrokerBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.SharedAddressSpaceEnv;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.SharedAddressSpaceManager;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -19,12 +33,14 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import org.apache.qpid.proton.message.Message;
+import org.junit.After;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +55,7 @@ public abstract class TestBaseWithShared extends TestBase {
     protected static AddressSpace sharedAddressSpace;
     private static Logger log = CustomLogger.getLogger();
     private static Map<String, Integer> spaceCountMap = new HashMap<>();
+    private AdminResourcesManager adminResourcesManager = AdminResourcesManager.getInstance();
 
     private void deleteSharedAddressSpace(AddressSpace addressSpace) throws Exception {
         deleteAddressSpace(addressSpace);
@@ -50,6 +67,9 @@ public abstract class TestBaseWithShared extends TestBase {
 
     @BeforeEach
     public void setupShared() throws Exception {
+        if (adminResourcesManager.getSharedAddressSpaceEnv() == null) {
+            adminResourcesManager.deploySharedAddressSpaceEnv();
+        }
         spaceCountMap.putIfAbsent(getDefaultAddrSpaceIdentifier(), 0);
         sharedAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -65,6 +85,7 @@ public abstract class TestBaseWithShared extends TestBase {
                 .endSpec()
                 .build();
         createAddressSpace(sharedAddressSpace);
+        Thread.sleep(10000);
         SharedAddressSpaceManager.getInstance().setActualSharedAddressSpace(sharedAddressSpace);
         defaultCredentials.setUsername("test").setPassword("test");
         createOrUpdateUser(sharedAddressSpace, defaultCredentials);
@@ -75,6 +96,7 @@ public abstract class TestBaseWithShared extends TestBase {
         amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(sharedAddressSpace, defaultCredentials);
     }
+
 
     @AfterEach
     public void tearDownShared(ExtensionContext context) {

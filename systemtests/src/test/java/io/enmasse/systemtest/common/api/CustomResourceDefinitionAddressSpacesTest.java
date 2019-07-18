@@ -57,7 +57,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                 .endSpec()
                 .build();
         JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
-        addToAddressSpacess(brokered);
+        addToAddressSpaces(brokered);
         createCR(addressSpacePayloadJson.toString());
         waitForAddressSpaceReady(brokered);
 
@@ -84,9 +84,9 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        addToAddressSpacess(standard);
+        addToAddressSpaces(standard);
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
-        addToAddressSpacess(standard);
+        addToAddressSpaces(standard);
         waitForAddressSpaceReady(standard);
         waitForAddressSpacePlanApplied(standard);
 
@@ -152,7 +152,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            addToAddressSpacess(brokered);
+            addToAddressSpaces(brokered);
             JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
@@ -208,8 +208,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase {
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            addToAddressSpacess(brokered);
-            addToAddressSpacess(standard);
+            addToAddressSpaces(brokered);
+            addToAddressSpaces(standard);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
