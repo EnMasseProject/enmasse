@@ -113,7 +113,7 @@ public class SharedAddressSpaceEnv {
     }
 
     private void createCustomBrokeredInfra() {
-            brokeredInfraConfig= new BrokeredInfraConfigBuilder()
+        brokeredInfraConfig = new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
                 .withNamespace(Kubernetes.getInstance().getInfraNamespace())
                 .withName(BROKERED_INFRA)
