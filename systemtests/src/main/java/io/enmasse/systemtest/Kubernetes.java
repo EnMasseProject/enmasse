@@ -178,8 +178,13 @@ public abstract class Kubernetes {
 
     public MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
             Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient() {
+        return getConsoleServiceClient(infraNamespace);
+    }
+
+    public MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
+            Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient(String namespace) {
         return (MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
-                Resource<ConsoleService, DoneableConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class, DoneableConsoleService.class).inNamespace(infraNamespace);
+                Resource<ConsoleService, DoneableConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class, DoneableConsoleService.class).inNamespace(namespace);
     }
 
     public MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> getIoTConfigClient() {
