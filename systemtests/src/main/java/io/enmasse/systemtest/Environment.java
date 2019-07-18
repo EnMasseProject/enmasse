@@ -53,6 +53,12 @@ public class Environment {
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
 
     private Environment() {
+        if (token == null || url == null) {
+            Config config = Config.autoConfigure(System.getenv()
+                    .getOrDefault("TEST_CLUSTER_CONTEXT", null));
+            token = config.getOauthToken();
+            url = config.getMasterUrl();
+        }
         String debugFormat = "{}:{}";
         log.info(debugFormat, USE_MINUKUBE_ENV, useMinikube);
         log.info(debugFormat, KEYCLOAK_ADMIN_PASSWORD_ENV, keycloakAdminPassword);
@@ -66,12 +72,6 @@ public class Environment {
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
         if(!useMinikube) {
             log.info(debugFormat, OCP_VERSION_ENV, ocpVersion);
-        }
-        if (token == null || url == null) {
-            Config config = Config.autoConfigure(System.getenv()
-                    .getOrDefault("TEST_CLUSTER_CONTEXT", null));
-            token = config.getOauthToken();
-            url = config.getMasterUrl();
         }
     }
 
