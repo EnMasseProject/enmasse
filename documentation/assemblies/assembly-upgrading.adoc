@@ -11,6 +11,10 @@ ifeval::["{cmdcli}" == "oc"]
 It is recommended to use the same method to upgrade that was used to initially install {ProductName}.
 endif::[]
 
+ifdef::ProductUpgrading[]
+When upgrading from {ProductName} 1.0 or 1.1.x, be sure to upgrade to the next available version before upgrading to {ProductName} 1.2.0.
+endif::ProductUpgrading[]
+
 Upgrading {ProductName} is accomplished by applying the YAML files for the new version.
 
 ifeval::["{cmdcli}" == "oc"]

@@ -67,6 +67,7 @@
 :LinkaddressFullPolicyDocs: https://activemq.apache.org/artemis/docs/latest/address-model.html
 
 // Section enablers
+// :ProductUpgrading:
 :SingleBookLink:
 :OperatorSource:
 :NoneAuthService:
