@@ -323,8 +323,8 @@ class UpgradeTest extends TestBase {
             AuthenticationServiceSpecStandardStorage storage = authService.getSpec().getStandard().getStorage();
             if (storage == null || !AuthenticationServiceSpecStandardType.persistent_claim.equals(storage.getType())) {
                 log.info("Installed auth service {} does not use persistent claim, recreating it ", authServiceName);
-                Boolean delete = kubernetes.getAuthenticationServiceClient().withName(authServiceName).delete();
-                log.info("Deleted {}", delete);
+                AdminResourcesManager.getInstance().removeAuthService(authService);
+
                 AuthenticationService replacement = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true);
                 kubernetes.getAuthenticationServiceClient().create(replacement);
 
