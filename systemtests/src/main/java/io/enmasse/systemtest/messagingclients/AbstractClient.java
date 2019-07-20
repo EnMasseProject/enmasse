@@ -180,13 +180,14 @@ public abstract class AbstractClient {
             executor = new Executor(logPath);
             int ret = executor.execute(prepareCommand(), timeout);
             synchronized (lock) {
-                log.info("Return code - " + ret);
+                log.info("{} {} Return code - {}", this.getClass().getName(), clientType,  ret);
                 if (logToOutput) {
+                    log.info("{} {} stdout : {}", this.getClass().getName(), clientType, executor.getStdOut());
+                    if (!executor.getStdErr().isEmpty()) {
+                        log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
+                    }
                     if (ret == 0) {
-                        log.info(executor.getStdOut());
                         parseToJson(executor.getStdOut());
-                    } else {
-                        log.error(executor.getStdErr());
                     }
                 }
             }
@@ -299,6 +300,7 @@ public abstract class AbstractClient {
                     try {
                         messages.add(new JsonObject(line));
                     } catch (Exception ignored) {
+                        log.warn("{} - Failed to parse client output '{}' as JSON", clientType, line);
                     }
                 }
             }

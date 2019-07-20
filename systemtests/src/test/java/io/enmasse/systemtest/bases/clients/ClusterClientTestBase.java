@@ -75,6 +75,7 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         }
 
         sender.setArguments(arguments);
+        arguments.put(ClientArgument.TIMEOUT, "10");  // In seconds, maximum time the consumer waits for a single message
         arguments.remove(ClientArgument.MSG_CONTENT);
         receiver.setArguments(arguments);
 
