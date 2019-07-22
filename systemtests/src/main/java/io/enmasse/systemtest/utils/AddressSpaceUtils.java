@@ -63,20 +63,21 @@ public class AddressSpaceUtils {
         boolean isReady = false;
         var client = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
 
+        String name = addressSpace.getMetadata().getName();
         AddressSpace clientAddressSpace = addressSpace;
         while (budget.timeLeft() >= 0 && !isReady) {
-            clientAddressSpace = client.withName(addressSpace.getMetadata().getName()).get();
+            clientAddressSpace = client.withName(name).get();
             isReady = isAddressSpaceReady(clientAddressSpace);
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: '{}' messages {} will be in ready state", addressSpace.getMetadata().getName(),
+            log.info("Waiting until Address space: '{}' messages {} will be in ready state", name,
                     (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().getMessages() : null);
         }
 
         if (!isReady) {
             String status = (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().toString() : null;
-            throw new IllegalStateException("Address Space " + clientAddressSpace + " is not in Ready state within timeout: " + status);
+            throw new IllegalStateException(String.format("Address Space %s is not in Ready state within timeout: %s", name, status));
         }
         log.info("Address space {} is ready for use", clientAddressSpace);
         return clientAddressSpace;
