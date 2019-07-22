@@ -2,3 +2,4 @@
 dist
 yarn-error.log
 stats.json
+/licenses/
