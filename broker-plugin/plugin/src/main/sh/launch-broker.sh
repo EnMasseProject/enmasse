@@ -2,7 +2,7 @@
 
 # Turn on AMQ_RESET_CONFIG so that Artemis config/scripts get unconditionally rewritten on startup.  Required to handle
 # all Artemis upgrade cases properly (see http://activemq.apache.org/components/artemis/documentation/latest/versions.html)
-AMQ_RESET_CONFIG="${AMQ_RESET_CONFIG:-true}"
+AMQ_RESET_CONFIG="${ENMASSE_AMQ_RESET_CONFIG:-true}"
 BROKER_DIR=${ARTEMIS_HOME}
 BROKER_CUSTOM_DIR=${BROKER_DIR}/custom
 sed -i '$ d' ${BROKER_DIR}/bin/launch.sh
