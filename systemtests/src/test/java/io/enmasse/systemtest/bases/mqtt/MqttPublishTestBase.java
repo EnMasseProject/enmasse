@@ -122,7 +122,7 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
         setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();
-        options.setConnectionTimeout(options.getConnectionTimeout() * 2);
+        options.setConnectionTimeout(options.getConnectionTimeout() * 2);  //Default is 30 seconds, increase it to 1 min.
         options.setAutomaticReconnect(true);
         Builder clientBuilder = mqttClientFactory.build().mqttConnectionOptions(options);
         customizeClient(clientBuilder);
@@ -140,7 +140,7 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
             assertThat("Incorrect count of messages published",
                     publishCount, is(messages.size()));
 
-            int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+            int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 2, TimeUnit.MINUTES);
             assertThat("Incorrect count of messages received",
                     receivedCount, is(messages.size()));
         } finally {
