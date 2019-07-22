@@ -6,10 +6,11 @@
 package install
 
 import (
+	"strconv"
+
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/images"
-	"strconv"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -45,6 +46,18 @@ func ApplyServiceDefaults(service *corev1.Service, component string, name string
 
 }
 
+func CreateDefaultAnnotations(annotations map[string]string) map[string]string {
+
+	// currently we only ensure the annotations map is not null
+
+	if annotations == nil {
+		annotations = make(map[string]string)
+	}
+
+	return annotations
+
+}
+
 // Apply some default deployment values
 func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, name string) {
 
@@ -56,9 +69,15 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 		}
 	}
 
+	if deployment.Annotations == nil {
+		deployment.Annotations = map[string]string{}
+	}
+
 	replicas := int32(1)
 	deployment.Spec.Replicas = &replicas
-	deployment.Spec.Template.ObjectMeta.Labels = CreateDefaultLabels(deployment.Spec.Template.ObjectMeta.Labels, component, name)
+
+	deployment.Spec.Template.Annotations = CreateDefaultAnnotations(deployment.Spec.Template.Annotations)
+	deployment.Spec.Template.Labels = CreateDefaultLabels(deployment.Spec.Template.Labels, component, name)
 
 }
 
