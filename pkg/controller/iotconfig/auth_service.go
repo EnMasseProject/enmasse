@@ -9,6 +9,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -27,26 +29,35 @@ const nameAuthService = "iot-auth-service"
 
 func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
+	configCtx := cchange.NewRecorder()
+
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameAuthService, config, r.reconcileAuthServiceDeployment)
+		return r.processConfigMap(ctx, nameAuthService+"-config", config, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			return r.reconcileAuthServiceConfigMap(config, configMap, configCtx)
+		})
+	})
+	rc.ProcessSimple(func() error {
+		return r.processDeployment(ctx, nameAuthService, config, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileAuthServiceDeployment(config, deployment, configCtx)
+		})
 	})
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameAuthService, config, r.reconcileAuthServiceService)
-	})
-	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameAuthService+"-config", config, r.reconcileAuthServiceConfigMap)
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.Authentication.ServiceConfig)
+
+	// set the permissions hash on the pod template to re-deploy, in case the permissions.json changed
+	deployment.Spec.Template.Annotations["iot.enmasse.io/config-hash"] = configCtx.HashString()
 
 	err := install.ApplyContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
 
@@ -144,7 +155,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceService(config *iotv1alpha1.IoT
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -250,6 +261,9 @@ hono:
 	}
 }
 `
+
+	configCtx.AddString(configMap.Data["application.yml"])
+	configCtx.AddString(configMap.Data["permissions.json"])
 
 	return nil
 }
