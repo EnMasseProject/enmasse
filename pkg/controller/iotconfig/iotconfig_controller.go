@@ -180,7 +180,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		case DeviceRegistryFileBased:
 			return r.processFileDeviceRegistry(ctx, config)
 		default:
-			return reconcile.Result{}, fmt.Errorf("illegal device registry configuration.")
+			return reconcile.Result{}, fmt.Errorf("illegal device registry configuration")
 		}
 	})
 	rc.Process(func() (reconcile.Result, error) {
