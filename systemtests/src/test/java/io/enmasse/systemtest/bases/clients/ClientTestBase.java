@@ -55,8 +55,10 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
     @AfterEach
     public void teardownClient() {
         arguments.clear();
-        clients.forEach(AbstractClient::stop);
-        clients.clear();
+        if (clients != null) {
+            clients.forEach(AbstractClient::stop);
+            clients.clear();
+        }
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) throws Exception {

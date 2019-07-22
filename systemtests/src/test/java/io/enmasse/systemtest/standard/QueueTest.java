@@ -326,7 +326,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
 
         AmqpClient client = amqpClientFactory.createQueueClient();
         final List<String> prefixes = Arrays.asList("foo", "bar", "baz", "quux");
-        final int numMessages = 1000;
+        final int numMessages = 500;
         final int totalNumMessages = numMessages * prefixes.size();
         final int numReceiveBeforeDraining = numMessages / 2;
         final int numReceivedAfterScaled = totalNumMessages - numReceiveBeforeDraining;

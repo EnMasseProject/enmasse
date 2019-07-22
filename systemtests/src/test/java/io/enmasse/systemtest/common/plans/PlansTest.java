@@ -755,7 +755,7 @@ class PlansTest extends TestBase {
         AmqpClient queueClient = amqpClientFactory.createQueueClient(messagePersistAddressSpace);
         queueClient.getConnectOptions().setCredentials(user);
 
-        List<String> msgs = TestUtils.generateMessages(500);
+        List<String> msgs = TestUtils.generateMessages(350);
         Future<Integer> sendResult1 = queueClient.sendMessages(queue1.getSpec().getAddress(), msgs);
         Future<Integer> sendResult2 = queueClient.sendMessages(queue2.getSpec().getAddress(), msgs);
         Future<Integer> sendResult3 = queueClient.sendMessages(queue3.getSpec().getAddress(), msgs);
