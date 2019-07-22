@@ -46,6 +46,8 @@ public class MonitoringTest extends TestBase{
 
     private static Logger log = CustomLogger.getLogger();
 
+    private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
+
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
 
@@ -172,7 +174,7 @@ public class MonitoringTest extends TestBase{
                 }
                 return false;
             }
-        }, new TimeoutBudget(1, TimeUnit.MINUTES));
+        }, new TimeoutBudget(TIMEOUT_QUERY_RESULT_MINUTES, TimeUnit.MINUTES));
     }
 
     private void validateAddressSpaceRangeQueryWaiting(String query, Instant start, String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
@@ -186,7 +188,7 @@ public class MonitoringTest extends TestBase{
                 }
                 return false;
             }
-        }, new TimeoutBudget(1, TimeUnit.MINUTES));
+        }, new TimeoutBudget(TIMEOUT_QUERY_RESULT_MINUTES, TimeUnit.MINUTES));
     }
 
     private void validateAddressSpaceQuery(String query, String addressSpace, String expectedValue) throws Exception {
