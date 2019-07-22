@@ -293,6 +293,7 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
+        arguments.put(ClientArgument.TIMEOUT, "10");  // In seconds, maximum time the consumer waits for a single message
 
         sender.setArguments(arguments);
         arguments.remove(ClientArgument.MSG_CONTENT);
