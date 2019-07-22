@@ -123,7 +123,6 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setConnectionTimeout(options.getConnectionTimeout() * 2);  //Default is 30 seconds, increase it to 1 min.
-        options.setKeepAliveInterval(options.getKeepAliveInterval() * 2);  //Default is 60 seconds, increase it to 2 min.
         options.setAutomaticReconnect(true);
         Builder clientBuilder = mqttClientFactory.build().mqttConnectionOptions(options);
         customizeClient(clientBuilder);
