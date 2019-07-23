@@ -99,13 +99,13 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 				result := ownerHandler.GetOwnerReconcileRequest(a.Meta)
 
 				if result != nil && len(result) > 0 {
-					l.Info("Owned resource")
+					l.V(2).Info("Owned resource")
 					// looks like an owned resource ... take this is a result
 					return result
 				}
 
 				/*
-				 * TODO: at this point we are acitvely searching through all IoT projects
+				 * TODO: at this point we are actively searching through all IoT projects
 				 *       for all AddressSpaces that change.
 				 */
 
