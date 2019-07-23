@@ -14,11 +14,11 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RheaClientReceiver extends AbstractClient {
-    public RheaClientReceiver() {
+    public RheaClientReceiver() throws Exception {
         super(ClientType.CLI_RHEA_RECEIVER);
     }
 
-    public RheaClientReceiver(Path logPath) {
+    public RheaClientReceiver(Path logPath) throws Exception {
         super(ClientType.CLI_RHEA_RECEIVER, logPath);
     }
 

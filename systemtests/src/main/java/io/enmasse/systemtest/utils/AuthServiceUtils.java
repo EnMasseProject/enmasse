@@ -10,17 +10,12 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
-import io.enmasse.systemtest.CustomLogger;
-import io.fabric8.kubernetes.api.model.SecretReferenceBuilder;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class AuthServiceUtils {
-    private static Logger log = CustomLogger.getLogger();
 
     public static AuthenticationService createNoneAuthServiceObject(String name) {
         return createAuthService(name, AuthenticationServiceType.none).done();

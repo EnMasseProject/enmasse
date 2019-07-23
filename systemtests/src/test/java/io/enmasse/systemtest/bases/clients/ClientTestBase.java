@@ -12,10 +12,7 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.*;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -33,7 +30,8 @@ import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public abstract class ClientTestBase extends TestBaseWithShared {
+@ExternalClients
+public abstract class  ClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
     protected Path logPath = null;
@@ -57,8 +55,10 @@ public abstract class ClientTestBase extends TestBaseWithShared {
     @AfterEach
     public void teardownClient() {
         arguments.clear();
-        clients.forEach(AbstractClient::stop);
-        clients.clear();
+        if (clients != null) {
+            clients.forEach(AbstractClient::stop);
+            clients.clear();
+        }
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) throws Exception {
@@ -282,7 +282,8 @@ public abstract class ClientTestBase extends TestBaseWithShared {
                 .withAddress("drain" + ClientType.getAddressName(sender))
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
-                .build();;
+                .build();
+        ;
         setAddresses(dest);
 
         clients.addAll(Arrays.asList(sender, receiver));
@@ -297,6 +298,7 @@ public abstract class ClientTestBase extends TestBaseWithShared {
         arguments.remove(ClientArgument.MSG_CONTENT);
 
         arguments.put(ClientArgument.COUNT, "0");
+        arguments.put(ClientArgument.TIMEOUT, "10");  // In seconds, maximum time the consumer waits for a single message
         receiver.setArguments(arguments);
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");

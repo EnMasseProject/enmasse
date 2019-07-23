@@ -288,7 +288,7 @@ abstract class MarathonTestBase extends TestBase {
         ArrayList<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
 
         runTestInLoop(30, () -> {
-            SeleniumProvider selenium = new SeleniumProvider();
+            SeleniumProvider selenium = SeleniumProvider.getInstance();
             selenium.setupDriver(TestUtils.getFirefoxDriver());
             consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
             consoleWebPage.openWebConsolePage(user);

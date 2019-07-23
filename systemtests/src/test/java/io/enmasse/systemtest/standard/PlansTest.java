@@ -12,38 +12,23 @@ import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.AdminResourcesManager;
-import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 class PlansTest extends TestBaseWithShared implements ITestBaseStandard {
 
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
-
-    @BeforeEach
-    void setUp() {
-        adminManager.setUp();
-    }
-
-    @AfterEach
-    void tearDown() throws Exception {
-        adminManager.tearDown();
-    }
+    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     @Test
     @Disabled("test disabled because feature for appending address-plan is not implemented yet, issue: #904")

@@ -4,7 +4,7 @@ def lib = evaluate readTrusted('.jenkins/jenkins-functions.groovy')
 
 pipeline {
     options {
-        timeout(time: 6, unit: 'HOURS')
+        timeout(time: 15, unit: 'HOURS')
         ansiColor('xterm')
     }
     environment {
@@ -14,6 +14,7 @@ pipeline {
 
         OPENSHIFT_PROJECT = "enmasse-infra"
         TAG = 'latest'
+        OC_VERSION = "${params.OC_VERSION}"
     }
     agent {
         node {
@@ -47,25 +48,27 @@ pipeline {
         }
         stage('start openshift') {
             steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    script {
-                        lib.startOpenshift()
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        script {
+                            lib.startOpenshift(env.OC_VERSION)
+                        }
                     }
                 }
             }
         }
         stage('install enmasse') {
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER'), string(credentialsId: params.OPENSHIFT_DOMAIN_CREDENTIAL_ID, variable: 'KUBERNETES_DOMAIN')]) {
                     script {
-                        lib.installEnmasse(env.TAG, false, false, true, params.DEPLOY_IOT)
+                        lib.installEnmasse(env.TAG, true, params.DEPLOY_IOT)
                     }
                 }
             }
         }
         stage('system tests') {
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                withCredentials([string(credentialsId: params.OPENSHIFT_URL_CREDENTIAL_ID, variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER'), string(credentialsId: params.OPENSHIFT_DOMAIN_CREDENTIAL_ID, variable: 'KUBERNETES_DOMAIN')]) {
                     script {
                         lib.runSystemtests(params.TEST_PROFILE, params.TEST_CASE)
                     }
@@ -77,6 +80,9 @@ pipeline {
         always {
             script {
                 lib.postAction(env.ARTIFACTS_DIR)
+                if (env.OC_VERSION == '4') {
+                    lib.uninstallEnmasse(env.TAG, env.OPENSHIFT_PROJECT)
+                }
             }
         }
         failure {

@@ -11,13 +11,15 @@ import {css} from '@patternfly/react-styles';
 import spacingStyles from '@patternfly/patternfly/utilities/Spacing/spacing.css';
 import flexStyles from '@patternfly/patternfly/utilities/Flex/flex.css';
 
-import {deleteMessagingInstances} from './MessagingInstance/Enmasse/EnmasseAddressSpaces';
+import {deleteMessagingInstance} from './MessagingInstance/Enmasse/EnmasseAddressSpaces';
+import {editMessagingInstance} from './MessagingInstance/Enmasse/EnmasseAddressSpaces';
 
 import moment from 'moment';
 
 import Aux from '../../hoc/Aux/Aux';
 import CreateAddressSpace from './MessagingInstance/Enmasse/CreateAddressSpace/CreateAddressSpace';
 import InstancesActionKebab from './InstancesActionKebab/InstancesActionKebab';
+import EditAddressSpace from './MessagingInstance/Enmasse/EditAddressSpace/EditAddressSpace';
 import DeleteInstanceModal from './Delete/DeleteInstanceModal';
 import {NotificationConsumer} from "../../context/notification-manager";
 
@@ -35,6 +37,14 @@ class MessagingInstances extends React.Component {
       rows: [],
       actions: [
         {
+          title: 'Edit',
+          onClick: (event, rowId, rowData, extra) => {
+            let name = this.state.rows[rowId].instanceName;
+            let namespace = rowData.instanceNamespace;
+            return this.openEditModal({name, namespace});
+          }
+        },
+        {
           title: 'Delete',
           onClick: (event, rowId, rowData, extra) => {
             let name = this.state.rows[rowId].instanceName;
@@ -43,7 +53,10 @@ class MessagingInstances extends React.Component {
           }
         }
       ],
+
       hasSelectedRows: false,
+      isEditModalOpen: false,
+      editInstance: null,
       isDeleteModalOpen: false,
       deleteInstances: [],
       allMessagingInstances: props.messagingInstances
@@ -66,6 +79,22 @@ class MessagingInstances extends React.Component {
     });
   };
 
+  onEditToggle = () => {
+    this.setState(({isEditModalOpen: prevIsOpen}) => {
+      return {isEditModalOpen: !prevIsOpen};
+    });
+  };
+
+  handleEdit = (addNotification) => {
+    this.reload();
+     this.onEditToggle();
+  };
+
+  openEditModal = (instance) => {
+    this.setState({'editInstance': instance});
+    this.onEditToggle();
+  }
+
   onDeleteToggle = () => {
     this.setState(({isDeleteModalOpen: prevIsOpen}) => {
       return {isDeleteModalOpen: !prevIsOpen};
@@ -74,7 +103,7 @@ class MessagingInstances extends React.Component {
 
   handleDelete = (addNotification) => {
     this.state.deleteInstances.forEach(instance => {
-      deleteMessagingInstances(instance.name, instance.namespace)
+      deleteMessagingInstance(instance.name, instance.namespace)
         .catch(error => {
           console.log('FAILED to delete name <' + instance.name + '> namespace <' + instance.namespace + '>', error);
           if (error.response) {
@@ -225,14 +254,24 @@ class MessagingInstances extends React.Component {
       <React.Fragment>
         <NotificationConsumer>
           {({add}) => (
-            <DeleteInstanceModal
-              id="modal-delete"
-              isOpen={this.state.isDeleteModalOpen}
-              handleDeleteModalToggle={this.onDeleteToggle}
-              handleDelete={this.handleDelete}
-              deleteInstances={() => this.state.deleteInstances}
-              addNotification={add}
-            />
+            <React.Fragment>
+              <EditAddressSpace
+                id="modal-edit"
+                isOpen={this.state.isEditModalOpen}
+                handleEditModalToggle={this.onEditToggle}
+                handleEdit={this.handleEdit}
+                editInstance={() => this.state.editInstance}
+                addNotification={add}
+              />
+              <DeleteInstanceModal
+                id="modal-delete"
+                isOpen={this.state.isDeleteModalOpen}
+                handleDeleteModalToggle={this.onDeleteToggle}
+                handleDelete={this.handleDelete}
+                deleteInstances={() => this.state.deleteInstances}
+                addNotification={add}
+              />
+            </React.Fragment>
           )}
         </NotificationConsumer>
         <PageSection variant={PageSectionVariants.light}>

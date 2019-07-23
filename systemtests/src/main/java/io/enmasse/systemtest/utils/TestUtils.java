@@ -26,6 +26,8 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
+import com.google.common.io.BaseEncoding;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
@@ -42,6 +44,8 @@ import java.util.stream.Stream;
 
 public class TestUtils {
     private static Logger log = CustomLogger.getLogger();
+
+    private static final Random R = new Random();
 
     /**
      * scale up/down specific pod (type: Deployment) in address space
@@ -248,8 +252,7 @@ public class TestUtils {
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
         return kubernetes.listPods(Collections.singletonMap("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace))).stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running")
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
@@ -261,8 +264,7 @@ public class TestUtils {
      */
     public static List<Pod> listRunningPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running")
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
 
@@ -274,8 +276,7 @@ public class TestUtils {
      */
     public static List<Pod> listReadyPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
-                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady))
                 .collect(Collectors.toList());
     }
 
@@ -287,8 +288,7 @@ public class TestUtils {
      */
     public static List<Pod> listReadyPods(Kubernetes kubernetes, String namespace) {
         return kubernetes.listPods(namespace).stream()
-                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady)
-                        && !pod.getMetadata().getName().startsWith(SystemtestsKubernetesApps.MESSAGING_CLIENTS))
+                .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady))
                 .collect(Collectors.toList());
     }
 
@@ -359,11 +359,12 @@ public class TestUtils {
         for (int i = 0; i < 10; i++) {
             try {
                 InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
-                Thread.sleep(1000);
                 return addresses.length > 0;
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             } catch (UnknownHostException ignore) {
+            }
+            try {
+                Thread.sleep(1_000);
+            } catch (InterruptedException e) {
             }
         }
         return false;
@@ -425,7 +426,7 @@ public class TestUtils {
      *
      * @param retry count of remaining retries
      * @param fn    request function
-     * @return
+     * @return The value from the first successful call to the callable
      */
     public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
         for (int i = 0; i < retry; i++) {
@@ -433,12 +434,24 @@ public class TestUtils {
                 log.info("Running command, attempt: {}", i);
                 return fn.call();
             } catch (Exception ex) {
-                log.info("Command failed");
-                ex.printStackTrace();
+                log.info("Command failed", ex);
             }
             Thread.sleep(1000);
         }
         throw new IllegalStateException(String.format("Command wasn't pass in %s attempts", retry));
+    }
+
+    /**
+     * Repeat command n-times.
+     *
+     * @param retries Number of retries.
+     * @param callable Code to execute.
+     */
+    public static void runUntilPass(int retries, ThrowingCallable callable) throws InterruptedException {
+        runUntilPass(retries, () -> {
+            callable.call();
+            return null;
+        });
     }
 
     /**
@@ -555,7 +568,7 @@ public class TestUtils {
             throws Exception {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
 
-        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, (phase) -> {
+        waitUntilCondition("Resource version to change away from: " + currentResourceVersion, phase -> {
             try {
                 final String newVersion = provideNewResourceVersion.get();
                 return !currentResourceVersion.equals(newVersion);
@@ -571,11 +584,11 @@ public class TestUtils {
         return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
     }
 
-    public static CompletableFuture<Void> runAsync(ThrowingCallable callable){
+    public static CompletableFuture<Void> runAsync(ThrowingCallable callable) {
         return CompletableFuture.runAsync(() -> {
             try {
                 callable.call();
-            } catch ( Exception e ) {
+            } catch (Exception e) {
                 log.error("Error running async test", e);
                 throw new RuntimeException(e);
             }
@@ -585,5 +598,56 @@ public class TestUtils {
     @FunctionalInterface
     public static interface ThrowingCallable {
         void call() throws Exception;
+    }
+
+    /**
+     * Return a number of random characters in the range of {@code 0-9a-f}.
+     * @param length the number of characters to return
+     * @return The random string, never {@code null}.
+     */
+    public static String randomCharacters(int length) {
+        var b = new byte[(int) Math.ceil(length/2.0)];
+        R.nextBytes(b);
+        return BaseEncoding.base16().encode(b).substring(length%2);
+    }
+
+    public static void waitUntilDeployed(String namespace) throws Exception {
+        TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
+            List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
+            for (Pod pod : pods) {
+                List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
+                for (ContainerStatus s : initContainers) {
+                    if (!s.getReady())
+                        return false;
+                }
+                List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
+                for (ContainerStatus s : containers) {
+                    if (!s.getReady())
+                        return false;
+                }
+            }
+            return true;
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
+    }
+
+    public static void cleanAllEnmasseResourcesFromNamespace(String namespace) {
+        Kubernetes kube = Kubernetes.getInstance();
+        var brInfraConfigClient = kube.getBrokeredInfraConfigClient(namespace);
+        var stInfraConfigClient = kube.getStandardInfraConfigClient(namespace);
+        var addressSpaceClient = kube.getAddressSpaceClient(namespace);
+        var addressClient = kube.getAddressClient(namespace);
+        var addrSpacePlanClient = kube.getAddressSpacePlanClient(namespace);
+        var addPlanClient = kube.getAddressPlanClient(namespace);
+        var authServiceClient = kube.getAuthenticationServiceClient(namespace);
+        var consoleClient = kube.getConsoleServiceClient(namespace);
+
+        brInfraConfigClient.list().getItems().forEach(cr -> brInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        stInfraConfigClient.list().getItems().forEach(cr -> stInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addressSpaceClient.list().getItems().forEach(cr -> addressSpaceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addressClient.list().getItems().forEach(cr -> addressClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addrSpacePlanClient.list().getItems().forEach(cr -> addrSpacePlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        addPlanClient.list().getItems().forEach(cr -> addPlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        authServiceClient.list().getItems().forEach(cr -> authServiceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+        consoleClient.list().getItems().forEach(cr -> consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
     }
 }

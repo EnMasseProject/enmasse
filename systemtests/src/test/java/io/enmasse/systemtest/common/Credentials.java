@@ -15,11 +15,11 @@ public final class Credentials {
     }
 
     public static String user() {
-        return System.getenv().getOrDefault("SYSTEMTESTS_CREDENTIALS_USER", "pepik");
+        return System.getenv().getOrDefault("SYSTEMTESTS_CREDENTIALS_USER", "user");
     }
 
     public static String password() {
-        return System.getenv().getOrDefault("SYSTEMTESTS_CREDENTIALS_PASSWORD", "pepik");
+        return System.getenv().getOrDefault("SYSTEMTESTS_CREDENTIALS_PASSWORD", "user");
     }
 
     public static UserCredentials userCredentials() {

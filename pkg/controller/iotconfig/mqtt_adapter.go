@@ -45,7 +45,7 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 	})
 	if !util.IsOpenshift() {
 		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameMqttAdapter + "-external", config, r.reconcileMqttAdapterServiceExternal)
+			return r.processService(ctx, nameMqttAdapter+"-external", config, r.reconcileMqttAdapterServiceExternal)
 		})
 	}
 	if config.WantDefaultRoutes(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig) {
@@ -78,6 +78,8 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 			return err
 		}
 
+		container.Args = nil
+
 		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
@@ -101,18 +103,14 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
-			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 
 			{Name: "HONO_MQTT_NATIVE_TLS_REQUIRED", Value: "false"},
 		}
 
-		AppendHonoAdapterEnvs(container, "mqtt-adapter@HONO", config.Status.Adapters["mqtt"].InterServicePassword)
+		AppendStandardHonoJavaOptions(container)
 
-		if err := AppendTrustStores(config, container, []string{
-			"HONO_CREDENTIALS_TRUST_STORE_PATH",
-			"HONO_REGISTRATION_TRUST_STORE_PATH",
-			"HONO_TENANT_TRUST_STORE_PATH",
-		}); err != nil {
+		if err := AppendHonoAdapterEnvs(config, container, "mqtt-adapter@HONO", config.Status.Adapters["mqtt"].InterServicePassword); err != nil {
 			return err
 		}
 
@@ -220,6 +218,9 @@ hono:
     port: 5671
     trustStoreFormat: PEM
   credentials:
+    port: 5671
+    trustStoreFormat: PEM
+  deviceConnection:
     port: 5671
     trustStoreFormat: PEM
   tenant:

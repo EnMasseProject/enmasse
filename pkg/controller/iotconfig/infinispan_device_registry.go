@@ -6,24 +6,24 @@
 package iotconfig
 
 import (
-"context"
+	"context"
+	"strings"
 
-"k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
-"k8s.io/apimachinery/pkg/util/intstr"
+	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/recon"
+	routev1 "github.com/openshift/api/route/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
-"github.com/enmasseproject/enmasse/pkg/util"
-"github.com/enmasseproject/enmasse/pkg/util/recon"
-routev1 "github.com/openshift/api/route/v1"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"github.com/enmasseproject/enmasse/pkg/util/install"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 
-"github.com/enmasseproject/enmasse/pkg/util/install"
-appsv1 "k8s.io/api/apps/v1"
-corev1 "k8s.io/api/core/v1"
-"k8s.io/apimachinery/pkg/api/resource"
-
-iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
 func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
@@ -62,11 +62,19 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
 
-	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+	err := install.ApplyFsGroupOverride(deployment)
+
+	if err != nil {
+		return err
+	}
+
+	err = install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
 			return err
 		}
+
+		container.Args = nil
 
 		// set default resource limits
 
@@ -87,19 +95,24 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 		// environment
 
+		toks := strings.Split(config.Spec.ServicesConfig.DeviceRegistry.Infinispan.ServerAddress, ":")
+
 		container.Env = []corev1.EnvVar{
 			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
-			{Name: "HONO_AUTH_HOST", Value: "iot-auth-service.$(KUBERNETES_NAMESPACE).svc"},
+			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "JAVA_OPTS", Value: `-Dinfinispanserver=`+config.Spec.ServicesConfig.DeviceRegistry.Infinispan.InfinispanServerAddress},
+			{Name: "ENMASSE_IOT_DEVICE_REGISTRY_INFINISPAN_HOST", Value: toks[0]},
+			{Name: "ENMASSE_IOT_DEVICE_REGISTRY_INFINISPAN_PORT", Value: toks[1]},
 		}
+
+		AppendStandardHonoJavaOptions(container)
 
 		// append trust stores
 

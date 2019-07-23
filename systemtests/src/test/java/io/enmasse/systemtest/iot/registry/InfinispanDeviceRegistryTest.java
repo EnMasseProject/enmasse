@@ -27,7 +27,7 @@ public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase{
                 .withNewServices()
                 .withNewDeviceRegistry()
                 .withNewInfinispan()
-                .withInfinispanServerAddress(infinispanEndpoint.toString())
+                .withServerAddress(infinispanEndpoint.toString())
                 .endInfinispan()
                 .endDeviceRegistry()
                 .endServices()
@@ -50,6 +50,5 @@ public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase{
         super.removeIoTConfig();
         SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
     }
-
 
 }

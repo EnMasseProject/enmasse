@@ -8,7 +8,7 @@ package io.enmasse.systemtest.standard.mqtt;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.DestinationPlan;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
+import io.enmasse.systemtest.ability.ITestBaseWithMqtt;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.mqtt.MqttConnectionLostCallback;
 import io.enmasse.systemtest.mqtt.MqttDeliveryCompleteCallback;
@@ -23,7 +23,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class ConnectionTest extends TestBaseWithShared implements ITestBaseStandard {
+public class ConnectionTest extends TestBaseWithShared implements ITestBaseWithMqtt {
     private static final String CLIENT_ID = "my_client_id";
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";

@@ -21,7 +21,6 @@ import io.enmasse.systemtest.standard.QueueTest;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -31,20 +30,12 @@ import java.util.List;
 
 class PlansMarathonTest extends MarathonTestBase {
 
-    private static final AdminResourcesManager adminManager = new AdminResourcesManager();
-
-    @BeforeEach
-    void setUp() {
-        adminManager.setUp();
-    }
+    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     @AfterEach
     void tearDown() throws Exception {
         logCollector.collectRouterState("planMarathonTearDown");
         logCollector.collectConfigMaps("plansMarathonTearDown");
-        if (!environment.skipCleanup()) {
-            adminManager.tearDown();
-        }
     }
 
     @Test

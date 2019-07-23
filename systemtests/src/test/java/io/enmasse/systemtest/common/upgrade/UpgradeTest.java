@@ -5,25 +5,26 @@
 package io.enmasse.systemtest.common.upgrade;
 
 
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.*;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CmdClient;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.user.model.v1.User;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -36,8 +37,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.enmasse.systemtest.TestTag.upgrade;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(upgrade)
+@ExternalClients
 class UpgradeTest extends TestBase {
 
     private static final int MESSAGE_COUNT = 50;
@@ -46,7 +49,7 @@ class UpgradeTest extends TestBase {
     private static String startVersion;
 
     @BeforeAll
-    void prepareUpgradeEnv() {
+    void prepareUpgradeEnv() throws Exception {
         setReuseAddressSpace();
         productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
         startVersion = getVersionFromTemplateDir(Paths.get(Environment.getInstance().getStartTemplates()));
@@ -79,8 +82,14 @@ class UpgradeTest extends TestBase {
             installEnmasseBundle(Paths.get(Environment.getInstance().getStartTemplates()), startVersion);
         }
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null, getApiVersion());
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null, getApiVersion());
+        String authServiceName = !getApiVersion().equals("v1alpha1") ? "standard-authservice" : null;
+
+        if (authServiceName != null) {
+            ensurePersistentAuthService(authServiceName);
+        }
+
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion());
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", authServiceName, getApiVersion());
         Thread.sleep(30_000);
 
         createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", getApiVersion());
@@ -97,7 +106,7 @@ class UpgradeTest extends TestBase {
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion());
         Thread.sleep(30_000);
 
-        waitUntilDeployed(kubernetes.getInfraNamespace());
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
         Thread.sleep(60_000);
 
         assertTrue(sendMessage("brokered", new RheaClientSender(), new UserCredentials("test-brokered", "test"), "brokered-queue", "pepa", MESSAGE_COUNT, true));
@@ -110,7 +119,23 @@ class UpgradeTest extends TestBase {
         } else {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
         }
-        Thread.sleep(300_000);
+
+        AddressSpace brokered = getAddressSpace("brokered");
+        AddressSpace standard = getAddressSpace("standard");
+        Arrays.asList(brokered, standard).forEach(a -> {
+            try {
+                waitForAddressSpaceReady(a);
+            } catch (Exception e) {
+                fail(String.format("Address space didn't return to ready after upgrade : %s", a), e);
+            }
+        });
+
+        waitForDestinationsReady(AddressUtils.getAddresses(brokered).toArray(new Address[0]));
+        waitForDestinationsReady(AddressUtils.getAddresses(standard).toArray(new Address[0]));
+
+        List<User> items = kubernetes.getUserClient().list().getItems();
+        log.info("After upgrade {} user(s)", items.size());
+        items.forEach(u -> log.info("User {}", u.getSpec().getUsername()));
 
         if (!startVersion.equals("1.0")) {
 
@@ -180,7 +205,7 @@ class UpgradeTest extends TestBase {
             KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
         }
         Thread.sleep(60_000);
-        waitUntilDeployed(kubernetes.getInfraNamespace());
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
     }
 
     private void upgradeEnmasseBundle(Path templateDir) throws Exception {
@@ -208,7 +233,7 @@ class UpgradeTest extends TestBase {
             Thread.sleep(600_000);
             checkImagesUpdated(getVersionFromTemplateDir(templatePaths));
         } else {
-            waitUntilDeployed(kubernetes.getInfraNamespace());
+            TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
         }
     }
 
@@ -255,26 +280,7 @@ class UpgradeTest extends TestBase {
             });
             return ready.get();
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
-        waitUntilDeployed(kubernetes.getInfraNamespace());
-    }
-
-    private void waitUntilDeployed(String namespace) throws Exception {
-        TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
-            List<Pod> pods = kubernetes.listPods(namespace);
-            for (Pod pod : pods) {
-                List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
-                for (ContainerStatus s : initContainers) {
-                    if (!s.getReady())
-                        return false;
-                }
-                List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
-                for (ContainerStatus s : containers) {
-                    if (!s.getReady())
-                        return false;
-                }
-            }
-            return true;
-        }, new TimeoutBudget(10, TimeUnit.MINUTES));
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
     }
 
     protected boolean sendMessage(String addressSpace, AbstractClient client, UserCredentials
@@ -307,5 +313,26 @@ class UpgradeTest extends TestBase {
         client.setArguments(arguments);
 
         return client.run(logToOutput);
+    }
+
+    private void ensurePersistentAuthService(String authServiceName) throws Exception {
+        AuthenticationService authService = kubernetes.getAuthenticationServiceClient().withName(authServiceName).get();
+
+        if (authService.getSpec() != null && authService.getSpec().getStandard() != null) {
+
+            AuthenticationServiceSpecStandardStorage storage = authService.getSpec().getStandard().getStorage();
+            if (storage == null || !AuthenticationServiceSpecStandardType.persistent_claim.equals(storage.getType())) {
+                log.info("Installed auth service {} does not use persistent claim, recreating it ", authServiceName);
+                AdminResourcesManager.getInstance().removeAuthService(authService);
+
+                AuthenticationService replacement = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true);
+                kubernetes.getAuthenticationServiceClient().create(replacement);
+
+                log.info("Replacement auth service : {}", replacement);
+
+                Thread.sleep(30_000);
+                TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+            }
+        }
     }
 }

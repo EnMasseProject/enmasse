@@ -10,14 +10,16 @@ import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderFirefox {
+@SeleniumFirefox
+public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
 
     @Test
     void testCreateDeleteQueue() throws Exception {
@@ -161,47 +163,56 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
+    @ExternalClients
     void testSortAddressesByClients() throws Exception {
         doTestSortAddressesByClients();
     }
 
     @Test
+    @ExternalClients
     void testSortConnectionsBySenders() throws Exception {
         doTestSortConnectionsBySenders();
     }
 
     @Test
+    @ExternalClients
     void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers();
     }
 
     @Test
+    @ExternalClients
     void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
 
     @Test
+    @ExternalClients
     @Disabled("related issue: #667")
     void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
 
     @Test
+    @ExternalClients
     void testFilterConnectionsByHostname() throws Exception {
         doTestFilterConnectionsByHostname();
     }
 
     @Test
+    @ExternalClients
     void testSortConnectionsByHostname() throws Exception {
         doTestSortConnectionsByHostname();
     }
 
     @Test
+    @ExternalClients
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId();
     }
 
     @Test
+    @ExternalClients
     void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
     }
@@ -212,6 +223,7 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseSt
     }
 
     @Test
+    @ExternalClients
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics();
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, EnMasse authors.
+ * Copyright 2016-2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -17,6 +17,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 
 import javax.net.ssl.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -25,6 +26,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.BiFunction;
 
 public class MqttClientFactory {
 
@@ -33,7 +36,7 @@ public class MqttClientFactory {
     private final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
     private final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
 
-    private final Set<IMqttClient> connectedClients = new HashSet<>();
+    private final Set<AutoCloseable> connectedClients = new CopyOnWriteArraySet<>(); // using a copy-on-write set allows to mutate the set while traversing it
 
     private final AddressSpace defaultAddressSpace;
     private final String username;
@@ -59,7 +62,7 @@ public class MqttClientFactory {
 
     public Builder build() {
         return new Builder() {
-            Endpoint endpoint = null;
+            Endpoint endpoint;
             AddressSpace addressSpace = defaultAddressSpace;
             MqttConnectOptions mqttConnectOptions;
             String clientId = UUID.randomUUID().toString();
@@ -94,7 +97,12 @@ public class MqttClientFactory {
                     mqttConnectOptions = new MqttConnectOptions();
                     mqttConnectOptions.setAutomaticReconnect(true);
                 }
-                return MqttClientFactory.this.create(endpoint, addressSpace, mqttConnectOptions, clientId);
+                return MqttClientFactory.this.create(MqttClient::new, DelegatingMqttClient::new, endpoint, addressSpace, mqttConnectOptions, clientId);
+            }
+
+            @Override
+            public IMqttAsyncClient createAsync() throws Exception {
+                return MqttClientFactory.this.create(MqttAsyncClient::new, DelegatingMqttAsyncClient::new, endpoint, addressSpace, mqttConnectOptions, clientId);
             }
         };
     }
@@ -103,7 +111,16 @@ public class MqttClientFactory {
         return build().create();
     }
 
-    private IMqttClient create(Endpoint endpoint, AddressSpace addressSpace, MqttConnectOptions options, String clientId) throws Exception {
+    public IMqttAsyncClient createAsycm() throws Exception {
+        return build().createAsync();
+    }
+
+    @FunctionalInterface
+    private interface ConnectionFactory<C> {
+        C newInstance(String serverUri, String clientId, MqttClientPersistence persistence) throws MqttException;
+    }
+
+    private <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator, Endpoint endpoint, AddressSpace addressSpace, MqttConnectOptions options, String clientId) throws Exception {
 
         Endpoint mqttEndpoint;
 
@@ -143,20 +160,17 @@ public class MqttClientFactory {
                 ? TLS_SERVER_URI_TEMPLATE
                 : SERVER_URI_TEMPLATE;
         String serverURI = String.format(uriFormat, mqttEndpoint.getHost(), mqttEndpoint.getPort());
-        IMqttClient mqttClient = new MqttClient(serverURI, clientId, new MemoryPersistence());
-
-        return new DelegatingMqttClient(mqttClient, options);
+        return delegator.apply(factory.newInstance(serverURI, clientId, new MemoryPersistence()), options);
     }
 
     public void close() {
-        for (Iterator<IMqttClient> iterator = connectedClients.iterator(); iterator.hasNext(); ) {
-            IMqttClient connectedClient = iterator.next();
+        for (AutoCloseable client : connectedClients) {
             try {
-                connectedClient.close();
+                client.close();
             } catch (Exception e) {
             }
-            iterator.remove();
         }
+        connectedClients.clear();
     }
 
 
@@ -245,14 +259,171 @@ public class MqttClientFactory {
         }
     }
 
-    private class DelegatingMqttClient implements IMqttClient {
+    private class DelegatingMqttAsyncClient implements IMqttAsyncClient, AutoCloseable {
+
+        private IMqttAsyncClient mqttClient;
+        private MqttConnectOptions options;
+
+        public DelegatingMqttAsyncClient(IMqttAsyncClient mqttClient, MqttConnectOptions options) {
+            this.mqttClient = mqttClient;
+            this.options = options;
+            connectedClients.add(this);
+        }
+
+        @Override
+        public void close() throws MqttException {
+            connectedClients.remove(this);
+            mqttClient.close();
+        }
+
+        public IMqttToken connect() throws MqttException, MqttSecurityException {
+            return mqttClient.connect(options);
+        }
+
+        public IMqttToken connect(MqttConnectOptions options) throws MqttException, MqttSecurityException {
+            throw new UnsupportedOperationException("Use the zero args this method.");
+        }
+
+        public IMqttToken connect(Object userContext, IMqttActionListener callback) throws MqttException, MqttSecurityException {
+            return mqttClient.connect(options, userContext, callback);
+        }
+
+        public IMqttToken connect(MqttConnectOptions options, Object userContext, IMqttActionListener callback) throws MqttException, MqttSecurityException {
+            throw new UnsupportedOperationException("Use the zero args this method.");
+        }
+
+        public IMqttToken disconnect() throws MqttException {
+            return mqttClient.disconnect();
+        }
+
+        public IMqttToken disconnect(long quiesceTimeout) throws MqttException {
+            return mqttClient.disconnect(quiesceTimeout);
+        }
+
+        public IMqttToken disconnect(Object userContext, IMqttActionListener callback) throws MqttException {
+            return mqttClient.disconnect(userContext, callback);
+        }
+
+        public IMqttToken disconnect(long quiesceTimeout, Object userContext, IMqttActionListener callback) throws MqttException {
+            return mqttClient.disconnect(quiesceTimeout, userContext, callback);
+        }
+
+        public void disconnectForcibly() throws MqttException {
+            mqttClient.disconnectForcibly();
+        }
+
+        public void disconnectForcibly(long disconnectTimeout) throws MqttException {
+            mqttClient.disconnectForcibly(disconnectTimeout);
+        }
+
+        public void disconnectForcibly(long quiesceTimeout, long disconnectTimeout) throws MqttException {
+            mqttClient.disconnectForcibly(quiesceTimeout, disconnectTimeout);
+        }
+
+        public boolean isConnected() {
+            return mqttClient.isConnected();
+        }
+
+        public String getClientId() {
+            return mqttClient.getClientId();
+        }
+
+        public String getServerURI() {
+            return mqttClient.getServerURI();
+        }
+
+        public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained) throws MqttException, MqttPersistenceException {
+            return mqttClient.publish(topic, payload, qos, retained);
+        }
+
+        public IMqttDeliveryToken publish(String topic, byte[] payload, int qos, boolean retained, Object userContext, IMqttActionListener callback)
+                throws MqttException, MqttPersistenceException {
+            return mqttClient.publish(topic, payload, qos, retained, userContext, callback);
+        }
+
+        public IMqttDeliveryToken publish(String topic, MqttMessage message) throws MqttException, MqttPersistenceException {
+            return mqttClient.publish(topic, message);
+        }
+
+        public IMqttDeliveryToken publish(String topic, MqttMessage message, Object userContext, IMqttActionListener callback) throws MqttException, MqttPersistenceException {
+            return mqttClient.publish(topic, message, userContext, callback);
+        }
+
+        public IMqttToken subscribe(String topicFilter, int qos) throws MqttException {
+            return mqttClient.subscribe(topicFilter, qos);
+        }
+
+        public IMqttToken subscribe(String topicFilter, int qos, Object userContext, IMqttActionListener callback) throws MqttException {
+            return mqttClient.subscribe(topicFilter, qos, userContext, callback);
+        }
+
+        public IMqttToken subscribe(String[] topicFilters, int[] qos) throws MqttException {
+            return mqttClient.subscribe(topicFilters, qos);
+        }
+
+        public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext, IMqttActionListener callback) throws MqttException {
+            return mqttClient.subscribe(topicFilters, qos, userContext, callback);
+        }
+
+        public IMqttToken subscribe(String topicFilter, int qos, Object userContext, IMqttActionListener callback, IMqttMessageListener messageListener) throws MqttException {
+            return mqttClient.subscribe(topicFilter, qos, userContext, callback, messageListener);
+        }
+
+        public IMqttToken subscribe(String topicFilter, int qos, IMqttMessageListener messageListener) throws MqttException {
+            return mqttClient.subscribe(topicFilter, qos, messageListener);
+        }
+
+        public IMqttToken subscribe(String[] topicFilters, int[] qos, IMqttMessageListener[] messageListeners) throws MqttException {
+            return mqttClient.subscribe(topicFilters, qos, messageListeners);
+        }
+
+        public IMqttToken subscribe(String[] topicFilters, int[] qos, Object userContext, IMqttActionListener callback, IMqttMessageListener[] messageListeners)
+                throws MqttException {
+            return mqttClient.subscribe(topicFilters, qos, userContext, callback, messageListeners);
+        }
+
+        public IMqttToken unsubscribe(String topicFilter) throws MqttException {
+            return mqttClient.unsubscribe(topicFilter);
+        }
+
+        public IMqttToken unsubscribe(String[] topicFilters) throws MqttException {
+            return mqttClient.unsubscribe(topicFilters);
+        }
+
+        public IMqttToken unsubscribe(String topicFilter, Object userContext, IMqttActionListener callback) throws MqttException {
+            return mqttClient.unsubscribe(topicFilter, userContext, callback);
+        }
+
+        public IMqttToken unsubscribe(String[] topicFilters, Object userContext, IMqttActionListener callback) throws MqttException {
+            return mqttClient.unsubscribe(topicFilters, userContext, callback);
+        }
+
+        public void setCallback(MqttCallback callback) {
+            mqttClient.setCallback(callback);
+        }
+
+        public IMqttDeliveryToken[] getPendingDeliveryTokens() {
+            return mqttClient.getPendingDeliveryTokens();
+        }
+
+        public void setManualAcks(boolean manualAcks) {
+            mqttClient.setManualAcks(manualAcks);
+        }
+
+        public void messageArrivedComplete(int messageId, int qos) throws MqttException {
+            mqttClient.messageArrivedComplete(messageId, qos);
+        }
+
+    }
+
+    private class DelegatingMqttClient implements IMqttClient, AutoCloseable {
         private final IMqttClient mqttClient;
         private final MqttConnectOptions options;
 
         public DelegatingMqttClient(IMqttClient mqttClient, MqttConnectOptions options) {
             this.mqttClient = mqttClient;
             this.options = options;
-            connectedClients.add(mqttClient);
+            connectedClients.add(this);
         }
 
         @Override
@@ -267,7 +438,7 @@ public class MqttClientFactory {
 
         @Override
         public void connect() throws MqttException {
-            mqttClient.connect(options);
+            this.mqttClient.connect(options);
         }
 
         @Override
@@ -437,11 +608,8 @@ public class MqttClientFactory {
 
         @Override
         public void close() throws MqttException {
-            try {
-                this.mqttClient.close();
-            } finally {
-                connectedClients.remove(this.mqttClient);
-            }
+            connectedClients.remove(this);
+            this.mqttClient.close();
         }
     }
 
@@ -456,5 +624,7 @@ public class MqttClientFactory {
         Builder clientId(String clientId);
 
         IMqttClient create() throws Exception;
+
+        IMqttAsyncClient createAsync() throws Exception;
     }
 }

@@ -62,20 +62,25 @@ public class AddressSpaceUtils {
     public static AddressSpace waitForAddressSpaceReady(AddressSpace addressSpace, TimeoutBudget budget) throws Exception {
         boolean isReady = false;
         var client = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
+
+        String name = addressSpace.getMetadata().getName();
+        AddressSpace clientAddressSpace = addressSpace;
         while (budget.timeLeft() >= 0 && !isReady) {
-            addressSpace = client.withName(addressSpace.getMetadata().getName()).get();
-            isReady = isAddressSpaceReady(addressSpace);
+            clientAddressSpace = client.withName(name).get();
+            isReady = isAddressSpaceReady(clientAddressSpace);
             if (!isReady) {
                 Thread.sleep(10000);
             }
-            log.info("Waiting until Address space: '{}' messages {} will be in ready state", addressSpace.getMetadata().getName(), addressSpace.getStatus().getMessages());
+            log.info("Waiting until Address space: '{}' messages {} will be in ready state", name,
+                    (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().getMessages() : null);
         }
+
         if (!isReady) {
-            String status = addressSpace.getStatus().toString();
-            throw new IllegalStateException("Address Space " + addressSpace + " is not in Ready state within timeout: " + status);
+            String status = (clientAddressSpace != null && clientAddressSpace.getStatus() != null) ? clientAddressSpace.getStatus().toString() : null;
+            throw new IllegalStateException(String.format("Address Space %s is not in Ready state within timeout: %s", name, status));
         }
-        log.info("Address space {} is ready for use", addressSpace);
-        return addressSpace;
+        log.info("Address space {} is ready for use", clientAddressSpace);
+        return clientAddressSpace;
     }
 
     public static void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {

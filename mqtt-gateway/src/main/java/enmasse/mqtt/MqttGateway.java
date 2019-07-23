@@ -174,7 +174,7 @@ public class MqttGateway extends AbstractVerticle {
                                                     .collect(Collectors.toList());
 
             CompositeFuture.all(closeFutures).setHandler(done -> {
-                this.server.close(shutdownTracker.completer());
+                this.server.close(shutdownTracker);
             });
         } else {
             shutdownTracker.complete();

@@ -8,8 +8,6 @@ pipeline {
         ansiColor('xterm')
     }
     environment {
-        DOCKER_REGISTRY = '172.30.1.1:5000'
-        DOCKER_ORG = 'enmasseci'
         TAG = "latest"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
@@ -57,6 +55,17 @@ pipeline {
                     } else {
                         env.UPGRADE_FROM = params.UPGRADE_FROM
                     }
+                    if (env.ghprbCommentBody.contains('test_only')) {
+                        env.TEST_ONLY = true
+                        env.DOCKER_REGISTRY = 'quay.io'
+                        env.DOCKER_ORG = 'enmasse'
+                    } else {
+                        env.TEST_ONLY = false
+                        env.DOCKER_REGISTRY = '172.30.1.1:5000'
+                        env.DOCKER_ORG = 'enmasseci'
+                    }
+
+                    echo "TEST_ONLY: ${env.TEST_ONLY}"
                     echo "TEST_CASE: ${env.TEST_CASE}"
                     echo "TEST_PROFILE: ${env.TEST_PROFILE}"
                     echo "UPGRADE_FROM: ${env.UPGRADE_FROM}"
@@ -73,13 +82,20 @@ pipeline {
             }
         }
         stage('build') {
+            when {
+                environment name: 'TEST_ONLY', value: 'false'
+            }
             steps {
                 script {
                     lib.buildEnmasse()
                 }
             }
+
         }
         stage('push docker images') {
+            when {
+                environment name: 'TEST_ONLY', value: 'false'
+            }
             steps {
                 sh 'oc login -u test -p test --server localhost:8443 --insecure-skip-tls-verify'
                 sh 'oc new-project enmasseci'
@@ -97,13 +113,6 @@ pipeline {
             }
             steps {
                 sh "sh ./systemtests/scripts/download_released_enmasse.sh ${env.UPGRADE_FROM}"
-            }
-        }
-        stage('[upgrade] install requirements') {
-            steps {
-                script {
-                    sh "ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml"
-                }
             }
         }
         stage('[upgrade] login') {
@@ -143,7 +152,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.TAG, false, false, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
+                        lib.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
                     }
                 }
             }

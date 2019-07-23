@@ -4,7 +4,11 @@
  */
 package io.enmasse.systemtest.ability;
 
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.GlobalLogCollector;
+import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -19,6 +23,12 @@ public class ExecutionListener implements TestExecutionListener {
     private static final Logger log = CustomLogger.getLogger();
 
     @Override
+    public void testPlanExecutionStarted(TestPlan testPlan) {
+        SharedAddressSpaceManager.getInstance().setTestPlan(testPlan);
+        SharedAddressSpaceManager.getInstance().printTestClasses();
+    }
+
+    @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
         Environment env = Environment.getInstance();
         if (!env.skipCleanup()) {
@@ -30,11 +40,11 @@ public class ExecutionListener implements TestExecutionListener {
                     try {
                         AddressSpaceUtils.deleteAddressSpaceAndWait(addrSpace, logCollector);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.warn("Cleanup failed or no clean is needed");
                     }
                 });
             } catch (Exception e) {
-                e.printStackTrace();
+                log.warn("Cleanup failed or no clean is needed");
             }
             if (IoTUtils.isIoTInstalled(kube)) {
                 try {
@@ -51,14 +61,14 @@ public class ExecutionListener implements TestExecutionListener {
                         log.info("iot config '{}' will be removed", config.getMetadata().getName());
                         try {
                             IoTUtils.deleteIoTConfigAndWait(kube, config);
-                        } catch ( Exception e ) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                     });
                     log.info("Infinispan server will be removed");
                     SystemtestsKubernetesApps.deleteInfinispanServer(kube.getInfraNamespace());
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.warn("Cleanup failed or no clean is needed");
                 }
             }
         } else {

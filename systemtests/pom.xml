@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.enmasse</groupId>
         <artifactId>enmasse</artifactId>
-        <version>0.29-SNAPSHOT</version>
+        <version>0.30-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>systemtests</artifactId>
@@ -159,62 +159,48 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>shared-standard | shared-brokered | isolated | marathon | shared-iot</groups>
+                <groups>shared-standard | shared-brokered | shared-mqtt | isolated | marathon | shared-iot</groups>
             </properties>
         </profile>
         <profile>
-            <id>shared-brokered-pr</id>
+            <id>shared</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>shared-brokered &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot</groups>
+                <groups>(shared-standard | shared-brokered | shared-mqtt) &amp; !isolated &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !olm</groups>
             </properties>
         </profile>
         <profile>
-            <id>shared-standard-pr</id>
+            <id>isolated</id>
+            <properties>
+                <groups>isolated &amp; !marathon  &amp; !shared-iot &amp; !olm</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>shared-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>shared-standard &amp; !nonPR &amp; !smoke &amp; !marathon &amp; !shared-iot</groups>
+                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot &amp; !isolated &amp; !olm</groups>
             </properties>
         </profile>
         <profile>
             <id>isolated-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot</groups>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated</id>
-            <properties>
-                <groups>isolated &amp; !marathon  &amp; !shared-iot</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>shared-brokered</id>
-            <properties>
-                <groups>shared-brokered &amp; !marathon</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>shared-standard</id>
-            <properties>
-                <groups>shared-standard &amp; !marathon</groups>
-                <skip.tests>false</skip.tests>
+                <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot &amp; !olm</groups>
             </properties>
         </profile>
         <profile>
             <id>shared-iot</id>
             <properties>
-                <groups>shared-iot &amp; !marathon</groups>
+                <groups>shared-iot &amp; !marathon &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>smoke-iot</id>
             <properties>
-                <groups>shared-iot &amp; smoke &amp; !marathon</groups>
+                <groups>shared-iot &amp; smoke &amp; !marathon &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -228,42 +214,42 @@
         <profile>
             <id>smoke</id>
             <properties>
-                <groups>smoke &amp; !shared-iot &amp; !marathon</groups>
+                <groups>smoke &amp; !shared-iot &amp; !marathon &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>upgrade</id>
             <properties>
-                <groups>upgrade &amp; !marathon</groups>
+                <groups>upgrade &amp; !marathon &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
-            <id>shared-standard-release</id>
+            <id>shared-release</id>
             <properties>
-                <groups>shared-standard &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>shared-brokered-release</id>
-            <properties>
-                <groups>shared-brokered &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot</groups>
+                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !isolated &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>isolated-release</id>
             <properties>
-                <groups>isolated &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
+                <groups>isolated &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
         <profile>
             <id>iot-release</id>
             <properties>
-                <groups>shared-iot &amp; !noneAuth &amp; !smoke &amp; !marathon</groups>
+                <groups>shared-iot &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !olm</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
+            <id>olm</id>
+            <properties>
+                <groups>olm &amp; !shared-standard &amp; !shared-brokered &amp; !shared-mqtt  &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !smoke-iot &amp; !isolated</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

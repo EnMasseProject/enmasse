@@ -10,7 +10,8 @@ import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -20,7 +21,8 @@ import static io.enmasse.systemtest.TestTag.nonPR;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(nonPR)
-public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseStandard, ISeleniumProviderChrome {
+@SeleniumChrome
+public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseStandard {
 
     @Test
     void testCreateDeleteQueue() throws Exception {
@@ -171,48 +173,56 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testSortConnectionsBySenders() throws Exception {
         doTestSortConnectionsBySenders();
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers();
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testFilterConnectionsByHostname() throws Exception {
         doTestFilterConnectionsByHostname();
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testSortConnectionsByHostname() throws Exception {
         doTestSortConnectionsByHostname();
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId();
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
@@ -225,6 +235,7 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
     }
 
     @Test
+    @ExternalClients
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics();

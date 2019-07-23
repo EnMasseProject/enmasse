@@ -7,18 +7,18 @@
   <parent>
     <groupId>io.enmasse</groupId>
     <artifactId>enmasse</artifactId>
-    <version>0.29-SNAPSHOT</version>
+    <version>0.30-SNAPSHOT</version>
   </parent>
   <artifactId>iot</artifactId>
   <packaging>pom</packaging>
 
   <properties>
-    <hono.version>1.0-M4</hono.version>
+    <hono.version>1.0-M5</hono.version>
     <infinispan.version>9.4.13.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
-    <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
+    <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
     <micrometer.version>1.1.4</micrometer.version>
     <netty-tcnative.version>2.0.17.Final</netty-tcnative.version>
   </properties>
@@ -84,17 +84,12 @@
 
       <dependency>
         <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-query</artifactId>
+        <artifactId>infinispan-core</artifactId>
         <version>${infinispan.version}</version>
       </dependency>
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-client-hotrod</artifactId>
-        <version>${infinispan.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.infinispan</groupId>
-        <artifactId>infinispan-remote-query-client</artifactId>
         <version>${infinispan.version}</version>
       </dependency>
       <dependency>

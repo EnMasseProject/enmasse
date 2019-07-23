@@ -8,18 +8,11 @@ import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.iot.model.v1.*;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
-import io.enmasse.address.model.CoreCrd;
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigList;
-import io.enmasse.iot.model.v1.IoTCrd;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectList;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -29,11 +22,7 @@ import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.ExecListener;
-import io.fabric8.kubernetes.client.dsl.ExecWatch;
-import io.fabric8.kubernetes.client.dsl.LogWatch;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.*;
 import okhttp3.Response;
 import org.slf4j.Logger;
 
@@ -189,8 +178,13 @@ public abstract class Kubernetes {
 
     public MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
             Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient() {
+        return getConsoleServiceClient(infraNamespace);
+    }
+
+    public MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
+            Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient(String namespace) {
         return (MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
-                Resource<ConsoleService, DoneableConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class, DoneableConsoleService.class).inNamespace(infraNamespace);
+                Resource<ConsoleService, DoneableConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class, DoneableConsoleService.class).inNamespace(namespace);
     }
 
     public MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> getIoTConfigClient() {
@@ -206,9 +200,9 @@ public abstract class Kubernetes {
     }
 
     public MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> getIoTProjectClient(String namespace) {
-        if(namespace == null) {
+        if (namespace == null) {
             return client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
-        }else {
+        } else {
             return (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class).inNamespace(namespace);
         }
     }
@@ -238,6 +232,7 @@ public abstract class Kubernetes {
 
     /**
      * Assumes infra namespace
+     *
      * @param name
      * @return
      */
@@ -258,26 +253,27 @@ public abstract class Kubernetes {
 
     public Map<String, String> getLogsOfTerminatedPods(String namespace) {
         Map<String, String> terminatedPodsLogs = new HashMap<>();
-        try {
-            client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
-                pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
-                    log.info("pod:'{}' : restart count '{}'",
-                            pod.getMetadata().getName(),
-                            containerStatus.getRestartCount());
-                    if (containerStatus.getRestartCount() > 0) {
+        client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
+            pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
+                log.info("pod:'{}' : restart count '{}'",
+                        pod.getMetadata().getName(),
+                        containerStatus.getRestartCount());
+                if (containerStatus.getRestartCount() > 0) {
+                    String name = String.format("%s_%s", pod.getMetadata().getName(), containerStatus.getName());
+                    try {
+                        String log = client.pods().inNamespace(namespace)
+                                .withName(pod.getMetadata().getName())
+                                .inContainer(containerStatus.getName())
+                                .terminated().getLog();
                         terminatedPodsLogs.put(
-                                pod.getMetadata().getName(),
-                                client.pods().inNamespace(namespace)
-                                        .withName(pod.getMetadata().getName())
-                                        .inContainer(containerStatus.getName())
-                                        .terminated().getLog());
+                                name,
+                                log);
+                    } catch (Exception e) {
+                        log.warn("Failed to gather terminated log for {} with termination count {} (ignored)", name, containerStatus.getRestartCount());
                     }
-                });
+                }
             });
-        } catch (Exception allExceptions) {
-            log.warn("Searching in terminated pods failed! No logs of terminated pods will be stored.");
-            allExceptions.printStackTrace();
-        }
+        });
         return terminatedPodsLogs;
     }
 

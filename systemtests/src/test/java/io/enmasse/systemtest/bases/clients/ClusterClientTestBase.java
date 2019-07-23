@@ -8,53 +8,27 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.apiclients.MsgCliApiClient;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
-import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.*;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.slf4j.Logger;
+import java.util.concurrent.Future;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
+@ExternalClients
 public abstract class ClusterClientTestBase extends TestBaseWithShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
-    private Logger log = CustomLogger.getLogger();
-    private MsgCliApiClient cliApiClient;
 
     @BeforeEach
     public void setUpClientBase() throws Exception {
-        if (cliApiClient == null) {
-            SystemtestsKubernetesApps.deployMessagingClientApp(environment.namespace(), kubernetes);
-            cliApiClient = new MsgCliApiClient(kubernetes, SystemtestsKubernetesApps.getMessagingClientEndpoint(environment.namespace(), kubernetes));
-        }
-
         arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
         arguments.put(ClientArgument.CONN_SSL, "true");
-    }
-
-    @AfterAll
-    public void tearDownAll() {
-        try {
-            SystemtestsKubernetesApps.deleteMessagingClientApp(environment.namespace(), kubernetes);
-        } finally {
-            if (cliApiClient != null) {
-                cliApiClient.close();
-                cliApiClient = null;
-            }
-        }
     }
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) throws Exception {
@@ -101,18 +75,17 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         }
 
         sender.setArguments(arguments);
+        arguments.put(ClientArgument.TIMEOUT, "10");  // In seconds, maximum time the consumer waits for a single message
         arguments.remove(ClientArgument.MSG_CONTENT);
         receiver.setArguments(arguments);
 
-        JsonObject response = cliApiClient.sendAndGetStatus(sender);
-        assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
-                response.getInteger("ecode"), is(0));
+        assertTrue(sender.run());
+        assertTrue(receiver.run());
 
-        Thread.sleep(2000);
-
-        response = cliApiClient.sendAndGetStatus(receiver);
-        assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
-                response.getInteger("ecode"), is(0));
+        assertEquals(expectedMsgCount, sender.getMessages().size(),
+                String.format("Expected %d sent messages", expectedMsgCount));
+        assertEquals(expectedMsgCount, receiver.getMessages().size(),
+                String.format("Expected %d received messages", expectedMsgCount));
     }
 
     protected void doMqttMessageTest() throws Exception {
@@ -147,23 +120,16 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
         arguments.put(ClientArgument.TIMEOUT, "40");
         receiver.setArguments(arguments);
 
-        log.info("Subscribe receiver");
-        String receiverId = cliApiClient.sendAndGetId(receiver);
+        Future<Boolean> recResult = receiver.runAsync();
+        Thread.sleep(20_000);
 
-        Thread.sleep(30_000); //mqtt connection is not in console
-
-        log.info("Send messages");
-        JsonObject response = cliApiClient.sendAndGetStatus(sender);
-        assertThat(String.format("Return code of sender is not 0: %s", response.toString()),
-                response.getInteger("ecode"), is(0));
-
-        Thread.sleep(30_000);
-
-        log.info("Check if subscriber received messages");
-        response = cliApiClient.getClientInfo(receiverId);
-        log.info(response.toString());
-        assertThat(String.format("Return code of receiver is not 0: %s", response.toString()),
-                response.getInteger("ecode"), is(0));
-        assertFalse(response.getString("stdOut").isEmpty(), "Receiver does not receive message");
+        assertAll(
+                () -> assertTrue(sender.run(), "Producer failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, sender.getMessages().size(),
+                        String.format("Expected %d sent messages", expectedMsgCount)));
+        assertAll(
+                () -> assertTrue(recResult.get(), "Subscriber failed, expected return code 0"),
+                () -> assertEquals(expectedMsgCount, receiver.getMessages().size(),
+                        String.format("Expected %d received messages", expectedMsgCount)));
     }
 }

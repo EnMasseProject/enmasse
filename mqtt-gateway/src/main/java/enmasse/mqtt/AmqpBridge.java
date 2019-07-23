@@ -129,8 +129,8 @@ public class AmqpBridge {
         ProtonClientOptions clientOptions = new ProtonClientOptions();
         clientOptions.setHeartbeat(this.mqttEndpoint.keepAliveTimeSeconds() * 1000);
 
-        String userName = (this.mqttEndpoint.auth() != null) ? this.mqttEndpoint.auth().userName() : null;
-        String password = (this.mqttEndpoint.auth() != null) ? this.mqttEndpoint.auth().password() : null;
+        String userName = (this.mqttEndpoint.auth() != null) ? this.mqttEndpoint.auth().getUsername() : null;
+        String password = (this.mqttEndpoint.auth() != null) ? this.mqttEndpoint.auth().getPassword() : null;
         // NOTE : if username/password are null then Vert.x Proton just provides SASL ANONYMOUS as supported mechanism
         //        otherwise it provides PLAIN with username/password provided here
         this.client.connect(clientOptions, address, port, userName, password, done -> {
@@ -206,9 +206,9 @@ public class AmqpBridge {
 
                     AmqpWillMessage amqpWillMessage =
                             new AmqpWillMessage(will.isWillRetain(),
-                                    will.willTopic(),
-                                    MqttQoS.valueOf(will.willQos()),
-                                    Buffer.buffer(will.willMessage()));
+                                    will.getWillTopic(),
+                                    MqttQoS.valueOf(will.getWillQos()),
+                                    Buffer.buffer(will.getWillMessageBytes()));
 
                     // specified link name for the Last Will and Testament Service as MQTT clientid
                     ProtonLinkOptions linkOptions = new ProtonLinkOptions();
@@ -219,7 +219,7 @@ public class AmqpBridge {
                     this.lwtEndpoint = new AmqpLwtServiceEndpoint(wsSender);
 
                     this.lwtEndpoint.open();
-                    this.lwtEndpoint.sendWill(amqpWillMessage, willFuture.completer());
+                    this.lwtEndpoint.sendWill(amqpWillMessage, willFuture);
 
                 } else {
 
@@ -264,7 +264,7 @@ public class AmqpBridge {
                         AmqpListMessage amqpListMessage =
                                 new AmqpListMessage(clientIdentifier);
 
-                        this.ssEndpoint.sendList(amqpListMessage, sessionFuture.completer());
+                        this.ssEndpoint.sendList(amqpListMessage, sessionFuture);
                     }
 
                     return sessionFuture;

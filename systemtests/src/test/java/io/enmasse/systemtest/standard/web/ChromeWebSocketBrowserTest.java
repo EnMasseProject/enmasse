@@ -8,7 +8,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderChrome;
+import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,8 @@ import org.junit.jupiter.api.Test;
 import static io.enmasse.systemtest.TestTag.nonPR;
 
 @Tag(nonPR)
-class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard, ISeleniumProviderChrome {
+@SeleniumChrome
+class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestBaseStandard {
 
     @Test
     void testWebSocketSendReceiveQueue() throws Exception {

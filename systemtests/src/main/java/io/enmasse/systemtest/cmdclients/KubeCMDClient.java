@@ -24,10 +24,10 @@ public class KubeCMDClient extends CmdClient {
     protected static final int DEFAULT_SYNC_TIMEOUT = 10000;
     protected static final int ONE_MINUTE_TIMEOUT = 60000;
     protected static final int FIVE_MINUTES_TIMEOUT = 300000;
-    protected static String CMD = setUpKubernetesCmd();
+    protected static String CMD = getCMD();
     private static Logger log = CustomLogger.getLogger();
 
-    private static String setUpKubernetesCmd() {
+    public static String getCMD() {
         String cmd = CMD;
         if (cmd == null) {
             if (env.useMinikube()) {
@@ -51,14 +51,12 @@ public class KubeCMDClient extends CmdClient {
             wr.write(definition);
             wr.flush();
             log.info("User '{}' created", defInFile.getAbsolutePath());
-            return execute(Arrays.asList(CMD, replace ? "replace" : "create", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
+            return execute(Arrays.asList(CMD, replace ? "replace" : "apply", "-n", namespace, "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
         } finally {
-            if (defInFile != null) {
-                Files.delete(Paths.get(defInFile.getAbsolutePath()));
-            }
+            Files.delete(Paths.get(defInFile.getAbsolutePath()));
         }
     }
 
@@ -266,7 +264,11 @@ public class KubeCMDClient extends CmdClient {
     }
 
     public static ExecutionResultData getEvents(String namespace) {
-        List<String> command = Arrays.asList(CMD, "get", "events", "-n", namespace);
+        List<String> command = Arrays.asList(CMD, "get", "events",
+                "--namespace", namespace,
+                "--output", "custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}",
+                "--sort-by={.lastTimestamp}");
+
         return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
@@ -277,6 +279,10 @@ public class KubeCMDClient extends CmdClient {
 
     public static ExecutionResultData describePods(String namespace) {
         return execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "-n", namespace, "describe", "pods");
+    }
+
+    public static ExecutionResultData describeNodes() {
+        return execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "describe", "nodes");
     }
 
     public static ExecutionResultData createFromFile(String namespace, Path path) {
@@ -307,4 +313,24 @@ public class KubeCMDClient extends CmdClient {
         return execute(Arrays.asList(CMD, "delete", "namespace", name), FIVE_MINUTES_TIMEOUT, true);
     }
 
+
+    public static ExecutionResultData applyCR(String definition) throws IOException {
+        final File defInFile = new File("crdefinition.file");
+        try (FileWriter wr = new FileWriter(defInFile.getName())) {
+            wr.write(definition);
+            wr.flush();
+            log.info("User '{}' created", defInFile.getAbsolutePath());
+            return execute(Arrays.asList(CMD, "apply", "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw e;
+        } finally {
+            Files.delete(Paths.get(defInFile.getAbsolutePath()));
+        }
+    }
+
+    public static ExecutionResultData deleteResource(String namespace, String resource, String name) {
+        List<String> ressourcesCmd = getRessourcesCmd("delete", resource, namespace, name, Optional.empty());
+        return execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
+    }
 }

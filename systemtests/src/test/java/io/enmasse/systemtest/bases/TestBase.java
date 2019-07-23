@@ -10,7 +10,19 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSchemaList;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
+import io.enmasse.systemtest.AddressType;
+import io.enmasse.systemtest.AdminResourcesManager;
+import io.enmasse.systemtest.BrokerManagement;
+import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.DestinationPlan;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.GlobalLogCollector;
+import io.enmasse.systemtest.JmsProvider;
+import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBase;
 import io.enmasse.systemtest.ability.ITestSeparator;
 import io.enmasse.systemtest.ability.TestWatcher;
@@ -36,7 +48,13 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
-import io.enmasse.user.model.v1.*;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.sasl.MechanismMismatchException;
 import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
@@ -56,8 +74,21 @@ import javax.jms.Session;
 import javax.security.sasl.AuthenticationException;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -67,7 +98,9 @@ import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Base class for all tests
@@ -88,6 +121,26 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private List<AddressSpace> addressSpaceList = new ArrayList<>();
     private boolean reuseAddressSpace;
 
+    protected static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
+        List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
+            MqttMessage m = new MqttMessage();
+            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
+            m.setQos(1);
+            return m;
+        }).collect(Collectors.toList());
+
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
+
+        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages published",
+                publishCount, is(messages.size()));
+
+        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages received",
+                receivedCount, is(messages.size()));
+    }
+
     @BeforeEach
     public void setup() throws Exception {
         if (!reuseAddressSpace) {
@@ -100,37 +153,48 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     @AfterEach
     public void teardown() throws Exception {
         try {
-            if (mqttClientFactory != null) {
-                mqttClientFactory.close();
-            }
-            if (amqpClientFactory != null) {
-                amqpClientFactory.close();
-            }
-
             if (!environment.skipCleanup() && !reuseAddressSpace) {
                 deleteAddressspacesFromList();
+                AdminResourcesManager.getInstance().tearDown();
             } else {
                 log.warn("Remove address spaces in tear down - SKIPPED!");
             }
         } catch (Exception e) {
-            log.error("Error tearing down test: {}", e.getMessage());
+            log.error("Error tearing down test", e);
 
             throw e;
         }
+    }
+
+    @AfterEach
+    public void closeMqttClient() {
+        if (mqttClientFactory != null) {
+            mqttClientFactory.close();
+            mqttClientFactory = null;
+        }
+    }
+
+    @AfterEach
+    public void closeAmqpClient() throws Exception {
+        if (amqpClientFactory != null) {
+            amqpClientFactory.close();
+            amqpClientFactory = null;
+        }
+
     }
 
     protected void setReuseAddressSpace() {
         reuseAddressSpace = true;
     }
 
-    protected void unsetReuseAddressSpace() {
-        reuseAddressSpace = false;
-    }
-
 
     //================================================================================================
     //==================================== AddressSpace methods ======================================
     //================================================================================================
+
+    protected void unsetReuseAddressSpace() {
+        reuseAddressSpace = false;
+    }
 
     protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
@@ -247,13 +311,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return kubernetes.getAddressSpaceClient().withName(addressSpaceName).get();
     }
 
-    protected AddressSpace getAddressSpace(String namespace, String addressSpaceName) {
-        return kubernetes.getAddressSpaceClient(namespace).withName(addressSpaceName).get();
-    }
-
     //================================================================================================
     //====================================== Address methods =========================================
     //================================================================================================
+
+    protected AddressSpace getAddressSpace(String namespace, String addressSpaceName) {
+        return kubernetes.getAddressSpaceClient(namespace).withName(addressSpaceName).get();
+    }
 
     protected void deleteAddresses(Address... destinations) throws Exception {
         logCollector.collectConfigMaps();
@@ -292,13 +356,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         AddressUtils.setAddresses(budget, true, addresses);
     }
 
-    protected void replaceAddress(Address destination) throws Exception {
-        AddressUtils.replaceAddress(destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
-    }
-
     //================================================================================================
     //======================================= User methods ===========================================
     //================================================================================================
+
+    protected void replaceAddress(Address destination) throws Exception {
+        AddressUtils.replaceAddress(destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
+    }
 
     protected User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) {
         User user = new UserBuilder()
@@ -378,13 +442,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         return null;
     }
 
-    protected boolean userExist(AddressSpace addressSpace, String username) {
-        return getUser(addressSpace, username) != null;
-    }
-
     //================================================================================================
     //======================================= Help methods ===========================================
     //================================================================================================
+
+    protected boolean userExist(AddressSpace addressSpace, String username) {
+        return getUser(addressSpace, username) != null;
+    }
 
     /**
      * give you a schema object
@@ -438,31 +502,34 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         if (isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
             return defaultValue;
         }
-        AmqpClient client = amqpClientFactory.createAddressClient(addressSpace, addressType);
-        client.getConnectOptions().setCredentials(credentials);
+        try (AmqpClient client = amqpClientFactory.createAddressClient(addressSpace, addressType)) {
+            client.getConnectOptions().setCredentials(credentials);
+            ProtonClientOptions protonClientOptions = client.getConnectOptions().getProtonClientOptions();
+            protonClientOptions.setLogActivity(true);
+            client.getConnectOptions().setProtonClientOptions(protonClientOptions);
 
-        try {
-            Future<List<Message>> received = client.recvMessages(address, 1);
-            Future<Integer> sent = client.sendMessages(address, Collections.singletonList("msg1"));
 
-            int numReceived = received.get(1, TimeUnit.MINUTES).size();
-            int numSent = sent.get(1, TimeUnit.MINUTES);
-            return (numSent == numReceived);
-        } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
-            Throwable cause = ex;
-            if (ex instanceof ExecutionException) {
-                cause = ex.getCause();
+            try {
+                Future<List<Message>> received = client.recvMessages(address, 1);
+                Future<Integer> sent = client.sendMessages(address, Collections.singletonList("msg1"));
+
+                int numReceived = received.get(1, TimeUnit.MINUTES).size();
+                int numSent = sent.get(1, TimeUnit.MINUTES);
+                return (numSent == numReceived);
+            } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
+                Throwable cause = ex;
+                if (ex instanceof ExecutionException) {
+                    cause = ex.getCause();
+                }
+
+                if (cause instanceof AuthenticationException || cause instanceof SaslSystemException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException || cause instanceof MechanismMismatchException) {
+                    log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
+                    return false;
+                } else {
+                    log.warn("canConnectWithAmqpAddress {} ({}) exception", address, addressType, ex);
+                    throw ex;
+                }
             }
-
-            if (cause instanceof AuthenticationException || cause instanceof SaslSystemException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException) {
-                log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
-                return false;
-            } else {
-                log.warn("canConnectWithAmqpAddress {} ({}) exception", address, addressType, ex);
-                throw ex;
-            }
-        } finally {
-            client.close();
         }
     }
 
@@ -507,7 +574,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * selenium provider with Firefox webdriver
      */
     protected SeleniumProvider getFirefoxSeleniumProvider() throws Exception {
-        SeleniumProvider seleniumProvider = new SeleniumProvider();
+        SeleniumProvider seleniumProvider = SeleniumProvider.getInstance();
         seleniumProvider.setupDriver(TestUtils.getFirefoxDriver());
         return seleniumProvider;
     }
@@ -940,8 +1007,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void logWithSeparator(Logger logger, String... messages) {
         logger.info("--------------------------------------------------------------------------------");
-        for (String message : messages)
+        for (String message : messages) {
             logger.info(message);
+        }
     }
 
     /**
@@ -1153,26 +1221,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    protected static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
-        List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
-            MqttMessage m = new MqttMessage();
-            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
-            m.setQos(1);
-            return m;
-        }).collect(Collectors.toList());
-
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
-
-        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages published",
-                publishCount, is(messages.size()));
-
-        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages received",
-                receivedCount, is(messages.size()));
-    }
-
     protected List<String> extractBodyAsString(Future<List<Message>> msgs) throws Exception {
         return msgs.get(1, TimeUnit.MINUTES).stream().map(m -> (String) ((AmqpValue) m.getBody()).getValue()).collect(Collectors.toList());
     }
@@ -1190,18 +1238,20 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list, boolean reverse) {
         log.info("Assert sort reverse: " + reverse);
-        if (!reverse)
+        if (!reverse) {
             assertTrue(Ordering.natural().isOrdered(list), message);
-        else
+        } else {
             assertTrue(Ordering.natural().reverse().isOrdered(list), message);
+        }
     }
 
     protected <T> void assertSorted(String message, Iterable<T> list, boolean reverse, Comparator<T> comparator) {
         log.info("Assert sort reverse: " + reverse);
-        if (!reverse)
+        if (!reverse) {
             assertTrue(Ordering.from(comparator).isOrdered(list), message);
-        else
+        } else {
             assertTrue(Ordering.from(comparator).reverse().isOrdered(list), message);
+        }
     }
 
     protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {

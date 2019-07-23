@@ -173,7 +173,7 @@ public class Executor {
                 Files.write(Paths.get(logPath.toString(), "stdOutput.log"), stdOut.getBytes());
                 Files.write(Paths.get(logPath.toString(), "stdError.log"), stdErr.getBytes());
             } catch (Exception ex) {
-                log.warn("Cannot save output of execution: " + ex.getMessage());
+                log.warn("Cannot save output of execution", ex);
             }
         }
     }
@@ -212,7 +212,7 @@ public class Executor {
             return CompletableFuture.supplyAsync(() -> {
                 Scanner scanner = new Scanner(is);
                 try {
-                    log.info("Reading stream {}", is);
+                    log.debug("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
                         data.append(scanner.nextLine());
                         if (appendLineSeparator) {

@@ -23,11 +23,12 @@ import java.util.Objects;
         },
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"credentialsSecret", "certificateSecret"})
+@JsonPropertyOrder({"credentialsSecret", "certificateSecret", "storage"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalProperties {
     private SecretReference credentialsSecret;
     private SecretReference certificateSecret;
+    private AuthenticationServiceSpecStandardStorage storage;
 
     public SecretReference getCredentialsSecret() {
         return credentialsSecret;
@@ -43,12 +44,13 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
         if (o == null || getClass() != o.getClass()) return false;
         AuthenticationServiceSpecStandard that = (AuthenticationServiceSpecStandard) o;
         return Objects.equals(credentialsSecret, that.credentialsSecret) &&
-                Objects.equals(certificateSecret, that.certificateSecret);
+                Objects.equals(certificateSecret, that.certificateSecret) &&
+                Objects.equals(storage, that.storage);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(credentialsSecret, certificateSecret);
+        return Objects.hash(credentialsSecret, certificateSecret, storage);
     }
 
     @Override
@@ -56,6 +58,7 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
         return "AuthenticationServiceSpecStandard{" +
                 "credentialsSecret=" + credentialsSecret +
                 ", certificateSecret=" + certificateSecret +
+                ", storage=" + storage +
                 '}';
     }
 
@@ -65,5 +68,13 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
 
     public void setCertificateSecret(SecretReference certificateSecret) {
         this.certificateSecret = certificateSecret;
+    }
+
+    public AuthenticationServiceSpecStandardStorage getStorage() {
+        return storage;
+    }
+
+    public void setStorage(AuthenticationServiceSpecStandardStorage storage) {
+        this.storage = storage;
     }
 }

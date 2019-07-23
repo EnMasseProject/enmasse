@@ -15,7 +15,7 @@ include::assembly-configuring.adoc[leveloffset=+1]
 
 include::assembly-upgrading.adoc[leveloffset=+1]
 
-include::../modules/proc-uninstalling.adoc[leveloffset=+1]
+include::assembly-uninstalling.adoc[leveloffset=+1]
 
 include::assembly-monitoring.adoc[leveloffset=+1]
 

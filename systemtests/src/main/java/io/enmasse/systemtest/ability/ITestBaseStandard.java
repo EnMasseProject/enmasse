@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.ability;
 
+import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.DestinationPlan;
@@ -34,4 +35,13 @@ public interface ITestBaseStandard extends ITestBase {
         return null;
     }
 
+    @Override
+    default String getDefaultAddressSpacePlan() {
+        return AddressSpacePlans.STANDARD_UNLIMITED;
+    }
+
+    @Override
+    default String getDefaultAddrSpaceIdentifier() {
+        return "standard";
+    }
 }

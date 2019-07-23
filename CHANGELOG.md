@@ -1,7 +1,12 @@
+## 0.30.0
+* Fix go tool vet on newer versions of go
+
+
 ## 0.29.0
 * Upgrade to Apache ActiveMQ Artemis 2.9.0
 * Upgrade to Apache Qpid Dispatch Router 1.8.0
-* Fix go tool vet on newer versions of go
+* Upgrade to Hono 1.0-M5
+* Updated Address Go type to add Status
 
 ## 0.28.2
 

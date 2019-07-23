@@ -10,24 +10,21 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.selenium.ISeleniumProvider;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.RheaWebPage;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
+
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class WebSocketBrowserTest extends TestBaseWithShared implements ISeleniumProvider {
+public abstract class WebSocketBrowserTest extends TestBaseWithShared {
 
     private RheaWebPage rheaWebPage;
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
-        if (selenium.getDriver() == null)
-            selenium.setupDriver(buildDriver());
-        else
-            selenium.clearScreenShots();
-        rheaWebPage = new RheaWebPage(selenium);
+        rheaWebPage = new RheaWebPage(SeleniumProvider.getInstance());
         deleteAddresses(sharedAddressSpace);
     }
 

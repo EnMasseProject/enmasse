@@ -35,7 +35,7 @@ public abstract class IoTTestBase extends TestBase {
     protected static final String IOT_ADDRESS_TELEMETRY = "telemetry";
     protected static final String IOT_ADDRESS_CONTROL = "control";
 
-    protected static Logger log = CustomLogger.getLogger();
+    private static Logger log = CustomLogger.getLogger();
 
     private List<IoTConfig> iotConfigs = new ArrayList<>();
     private List<IoTProject> iotProjects = new ArrayList<>();

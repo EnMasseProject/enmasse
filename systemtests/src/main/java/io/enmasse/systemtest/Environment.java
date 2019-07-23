@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest;
 
+import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
 
 import java.nio.file.Paths;
@@ -30,11 +31,12 @@ public class Environment {
     public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
     public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
     public static final String TAG_ENV = "TAG";
+    public static final String APP_NAME_ENV = "APP_NAME";
 
     public static final String IS_OCP4_REGEXP = "4.*";
 
-    private final String token = System.getenv(K8S_API_TOKEN_ENV);
-    private final String url = System.getenv(K8S_API_URL_ENV);
+    private String token = System.getenv(K8S_API_TOKEN_ENV);
+    private String url = System.getenv(K8S_API_URL_ENV);
     private final String namespace = System.getenv(K8S_NAMESPACE_ENV);
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault(KEYCLOAK_ADMIN_USER_ENV, "admin");
@@ -50,8 +52,15 @@ public class Environment {
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-0.26.5").toString());
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
+    private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
 
     private Environment() {
+        if (token == null || url == null) {
+            Config config = Config.autoConfigure(System.getenv()
+                    .getOrDefault("TEST_CLUSTER_CONTEXT", null));
+            token = config.getOauthToken();
+            url = config.getMasterUrl();
+        }
         String debugFormat = "{}:{}";
         log.info(debugFormat, USE_MINUKUBE_ENV, useMinikube);
         log.info(debugFormat, KEYCLOAK_ADMIN_PASSWORD_ENV, keycloakAdminPassword);
@@ -63,6 +72,7 @@ public class Environment {
         log.info(debugFormat, ENMASSE_VERSION_SYSTEM_PROPERTY, enmasseVersion);
         log.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
+        log.info(debugFormat, APP_NAME_ENV, appName);
         if(!useMinikube) {
             log.info(debugFormat, OCP_VERSION_ENV, ocpVersion);
         }
@@ -156,6 +166,10 @@ public class Environment {
 
     public String getTag() {
         return tag;
+    }
+
+    public String getAppName() {
+        return appName;
     }
 
 }

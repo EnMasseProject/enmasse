@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 
 /**
  * Various static utilities that don't belong in a specific place
@@ -237,5 +239,25 @@ public final class KubeUtil {
         } catch ( Exception e ) {
             return false;
         }
+    }
+
+    public static void applyFsGroupOverride(List<HasMetadata> items, Long fsGroupOverride) {
+        items.stream().filter(i -> i instanceof Deployment || i instanceof StatefulSet).forEach(
+                i -> {
+                    PodSpec spec;
+                    if (i instanceof StatefulSet) {
+                        spec = ((StatefulSet) i).getSpec().getTemplate().getSpec();
+                    } else  {
+                        spec = ((Deployment) i).getSpec().getTemplate().getSpec();
+                    }
+
+                    PodSecurityContext securityContext = new PodSecurityContext();
+                    if (spec.getSecurityContext() != null) {
+                        securityContext = spec.getSecurityContext();
+                    }
+                    securityContext.setFsGroup(fsGroupOverride);
+                    spec.setSecurityContext(securityContext);
+                }
+        );
     }
 }

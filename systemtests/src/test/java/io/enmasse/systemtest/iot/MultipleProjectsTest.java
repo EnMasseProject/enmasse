@@ -7,14 +7,15 @@ package io.enmasse.systemtest.iot;
 import java.net.HttpURLConnection;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import io.enmasse.systemtest.CustomLogger;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -38,7 +39,7 @@ import io.enmasse.systemtest.WaitPhase;
 import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBase;
-import io.enmasse.systemtest.iot.http.HttpAdapterTest;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -48,10 +49,12 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
+import org.slf4j.Logger;
 
 @Tag(TestTag.sharedIot)
 @Tag(TestTag.smoke)
 public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStandard {
+    private static Logger log = CustomLogger.getLogger();
 
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
@@ -61,7 +64,6 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
 
     @BeforeEach
     void initEnv() throws Exception {
-        Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
         CertBundle certBundle = CertificateUtils.createCertBundle();
         IoTConfig iotConfig = new IoTConfigBuilder()
                 .withNewMetadata()
@@ -70,9 +72,9 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
                 .withNewSpec()
                 .withNewServices()
                 .withNewDeviceRegistry()
-                .withNewInfinispan()
-                .withInfinispanServerAddress(infinispanEndpoint.toString())
-                .endInfinispan()
+                .withNewFile()
+                .withNumberOfDevicesPerTenant(10_0000)
+                .endFile()
                 .endDeviceRegistry()
                 .endServices()
                 .withNewAdapters()
@@ -128,14 +130,27 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
 
     @Test
     void testMultipleProjects() throws Exception {
-        CompletableFuture.allOf(projects.stream()
-                .map(ctx -> {
-                    return CompletableFuture.allOf(
-                            TestUtils.runAsync(() -> HttpAdapterTest.simpleHttpTelemetryTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getHttpAdapterClient())),
-                            TestUtils.runAsync(() -> HttpAdapterTest.simpleHttpEventTest(ctx.getAmqpClient(), tenantId(ctx.getProject()), ctx.getHttpAdapterClient())));
-                            //TODO add mqtt adapter tests when mqtt tests are enabled
-                })
-                .toArray(CompletableFuture[]::new)).get(5, TimeUnit.MINUTES);
+
+        for (final IoTProjectTestContext ctx : projects) {
+            new MessageSendTester()
+                    .type(MessageSendTester.Type.TELEMETRY)
+                    .delay(Duration.ofSeconds(1))
+                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), tenantId(ctx.getProject())))
+                    .sender(ctx.getHttpAdapterClient()::send)
+                    .amount(50)
+                    .consume(MessageSendTester.Consume.BEFORE)
+                    .execute();
+
+            new MessageSendTester()
+                    .type(MessageSendTester.Type.EVENT)
+                    .delay(Duration.ofMillis(100))
+                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), tenantId(ctx.getProject())))
+                    .sender(ctx.getHttpAdapterClient()::send)
+                    .amount(5)
+                    .consume(MessageSendTester.Consume.AFTER)
+                    .execute();
+        }
+
     }
 
     private void configureAmqpSide(IoTProjectTestContext ctx) throws Exception {
@@ -226,7 +241,6 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
         String tenant = tenantId(ctx.getProject());
         String deviceId = ctx.getDeviceId();
         credentialsClient.deleteAllCredentials(tenant, deviceId);
-        credentialsClient.getCredentials(tenant, deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         registryClient.deleteDeviceRegistration(tenant, deviceId);
         registryClient.getDeviceRegistration(tenant, deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         ctx.getHttpAdapterClient().close();

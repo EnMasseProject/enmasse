@@ -13,6 +13,7 @@ import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -26,7 +27,7 @@ import java.util.UUID;
 
 public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
-    protected final static Logger log = CustomLogger.getLogger();
+    private final static Logger log = CustomLogger.getLogger();
 
     private final String addressSpace = "shared-address-space";
 
@@ -35,6 +36,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
     private UserCredentials credentials;
     protected AmqpClientFactory iotAmqpClientFactory;
+
+    protected AmqpClient iotAmqpClient;
 
     @BeforeEach
     public void setUpSharedIoTProject() throws Exception {
@@ -52,7 +55,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                     .withNewServices()
                     .withNewDeviceRegistry()
                     .withNewInfinispan()
-                    .withInfinispanServerAddress(infinispanEndpoint.toString())
+                    .withServerAddress(infinispanEndpoint.toString())
                     .endInfinispan()
                     .endDeviceRegistry()
                     .endServices()
@@ -78,6 +81,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         }
 
         this.iotAmqpClientFactory = createAmqpClientFactory();
+        this.iotAmqpClient = this.iotAmqpClientFactory.createQueueClient();
     }
 
     public AddressSpace getAddressSpace() {
@@ -125,6 +129,18 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
             }
         }
 
+    }
+
+    @AfterEach
+    public void closeIoTAmqpClient () throws Exception {
+        if (this.iotAmqpClient != null) {
+            this.iotAmqpClient.close();
+            this.iotAmqpClient = null;
+        }
+    }
+
+    @AfterEach
+    public void closeIoTAmqpClientFactory() throws Exception {
         if (this.iotAmqpClientFactory != null) {
             this.iotAmqpClientFactory.close();
             this.iotAmqpClientFactory = null;

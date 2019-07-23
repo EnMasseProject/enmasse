@@ -10,7 +10,7 @@ import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 
 
 public class PahoMQTTClientSender extends ProtonJMSClientSender {
-    public PahoMQTTClientSender() {
+    public PahoMQTTClientSender() throws Exception {
         this.setClientType(ClientType.CLI_JAVA_PAHO_MQTT_SENDER);
     }
 

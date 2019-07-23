@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -23,6 +22,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("unused")
 public class OpenshiftWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();

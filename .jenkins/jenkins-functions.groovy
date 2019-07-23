@@ -55,9 +55,15 @@ def runSystemtests(String profile, String testCases, String envVarsString = "") 
     sh(script: "${envVarsString} ./systemtests/scripts/run_test_component.sh '${profile}' '${testCases}'")
 }
 
-def startOpenshift() {
-    sh(script: './systemtests/scripts/setup-openshift.sh "systemtests"')
-    sh(script: 'sudo chmod -R 777 /var/lib/origin/ || true')
+def startOpenshift(String ocVersion = "3.11") {
+    if( ocVersion == "4") {
+        sh(script: './systemtests/scripts/setup-oc.sh "systemtests"')
+        env.KUBERNETES_API_URL = env.OPENSHIFT_URL
+        loginOCUser(false)
+    } else {
+        sh(script: './systemtests/scripts/setup-openshift.sh "systemtests"')
+        sh(script: 'sudo chmod -R 777 /var/lib/origin/ || true')
+    }
 }
 
 def waitUntilAgentReady() {
@@ -94,12 +100,12 @@ def postAction(String artifactDir) {
     archiveArtifacts(artifacts: "${artifactDir}/**", onlyIfSuccessful: false)
 }
 
-def installEnmasse(String tag, Boolean skipDependencies, Boolean upgrade, Boolean generateTemplates, Boolean installIoT = false) {
+def installEnmasse(String tag, Boolean generateTemplates, Boolean installIoT = false) {
     if (generateTemplates) {
         sh(script: "make -C templates clean")
         sh(script: 'make templates || true')
     }
-    sh(script: "DEPLOY_IOT=${installIoT} ./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}' ${skipDependencies} ${upgrade}")
+    sh(script: "DEPLOY_IOT=${installIoT} ./systemtests/scripts/deploy_enmasse.sh false 'templates/build/enmasse-${tag}'")
 }
 
 def sendMail(address, jobName, buildUrl) {
@@ -108,6 +114,10 @@ def sendMail(address, jobName, buildUrl) {
 
 def loginOCUser(boolean setupClusterUser) {
     sh(script: "./systemtests/scripts/login_cluster_user.sh ${setupClusterUser}")
+}
+
+def uninstallEnmasse(String tag, String namespace) {
+    sh(script: "ansible-playbook templates/build/enmasse-${tag}/ansible/playbooks/openshift/uninstall.yml -i systemtests/ansible/inventory/systemtests.ocp4.inventory -e namespace=${namespace}")
 }
 
 return this

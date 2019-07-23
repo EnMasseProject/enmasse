@@ -71,3 +71,22 @@ Edit the release tag on github with the changes from CHANGELOG.md (Example: http
 ## Announce release
 
 Send an e-mail to enmasse@redhat.com announcing the release, including changes for the release.
+
+## Releasing to [OperatorHub](https://operatorhub.io/)
+
+The EnMasse Operator is released as both a community-operators (for OpenShift) and upstream-community-operators (for Kubernetes).
+
+You will find the Operator bundle beneath `install/olm` in the release artefacts produced by the release.
+
+Use this [procedure](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md) to create a
+new Operator Bundle version within the [EnMasse application registry](https://quay.io/new/?namespace=enmasse) and test it
+in OperatorHub on both Kubernetes and OpenShift.
+
+When versioning the bundle, use a `PACKAGE_VERSION` in the form `<EnMasseVersionNumber>-<Sequence Number>` e.g. 0.28.2-0.   If it is necessary
+to republish the bundle, simply increment the sequence number.  Note it is currently not possible to remove versions from the application
+registry on Quay.
+
+Once complete raise two separate PR against the https://github.com/operator-framework/community-operators/ to update EnMasse in both the
+community-operators and upstream-community-operators areas.
+
+

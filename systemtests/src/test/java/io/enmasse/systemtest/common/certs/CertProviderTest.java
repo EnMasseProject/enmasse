@@ -334,7 +334,7 @@ class CertProviderTest extends TestBase {
     }
 
     private void testCertProvider(AmqpClient amqpClient, IMqttClient mqttClient) throws Exception {
-        QueueTest.runQueueTest(amqpClient, queue);
+        QueueTest.runQueueTest(amqpClient, queue, 5);
         mqttClient.connect();
         simpleMQTTSendReceive(topic, mqttClient, 3);
         mqttClient.disconnect();

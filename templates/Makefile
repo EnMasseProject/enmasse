@@ -58,7 +58,7 @@ replace_images: prepare
 		cat $$i | sed -e 's,\$${ADDRESS_SPACE_CONTROLLER_IMAGE},$(ADDRESS_SPACE_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
-					  -e 's,\$${ENMASSE_VERSION},$(VERSION),g' \
+					  -e 's,\$${VERSION},$(VERSION),g' \
 					  -e 's,\$${IMAGE_PULL_POLICY},$(IMAGE_PULL_POLICY),g' \
 					  -e 's,\$${STANDARD_CONTROLLER_IMAGE},$(STANDARD_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${ROUTER_IMAGE},$(ROUTER_IMAGE),g' \
@@ -78,7 +78,6 @@ replace_images: prepare
 					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
 					  -e 's,\$${QDROUTERD_BASE_IMAGE},$(QDROUTERD_BASE_IMAGE),g' \
-					  -e 's,\$${HONO_VERSION},$(HONO_VERSION),g' \
 					  -e 's,\$${IOT_GC_IMAGE},$(IOT_GC_IMAGE),g' \
 					  -e 's,\$${IOT_TENANT_SERVICE_IMAGE},$(IOT_TENANT_SERVICE_IMAGE),g' \
 					  -e 's,\$${IOT_AUTH_SERVICE_IMAGE},$(IOT_AUTH_SERVICE_IMAGE),g' \

@@ -148,7 +148,7 @@ public class IoTUtils {
                 .withNewManagedStrategy()
                 .withNewAddressSpace()
                 .withName(addressSpaceName)
-                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
                 .endAddressSpace()
                 .withNewAddresses()
                 .withNewTelemetry()

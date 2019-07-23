@@ -1,3 +1,8 @@
+// This assembly is included in the following assemblies:
+//
+// openshift master.adoc
+// kubernetes master.adoc
+
 :context: {context}-gs
 
 [id='quickstart-{context}']
@@ -29,3 +34,4 @@ include::../modules/proc-send-receive.adoc[leveloffset=+1]
 We have seen how to set up {ProductName} on {KubePlatform}, and how to communicate with it using an AMQP client.
 
 :context: {parent-context}
+

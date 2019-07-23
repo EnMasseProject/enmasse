@@ -23,27 +23,33 @@ function getCommand() {
 function setup_test_openshift() {
     TEMPLATES_INSTALL_DIR=$1
     KUBEADM=$2
-    SKIP_DEPENDENCIES=${3:-false}
-    UPGRADE=${4:-false}
-    IMAGE_NAMESPACE=${5:-"enmasseci"}
+    IMAGE_NAMESPACE=${3:-"enmasseci"}
 
     export_required_env
 
-    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, skip setup: ${SKIP_DEPENDENCIES}, upgrade: ${UPGRADE}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}, iot: ${DEPLOY_IOT}"
+    info "Deploying enmasse with templates dir: ${TEMPLATES_INSTALL_DIR}, kubeadmin: ${KUBEADM}, namespace: ${KUBERNETES_NAMESPACE}, image namespace: ${IMAGE_NAMESPACE}, iot: ${DEPLOY_IOT}"
 
     rm -rf ${TEST_LOGDIR}
     mkdir -p ${TEST_LOGDIR}
 
     oc login -u ${OPENSHIFT_USER} -p ${OPENSHIFT_PASSWD} --insecure-skip-tls-verify=true ${KUBERNETES_API_URL}
-    oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
-    oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=${IMAGE_NAMESPACE}
+    OC_VERSION=${OC_VERSION:-"3.11"}
+    if [[ ${OC_VERSION} != "4" ]]; then
+        oc adm --config ${KUBEADM} policy add-cluster-role-to-user cluster-admin ${OPENSHIFT_USER}
+        oc policy add-role-to-group system:image-puller system:serviceaccounts:${KUBERNETES_NAMESPACE} --namespace=${IMAGE_NAMESPACE}
+    fi
     export KUBERNETES_API_TOKEN=`oc whoami -t`
 
     if [[ "${SKIP_DEPENDENCIES}" == "false" ]]; then
         ansible-playbook ${CURDIR}/../ansible/playbooks/systemtests-dependencies.yml
     fi
-    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/systemtests.inventory --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"enable_iot\": \"${DEPLOY_IOT}\" }"
-    wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE} ${UPGRADE}
+    INVENTORY_FILE=systemtests.inventory
+    if [[ ${OC_VERSION} == "4" ]]; then
+        echo "using openshift4 ansible inventory file"
+        INVENTORY_FILE=systemtests.ocp4.inventory
+    fi
+    ansible-playbook ${TEMPLATES_INSTALL_DIR}/ansible/playbooks/openshift/deploy_all.yml -i ${CURDIR}/../ansible/inventory/${INVENTORY_FILE} --extra-vars "{\"namespace\": \"${KUBERNETES_NAMESPACE}\", \"admin_user\": \"${OPENSHIFT_USER}\", \"enable_iot\": \"${DEPLOY_IOT}\" }"
+    wait_until_enmasse_up 'openshift' ${KUBERNETES_NAMESPACE}
 }
 
 function login_user() {
@@ -85,6 +91,10 @@ function wait_until_enmasse_up() {
     UPGRADE=${3:-false}
 
     expected_pods=7
+    if [[ ${OC_VERSION} == "4" ]]; then
+        # no service catalog nor service broker in ocp4
+        expected_pods=6
+    fi
     if [[ "${DEPLOY_IOT}" == "true" ]]; then
         expected_pods=$(($expected_pods + 1))
     fi
@@ -379,6 +389,10 @@ function get_oc_url() {
         echo "https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz"
     elif [[ ${OC_VERSION} == "3.10" ]]; then
         echo "https://github.com/openshift/origin/releases/download/v3.10.0/openshift-origin-client-tools-v3.10.0-dd10d17-linux-64bit.tar.gz"
+    elif [[ ${OC_VERSION} == "4" ]]; then
+        echo "https://github.com/openshift/origin/releases/download/v3.11.0/openshift-origin-client-tools-v3.11.0-0cbc58b-linux-64bit.tar.gz"
+        # workaround because 3.11 tar.gz has a folder inside and 4.1.X tar.gz hasn't, TODO modify systemtests/ansible/playbooks/environment.yml to work with both
+        # echo "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/4.1.3/openshift-client-linux-4.1.3.tar.gz"
     fi
 }
 

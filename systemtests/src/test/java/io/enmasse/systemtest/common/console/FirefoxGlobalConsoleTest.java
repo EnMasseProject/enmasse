@@ -8,14 +8,15 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.bases.web.GlobalConsoleTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.isolated;
 
 @Tag(isolated)
-class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumProviderFirefox {
+@SeleniumFirefox
+class FirefoxGlobalConsoleTest extends GlobalConsoleTest {
 
     @Test
     void testLoginLogout() throws Exception {
@@ -82,6 +83,11 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ISeleniumPro
     @Test
     void testCreateAddrSpaceNonClusterAdmin() throws Exception {
         doTestCreateAddrSpaceNonClusterAdmin();
+    }
+
+    @Test
+    void testSwitchAddressSpacePlan() throws Exception {
+        doTestSwitchAddressSpacePlan();
     }
 }
 

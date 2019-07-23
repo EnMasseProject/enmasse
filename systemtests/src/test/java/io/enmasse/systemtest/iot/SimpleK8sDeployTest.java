@@ -14,12 +14,19 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static java.time.Duration.ofMinutes;
+import static java.util.Collections.singletonMap;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -27,12 +34,14 @@ import java.util.Map;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
+import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
 
 @Tag(sharedIot)
 @Tag(smoke)
 @EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
 class SimpleK8sDeployTest {
 
+    private static final Logger log = LoggerFactory.getLogger(SimpleK8sDeployTest.class);
     private static final String NAMESPACE = Environment.getInstance().namespace();
 
     private Kubernetes client = Kubernetes.getInstance();
@@ -125,6 +134,8 @@ class SimpleK8sDeployTest {
     @AfterAll
     static void cleanup() throws Exception {
         KubeCMDClient.deleteIoTConfig(NAMESPACE, "default");
+        log.info("Waiting for IoT components to be removed");
+        TestUtils.waitForNReplicas(0, singletonMap("component", "iot"), ofDuration(ofMinutes(5)));
     }
 
     @Test

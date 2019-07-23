@@ -9,14 +9,16 @@ import io.enmasse.systemtest.AddressType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.ITestBaseBrokered;
 import io.enmasse.systemtest.bases.web.WebConsoleTest;
-import io.enmasse.systemtest.selenium.ISeleniumProviderFirefox;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered, ISeleniumProviderFirefox {
+@SeleniumFirefox
+class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered {
 
     @Test
     void testCreateDeleteQueue() throws Exception {
@@ -79,48 +81,57 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
     }
 
     @Test
+    @ExternalClients
     void testSortAddressesByClients() throws Exception {
         doTestSortAddressesByClients();
     }
 
     @Test
+    @ExternalClients
     void testSortConnectionsBySenders() throws Exception {
         doTestSortConnectionsBySenders();
     }
 
     @Test
+    @ExternalClients
     void testSortConnectionsByReceivers() throws Exception {
         doTestSortConnectionsByReceivers();
     }
 
     @Test
+    @ExternalClients
     @Disabled("disabled due to #669")
     void testFilterConnectionsByEncrypted() throws Exception {
         doTestFilterConnectionsByEncrypted();
     }
 
     @Test
+    @ExternalClients
     void testFilterConnectionsByUser() throws Exception {
         doTestFilterConnectionsByUser();
     }
 
     @Test
+    @ExternalClients
     void testFilterConnectionsByHostname() throws Exception {
         doTestFilterConnectionsByHostname();
     }
 
     @Test
+    @ExternalClients
     void testSortConnectionsByHostname() throws Exception {
         doTestSortConnectionsByHostname();
     }
 
     @Test
+    @ExternalClients
     @Disabled("disabled due to https://github.com/EnMasseProject/enmasse/issues/634")
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId();
     }
 
     @Test
+    @ExternalClients
     @Disabled("disabled due to https://github.com/EnMasseProject/enmasse/issues/634")
     void testSortConnectionsByContainerId() throws Exception {
         doTestSortConnectionsByContainerId();
@@ -132,6 +143,7 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered,
     }
 
     @Test
+    @ExternalClients
     @Disabled("disabled due to #649")
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics();

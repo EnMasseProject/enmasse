@@ -119,7 +119,7 @@ public class TimeMeasuringSystem {
         });
     }
 
-    private void saveResults(Map data, String name) {
+    private void saveResults(Map<?,?> data, String name) {
         try {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String json = gson.toJson(data);
@@ -217,6 +217,7 @@ public class TimeMeasuringSystem {
     /**
      * Test time duration class
      */
+    @SuppressWarnings("unused")
     private class MeasureRecord {
         private long startTime;
         private long endTime;

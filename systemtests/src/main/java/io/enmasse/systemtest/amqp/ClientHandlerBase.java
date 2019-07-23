@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;
     private final String containerId;
@@ -35,6 +35,8 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     @Override
     public void start() {
+        log.info("Starting verticle: {}", this);
+
         ProtonClient client = ProtonClient.create(vertx);
         Endpoint endpoint = clientOptions.getEndpoint();
         client.connect(clientOptions.getProtonClientOptions(), endpoint.getHost(), endpoint.getPort(), clientOptions.getUsername(), clientOptions.getPassword(), connection -> {
@@ -66,6 +68,11 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
                 connectPromise.completeExceptionally(connection.cause());
             }
         });
+    }
+
+    @Override
+    public void stop() throws Exception {
+        log.info("Stopping verticle: {}", this);
     }
 
     protected abstract void connectionOpened(ProtonConnection conn);

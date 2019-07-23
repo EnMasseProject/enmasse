@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -15,29 +16,38 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Base64;
+import java.util.concurrent.TimeUnit;
 
 public class SystemtestsKubernetesApps {
-    public static final String MESSAGING_CLIENTS = "messaging-clients";
+    public static final String MESSAGING_CLIENTS = "systemtests-clients";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
     public static final String SELENIUM_CHROME = "selenium-chrome";
-    public static final String SELENIUM_PROJECT = "selenium";
+    public static final String SELENIUM_PROJECT = "systemtests-selenium";
+    public static final String MESSAGING_PROJECT = "systemtests-clients";
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
-    public static final String OPENSHIFT_CERT_VALIDATOR = "openshift-cert-validator";
+    public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
 
-    public static void deployMessagingClientApp(String namespace, Kubernetes kubeClient) throws Exception {
-        kubeClient.createServiceFromResource(namespace, getSystemtestsServiceResource(MESSAGING_CLIENTS, 4242));
-        kubeClient.createDeploymentFromResource(namespace, getMessagingAppDeploymentResource());
-        kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(MESSAGING_CLIENTS, 4242));
-        Thread.sleep(5000);
+    public static String getMessagingAppPodName() throws Exception {
+        TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+                pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1, new TimeoutBudget(1, TimeUnit.MINUTES));
+        return Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
+                pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }
 
-    public static void deleteMessagingClientApp(String namespace, Kubernetes kubeClient) {
-        if (kubeClient.deploymentExists(namespace, MESSAGING_CLIENTS)) {
-            kubeClient.deleteDeployment(namespace, MESSAGING_CLIENTS);
-            kubeClient.deleteService(namespace, MESSAGING_CLIENTS);
-            kubeClient.deleteIngress(namespace, MESSAGING_CLIENTS);
+    public static String deployMessagingClientApp() throws Exception {
+        if (!Kubernetes.getInstance().namespaceExists(MESSAGING_PROJECT)) {
+            Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
+        }
+        Kubernetes.getInstance().createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
+        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
+        return getMessagingAppPodName();
+    }
+
+    public static void deleteMessagingClientApp() {
+        if (Kubernetes.getInstance().deploymentExists(MESSAGING_PROJECT, MESSAGING_CLIENTS)) {
+            Kubernetes.getInstance().deleteDeployment(MESSAGING_PROJECT, MESSAGING_CLIENTS);
         }
     }
 
@@ -100,10 +110,6 @@ public class SystemtestsKubernetesApps {
         kubeClient.listPods(namespace).forEach(pod -> kubeClient.deletePod(namespace, pod.getMetadata().getName()));
     }
 
-    public static Endpoint getMessagingClientEndpoint(String namespace, Kubernetes kubeClient) {
-        return new Endpoint(kubeClient.getIngressHost(namespace, MESSAGING_CLIENTS), 80);
-    }
-
     public static Endpoint getFirefoxSeleniumAppEndpoint(Kubernetes kubeClient) {
         return new Endpoint(kubeClient.getIngressHost(SELENIUM_PROJECT, SELENIUM_FIREFOX), 80);
     }
@@ -146,7 +152,7 @@ public class SystemtestsKubernetesApps {
 
     public static void deleteInfinispanServer(String namespace) {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        if(kubeCli.deploymentExists(namespace, INFINISPAN_SERVER)) {
+        if (kubeCli.deploymentExists(namespace, INFINISPAN_SERVER)) {
             kubeCli.deleteService(namespace, INFINISPAN_SERVER);
             kubeCli.deleteDeployment(namespace, INFINISPAN_SERVER);
         }
@@ -218,17 +224,9 @@ public class SystemtestsKubernetesApps {
                 .withNewSpec()
                 .addNewContainer()
                 .withName(MESSAGING_CLIENTS)
-                .withImage("kornysd/docker-clients:1.2")
-                .addNewPort()
-                .withContainerPort(4242)
-                .endPort()
-                .withNewLivenessProbe()
-                .withNewTcpSocket()
-                .withNewPort(4242)
-                .endTcpSocket()
-                .withInitialDelaySeconds(10)
-                .withPeriodSeconds(5)
-                .endLivenessProbe()
+                .withImage("quay.io/enmasse/systemtests-clients:latest")
+                .withCommand("sleep")
+                .withArgs("infinity")
                 .endContainer()
                 .endSpec()
                 .endTemplate()
@@ -280,7 +278,7 @@ public class SystemtestsKubernetesApps {
 
     private static ConfigMap getRheaConfigMap() throws Exception {
         File rheaHtml = new File("src/main/resources/rhea.html");
-        File rheaJs = new File("client_executable/rhea/dist/rhea.js");
+        File rheaJs = new File("src/main/resources/rhea.js");
         String htmlContent = Files.readString(rheaHtml.toPath());
         String jsContent = Files.readString(rheaJs.toPath());
 
@@ -310,7 +308,7 @@ public class SystemtestsKubernetesApps {
                 .withNewSpec()
                 .addNewContainer()
                 .withName(OPENSHIFT_CERT_VALIDATOR)
-                .withImage("famargon/openshift-cert-validator:latest")
+                .withImage("quay.io/enmasse/systemtests-cert-validator:latest")
                 .addNewPort()
                 .withContainerPort(8080)
                 .endPort()

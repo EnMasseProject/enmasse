@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-installing-openshift.adoc
+// assembly-installing.adoc
 
 [id='installing-using-ansible-{context}']
 = Installing {ProductName} using Ansible
@@ -8,7 +8,7 @@
 Installing {ProductName} using Ansible requires creating an inventory file with the variables for
 configuring the system. Example inventory files can be found in the `ansible/inventory` folder.
 
-An example inventory file that enables a minimal installation of {ProductName}:
+The following example inventory file enables a minimal installation of {ProductName}:
 
 [source,options="nowrap"]
 ----
@@ -18,27 +18,27 @@ include::../service_admin/example.inventory[]
 The following Ansible configuration settings are supported:
 
 .Ansible configuration settings
-[cols="25%a,25%a,25%a,25%a",options="header"]
+[cols="35%a,40%a,15%a,10%a",options="header"]
 |===
 |Name |Description |Default value | Required
-|namespace|Specifies the namespace where {ProductName} is installed.|Not applicable |yes
-|enable_rbac|Specifies whether to enable RBAC authentication of REST APIs|True |no
-|service_catalog|Specifies whether to enable integration with the Service Catalog|False |no
+|namespace|Specifies the project where {ProductName} is installed. |Not applicable |yes
+|enable_rbac|Specifies whether to enable RBAC authentication of REST APIs |True |no
+|service_catalog|Specifies whether to enable integration with the Service Catalog |False |no
 |authentication_services|Specifies the list of authentication services to deploy. Supported values are `none` and `standard`. |`none` |no
 |keycloak_admin_password|Specifies the admin password to use for the `standard` authentication service {AuthProductName} instance |Not applicable |yes (if `standard` authentication service is enabled)
-|api_server|Specifies whether to enable the REST API server|True |no
-|register_api_server|Specifies whether to register the API server with {KubePlatform} master|False |no
-|secure_api_server|Specifies whether to enable mutual TLS for the API server|False |no
-|install_example_plans|Specifies whether to install example plans and infrastructure configurations|True|no
-|monitoring_namespace|Specifies the namespace where the {ProductName} monitoring is installed.|Not applicable |yes
-|monitoring_operator|Specifies whether to install the monitoring infrastructure|Not applicable|no
-|monitoring|Specifies whether to install the service monitors, Prometheus rules, and Grafana dashboards for monitoring {ProductName}|Not applicable|no
+|api_server|Specifies whether to enable the REST API server |True |no
+|register_api_server|Specifies whether to register the API server with {KubePlatform} master |False |no
+|secure_api_server|Specifies whether to enable mutual TLS for the API server |False |no
+|install_example_plans|Specifies whether to install example plans and infrastructure configurations |True |no
+|monitoring_namespace|Specifies the project where {ProductName} monitoring is installed. |Not applicable |yes
+|monitoring_operator|Specifies whether to install the monitoring infrastructure |Not applicable |no
+|monitoring|Specifies whether to install the service monitors, Prometheus rules, and Grafana dashboards for monitoring {ProductName} |Not applicable |no
 |===
 
 
 .Procedure
 
-. (Optional) Create an inventory file.
+. Create an inventory file.
 
 . Run the Ansible playbook:
 +

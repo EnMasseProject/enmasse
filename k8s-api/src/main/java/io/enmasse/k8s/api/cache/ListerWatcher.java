@@ -9,7 +9,7 @@ import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 
-public interface ListerWatcher<T extends HasMetadata, LT extends KubernetesResourceList> {
+public interface ListerWatcher<T extends HasMetadata, LT extends KubernetesResourceList<T>> {
     LT list(ListOptions listOptions);
     Watch watch(Watcher<T> watcher, ListOptions listOptions);
 }
