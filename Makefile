@@ -68,7 +68,7 @@ test_go: test_go_vet test_go_run
 endif
 
 test_go_vet:
-	cd $(GOPRJ) && go tool vet cmd pkg
+	cd $(GOPRJ) && go vet ./cmd/... ./pkg/...
 
 ifeq (,$(GO2XUNIT))
 test_go_run: $(GOPRJ)
