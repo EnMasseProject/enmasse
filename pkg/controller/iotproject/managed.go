@@ -42,7 +42,7 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 			return err
 		}
 
-		log.Info("Reconcile address space", "AddressSpace", existingAddressSpace)
+		log.V(2).Info("Reconcile address space", "AddressSpace", existingAddressSpace)
 
 		return r.reconcileAddressSpace(project, strategy, existingAddressSpace)
 	})
@@ -58,11 +58,13 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 
 	if err != nil {
 		log.Error(err, "Failed to create addresses")
+		return nil, err
 	}
 
 	// create a new user for protocol adapters
 
 	credentials, err := r.reconcileAdapterUser(ctx, project, strategy)
+
 	if err != nil {
 		log.Error(err, "failed to create adapter user")
 		return nil, err
@@ -76,19 +78,21 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *rec
 
 func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy) (*iotv1alpha1.Credentials, error) {
 
-	adapterUserName := "adapter"
-	adapterUser := &userv1beta1.MessagingUser{
-		ObjectMeta: v1.ObjectMeta{Namespace: project.Namespace, Name: strategy.AddressSpace.Name + "." + adapterUserName},
+	credentials := &iotv1alpha1.Credentials{
+		Username: "adapter",
 	}
 
-	credentials := &iotv1alpha1.Credentials{
-		Username: adapterUserName,
+	adapterUser := &userv1beta1.MessagingUser{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: project.Namespace,
+			Name:      strategy.AddressSpace.Name + "." + credentials.Username,
+		},
 	}
 
 	_, err := controllerutil.CreateOrUpdate(ctx, r.client, adapterUser, func(existing runtime.Object) error {
 		existingUser := existing.(*userv1beta1.MessagingUser)
 
-		log.Info("Reconcile messaging user", "MessagingUser", existingUser)
+		log.V(2).Info("Reconcile messaging user", "MessagingUser", existingUser)
 
 		return r.reconcileAdapterMessagingUser(project, credentials, existingUser)
 	})
@@ -188,13 +192,7 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 		return err
 	}
 
-	username := credentials.Username
-
-	telemetryName := util.AddressName(project, AddressNameTelemetry)
-	eventName := util.AddressName(project, AddressNameEvent)
-	controlName := util.AddressName(project, AddressNameCommand)
-
-	existing.Spec.Username = username
+	existing.Spec.Username = credentials.Username
 	existing.Spec.Authentication = userv1beta1.AuthenticationSpec{
 		Type: "password",
 	}
@@ -218,6 +216,10 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 		// ... and set it to the messaging user
 		existing.Spec.Authentication.Password = []byte(credentials.Password)
 	}
+
+	telemetryName := util.AddressName(project, AddressNameTelemetry)
+	eventName := util.AddressName(project, AddressNameEvent)
+	controlName := util.AddressName(project, AddressNameCommand)
 
 	existing.Spec.Authorization = []userv1beta1.AuthorizationSpec{
 		{
