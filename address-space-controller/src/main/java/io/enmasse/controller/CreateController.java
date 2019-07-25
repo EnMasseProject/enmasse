@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
+import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.controller.common.ControllerKind;
@@ -102,6 +103,13 @@ public class CreateController implements Controller {
     @Override
     public AddressSpace reconcile(AddressSpace addressSpace) throws Exception {
         Schema schema = schemaProvider.getSchema();
+//
+//        Optional<ConsoleService> consoleService = schema.findConsoleService(TemplateInfraResourceFactory.WELL_KNOWN_CONSOLE_SERVICE_NAME);
+//        if (consoleService.isEmpty() || consoleService.get().getSpec().) {
+//            addressSpace.getStatus().appendMessage(String.format("%s - not ready", TemplateInfraResourceFactory.WELL_KNOWN_CONSOLE_SERVICE_NAME));
+//            addressSpace.
+//        }
+
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
         addressSpaceResolver.validate(addressSpace);
 

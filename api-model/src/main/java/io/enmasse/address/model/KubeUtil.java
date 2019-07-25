@@ -260,4 +260,38 @@ public final class KubeUtil {
                 }
         );
     }
+
+    public static boolean applyEnvVar(Container container, EnvVar envVar) {
+        List<EnvVar> copy = new ArrayList<>(container.getEnv());
+        for (int i = 0; i < copy.size(); i++) {
+            EnvVar current = copy.get(0);
+            if (Objects.equals(current.getName(), envVar.getName())) {
+                if (Objects.equals(current, envVar)) {
+                    return false;
+                } else {
+                    copy.set(i, envVar);
+                    container.setEnv(copy);
+                    return true;
+                }
+            }
+        }
+
+        copy.add(envVar);
+        container.setEnv(copy);
+        return true;
+    }
+
+    public static boolean removeEnvVar(Container container, String name) {
+        List<EnvVar> copy = new ArrayList<>(container.getEnv());
+        Iterator<EnvVar> iterator = copy.iterator();
+        while (iterator.hasNext()) {
+            EnvVar current = iterator.next();
+            if (Objects.equals(current.getName(), name)) {
+                iterator.remove();
+                container.setEnv(copy);
+                return true;
+            }
+        }
+        return false;
+    }
 }

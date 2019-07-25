@@ -5,7 +5,9 @@
 
 package io.enmasse.controller;
 
+import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
+import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.api.common.OpenShift;
 import io.enmasse.controller.auth.*;
 import io.enmasse.controller.common.Kubernetes;
@@ -21,7 +23,10 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Map;
+import java.util.*;
 
 public class AddressSpaceController {
     private static final Logger log = LoggerFactory.getLogger(AddressSpaceController.class.getName());
@@ -47,6 +52,7 @@ public class AddressSpaceController {
 
     private HTTPServer metricsServer;
     private ControllerChain controllerChain;
+    private ConsoleService lastConsole;
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
         this.controllerClient = new DefaultKubernetesClient();
@@ -80,6 +86,7 @@ public class AddressSpaceController {
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
         KeycloakUserApi keycloakUserApi = new KeycloakUserApi(keycloakFactory, clock, Duration.ZERO);
         schemaProvider.registerListener(newSchema -> keycloakUserApi.retainAuthenticationServices(newSchema.findAuthenticationServiceType(AuthenticationServiceType.standard)));
+        schemaProvider.registerListener(newSchema -> onConsoleServiceUpdate(newSchema));
         UserApi userApi = new DelegateUserApi(Map.of(AuthenticationServiceType.none, new NullUserApi(),
                 AuthenticationServiceType.external, new NullUserApi(),
                 AuthenticationServiceType.standard, keycloakUserApi));
@@ -95,6 +102,8 @@ public class AddressSpaceController {
         controllerChain.addController(authController);
         controllerChain.addController(new DeleteController(kubernetes));
         controllerChain.start();
+
+
 
         metricsServer = new HTTPServer(8080, metrics);
         metricsServer.start();
@@ -173,6 +182,37 @@ public class AddressSpaceController {
             if (controller != null) {
                 Runtime.getRuntime().addShutdownHook(new Thread(controller::stop));
             }
+        }
+    }
+
+    private void onConsoleServiceUpdate(Schema newSchema) {
+        Optional<ConsoleService> console = newSchema.findConsoleService("console");
+        if (console.isPresent() && !Objects.equals(lastConsole, console.get())) {
+            lastConsole = console.get();
+
+            List<Deployment> items = new ArrayList<>();
+            items.addAll(controllerClient.apps().deployments().inNamespace(controllerClient.getNamespace()).withLabel("role", "agent").list().getItems());
+            items.addAll(controllerClient.apps().deployments().inNamespace(controllerClient.getNamespace()).withLabel("name", "admin").list().getItems());
+
+            String expectedContainerName = "agent";
+            items.forEach(d -> {
+                Optional<Container> agentContainer = d.getSpec().getTemplate().getSpec().getContainers().stream().filter(c -> {
+                    return expectedContainerName.equals(c.getName());
+                }).findFirst();
+                agentContainer.ifPresentOrElse(container -> {
+                    boolean updated = ServiceHelper.applyConsoleServiceToContainer(container, lastConsole);
+                    if (updated) {
+                        try {
+                            controllerClient.apps().deployments().createOrReplace(d);
+                        } catch (KubernetesClientException e) {
+                            log.warn("Failed to update deployment {} with updated console service settings", d, e);
+                        }
+                    }
+                }, () -> {
+                    log.warn("Failed to find expected container '{}' within deployment '{}', updated console settings", expectedContainerName, d);
+                });
+
+            });
         }
     }
 }

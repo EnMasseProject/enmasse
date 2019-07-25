@@ -522,30 +522,6 @@ objects:
             value: ${ADDRESS_SPACE_NAMESPACE}
           - name: MESSAGING_CERT
             value: /opt/agent/messaging-cert/tls.crt
-          - name: CONSOLE_OAUTH_DISCOVERY_URL
-            value: ${CONSOLE_OAUTH_DISCOVERY_URL}
-          - name: CONSOLE_OAUTH_SCOPE
-            value: ${CONSOLE_OAUTH_SCOPE}
-          - name: CONSOLE_LINK
-            value: ${CONSOLE_LINK}
-          - name: CONSOLE_OAUTH_CLIENT_ID
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
-                key: client-id
-                optional: true
-          - name: CONSOLE_OAUTH_CLIENT_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_OAUTH_SECRET_SECRET_NAME}
-                key: client-secret
-                optional: true
-          - name: SSO_COOKIE_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: ${CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME}
-                key: cookie-secret
-                optional: true
           image: ${AGENT_IMAGE}
           imagePullPolicy: ${env.IMAGE_PULL_POLICY}
           livenessProbe:
@@ -593,10 +569,6 @@ objects:
         - name: console-secret
           secret:
             secretName: ${CONSOLE_SECRET}
-        - name: sso-cookie-secret
-          secret:
-            secretName: ${CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME}
-            optional: true
         - name: authservice-ca
           secret:
             secretName: authservice-ca.${INFRA_UUID}
@@ -804,15 +776,5 @@ parameters:
 - name: TOPIC_FORWARDER_IMAGE
   description: Topic Forwarder Image
   value: ${env.TOPIC_FORWARDER_IMAGE}
-- description:
-  name: CONSOLE_OAUTH_DISCOVERY_URL
-- description:
-  name: CONSOLE_OAUTH_SCOPE
-- description:
-  name: CONSOLE_OAUTH_SECRET_SECRET_NAME
-- description:
-  name: CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME
-- description:
-  name: CONSOLE_LINK
 - description:
   name: FS_GROUP_OVERRIDE

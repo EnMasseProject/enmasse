@@ -10,6 +10,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.Arguments.of;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -176,6 +177,40 @@ public class KubeUtilTest {
 
         Container container = actual.getSpec().getContainers().get(0);
         assertThat(container.getReadinessProbe().getInitialDelaySeconds(), equalTo(10));
+    }
+
+    @Test
+    public void applyNewEnvVarToContainer() {
+        Container c = new ContainerBuilder().withName("foo").addAllToEnv(Arrays.asList(FOO1_ENVVAR, FOO2_ENVAR)).build();
+        assertThat(c.getEnv().size(), equalTo(2));
+        assertThat(KubeUtil.applyEnvVar(c, FOO1_UPD_ENVVAR), is(true));
+        assertThat(c.getEnv(), containsInAnyOrder(FOO1_UPD_ENVVAR, FOO2_ENVAR));
+    }
+
+    @Test
+    public void applyExistingEnvVarToContainer() {
+        Container c = new ContainerBuilder().withName("foo").addAllToEnv(Arrays.asList(FOO1_ENVVAR, FOO2_ENVAR)).build();
+        assertThat(c.getEnv().size(), equalTo(2));
+        EnvVar copyFooEnv1 = new EnvVarBuilder().withName(FOO1_ENVVAR.getName()).withValue(FOO1_ENVVAR.getValue()).build();
+        assertThat(KubeUtil.applyEnvVar(c, copyFooEnv1), is(false));
+        assertThat(c.getEnv(), containsInAnyOrder(FOO1_ENVVAR, FOO2_ENVAR));
+    }
+
+    @Test
+    public void applyEnvVarToContainerWithNoCurrentEnvironment() {
+        Container c = new ContainerBuilder().withName("foo").build();
+        assertThat(c.getEnv().size(), equalTo(0));
+        assertThat(KubeUtil.applyEnvVar(c, FOO1_ENVVAR), is(true));
+        assertThat(c.getEnv(), containsInAnyOrder(FOO1_ENVVAR));
+    }
+
+    @Test
+    public void removeEnvVarFromContainer() {
+        Container c = new ContainerBuilder().withName("foo").addAllToEnv(Arrays.asList(FOO1_ENVVAR, FOO2_ENVAR)).build();
+        assertThat(c.getEnv().size(), equalTo(2));
+        assertThat(KubeUtil.removeEnvVar(c, FOO1_ENVVAR.getName()), is(true));
+        assertThat(KubeUtil.removeEnvVar(c, FOO3_ENVVAR.getName()), is(false));
+        assertThat(c.getEnv(), containsInAnyOrder(FOO2_ENVAR));
     }
 
     private PodTemplateSpec doApplyContainers(Container actualContainer, Container desiredContainer) {

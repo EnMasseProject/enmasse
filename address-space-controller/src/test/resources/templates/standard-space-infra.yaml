@@ -21,7 +21,7 @@ objects:
             component: "admin"
         spec:
           containers:
-            - name: admin
+            - name: agent
 
   - kind: "StatefulSet"
     apiVersion: "apps/v1"

@@ -16,10 +16,7 @@ import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.SecretReference;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
@@ -84,10 +81,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
 
-        Optional<ConsoleService> console = schemaProvider.getSchema().findConsoleService(WELL_KNOWN_CONSOLE_SERVICE_NAME);
-        if (console.isEmpty()) {
-            log.warn("No ConsoleService found named '{}', address space console service will be unavailable", WELL_KNOWN_CONSOLE_SERVICE_NAME);
-        }
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         parameters.put(TemplateParameter.INFRA_NAMESPACE, kubernetes.getNamespace());
@@ -125,30 +118,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
         parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
         parameters.put(TemplateParameter.CONSOLE_SECRET, serviceCertMapping.get("console").getSecretName());
-
-        if (console.isPresent()) {
-            ConsoleService consoleService = console.get();
-            ConsoleServiceSpec spec = consoleService.getSpec();
-
-            parameters.put(TemplateParameter.CONSOLE_OAUTH_DISCOVERY_URL, spec.getDiscoveryMetadataURL());
-            parameters.put(TemplateParameter.CONSOLE_OAUTH_SCOPE, spec.getScope());
-
-            SecretReference oauthClientSecret = spec.getOauthClientSecret();
-            if (oauthClientSecret != null) {
-                parameters.put(TemplateParameter.CONSOLE_OAUTH_SECRET_SECRET_NAME, oauthClientSecret.getName());
-            }
-
-            SecretReference cookieSecret = spec.getSsoCookieSecret();
-            if (cookieSecret != null) {
-                parameters.put(TemplateParameter.CONSOLE_SSO_COOKIE_SECRET_SECRET_NAME, cookieSecret.getName());
-            }
-
-            ConsoleServiceStatus status = consoleService.getStatus();
-            if (status != null && status.getUrl() != null) {
-                parameters.put(TemplateParameter.CONSOLE_LINK, status.getUrl());
-            }
-
-        }
     }
 
     private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {
@@ -264,12 +233,15 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
 
+        Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
+        PodTemplateSpec actualAdminPodTemplate = adminDeployment.getSpec().getTemplate();
         if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getAdmin().getPodTemplate();
-            Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
-            PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
-            applyPodTemplate(actualPodTemplate, podTemplate);
+            applyPodTemplate(actualAdminPodTemplate, podTemplate);
         }
+
+        Optional<Container> agentContainer = actualAdminPodTemplate.getSpec().getContainers().stream().filter(c -> "agent".equals(c.getName())).findFirst();
+        agentContainer.ifPresent(this::applyConsoleServiceToAdminContainer);
 
         if (standardInfraConfig.getSpec().getRouter() != null && standardInfraConfig.getSpec().getRouter().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getRouter().getPodTemplate();
@@ -396,12 +368,17 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             items = kubernetes.processTemplate(templateName, parameters).getItems();
         }
 
+        PodTemplateSpec adminPodTemplate = brokeredInfraConfig.getSpec().getAdmin().getPodTemplate();
+        Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
+        PodTemplateSpec actualAdminPodTemplate = adminDeployment.getSpec().getTemplate();
         if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
-            PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getAdmin().getPodTemplate();
-            Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
-            PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
-            applyPodTemplate(actualPodTemplate, podTemplate);
+            applyPodTemplate(actualAdminPodTemplate, adminPodTemplate);
         }
+
+        Optional<Container> agentContainer = actualAdminPodTemplate.getSpec().getContainers().stream().filter(c -> "agent".equals(c.getName())).findFirst();
+        agentContainer.ifPresent(agentContainer1 -> {
+            applyConsoleServiceToAdminContainer(agentContainer1);
+        });
 
         Deployment brokerDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getBrokeredBrokerSetName(addressSpace), items);
         if (brokeredInfraConfig.getSpec().getBroker() != null && brokeredInfraConfig.getSpec().getBroker().getPodTemplate() != null) {
@@ -454,6 +431,16 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             return createBrokeredInfra(addressSpace, (BrokeredInfraConfig) infraConfig);
         } else {
             throw new IllegalArgumentException("Unknown address space type " + addressSpace.getSpec().getType());
+        }
+    }
+
+    private void applyConsoleServiceToAdminContainer(Container container) {
+        Optional<ConsoleService> consoleServiceOptional = schemaProvider.getSchema().findConsoleService(WELL_KNOWN_CONSOLE_SERVICE_NAME);
+
+        if (consoleServiceOptional.isEmpty()) {
+            log.info("Console service not yet available, settings will be applied later");
+        } else {
+            ServiceHelper.applyConsoleServiceToContainer(container, consoleServiceOptional.get());
         }
     }
 }
