@@ -3,6 +3,7 @@ kind: GrafanaDashboard
 metadata:
   labels:
     app: enmasse
+    monitoring-key: middleware
   name: enmasse-routers
 spec:
   name: enmasse-routers.json

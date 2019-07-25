@@ -3,6 +3,7 @@ kind: GrafanaDashboard
 metadata:
   labels:
     app: enmasse
+    monitoring-key: middleware
   name: enmasse-brokers
 spec:
   name: enmasse-brokers.json
