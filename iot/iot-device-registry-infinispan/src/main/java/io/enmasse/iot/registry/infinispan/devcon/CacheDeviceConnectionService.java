@@ -22,6 +22,7 @@ import org.eclipse.hono.util.DeviceConnectionConstants;
 import org.eclipse.hono.util.DeviceConnectionResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @Primary
+@Qualifier("infinispan")
 public class CacheDeviceConnectionService extends BaseDeviceConnectionService<Void> {
 
     private final RemoteCache<DeviceConnectionKey, String> cache;
