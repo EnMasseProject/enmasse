@@ -4,11 +4,11 @@
 // assembly-uninstalling-kubernetes.adoc
 
 [id='uninstalling-{context}']
-= Uninstalling {ProductName}
+= Uninstalling {ProductName} using the YAML bundle
 
 This method uninstalls {ProductName} that was installed using the YAML bundle.
 
-.Procedure 
+.Procedure
 
 ifeval::["{cmdcli}" == "oc"]
 . Log in as a user with `cluster-admin` privileges:
