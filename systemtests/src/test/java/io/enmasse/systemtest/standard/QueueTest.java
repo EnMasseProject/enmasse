@@ -55,7 +55,7 @@ public class QueueTest extends TestBaseWithShared implements ITestBaseStandard {
     public static void runQueueTest(AmqpClient client, Address dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
-        long timeoutMs = countMessages * 150; //estimate in worst case it takes at most 150ms to send one message
+        long timeoutMs = countMessages * 200; //estimate in worst case it takes at most 200ms to send one message
         log.info("Start sending with "+timeoutMs+" ms timeout");
         Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
 
