@@ -3,6 +3,7 @@ kind: GrafanaDashboard
 metadata:
   labels:
     app: enmasse
+    monitoring-key: middleware
   name: enmasse-components
 spec:
   name: enmasse-components.json
@@ -261,7 +262,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "${APP_PREFIX}_component_health",
+              "expr": "enmasse_component_health",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -358,7 +359,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "${APP_PREFIX}_version",
+              "expr": "enmasse_version",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -489,7 +490,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "${APP_PREFIX}_address_spaces_ready_total",
+              "expr": "enmasse_address_spaces_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -578,7 +579,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "${APP_PREFIX}_address_spaces_not_ready_total",
+              "expr": "enmasse_address_spaces_not_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,
@@ -627,7 +628,7 @@ spec:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "${APP_PREFIX}_addresses_total",
+              "expr": "enmasse_addresses_total",
               "format": "time_series",
               "instant": false,
               "interval": "",
@@ -764,7 +765,7 @@ spec:
           ],
           "targets": [
             {
-              "expr": "${APP_PREFIX}_addresses_not_ready_total",
+              "expr": "enmasse_addresses_not_ready_total",
               "format": "table",
               "instant": true,
               "intervalFactor": 1,

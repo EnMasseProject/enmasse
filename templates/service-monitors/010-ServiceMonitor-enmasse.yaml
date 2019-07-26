@@ -13,4 +13,4 @@ spec:
   - port: health
   namespaceSelector:
     matchLabels:
-      app: enmasse
+      monitoring-key: middleware
