@@ -153,7 +153,7 @@ class SmokeTest extends TestBase implements ITestBaseStandard {
     private void testTopic() throws Exception {
         AmqpClient client = amqpClientFactory.createTopicClient(addressSpace);
         client.getConnectOptions().setCredentials(cred);
-        List<String> msgs = TestUtils.generateMessages(1000);
+        List<String> msgs = TestUtils.generateMessages(500);
 
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
@@ -165,21 +165,21 @@ class SmokeTest extends TestBase implements ITestBaseStandard {
 
         Thread.sleep(10_000);
         assertThat("Wrong count of messages sent",
-                client.sendMessages(topic.getSpec().getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
+                client.sendMessages(topic.getSpec().getAddress(), msgs).get(3, TimeUnit.MINUTES), is(msgs.size()));
 
         assertAll("Every subscriber should receive all messages",
                 () -> assertThat("Wrong count of messages received: receiver0",
-                        recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                        recvResults.get(0).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
                 () -> assertThat("Wrong count of messages received: receiver1",
-                        recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                        recvResults.get(1).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
                 () -> assertThat("Wrong count of messages received: receiver2",
-                        recvResults.get(2).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                        recvResults.get(2).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
                 () -> assertThat("Wrong count of messages received: receiver3",
-                        recvResults.get(3).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                        recvResults.get(3).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
                 () -> assertThat("Wrong count of messages received: receiver4",
-                        recvResults.get(4).get(1, TimeUnit.MINUTES).size(), is(msgs.size())),
+                        recvResults.get(4).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
                 () -> assertThat("Wrong count of messages received: receiver5",
-                        recvResults.get(5).get(1, TimeUnit.MINUTES).size(), is(msgs.size()))
+                        recvResults.get(5).get(3, TimeUnit.MINUTES).size(), is(msgs.size()))
         );
     }
 

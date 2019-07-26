@@ -98,15 +98,15 @@ class SmokeTest extends TestBase implements ITestBaseBrokered {
 
         assertAll("All senders should send all messages",
                 () -> assertThat("Wrong count of messages sent: batch1",
-                        amqpTopicCli.sendMessages(topicB.getSpec().getAddress(), msgsBatch).get(1, TimeUnit.MINUTES), is(msgsBatch.size())),
+                        amqpTopicCli.sendMessages(topicB.getSpec().getAddress(), msgsBatch).get(3, TimeUnit.MINUTES), is(msgsBatch.size())),
                 () -> assertThat("Wrong count of messages sent: batch2",
-                        amqpTopicCli.sendMessages(topicB.getSpec().getAddress(), msgsBatch2).get(1, TimeUnit.MINUTES), is(msgsBatch2.size())));
+                        amqpTopicCli.sendMessages(topicB.getSpec().getAddress(), msgsBatch2).get(3, TimeUnit.MINUTES), is(msgsBatch2.size())));
 
         assertAll("All receivers should receive all messages",
                 () -> assertThat("Wrong count of messages received",
-                        recvResults.get(0).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())),
+                        recvResults.get(0).get(3, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())),
                 () -> assertThat("Wrong count of messages received",
-                        recvResults.get(1).get(1, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())));
+                        recvResults.get(1).get(3, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())));
     }
 
     @Test
