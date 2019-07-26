@@ -278,18 +278,31 @@ public abstract class Kubernetes {
     }
 
     public Map<String, String> getLogsByLables(String namespace, Map<String, String> labels) {
+        return getLogs(namespace, client.pods().inNamespace(namespace).withLabels(labels).list().getItems());
+    }
+
+    public Map<String, String> getLogsOfAllPods(String namespace) {
+        return getLogs(namespace, client.pods().inNamespace(namespace).list().getItems());
+    }
+
+    public Map<String, String> getLogs(String namespace, List<Pod> pods) {
         Map<String, String> logs = new HashMap<>();
         try {
-            client.pods().inNamespace(namespace).withLabels(labels).list().getItems().stream()
-                    .forEach(pod -> {
-                        logs.put(pod.getMetadata().getName(),
-                                client.pods().inNamespace(namespace)
-                                        .withName(pod.getMetadata().getName())
-                                        .getLog());
-                    });
+            if (pods == null || pods.isEmpty()) {
+                log.info("No pods to get logs");
+                return logs;
+            }
+            pods.forEach(pod -> {
+                pod.getSpec().getContainers().forEach(container -> {
+                    logs.put(pod.getMetadata().getName()+"-"+container.getName(),
+                            client.pods().inNamespace(namespace)
+                                    .withName(pod.getMetadata().getName())
+                                    .inContainer(container.getName())
+                                    .getLog());
+                });
+            });
         } catch (Exception e) {
-            log.error("Error getting logs by labels.");
-            e.printStackTrace();
+            log.error("Error getting logs of pods", e);
         }
         return logs;
     }
