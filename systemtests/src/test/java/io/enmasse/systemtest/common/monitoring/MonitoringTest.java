@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import com.google.common.collect.Ordering;
@@ -118,7 +119,10 @@ public class MonitoringTest extends TestBase{
     }
 
     @AfterEach
-    void uninstallMonitoring() {
+    void uninstallMonitoring(ExtensionContext context) {
+        if (context.getExecutionException().isPresent()) { //test failed
+            logCollector.collectLogsOfPodsInNamespace(environment.getMonitoringNamespace());
+        }
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
         KubeCMDClient.deleteFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
         KubeCMDClient.switchProject(environment.getMonitoringNamespace());
