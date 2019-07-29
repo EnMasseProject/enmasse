@@ -131,22 +131,9 @@ ConsoleServer.prototype.ws_bind = function (server, env) {
         auth_utils.ws_auth_handler(self.authz, env)(info.req, callback);
     }});
     this.ws_server.on('connection', function (ws, request) {
-
         if (self.authz.access_console(request)) {
-            var idleTimeout = 30000;
-            if (env.CONSOLE_AMQP_IDLE_TIMEOUT) {
-                function isNan(parsed) {
-                    return parsed !== parsed;
-                }
-                idleTimeout = parseInt(env.CONSOLE_AMQP_IDLE_TIMEOUT, 10);
-                if (isNan(idleTimeout) || idleTimeout <= 0) {
-                    idleTimeout = null;
-                }
-            }
-            var options = {idle_time_out: idleTimeout};
-            Object.assign(options, self.authz.get_authz_props(request));
-            log.info('Accepting incoming websocket connection (idle timeout : %s)', idleTimeout === null ? "off" : idleTimeout);
-            self.amqp_container.websocket_accept(ws, options);
+            log.info('Accepting incoming websocket connection');
+            self.amqp_container.websocket_accept(ws, self.authz.get_authz_props(request));
         } else {
             ws.close(4403, 'You do not have permission to use this console');
         }
