@@ -262,6 +262,7 @@ public class AdminResourcesManager {
     }
 
     public void tearDownSharedEnv() throws Exception {
+        LOGGER.warn("Next tag is shared? " + SharedAddressSpaceManager.getInstance().isNextTagShared());
         if(!SharedAddressSpaceManager.getInstance().isNextTagShared()) {
             LOGGER.info("Shared env will be deleted");
             for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
