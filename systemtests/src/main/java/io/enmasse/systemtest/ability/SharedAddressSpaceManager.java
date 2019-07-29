@@ -127,7 +127,8 @@ public class SharedAddressSpaceManager {
         int currentTestIndex = tests.indexOf(test);
         if (!(currentTestIndex == tests.size() - 1)) {
             List<String> nextTags = getTags(tests.get(currentTestIndex + 1));
-            return nextTags.contains(TestTag.sharedBrokered) || nextTags.contains(TestTag.sharedStandard);
+            return nextTags.contains(TestTag.sharedBrokered) || nextTags.contains(TestTag.sharedStandard)
+                    || nextTags.contains(TestTag.sharedMqtt) || nextTags.contains(TestTag.sharedIot);
         }
         return false;
     }
