@@ -273,6 +273,7 @@ public class AdminResourcesManager {
             removeInfraConfig(sharedAddressSpaceEnv.getStandardInfraConfig());
             LOGGER.info("Infra config " + sharedAddressSpaceEnv.getBrokeredInfra() + "is going to be deleted!");
             removeInfraConfig(sharedAddressSpaceEnv.getBrokeredInfraConfig());
+            AdminResourcesManager.getInstance().sharedAddressSpaceEnv = null;
         }
     }
 
