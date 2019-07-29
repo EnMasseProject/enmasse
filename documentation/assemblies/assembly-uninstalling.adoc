@@ -10,6 +10,7 @@ You must uninstall {ProductName} using the same method that you used to install 
 
 include::../modules/proc-uninstalling.adoc[leveloffset=+1]
 
+ifeval::["{cmdcli}" == "oc"]
 include::../modules/proc-uninstalling-using-ansible.adoc[leveloffset=+1]
-
+endif::[]
 
