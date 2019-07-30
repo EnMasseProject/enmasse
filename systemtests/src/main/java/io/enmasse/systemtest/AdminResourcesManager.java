@@ -57,7 +57,7 @@ public class AdminResourcesManager {
     public void tearDown() throws Exception {
         if (!Environment.getInstance().skipCleanup()) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
-                if(!sharedAddressSpaceEnv.getAddressSpacePlanList().contains(addressSpacePlan)) {
+                if(sharedAddressSpaceEnv != null && !sharedAddressSpaceEnv.getAddressSpacePlanList().contains(addressSpacePlan)) {
                 Kubernetes.getInstance().getAddressSpacePlanClient()
                         .withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
                     LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
@@ -70,7 +70,7 @@ public class AdminResourcesManager {
             }
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
-                if (!infraConfigDefinition.getMetadata().getName()
+                if (sharedAddressSpaceEnv != null && !infraConfigDefinition.getMetadata().getName()
                         .equals(sharedAddressSpaceEnv.getStandardInfra())) {
                 Kubernetes.getInstance().getStandardInfraConfigClient()
                         .withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
@@ -79,7 +79,7 @@ public class AdminResourcesManager {
             }
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
-                if (!infraConfigDefinition.getMetadata().getName()
+                if (sharedAddressSpaceEnv != null && !infraConfigDefinition.getMetadata().getName()
                         .equals(sharedAddressSpaceEnv.getBrokeredInfra())) {
                 Kubernetes.getInstance().getBrokeredInfraConfigClient()
                         .withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
@@ -262,7 +262,7 @@ public class AdminResourcesManager {
     }
 
     public void tearDownSharedEnv() throws Exception {
-        LOGGER.warn("Next tag is shared? " + SharedAddressSpaceManager.getInstance().isNextTagShared());
+        LOGGER.info("Next tag is shared? " + SharedAddressSpaceManager.getInstance().isNextTagShared());
         if(!SharedAddressSpaceManager.getInstance().isNextTagShared()) {
             LOGGER.info("Shared env will be deleted");
             for (AddressSpacePlan addressSpacePlan : sharedAddressSpaceEnv.getAddressSpacePlanList()) {
