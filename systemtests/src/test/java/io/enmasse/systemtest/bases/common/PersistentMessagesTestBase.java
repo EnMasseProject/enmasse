@@ -37,6 +37,9 @@ public class PersistentMessagesTestBase extends TestBaseWithShared {
     protected void doTestQueuePersistentMessages(Address address, int messagesBatch) throws Exception {
         setAddresses(address);
 
+        // Wait for the first console pod to be terminated
+        TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
+
         int podCount = kubernetes.listPods().size();
 
         sendDurableMessages(getSharedAddressSpace(), address, defaultCredentials, messagesBatch);
