@@ -106,7 +106,7 @@ public class MonitoringTest extends TestBase{
                     }
                 }
                 if(phase == WaitPhase.LAST_TRY) {
-                    log.info("Prometheus rules obtained", rules==null ? "null" : rules.encodePrettily());
+                    log.info("Prometheus rules obtained : {}", rules.encodePrettily());
                 }
             } catch ( Exception e ) {
                 if(phase == WaitPhase.LAST_TRY) {
@@ -122,6 +122,7 @@ public class MonitoringTest extends TestBase{
     void uninstallMonitoring(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectLogsOfPodsInNamespace(environment.getMonitoringNamespace());
+            logCollector.collectEvents(environment.getMonitoringNamespace());
         }
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
         KubeCMDClient.deleteFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));

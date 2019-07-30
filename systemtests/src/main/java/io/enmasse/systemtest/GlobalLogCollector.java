@@ -122,15 +122,23 @@ public class GlobalLogCollector {
         });
     }
 
-    public void collectEvents() throws IOException {
+    public void collectEvents() {
+        collectEvents(this.namespace);
+    }
+
+    public void collectEvents(String namespace) {
         long timestamp = System.currentTimeMillis();
         log.info("Collecting events in {}", namespace);
         ExecutionResultData result = KubeCMDClient.getEvents(namespace);
-        Path eventLog = resolveLogFile(namespace + ".events." + timestamp);
-        try (BufferedWriter writer = Files.newBufferedWriter(eventLog)) {
-            writer.write(result.getStdOut());
-        } catch (Exception e) {
-            log.error("Error collecting events for {}", namespace, e);
+        try {
+            Path eventLog = resolveLogFile(namespace + ".events." + timestamp);
+            try (BufferedWriter writer = Files.newBufferedWriter(eventLog)) {
+                writer.write(result.getStdOut());
+            } catch (Exception e) {
+                log.error("Error collecting events for {}", namespace, e);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

@@ -272,7 +272,9 @@ function get_previous_logs() {
 
 function get_all_events() {
     LOG_DIR=${1}
-    ${CMD} get events --all-namespaces > ${LOG_DIR}/all_events.log
+    ${CMD} get events --all-namespaces \
+                      --output="custom-columns=LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}" \
+                      --sort-by="{.lastTimestamp}" > ${LOG_DIR}/all_events.log
 }
 
 function stop_and_check_openshift() {
