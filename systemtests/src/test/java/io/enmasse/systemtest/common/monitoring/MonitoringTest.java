@@ -66,6 +66,7 @@ public class MonitoringTest extends TestBase{
             //workaround for https://github.com/EnMasseProject/enmasse/issues/2918
             KubeCMDClient.deleteFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
             KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
+            TestUtils.waitForNamespaceDeleted(kubernetes, environment.getMonitoringNamespace());
             KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
             KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
             TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(2, TimeUnit.MINUTES));
