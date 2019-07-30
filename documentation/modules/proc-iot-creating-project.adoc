@@ -9,7 +9,7 @@
 After installing the IoT services, you create an IoT project.
 
 .Prerequisites
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-messaging-iot[The IoT services are installed].
 
 .Procedure
 
