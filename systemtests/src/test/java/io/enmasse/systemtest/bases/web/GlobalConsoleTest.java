@@ -176,11 +176,14 @@ public abstract class GlobalConsoleTest extends TestBase {
     }
 
     private void waitUntilAddressSpaceActive(AddressSpace addressSpace) throws Exception {
-        assertTrue(Optional.ofNullable(selenium.waitUntilItemPresent(30, () -> globalConsolePage.getAddressSpaceItem(addressSpace)))
+        String name = addressSpace.getMetadata().getName();
+        waitForAddressSpaceReady(addressSpace);
+        Boolean active = Optional.ofNullable(selenium.waitUntilItemPresent(60, () -> globalConsolePage.getAddressSpaceItem(addressSpace)))
                 .map(webItem -> webItem.getStatus().contains("Active"))
                 .orElseGet(() -> {
-                    log.error("AddressSpaceWebItem {} not present", addressSpace.getMetadata().getName());
+                    log.error("AddressSpaceWebItem {} not present", name);
                     return false;
-                }));
+                });
+        assertTrue(active, String.format("Address space %s not marked active in UI within timeout", name));
     }
 }
