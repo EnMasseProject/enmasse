@@ -57,11 +57,9 @@ public class AdminResourcesManager {
     public void tearDown() throws Exception {
         if (!Environment.getInstance().skipCleanup()) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
-                if(sharedAddressSpaceEnv != null && !sharedAddressSpaceEnv.getAddressSpacePlanList().contains(addressSpacePlan)) {
                 Kubernetes.getInstance().getAddressSpacePlanClient()
                         .withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
                     LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
-                }
             }
 
             for (AddressPlan addressPlan : addressPlans) {
@@ -70,21 +68,15 @@ public class AdminResourcesManager {
             }
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
-                if (sharedAddressSpaceEnv != null && !infraConfigDefinition.getMetadata().getName()
-                        .equals(sharedAddressSpaceEnv.getStandardInfra())) {
                 Kubernetes.getInstance().getStandardInfraConfigClient()
                         .withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                     LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
-                }
             }
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
-                if (sharedAddressSpaceEnv != null && !infraConfigDefinition.getMetadata().getName()
-                        .equals(sharedAddressSpaceEnv.getBrokeredInfra())) {
                 Kubernetes.getInstance().getBrokeredInfraConfigClient()
                         .withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                     LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
-                }
             }
 
             for (AuthenticationService authService : authServices) {
@@ -96,7 +88,6 @@ public class AdminResourcesManager {
             addressPlans.clear();
             addressSpacePlans.clear();
         }
-
     }
 
     //------------------------------------------------------------------------------------------------
@@ -148,7 +139,9 @@ public class AdminResourcesManager {
         } else {
             client.create(addressSpacePlan);
         }
-        addressSpacePlans.add(addressSpacePlan);
+        if (!addressSpacePlan.getDisplayName().contains("custom-shared")) {
+            addressSpacePlans.add(addressSpacePlan);
+        }
         Thread.sleep(1000);
     }
 
@@ -178,11 +171,16 @@ public class AdminResourcesManager {
         if (infraConfigDefinition instanceof StandardInfraConfig) {
             var client = Kubernetes.getInstance().getStandardInfraConfigClient();
             client.createOrReplace((StandardInfraConfig) infraConfigDefinition);
-            standardInfraConfigs.add((StandardInfraConfig) infraConfigDefinition);
+            if (!infraConfigDefinition.getMetadata().getName().contains("custom-shared")) {
+                standardInfraConfigs.add((StandardInfraConfig) infraConfigDefinition);
+            }
         } else {
             var client = Kubernetes.getInstance().getBrokeredInfraConfigClient();
             client.createOrReplace((BrokeredInfraConfig) infraConfigDefinition);
-            brokeredInfraConfigs.add((BrokeredInfraConfig) infraConfigDefinition);
+            if (!infraConfigDefinition.getMetadata().getName().contains("custom-shared")) {
+                brokeredInfraConfigs.add((BrokeredInfraConfig) infraConfigDefinition);
+            }
+
         }
         Thread.sleep(1000);
     }

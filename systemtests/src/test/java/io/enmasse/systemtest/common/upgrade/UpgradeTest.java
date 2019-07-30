@@ -7,6 +7,10 @@ package io.enmasse.systemtest.common.upgrade;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardStorage;
+import io.enmasse.admin.model.v1.AuthenticationServiceSpecStandardType;
+import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.TimeoutBudget;

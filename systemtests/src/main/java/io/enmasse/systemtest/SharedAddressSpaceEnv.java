@@ -23,8 +23,8 @@ import java.util.Map;
 
 public class SharedAddressSpaceEnv {
 
-    private static final String STANDARD_INFRA = "custom-standard-infra";
-    private static final String BROKERED_INFRA = "custom-brokered-infra";
+    private static final String STANDARD_INFRA = "custom-shared-standard-infra";
+    private static final String BROKERED_INFRA = "custom-shared-brokered-infra";
 
     private StandardInfraConfig standardInfraConfig = null;
     private BrokeredInfraConfig brokeredInfraConfig = null;
