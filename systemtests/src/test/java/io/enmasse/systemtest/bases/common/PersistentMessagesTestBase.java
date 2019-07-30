@@ -29,6 +29,8 @@ import io.enmasse.systemtest.bases.TestBaseWithShared;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
+import io.fabric8.kubernetes.api.model.Pod;
+
 @Tag(isolated)
 public class PersistentMessagesTestBase extends TestBaseWithShared {
 
@@ -37,7 +39,12 @@ public class PersistentMessagesTestBase extends TestBaseWithShared {
     protected void doTestQueuePersistentMessages(Address address, int messagesBatch) throws Exception {
         setAddresses(address);
 
-        int podCount = kubernetes.listPods().size();
+        List<Pod> pods = kubernetes.listPods();
+
+        log.info("pods looking for: ");
+        TestUtils.printPods(pods);
+
+        int podCount = pods.size();
 
         sendDurableMessages(getSharedAddressSpace(), address, defaultCredentials, messagesBatch);
 
