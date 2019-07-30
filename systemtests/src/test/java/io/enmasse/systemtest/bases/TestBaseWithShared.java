@@ -12,7 +12,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.ability.SharedAddressSpaceManager;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
@@ -119,42 +118,6 @@ public abstract class TestBaseWithShared extends TestBase {
     //====================================== Test help methods =======================================
     //================================================================================================
 
-
-    /**
-     * attach N receivers into one address with default username/password
-     */
-    protected List<AbstractClient> attachReceivers(Address destination, int receiverCount) throws Exception {
-        return attachReceivers(sharedAddressSpace, destination, receiverCount, defaultCredentials);
-    }
-
-    /**
-     * attach N receivers into one address with own username/password
-     */
-    protected List<AbstractClient> attachReceivers(Address destination, int receiverCount, UserCredentials credentials) throws Exception {
-        return attachReceivers(sharedAddressSpace, destination, receiverCount, credentials);
-    }
-
-    /**
-     * attach senders to destinations
-     */
-    protected List<AbstractClient> attachSenders(List<Address> destinations) throws Exception {
-        return attachSenders(sharedAddressSpace, destinations);
-    }
-
-    /**
-     * attach receivers to destinations
-     */
-    protected List<AbstractClient> attachReceivers(List<Address> destinations) throws Exception {
-        return attachReceivers(sharedAddressSpace, destinations);
-    }
-
-    /**
-     * create M connections with N receivers and K senders
-     */
-    protected AbstractClient attachConnector(Address destination, int connectionCount,
-                                             int senderCount, int receiverCount) throws Exception {
-        return attachConnector(sharedAddressSpace, destination, connectionCount, senderCount, receiverCount, defaultCredentials);
-    }
 
     /**
      * Create users within groups (according to destNamePrefix and customerIndex), wait until destinations are ready to use

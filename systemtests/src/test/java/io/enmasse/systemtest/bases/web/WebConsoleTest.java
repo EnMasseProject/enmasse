@@ -369,33 +369,37 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
         consoleWebPage.openAddressesPageWebConsole();
 
-        clientsList = attachReceivers(addresses);
+        List<AbstractClient> receivers = attachReceivers(sharedAddressSpace, addresses, -1, defaultCredentials);
+        try {
+            Thread.sleep(15000);
 
-        Thread.sleep(15000);
+            consoleWebPage.sortItems(SortType.RECEIVERS, true);
+            assertSorted("Console failed, items are not sorted by count of receivers asc",
+                    consoleWebPage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getReceiversCount));
 
-        consoleWebPage.sortItems(SortType.RECEIVERS, true);
-        assertSorted("Console failed, items are not sorted by count of receivers asc",
-                consoleWebPage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getReceiversCount));
+            consoleWebPage.sortItems(SortType.RECEIVERS, false);
+            assertSorted("Console failed, items are not sorted by count of receivers desc",
+                    consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
+        } finally {
+            stopClients(receivers);
+        }
 
-        consoleWebPage.sortItems(SortType.RECEIVERS, false);
-        assertSorted("Console failed, items are not sorted by count of receivers desc",
-                consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getReceiversCount));
+        List<AbstractClient> senders = attachSenders(sharedAddressSpace, addresses, 360, defaultCredentials);
+        try {
 
-        stopClients(clientsList);
+            Thread.sleep(15000);
 
-        clientsList = attachSenders(addresses);
+            consoleWebPage.sortItems(SortType.SENDERS, true);
+            assertSorted("Console failed, items are not sorted by count of senders asc",
+                    consoleWebPage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
 
-        Thread.sleep(15000);
+            consoleWebPage.sortItems(SortType.SENDERS, false);
+            assertSorted("Console failed, items are not sorted by count of senders desc",
+                    consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
+        } finally {
+            stopClients(senders);
+        }
 
-        consoleWebPage.sortItems(SortType.SENDERS, true);
-        assertSorted("Console failed, items are not sorted by count of senders asc",
-                consoleWebPage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getSendersCount));
-
-        consoleWebPage.sortItems(SortType.SENDERS, false);
-        assertSorted("Console failed, items are not sorted by count of senders desc",
-                consoleWebPage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getSendersCount));
-
-        stopClients(clientsList);
     }
 
     protected void doTestSortConnectionsBySenders() throws Exception {
@@ -460,7 +464,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
         consoleWebPage.openConnectionsPageWebConsole();
 
         int receiverCount = 5;
-        clientsList = attachReceivers(queue, receiverCount);
+        clientsList = attachReceivers(sharedAddressSpace, queue, receiverCount, -1, defaultCredentials);
 
         consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
         List<ConnectionWebItem> items = consoleWebPage.getConnectionItems(receiverCount);
@@ -503,8 +507,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
         try {
             int receiversBatch1 = 5;
             int receiversBatch2 = 10;
-            receiversPavel = attachReceivers(queue, receiversBatch1, pavel);
-            receiversTest = attachReceivers(queue, receiversBatch2);
+            receiversPavel = attachReceivers(sharedAddressSpace, queue, receiversBatch1, -1, pavel);
+            receiversTest = attachReceivers(sharedAddressSpace, queue, receiversBatch2, -1, defaultCredentials);
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch1 + receiversBatch2),
                     consoleWebPage.getConnectionItems(receiversBatch1 + receiversBatch2).size(), is(receiversBatch1 + receiversBatch2));
 
@@ -550,7 +554,8 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
 
         clientsList = attachClients(addresses);
 
-        String hostname = consoleWebPage.getConnectionItems(6).get(0).getName();
+        List<ConnectionWebItem> connectionItems = consoleWebPage.getConnectionItems(6);
+        String hostname = connectionItems.get(0).getName();
 
         consoleWebPage.addConnectionsFilter(FilterType.HOSTNAME, hostname);
         assertThat(String.format("Console failed, does not contain %d connections", 1),
@@ -602,7 +607,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
         consoleWebPage.openConnectionsPageWebConsole();
 
         clientsList = new ArrayList<>();
-        clientsList.add(attachConnector(dest, connectionCount, 1, 1));
+        clientsList.add(attachConnector(sharedAddressSpace, dest, connectionCount, 1, 1, defaultCredentials, 360));
         selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
 
         String containerID = consoleWebPage.getConnectionItems(connectionCount).get(0).getContainerID();
@@ -637,7 +642,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
         consoleWebPage.openConnectionsPageWebConsole();
 
         clientsList = new ArrayList<>();
-        clientsList.add(attachConnector(dest, connectionCount, 1, 1));
+        clientsList.add(attachConnector(sharedAddressSpace, dest, connectionCount, 1, 1, defaultCredentials, 360));
         selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
 
         consoleWebPage.sortItems(SortType.CONTAINER_ID, true);
@@ -709,7 +714,7 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
 
         AbstractClient client = new RheaClientConnector();
         try {
-            client = attachConnector(dest, 1, senderCount, receiverCount);
+            client = attachConnector(sharedAddressSpace, dest, 1, senderCount, receiverCount, defaultCredentials, 360);
             selenium.waitUntilPropertyPresent(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
 
             assertAll(
@@ -967,9 +972,9 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
     private List<AbstractClient> attachClients(List<Address> destinations) throws Exception {
         List<AbstractClient> clients = new ArrayList<>();
         for (Address destination : destinations) {
-            clients.add(attachConnector(destination, 1, 6, 1));
-            clients.add(attachConnector(destination, 1, 4, 4));
-            clients.add(attachConnector(destination, 1, 1, 6));
+            clients.add(attachConnector(sharedAddressSpace, destination, 1, 6, 1, defaultCredentials, 360));
+            clients.add(attachConnector(sharedAddressSpace, destination, 1, 4, 4, defaultCredentials, 360));
+            clients.add(attachConnector(sharedAddressSpace, destination, 1, 1, 6, defaultCredentials, 360));
         }
 
         Thread.sleep(5000);

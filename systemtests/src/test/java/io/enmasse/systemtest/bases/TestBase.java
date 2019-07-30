@@ -763,21 +763,15 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     /**
-     * attach N receivers into one address with default username/password
-     */
-    protected List<AbstractClient> attachReceivers(AddressSpace addressSpace, Address destination,
-                                                   int receiverCount) throws Exception {
-        return attachReceivers(addressSpace, destination, receiverCount, defaultCredentials);
-    }
-
-    /**
      * attach N receivers into one address with own username/password
      */
-    List<AbstractClient> attachReceivers(AddressSpace addressSpace, Address destination,
-                                         int receiverCount, UserCredentials credentials) throws Exception {
+    public List<AbstractClient> attachReceivers(AddressSpace addressSpace, Address destination,
+                                                int receiverCount, int timeout, UserCredentials credentials) throws Exception {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(ClientArgument.TIMEOUT, "120");
+        if (timeout > 0) {
+            arguments.put(ClientArgument.TIMEOUT, Integer.toString(timeout));
+        }
         arguments.put(ClientArgument.CONN_SSL, "true");
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
@@ -801,12 +795,14 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach senders to destinations (for N-th destination is attached N+1 senders)
      */
-    List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Address> destinations) throws Exception {
+    public List<AbstractClient> attachSenders(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials defaultCredentials) throws Exception {
         List<AbstractClient> senders = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(ClientArgument.TIMEOUT, "60");
+        if (timeout > 0) {
+            arguments.put(ClientArgument.TIMEOUT, Integer.toString(timeout));
+        }
         arguments.put(ClientArgument.CONN_SSL, "true");
         arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
@@ -833,15 +829,17 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     /**
      * attach receivers to destinations (for N-th destination is attached N+1 senders)
      */
-    List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations) throws Exception {
+    public List<AbstractClient> attachReceivers(AddressSpace addressSpace, List<Address> destinations, int timeout, UserCredentials userCredentials) throws Exception {
         List<AbstractClient> receivers = new ArrayList<>();
 
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(ClientArgument.TIMEOUT, "60");
+        if (timeout > 0) {
+            arguments.put(ClientArgument.TIMEOUT, Integer.toString(timeout));
+        }
         arguments.put(ClientArgument.CONN_SSL, "true");
-        arguments.put(ClientArgument.USERNAME, defaultCredentials.getUsername());
-        arguments.put(ClientArgument.PASSWORD, defaultCredentials.getPassword());
+        arguments.put(ClientArgument.USERNAME, userCredentials.getUsername());
+        arguments.put(ClientArgument.PASSWORD, userCredentials.getPassword());
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
         arguments.put(ClientArgument.CONN_PROPERTY, "connection_property1~50");
         arguments.put(ClientArgument.CONN_PROPERTY, "connection_property2~testValue");
@@ -864,10 +862,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected AbstractClient attachConnector(AddressSpace addressSpace, Address destination,
                                              int connectionCount,
-                                             int senderCount, int receiverCount, UserCredentials credentials) throws Exception {
+                                             int senderCount, int receiverCount, UserCredentials credentials, int timeout) throws Exception {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.BROKER, getMessagingRoute(addressSpace).toString());
-        arguments.put(ClientArgument.TIMEOUT, "120");
+        if (timeout > 0) {
+            arguments.put(ClientArgument.TIMEOUT, Integer.toString(timeout));
+        }
         arguments.put(ClientArgument.CONN_SSL, "true");
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
