@@ -5,8 +5,6 @@
 package io.enmasse.systemtest.selenium.page;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.systemtest.AddressSpacePlans;
 import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
@@ -184,7 +182,9 @@ public class GlobalConsolePage implements IWebPage {
         selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
         selenium.clickOnItem(getNextButton());
         selenium.clickOnItem(getFinishButton());
+        selenium.refreshPage();
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.takeScreenShot();
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         selenium.refreshPage();
     }
