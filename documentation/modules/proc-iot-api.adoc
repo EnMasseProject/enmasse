@@ -21,9 +21,9 @@ endif::[]
 == Starting the {api} consumer
 
 .Prerequisites
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-iot[The IoT services are installed].
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-iot[An IoT project is created].
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-iot[An IoT device is created].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-messaging-iot[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-messaging-iot[An IoT project is created].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-messaging-iot[An IoT device is created].
 
 .Procedure
 
