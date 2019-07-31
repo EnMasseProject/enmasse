@@ -22,7 +22,9 @@ import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxDriverLogLevel;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
@@ -492,7 +494,14 @@ public class TestUtils {
 
     public static RemoteWebDriver getFirefoxDriver() throws Exception {
         Endpoint endpoint = SystemtestsKubernetesApps.getFirefoxSeleniumAppEndpoint(Kubernetes.getInstance());
-        return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), new FirefoxOptions());
+        FirefoxOptions options = new FirefoxOptions();
+        FirefoxProfile myProfile = new FirefoxProfile();
+        // https://github.com/mozilla/geckodriver/issues/330 enable the emission of console.info(), warn() etc
+        // to stdout of the browser process.  Works around the fact that Firefox logs do are not available through
+        // WebDriver.manage().logs()
+        myProfile.setPreference("devtools.console.stdout.content", true);
+        options.setProfile(myProfile);
+        return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), options);
     }
 
     public static RemoteWebDriver getChromeDriver() throws Exception {

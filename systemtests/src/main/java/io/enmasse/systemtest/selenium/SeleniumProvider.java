@@ -61,36 +61,34 @@ public class SeleniumProvider {
     public void onFailed(ExtensionContext extensionContext) {
         String getTestClassName = extensionContext.getTestClass().get().getName();
         String getTestMethodName = extensionContext.getTestMethod().get().getName();
-        saveBrowserLog(getTestClassName, getTestMethodName);
-        saveScreenShots(getTestClassName, getTestMethodName);
+        Path webConsolePath = getWebConsolePath(Environment.getInstance().testLogDir(), getTestClassName, getTestMethodName);
+        saveBrowserLog(webConsolePath);
+        SeleniumManagement.collectAppLogs(webConsolePath);
+        saveScreenShots(webConsolePath, getTestClassName, getTestMethodName);
+
     }
 
-    public void saveBrowserLog(String className, String methodName) {
+    private void saveBrowserLog(Path path) {
         try {
             log.info("Saving browser console log...");
-            Path path = Paths.get(
-                    Environment.getInstance().testLogDir(),
-                    webconsoleFolder,
-                    className,
-                    methodName);
             Files.createDirectories(path);
             File consoleLog = new File(path.toString(), "browser_console.log");
             StringBuilder logEntries = formatedBrowserLogs();
             Files.write(Paths.get(consoleLog.getPath()), logEntries.toString().getBytes());
-            log.info("Browser console log saved successfully");
+            log.info("Browser console log saved successfully : {}", consoleLog);
         } catch (Exception ex) {
             log.warn("Cannot save browser log: " + ex.getMessage());
         }
     }
 
     public void saveScreenShots(String className, String methodName) {
+        Path webConsolePath = getWebConsolePath(Environment.getInstance().testLogDir(), className, methodName);
+        saveScreenShots(webConsolePath, className, methodName);
+    }
+
+    private void saveScreenShots(Path path, String className, String methodName) {
         try {
             takeScreenShot();
-            Path path = Paths.get(
-                    Environment.getInstance().testLogDir(),
-                    webconsoleFolder,
-                    className,
-                    methodName);
             Files.createDirectories(path);
             for (Date key : browserScreenshots.keySet()) {
                 FileUtils.copyFile(browserScreenshots.get(key), new File(Paths.get(path.toString(),
@@ -100,7 +98,7 @@ public class SeleniumProvider {
         } catch (Exception ex) {
             log.warn("Cannot save screenshots: " + ex.getMessage());
         } finally {
-            tearDownDrivers();
+            //tearDownDrivers();
         }
     }
 
@@ -284,6 +282,14 @@ public class SeleniumProvider {
 
     public void waitUntilItemNotPresent(int timeInSeconds, Supplier<WebItem> item) throws Exception {
         waitUntilItem(timeInSeconds, item, false);
+    }
+
+    private Path getWebConsolePath(String target, String className, String methodName) {
+        return Paths.get(
+                target,
+                webconsoleFolder,
+                className,
+                methodName);
     }
 
     private <T extends WebItem> T waitUntilItem(int timeInSeconds, Supplier<T> item, boolean present) throws Exception {

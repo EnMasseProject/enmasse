@@ -5,15 +5,14 @@
 package io.enmasse.systemtest.selenium;
 
 
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.TimeoutBudget;
+import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
 import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.slf4j.Logger;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -51,6 +50,16 @@ public class SeleniumManagement {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_SELENIUM_CONTAINER);
         SystemtestsKubernetesApps.deleteFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
         TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void collectAppLogs(Path path) {
+        try {
+            Files.createDirectories(path);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path.toFile(), SystemtestsKubernetesApps.SELENIUM_PROJECT);
+            collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.SELENIUM_PROJECT);
+        } catch (Exception e) {
+            log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.SELENIUM_PROJECT);
+        }
     }
 
     public static void removeChromeApp() throws Exception {
