@@ -10,11 +10,14 @@ import static io.enmasse.systemtest.TestTag.isolated;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -60,16 +63,32 @@ public class MonitoringTest extends TestBase{
         KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
         KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
         Thread.sleep(5000);
+        int expectedPods = 6;
         try {
-            TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(2, TimeUnit.MINUTES));
+            TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), expectedPods, new TimeoutBudget(2, TimeUnit.MINUTES));
         } catch (IllegalStateException e) {
+            log.info("Trying to workaround https://github.com/EnMasseProject/enmasse/issues/2918");
             //workaround for https://github.com/EnMasseProject/enmasse/issues/2918
-            KubeCMDClient.deleteFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
-            KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
-            TestUtils.waitForNamespaceDeleted(kubernetes, environment.getMonitoringNamespace());
-            KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
-            KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
-            TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(2, TimeUnit.MINUTES));
+            Set<Pod> readyPods = new HashSet<>(TestUtils.listReadyPods(kubernetes));
+            kubernetes.listPods(environment.getMonitoringNamespace()).stream().filter(p -> !readyPods.contains(p)).forEach(
+                    p -> {
+
+                        String name = p.getMetadata().getName();
+                        try {
+                            log.info("Bouncing unready pod {}", name);
+                            kubernetes.deletePod(environment.getMonitoringNamespace(), name);
+                        } catch (Exception ex) {
+                           log.error("Failed to delete pod {} (ignored)", name, ex);
+                        }
+                    }
+            );
+            TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), expectedPods, new TimeoutBudget(2, TimeUnit.MINUTES));
+//            KubeCMDClient.deleteFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
+//            KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
+//            TestUtils.waitForNamespaceDeleted(kubernetes, environment.getMonitoringNamespace());
+//            KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
+//            KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
+//            TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(2, TimeUnit.MINUTES));
         }
 
         Kubernetes.getInstance().getClient().namespaces()
