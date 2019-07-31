@@ -30,7 +30,7 @@ spec:
   router:
     resources:
       memory: 256Mi
-    linkCapcity: 1000
+    linkCapacity: 1000
     minReplicas: 1
     policy:
       maxConnections: 1000

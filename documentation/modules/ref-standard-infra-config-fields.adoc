@@ -32,7 +32,7 @@ This table shows the fields available for the standard infrastructure configurat
 |broker.storageClassName |Specifies what storage class to use for the persistent volume for the broker.
 |broker.updatePersistentVolumeClaim |If the persistent volume supports resizing, setting this value to `true` allows the broker storage to be resized.
 |router.resources.memory |Specifies the amount of memory allocated to the router.
-|router.linkCapcity |Specifies the default number of credits issued on AMQP links for the router.
+|router.linkCapacity |Specifies the default number of credits issued on AMQP links for the router.
 |router.handshakeTimeout |Specifies the amount of time in seconds to wait for the secure handshake to be initiated.
 |router.minReplicas |Specifies the minimum number of router pods to run; a minimum of two are required for high availability (HA) configuration.
 |router.podTemplate.metadata.labels |Specifies the labels added to the router pod.
