@@ -14,6 +14,7 @@ import io.enmasse.systemtest.selenium.resources.*;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("unused")
 public class ConsoleWebPage implements IWebPage {
@@ -94,6 +96,17 @@ public class ConsoleWebPage implements IWebPage {
 
     public WebElement getRemoveButton() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Delete")));
+    }
+
+    public void assertDialogPresent(String id) {
+        int timeout = 30;
+        try {
+            WebElement dialog = selenium.getDriverWait().withTimeout(Duration.ofSeconds(timeout)).until(ExpectedConditions.visibilityOfElementLocated(By.id(id)));
+            assertNotNull(dialog);
+        } catch (TimeoutException e) {
+            selenium.takeScreenShot();
+            fail(String.format("Expected dialog with id %s did not appear within timeout %d s", id, timeout));
+        }
     }
 
     /**

@@ -152,12 +152,12 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered 
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class,
-                () -> doTestCanOpenConsolePage(new UserCredentials("noexistuser", "pepaPa555")));
+                () -> doTestCanOpenConsolePage(new UserCredentials("noexistuser", "pepaPa555"), false));
     }
 
     @Test
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(clusterUser);
+        doTestCanOpenConsolePage(clusterUser, true);
     }
 
     @Test

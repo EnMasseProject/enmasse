@@ -160,13 +160,13 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseBrokered {
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class,
-                () -> doTestCanOpenConsolePage(new UserCredentials("nonexistsUser", "pepaPa555")));
+                () -> doTestCanOpenConsolePage(new UserCredentials("nonexistsUser", "pepaPa555"), false));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(clusterUser);
+        doTestCanOpenConsolePage(clusterUser, true);
     }
 
     @Test
