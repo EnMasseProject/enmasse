@@ -224,7 +224,9 @@ public class TestUtils {
             log.info("Got {} pods, expected: {}", pods.size(), numExpected);
         }
         if (pods.size() != numExpected) {
-            throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
+            Set<Pod> ready = new HashSet<>(pods);
+            Set<Pod> unready = client.listPods(namespace).stream().filter(pod -> !ready.contains(pod)).collect(Collectors.toSet());
+            throw new IllegalStateException(String.format("Unable to find %d ready pods. Ready : %s, Unready : %s", numExpected, printPods(ready), printPods(unready)));
         }
         for (Pod pod : pods) {
             client.waitUntilPodIsReady(pod);
@@ -237,7 +239,7 @@ public class TestUtils {
      * @param pods list of pods that should be printed
      * @return
      */
-    public static String printPods(List<Pod> pods) {
+    public static String printPods(Collection<Pod> pods) {
         return pods.stream()
                 .map(pod -> "{" + pod.getMetadata().getName() + ", " + pod.getStatus().getPhase() + "}")
                 .collect(Collectors.joining(","));

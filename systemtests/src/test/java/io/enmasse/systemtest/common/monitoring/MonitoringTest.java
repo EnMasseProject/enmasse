@@ -69,7 +69,7 @@ public class MonitoringTest extends TestBase{
         } catch (IllegalStateException e) {
             log.info("Trying to workaround https://github.com/EnMasseProject/enmasse/issues/2918");
             //workaround for https://github.com/EnMasseProject/enmasse/issues/2918
-            Set<Pod> readyPods = new HashSet<>(TestUtils.listReadyPods(kubernetes));
+            Set<Pod> readyPods = new HashSet<>(TestUtils.listReadyPods(kubernetes, environment.getMonitoringNamespace()));
             kubernetes.listPods(environment.getMonitoringNamespace()).stream().filter(p -> !readyPods.contains(p)).forEach(
                     p -> {
 
