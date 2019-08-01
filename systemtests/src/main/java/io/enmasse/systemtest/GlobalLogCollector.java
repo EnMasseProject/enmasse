@@ -31,9 +31,13 @@ public class GlobalLogCollector {
     private final String namespace;
 
     public GlobalLogCollector(Kubernetes kubernetes, File logDir) {
+        this(kubernetes, logDir, kubernetes.getInfraNamespace());
+    }
+
+    public GlobalLogCollector(Kubernetes kubernetes, File logDir, String namespace) {
         this.kubernetes = kubernetes;
         this.logDir = logDir;
-        this.namespace = kubernetes.getInfraNamespace();
+        this.namespace = namespace;
     }
 
 
