@@ -13,6 +13,7 @@ import java.util.Optional;
 import javax.security.auth.x500.X500Principal;
 
 import org.eclipse.hono.util.CacheDirective;
+import org.eclipse.hono.util.Constants;
 import org.eclipse.hono.util.TenantResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,16 +116,18 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
             return RESULT_NOT_FOUND;
         }
 
-        String payload;
+        JsonObject payload;
         if (project.getSpec().getConfiguration() != null) {
-            payload = this.objectMapper.writeValueAsString(project.getSpec().getConfiguration());
+            payload = new JsonObject(this.objectMapper.writeValueAsString(project.getSpec().getConfiguration()));
         } else {
-            payload = null;
+            payload = new JsonObject();
         }
+
+        payload.put(Constants.JSON_FIELD_TENANT_ID, tenantId);
 
         return TenantResult.from(
                 HttpURLConnection.HTTP_OK,
-                payload != null ? new JsonObject(payload) : new JsonObject(),
+                payload,
                 CacheDirective.maxAgeDirective(this.configuration.getCacheTimeToLive().getSeconds()));
     }
 

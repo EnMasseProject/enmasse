@@ -65,6 +65,10 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     }
 
     private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
+        if (isSkipSaveState()) {
+            throw throwable;
+        }
+
         Method testMethod = extensionContext.getTestMethod().orElse(null);
         Class<?> testClass = extensionContext.getRequiredTestClass();
         try {
@@ -117,5 +121,9 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             path = path.resolve(testMethod.getName());
         }
         return path;
+    }
+
+    private boolean isSkipSaveState() {
+        return Environment.getInstance().isSkipSaveState();
     }
 }

@@ -8,16 +8,15 @@ import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +41,6 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.IoTUtils;
-import io.vertx.core.json.JsonObject;
 
 @Tag(sharedIot)
 @Tag(smoke)
@@ -73,10 +71,12 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
      * Test if the enabled flag is set to "enabled".
      * <br>
      * The flag is considered "enabled", in case the value is "true" or missing.
-     * @param obj The object to test.
+     * @param obj The value to test.
      */
-    private static void assertDefaultEnabled(final JsonObject obj) {
-        assertTrue(obj.getBoolean("enabled", true));
+    private static void assertDefaultEnabled(final Boolean enabled) {
+        if ( enabled != null && !Boolean.TRUE.equals(enabled)) {
+            fail("Default value must be 'null' or 'true'");
+        }
     }
 
     protected void removeIoTConfig() throws Exception {
@@ -162,10 +162,9 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     void testRegisterDevice() throws Exception {
         client.registerDevice(tenantId(), randomDeviceId);
 
-        JsonObject result = client.getDeviceRegistration(tenantId(), randomDeviceId);
-        assertEquals(randomDeviceId, result.getString("device-id"));
-        assertNotNull(result.getJsonObject("data"));
-        assertDefaultEnabled(result.getJsonObject("data"));
+        final Device result = client.getDeviceRegistration(tenantId(), randomDeviceId);
+        assertNotNull(result);
+        assertDefaultEnabled(result.getEnabled());
 
         client.deleteDeviceRegistration(tenantId(), randomDeviceId);
         client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
@@ -175,16 +174,15 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     void testDisableDevice() throws Exception {
         client.registerDevice(tenantId(), randomDeviceId);
 
-        JsonObject payload = new JsonObject(Map.of("enabled", false));
+        final Device payload = new Device();
+        payload.setEnabled(false);
 
         client.updateDeviceRegistration(tenantId(), randomDeviceId, payload);
 
-        JsonObject result = client.getDeviceRegistration(tenantId(), randomDeviceId);
-        assertEquals(randomDeviceId, result.getString("device-id"));
-        assertNotNull(result.getJsonObject("data"));
+        final Device result = client.getDeviceRegistration(tenantId(), randomDeviceId);
 
         // as we set it explicitly, we expect the explicit value of "false"
-        assertEquals(false, result.getJsonObject("data").getBoolean("enabled"));
+        assertEquals(Boolean.FALSE, result.getEnabled());
 
         client.deleteDeviceRegistration(tenantId(), randomDeviceId);
         client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);

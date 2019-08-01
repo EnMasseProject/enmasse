@@ -6,13 +6,17 @@
 package io.enmasse.iot.registry.infinispan.config;
 
 import org.eclipse.hono.deviceregistry.ApplicationConfig;
+import org.eclipse.hono.service.management.tenant.TenantManagementHttpEndpoint;
 import org.eclipse.hono.service.tenant.TenantAmqpEndpoint;
-import org.eclipse.hono.service.tenant.TenantHttpEndpoint;
+import org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import org.springframework.context.annotation.Scope;
+
+import io.enmasse.iot.registry.infinispan.DeviceRegistryAmqpServer;
+import io.enmasse.iot.registry.infinispan.DeviceRegistryRestServer;
 
 /**
  * Spring Boot configuration for the Device Registry application.
@@ -20,6 +24,35 @@ import org.springframework.context.annotation.Scope;
  */
 @Configuration
 public class InfinispanRegistryConfig extends ApplicationConfig {
+
+    private static final String BEAN_NAME_DEVICE_REGISTRY_AMQP_SERVER = "deviceRegistryAmqpServer";
+    private static final String BEAN_NAME_DEVICE_REGISTRY_REST_SERVER = "deviceRegistryRestServer";
+
+    @Bean(BEAN_NAME_DEVICE_REGISTRY_AMQP_SERVER)
+    @Scope("prototype")
+    public DeviceRegistryAmqpServer deviceRegistryAmqpServer(){
+        return new DeviceRegistryAmqpServer();
+    }
+
+    @Bean(BEAN_NAME_DEVICE_REGISTRY_REST_SERVER)
+    @Scope("prototype")
+    public DeviceRegistryRestServer deviceRegistryRestServer(){
+        return new DeviceRegistryRestServer();
+    }
+
+    @Bean
+    public ObjectFactoryCreatingFactoryBean deviceRegistryAmqpServerFactory() {
+        final ObjectFactoryCreatingFactoryBean factory = new ObjectFactoryCreatingFactoryBean();
+        factory.setTargetBeanName(BEAN_NAME_DEVICE_REGISTRY_AMQP_SERVER);
+        return factory;
+    }
+
+    @Bean
+    public ObjectFactoryCreatingFactoryBean deviceRegistryRestServerFactory() {
+        final ObjectFactoryCreatingFactoryBean factory = new ObjectFactoryCreatingFactoryBean();
+        factory.setTargetBeanName(BEAN_NAME_DEVICE_REGISTRY_REST_SERVER);
+        return factory;
+    }
 
     /**
      * Creates a new instance of an AMQP 1.0 protocol handler for Hono's <em>Tenant</em> API.
@@ -31,7 +64,7 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
     @Scope("prototype")
     @ConditionalOnBean(name="CacheTenantService")
     public TenantAmqpEndpoint tenantAmqpEndpoint() {
-        return new TenantAmqpEndpoint(vertx());
+        return super.tenantAmqpEndpoint();
     }
 
     /**
@@ -43,7 +76,7 @@ public class InfinispanRegistryConfig extends ApplicationConfig {
     @Override
     @Scope("prototype")
     @ConditionalOnBean(name="CacheTenantService")
-    public TenantHttpEndpoint tenantHttpEndpoint() {
-        return new TenantHttpEndpoint(vertx());
+    public TenantManagementHttpEndpoint tenantHttpEndpoint() {
+        return super.tenantHttpEndpoint();
     }
 }

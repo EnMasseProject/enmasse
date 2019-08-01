@@ -223,8 +223,10 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryConfigMap(config *iotv1a
 hono:
   app:
     maxInstances: 1
-    healthCheckBindAddress: 0.0.0.0
-    healthCheckPort: 8088
+  healthCheck:
+    insecurePortBindAddress: 0.0.0.0
+    insecurePortEnabled: true
+    insecurePort: 8088
   auth:
     port: 5671
     keyPath: /etc/tls/tls.key

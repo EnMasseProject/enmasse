@@ -5,9 +5,12 @@ enmasse:
     vertx:
       preferNative: true
 
+    healthCheck:
+      insecurePortBindAddress: 0.0.0.0
+      insecurePortEnabled: true
+      insecurePort: 8088
+
     tenant:
 
       app:
         maxInstances: 1
-        healthCheckBindAddress: 0.0.0.0
-        healthCheckPort: 8088

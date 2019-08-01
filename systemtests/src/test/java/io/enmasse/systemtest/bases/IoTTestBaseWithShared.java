@@ -10,7 +10,6 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -21,6 +20,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
+
+import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.deviceRegistry;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
@@ -45,7 +46,6 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
         this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
         if (sharedConfig == null) {
-            Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
             CertBundle certBundle = CertificateUtils.createCertBundle();
             sharedConfig = new IoTConfigBuilder()
                     .withNewMetadata()
@@ -53,11 +53,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
                     .endMetadata()
                     .withNewSpec()
                     .withNewServices()
-                    .withNewDeviceRegistry()
-                    .withNewInfinispan()
-                    .withServerAddress(infinispanEndpoint.toString())
-                    .endInfinispan()
-                    .endDeviceRegistry()
+                    .withDeviceRegistry(deviceRegistry())
                     .endServices()
                     .withNewAdapters()
                     .withNewMqtt()
