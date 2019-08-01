@@ -16,7 +16,7 @@ import (
 )
 
 func (r *ReconcileIoTConfig) processCollector(ctx context.Context, config *iotv1alpha1.IoTConfig) error {
-	return r.processDeployment(ctx, "iot-gc", config, r.reconcileCollectorDeployment)
+	return r.processDeployment(ctx, "iot-gc", config, false, r.reconcileCollectorDeployment)
 }
 
 func (r *ReconcileIoTConfig) reconcileCollectorDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
