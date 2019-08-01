@@ -31,6 +31,6 @@
           storage:
             type: persistent-claim
             claimName: keycloak-data
-            size: 5Gi
+            size: 1Gi
       EOF
   when: keycloak_exists.rc != 0

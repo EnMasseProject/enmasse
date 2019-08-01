@@ -94,7 +94,15 @@ metadata:
             "name": "standard-authservice"
           },
           "spec": {
-            "type": "standard"
+            "type": "standard",
+            "standard": {
+              "storage": {
+                "claimName": "standard-authservice",
+                "deleteClaim": true,
+                "size": "1Gi",
+                "type": "persistent-claim"
+              }
+            }
           }
         },
         {
@@ -255,6 +263,12 @@ spec:
       name: standard-authservice
     spec:
       type: standard
+      standard:
+        storage:
+          claimName: standard-authservice
+          deleteClaim: true
+          size: 1Gi
+          type: persistent-claim
     ~~~
 
     ### Creating infrastructure using the Web UI

@@ -4,3 +4,9 @@ metadata:
   name: standard-authservice
 spec:
   type: standard
+  standard:
+    storage:
+      claimName: standard-authservice
+      deleteClaim: true
+      size: 1Gi
+      type: persistent-claim

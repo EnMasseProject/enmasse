@@ -51,6 +51,12 @@ spec:
         memory: 1Gi
       limits:
         memory: 1Gi
+    storage:
+      claimName: standard-authservice
+      deleteClaim: true
+      size: 128Mi
+      type: persistent-claim
+
 EOF
 
 cat <<EOF | kubectl create -f -
