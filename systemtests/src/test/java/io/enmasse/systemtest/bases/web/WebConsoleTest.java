@@ -35,6 +35,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
@@ -55,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class WebConsoleTest extends TestBaseWithShared {
     SeleniumProvider selenium = SeleniumProvider.getInstance();
@@ -720,17 +722,24 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
         }
     }
 
-    protected void doTestCanOpenConsolePage(UserCredentials credentials) throws Exception {
-        try {
-            consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace),
-                    sharedAddressSpace, credentials);
-            consoleWebPage.openWebConsolePage();
+    protected void doTestCanOpenConsolePage(UserCredentials credentials, boolean userAllowed) throws Exception {
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(sharedAddressSpace),
+                sharedAddressSpace, credentials);
+        consoleWebPage.openWebConsolePage();
+        log.info("User {} successfully authenticated", credentials);
+
+        if (userAllowed) {
             consoleWebPage.openAddressesPageWebConsole();
-            log.info(String.format("User %s successfully authenticated", credentials));
-            consoleWebPage.openAddressesPageWebConsole();
-        } catch (IllegalAccessException | org.openqa.selenium.WebDriverException ex) {
-            selenium.tearDownDrivers();
-            log.info(String.format("User %s can't authenticate", credentials));
+        } else {
+            consoleWebPage.assertDialogPresent("noRbacErrorDialog");
+
+            try {
+                consoleWebPage.openAddressesPageWebConsole();
+                fail("Exception not thrown");
+            } catch (WebDriverException ex) {
+                // PASS
+            }
+
             throw new IllegalAccessException();
         }
     }

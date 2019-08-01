@@ -243,13 +243,13 @@ public class ChromeWebConsoleTest extends WebConsoleTest implements ITestBaseSta
 
     @Test()
     void testCannotOpenConsolePage() {
-        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage(new UserCredentials("noexistuser", "pepaPa555")));
+        assertThrows(IllegalAccessException.class, () -> doTestCanOpenConsolePage(new UserCredentials("noexistuser", "pepaPa555"), false));
     }
 
     @Test
     @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(clusterUser);
+        doTestCanOpenConsolePage(clusterUser, true);
     }
 
     @Test
