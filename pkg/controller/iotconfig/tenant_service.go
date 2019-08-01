@@ -29,13 +29,13 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameTenantService, config, r.reconcileTenantServiceDeployment)
+		return r.processDeployment(ctx, nameTenantService, config, false, r.reconcileTenantServiceDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameTenantService, config, r.reconcileTenantServiceService)
+		return r.processService(ctx, nameTenantService, config, false, r.reconcileTenantServiceService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameTenantService+"-config", config, r.reconcileTenantServiceConfigMap)
+		return r.processConfigMap(ctx, nameTenantService+"-config", config, false, r.reconcileTenantServiceConfigMap)
 	})
 
 	return rc.Result()

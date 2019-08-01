@@ -9,8 +9,6 @@ import (
 	"context"
 	"strconv"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -35,32 +33,30 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameDeviceRegistry, config, r.reconcileFileDeviceRegistryDeployment)
+		return r.processDeployment(ctx, nameDeviceRegistry, config, false, r.reconcileFileDeviceRegistryDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameDeviceRegistry, config, r.reconcileFileDeviceRegistryService)
+		return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileFileDeviceRegistryService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, r.reconcileFileDeviceRegistryConfigMap)
+		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileFileDeviceRegistryConfigMap)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, r.reconcileFileDeviceRegistryPersistentVolumeClaim)
+		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, false, r.reconcileFileDeviceRegistryPersistentVolumeClaim)
 	})
 
 	if !util.IsOpenshift() {
 		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameDeviceRegistry+"-external", config, r.reconcileFileDeviceRegistryServiceExternal)
+			return r.processService(ctx, nameDeviceRegistry+"-external", config, false, r.reconcileFileDeviceRegistryServiceExternal)
 		})
 	}
 
-	if config.WantDefaultRoutes(nil) {
+	if util.IsOpenshift() {
+		routesEnabled := config.WantDefaultRoutes(nil)
+
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeDeviceRegistry, config, r.reconcileFileDeviceRegistryRoute)
+			return r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, r.reconcileFileDeviceRegistryRoute)
 		})
-	} else {
-		if util.IsOpenshift() {
-			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeDeviceRegistry}})
-		}
 	}
 
 	return rc.Result()

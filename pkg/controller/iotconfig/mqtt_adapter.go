@@ -9,8 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -34,31 +32,32 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 
 	rc := &recon.ReconcileContext{}
 
+	adapterConfig := config.Spec.AdaptersConfig.MqttAdapterConfig
+	enabled := IsAdapterEnabled("mqtt", adapterConfig.AdapterConfig)
+
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameMqttAdapter, config, r.reconcileMqttAdapterDeployment)
+		return r.processDeployment(ctx, nameMqttAdapter, config, !enabled, r.reconcileMqttAdapterDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameMqttAdapter, config, r.reconcileMqttAdapterService)
+		return r.processService(ctx, nameMqttAdapter, config, !enabled, r.reconcileMqttAdapterService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, r.reconcileMqttAdapterConfigMap)
+		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, !enabled, r.reconcileMqttAdapterConfigMap)
 	})
 	if !util.IsOpenshift() {
 		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameMqttAdapter+"-external", config, r.reconcileMqttAdapterServiceExternal)
+			return r.processService(ctx, nameMqttAdapter+"-external", config, !enabled, r.reconcileMqttAdapterServiceExternal)
 		})
 	}
-	if config.WantDefaultRoutes(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig) {
+	if util.IsOpenshift() {
+		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
+
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeMqttAdapter, config, r.reconcileMqttAdapterRoute)
+			return r.processRoute(ctx, routeMqttAdapter, config, !routesEnabled, r.reconcileMqttAdapterRoute)
 		})
-	} else {
-		if util.IsOpenshift() {
-			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeMqttAdapter}})
-		}
 	}
 	rc.ProcessSimple(func() error {
-		return r.reconcileEndpointKeyCertificateSecret(ctx, config, config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, nameMqttAdapter)
+		return r.reconcileEndpointKeyCertificateSecret(ctx, config, adapterConfig.EndpointConfig, nameMqttAdapter, !enabled)
 	})
 
 	return rc.Result()

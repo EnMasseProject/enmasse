@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"k8s.io/apimachinery/pkg/api/errors"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -89,6 +91,18 @@ func IsOwnedByPredicate(owner runtime.Object, controller bool) DeletePredicate {
 
 		return false
 	}
+}
+
+// Delete object, ignore if it is already gone.
+func DeleteIgnoreNotFound(ctx context.Context, client client.Client, obj runtime.Object, opts ...client.DeleteOptionFunc) error {
+	err := client.Delete(ctx, obj, opts...)
+
+	if err == nil || errors.IsNotFound(err) {
+		return nil
+	} else {
+		return err
+	}
+
 }
 
 // Bulk delete

@@ -163,6 +163,10 @@ type AdapterEndpointConfig struct {
 	KeyCertificateStrategy *KeyCertificateStrategy `json:"keyCertificateStrategy,omitempty"`
 }
 
+type AdapterConfig struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
+
 type KeyCertificateStrategy struct {
 	Key         []byte `json:"key,omitempty"`
 	Certificate []byte `json:"certificate,omitempty"`
@@ -215,6 +219,7 @@ type AuthenticationServiceConfig struct {
 
 type HttpAdapterConfig struct {
 	ServiceConfig `json:",inline"`
+	AdapterConfig `json:",inline"`
 
 	Containers CommonAdapterContainers `json:"containers,omitempty"`
 
@@ -223,6 +228,7 @@ type HttpAdapterConfig struct {
 
 type MqttAdapterConfig struct {
 	ServiceConfig `json:",inline"`
+	AdapterConfig `json:",inline"`
 
 	Containers CommonAdapterContainers `json:"containers,omitempty"`
 

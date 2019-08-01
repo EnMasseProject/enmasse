@@ -8,8 +8,6 @@ package iotconfig
 import (
 	"context"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -33,31 +31,32 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 
 	rc := &recon.ReconcileContext{}
 
+	adapterConfig := config.Spec.AdaptersConfig.HttpAdapterConfig
+	enabled := IsAdapterEnabled("http", adapterConfig.AdapterConfig)
+
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameHttpAdapter, config, r.reconcileHttpAdapterDeployment)
+		return r.processDeployment(ctx, nameHttpAdapter, config, !enabled, r.reconcileHttpAdapterDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameHttpAdapter, config, r.reconcileHttpAdapterService)
+		return r.processService(ctx, nameHttpAdapter, config, !enabled, r.reconcileHttpAdapterService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, r.reconcileHttpAdapterConfigMap)
+		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, !enabled, r.reconcileHttpAdapterConfigMap)
 	})
 	if !util.IsOpenshift() {
 		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameHttpAdapter+"-external", config, r.reconcileHttpAdapterServiceExternal)
+			return r.processService(ctx, nameHttpAdapter+"-external", config, !enabled, r.reconcileHttpAdapterServiceExternal)
 		})
 	}
-	if config.WantDefaultRoutes(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig) {
+	if util.IsOpenshift() {
+		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
+
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeHttpAdapter, config, r.reconcileHttpAdapterRoute)
+			return r.processRoute(ctx, routeHttpAdapter, config, !routesEnabled, r.reconcileHttpAdapterRoute)
 		})
-	} else {
-		if util.IsOpenshift() {
-			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeHttpAdapter}})
-		}
 	}
 	rc.ProcessSimple(func() error {
-		return r.reconcileEndpointKeyCertificateSecret(ctx, config, config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, nameHttpAdapter)
+		return r.reconcileEndpointKeyCertificateSecret(ctx, config, adapterConfig.EndpointConfig, nameHttpAdapter, !enabled)
 	})
 
 	return rc.Result()

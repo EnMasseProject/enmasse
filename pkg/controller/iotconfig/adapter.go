@@ -8,6 +8,8 @@ package iotconfig
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 
@@ -144,7 +146,7 @@ func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, "qdr-proxy-configurator", config, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+		return r.processConfigMap(ctx, "qdr-proxy-configurator", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
 			if configMap.Data == nil {
 				configMap.Data = make(map[string]string)
@@ -233,9 +235,9 @@ func applyAdapterEndpointService(endpoint *iotv1alpha1.AdapterEndpointConfig, se
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.Context, config *iotv1alpha1.IoTConfig, endpoint *iotv1alpha1.AdapterEndpointConfig, adapterName string) error {
+func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.Context, config *iotv1alpha1.IoTConfig, endpoint *iotv1alpha1.AdapterEndpointConfig, adapterName string, delete bool) error {
 
-	if !hasEndpointKeyAndCert(endpoint) {
+	if delete || !hasEndpointKeyAndCert(endpoint) {
 
 		// cleanup previous secrets
 		return r.cleanupSecrets(ctx, config, adapterName)
@@ -244,7 +246,7 @@ func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.C
 
 	kc := endpoint.KeyCertificateStrategy
 	name := adapterName + "-" + kc.HashString()
-	return r.processSecret(ctx, name, config, func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error {
+	return r.processSecret(ctx, name, config, false, func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error {
 
 		// cleanup previous secrets
 		if err := r.cleanupSecrets(ctx, config, adapterName); err != nil {
@@ -256,4 +258,16 @@ func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.C
 		return nil
 	})
 
+}
+
+func IsAdapterEnabled(name string, config iotv1alpha1.AdapterConfig) bool {
+	if config.Enabled != nil {
+		return *config.Enabled
+	}
+	return globalIsAdapterEnabled(name)
+}
+
+func globalIsAdapterEnabled(name string) bool {
+	v := os.Getenv("IOT_ADAPTER_" + strings.ToUpper(name) + "_ENABLED")
+	return v == "" || v == "true"
 }

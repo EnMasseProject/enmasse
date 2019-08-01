@@ -9,10 +9,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/enmasseproject/enmasse/pkg/util/install"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-
-	"k8s.io/apimachinery/pkg/api/errors"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"go.uber.org/multierr"
@@ -45,18 +45,9 @@ func (r *ReconcileContext) ProcessSimple(processor func() error) {
 	})
 }
 
-func (r *ReconcileContext) internalDelete(ctx context.Context, client client.Client, object runtime.Object) error {
-	err := client.Delete(ctx, object)
-	if err == nil || errors.IsNotFound(err) {
-		return nil
-	} else {
-		return err
-	}
-}
-
 func (r *ReconcileContext) Delete(ctx context.Context, client client.Client, object runtime.Object) {
 	r.ProcessSimple(func() error {
-		return r.internalDelete(ctx, client, object)
+		return install.DeleteIgnoreNotFound(ctx, client, object)
 	})
 }
 

@@ -34,17 +34,17 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameAuthService+"-config", config, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+		return r.processConfigMap(ctx, nameAuthService+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 			return r.reconcileAuthServiceConfigMap(config, configMap, configCtx)
 		})
 	})
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameAuthService, config, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+		return r.processDeployment(ctx, nameAuthService, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 			return r.reconcileAuthServiceDeployment(config, deployment, configCtx)
 		})
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameAuthService, config, r.reconcileAuthServiceService)
+		return r.processService(ctx, nameAuthService, config, false, r.reconcileAuthServiceService)
 	})
 
 	return rc.Result()

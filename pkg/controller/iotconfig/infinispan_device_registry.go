@@ -9,8 +9,6 @@ import (
 	"context"
 	"strings"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
@@ -31,26 +29,24 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameDeviceRegistry, config, r.reconcileInfinispanDeviceRegistryDeployment)
+		return r.processDeployment(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryDeployment)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameDeviceRegistry, config, r.reconcileInfinispanDeviceRegistryService)
+		return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, r.reconcileInfinispanDeviceRegistryConfigMap)
+		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileInfinispanDeviceRegistryConfigMap)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, r.reconcileInfinispanDeviceRegistryPersistentVolumeClaim)
+		return r.processPersistentVolumeClaim(ctx, nameDeviceRegistry+"-pvc", config, false, r.reconcileInfinispanDeviceRegistryPersistentVolumeClaim)
 	})
 
-	if config.WantDefaultRoutes(nil) {
+	if util.IsOpenshift() {
+		routesEnabled := config.WantDefaultRoutes(nil)
+
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeDeviceRegistry, config, r.reconcileInfinispanDeviceRegistryRoute)
+			return r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, r.reconcileInfinispanDeviceRegistryRoute)
 		})
-	} else {
-		if util.IsOpenshift() {
-			rc.Delete(ctx, r.client, &routev1.Route{ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: routeDeviceRegistry}})
-		}
 	}
 
 	return rc.Result()
