@@ -330,7 +330,7 @@ public class ConsoleWebPage implements IWebPage {
      */
     public List<ConnectionWebItem> getConnectionItems(int expectedCount) {
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
-        int timeout = 30000;
+        int timeout = 60000;
         long endTime = System.currentTimeMillis() + timeout;
         while (connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
             log.info("First iteration waiting for {} connections items", expectedCount);

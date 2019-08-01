@@ -4,8 +4,17 @@
  */
 package io.enmasse.systemtest.messagingclients;
 
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.GlobalLogCollector;
+import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.ability.TestWatcher;
+import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.junit.jupiter.api.extension.*;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class ExternalClientsExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
     private boolean isFullClass = false;
@@ -24,6 +33,12 @@ public class ExternalClientsExtension implements BeforeTestExecutionCallback, Af
 
     @Override
     public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
+        if (extensionContext.getExecutionException().isPresent()) {
+            Path path = TestWatcher.getPath(extensionContext.getTestMethod().get(), extensionContext.getTestClass().get());
+            SystemtestsKubernetesApps.collectMessagingClientAppLogs(path);
+        }
+
+
         if (!isFullClass) {
             SystemtestsKubernetesApps.deleteMessagingClientApp();
         }

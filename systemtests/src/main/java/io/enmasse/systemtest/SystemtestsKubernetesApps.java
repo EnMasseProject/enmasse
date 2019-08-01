@@ -10,15 +10,19 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.*;
+import org.slf4j.Logger;
 
 import java.io.File;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 public class SystemtestsKubernetesApps {
+    private static Logger log = CustomLogger.getLogger();
+
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
     public static final String SELENIUM_CHROME = "selenium-chrome";
@@ -44,6 +48,18 @@ public class SystemtestsKubernetesApps {
         TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
         return getMessagingAppPodName();
     }
+
+
+    public static void collectMessagingClientAppLogs(Path path) {
+        try {
+            Files.createDirectories(path);
+            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path.toFile(), SystemtestsKubernetesApps.MESSAGING_PROJECT);
+            collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
+        } catch (Exception e) {
+            log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.MESSAGING_PROJECT);
+        }
+    }
+
 
     public static void deleteMessagingClientApp() {
         if (Kubernetes.getInstance().deploymentExists(MESSAGING_PROJECT, MESSAGING_CLIENTS)) {
