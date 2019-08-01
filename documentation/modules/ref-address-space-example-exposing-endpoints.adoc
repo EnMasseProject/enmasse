@@ -3,13 +3,12 @@
 // assembly-address-space-examples.adoc
 
 [id='ref-address-space-example-exposing-endpoints-{context}']
-= Address space example exposing endpoints externally 
+= Address space examples exposing endpoints externally
 
-This address space example shows how you can configure the external endpoints of an `AddressSpace`
+These address space examples show how you can configure the external endpoints of an `AddressSpace`
 to access messaging endpoints outside the {KubePlatform} cluster.
 
-ifeval::["{cmdcli}" =="oc"]
-== OpenShift route example
+== {KubePlatform} `LoadBalancer` service example
 
 To expose `AddressSpace` endpoints through {KubePlatform} `LoadBalancer` services, the `loadbalancer` type is used:
 
@@ -38,16 +37,16 @@ spec:
     - 10.0.0.0/8
 ----
 <1> (Required) The name of the endpoint. The name specified affects the name of the {KubePlatform} service to be created as well as the name of the endpoint in the status section of the `AddressSpace`.
-<2> (Required) The service names that must be configured for the `AddressSpace`.  The service can either be `messaging`, `console`, or `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
-<3> (Required) The type of endpoint being exposed. The `loadbalancer` type will create an {Kubernetes} `LoadBalancer` service. Valid values are `route` and `loadbalancer`.
-<4> (Required) A list of the ports to be exposed on the `LoadBalancer` service. For `messaging`, `amqp` and `amqps` can be specified.
+<2> (Required) The service configured for the endpoint. Valid values for `service` are `messaging`, `console`, and `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
+<3> (Required) The type of endpoint being exposed. The `loadbalancer` type creates an {KubePlatform} `LoadBalancer` service. Valid values are `route` and `loadbalancer`.
+<4> (Required) A list of the ports to be exposed on the `LoadBalancer` service. For the `messaging` service, the valid values are `amqp` and `amqps`.
 <5> (Optional) A set of key-value annotation pairs that are added to the `LoadBalancer` `Service` object.
 <6> (Optional) The allowed source ranges that are accepted by the load balancer.
-endif::[]
 
-== {KubePlatform} `LoadBalancer` service example
+ifeval::["{cmdcli}" =="oc"]
+== {KubePlatform} route example
 
-To expose `AddressSpace` endpoints as OpenShift routes, the `route` type is used:
+To expose `AddressSpace` endpoints as {KubePlatform} routes, the `route` type is used:
 
 [source,yaml,options="nowrap"]
 ----
@@ -70,7 +69,9 @@ spec:
      routeHost: messaging.example.com <5>
 ----
 <1> (Required) The name of the endpoint. The name specified affects the name of the {KubePlatform} service to be created as well as the name of the endpoint in the status section of the `AddressSpace`.
-<2> (Required) The service names that must be configured for the `AddressSpace`.  The service can either be `messaging`, `console`, or `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
-<3> (Required) The name of the port to be exposed. With the `route` type, only a single TLS-enabled port can be specified. For the `messaging` service, either `amqps` and `https` can be specified. For the `console` service, only `https` can be specified.
-<4> (Required) The TLS termination policy to be used for the OpenShift route. For the `messaging` service, the `amqps` port requires `passthrough` to be used, whereas `https` (websockets) also allows `reencrypt`. For the `console` service, `reencrypt` can be used.
-<5> (Optional) The hostname to use for the created route.
+<2> (Required) The service configured for the endpoint. Valid values for `service` are `messaging`, `console`, or `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
+<3> (Required) The name of the port to be exposed. With the `route` type, only a single TLS-enabled port can be specified. For the `messaging` service, the valid values are `amqps` or `https`. For the `console` service, the only valid value is `https`.
+<4> (Required) The TLS termination policy to be used for the {KubePlatform} route. For the `messaging` service, the `amqps` port requires `passthrough` to be specified, whereas `https` (websockets) also allows `reencrypt`. For the `console` service, `reencrypt` can be specified.
+<5> (Optional) The host name to use for the created route.
+endif::[]
+
