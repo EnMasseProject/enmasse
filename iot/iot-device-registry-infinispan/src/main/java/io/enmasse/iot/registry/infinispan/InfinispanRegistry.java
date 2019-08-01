@@ -12,9 +12,9 @@ import java.util.Objects;
 import org.eclipse.hono.service.AbstractApplication;
 import org.eclipse.hono.service.HealthCheckProvider;
 import org.eclipse.hono.service.auth.AuthenticationService;
-import org.eclipse.hono.service.credentials.CredentialsService;
-import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
-import org.eclipse.hono.service.registration.RegistrationService;
+import org.eclipse.hono.service.credentials.CompleteBaseCredentialsService;
+import org.eclipse.hono.service.deviceconnection.BaseDeviceConnectionService;
+import org.eclipse.hono.service.registration.CompleteBaseRegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -22,16 +22,16 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 @ComponentScan("org.eclipse.hono.service.auth")
-@ComponentScan( "io.enmasse.iot.registry.infinispan")
-@ComponentScan( "io.enmasse.iot.registry.infinispan.config")
+@ComponentScan("org.eclipse.hono.service.metric")
+@ComponentScan("io.enmasse.iot.registry.infinispan")
 @Configuration
 @EnableAutoConfiguration
 public class InfinispanRegistry extends AbstractApplication {
 
     private AuthenticationService authenticationService;
-    private CredentialsService credentialsService;
-    private RegistrationService registrationService;
-    private DeviceConnectionService deviceConnectionService;
+    private CompleteBaseCredentialsService credentialsService;
+    private CompleteBaseRegistrationService registrationService;
+    private BaseDeviceConnectionService deviceConnectionService;
 
     /**
      * Sets the credentials service implementation this server is based on.
@@ -40,7 +40,7 @@ public class InfinispanRegistry extends AbstractApplication {
      * @throws NullPointerException if service is {@code null}.
      */
     @Autowired
-    public final void setCredentialsService(final CredentialsService credentialsService) {
+    public final void setCredentialsService(final CompleteBaseCredentialsService credentialsService) {
         this.credentialsService = Objects.requireNonNull(credentialsService);
     }
 
@@ -51,7 +51,7 @@ public class InfinispanRegistry extends AbstractApplication {
      * @throws NullPointerException if service is {@code null}.
      */
     @Autowired
-    public final void setRegistrationService(final RegistrationService registrationService) {
+    public final void setRegistrationService(final CompleteBaseRegistrationService registrationService) {
         this.registrationService = Objects.requireNonNull(registrationService);
     }
 
@@ -67,7 +67,7 @@ public class InfinispanRegistry extends AbstractApplication {
     }
 
     @Autowired
-    public void setDeviceConnectionService(DeviceConnectionService deviceConnectionService) {
+    public void setDeviceConnectionService(BaseDeviceConnectionService deviceConnectionService) {
         this.deviceConnectionService = deviceConnectionService;
     }
 

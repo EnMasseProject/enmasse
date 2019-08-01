@@ -10,29 +10,30 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.Random;
+import java.util.function.Function;
+
+import org.eclipse.hono.service.management.credentials.CommonCredential;
+import org.eclipse.hono.service.management.credentials.PasswordCredential;
+import org.eclipse.hono.service.management.credentials.PasswordSecret;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.apiclients.ApiClient;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
-import io.vertx.ext.web.codec.BodyCodec;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
 
-public class CredentialsRegistryClient extends ApiClient {
+public class CredentialsRegistryClient extends HonoApiClient {
 
-    private static final String CREDENTIALS_PATH = "credentials";
+    private static final String CREDENTIALS_PATH = "v1/credentials";
+    private static final Random rnd = new SecureRandom();
 
     public CredentialsRegistryClient(Kubernetes kubernetes, Endpoint endpoint) {
-        super(kubernetes, () -> endpoint, "");
+        super(kubernetes, () -> endpoint);
     }
 
     @Override
@@ -40,62 +41,42 @@ public class CredentialsRegistryClient extends ApiClient {
         return "iot-credentials-registry";
     }
 
-    @Override
-    protected void connect() {
-        this.client = WebClient.create(vertx, new WebClientOptions()
-                .setSsl(true)
-                .setTrustAll(true)
-                .setVerifyHost(false));
-    }
-
-    public void addCredentials(String tenantId, String deviceId, String authId, String password) throws Exception {
-        addCredentials(tenantId, deviceId, authId, password, null);
-    }
-
-    public void addCredentials(String tenantId, String deviceId, String authId, String password, Instant notAfter) throws Exception {
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        var requestPath = String.format("/%s/%s", CREDENTIALS_PATH, tenantId);
-        var body = createCredentialsObject(deviceId, authId, password, notAfter);
-        log.info("POST-credentials: path {}; body {}", requestPath, body.toString());
-        client.post(endpoint.getPort(), endpoint.getHost(), requestPath)
-            .as(BodyCodec.jsonObject())
-            .timeout(120000)
-            .sendJsonObject(body,
-                    ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_CREATED, "Error adding credentials to device"));
-        responsePromise.get(150000, TimeUnit.SECONDS);
-    }
-
-    public void updateCredentials(String tenantId, String deviceId, String authId, String password, Instant notAfter) throws Exception {
-        CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        var requestPath = String.format("/%s/%s/%s/%s", CREDENTIALS_PATH, tenantId, authId, "hashed-password");
-        JsonObject payload = createCredentialsObject(deviceId, authId, password, notAfter);
-        log.info("PUT-credentials: path {}; body {}", requestPath, payload.toString());
-        client.put(endpoint.getPort(), endpoint.getHost(), requestPath)
-            .as(BodyCodec.jsonObject())
-            .timeout(120000)
-            .sendJsonObject(payload,
-                    ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_NO_CONTENT, "Error updating device registration"));
-        responsePromise.get(150000, TimeUnit.SECONDS);
-    }
-
-    public void deleteAllCredentials(String tenantId, String deviceId) throws Exception {
-        CompletableFuture<Buffer> responsePromise = new CompletableFuture<>();
+    public void setCredentials(final String tenantId, final String deviceId, final List<CommonCredential> credentials) throws Exception {
         var requestPath = String.format("/%s/%s/%s", CREDENTIALS_PATH, tenantId, deviceId);
-        log.info("DELETE-credentials: path {}", requestPath);
-        client.delete(endpoint.getPort(), endpoint.getHost(), requestPath)
-            .send(ar -> responseHandler(ar, responsePromise, HttpURLConnection.HTTP_NO_CONTENT, "Error deleting all credentials of device"));
-        responsePromise.get(150000, TimeUnit.SECONDS);
+        var body = Json.encode(credentials.toArray(CommonCredential[]::new)); // jackson needs an array
+        execute(HttpMethod.PUT, requestPath, body, HttpURLConnection.HTTP_NO_CONTENT, "Error setting credentials to device");
     }
 
-    static JsonObject createCredentialsObject(String deviceId, String authId, String password, Instant notAfter) {
-        var body = new JsonObject();
-        body.put("device-id", deviceId);
-        body.put("type", "hashed-password");
-        body.put("auth-id", authId);
+    public List<CommonCredential> getCredentials(final String tenantId, final String deviceId) throws Exception {
+        var requestPath = String.format("/%s/%s/%s", CREDENTIALS_PATH, tenantId, deviceId);
+        var result = execute(HttpMethod.GET, requestPath, null, HttpURLConnection.HTTP_OK, "Error getting credentials for device");
+        return new ArrayList<>(Arrays.asList(Json.decodeValue(result, CommonCredential[].class)));
+    }
 
-        var rnd = new SecureRandom();
+    public void addCredentials(final String tenantId, final String deviceId, final List<CommonCredential> newCredentials) throws Exception {
+        var credentials = getCredentials(tenantId, deviceId);
+        credentials.addAll(newCredentials);
+        setCredentials(tenantId, deviceId, credentials);
+    }
+
+    public void updateCredentials(String tenantId, String deviceId, Function<List<CommonCredential>, List<CommonCredential>> manipulator) throws Exception {
+        var credentials = manipulator.apply(getCredentials(tenantId, deviceId));
+        if (credentials != null) {
+            setCredentials(tenantId, deviceId, credentials);
+        }
+    }
+
+    public void deleteAllCredentials(final String tenantId, final String deviceId) throws Exception {
+        setCredentials(tenantId, deviceId, Collections.emptyList());
+    }
+
+    static PasswordSecret createPasswordSecret(final String authId, final String password, final Instant notAfter) {
+
+        var secret = new PasswordSecret();
+
         var salt = new byte[16];
         rnd.nextBytes(salt);
+        secret.setSalt(Base64.getEncoder().encodeToString(salt));
 
         try {
             var md = MessageDigest.getInstance("SHA-256");
@@ -103,21 +84,56 @@ public class CredentialsRegistryClient extends ApiClient {
             md.update(password.getBytes(StandardCharsets.UTF_8));
 
             var hashedPassword = Base64.getEncoder().encodeToString(md.digest());
+            secret.setHashFunction("sha-256");
+            secret.setPasswordHash(hashedPassword);
 
-            var secret = new JsonObject()
-                    .put("hash-function", "sha-256")
-                    .put("salt", Base64.getEncoder().encodeToString(salt))
-                    .put("pwd-hash", hashedPassword);
+            secret.setNotAfter(notAfter);
 
-            if(notAfter != null) {
-                secret.put("not-after", DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(notAfter.atOffset(ZoneOffset.UTC)));
-            }
-
-            body.put("secrets", new JsonArray(List.of(secret)));
-            return body;
-        }
-        catch ( NoSuchAlgorithmException e ) {
+            return secret;
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static PasswordCredential createCredentialsObject(final String authId, final String password, final Instant notAfter) {
+
+        var secret = createPasswordSecret(authId, password, notAfter);
+
+        // create credentials
+
+        var credentials = new PasswordCredential();
+        credentials.setAuthId(authId);
+        credentials.setSecrets(Collections.singletonList(secret));
+
+        return credentials;
+
+    }
+
+    public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password) throws Exception {
+        addCredentials(tenantId, deviceId, authId, password, null);
+    }
+
+    public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter) throws Exception {
+        addCredentials(tenantId, deviceId, Collections.singletonList(createCredentialsObject(authId, password, notAfter)));
+    }
+
+    public void updateCredentials(final String tenantId, final String deviceId, final String authId, final String newPassword, final Instant notAfter) throws Exception {
+        updateCredentials(tenantId, deviceId, credentials -> {
+
+            for ( CommonCredential c : credentials ) {
+                if (!(c instanceof PasswordCredential) ) {
+                    continue;
+                }
+                final var pc = (PasswordCredential)c;
+                if (! authId.equals(pc.getAuthId())) {
+                    continue;
+                }
+                pc.setSecrets(Collections.singletonList(createPasswordSecret(authId, newPassword, notAfter)));
+                // first match ... stop looking further
+                break;
+            }
+
+            return credentials;
+        });
     }
 }

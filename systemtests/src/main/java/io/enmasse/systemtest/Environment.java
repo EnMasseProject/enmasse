@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import java.nio.file.Paths;
 
 public class Environment {
+
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
 
@@ -32,6 +33,8 @@ public class Environment {
     public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
     public static final String TAG_ENV = "TAG";
     public static final String APP_NAME_ENV = "APP_NAME";
+    private static final String DEFAULT_DEVICE_REGISTRY = "DEFAULT_DEVICE_REGISTRY";
+    private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
 
     public static final String IS_OCP4_REGEXP = "4.*";
 
@@ -53,6 +56,8 @@ public class Environment {
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
+    private final String defaultDeviceRegistry = System.getenv().getOrDefault(DEFAULT_DEVICE_REGISTRY, "file");
+    private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
 
     private Environment() {
         if (token == null || url == null) {
@@ -170,6 +175,14 @@ public class Environment {
 
     public String getAppName() {
         return appName;
+    }
+
+    public String getDefaultDeviceRegistry() {
+        return defaultDeviceRegistry;
+    }
+
+    public boolean isSkipSaveState() {
+        return skipSaveState;
     }
 
 }

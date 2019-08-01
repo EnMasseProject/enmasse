@@ -6,16 +6,15 @@
 package io.enmasse.systemtest.iot;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 import org.junit.jupiter.api.Test;
+
+import io.vertx.core.json.JsonObject;
 
 public class CredentialsTest {
 
     @Test
     public void testCreateSecret() {
-        var creds = CredentialsRegistryClient.createCredentialsObject("device-id", "auth-id", "foo", null);
-        assertEquals("device-id", creds.getString("device-id"));
+        var creds = JsonObject.mapFrom(CredentialsRegistryClient.createCredentialsObject("auth-id", "foo", null));
 
         var secrets = creds.getJsonArray("secrets");
         assertNotNull(secrets);

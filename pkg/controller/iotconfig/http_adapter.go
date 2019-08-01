@@ -206,8 +206,10 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(config *iotv1alpha1.I
 hono:
   app:
     maxInstances: 1
-    healthCheckPort: 8088
-    healthCheckBindAddress: 0.0.0.0
+  healthCheck:
+    insecurePortBindAddress: 0.0.0.0
+    insecurePortEnabled: true
+    insecurePort: 8088
   http:
     bindAddress: 0.0.0.0
     keyPath: /etc/tls/tls.key

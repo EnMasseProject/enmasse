@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public abstract class ApiClient implements AutoCloseable {
-    protected static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
     protected WebClient client;
     protected Kubernetes kubernetes;
     protected Vertx vertx;

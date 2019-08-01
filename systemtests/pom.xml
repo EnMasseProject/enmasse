@@ -14,6 +14,17 @@
         <excludeGroups></excludeGroups>
         <skip.tests>true</skip.tests>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.enmasse</groupId>
+                <artifactId>iot</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.keycloak</groupId>
@@ -111,6 +122,10 @@
         <dependency>
             <groupId>io.enmasse</groupId>
             <artifactId>api-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.hono</groupId>
+            <artifactId>hono-service-base</artifactId>
         </dependency>
     </dependencies>
     <build>

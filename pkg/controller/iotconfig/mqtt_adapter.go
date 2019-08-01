@@ -207,8 +207,10 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterConfigMap(config *iotv1alpha1.I
 hono:
   app:
     maxInstances: 1
-    healthCheckPort: 8088
-    healthCheckBindAddress: 0.0.0.0
+  healthCheck:
+    insecurePortBindAddress: 0.0.0.0
+    insecurePortEnabled: true
+    insecurePort: 8088
   mqtt:
     bindAddress: 0.0.0.0
     keyPath: /etc/tls/tls.key
