@@ -27,10 +27,12 @@ angular.module('enmasse', ['patternfly.navigation', 'ui.router', 'patternfly.vie
             }
         ];
         $scope.clickNavigationItem = function (title) {
-            var connectionsNavItem = $scope.navigationItems.find(item => item.title === title);
             $timeout(function() {
-                //If already navigated to the page, the click will only mark the menu item as active.
-                angular.element(selector).parent().click();
+                angular.forEach(angular.element("li.list-group-item"), (element) => {
+                    if (element.innerText === title) {
+                        element.children[0].click()
+                    }
+                });
             }, 0);
         };
         $scope.setUser = function (user) {
