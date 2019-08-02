@@ -38,6 +38,7 @@ public class PersistentMessagesTestBase extends TestBaseWithShared {
         setAddresses(address);
 
         // Wait for the first console pod to be terminated
+        TestUtils.waitForConsoleRollingUpdate(kubernetes.getInfraNamespace());
         TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
 
         int podCount = kubernetes.listPods().size();
