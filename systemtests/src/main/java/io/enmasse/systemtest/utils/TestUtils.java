@@ -639,6 +639,14 @@ public class TestUtils {
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
+    public static void waitForConsoleRollingUpdate(String namespace) throws Exception {
+        TestUtils.waitUntilCondition("Wait for console rolling update to complete", waitPhase -> {
+            List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
+            pods.removeIf(pod -> !pod.getSpec().getContainers().get(0).getName().equals("console-proxy"));
+            return pods.size() == 1;
+        }, new TimeoutBudget(10, TimeUnit.MINUTES));
+    }
+
     public static void cleanAllEnmasseResourcesFromNamespace(String namespace) {
         Kubernetes kube = Kubernetes.getInstance();
         var brInfraConfigClient = kube.getBrokeredInfraConfigClient(namespace);
