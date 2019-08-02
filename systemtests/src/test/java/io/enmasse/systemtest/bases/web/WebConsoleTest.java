@@ -412,15 +412,32 @@ public abstract class WebConsoleTest extends TestBaseWithShared {
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
         consoleWebPage.openConnectionsPageWebConsole();
 
+        assertEquals(0, consoleWebPage.getConnectionItems().size(), "Unexpected number of connections present before attaching clients");
+
         clientsList = attachClients(addresses);
 
-        consoleWebPage.sortItems(SortType.SENDERS, true);
-        assertSorted("Console failed, items are not sorted by count of senders asc",
-                consoleWebPage.getConnectionItems(6), Comparator.comparingInt(ConnectionWebItem::getSendersCount));
+        boolean pass=false;
+        try {
+            consoleWebPage.sortItems(SortType.SENDERS, true);
+            assertSorted("Console failed, items are not sorted by count of senders asc",
+                    consoleWebPage.getConnectionItems(6), Comparator.comparingInt(ConnectionWebItem::getSendersCount));
 
-        consoleWebPage.sortItems(SortType.SENDERS, false);
-        assertSorted("Console failed, items are not sorted by count of senders desc",
-                consoleWebPage.getConnectionItems(6), true, Comparator.comparingInt(ConnectionWebItem::getSendersCount));
+            consoleWebPage.sortItems(SortType.SENDERS, false);
+            assertSorted("Console failed, items are not sorted by count of senders desc",
+                    consoleWebPage.getConnectionItems(6), true, Comparator.comparingInt(ConnectionWebItem::getSendersCount));
+            pass = true;
+        } finally {
+            if (!pass) {
+                clientsList.forEach(c -> {
+                    c.stop();
+                    log.info("=======================================");
+                    log.info("stderr {}", c.getStdErr());
+                    log.info("stdout {}", c.getStdOut());
+                });
+                clientsList.clear();
+            }
+
+        }
     }
 
     protected void doTestSortConnectionsByReceivers() throws Exception {
