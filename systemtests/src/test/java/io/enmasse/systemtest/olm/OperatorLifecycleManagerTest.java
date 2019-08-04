@@ -95,7 +95,7 @@ class OperatorLifecycleManagerTest extends TestBase {
         TestUtils.cleanAllEnmasseResourcesFromNamespace(infraNamespace);
         Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
-        page.uninstallFromCatalog("EnMasse");
+        page.uninstallFromCatalog(environment.getAppName());
         kubernetes.getConsoleServiceClient(infraNamespace).delete();
     }
 
