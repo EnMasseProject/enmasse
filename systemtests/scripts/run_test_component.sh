@@ -43,6 +43,7 @@ elif [[ "${TEST_PROFILE}" = "systemtests-marathon" ]] \
     || [[ "${TEST_PROFILE}" = "smoke" ]] \
     || [[ "${TEST_PROFILE}" = "systemtests-smoke" ]] \
     || [[ "${TEST_PROFILE}" = "iot-release" ]] \
+    || [[ "${TEST_PROFILE}" = "olm" ]] \
     || [[ "${TEST_PROFILE}" = "smoke-iot" ]]; then
     run_test $(echo ${TEST_PROFILE} | sed 's/systemtests-//') ${TESTCASE} || failure=$(($failure + 1))
 elif [[ "${TEST_PROFILE}" = "systemtests-release" ]]; then
