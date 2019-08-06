@@ -4,17 +4,18 @@
  */
 package io.enmasse.systemtest.messagingclients;
 
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.GlobalLogCollector;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.ability.TestWatcher;
-import io.enmasse.systemtest.selenium.SeleniumProvider;
-import org.junit.jupiter.api.extension.*;
 
-import java.nio.file.Files;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.watcher.TestWatcher;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+
+
 import java.nio.file.Path;
-import java.nio.file.Paths;
+
 
 public class ExternalClientsExtension implements BeforeTestExecutionCallback, AfterTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
     private boolean isFullClass = false;

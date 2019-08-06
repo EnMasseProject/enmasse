@@ -181,13 +181,15 @@
             <id>shared</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | shared-mqtt) &amp; !isolated &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !olm</groups>
+                <groups>(shared-standard | shared-brokered | shared-mqtt) &amp; !isolated &amp; !smoke &amp; !marathon
+                    &amp; !shared-iot &amp; !olm
+                </groups>
             </properties>
         </profile>
         <profile>
             <id>isolated</id>
             <properties>
-                <groups>isolated &amp; !marathon  &amp; !shared-iot &amp; !olm</groups>
+                <groups>isolated &amp; !marathon &amp; !shared-iot &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -195,14 +197,16 @@
             <id>shared-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot &amp; !isolated &amp; !olm</groups>
+                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !nonPR &amp; !smoke &amp; !marathon
+                    &amp; !shared-iot &amp; !isolated &amp; !olm
+                </groups>
             </properties>
         </profile>
         <profile>
             <id>isolated-pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon  &amp; !shared-iot &amp; !olm</groups>
+                <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !olm</groups>
             </properties>
         </profile>
         <profile>
@@ -243,7 +247,9 @@
         <profile>
             <id>shared-release</id>
             <properties>
-                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !isolated &amp; !olm</groups>
+                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !noneAuth &amp; !smoke &amp; !marathon
+                    &amp; !shared-iot &amp; !isolated &amp; !olm
+                </groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -264,7 +270,9 @@
         <profile>
             <id>olm</id>
             <properties>
-                <groups>olm &amp; !shared-standard &amp; !shared-brokered &amp; !shared-mqtt  &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !smoke-iot &amp; !isolated</groups>
+                <groups>olm &amp; !shared-standard &amp; !shared-brokered &amp; !shared-mqtt &amp; !noneAuth &amp;
+                    !smoke &amp; !marathon &amp; !shared-iot &amp; !smoke-iot &amp; !isolated
+                </groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

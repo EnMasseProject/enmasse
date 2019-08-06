@@ -5,18 +5,14 @@
 
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.Count;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.VertxFactory;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.Count;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Vertx;
-
-import io.vertx.proton.ProtonConnection;
-
 import io.vertx.core.impl.ConcurrentHashSet;
-
+import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
-
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -44,6 +40,42 @@ public class AmqpClient implements AutoCloseable {
 
     public AmqpClient(AmqpConnectOptions options) {
         this.options = options;
+    }
+
+    /**
+     * Close vertx instances and wait.
+     *
+     * @param vertx the instances to close.
+     * @throws Exception in case something goes wrong.
+     */
+    private static void closeVertxAndWait(final Iterable<Vertx> vertx) throws Exception {
+
+        log.info("Start closing vertx instances");
+
+        // gather all vertx futures
+        @SuppressWarnings("rawtypes") final List<io.vertx.core.Future> futures = new LinkedList<>();
+
+        // trigger the close and record the future
+        for (final Vertx client : vertx) {
+            var f = io.vertx.core.Future.<Void>future();
+            client.close(f);
+            futures.add(f);
+        }
+
+        // now wait on the vertx futures ... with the help of Java futures
+        var await = new CompletableFuture<>();
+        CompositeFuture.all(futures).setHandler(ar -> {
+            if (ar.succeeded()) {
+                await.complete(null);
+            } else {
+                await.completeExceptionally(ar.cause());
+            }
+
+            log.info("Close of all vertx instances completed", ar.cause());
+        });
+
+        await.get(10, TimeUnit.SECONDS);
+
     }
 
     public AmqpConnectOptions getConnectOptions() {
@@ -113,7 +145,7 @@ public class AmqpClient implements AutoCloseable {
             }
 
             @Override
-            public void close () throws Exception {
+            public void close() throws Exception {
                 clients.remove(vertx);
                 closeVertxAndWait(Arrays.asList(vertx));
             }
@@ -126,42 +158,6 @@ public class AmqpClient implements AutoCloseable {
         this.clients.clear();
 
         closeVertxAndWait(clients);
-    }
-
-    /**
-     * Close vertx instances and wait.
-     * @param vertx the instances to close.
-     * @throws Exception in case something goes wrong.
-     */
-    private static void closeVertxAndWait (final Iterable<Vertx> vertx) throws Exception {
-
-        log.info("Start closing vertx instances");
-
-        // gather all vertx futures
-        @SuppressWarnings("rawtypes")
-        final List<io.vertx.core.Future> futures = new LinkedList<>();
-
-        // trigger the close and record the future
-        for (final Vertx client : vertx) {
-            var f = io.vertx.core.Future.<Void>future();
-            client.close(f);
-            futures.add(f);
-        }
-
-        // now wait on the vertx futures ... with the help of Java futures
-        var await = new CompletableFuture<>();
-        CompositeFuture.all(futures).setHandler(ar -> {
-            if (ar.succeeded()) {
-                await.complete(null);
-            } else {
-                await.completeExceptionally(ar.cause());
-            }
-
-            log.info("Close of all vertx instances completed", ar.cause());
-        });
-
-        await.get(10, TimeUnit.SECONDS);
-
     }
 
     public CompletableFuture<Integer> sendMessages(String address, List<String> messages) {

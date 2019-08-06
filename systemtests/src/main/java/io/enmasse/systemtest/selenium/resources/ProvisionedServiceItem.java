@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
-import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;

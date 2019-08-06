@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.cmdclients;
 
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
@@ -15,7 +15,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Class represent abstract client which keeps common features of client

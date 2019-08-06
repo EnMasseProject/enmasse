@@ -6,7 +6,10 @@ package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.user.model.v1.*;
+import io.enmasse.user.model.v1.DoneableUser;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
 
 import java.nio.charset.StandardCharsets;

@@ -7,13 +7,17 @@ package io.enmasse.systemtest.utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import io.enmasse.address.model.*;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.WaitPhase;
-import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
-import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressList;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.SystemtestsOperation;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
@@ -22,7 +26,12 @@ import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,12 +82,15 @@ public class AddressUtils {
     public static void delete(AddressSpace addressSpace) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
         var client = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace());
-        getAddresses(addressSpace).forEach(addr -> client.withName(addr.getMetadata().getName()).cascading(true).delete());
+        for (Address address : client.list().getItems()) {
+            client.withName(address.getMetadata().getName()).cascading(true).delete();
+            waitForAddressDeleted(address, new TimeoutBudget(5, TimeUnit.MINUTES));
+        }
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void setAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be created", new Object[] {addresses});
+        log.info("Addresses {} will be created", new Object[]{addresses});
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
         log.info("Remove addresses in every addresses's address space");
         for (Address address : addresses) {
@@ -96,7 +108,7 @@ public class AddressUtils {
     }
 
     public static void appendAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be appended", new Object[] {addresses});
+        log.info("Addresses {} will be appended", new Object[]{addresses});
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
         for (Address address : addresses) {
             address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
@@ -148,10 +160,6 @@ public class AddressUtils {
             }
         }
         return isReady;
-    }
-
-    interface AddressListMatcher {
-        Map<String, Address> matchAddresses(List<Address> addressList);
     }
 
     private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
@@ -225,7 +233,31 @@ public class AddressUtils {
         return notMatchingAddresses;
     }
 
+    public static void waitForAddressDeleted(Address address, TimeoutBudget timeoutBudget) throws Exception {
+        Kubernetes kubernetes = Kubernetes.getInstance();
+
+        TestUtils.waitUntilCondition(address + " match", phase -> {
+            try {
+                AddressList addressList = kubernetes.getAddressClient().inNamespace(address.getMetadata().getNamespace()).list();
+                List<Address> addressesInSameAddrSpace = addressList.getItems().stream()
+                        .filter(address1 -> Address.extractAddressSpace(address1)
+                                .equals(Address.extractAddressSpace(address))).collect(Collectors.toList());
+                if (!addressesInSameAddrSpace.contains(address)) {
+                    return true;
+                }
+                return false;
+            } catch (KubernetesClientException e) {
+                log.warn("Client can't read address resources");
+                return false;
+            }
+        }, timeoutBudget);
+    }
+
     public static String getTopicPrefix(boolean topicSwitch) {
         return topicSwitch ? "topic://" : "";
+    }
+
+    interface AddressListMatcher {
+        Map<String, Address> matchAddresses(List<Address> addressList);
     }
 }

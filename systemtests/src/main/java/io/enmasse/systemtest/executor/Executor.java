@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.executor;
 
-import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.logs.CustomLogger;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -15,7 +15,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Class provide execution of external command

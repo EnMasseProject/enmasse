@@ -4,11 +4,10 @@
  */
 package io.enmasse.systemtest.iot;
 
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.user.model.v1.User;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
 
 public class IoTProjectTestContext {
 

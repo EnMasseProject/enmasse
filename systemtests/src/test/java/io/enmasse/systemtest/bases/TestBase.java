@@ -10,58 +10,46 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSchemaList;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.AdminResourcesManager;
-import io.enmasse.systemtest.BrokerManagement;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.GlobalLogCollector;
-import io.enmasse.systemtest.JmsProvider;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.TimeoutBudget;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.ability.ITestBase;
-import io.enmasse.systemtest.ability.ITestSeparator;
-import io.enmasse.systemtest.ability.TestWatcher;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.amqp.ReceiverStatus;
-import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
+import io.enmasse.systemtest.broker.BrokerManagement;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.ResourceManager;
+import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
-import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
-import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.JmsProvider;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
+import io.enmasse.systemtest.watcher.TestWatcher;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import io.enmasse.user.model.v1.UserBuilder;
-import io.vertx.proton.ProtonClientOptions;
-import io.vertx.proton.sasl.MechanismMismatchException;
-import io.vertx.proton.sasl.SaslSystemException;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -71,7 +59,6 @@ import javax.jms.DeliveryMode;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
-import javax.security.sasl.AuthenticationException;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -79,26 +66,20 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
-import static java.time.Duration.ofMinutes;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -108,338 +89,30 @@ import static org.junit.jupiter.api.Assertions.fail;
 @ExtendWith(TestWatcher.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
-    protected static final Environment environment = Environment.getInstance();
     protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
     protected static final Kubernetes kubernetes = Kubernetes.getInstance();
+    protected static final Environment environment = Environment.getInstance();
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     private static Logger log = CustomLogger.getLogger();
-    protected AmqpClientFactory amqpClientFactory;
-    protected MqttClientFactory mqttClientFactory;
-    protected UserCredentials managementCredentials = new UserCredentials(null, null);
-    protected UserCredentials defaultCredentials = new UserCredentials(null, null);
-    private List<AddressSpace> addressSpaceList = new ArrayList<>();
-    private boolean reuseAddressSpace;
-
-    protected static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
-        List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
-            MqttMessage m = new MqttMessage();
-            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
-            m.setQos(1);
-            return m;
-        }).collect(Collectors.toList());
-
-        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
-        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
-
-        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages published",
-                publishCount, is(messages.size()));
-
-        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
-        assertThat("Incorrect count of messages received",
-                receivedCount, is(messages.size()));
-    }
+    protected ResourceManager resourcesManager;
+    protected UserCredentials defaultCredentials = null;
+    protected UserCredentials managementCredentials = null;
 
     @BeforeEach
-    public void setup() throws Exception {
-        if (!reuseAddressSpace) {
-            addressSpaceList = new ArrayList<>();
-        }
-        amqpClientFactory = new AmqpClientFactory(null, defaultCredentials);
-        mqttClientFactory = new MqttClientFactory(null, defaultCredentials);
-    }
+    public void initTest() throws Exception {
+        defaultCredentials = environment.getDefaultCredentials();
+        managementCredentials = environment.getManagementCredentials();
+        resourcesManager = getResourceManager();
+        if (TestInfo.getInstance().isTestShared()) {
+            ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
+            ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
+            ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
 
-    @AfterEach
-    public void teardown() throws Exception {
-        try {
-            if (!environment.skipCleanup() && !reuseAddressSpace) {
-                deleteAddressspacesFromList();
-                AdminResourcesManager.getInstance().tearDown();
-            } else {
-                log.warn("Remove address spaces in tear down - SKIPPED!");
-            }
-        } catch (Exception e) {
-            log.error("Error tearing down test", e);
-
-            throw e;
-        }
-    }
-
-    @AfterEach
-    public void closeMqttClient() {
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
-            mqttClientFactory = null;
-        }
-    }
-
-    @AfterEach
-    public void closeAmqpClient() throws Exception {
-        if (amqpClientFactory != null) {
-            amqpClientFactory.close();
-            amqpClientFactory = null;
-        }
-
-    }
-
-    protected void setReuseAddressSpace() {
-        reuseAddressSpace = true;
-    }
-
-
-    //================================================================================================
-    //==================================== AddressSpace methods ======================================
-    //================================================================================================
-
-    protected void unsetReuseAddressSpace() {
-        reuseAddressSpace = false;
-    }
-
-    protected void createAddressSpaceList(AddressSpace... addressSpaces) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
-        ArrayList<AddressSpace> spaces = new ArrayList<>();
-        for (AddressSpace addressSpace : addressSpaces) {
-            if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
-                log.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
-                spaces.add(addressSpace);
-                if (!addressSpace.equals(getSharedAddressSpace())) {
-                    addressSpaceList.add(addressSpace);
-                }
-            } else {
-                log.warn("Address space '" + addressSpace + "' already exists.");
+            if (resourcesManager.getSharedAddressSpace() == null) {
+                ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
             }
         }
-        spaces.forEach(addressSpace ->
-                kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace));
-        for (AddressSpace addressSpace : spaces) {
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-            logCollector.startCollecting(addressSpace);
-        }
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    protected void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
-        if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
-            log.info("Address space '{}' doesn't exist and will be created.", addressSpace);
-            kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-
-            if (!addressSpace.equals(getSharedAddressSpace())) {
-                addressSpaceList.add(addressSpace);
-            }
-        } else {
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-            log.info("Address space '" + addressSpace + "' already exists.");
-        }
-        AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-        logCollector.startCollecting(addressSpace);
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    protected void deleteAddressspacesFromList() throws Exception {
-        log.info("All addressspaces will be removed");
-        for (AddressSpace addressSpace : addressSpaceList) {
-            deleteAddressSpace(addressSpace);
-        }
-        addressSpaceList.clear();
-    }
-
-    protected void addToAddressSpacess(AddressSpace addressSpace) {
-        this.addressSpaceList.add(addressSpace);
-    }
-
-    protected void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
-            AddressSpaceUtils.deleteAddressSpaceAndWait(addressSpace, logCollector);
-        } else {
-            log.info("Address space '" + addressSpace.getMetadata().getName() + "' doesn't exists!");
-        }
-    }
-
-    protected void deleteAllAddressSpaces() throws Exception {
-        AddressSpaceUtils.deleteAllAddressSpaces(logCollector);
-        for (AddressSpace addressSpace : addressSpaceList) {
-            AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
-        }
-    }
-
-    protected AddressSpace getSharedAddressSpace() {
-        return null;
-    }
-
-    protected void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        replaceAddressSpace(addressSpace, true);
-    }
-
-    protected void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
-        var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
-        if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
-            log.info("Address space '{}' exists and will be updated.", addressSpace);
-            final String currentResourceVersion = client.withName(addressSpace.getMetadata().getName()).get().getMetadata().getResourceVersion();
-            client.createOrReplace(addressSpace);
-            Thread.sleep(10_000);
-            TestUtils.waitForChangedResourceVersion(ofDuration(ofMinutes(5)), addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName(), currentResourceVersion);
-            if (waitForPlanApplied) {
-                AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
-            }
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-
-            if (!addressSpace.equals(getSharedAddressSpace())) {
-                addressSpaceList.add(addressSpace);
-            }
-        } else {
-            log.info("Address space '{}' does not exists.", addressSpace.getMetadata().getName());
-        }
-        log.info("Address space updated: {}", addressSpace);
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
-    protected void waitForAddressSpaceReady(AddressSpace addressSpace) throws Exception {
-        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-    }
-
-    protected void waitForAddressSpacePlanApplied(AddressSpace addressSpace) throws Exception {
-        AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
-    }
-
-    protected AddressSpace getAddressSpace(String addressSpaceName) {
-        return kubernetes.getAddressSpaceClient().withName(addressSpaceName).get();
-    }
-
-    //================================================================================================
-    //====================================== Address methods =========================================
-    //================================================================================================
-
-    protected AddressSpace getAddressSpace(String namespace, String addressSpaceName) {
-        return kubernetes.getAddressSpaceClient(namespace).withName(addressSpaceName).get();
-    }
-
-    protected void deleteAddresses(Address... destinations) throws Exception {
-        logCollector.collectConfigMaps();
-        logCollector.collectRouterState("deleteAddresses");
-        AddressUtils.delete(destinations);
-    }
-
-    protected void deleteAddresses(AddressSpace addressSpace) throws Exception {
-        logCollector.collectConfigMaps();
-        logCollector.collectRouterState("deleteAddresses");
-        AddressUtils.delete(addressSpace);
-    }
-
-    protected void appendAddresses(Address... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        appendAddresses(budget, destinations);
-    }
-
-    protected void appendAddresses(TimeoutBudget timeout, Address... destinations) throws Exception {
-        appendAddresses(true, timeout, destinations);
-    }
-
-    protected void appendAddresses(boolean wait, Address... destinations) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        appendAddresses(wait, budget, destinations);
-    }
-
-    protected void appendAddresses(boolean wait, TimeoutBudget timeout, Address... destinations) throws Exception {
-        AddressUtils.appendAddresses(timeout, wait, destinations);
-        logCollector.collectConfigMaps();
-    }
-
-    protected void setAddresses(Address... addresses) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        logCollector.collectRouterState("setAddresses");
-        AddressUtils.setAddresses(budget, true, addresses);
-    }
-
-    //================================================================================================
-    //======================================= User methods ===========================================
-    //================================================================================================
-
-    protected void replaceAddress(Address destination) throws Exception {
-        AddressUtils.replaceAddress(destination, true, new TimeoutBudget(3, TimeUnit.MINUTES));
-    }
-
-    protected User createOrUpdateUser(AddressSpace addressSpace, UserCredentials credentials) {
-        User user = new UserBuilder()
-                .withNewMetadata()
-                .withName(addressSpace.getMetadata().getName() + "." + credentials.getUsername())
-                .endMetadata()
-                .withNewSpec()
-                .withUsername(credentials.getUsername())
-                .withNewAuthentication()
-                .withType(UserAuthenticationType.password)
-                .withNewPassword(UserUtils.passwordToBase64(credentials.getPassword()))
-                .endAuthentication()
-                .addNewAuthorization()
-                .withAddresses("*")
-                .addToOperations(Operation.send)
-                .addToOperations(Operation.recv)
-                .endAuthorization()
-                .addNewAuthorization()
-                .addToOperations(Operation.manage)
-                .endAuthorization()
-                .endSpec()
-                .build();
-        return createOrUpdateUser(addressSpace, user);
-    }
-
-    protected User createOrUpdateUser(AddressSpace addressSpace, User user) {
-        log.info("User {} in address space {} will be created", user, addressSpace.getMetadata().getName());
-        if (user.getMetadata().getName() == null || !user.getMetadata().getName().contains(addressSpace.getMetadata().getName())) {
-            user.getMetadata().setName(addressSpace.getMetadata().getName() + "." + user.getSpec().getUsername());
-        }
-        return kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).createOrReplace(user);
-    }
-
-    protected User createUserServiceaccount(AddressSpace addressSpace, UserCredentials cred) {
-        log.info("ServiceAccount user {} in address space {} will be created", cred.getUsername(), addressSpace.getMetadata().getName());
-        String serviceaccountName = kubernetes.createServiceAccount(cred.getUsername(), addressSpace.getMetadata().getNamespace());
-        User user = new UserBuilder()
-                .withNewMetadata()
-                .withName(String.format("%s.%s", addressSpace.getMetadata().getName(),
-                        Pattern.compile(".*:").matcher(serviceaccountName).replaceAll("")))
-                .endMetadata()
-                .withNewSpec()
-                .withUsername(serviceaccountName)
-                .withNewAuthentication()
-                .withType(UserAuthenticationType.serviceaccount)
-                .endAuthentication()
-                .addNewAuthorization()
-                .withAddresses("*")
-                .addToOperations(Operation.send)
-                .addToOperations(Operation.recv)
-                .endAuthorization()
-                .endSpec()
-                .build();
-        return createOrUpdateUser(addressSpace, user);
-    }
-
-    protected void removeUser(AddressSpace addressSpace, User user) {
-        log.info("User {} in address space {} will be removed", user.getMetadata().getName(), addressSpace.getMetadata().getName());
-        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
-    }
-
-    protected void removeUser(AddressSpace addressSpace, String userName) {
-        log.info("User {} in address space {} will be removed", userName, addressSpace.getMetadata().getName());
-        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(String.format("%s.%s", addressSpace.getMetadata().getName(), userName)).cascading(true).delete();
-    }
-
-    protected User getUser(AddressSpace addressSpace, String username) {
-        String id = String.format("%s.%s", addressSpace.getMetadata().getName(), username);
-        List<User> response = kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).list().getItems();
-        log.info("User list for {}: {}", addressSpace.getMetadata().getName(), response);
-        for (User user : response) {
-            if (user.getMetadata().getName().equals(id)) {
-                log.info("User {} in addressspace {} already exists", username, addressSpace.getMetadata().getName());
-                return user;
-            }
-        }
-        return null;
     }
 
     //================================================================================================
@@ -447,7 +120,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
 
     protected boolean userExist(AddressSpace addressSpace, String username) {
-        return getUser(addressSpace, username) != null;
+        return CommonResourcesManager.getInstance().getUser(addressSpace, username) != null;
     }
 
     /**
@@ -475,62 +148,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             throw new IllegalArgumentException("'numReplicas' must be greater than 0");
         }
 
-    }
-
-    protected boolean isBrokered(AddressSpace addressSpace) {
-        return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
-    }
-
-    protected void assertCanConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations) throws Exception {
-        for (Address destination : destinations) {
-            String message = String.format("Client failed, cannot connect to %s under user %s", destination.getSpec().getAddress(), credentials);
-            AddressType addressType = AddressType.getEnum(destination.getSpec().getType());
-            assertTrue(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getSpec().getAddress(), true), message);
-        }
-    }
-
-    protected void assertCannotConnect(AddressSpace addressSpace, UserCredentials credentials, List<Address> destinations) throws Exception {
-        for (Address destination : destinations) {
-            String message = String.format("Client failed, can connect to %s under user %s", destination.getSpec().getAddress(), credentials);
-            AddressType addressType = AddressType.getEnum(destination.getSpec().getType());
-            assertFalse(canConnectWithAmqpAddress(addressSpace, credentials, addressType, destination.getSpec().getAddress(), false), message);
-        }
-    }
-
-    private boolean canConnectWithAmqpAddress(AddressSpace addressSpace, UserCredentials credentials, AddressType addressType, String address, boolean defaultValue) throws Exception {
-        Set<AddressType> brokeredAddressTypes = new HashSet<>(Arrays.asList(AddressType.QUEUE, AddressType.TOPIC));
-        if (isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
-            return defaultValue;
-        }
-        try (AmqpClient client = amqpClientFactory.createAddressClient(addressSpace, addressType)) {
-            client.getConnectOptions().setCredentials(credentials);
-            ProtonClientOptions protonClientOptions = client.getConnectOptions().getProtonClientOptions();
-            protonClientOptions.setLogActivity(true);
-            client.getConnectOptions().setProtonClientOptions(protonClientOptions);
-
-
-            try {
-                Future<List<Message>> received = client.recvMessages(address, 1);
-                Future<Integer> sent = client.sendMessages(address, Collections.singletonList("msg1"));
-
-                int numReceived = received.get(1, TimeUnit.MINUTES).size();
-                int numSent = sent.get(1, TimeUnit.MINUTES);
-                return (numSent == numReceived);
-            } catch (ExecutionException | SecurityException | UnauthorizedAccessException ex) {
-                Throwable cause = ex;
-                if (ex instanceof ExecutionException) {
-                    cause = ex.getCause();
-                }
-
-                if (cause instanceof AuthenticationException || cause instanceof SaslSystemException || cause instanceof SecurityException || cause instanceof UnauthorizedAccessException || cause instanceof MechanismMismatchException) {
-                    log.info("canConnectWithAmqpAddress {} ({}): {}", address, addressType, ex.getMessage());
-                    return false;
-                } else {
-                    log.warn("canConnectWithAmqpAddress {} ({}) exception", address, addressType, ex);
-                    throw ex;
-                }
-            }
-        }
     }
 
     protected Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
@@ -625,7 +242,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     private void waitForSubscribers(BrokerManagement brokerManagement, AddressSpace addressSpace, String topic, int expectedCount, TimeoutBudget budget) throws Exception {
         AmqpClient queueClient = null;
         try {
-            queueClient = amqpClientFactory.createQueueClient(addressSpace);
+            queueClient = resourcesManager.getAmqpClientFactory().createQueueClient(addressSpace);
             queueClient.setConnectOptions(queueClient.getConnectOptions().setCredentials(managementCredentials));
             String replyQueueName = "reply-queue";
             Address replyQueue = new AddressBuilder()
@@ -639,7 +256,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                     .withPlan(getDefaultPlan(AddressType.QUEUE))
                     .endSpec()
                     .build();
-            appendAddresses(replyQueue);
+            resourcesManager.appendAddresses(replyQueue);
 
             boolean done = false;
             int actualSubscribers = 0;
@@ -687,8 +304,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected void waitForPodsToTerminate(List<String> uids) throws Exception {
         log.info("Waiting for following pods to be deleted {}", uids);
         assertWaitForValue(true, () -> (kubernetes.listPods(kubernetes.getInfraNamespace()).stream()
-                .filter(pod -> uids.contains(pod.getMetadata().getUid()))
-                .collect(Collectors.toList()).size() == 0), new TimeoutBudget(2, TimeUnit.MINUTES));
+                .noneMatch(pod -> uids.contains(pod.getMetadata().getUid()))), new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     /**
@@ -955,7 +571,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 .done());
 
         for (User user : users) {
-            createOrUpdateUser(addressSpace, user);
+            CommonResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
         }
         return users;
     }
@@ -1024,8 +640,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected void runRestApiTest(AddressSpace addressSpace, Address d1, Address d2) throws Exception {
         List<String> destinationsNames = Arrays.asList(d1.getSpec().getAddress(), d2.getSpec().getAddress());
-        setAddresses(d1);
-        appendAddresses(d2);
+        resourcesManager.setAddresses(d1);
+        resourcesManager.appendAddresses(d2);
 
         //d1, d2
         List<String> response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
@@ -1036,22 +652,22 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         Address res = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).withName(d2.getMetadata().getName()).get();
         assertThat("Rest api does not return specific address", res.getSpec().getAddress(), is(d2.getSpec().getAddress()));
 
-        deleteAddresses(d1);
+        resourcesManager.deleteAddresses(d1);
 
         //d2
         response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
         assertThat("Rest api does not return right addresses", response, is(destinationsNames.subList(1, 2)));
         log.info("address {} successfully deleted", d1.getSpec().getAddress());
 
-        deleteAddresses(d2);
+        resourcesManager.deleteAddresses(d2);
 
         //empty
         List<Address> listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
         log.info("addresses {} successfully deleted", d2.getSpec().getAddress());
 
-        setAddresses(d1, d2);
-        deleteAddresses(d1, d2);
+        CommonResourcesManager.getInstance().setAddresses(d1, d2);
+        resourcesManager.deleteAddresses(d1, d2);
 
         listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
@@ -1079,10 +695,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         recvd = jmsProvider.receiveMessages(receiver, count, 2000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
         log.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
-    }
-
-    protected void deleteAddressSpaceCreatedBySC(AddressSpace addressSpace) throws Exception {
-        TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, logCollector);
     }
 
     protected List<Address> getAllStandardAddresses(AddressSpace addressspace) {
@@ -1187,49 +799,28 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                         .build());
     }
 
-    protected void sendDurableMessages(AddressSpace addressSpace, Address destination,
-                                       UserCredentials credentials, int count) throws Exception {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-        List<Message> listOfMessages = new ArrayList<>();
-        IntStream.range(0, count).forEach(num -> {
-            Message msg = Message.Factory.create();
-            msg.setAddress(destination.getSpec().getAddress());
-            msg.setDurable(true);
-            listOfMessages.add(msg);
-        });
-        Future<Integer> sent = client.sendMessages(destination.getSpec().getAddress(), listOfMessages.toArray(new Message[0]));
-        assertThat("Cannot send durable messages to " + destination, sent.get(1, TimeUnit.MINUTES), is(count));
-        client.close();
-    }
-
-    protected void receiveDurableMessages(AddressSpace addressSpace, Address dest,
-                                          UserCredentials credentials, int count) throws Exception {
-        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
-        client.getConnectOptions().setCredentials(credentials);
-        ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getSpec().getAddress(), count);
-        assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
-        client.close();
-    }
-
-    protected void connectAddressSpace(AddressSpace addressSpace, UserCredentials credentials) throws Exception {
-        try (AmqpClient client = amqpClientFactory.createQueueClient(addressSpace)) {
-            client.getConnectOptions().setCredentials(credentials);
-            CompletableFuture<Void> connect = client.connect();
-            try {
-                connect.get(5, TimeUnit.MINUTES);
-            } catch (ExecutionException e) {
-                if (e.getCause() instanceof Exception) {
-                    throw ((Exception) e.getCause());
-                } else {
-                    throw new RuntimeException(e.getCause());
-                }
-            }
-        }
-    }
-
     protected List<String> extractBodyAsString(Future<List<Message>> msgs) throws Exception {
         return msgs.get(1, TimeUnit.MINUTES).stream().map(m -> (String) ((AmqpValue) m.getBody()).getValue()).collect(Collectors.toList());
+    }
+
+    protected static void simpleMQTTSendReceive(Address dest, IMqttClient client, int msgCount) throws Exception {
+        List<MqttMessage> messages = IntStream.range(0, msgCount).boxed().map(i -> {
+            MqttMessage m = new MqttMessage();
+            m.setPayload(String.format("mqtt-simple-send-receive-%s", i).getBytes(StandardCharsets.UTF_8));
+            m.setQos(1);
+            return m;
+        }).collect(Collectors.toList());
+
+        List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), 1);
+        List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
+
+        int publishCount = MqttUtils.awaitAndReturnCode(publishFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages published",
+                publishCount, is(messages.size()));
+
+        int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 1, TimeUnit.MINUTES);
+        assertThat("Incorrect count of messages received",
+                receivedCount, is(messages.size()));
     }
 
     //================================================================================================
@@ -1276,5 +867,70 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected <T> void assertWaitForValue(T expected, Callable<T> fn) throws Exception {
         assertWaitForValue(expected, fn, new TimeoutBudget(10, TimeUnit.SECONDS));
+    }
+
+    //================================================================================================
+    //====================================== Shared test help methods =======================================
+    //================================================================================================
+
+    /**
+     * Create users within groups (according to destNamePrefix and customerIndex), wait until destinations are ready to use
+     * and start sending and receiving messages
+     *
+     * @param dest           list of all available destinations (destinations are not in ready state presumably)
+     * @param users          list of users dedicated for sending messages into destinations above
+     * @param destNamePrefix prefix of destinations name (due to authorization)
+     * @param customerIndex  also important due to authorization (only users under this customer can send messages into dest)
+     * @param messageCount   count of messages that will be send into destinations
+     * @throws Exception
+     */
+    protected void doMessaging(List<Address> dest, List<UserCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
+        ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
+        String sufix = new AddressSpaceUtils().isBrokered(resourcesManager.getSharedAddressSpace()) ? "#" : "*";
+        users.forEach((user) -> {
+            try {
+                CommonResourcesManager.getInstance().createOrUpdateUser(resourcesManager.getSharedAddressSpace(),
+                        UserUtils.createUserResource(user)
+                                .editSpec()
+                                .withAuthorization(Collections.singletonList(
+                                        new UserAuthorizationBuilder()
+                                                .withAddresses(String.format("%s.%s.%s", destNamePrefix, customerIndex, sufix))
+                                                .withOperations(Operation.send, Operation.recv).build()))
+                                .endSpec()
+                                .done());
+                AmqpClient queueClient = resourcesManager.getAmqpClientFactory().createQueueClient();
+                queueClient.getConnectOptions().setCredentials(user);
+                clients.add(queueClient);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        waitForDestinationsReady(dest.toArray(new Address[0]));
+        //start sending messages
+        int everyN = 3;
+        for (AmqpClient client : clients) {
+            for (int i = 0; i < dest.size(); i++) {
+                if (i % everyN == 0) {
+                    Future<Integer> sent = client.sendMessages(dest.get(i).getSpec().getAddress(), TestUtils.generateMessages(messageCount));
+                    //wait for messages sent
+                    assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES).intValue(),
+                            "Incorrect count of messages send");
+                }
+            }
+        }
+
+        //receive messages
+        for (AmqpClient client : clients) {
+            for (int i = 0; i < dest.size(); i++) {
+                if (i % everyN == 0) {
+                    Future<List<Message>> received = client.recvMessages(dest.get(i).getSpec().getAddress(), messageCount);
+                    //wait for messages received
+                    assertEquals(messageCount, received.get(1, TimeUnit.MINUTES).size(),
+                            "Incorrect count of messages received");
+                }
+            }
+            client.close();
+        }
     }
 }

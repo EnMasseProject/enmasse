@@ -4,19 +4,23 @@
  */
 package io.enmasse.systemtest.iot.registry;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
-import static io.enmasse.systemtest.TestTag.smoke;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.net.HttpURLConnection;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.iot.CredentialsRegistryClient;
+import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.MessageSendTester.Type;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.utils.IoTUtils;
 import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
@@ -28,26 +32,22 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.bases.IoTTestBase;
-import io.enmasse.systemtest.iot.CredentialsRegistryClient;
-import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.iot.MessageSendTester.Type;
-import io.enmasse.systemtest.utils.IoTUtils;
+import java.net.HttpURLConnection;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 
-@Tag(sharedIot)
-@Tag(smoke)
+import static io.enmasse.systemtest.TestTag.SHARED_IOT;
+import static io.enmasse.systemtest.TestTag.SMOKE;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
+@Tag(SHARED_IOT)
+@Tag(SMOKE)
 public abstract class DeviceRegistryTestBase extends IoTTestBase {
 
     private static final String DEVICE_REGISTRY_TEST_ADDRESSSPACE = "device-registry-test-addrspace";
@@ -69,19 +69,20 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
 
     private AmqpClient iotAmqpClient;
 
-    protected abstract IoTConfig provideIoTConfig() throws Exception;
-
     /**
      * Test if the enabled flag is set to "enabled".
      * <br>
      * The flag is considered "enabled", in case the value is "true" or missing.
-     * @param obj The value to test.
+     *
+     * @param enabled The object to test.
      */
     private static void assertDefaultEnabled(final Boolean enabled) {
         if ( enabled != null && !Boolean.TRUE.equals(enabled)) {
             fail("Default value must be 'null' or 'true'");
         }
     }
+
+    protected abstract IoTConfig provideIoTConfig() throws Exception;
 
     protected void removeIoTConfig() throws Exception {
         log.info("Shared IoTConfig will be removed");
@@ -127,8 +128,8 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         this.randomDeviceId = UUID.randomUUID().toString();
 
         this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        createOrUpdateUser(getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
-        this.iotAmqpClientFactory = new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        CommonResourcesManager.getInstance().createOrUpdateUser(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        this.iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
         this.iotAmqpClient = iotAmqpClientFactory.createQueueClient();
     }
 
@@ -148,7 +149,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     }
 
     @AfterAll
-    public void cleanAll() throws Exception{
+    public void cleanAll() throws Exception {
         log.info("Cleaning environment, test class completely executed");
         cleanEnv();
     }
@@ -183,7 +184,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         assertDefaultEnabled(result.getEnabled());
 
         client.deleteDeviceRegistration(tenantId(), randomDeviceId);
-        client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        client.getDeviceRegistration(tenantId(), randomDeviceId, HTTP_NOT_FOUND);
     }
 
     @Test
@@ -201,7 +202,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         assertEquals(Boolean.FALSE, result.getEnabled());
 
         client.deleteDeviceRegistration(tenantId(), randomDeviceId);
-        client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        client.getDeviceRegistration(tenantId(), randomDeviceId, HTTP_NOT_FOUND);
     }
 
     @Test
@@ -220,7 +221,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
 
             client.deleteDeviceRegistration(tenantId(), randomDeviceId);
-            client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            client.getDeviceRegistration(tenantId(), randomDeviceId, HTTP_NOT_FOUND);
 
         }
     }
@@ -230,7 +231,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     void testCacheExpiryForCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
-           final Duration cacheExpiration = Duration.ofMinutes(3);
+            final Duration cacheExpiration = Duration.ofMinutes(3);
 
             // register device
 
@@ -262,7 +263,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
 
             client.deleteDeviceRegistration(tenantId(), randomDeviceId);
-            client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            client.getDeviceRegistration(tenantId(), randomDeviceId, HTTP_NOT_FOUND);
         }
     }
 

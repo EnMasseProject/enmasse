@@ -7,12 +7,17 @@ package io.enmasse.systemtest.bases.clients;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.ArtemisManagement;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.*;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.shared.ITestBaseShared;
+import io.enmasse.systemtest.broker.ArtemisManagement;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -28,13 +33,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
-public abstract class  ClientTestBase extends TestBaseWithShared {
+public abstract class ClientTestBase extends TestBase implements ITestBaseShared {
+    protected Path logPath = null;
     private ClientArgumentMap arguments = new ClientArgumentMap();
     private List<AbstractClient> clients;
-    protected Path logPath = null;
 
     @BeforeEach
     public void setUpClientBase(TestInfo info) {
@@ -84,8 +91,8 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "message-basic"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -93,16 +100,16 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace(), websocket).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
         arguments.put(ClientArgument.TIMEOUT, "30");
         if (websocket) {
             arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
-            if (sharedAddressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            if (getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
                 arguments.put(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
             }
         }
@@ -127,8 +134,8 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "round-robin"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "round-robin"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -136,9 +143,9 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount / 2));
         arguments.put(ClientArgument.TIMEOUT, "100");
@@ -150,10 +157,10 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
         Future<Boolean> recResult = receiver.runAsync();
         Future<Boolean> rec2Result = receiver2.runAsync();
 
-        if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getSpec().getAddress(), 2);
+        if (new AddressSpaceUtils().isBrokered(getSharedAddressSpace())) {
+            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
         } else {
-            waitForSubscribersConsole(sharedAddressSpace, dest, 2);
+            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
         }
 
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
@@ -182,8 +189,8 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "topic-sub"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "topic-sub"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -191,9 +198,9 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
@@ -207,10 +214,10 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
         Future<Boolean> recResult = subscriber.runAsync();
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
-        if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(artemisManagement, sharedAddressSpace, dest.getSpec().getAddress(), 2);
+        if (new AddressSpaceUtils().isBrokered(getSharedAddressSpace())) {
+            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
         } else {
-            waitForSubscribersConsole(sharedAddressSpace, dest, 2);
+            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
         }
 
         assertAll(
@@ -233,8 +240,8 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "browse"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "browse"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -242,9 +249,9 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
@@ -274,8 +281,8 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "drain"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "drain"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -283,13 +290,12 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        ;
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
@@ -316,8 +322,8 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
         clients.addAll(Arrays.asList(sender, receiver));
         Address queue = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "selector-queue"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "selector-queue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -325,9 +331,9 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        setAddresses(queue);
+        resourcesManager.setAddresses(queue);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
         arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
@@ -389,8 +395,8 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
 
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "selector-topic"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "selector-topic"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -398,9 +404,9 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        setAddresses(topic);
+        resourcesManager.setAddresses(topic);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + topic.getSpec().getAddress());
         arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
@@ -433,10 +439,10 @@ public abstract class  ClientTestBase extends TestBaseWithShared {
         Future<Boolean> result1 = subscriber.runAsync();
         Future<Boolean> result2 = subscriber2.runAsync();
 
-        if (isBrokered(sharedAddressSpace)) {
-            waitForSubscribers(artemisManagement, sharedAddressSpace, topic.getSpec().getAddress(), 2);
+        if (new AddressSpaceUtils().isBrokered(getSharedAddressSpace())) {
+            waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress(), 2);
         } else {
-            waitForSubscribersConsole(sharedAddressSpace, topic, 2);
+            waitForSubscribersConsole(getSharedAddressSpace(), topic, 2);
         }
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");

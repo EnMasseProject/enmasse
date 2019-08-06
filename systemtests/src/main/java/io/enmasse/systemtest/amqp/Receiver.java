@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;

@@ -7,20 +7,31 @@ package io.enmasse.systemtest.bases.clients;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.messagingclients.*;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.shared.ITestBaseShared;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientType;
+import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.BeforeEach;
+
 import java.util.concurrent.Future;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
-public abstract class ClusterClientTestBase extends TestBaseWithShared {
+public abstract class ClusterClientTestBase extends TestBase implements ITestBaseShared {
     private ClientArgumentMap arguments = new ClientArgumentMap();
 
     @BeforeEach
@@ -52,8 +63,8 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "message-basic"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -61,15 +72,15 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, websocket, true, false).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace(), websocket, true, false).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "message");
         if (websocket) {
             arguments.put(ClientArgument.CONN_WEB_SOCKET, "true");
-            if (sharedAddressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            if (getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
                 arguments.put(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
             }
         }
@@ -95,19 +106,19 @@ public abstract class ClusterClientTestBase extends TestBaseWithShared {
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "basic-mqtt"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "basic-mqtt"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("basic-mqtt" + ClientType.getAddressName(sender))
-                .withPlan(sharedAddressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC))
+                .withPlan(getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
 
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(sharedAddressSpace, false, false, true).toString());
+        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace(), false, false, true).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "message");

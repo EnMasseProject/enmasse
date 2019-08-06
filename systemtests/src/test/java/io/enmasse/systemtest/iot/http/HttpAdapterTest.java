@@ -5,16 +5,19 @@
 package io.enmasse.systemtest.iot.http;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -30,25 +33,24 @@ import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
-import static io.enmasse.systemtest.TestTag.sharedIot;
 
-@Tag(sharedIot)
-public class HttpAdapterTest extends IoTTestBaseWithShared {
+import static io.enmasse.systemtest.TestTag.SHARED_IOT;
+
+@Tag(SHARED_IOT)
+public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsolatedStandard {
 
     @SuppressWarnings("unused")
     private static final Logger log = CustomLogger.getLogger();
-
-    private Endpoint deviceRegistryEndpoint;
-    private DeviceRegistryClient registryClient;
-    private CredentialsRegistryClient credentialsClient;
-    private AmqpClient businessApplicationClient;
-    private HttpAdapterClient adapterClient;
-
     private final String deviceId = UUID.randomUUID().toString();
     private final String deviceAuthId = UUID.randomUUID().toString();
     private final String devicePassword = UUID.randomUUID().toString();
     private final String businessApplicationUsername = UUID.randomUUID().toString();
     private final String businessApplicationPassword = UUID.randomUUID().toString();
+    private Endpoint deviceRegistryEndpoint;
+    private DeviceRegistryClient registryClient;
+    private CredentialsRegistryClient credentialsClient;
+    private AmqpClient businessApplicationClient;
+    private HttpAdapterClient adapterClient;
 
     @BeforeEach
     void initEnv() throws Exception {
@@ -72,11 +74,11 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
                 .endSpec()
                 .done();
 
-        AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = resourcesManager.getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
 
-        createOrUpdateUser(addressSpace, businessApplicationUser);
+        CommonResourcesManager.getInstance().createOrUpdateUser(addressSpace, businessApplicationUser);
 
-        businessApplicationClient = amqpClientFactory.createQueueClient(addressSpace);
+        businessApplicationClient = getAmqpClientFactory().createQueueClient(addressSpace);
         businessApplicationClient.getConnectOptions()
                 .setUsername(businessApplicationUsername)
                 .setPassword(businessApplicationPassword);
@@ -98,14 +100,14 @@ public class HttpAdapterTest extends IoTTestBaseWithShared {
             registryClient.deleteDeviceRegistration(tenantId(), deviceId);
             registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         }
-        if (adapterClient != null ) {
+        if (adapterClient != null) {
             adapterClient.close();
         }
-        removeUser(getAddressSpace(), businessApplicationUsername);
+        CommonResourcesManager.getInstance().removeUser(getAddressSpace(), businessApplicationUsername);
     }
 
     @AfterEach
-    public void closeClient () throws Exception {
+    public void closeClient() throws Exception {
         // close in a dedicated method to ensure it gets called in any case
         if (businessApplicationClient != null) {
             businessApplicationClient.close();

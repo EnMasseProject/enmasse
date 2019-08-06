@@ -5,40 +5,37 @@
 
 package io.enmasse.systemtest.amqp;
 
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.message.Message;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import org.apache.qpid.proton.message.Message;
-
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonDelivery;
-import io.vertx.proton.ProtonSender;
-
 public class SingleSender extends AbstractSender<List<ProtonDelivery>> {
-
-    /**
-     * Recorded deliveries.
-     */
-    private List<ProtonDelivery> deliveries;
 
     /**
      * The message to send.
      */
     private final Message message;
-
+    /**
+     * Recorded deliveries.
+     */
+    private List<ProtonDelivery> deliveries;
     /**
      * The current state, in a human readable format.
      */
     private String state = "initialized";
 
     public SingleSender(final AmqpConnectOptions clientOptions,
-            final LinkOptions linkOptions,
-            final CompletableFuture<Void> connectPromise,
-            final CompletableFuture<List<ProtonDelivery>> resultPromise,
-            final String containerId, final Message message) {
+                        final LinkOptions linkOptions,
+                        final CompletableFuture<Void> connectPromise,
+                        final CompletableFuture<List<ProtonDelivery>> resultPromise,
+                        final String containerId, final Message message) {
 
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
 

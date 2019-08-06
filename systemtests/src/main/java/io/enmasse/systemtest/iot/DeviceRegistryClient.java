@@ -6,10 +6,10 @@
 package io.enmasse.systemtest.iot;
 
 import java.net.HttpURLConnection;
-import org.eclipse.hono.service.management.device.Device;
 
+import io.enmasse.systemtest.platform.Kubernetes;
+import org.eclipse.hono.service.management.device.Device;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;

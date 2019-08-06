@@ -5,16 +5,13 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
 
 import java.nio.file.Paths;
 
 public class Environment {
-
-    private static Logger log = CustomLogger.getLogger();
-    private static Environment instance;
-
     public static final String USE_MINUKUBE_ENV = "USE_MINIKUBE";
     public static final String OCP_VERSION_ENV = "OC_VERSION";
     public static final String KEYCLOAK_ADMIN_PASSWORD_ENV = "KEYCLOAK_ADMIN_PASSWORD";
@@ -33,13 +30,11 @@ public class Environment {
     public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
     public static final String TAG_ENV = "TAG";
     public static final String APP_NAME_ENV = "APP_NAME";
+    public static final String IS_OCP4_REGEXP = "4.*";
     private static final String DEFAULT_DEVICE_REGISTRY = "DEFAULT_DEVICE_REGISTRY";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
-
-    public static final String IS_OCP4_REGEXP = "4.*";
-
-    private String token = System.getenv(K8S_API_TOKEN_ENV);
-    private String url = System.getenv(K8S_API_URL_ENV);
+    private static Logger log = CustomLogger.getLogger();
+    private static Environment instance;
     private final String namespace = System.getenv(K8S_NAMESPACE_ENV);
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
     private final String keycloakAdminUser = System.getenv().getOrDefault(KEYCLOAK_ADMIN_USER_ENV, "admin");
@@ -58,6 +53,19 @@ public class Environment {
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
     private final String defaultDeviceRegistry = System.getenv().getOrDefault(DEFAULT_DEVICE_REGISTRY, "file");
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
+    protected UserCredentials managementCredentials = new UserCredentials(null, null);
+    protected UserCredentials defaultCredentials = new UserCredentials(null, null);
+
+    /**
+     * Skip removing address-spaces
+     */
+    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv(SKIP_CLEANUP_ENV));
+    /**
+     * Store screenshots every time
+     */
+    private final boolean storeScreenshots = Boolean.parseBoolean(System.getenv(STORE_SCREENSHOTS_ENV));
+    private String token = System.getenv(K8S_API_TOKEN_ENV);
+    private String url = System.getenv(K8S_API_URL_ENV);
 
     private Environment() {
         if (token == null || url == null) {
@@ -78,7 +86,7 @@ public class Environment {
         log.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
         log.info(debugFormat, APP_NAME_ENV, appName);
-        if(!useMinikube) {
+        if (!useMinikube) {
             log.info(debugFormat, OCP_VERSION_ENV, ocpVersion);
         }
     }
@@ -89,17 +97,6 @@ public class Environment {
         }
         return instance;
     }
-
-    /**
-     * Skip removing address-spaces
-     */
-    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv(SKIP_CLEANUP_ENV));
-
-    /**
-     * Store screenshots every time
-     */
-    private final boolean storeScreenshots = Boolean.parseBoolean(System.getenv(STORE_SCREENSHOTS_ENV));
-
 
     public String getApiUrl() {
         return url;
@@ -177,12 +174,26 @@ public class Environment {
         return appName;
     }
 
-    public String getDefaultDeviceRegistry() {
-        return defaultDeviceRegistry;
+
+    public UserCredentials getManagementCredentials() {
+        return managementCredentials;
     }
 
+    public void setManagementCredentials(UserCredentials managementCredentials) {
+        this.managementCredentials = managementCredentials;
+    }
+
+    public UserCredentials getDefaultCredentials() {
+        return defaultCredentials;
+    }
+
+    public void setDefaultCredentials(UserCredentials defaultCredentials) {
+        this.defaultCredentials = defaultCredentials;
+    }
     public boolean isSkipSaveState() {
         return skipSaveState;
     }
-
+    public String getDefaultDeviceRegistry() {
+        return defaultDeviceRegistry;
+    }
 }

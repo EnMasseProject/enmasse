@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -68,14 +68,14 @@ public class OpenshiftLoginWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        if(Environment.getInstance().isOcp4()) {
+        if (Environment.getInstance().isOcp4()) {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlContains("oauth/authorize"));
-        }else {
+        } else {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("inputPassword")));
         }
         selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
-        if(Environment.getInstance().isOcp4()) {
+        if (Environment.getInstance().isOcp4()) {
             selenium.clickOnItem(getHtpasswdButton(), "Htpasswd log in page");
             selenium.takeScreenShot();
         }

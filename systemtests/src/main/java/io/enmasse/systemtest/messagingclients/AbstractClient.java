@@ -4,10 +4,10 @@
  */
 package io.enmasse.systemtest.messagingclients;
 
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.Executor;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -15,7 +15,11 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Future;
@@ -86,19 +90,6 @@ public abstract class AbstractClient {
     }
 
     /**
-     * Get all client arguments
-     *
-     * @return
-     */
-    public ArrayList<String> getArguments() {
-        return arguments;
-    }
-
-    public List<String> getExecutable() {
-        return this.executable;
-    }
-
-    /**
      * @param clientType
      */
     public void setClientType(ClientType clientType) {
@@ -106,12 +97,13 @@ public abstract class AbstractClient {
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
     }
 
-    public String getStdOut() {
-        return executor.getStdOut();
-    }
-
-    public String getStdErr() {
-        return executor.getStdErr();
+    /**
+     * Get all client arguments
+     *
+     * @return
+     */
+    public ArrayList<String> getArguments() {
+        return arguments;
     }
 
     /**
@@ -134,6 +126,18 @@ public abstract class AbstractClient {
                         this.getClass().getSimpleName()));
             }
         }
+    }
+
+    public List<String> getExecutable() {
+        return this.executable;
+    }
+
+    public String getStdOut() {
+        return executor.getStdOut();
+    }
+
+    public String getStdErr() {
+        return executor.getStdErr();
     }
 
     /**
@@ -180,14 +184,15 @@ public abstract class AbstractClient {
             executor = new Executor(logPath);
             int ret = executor.execute(prepareCommand(), timeout);
             synchronized (lock) {
-                log.info("{} {} Return code - {}", this.getClass().getName(), clientType,  ret);
+                log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
                 if (logToOutput) {
                     log.info("{} {} stdout : {}", this.getClass().getName(), clientType, executor.getStdOut());
-                    if (!executor.getStdErr().isEmpty()) {
-                        log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
-                    }
                     if (ret == 0) {
                         parseToJson(executor.getStdOut());
+                    } else {
+                        if (!executor.getStdErr().isEmpty()) {
+                            log.error("{} {} stderr : {}", this.getClass().getName(), clientType, executor.getStdErr());
+                        }
                     }
                 }
             }

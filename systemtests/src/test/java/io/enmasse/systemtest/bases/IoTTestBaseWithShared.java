@@ -8,12 +8,15 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.CertBundle;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -21,12 +24,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.deviceRegistry;
-
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
-public abstract class IoTTestBaseWithShared extends IoTTestBase {
+import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.deviceRegistry;
+
+public abstract class IoTTestBaseWithShared extends IoTTestBase implements ITestBaseIsolated {
 
     private final static Logger log = CustomLogger.getLogger();
 
@@ -34,11 +38,9 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
 
     protected IoTConfig sharedConfig;
     protected IoTProject sharedProject;
-
-    private UserCredentials credentials;
     protected AmqpClientFactory iotAmqpClientFactory;
-
     protected AmqpClient iotAmqpClient;
+    private UserCredentials credentials;
 
     @BeforeEach
     public void setUpSharedIoTProject() throws Exception {
@@ -76,12 +78,18 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
             createIoTProject(sharedProject);
         }
 
+        AddressSpace addressSpace = kubernetes.getAddressSpaceClient().inNamespace(sharedProject.getMetadata().getNamespace())
+                .list().getItems().stream().filter(addressSpace1 -> addressSpace1.getMetadata().getName()
+                        .equals(sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()))
+                .collect(Collectors.toList()).get(0);
+        CommonResourcesManager.getInstance().initFactories(addressSpace);
+
         this.iotAmqpClientFactory = createAmqpClientFactory();
         this.iotAmqpClient = this.iotAmqpClientFactory.createQueueClient();
     }
 
     public AddressSpace getAddressSpace() {
-        return getAddressSpace(this.iotProjectNamespace, this.addressSpace);
+        return resourcesManager.getAddressSpace(this.iotProjectNamespace, this.addressSpace);
     }
 
     /**
@@ -89,8 +97,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
      */
     private AmqpClientFactory createAmqpClientFactory() throws Exception {
 
-        createOrUpdateUser(getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
-        return new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
+        resourcesManager.createOrUpdateUser(resourcesManager.getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
+        return new AmqpClientFactory(resourcesManager.getAddressSpace(this.iotProjectNamespace, this.addressSpace), this.credentials);
 
     }
 
@@ -128,7 +136,7 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase {
     }
 
     @AfterEach
-    public void closeIoTAmqpClient () throws Exception {
+    public void closeIoTAmqpClient() throws Exception {
         if (this.iotAmqpClient != null) {
             this.iotAmqpClient.close();
             this.iotAmqpClient = null;

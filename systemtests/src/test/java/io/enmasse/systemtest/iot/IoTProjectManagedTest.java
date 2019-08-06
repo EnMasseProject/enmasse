@@ -8,13 +8,14 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.AddressSpacePlans;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.DestinationPlan;
 import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
 import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -22,10 +23,10 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorization;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
-
 import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -41,11 +42,13 @@ import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.hamcrest.core.AllOf.allOf;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag(TestTag.sharedIot)
-@Tag(TestTag.smoke)
-class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
+@Tag(TestTag.SHARED_IOT)
+@Tag(TestTag.SMOKE)
+class IoTProjectManagedTest extends IoTTestBase implements ITestIsolatedStandard {
 
     @Test
     void testCreate() throws Exception {
@@ -90,8 +93,8 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
     }
 
     private void assertManaged(IoTProject project) throws Exception {
-        // address space s
-        AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        //address space s
+        AddressSpace addressSpace = commonResourcesManager.getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
@@ -131,9 +134,9 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
         }
         assertEquals(5, correctAddressesCounter, "There are incorrect IoT addresses " + addresses);
 
-        // username "adapter"
-        // name "project-address-space"+".adapter"
-        final User user = getUser(addressSpace, "adapter");
+        //username "adapter"
+        //name "project-address-space"+".adapter"
+        User user = CommonResourcesManager.getInstance().getUser(addressSpace, "adapter");
         assertNotNull(user);
         assertEquals(1, user.getMetadata().getOwnerReferences().size());
         assertTrue(isOwner(project, user.getMetadata().getOwnerReferences().get(0)));

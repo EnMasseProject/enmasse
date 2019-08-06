@@ -5,9 +5,9 @@
 package io.enmasse.systemtest.selenium.page;
 
 
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.slf4j.Logger;

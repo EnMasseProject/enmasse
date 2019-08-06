@@ -6,10 +6,11 @@ package io.enmasse.systemtest.olm;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.CmdClient;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.Openshift4WebPage;
@@ -25,10 +26,10 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static io.enmasse.systemtest.TestTag.olm;
+import static io.enmasse.systemtest.TestTag.OLM;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@Tag(olm)
+@Tag(OLM)
 class OperatorLifecycleManagerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private final String marketplaceNamespace = "openshift-marketplace";
@@ -72,7 +73,7 @@ class OperatorLifecycleManagerTest extends TestBase {
         TestUtils.waitUntilDeployed(infraNamespace);
 
         page.createExampleResourceItem("addressspace");
-        waitForAddressSpaceReady(kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get());
+        resourcesManager.waitForAddressSpaceReady(kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get());
 
         page.createExampleResourceItem("address");
         page.createExampleResourceItem("messaginguser");
@@ -85,7 +86,7 @@ class OperatorLifecycleManagerTest extends TestBase {
     void testBasicMessagingAfterOlmInstallation() throws Exception {
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get();
         Address exampleAddress = kubernetes.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
-        assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress));
+        getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress), CommonResourcesManager.getInstance());
     }
 
     @Test

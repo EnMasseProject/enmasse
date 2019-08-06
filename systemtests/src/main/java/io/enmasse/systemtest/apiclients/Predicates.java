@@ -11,7 +11,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public final class Predicates {
-    private Predicates() {}
+    private Predicates() {
+    }
 
     public static <T> Predicate<T> is(T value) {
         return new Predicate<>() {
@@ -37,12 +38,12 @@ public final class Predicates {
     }
 
     @SafeVarargs
-    public static <T> Predicate<T> notIn(final T...values) {
+    public static <T> Predicate<T> notIn(final T... values) {
         return in(Arrays.asList(values)).negate();
     }
 
     @SafeVarargs
-    public static <T> Predicate<T> in(final T...values) {
+    public static <T> Predicate<T> in(final T... values) {
         return in(Arrays.asList(values));
     }
 

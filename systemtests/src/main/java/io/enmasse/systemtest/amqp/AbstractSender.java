@@ -5,12 +5,12 @@
 
 package io.enmasse.systemtest.amqp;
 
-import java.util.concurrent.CompletableFuture;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
+import org.slf4j.Logger;
+
+import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractSender<T> extends ClientHandlerBase<T> {
 
@@ -21,6 +21,7 @@ public abstract class AbstractSender<T> extends ClientHandlerBase<T> {
     }
 
     protected abstract String getCurrentState();
+
     protected abstract void sendMessages(ProtonConnection connection, ProtonSender sender);
 
     @Override
@@ -51,8 +52,8 @@ public abstract class AbstractSender<T> extends ClientHandlerBase<T> {
     @Override
     protected void connectionDisconnected(ProtonConnection conn) {
         conn.close();
-        resultPromise.completeExceptionally(new RuntimeException("Connection disconnected after "  + getCurrentState()));
-        connectPromise.completeExceptionally(new RuntimeException("Connection disconnected after "  + getCurrentState()));
+        resultPromise.completeExceptionally(new RuntimeException("Connection disconnected after " + getCurrentState()));
+        connectPromise.completeExceptionally(new RuntimeException("Connection disconnected after " + getCurrentState()));
     }
 
 

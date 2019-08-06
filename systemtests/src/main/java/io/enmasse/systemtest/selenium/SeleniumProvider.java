@@ -6,8 +6,8 @@ package io.enmasse.systemtest.selenium;
 
 
 import com.paulhammant.ngwebdriver.NgWebDriver;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.selenium.resources.WebItem;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -41,13 +41,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class SeleniumProvider {
 
     private static Logger log = CustomLogger.getLogger();
+    private static SeleniumProvider instance;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private WebDriver driver;
     private NgWebDriver angularDriver;
     private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
     private String webconsoleFolder = "selenium_tests";
-    private static SeleniumProvider instance;
 
     private SeleniumProvider() {
     }

@@ -11,13 +11,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
 import org.slf4j.Logger;
 
 import com.google.common.net.HttpHeaders;
 
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;

@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.systemtest.CertBundle;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
 
 public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase {

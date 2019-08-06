@@ -4,12 +4,11 @@
  */
 package io.enmasse.systemtest.amqp;
 
-import org.apache.qpid.proton.amqp.messaging.Accepted;
-import org.apache.qpid.proton.message.Message;
-
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.message.Message;
 
 import java.util.Iterator;
 import java.util.concurrent.CompletableFuture;
@@ -18,9 +17,9 @@ import java.util.function.Predicate;
 
 class Sender extends AbstractSender<Integer> {
 
-    private final AtomicInteger numSent = new AtomicInteger(0);
     protected final Iterator<Message> messageQueue;
     protected final Predicate<Message> predicate;
+    private final AtomicInteger numSent = new AtomicInteger(0);
 
     public Sender(AmqpConnectOptions clientOptions,
                   LinkOptions linkOptions,
