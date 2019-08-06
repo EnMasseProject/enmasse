@@ -53,10 +53,12 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getNamespaceBar() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("co-namespace-bar")));
         return selenium.getDriver().findElement(By.className("co-namespace-bar"));
     }
 
     private WebElement getDropdownButton() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("caret")));
         return getNamespaceBar().findElement(By.className("caret"));
     }
 
@@ -108,6 +110,7 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getSaveChangesButton() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("save-changes")));
         return getContentWindow().findElement(By.id("save-changes"));
     }
 
@@ -133,14 +136,17 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getInstallButton() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("btn")));
         return getInstallOperatorModalView().findElement(By.className("btn"));
     }
 
     private WebElement getSubscribeButton() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//button[contains(text(), 'Subscribe')]")));
         return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Subscribe')]"));
     }
 
     private WebElement getUninstallButton() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("confirm-action")));
         return selenium.getDriver().findElement(By.className("co-catalog-install-modal")).findElement(By.id("confirm-action"));
     }
 
