@@ -209,7 +209,7 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alph
 	// do a status update
 
 	rc.ProcessSimple(func() error {
-		return r.client.Update(ctx, config)
+		return r.client.Status().Update(ctx, config)
 	})
 
 	// return result ... including status update
