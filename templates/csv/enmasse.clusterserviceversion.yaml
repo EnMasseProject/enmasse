@@ -353,7 +353,7 @@ spec:
           resources: [ "authenticationservices", "authenticationservices/finalizers", "consoleservices", "consoleservices/finalizers" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch" ]
         - apiGroups: [ "iot.enmasse.io" ]
-          resources: [ "iotconfigs", "iotconfigs/finalizers" ]
+          resources: [ "iotconfigs", "iotconfigs/finalizers", "iotconfigs/status" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch" ]
       - serviceAccountName: address-space-controller
         rules:

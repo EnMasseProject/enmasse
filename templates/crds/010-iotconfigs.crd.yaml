@@ -14,3 +14,5 @@ spec:
     singular: iotconfig
     shortNames:
     - icfg
+  subresources:
+    status: {}
