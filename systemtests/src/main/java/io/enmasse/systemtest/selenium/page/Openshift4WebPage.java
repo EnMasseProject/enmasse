@@ -61,6 +61,7 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getContentWindow() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("content")));
         return selenium.getDriver().findElement(By.id("content"));
     }
 
@@ -87,6 +88,7 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getTopMenuResources() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.xpath("//ul[@class='co-m-horizontal-nav__menu-secondary']")));
         return getContentWindow().findElement(By.xpath("//ul[@class='co-m-horizontal-nav__menu-secondary']"));
     }
 
@@ -110,6 +112,7 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getCatalogPage() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("co-catalog-page")));
         return getContentWindow().findElement(By.className("co-catalog-page"));
     }
 
@@ -125,6 +128,7 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     private WebElement getInstallOperatorModalView() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.className("modal-content")));
         return selenium.getDriver().findElement(By.className("modal-content"));
     }
 
