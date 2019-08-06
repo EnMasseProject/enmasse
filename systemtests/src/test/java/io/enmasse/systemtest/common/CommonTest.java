@@ -12,8 +12,10 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -276,18 +278,24 @@ class CommonTest extends TestBase {
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
-        for (Address addr : brokeredAddresses) {
-            log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
-            for (Label label : labels) {
-                doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
+        try {
+            for (Address addr : brokeredAddresses) {
+                log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
+                for (Label label : labels) {
+                    doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
+                }
             }
-        }
 
-        for (Address addr : standardAddresses) {
-            log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
-            for (Label label : labels) {
-                doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
+            for (Address addr : standardAddresses) {
+                log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
+                for (Label label : labels) {
+                    doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
+                }
             }
+        } finally {
+            // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
+            // the test otherwise test clean-up will fail.
+            assertWaitForValue(true, () -> KubeCMDClient.getApiServices("v1beta1.enmasse.io").getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
 
     }
