@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SeleniumProvider {
 
@@ -327,13 +328,16 @@ public class SeleniumProvider {
             Exception {
         log.info("Waiting until data will be present");
         int attempts = 0;
+        Integer actual = null;
         while (attempts < timeoutInSeconds) {
-            if (expectedValue == item.get())
+            actual = item.get();
+            if (expectedValue == actual)
                 break;
             Thread.sleep(1000);
             attempts++;
         }
         log.info("End of waiting");
+        assertEquals(expectedValue, actual, String.format("Property does not have expected value %d after timeout %ds.", expectedValue, timeoutInSeconds));
     }
 
     //================================================================================================

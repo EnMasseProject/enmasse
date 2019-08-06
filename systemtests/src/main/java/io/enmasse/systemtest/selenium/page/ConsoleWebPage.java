@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -329,7 +330,8 @@ public class ConsoleWebPage implements IWebPage {
      */
     public List<ConnectionWebItem> getConnectionItems(int expectedCount) {
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
-        long endTime = System.currentTimeMillis() + 30000;
+        int timeout = 60000;
+        long endTime = System.currentTimeMillis() + timeout;
         while (connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
             log.info("First iteration waiting for {} connections items", expectedCount);
             WebElement content = getContentContainer();
@@ -342,7 +344,14 @@ public class ConsoleWebPage implements IWebPage {
                     connectionItems.add(item);
                 }
             }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
+        assertEquals(expectedCount, connectionItems.size(), String.format("Unexpected number of connections after timeout %d", timeout));
         return connectionItems;
     }
 

@@ -108,7 +108,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
         throw throwable;
     }
 
-    private static Path getPath(Method testMethod, Class<?> testClass) {
+    public static Path getPath(Method testMethod, Class<?> testClass) {
         Path path = Paths.get(
                 Environment.getInstance().testLogDir(),
                 "failed_test_logs",
