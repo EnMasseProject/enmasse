@@ -99,7 +99,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
         Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
         page.uninstallFromCatalog(environment.getAppName());
-        kubernetes.getConsoleServiceClient(infraNamespace).delete();
+        kubernetes.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();
     }
 
 

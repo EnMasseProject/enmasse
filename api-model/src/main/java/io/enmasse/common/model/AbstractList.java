@@ -18,7 +18,7 @@ import io.fabric8.kubernetes.api.model.ListMeta;
 
 @SuppressWarnings("serial")
 public abstract class AbstractList<T extends HasMetadata> extends AbstractResource<T>
-                implements KubernetesResource<T>, KubernetesResourceList<T> {
+                implements KubernetesResource, KubernetesResourceList<T> {
 
     @Valid
     private ListMeta metadata = new ListMeta();

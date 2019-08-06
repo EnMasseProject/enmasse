@@ -134,7 +134,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
         labels.put(LabelKeys.INFRA_UUID, infraUuid);
         labels.put(LabelKeys.NAMESPACE, namespace);
 
-        client.configMaps().withLabels(labels).delete();
+        client.configMaps().withLabels(labels).withPropagationPolicy("Background").delete();
     }
 
     @Override
@@ -220,7 +220,7 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
 
     @Override
     public boolean deleteAddress(Address address) {
-        Boolean deleted = client.configMaps().withName(getConfigMapName(address.getMetadata().getNamespace(), address.getMetadata().getName())).delete();
+        Boolean deleted = client.configMaps().withName(getConfigMapName(address.getMetadata().getNamespace(), address.getMetadata().getName())).cascading(true).delete();
         return deleted != null && deleted;
     }
 

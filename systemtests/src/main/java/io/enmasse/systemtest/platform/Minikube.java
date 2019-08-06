@@ -121,6 +121,6 @@ public class Minikube extends Kubernetes {
         if (!name.endsWith("-external")) {
             name += "-external";
         }
-        client.services().inNamespace(name).withName(name).delete();
+        client.services().inNamespace(name).withName(name).cascading(true).delete();
     }
 }

@@ -342,8 +342,8 @@ public class SystemtestsKubernetesApps {
 
     public static void deleteAMQBroker(String namespace, String name) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.getClient().rbac().roles().inNamespace(namespace).withName(name).delete();
-        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).delete();
+        kubeCli.getClient().rbac().roles().inNamespace(namespace).withName(name).cascading(true).delete();
+        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).cascading(true).delete();
         kubeCli.deleteSecret(namespace, name);
         kubeCli.deleteService(namespace, name);
         kubeCli.deleteDeployment(namespace, name);

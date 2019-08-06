@@ -110,14 +110,6 @@
                   <mainClass>io.enmasse.controller.standard.StandardController</mainClass>
                 </transformer>
               </transformers>
-              <filters>
-                  <filter>
-                      <artifact>io.fabric8:kubernetes-model</artifact>
-                      <excludes>
-                          <exclude>io/fabric8/kubernetes/internal/KubernetesDeserializer**</exclude>
-                      </excludes>
-                  </filter>
-              </filters>
             </configuration>
           </execution>
         </executions>

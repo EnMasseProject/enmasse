@@ -546,7 +546,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             assertTrue(KubeCMDClient.createCR(namespace, space1Json.toString()).getRetCode());
             resourcesManager.deleteAddressSpace(space1);
 
-            kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).delete();
+            kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
 
             AddressSpace space2 = supplier.get();
             JsonObject space2Json = AddressSpaceUtils.addressSpaceToJson(space2);
@@ -555,7 +555,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
         } finally {
             if (kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).get() != null) {
-                kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).delete();
+                kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
             }
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());

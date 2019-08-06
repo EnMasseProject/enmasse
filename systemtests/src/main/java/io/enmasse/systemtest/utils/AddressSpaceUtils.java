@@ -149,7 +149,7 @@ public class AddressSpaceUtils {
         logCollector.collectLogsTerminatedPods();
         logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpace");
-        Kubernetes.getInstance().getAddressSpaceClient().delete();
+        Kubernetes.getInstance().getAddressSpaceClient().withPropagationPolicy("Background").delete();
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
