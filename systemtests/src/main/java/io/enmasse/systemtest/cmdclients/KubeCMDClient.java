@@ -272,6 +272,15 @@ public class KubeCMDClient extends CmdClient {
         return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
+    public static ExecutionResultData getApiServices(String name) {
+        List<String> command = Arrays.asList(CMD, "get", "apiservices", name,
+                "--output", "custom-columns=NAME:{.name}",
+                "--no-headers=true",
+                "--sort-by={.name}");
+
+        return execute(command, ONE_MINUTE_TIMEOUT, false);
+    }
+
     public static ExecutionResultData deleteIoTConfig(String namespace, String name) {
         List<String> ressourcesCmd = getRessourcesCmd("delete", "iotconfig", namespace, name, Optional.empty());
         return execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);

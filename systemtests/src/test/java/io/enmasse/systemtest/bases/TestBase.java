@@ -1254,20 +1254,20 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    protected void assertWaitForValue(int expected, Callable<Integer> fn, TimeoutBudget budget) throws Exception {
-        Integer got = null;
+    protected <T> void assertWaitForValue(T expected, Callable<T> fn, TimeoutBudget budget) throws Exception {
+        T got = null;
         log.info("waiting for expected value '{}' ...", expected);
         while (budget.timeLeft() >= 0) {
             got = fn.call();
-            if (got != null && expected == got) {
+            if (Objects.equals(expected, got)) {
                 return;
             }
             Thread.sleep(100);
         }
-        fail(String.format("Incorrect results value! expected: '%s', got: '%s'", expected, Objects.requireNonNull(got)));
+        fail(String.format("Incorrect result value! expected: '%s', got: '%s'", expected, Objects.requireNonNull(got)));
     }
 
-    protected void assertWaitForValue(int expected, Callable<Integer> fn) throws Exception {
+    protected <T> void assertWaitForValue(T expected, Callable<T> fn) throws Exception {
         assertWaitForValue(expected, fn, new TimeoutBudget(10, TimeUnit.SECONDS));
     }
 }

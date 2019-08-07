@@ -1,4 +1,7 @@
 #!/bin/sh
+
+set -e
+
 PROFILE=${1:-"systemtests"}
 TESTCASE=${2}
 
