@@ -7,7 +7,9 @@ package io.enmasse.iot.tenant.impl;
 
 import org.eclipse.hono.config.ServiceConfigProperties;
 import org.eclipse.hono.service.amqp.AmqpServiceBase;
+import org.springframework.stereotype.Component;
 
+@Component
 public final class TenantAmqpService extends AmqpServiceBase<ServiceConfigProperties> {
 
     @Override
