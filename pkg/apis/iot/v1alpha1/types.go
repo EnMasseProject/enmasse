@@ -32,6 +32,7 @@ type IoTProjectSpec struct {
 
 type IoTProjectStatus struct {
 	IsReady            bool                        `json:"isReady"`
+	TenantName         string                      `json:"tenantName"`
 	DownstreamEndpoint *ExternalDownstreamStrategy `json:"downstreamEndpoint,omitempty"`
 
 	// FIXME: add conditions

@@ -20,7 +20,7 @@ var _ v1beta1.ImageOverridesProvider = &IoTConfigSpec{}
 // Get the IoT tenant name from an IoT project.
 // This is not in any way encoded
 func (project *IoTProject) TenantName() string {
-	return util.TenantName(project.Namespace, project.Name)
+	return util.TenantNameForObject(project)
 }
 
 func (config *IoTConfig) WantDefaultRoutes(adapter *AdapterEndpointConfig) bool {
