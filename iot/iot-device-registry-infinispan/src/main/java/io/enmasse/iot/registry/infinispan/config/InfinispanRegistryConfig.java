@@ -20,9 +20,11 @@ import org.eclipse.hono.service.management.credentials.CredentialsManagementServ
 import org.eclipse.hono.service.management.device.DeviceManagementHttpEndpoint;
 import org.eclipse.hono.service.management.device.DeviceManagementService;
 import org.eclipse.hono.service.management.tenant.TenantManagementHttpEndpoint;
+import org.eclipse.hono.service.management.tenant.TenantManagementService;
 import org.eclipse.hono.service.metric.MetricsTags;
 import org.eclipse.hono.service.registration.RegistrationAmqpEndpoint;
 import org.eclipse.hono.service.tenant.TenantAmqpEndpoint;
+import org.eclipse.hono.service.tenant.TenantService;
 import org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean;
 import org.eclipse.hono.util.Constants;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -256,7 +258,7 @@ public class InfinispanRegistryConfig {
      */
     @Bean
     @Scope("prototype")
-    @ConditionalOnBean(name="CacheTenantService")
+    @ConditionalOnBean(TenantService.class)
     public TenantAmqpEndpoint tenantAmqpEndpoint() {
         return new TenantAmqpEndpoint(vertx());
     }
@@ -268,7 +270,7 @@ public class InfinispanRegistryConfig {
      */
     @Bean
     @Scope("prototype")
-    @ConditionalOnBean(name="CacheTenantService")
+    @ConditionalOnBean(TenantManagementService.class)
     public TenantManagementHttpEndpoint tenantHttpEndpoint() {
         return new TenantManagementHttpEndpoint(vertx());
     }
