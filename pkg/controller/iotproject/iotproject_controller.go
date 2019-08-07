@@ -203,6 +203,12 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
+	// set the tenant name in the status section
+
+	project.Status.TenantName = project.TenantName()
+
+	// process different types
+
 	if project.Spec.DownstreamStrategy.ExternalDownstreamStrategy != nil {
 
 		// handling as external
