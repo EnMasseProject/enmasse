@@ -222,7 +222,7 @@ public class DevicesCredentialsCacheService implements CredentialsManagementServ
 
         managementCache.putIfAbsentAsync(key, val).thenAccept(result -> {
                 if ( result == null){
-
+                    System.out.println("sucess");
                     resultHandler.handle(Future.succeededFuture(
                             OperationResult.ok(HTTP_CREATED,
                                     Id.of(deviceId),
