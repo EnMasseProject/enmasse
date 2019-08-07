@@ -5,9 +5,9 @@
 
 package io.enmasse.iot.tenant;
 
-import io.enmasse.iot.model.IoTProjects;
-import io.enmasse.iot.model.IoTProjects.Client;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.tenant.utils.IoTProjects;
+import io.enmasse.iot.tenant.utils.IoTProjects.Client;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 

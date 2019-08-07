@@ -12,28 +12,26 @@ import java.util.Optional;
 
 import javax.security.auth.x500.X500Principal;
 
+import org.eclipse.hono.client.ServerErrorException;
 import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.Constants;
 import org.eclipse.hono.util.TenantResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.enmasse.iot.model.IoTProjects;
-import io.enmasse.iot.model.IoTProjects.Client;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.tenant.utils.IoTProjects;
+import io.enmasse.iot.tenant.utils.IoTProjects.Client;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.opentracing.Span;
+import io.opentracing.noop.NoopSpan;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
 @Service
-@Scope("prototype")
 public class TenantServiceImpl extends AbstractKubernetesTenantService {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
@@ -45,8 +43,6 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
     private interface TenantOperation {
         TenantResult<JsonObject> run(KubernetesClient client) throws Exception;
     }
-
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     protected void withClient(
             final TenantOperation operation,
@@ -93,7 +89,7 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
     public void get(final X500Principal subjectDn, final Span span,
             final Handler<AsyncResult<TenantResult<JsonObject>>> resultHandler) {
 
-        super.get(subjectDn, span, resultHandler);
+        resultHandler.handle(Future.failedFuture(new ServerErrorException(HttpURLConnection.HTTP_NOT_IMPLEMENTED)));
 
     }
 
@@ -118,7 +114,7 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
 
         JsonObject payload;
         if (project.getSpec().getConfiguration() != null) {
-            payload = new JsonObject(this.objectMapper.writeValueAsString(project.getSpec().getConfiguration()));
+            payload = JsonObject.mapFrom(project.getSpec().getConfiguration());
         } else {
             payload = new JsonObject();
         }
@@ -129,6 +125,16 @@ public class TenantServiceImpl extends AbstractKubernetesTenantService {
                 HttpURLConnection.HTTP_OK,
                 payload,
                 CacheDirective.maxAgeDirective(this.configuration.getCacheTimeToLive().getSeconds()));
+    }
+
+    @Override
+    public void get(final String tenantId, final Handler<AsyncResult<TenantResult<JsonObject>>> resultHandler) {
+        get(tenantId, NoopSpan.INSTANCE, resultHandler);
+    }
+
+    @Override
+    public void get(final X500Principal subjectDn, final Handler<AsyncResult<TenantResult<JsonObject>>> resultHandler) {
+        get(subjectDn, NoopSpan.INSTANCE, resultHandler);
     }
 
 }
