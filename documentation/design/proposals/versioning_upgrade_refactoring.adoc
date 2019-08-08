@@ -17,10 +17,30 @@
   deployments.  For Ansible/Bundle users configuration of these items is possible by a user (documentation is non existent).
   For OLM, the situation is worse as the environment variables are baked into the OLM manifest.
 * Having three distinct install paths Ansible/Bundle/OLM increases the difficulty when reasoning about the defects in the
-  product.  
+  product.
+* Uninstall for OLM is broken (https://github.com/EnMasseProject/enmasse/issues/2863).
 
 == what
 
-Goals
+=== Operator Responsible For Install
+
+The enmasse-operator will be given the responsibilities to deploy the api-server, address-space-controller, and service-broker and associated services, routes, roles, rolebindings etc. 
+
+It will also be responsible for reconciling the current state of those object against the desired state.
+
+=== EnMasse CR
+
+There will be an EnMasse CRD with an instance of this CR representing EnMasse itself.
+
+The enmasse-operator will watch its own namespace for the creation of  the enmasse CR.  On its appearence, it will take care
+of the deployment.  Conversely, if the CR is removed it will be removed.  This will go towards fixing #2863.
+
+The CR's spec will carry the configuration items that are current expressed as environment variables on the enmasse-operator, api-server, address-space-controller.  The CR will also carry the major/minor/micro version number of the version of EnMasse that created the record.  The status section will expose the current version.
+
+==
+
+in the same namespace)
+by creating an 
+Add a enmasse CRD.  EnMasse will im
 
 
