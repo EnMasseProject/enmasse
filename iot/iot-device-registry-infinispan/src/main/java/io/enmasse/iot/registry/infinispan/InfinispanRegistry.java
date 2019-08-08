@@ -16,25 +16,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 
 @ComponentScan("org.eclipse.hono.service.auth")
 @ComponentScan("org.eclipse.hono.service.metric")
 @ComponentScan("io.enmasse.iot.registry.infinispan")
-@Configuration
 @EnableAutoConfiguration
 public class InfinispanRegistry extends AbstractBaseApplication {
 
-        /**
-         * All the verticles.
-         */
-        private List<Verticle> verticles;
+    public static final String CONFIG_BASE = "enmasse.iot";
 
-        /**
-         * All the health check providers.
-         */
-        private List<HealthCheckProvider> healthCheckProviders;
+    /**
+     * All the verticles.
+     */
+    private List<Verticle> verticles;
 
+    /**
+     * All the health check providers.
+     */
+    private List<HealthCheckProvider> healthCheckProviders;
 
     @Autowired
     public void setVerticles(final List<Verticle> verticles) {

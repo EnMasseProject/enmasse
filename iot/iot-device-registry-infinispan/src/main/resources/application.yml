@@ -1,42 +1,36 @@
 hono:
-  app:
-    maxInstances: 1
-  healthCheck:
-    insecurePortBindAddress: 0.0.0.0
-    startupTimeout: 90
-  auth:
-    host: localhost #hono-service-auth.hono
-    port: 35672
-    name: device-registry
-    validation:
-      sharedSecret: 1234567890123456789012345678901234567890123456789012345678901234
-  registry:
-    amqp:
-      Port: 25672
-      insecurePortEnabled: true
+
+   auth:
+     host: localhost #hono-service-auth.hono
+     port: 35672
+     name: device-registry
+     validation:
+       sharedSecret: 1234567890123456789012345678901234567890123456789012345678901234
+
+enmasse:
+  iot:
+
+    app:
+      maxInstances: 1
+
+    healthCheck:
       insecurePortBindAddress: 0.0.0.0
-      insecurePort: 25672
-    rest:
-      insecurePortEnabled: true
-      insecurePort: 28080
-      insecurePortBindAddress: 0.0.0.0
-    svc:
-      signing:
-        sharedSecret: sdgfsdafazufgsdafjhfgsdajfgwhriojsdafjlksdhfgsa8fg452368gdf
-  credentials:
-    svc:
-      maxBcryptIterations: 10
-  metrics:
-    legacy: false
-infinispan:
-  config:
-    file: /src/main/resources/cache-configuration.xml
-spring:
-  jmx:
-    enabled: false
-management:
-  metrics:
-    enabled: false
-    export:
-      graphite:
-        enabled: false
+      startupTimeout: 90
+
+    registry:
+      amqp:
+        port: 25672
+        insecurePortEnabled: true
+        insecurePortBindAddress: 0.0.0.0
+        insecurePort: 25672
+      rest:
+        insecurePortEnabled: true
+        insecurePort: 28080
+        insecurePortBindAddress: 0.0.0.0
+      svc:
+        signing:
+          sharedSecret: 1234567890123456789012345678901234567890123456789012345678901234
+
+    credentials:
+      svc:
+        maxBcryptIterations: 10

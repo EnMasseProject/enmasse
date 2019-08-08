@@ -13,7 +13,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <hono.version>1.0.0-SNAPSHOT</hono.version>
+    <hono.version>1.0-M6</hono.version>
     <infinispan.version>9.4.13.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
@@ -94,6 +94,17 @@
         <artifactId>infinispan-client-hotrod</artifactId>
         <version>${infinispan.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-remote-query-client</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-query-dsl</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-server-hotrod</artifactId>

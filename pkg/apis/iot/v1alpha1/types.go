@@ -203,9 +203,23 @@ type FileBasedDeviceRegistry struct {
 }
 
 type InfinispanDeviceRegistry struct {
-	ServerAddress string `json:"serverAddress"`
+	Server InfinispanServer `json:"server"`
 
 	Container *ContainerConfig `json:"container,omitempty"`
+}
+
+type InfinispanServer struct {
+	External *ExternalInfinispanServer `json:"external,omitempty"`
+}
+
+type ExternalInfinispanServer struct {
+	Host string `json:"host"`
+	Port uint16 `json:"port"`
+
+	Credentials `json:",inline"`
+
+	SaslServerName string `json:"saslServerName,omitempty"`
+	SaslRealm      string `json:"saslRealm,omitempty"`
 }
 
 type TenantServiceConfig struct {

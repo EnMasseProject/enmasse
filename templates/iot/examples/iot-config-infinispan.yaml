@@ -6,7 +6,11 @@ spec:
   services:
     deviceRegistry:
       infinispan:
-        serverAddress: infinispan-server-hotrod:11222
+        external:
+          host: infinispan-server
+          port: 11222
+          username: admin
+          password: test1234
   adapters:
     mqtt:
       endpoint:

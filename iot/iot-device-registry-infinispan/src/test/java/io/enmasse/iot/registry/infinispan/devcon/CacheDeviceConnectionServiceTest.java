@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.enmasse.iot.registry.infinispan.EmbeddedHotRodServer;
-import io.enmasse.iot.registry.infinispan.device.CacheRegistrationService;
 import io.opentracing.noop.NoopSpan;
 import io.vertx.core.Future;
 import io.vertx.junit5.VertxExtension;
@@ -22,7 +21,6 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.IOException;
 import java.util.UUID;
 
 /**
@@ -38,14 +36,16 @@ public class CacheDeviceConnectionServiceTest {
     private EmbeddedHotRodServer server;
 
     @BeforeEach
-    public void setUp() throws IOException {
-        server = new EmbeddedHotRodServer();
-        service = new CacheDeviceConnectionService(server.getCache("state"));
+    public void setUp() throws Exception {
+        this.server = new EmbeddedHotRodServer();
+        this.service = new CacheDeviceConnectionService(server.getDeviceStateCache());
     }
 
     @AfterEach
     public void cleanUp() throws Exception {
-        server.stop();
+        if (this.server != null) {
+            this.server.stop();
+        }
     }
 
     @Test
