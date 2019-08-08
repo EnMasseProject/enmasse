@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-managing-address-spaces.adoc
+// assembly-address-space-examples.adoc
 
 [id='ref-address-space-example-auth-service-{context}']
 = Address space example using an authentication service

@@ -5,19 +5,19 @@
 [id='ref-external-auth-service-example-allow-overrides-{context}']
 = External authentication service example allowing overrides
 
-The following example shows an authentication service of type `external` that allows overrides to the host name, port number, and CA certificate by the messaging tenant:
+The following example shows an authentication service of type `external` that allows overrides to the host name, port number, and realm by the messaging tenant:
 
 [source,yaml,options="nowrap"]
 ----
 apiVersion: admin.enmasse.io/v1beta1
 kind: AuthenticationService
 metadata:
-  name: my-im-system
+  name: my-external-2
 spec:
   type: external
   realm: myrealm <1>
   external:
-    host: example.com <2>
+    host: example.org <2>
     port: 5671 <3>
     caCertSecret: <4>
       name: my-ca-cert
@@ -27,10 +27,10 @@ spec:
 ----
 <1> (Optional) The `realm` is passed in the authentication request. If not specified, an identifier in the form of _namespace-addressspace_ is used as the realm.
 <2> The host name of the external authentication service.
-<3> The port of the external authentication service.
+<3> The port number of the external authentication service.
 <4> (Optional) The CA certificate to trust when connecting to the authentication service.
-<5> (Optional) 
-<6> (Optional) Specifies whether overrides are allowed on the host name, port number, and CA certificate. Valid values are `true` or `false`.
+<5> (Optional) The client certificate to trust when connecting to the authentication service.
+<6> (Optional) Specifies whether address space overrides are allowed to the host name, port number, and realm. Valid values are `true` or `false`. If not specified, the default value is `false`.
 
 The external authentication service must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-service-api-messaging[External authentication service API].
 

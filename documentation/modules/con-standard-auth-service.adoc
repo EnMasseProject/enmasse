@@ -1,0 +1,12 @@
+// Module included in the following assemblies:
+//
+// assembly-auth-services.adoc
+
+[id='con-standard-auth-service-{context}']
+= Standard authentication service
+
+The `standard` authentication service type uses a {AuthProductName} instance to store user
+credentials and access policies. With this authentication service you can also manage users through the
+`MessagingUser` Custom Resource.
+
+

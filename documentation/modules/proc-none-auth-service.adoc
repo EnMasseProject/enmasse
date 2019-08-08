@@ -5,23 +5,28 @@
 [id='proc-deploying-none-auth-service-{context}']
 = Deploying the `none` authentication service
 
+The `none` authentication service type allows all clients to send and receive messages to any address.
+
+To implement the `none` authentication service, you deploy it.
+
 .Procedure
 
 ifeval::["{cmdcli}" == "oc"]
-. Log in as a service admin
+. Log in as a service admin:
 +
 [subs="attributes",options="nowrap"]
 ----
 {cmdcli} login -u admin
 ----
 
-. Select namespace where {ProductName} is installed:
+. Change to the project where {ProductName} is installed:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
 {cmdcli} project _{ProductNamespace}_
 ----
 endif::[]
+
 . Create an `AuthenticationService` definition:
 +
 [source,yaml,options="nowrap"]
@@ -40,3 +45,4 @@ spec:
 ----
 {cmdcli} create -f none-authservice.yaml
 ----
+

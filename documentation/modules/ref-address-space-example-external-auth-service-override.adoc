@@ -1,16 +1,19 @@
 // Module included in the following assemblies:
 //
-// assembly-managing-address-spaces.adoc
+// assembly-address-space-examples.adoc
 
 [id='ref-address-space-example-external-auth-service-override-{context}']
 = Address space example using an external authentication service allowing overrides
 
-This address space example shows how you can override the host name and port number for an external authentication service. Note that the ability to override host and port depends on how the external authentication service is configured by the {ProductName} administrator.
+This address space example shows how you can override the host name, port number, and realm for an external authentication service. Note that the ability to specify overrides depends on how the external authentication service is configured by the {ProductName} administrator.
 
-// upstream link
-For more information about how to configure an external authentication service to allow a messaging tenant to override host and port, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#[].
-// downstream link
-For more information about how to configure an external authentication service to allow a messaging tenant to override host and port, see link:{BookUrlBase}{BaseProductVersion}/html-single/installing_and_managing_amq_online_on_openshift_container_platform/#[].
+ifdef::SingleBookLink[]
+For more information about how to configure an external authentication service to allow a messaging tenant to override host name, port number, and realm, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-external-auth-service-example-allow-overrides-messaging[External authentication service example allowing overrides].
+endif::SingleBookLink[]
+
+ifndef::SingleBookLink[]
+For more information about how to configure an external authentication service to allow a messaging tenant to override host name, port number, and realm, see link:{BookUrlBase}{BaseProductVersion}/html-single/installing_and_managing_amq_online_on_openshift_container_platform/#ref-external-auth-service-example-allow-overrides-messaging[External authentication service example allowing overrides].
+endif::SingleBookLink[]
 
 [source,yaml,options="nowrap"]
 ----
@@ -30,5 +33,5 @@ spec:
       port: 5671
 ----
 <1> The authentication service name depends on the available authentication services configured by the {ProductName} administrator. To view the available authentication services for your address space type, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-auth-services-messaging[Listing available authentication services].
-<2> 
+<2> Specifies the override values.
 

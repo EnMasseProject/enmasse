@@ -5,17 +5,19 @@
 [id='proc-deploying-standard-auth-service-{context}']
 = Deploying the `standard` authentication service
 
+To implement the `standard` authentication service, you deploy it.
+
 .Procedure
 
 ifeval::["{cmdcli}" == "oc"]
-. Log in as a service admin
+. Log in as a service admin:
 +
 [subs="attributes",options="nowrap"]
 ----
 {cmdcli} login -u admin
 ----
 
-. Select namespace where {ProductName} is installed:
+. Change to the project where {ProductName} is installed:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
