@@ -28,6 +28,13 @@ The enmasse-operator will be given the responsibilities to deploy the api-server
 
 It will also be responsible for reconciling the current state of those object against the desired state.
 
+Ansible and Bundle install methods will be maintained, but they will be much simplified.  They will merely need to deploy the operator itself (and any necessary role/rolebindings), the CRDs.  For backward compatibility, it could create an instane of the EnMasse CR.  For OLM, the metadata shipped will be simplified.
+
+=== Operator Responsible For Upgrade
+
+The operator will have access to the CR's current version and actual version.  This information can be used to trigger
+upgrade specific processing.
+
 === EnMasse CR
 
 There will be an EnMasse CRD with an instance of this CR representing EnMasse itself.
@@ -35,12 +42,22 @@ There will be an EnMasse CRD with an instance of this CR representing EnMasse it
 The enmasse-operator will watch its own namespace for the creation of  the enmasse CR.  On its appearence, it will take care
 of the deployment.  Conversely, if the CR is removed it will be removed.  This will go towards fixing #2863.
 
-The CR's spec will carry the configuration items that are current expressed as environment variables on the enmasse-operator, api-server, address-space-controller.  The CR will also carry the major/minor/micro version number of the version of EnMasse that created the record.  The status section will expose the current version.
+The CR's spec will carry the configuration items that are currently expressed as environment variables on the enmasse-operator, api-server, address-space-controller.   If the CR does not specify a configuration item, its default will be taken
+from the environment variables passed to the enmasse-operator itself.
 
-==
+The CR will also carry the major/minor/micro version number of the version of EnMasse that created the record.  The status section will expose the current version.
 
-in the same namespace)
-by creating an 
-Add a enmasse CRD.  EnMasse will im
+TODO: design the CRD
 
+== Image Streams
 
+Jens - can you elaborate?
+
+== Address Space Controller Refactor
+
+The address space controller currently uses templates to put down the resources required for standard or brokered addressspaces.  We will move the responsibilities for the address space controller to enmasse-operator and reimplement
+the logic following the OLM framework reconcile pattern.  
+
+Do we add version information to the addresspace object too?
+
+To do this we would need to reimplement addressspace watching in the api-server. Or alternatively, we reimplement addressspaces as a CRD.   We would need the upgrade to promote the config maps into addressspace CR instances, but this might be simpler that implementing the watch proxy idea and would mean we have much less code).
