@@ -2,17 +2,22 @@
 
 == why
 
-* approach to upgrade is inconsistent.
- ** for addressspaces, upgrade triggered by the fact that major.minor version on the plan disagrees with the major.minor
+* Approach to upgrade is inconsistent.
+ ** For addressspaces, upgrade triggered by the fact that major.minor version on the plan disagrees with the major.minor
     of the running software.   There is no way to trigger the upgrade path for a mirco increment.
- ** for authenticationservices and consoleservice the code follows the OLM framework reconcile pattern.  For the upgrade
+ ** For authenticationservices and consoleservice the code follows the OLM framework reconcile pattern.  For the upgrade
     use-case this is functional but the code has no knowledge of the 'from' major/minor/mirco.  This may be an impediment
     if we ever need to handle more sophisticated upgrades.
+ ** The addressspace's OAuth configuration becomes stale if the consoleservice is updated after the addressspace is created.   
 * No easy way for the user to determine major/minor/micro of the product being run.
  ** The console displays a version - this is always an upstream version even in the downstream product.
- ** No mechanism to determine the version from a command line.
-* 
-
+ ** No mechanism to determine the version from a command line/API.
+ ** (Downstream) No easy way to ensure that you are running a set of images from the same major/minor/micro release.
+* Many configuration items exposed as environment variables in api-server/address-space-controller/enmasse-controller     
+  deployments.  For Ansible/Bundle users configuration of these items is possible by a user (documentation is non existent).
+  For OLM, the situation is worse as the environment variables are baked into the OLM manifest.
+* Having three distinct install paths Ansible/Bundle/OLM increases the difficulty when reasoning about the defects in the
+  product.  
 
 == what
 
