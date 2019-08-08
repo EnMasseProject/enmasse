@@ -1,4 +1,20 @@
-Versioning and Upgrade Refactoring
+= Versioning and Upgrade Refactoring
+
+== why
+
+* approach to upgrade is inconsistent.
+ ** for addressspaces, upgrade triggered by the fact that major.minor version on the plan disagrees with the major.minor
+    of the running software.   There is no way to trigger the upgrade path for a mirco increment.
+ ** for authenticationservices and consoleservice the code follows the OLM framework reconcile pattern.  For the upgrade
+    use-case this is functional but the code has no knowledge of the 'from' major/minor/mirco.  This may be an impediment
+    if we ever need to handle more sophisticated upgrades.
+* No easy way for the user to determine major/minor/micro of the product being run.
+ ** The console displays a version - this is always an upstream version even in the downstream product.
+ ** No mechanism to determine the version from a command line.
+* 
+
+
+== what
 
 Goals
 
