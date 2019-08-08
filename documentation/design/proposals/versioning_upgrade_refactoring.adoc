@@ -28,12 +28,12 @@ The enmasse-operator will be given the responsibilities to deploy the api-server
 
 It will also be responsible for reconciling the current state of those object against the desired state.
 
-Ansible and Bundle install methods will be maintained, but they will be much simplified.  They will merely need to deploy the operator itself (and any necessary role/rolebindings), the CRDs.  For backward compatibility, it could create an instane of the EnMasse CR.  For OLM, the metadata shipped will be simplified.
+Ansible and Bundle install methods will be maintained, but they will be much simplified.  They will merely need to deploy the operator itself (and any necessary role/rolebindings), the CRDs.  For backward compatibility, it could create an instance of the EnMasse CR.  For OLM, the metadata shipped will be much simplified.
 
 === Operator Responsible For Upgrade
 
 The operator will have access to the CR's current version and actual version.  This information can be used to trigger
-upgrade specific processing.
+upgrade specific processing.  After the upgrade is complete, the operator must change the spec.version to reflect the current running version.
 
 === EnMasse CR
 
@@ -66,4 +66,5 @@ To do this we would need to reimplement addressspace watching in the api-server.
 == Questions
 
 What version numbering scheme do we use downstream?
+Should standard-controller be in scope for change?  I think no.
 
