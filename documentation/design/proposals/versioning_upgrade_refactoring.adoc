@@ -63,6 +63,10 @@ Do we add version information to the addresspace object too and use this to trig
 
 To do this we would need to reimplement addressspace watching in the api-server. Or alternatively, we reimplement addressspaces as a CRD.   We would need the upgrade to promote the addressspace config maps into addressspace CR instances, but this might be simpler that implementing the watch proxy idea, and would mean we have much less code).
 
+== Images labeled with major/minor/micro product version
+
+Images will be labelled with major/minor/micro product version to ease identification.
+
 == Questions
 
 What version numbering scheme do we use downstream?
