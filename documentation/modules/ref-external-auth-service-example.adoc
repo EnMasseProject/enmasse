@@ -30,6 +30,6 @@ spec:
 <4> (Optional) The CA certificate to trust when connecting to the authentication service.
 <5> (Optional) The client certificate to trust when connecting to the authentication service.
 
-The external authentication service must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-service-api-messaging[External authentication service API].
+The external authentication service must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-server-api-messaging[External authentication service API].
 
 

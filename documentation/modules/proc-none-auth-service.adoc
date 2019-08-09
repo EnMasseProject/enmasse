@@ -5,8 +5,6 @@
 [id='proc-deploying-none-auth-service-{context}']
 = Deploying the `none` authentication service
 
-The `none` authentication service type allows all clients to send and receive messages to any address.
-
 To implement the `none` authentication service, you deploy it.
 
 .Procedure

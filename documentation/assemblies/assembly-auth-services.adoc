@@ -9,10 +9,7 @@ Authentication services are used to configure the authentication and authorizati
 available to messaging clients. The authentication services are configured by the {ProductName}
 service operator, and are specified when creating an address space. 
 
-Authentication services are configured as Custom Resources. An authentication service has a type, which can be `none`, `standard`, or `external`.
-
-// None auth service
-include::../modules/proc-none-auth-service.adoc[leveloffset=+1]
+Authentication services are configured as Custom Resources. An authentication service has a type, which can be `standard`, `external`, or `none`.
 
 // Standard auth service
 include::../modules/con-standard-auth-service.adoc[leveloffset=+1]
@@ -28,5 +25,10 @@ include::../modules/ref-external-auth-service-example.adoc[leveloffset=+2]
 
 include::../modules/ref-external-auth-service-example-allow-overrides.adoc[leveloffset=+2]
 
-include::../modules/con-external-authentication-service-api.adoc[leveloffset=+2]
+include::../modules/con-external-authentication-server-api.adoc[leveloffset=+2]
+
+// None auth service
+include::../modules/con-none-auth-service.adoc[leveloffset=+1]
+
+include::../modules/proc-none-auth-service.adoc[leveloffset=+2]
 

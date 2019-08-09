@@ -26,12 +26,12 @@ spec:
     allowOverride: true <6>
 ----
 <1> (Optional) The `realm` is passed in the authentication request. If not specified, an identifier in the form of _namespace-addressspace_ is used as the realm.
-<2> The host name of the external authentication service.
-<3> The port number of the external authentication service.
-<4> (Optional) The CA certificate to trust when connecting to the authentication service.
-<5> (Optional) The client certificate to trust when connecting to the authentication service.
+<2> The host name of the external authentication server.
+<3> The port number of the external authentication server.
+<4> (Optional) The CA certificate to trust when connecting to the authentication server.
+<5> (Optional) The client certificate to trust when connecting to the authentication server.
 <6> (Optional) Specifies whether address space overrides are allowed to the host name, port number, and realm. Valid values are `true` or `false`. If not specified, the default value is `false`.
 
-The external authentication service must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-service-api-messaging[External authentication service API].
+The external authentication service must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-server-api-messaging[External authentication server API].
 
 

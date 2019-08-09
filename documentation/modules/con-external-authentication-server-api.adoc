@@ -2,13 +2,13 @@
 //
 // assembly-auth-services.adoc
 
-[id='con-external-authentication-service-api-{context}']
-= External authentication service API
+[id='con-external-authentication-server-api-{context}']
+= External authentication server API
 
-An `external` authentication service must implement an AMQP SASL handshake, read the connection
+An external authentication server must implement an AMQP SASL handshake, read the connection
 properties of the client, and respond with the expected connection properties containing the
-authentication and authorization information. The authentication service is queried by the address
-space components such as the router and broker, whenever a new connection is established to the
+authentication and authorization information. The authentication server is queried by the address
+space components, such as the router and broker, whenever a new connection is established to the
 messaging endpoints.
 
 == Authentication
@@ -16,8 +16,8 @@ messaging endpoints.
 The requested identity of the client can be read from the SASL handshake `username`. The
 implementation can then authenticate the user.
 
-The authenticated identity will be returned in the `authenticated-identity` map with the following
-key/values. While this example uses JSON, it should be set as an AMQP map on the connection
+The authenticated identity is returned in the `authenticated-identity` map with the following
+key/values. While this example uses JSON, it must be set as an AMQP map on the connection
 property.
 
 [source,json,options="nowrap"]

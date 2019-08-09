@@ -6,7 +6,9 @@
 = External authentication service
 
 With the `external` authentication service you can configure an external provider of authentication and
-authorization policies through an AMQP SASL handshake. This can be used to implement a bridge for
+authorization policies through an AMQP SASL handshake. This configuration can be used to implement a bridge for
 your existing identity management system.
+
+Depending on your use case, you might define several `external` authentication services.
 
 
