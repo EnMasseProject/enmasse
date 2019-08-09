@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var v8 = require('v8');
 var log = require("../lib/log.js").logger();
 var AddressSource = require('../lib/internal_address_source.js');
 var BrokerAddressSettings = require('../lib/broker_address_settings.js');
@@ -82,6 +83,10 @@ function start(env) {
                         exitHandler();
                     });
                 });
+
+                setInterval(() => {
+                    log.info("Heap statistics : %j", v8.getHeapStatistics());
+                }, 60000);
             }).catch((e) => {log.error("Failed to listen ", e)})
 
         });
