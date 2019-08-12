@@ -77,11 +77,18 @@ public class PersistentMessagesTestBase extends TestBaseWithShared {
         assertThat("Wrong messages received: batch2", recvResults.get(1, TimeUnit.MINUTES).size(), is(30));
     }
 
-    private void restartBrokers(int podCount) throws InterruptedException {
+    private void restartBrokers(int podCount) throws Exception {
         kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
-        Thread.sleep(20_000);
+        waitForBrokerPodsToBeginRestarting();
+
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
         log.info("Broker pods restarted");
+    }
+
+    private void waitForBrokerPodsToBeginRestarting() throws Exception {
+        assertWaitForValue(true, () -> kubernetes.listPods(Collections.singletonMap("role", "broker")).stream()
+                .anyMatch(pod -> pod.getStatus().getContainerStatuses().stream()
+                        .allMatch(containerStatus->!containerStatus.getReady())), new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     private void assertConnectable(AddressSpace space, UserCredentials user) throws Exception {
