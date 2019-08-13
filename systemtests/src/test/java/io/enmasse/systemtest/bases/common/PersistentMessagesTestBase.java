@@ -12,8 +12,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
@@ -78,17 +80,14 @@ public class PersistentMessagesTestBase extends TestBaseWithShared {
     }
 
     private void restartBrokers(int podCount) throws Exception {
-        kubernetes.deletePod(kubernetes.getInfraNamespace(), Collections.singletonMap("role", "broker"));
-        waitForBrokerPodsToBeginRestarting();
+        Map<String, String> labelSelector = Collections.singletonMap("role", "broker");
+        List<String> uids = kubernetes.listPods(kubernetes.getInfraNamespace(), labelSelector).stream().map(pod -> pod.getMetadata().getUid()).collect(Collectors.toList());
 
+        kubernetes.deletePod(kubernetes.getInfraNamespace(), labelSelector);
+
+        waitForPodsToTerminate(uids);
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), podCount, new TimeoutBudget(10, TimeUnit.MINUTES));
         log.info("Broker pods restarted");
-    }
-
-    private void waitForBrokerPodsToBeginRestarting() throws Exception {
-        assertWaitForValue(true, () -> kubernetes.listPods(Collections.singletonMap("role", "broker")).stream()
-                .anyMatch(pod -> pod.getStatus().getContainerStatuses().stream()
-                        .allMatch(containerStatus->!containerStatus.getReady())), new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     private void assertConnectable(AddressSpace space, UserCredentials user) throws Exception {

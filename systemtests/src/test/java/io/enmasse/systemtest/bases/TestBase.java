@@ -684,6 +684,13 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         TestUtils.waitForNReplicas(expectedReplicas, labels, budget);
     }
 
+    protected void waitForPodsToTerminate(List<String> uids) throws Exception {
+        log.info("Waiting for following pods to be deleted {}", uids);
+        assertWaitForValue(true, () -> (kubernetes.listPods(kubernetes.getInfraNamespace()).stream()
+                .filter(pod -> uids.contains(pod.getMetadata().getUid()))
+                .collect(Collectors.toList()).size() > 0), new TimeoutBudget(2, TimeUnit.MINUTES));
+    }
+
     /**
      * Wait for destinations are in isReady=true state within default timeout (10 MINUTE)
      */
