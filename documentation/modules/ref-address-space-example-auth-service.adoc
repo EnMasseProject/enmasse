@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-managing-address-spaces.adoc
+// assembly-address-space-examples.adoc
 
 [id='ref-address-space-example-auth-service-{context}']
 = Address space example using an authentication service
@@ -20,3 +20,4 @@ spec:
     name: standard-authservice <1>
 ----
 <1> The authentication service name depends on the available authentication services configured by the {ProductName} administrator. To view the available authentication services for your address space type, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-auth-services-messaging[Listing available authentication services].
+

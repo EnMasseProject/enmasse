@@ -1,0 +1,35 @@
+// Module included in the following assemblies:
+//
+// assembly-auth-services.adoc
+
+[id='ref-external-auth-service-example-{context}']
+= External authentication service example
+
+The following example shows an authentication service of type `external`:
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: my-external-1
+spec:
+  type: external
+  realm: myrealm <1>
+  external:
+    host: example.com <2>
+    port: 5671 <3>
+    caCertSecret: <4>
+      name: my-ca-cert
+    clientCertSecret: <5>
+      name: my-client-cert
+----
+<1> (Optional) The `realm` is passed in the authentication request. If not specified, an identifier in the form of _namespace-addressspace_ is used as the realm.
+<2> The host name of the external authentication server.
+<3> The port number of the external authentication server.
+<4> (Optional) The CA certificate to trust when connecting to the authentication server.
+<5> (Optional) The certificate that the client presents when connecting to the authentication server.
+
+The external authentication server must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-server-api-messaging[External authentication server API].
+
+

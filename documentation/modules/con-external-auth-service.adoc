@@ -1,0 +1,14 @@
+// Module included in the following assemblies:
+//
+// assembly-auth-services.adoc
+
+[id='con-external-auth-service-{context}']
+= External authentication service
+
+With the `external` authentication service you can configure an external provider of authentication and
+authorization policies through an AMQP SASL handshake. This configuration can be used to implement a bridge for
+your existing identity management system.
+
+Depending on your use case, you might define several `external` authentication services.
+
+

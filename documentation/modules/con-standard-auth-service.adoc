@@ -1,0 +1,9 @@
+// Module included in the following assemblies:
+//
+// assembly-auth-services.adoc
+
+[id='con-standard-auth-service-{context}']
+= Standard authentication service
+
+The `standard` authentication service type allows the tenant administrator to manage users and their related permissions through the `MessagingUser` Custom Resource. This is achieved by using a {AuthProductName} instance to store user credentials and access policies. For typical use cases only one `standard` authentication service needs to be defined.
+

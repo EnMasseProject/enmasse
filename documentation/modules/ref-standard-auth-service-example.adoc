@@ -1,0 +1,44 @@
+// Module included in the following assemblies:
+//
+// assembly-auth-services.adoc
+
+[id='ref-standard-auth-service-example-{context}']
+= Standard authentication service example
+
+The following example shows an authentication service of type `standard`:
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard
+spec:
+  type: standard <1>
+  standard:
+    credentialsSecret: <2>
+      name: my-admin-credentials
+    certificateSecret <3>
+      name: my-authservice-certificate
+    resources: <4>
+      requests:
+        memory: 2Gi
+      limits:
+        memory: 2Gi
+    storage: <5>
+      type: persistent-claim
+      size: 5Gi
+    datasource: <6>
+      type: postgresql
+      host: example.com
+      port: 5432
+      database: authdb
+----
+<1> Valid values for `type` are `none`, `standard`, or `external`.
+<2> (Optional) The secret must contain the `admin.username` field for the user and the `admin.password` field for the password of the {AuthProductName} admin user. If not specified, a random password will be generated and stored in a secret.
+<3> (Optional on {KubePlatform}) A custom certificate can be specified. On {KubePlatform}, a certificate is automatically created if not specified.
+<4> (Optional) Resource limits for the {AuthProductName} instance can be specified.
+<5> (Optional) The storage type can be specified as `ephemeral` or `persistent-claim`. For `persistent-claim`, you should also configure the size of the claim. The default type is `ephemeral`.
+<6> (Optional) Specifies the data source to be used by {AuthProductName}. The default option is the embedded `h2` data source. For production usage, the `postgresql` data source is recommended.
+
+

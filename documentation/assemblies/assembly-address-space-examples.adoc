@@ -9,6 +9,8 @@ include::../modules/ref-address-space-example.adoc[leveloffset=+1]
 
 include::../modules/ref-address-space-example-auth-service.adoc[leveloffset=+1]
 
+include::../modules/ref-address-space-example-external-auth-service-override.adoc[leveloffset=+1]
+
 include::../modules/ref-address-space-example-exposing-endpoints.adoc[leveloffset=+1]
 
 include::../modules/ref-address-space-example-cert-providers.adoc[leveloffset=+1]

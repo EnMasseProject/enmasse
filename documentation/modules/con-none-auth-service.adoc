@@ -1,0 +1,11 @@
+// Module included in the following assemblies:
+//
+// assembly-auth-services.adoc
+
+[id='con-none-auth-service-{context}']
+= None authentication service
+
+The `none` authentication service type allows any client using any user name and password to send and receive messages to any address.
+
+NOTE:  It is not recommended to use the `none` authentication service in production environments. It is intended only to be used in non-production environments, such as internal test or development environments.
+
