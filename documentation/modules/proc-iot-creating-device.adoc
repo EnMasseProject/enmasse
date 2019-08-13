@@ -21,17 +21,30 @@ endif::[]
 
 .Procedure
 
-. Register a device:
+. Export the device registry host:
 +
 [options="nowrap",subs="attributes"]
 ----
-curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711"}' https://{registry}/registration/myapp.iot
+export REGISTRY_HOST={registry}
+----
+
+. Register a device with a defined ID (in this example we're using `4711`):
++
+[options="nowrap",subs="attributes"]
+----
+curl --insecure -X POST -i -H 'Content-Type: application/json' https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
 ----
 
 . Add credentials for a device:
 +
 [options="nowrap",subs="attributes"]
 ----
-curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{"device-id": "4711","type": "hashed-password","auth-id": "sensor1","secrets": [{"hash-function" : "sha-512","pwd-plain":"'hono-secret'"}]}' https://{registry}/credentials/myapp.iot
+curl --insecure -X PUT -i -H 'Content-Type: application/json' --data-binary '[{
+	"type": "hashed-password",
+	"auth-id": "sensor1",
+	"secrets": [{
+		"pwd-plain":"'hono-secret'"
+	}]
+}]' https://$REGISTRY_HOST/v1/credentials/myapp.iot/4711
 ----
 
