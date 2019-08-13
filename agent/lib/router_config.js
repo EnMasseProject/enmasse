@@ -346,7 +346,7 @@ function desired_address_config(high_level_address_definitions) {
         if (def.type === 'queue') {
             config.add_address({prefix:def.address, distribution:'balanced', waypoint:true});
             if (def.allocated_to) {
-                log.info("Constructing config for queue " + def.address + " allocated to: " + JSON.stringify(def.allocated_to));
+                log.debug("Constructing config for queue %s allocated to: %j", def.address, def.allocated_to);
                 for (var j in def.allocated_to) {
                     var brokerStatus = def.allocated_to[j];
                     if (brokerStatus.state === 'Active') {
@@ -358,7 +358,7 @@ function desired_address_config(high_level_address_definitions) {
                     }
                 }
             } else {
-                log.info("Constructing old config for queue " + def.address);
+                log.debug("Constructing old config for queue %s", def.address);
                 config.add_autolink_pair({addr:def.address, containerId: def.address});
             }
         } else if (def.type === 'topic') {
