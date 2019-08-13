@@ -27,23 +27,12 @@ endif::[]
 
 .Procedure
 
-. In the Hono project, run:
-+
-[options="nowrap",subs="attributes"]
-----
-cd cli
-----
-. Run the following command at least once:
-+
-[options="nowrap",subs="attributes"]
-----
-mvn package -am
-----
+. Download the link:https://www.eclipse.org/hono/downloads/[Eclipse Hono command-line client].
 . Get the messaging endpoint certificate:
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} -n myapp get addressspace iot -o jsonpath={.status.caCert} | base64 --decode > target/config/hono-demo-certs-jar/tls.crt
+{cmdcli} -n myapp get addressspace iot -o jsonpath={.status.caCert} | base64 --decode > tls.crt
 ----
 
 . Export the messaging endpoint host and port:
@@ -70,7 +59,7 @@ endif::[]
 +
 [options="nowrap",subs="attributes"]
 ----
-mvn spring-boot:run -Drun.arguments=--hono.client.host=$MESSAGING_HOST,--hono.client.port=$MESSAGING_PORT,--hono.client.username=consumer,--hono.client.password=foobar,--tenant.id=myapp.iot,--hono.client.trustStorePath=target/config/hono-demo-certs-jar/tls.crt,--message.type={api}
+java -jar hono-cli-*-exec.jar --hono.client.host=$MESSAGING_HOST --hono.client.port=$MESSAGING_PORT --hono.client.username=consumer --hono.client.password=foobar --tenant.id=myapp.iot --hono.client.trustStorePath=tls.crt --message.type={api}
 ----
 
 == Sending {api} data
