@@ -32,6 +32,6 @@ spec:
 <5> (Optional) The certificate that the client presents when connecting to the authentication server.
 <6> (Optional) Specifies whether address space overrides are allowed to the host name, port number, and realm. Valid values are `true` or `false`. If not specified, the default value is `false`.
 
-The external authentication service must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-server-api-messaging[External authentication server API].
+The external authentication server must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-server-api-messaging[External authentication server API].
 
 
