@@ -19,6 +19,7 @@ var util = require('util');
 var qdr = require('./qdr.js');
 var myutils = require('./utils.js');
 var log = require('./log.js').logger();
+var plimit = require('p-limit');
 
 const ID_QUALIFIER = 'ragent-';
 const MAX_RETRIES = 3;
@@ -268,14 +269,15 @@ function ensure_elements(entity, desired, router, collected) {
             let missing = delta.added.concat(delta.modified);
 
             if (stale.length || missing.length) {
-                let delete_fn = delete_config_element.bind(null, router, entity);
-                let create_fn = create_config_element.bind(null, router, entity);
+                var limit = plimit(250);
+                let delete_fn = limit.bind(null, delete_config_element.bind(null, router, entity));
+                let create_fn = limit.bind(null, create_config_element.bind(null, router, entity));
                 return Promise.all(stale.map(delete_fn)).then(
                     function (deletions) {
-                        report(entity, stale, deletions, actual, 'deleted')
+                        report(entity, stale, deletions, actual, 'deleted');
                         return Promise.all(missing.map(create_fn)).then(
                             function (creations) {
-                                report(entity, missing, creations, actual, 'created')
+                                report(entity, missing, creations, actual, 'created');
                                 return false;//recheck when changed
                             }
                         ).catch(function (error) {
