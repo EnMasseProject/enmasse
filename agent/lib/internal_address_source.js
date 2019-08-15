@@ -79,6 +79,22 @@ function same_allocation(a, b) {
     return true;
 }
 
+function same_messages(a, b) {
+    for (var i in a) {
+        var equal = false;
+        for (var j in b) {
+            if (a[i] === b[j]) {
+                equal = true;
+                break;
+            }
+        }
+        if (!equal) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function same_address_definition(a, b) {
     if (a.address === b.address && a.type === b.type && !same_allocation(a.allocated_to, b.allocated_to)) {
         log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
@@ -88,7 +104,7 @@ function same_address_definition(a, b) {
 
 function same_address_status(a, b) {
     if (a === undefined) return b === undefined;
-    return a.isReady === b.isReady && a.phase === b.phase && a.message === b.message;
+    return a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages);
 }
 
 function same_address_definition_and_status(a, b) {
