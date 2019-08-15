@@ -68,6 +68,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         String authServiceHost = authService.getStatus().getHost();
         int authServicePort = authService.getStatus().getPort();
         String authServiceRealm = authService.getSpec().getRealm() != null ? authService.getSpec().getRealm() : addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+        SecretReference authServiceCaCertSecret = authService.getStatus().getCaCertSecret();
+        SecretReference authServiceClientCertSecret = authService.getStatus().getClientCertSecret();
+
 
         if (authService.getSpec().getType().equals(AuthenticationServiceType.external) && authService.getSpec().getExternal() != null && authService.getSpec().getExternal().isAllowOverride()) {
             if (addressSpace.getSpec().getAuthenticationService().getOverrides() != null) {
@@ -80,6 +83,12 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                 }
                 if (overrides.getRealm() != null) {
                     authServiceRealm = overrides.getRealm();
+                }
+                if (overrides.getCaCertSecret() != null) {
+                    authServiceCaCertSecret = overrides.getCaCertSecret();
+                }
+                if (overrides.getClientCertSecret() != null) {
+                    authServiceClientCertSecret = overrides.getClientCertSecret();
                 }
             }
         }
@@ -98,7 +107,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authServicePort));
         parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
 
-        String encodedCaCert = Optional.ofNullable(authService.getStatus().getCaCertSecret())
+        String encodedCaCert = Optional.ofNullable(authServiceCaCertSecret)
                 .map(secretName ->
                     kubernetes.getSecret(secretName.getName()).map(secret ->
                             secret.getData().get("tls.crt"))
@@ -111,8 +120,8 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                     }
                 });
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, encodedCaCert);
-        if (authService.getStatus().getClientCertSecret()  != null) {
-            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, authService.getStatus().getClientCertSecret().getName());
+        if (authServiceClientCertSecret != null) {
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, authServiceClientCertSecret.getName());
         }
 
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authServiceRealm);

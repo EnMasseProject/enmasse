@@ -4,16 +4,15 @@
  */
 package io.enmasse.systemtest.common.api;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.AddressSpaceType;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.SecretReference;
 import org.junit.jupiter.api.*;
 import org.slf4j.Logger;
 
@@ -80,6 +79,87 @@ class AuthServiceTest extends TestBase {
         createOrUpdateUser(addressSpace, cred);
 
         assertCanConnect(addressSpace, cred, Collections.singletonList(queue));
+    }
+
+    @Test
+    void testAuthServiceExternal() throws Exception {
+        // create standard authservice to point external authservice at
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
+        adminManager.createAuthService(standardAuth);
+
+        AddressSpace addressSpaceStandardAuth = new AddressSpaceBuilder()
+            .withNewMetadata()
+            .withName("test-addr-space-standard-auth")
+            .withNamespace(kubernetes.getInfraNamespace())
+            .endMetadata()
+            .withNewSpec()
+            .withType(AddressSpaceType.STANDARD.toString())
+            .withPlan(AddressSpacePlans.STANDARD_SMALL)
+            .withNewAuthenticationService()
+            .withName(standardAuth.getMetadata().getName())
+            .endAuthenticationService()
+            .endSpec()
+            .build();
+        createAddressSpace(addressSpaceStandardAuth);
+
+        UserCredentials cred = new UserCredentials("david", "pepinator");
+        createOrUpdateUser(addressSpaceStandardAuth, cred);
+
+        SecretReference invalidCert = new SecretReference();
+        invalidCert.setName("mycert");
+
+        AuthenticationService externalAuth = AuthServiceUtils.createExternalAuthServiceObject(
+            "test-external-authservice",
+            "example.com",
+            80,
+            "myrealm",
+            invalidCert,
+            invalidCert);
+        adminManager.createAuthService(externalAuth);
+        log.info(externalAuth.toString());
+
+        SecretReference validCert = new SecretReference();
+        validCert.setName("standard-authservice-cert");
+
+        AuthenticationServiceOverrides authServiceOverrides = new AuthenticationServiceOverrides();
+        authServiceOverrides.setHost(standardAuth.getMetadata().getName());
+        authServiceOverrides.setPort(5671);
+        authServiceOverrides.setRealm(addressSpaceStandardAuth.getMetadata().getNamespace() + "-" + addressSpaceStandardAuth.getMetadata().getName());
+        authServiceOverrides.setCaCertSecret(validCert);
+        authServiceOverrides.setClientCertSecret(validCert);
+
+
+        AddressSpace addressSpaceExternalAuth = new AddressSpaceBuilder()
+            .withNewMetadata()
+            .withName("test-addr-space-external-auth")
+            .withNamespace(kubernetes.getInfraNamespace())
+            .endMetadata()
+            .withNewSpec()
+            .withType(AddressSpaceType.STANDARD.toString())
+            .withPlan(AddressSpacePlans.STANDARD_SMALL)
+            .withNewAuthenticationService()
+            .withName(externalAuth.getMetadata().getName())
+            .withType(AuthenticationServiceType.EXTERNAL)
+            .withOverrides(authServiceOverrides)
+            .endAuthenticationService()
+            .endSpec()
+            .build();
+
+        createAddressSpace(addressSpaceExternalAuth);
+
+        Address queue = new AddressBuilder()
+            .withNewMetadata()
+            .withNamespace(addressSpaceExternalAuth.getMetadata().getNamespace())
+            .withName(AddressUtils.generateAddressMetadataName(addressSpaceExternalAuth, "myqueue"))
+            .endMetadata()
+            .withNewSpec()
+            .withType("queue")
+            .withAddress("myqueue")
+            .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+            .endSpec()
+            .build();
+        setAddresses(queue);
+        assertCanConnect(addressSpaceExternalAuth, cred, Collections.singletonList(queue));
     }
 
     @Test

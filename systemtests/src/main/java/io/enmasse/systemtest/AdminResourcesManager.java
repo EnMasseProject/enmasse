@@ -207,20 +207,22 @@ public class AdminResourcesManager {
             client.create(authenticationService);
             authServices.add(authenticationService);
         }
-        String desiredPodName = authenticationService.getMetadata().getName();
-        TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
+        if (!authenticationService.getSpec().getType().toString().equals("external")) {
+            String desiredPodName = authenticationService.getMetadata().getName();
+            TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
                     List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance());
                     long matching = pods.stream().filter(pod ->
-                            pod.getMetadata().getName().contains(desiredPodName)).count();
+                        pod.getMetadata().getName().contains(desiredPodName)).count();
                     if (matching != 1) {
                         List<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toList());
                         LOGGER.info("Still awaiting pod with name : {}, matching : {}, current pods  {}",
-                                desiredPodName, matching, podNames);
+                            desiredPodName, matching, podNames);
                     }
 
                     return matching == 1;
                 },
                 new TimeoutBudget(5, TimeUnit.MINUTES));
+        }
     }
 
     public void removeAuthService(AuthenticationService authService) throws Exception {

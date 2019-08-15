@@ -10,6 +10,7 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.DoneableAuthenticationService;
+import io.fabric8.kubernetes.api.model.SecretReference;
 import io.vertx.core.json.JsonObject;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,6 +46,21 @@ public class AuthServiceUtils {
                 .endStandard()
                 .endSpec()
                 .done();
+    }
+
+    public static AuthenticationService createExternalAuthServiceObject(String name, String host, int port, String realm, SecretReference caCertSecret, SecretReference clientCertSecret) {
+        return createAuthService(name, AuthenticationServiceType.external)
+            .editSpec()
+            .addToAdditionalProperties("realm", realm)
+            .withNewExternal()
+            .addToAdditionalProperties("allowOverride", true)
+            .addToAdditionalProperties("host", host)
+            .addToAdditionalProperties("port", port)
+            .addToAdditionalProperties("caCertSecret", caCertSecret)
+            .addToAdditionalProperties("clientCertSecret", clientCertSecret)
+            .endExternal()
+            .endSpec()
+            .done();
     }
 
     private static DoneableAuthenticationService createAuthService(String name, AuthenticationServiceType type) {
