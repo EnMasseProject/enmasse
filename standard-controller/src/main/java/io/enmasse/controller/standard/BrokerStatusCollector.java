@@ -18,10 +18,12 @@ class BrokerStatusCollector {
 
     private final Kubernetes kubernetes;
     private final BrokerClientFactory brokerClientFactory;
+    private final StandardControllerOptions options;
 
-    BrokerStatusCollector(Kubernetes kubernetes, BrokerClientFactory brokerClientFactory) {
+    BrokerStatusCollector(Kubernetes kubernetes, BrokerClientFactory brokerClientFactory, StandardControllerOptions options) {
         this.kubernetes = kubernetes;
         this.brokerClientFactory = brokerClientFactory;
+        this.options = options;
     }
 
     long getQueueMessageCount(String queue, String clusterId) throws Exception {
@@ -31,7 +33,7 @@ class BrokerStatusCollector {
             if (Readiness.isPodReady(broker)) {
                 try (
                         SyncRequestClient brokerClient = brokerClientFactory.connectBrokerManagementClient(broker.getStatus().getPodIP(), 5673);
-                        Artemis artemis = new Artemis(brokerClient);
+                        Artemis artemis = new Artemis(brokerClient, options.getManagementQueryTimeout().toMillis());
                         ) {
                     long queueMessageCount = artemis.getQueueMessageCount(queue);
                     if (queueMessageCount < 0) {
