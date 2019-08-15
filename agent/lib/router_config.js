@@ -272,7 +272,6 @@ function ensure_elements(entity, desired, router, collected) {
                 var limit = plimit(250);
                 let delete_fn = limit.bind(null, delete_config_element.bind(null, router, entity));
                 let create_fn = limit.bind(null, create_config_element.bind(null, router, entity));
-                log.info("KWDEBUG using batches");
                 return Promise.all(stale.map(delete_fn)).then(
                     function (deletions) {
                         report(entity, stale, deletions, actual, 'deleted');
