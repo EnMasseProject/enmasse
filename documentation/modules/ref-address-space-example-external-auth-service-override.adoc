@@ -15,7 +15,7 @@ ifndef::SingleBookLink[]
 For more information about how to configure an external authentication service to allow a messaging tenant to override host name, port number, and realm, see link:{BookUrlBase}{BaseProductVersion}/html-single/installing_and_managing_amq_online_on_openshift_container_platform/#ref-external-auth-service-example-allow-overrides-messaging[External authentication service example allowing overrides].
 endif::SingleBookLink[]
 
-[source,yaml,options="nowrap"]
+[source,yaml,options="nowrap",subs="attributes+"]
 ----
 apiVersion: enmasse.io/v1beta1
 kind: AddressSpace
