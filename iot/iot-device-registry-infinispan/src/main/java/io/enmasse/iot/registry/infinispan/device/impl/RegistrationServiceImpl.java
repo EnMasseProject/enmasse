@@ -9,6 +9,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.hono.util.RegistrationConstants;
 import org.eclipse.hono.util.RegistrationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +52,8 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
     }
 
     private JsonObject convertTo(final JsonObject deviceInfo) {
-        return deviceInfo;
+        return new JsonObject()
+                .put(RegistrationConstants.FIELD_DATA, deviceInfo);
     }
 
 }
