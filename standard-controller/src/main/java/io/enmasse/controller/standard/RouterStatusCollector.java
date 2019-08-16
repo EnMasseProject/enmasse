@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -29,10 +30,14 @@ class RouterStatusCollector {
     private static final Logger log = LoggerFactory.getLogger(RouterStatusCollector.class);
     private final Vertx vertx;
     private final String certDir;
+    private final Duration managementConnectTimeout;
+    private final Duration managementQueryTimeout;
 
-    public RouterStatusCollector(Vertx vertx, String certDir) {
+    public RouterStatusCollector(Vertx vertx, StandardControllerOptions options) {
         this.vertx = vertx;
-        this.certDir = certDir;
+        this.certDir = options.getCertDir();
+        this.managementConnectTimeout = options.getManagementConnectTimeout();
+        this.managementQueryTimeout = options.getManagementQueryTimeout();
     }
 
     public RouterStatus collect(Pod router) throws Exception {
@@ -48,44 +53,70 @@ class RouterStatusCollector {
         }
 
         if (port != 0) {
-            log.debug("Checking router status of router " + router.getStatus().getPodIP());
-            ProtonClientOptions clientOptions = new ProtonClientOptions()
-                    .setSsl(true)
-                    .addEnabledSaslMechanism("EXTERNAL")
-                    .setHostnameVerificationAlgorithm("")
-                    .setPemTrustOptions(new PemTrustOptions()
-                            .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
-                    .setPemKeyCertOptions(new PemKeyCertOptions()
-                            .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
-                            .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
-            try (ProtonRequestClient client = new ProtonRequestClient(vertx, "standard-controller")) {
-                CompletableFuture<Void> promise = new CompletableFuture<>();
-                client.connect(router.getStatus().getPodIP(), port, clientOptions, "$management", promise);
-
-                promise.get(10, TimeUnit.SECONDS);
-
-
-                List<String> addresses = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.router.config.address",
-                        Arrays.asList("prefix")), 0);
-
-                List<List<String>> autoLinks = collectRouter(client, "org.apache.qpid.dispatch.router.config.autoLink",
-                        Arrays.asList("addr", "containerId", "dir", "operStatus"));
-                List<List<String>> linkRoutes = collectRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute",
-                        Arrays.asList("prefix", "containerId", "dir", "operStatus"));
-                List<String> connections = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.connection",
-                        Arrays.asList("container")), 0);
-
-
-                String routerId = router.getMetadata().getName();
-                return new RouterStatus(routerId, addresses, autoLinks, linkRoutes, connections);
-            }
+            return doCollectStatusWithRetry(router, port);
         } else {
-            log.info("Unable to find appropriate router port, skipping address check");
+            log.info("Unable to find appropriate port for router {}, skipping address check", router.getMetadata().getName());
             return null;
         }
     }
 
-    private static List<String> filterOnAttribute(List<List<String>> list, int attrNum) {
+    private RouterStatus doCollectStatusWithRetry(Pod router, int port) throws Exception {
+        int attempt = 1;
+        final int allowedAttempts = 3;
+        Exception lastException = null;
+        do {
+            try {
+                return doCollectStatus(router, port);
+            } catch (Exception e) {
+                log.error("Failed to collect router {} status (attempt {}/{}})", router.getMetadata().getName(), attempt, allowedAttempts, e);
+                lastException = e;
+                try {
+                    Thread.sleep(5 * 1000);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+                attempt++;
+            }
+        } while (allowedAttempts >= attempt);
+
+        throw lastException;
+    }
+
+    private RouterStatus doCollectStatus(Pod router, int port) throws Exception {
+        log.debug("Checking router status of router : {}", router.getMetadata().getName());
+        ProtonClientOptions clientOptions = new ProtonClientOptions()
+                .setSsl(true)
+                .addEnabledSaslMechanism("EXTERNAL")
+                .setHostnameVerificationAlgorithm("")
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
+                .setPemKeyCertOptions(new PemKeyCertOptions()
+                        .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
+                        .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        try (ProtonRequestClient client = new ProtonRequestClient(vertx, "standard-controller")) {
+            CompletableFuture<Void> promise = new CompletableFuture<>();
+            client.connect(router.getStatus().getPodIP(), port, clientOptions, "$management", promise);
+
+            promise.get(managementConnectTimeout.getSeconds(), TimeUnit.SECONDS);
+
+            List<String> addresses = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.router.config.address",
+                    Collections.singletonList("prefix")), 0);
+
+            List<List<String>> autoLinks = collectRouter(client, "org.apache.qpid.dispatch.router.config.autoLink",
+                    Arrays.asList("addr", "containerId", "dir", "operStatus"));
+            List<List<String>> linkRoutes = collectRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute",
+                    Arrays.asList("prefix", "containerId", "dir", "operStatus"));
+            List<String> connections = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.connection",
+                    Collections.singletonList("container")), 0);
+
+
+            String routerId = router.getMetadata().getName();
+            return new RouterStatus(routerId, addresses, autoLinks, linkRoutes, connections);
+        }
+    }
+
+    private List<String> filterOnAttribute(List<List<String>> list, int attrNum) {
         List<String> filtered = new ArrayList<>();
         for (List<String> entry : list) {
             String filteredValue = entry.get(attrNum);
@@ -96,7 +127,7 @@ class RouterStatusCollector {
         return filtered;
     }
 
-    private static List<List<String>> collectRouter(SyncRequestClient client, String entityType, List<String> attributeNames) throws Exception {
+    private List<List<String>> collectRouter(SyncRequestClient client, String entityType, List<String> attributeNames) throws Exception {
         Map<String, Object> properties = new LinkedHashMap<>();
         properties.put("operation", "QUERY");
         properties.put("entityType", entityType);
@@ -108,7 +139,11 @@ class RouterStatusCollector {
         message.setApplicationProperties(new ApplicationProperties(properties));
         message.setBody(new AmqpValue(body));
 
-        Message response = client.request(message, 10, TimeUnit.SECONDS);
+        long timeoutSeconds = this.managementQueryTimeout.getSeconds();
+        Message response = client.request(message, timeoutSeconds, TimeUnit.SECONDS);
+        if (response == null) {
+            throw new IllegalArgumentException(String.format("No response received within timeout : %s(s)", timeoutSeconds));
+        }
         AmqpValue value = (AmqpValue) response.getBody();
         if (value == null) {
             throw new IllegalArgumentException("Unexpected null body");

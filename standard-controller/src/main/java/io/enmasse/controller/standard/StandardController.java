@@ -88,7 +88,7 @@ public class StandardController {
 
         Vertx vertx = Vertx.vertx();
 
-        BrokerClientFactory brokerClientFactory = new MutualTlsBrokerClientFactory(vertx, options.getCertDir());
+        BrokerClientFactory brokerClientFactory = new MutualTlsBrokerClientFactory(vertx, options);
 
         addressController = new AddressController(
                 options,

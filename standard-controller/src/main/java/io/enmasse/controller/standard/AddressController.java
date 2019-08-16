@@ -445,7 +445,7 @@ public class AddressController implements Watcher<Address> {
     }
 
     private void checkAndRemoveDrainingBrokers(Set<Address> addresses) throws Exception {
-        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory);
+        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory, options);
         for (Address address : addresses) {
             List<BrokerStatus> brokerStatuses = new ArrayList<>();
             for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
@@ -469,7 +469,7 @@ public class AddressController implements Watcher<Address> {
 
     private List<RouterStatus> checkRouterStatuses() throws Exception {
 
-        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
+        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options);
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
             if (Readiness.isPodReady(router)) {
