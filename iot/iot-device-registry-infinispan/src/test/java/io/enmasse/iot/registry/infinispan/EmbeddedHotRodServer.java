@@ -18,7 +18,7 @@ import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuild
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.cache.DeviceConnectionCacheProvider;
 import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
 import io.enmasse.iot.registry.infinispan.devcon.DeviceConnectionKey;
@@ -36,7 +36,7 @@ public class EmbeddedHotRodServer {
     private final HotRodServer server;
     private final DefaultCacheManager defaultCacheManager;
 
-    private DeviceCacheProvider deviceProvider;
+    private DeviceManagementCacheProvider deviceProvider;
     private DeviceConnectionCacheProvider stateProvider;
 
     public EmbeddedHotRodServer() throws Exception {
@@ -73,7 +73,7 @@ public class EmbeddedHotRodServer {
         final InfinispanProperties properties = new InfinispanProperties();
         properties.setPort(server.getPort());
 
-        this.deviceProvider = new DeviceCacheProvider(properties);
+        this.deviceProvider = new DeviceManagementCacheProvider(properties);
         this.deviceProvider.start();
         this.stateProvider = new DeviceConnectionCacheProvider(properties);
         this.stateProvider.start();

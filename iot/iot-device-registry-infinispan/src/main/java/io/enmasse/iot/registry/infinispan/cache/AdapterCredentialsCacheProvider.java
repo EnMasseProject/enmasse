@@ -12,13 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.registry.infinispan.devcon.DeviceConnectionKey;
+import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
+import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 
 @Component
-public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
+public class AdapterCredentialsCacheProvider extends AbstractCacheProvider {
 
     @Autowired
-    public DeviceConnectionCacheProvider(final InfinispanProperties properties) throws Exception {
+    public AdapterCredentialsCacheProvider(final InfinispanProperties properties) throws Exception {
         super(properties);
     }
 
@@ -36,8 +37,10 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
                 .build();
     }
 
-    public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
-        return getOrCreateCache("deviceState", buildConfiguration());
+
+    public RemoteCache<CredentialsKey, AdapterCredentials> getAdapterCredentialsCache() {
+        return getOrCreateCache("adapterCredentialsCache", buildConfiguration());
     }
+
 
 }

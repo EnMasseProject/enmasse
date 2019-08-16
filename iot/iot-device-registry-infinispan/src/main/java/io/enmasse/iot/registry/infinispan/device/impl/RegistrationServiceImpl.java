@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 import org.eclipse.hono.util.RegistrationResult;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.AbstractRegistrationService;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
 import io.opentracing.Span;
@@ -21,7 +21,7 @@ import io.vertx.core.json.JsonObject;
 @Component
 public class RegistrationServiceImpl extends AbstractRegistrationService {
 
-    public RegistrationServiceImpl(final DeviceCacheProvider provider) {
+    public RegistrationServiceImpl(final DeviceManagementCacheProvider provider) {
         super(provider);
     }
 

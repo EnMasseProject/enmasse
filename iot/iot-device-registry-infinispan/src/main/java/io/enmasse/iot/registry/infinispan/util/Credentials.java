@@ -116,7 +116,8 @@ public final class Credentials {
         json.put("comment", credential.getComment());
 
         final JsonArray secrets = new JsonArray();
-        credential.getSecrets()
+        credential
+                .getSecrets()
                 .stream()
                 .map(JsonObject::new)
                 .forEach(secrets::add);
@@ -127,12 +128,15 @@ public final class Credentials {
     }
 
     public static List<CommonCredential> fromInternal(final List<DeviceCredential> credentials) {
+
         if (credentials == null || credentials.isEmpty()) {
             return Collections.emptyList();
         }
+
         return credentials
                 .stream()
                 .map(Credentials::fromInternal)
                 .collect(Collectors.toList());
+
     }
 }

@@ -17,8 +17,9 @@ import org.eclipse.hono.service.management.credentials.CredentialsManagementServ
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsCacheEntry;
+import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
@@ -30,16 +31,16 @@ public abstract class AbstractCredentialsManagementService implements Credential
 
     // Adapter cache :
     // <(tenantId + authId + type), (credential + deviceId)>
-    protected final RemoteCache<CredentialsKey, CredentialsCacheEntry> adapterCache;
+    protected final RemoteCache<CredentialsKey, AdapterCredentials> adapterCache;
 
     // Management cache
     // <(tenantId + deviceId), (device information + version + credentials)>
     protected final RemoteCache<DeviceKey, DeviceInformation> managementCache;
 
     @Autowired
-    public AbstractCredentialsManagementService(final DeviceCacheProvider provider) {
-        this.adapterCache = provider.getAdapterCredentialsCache();
-        this.managementCache = provider.getDeviceManagementCache();
+    public AbstractCredentialsManagementService(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
+        this.adapterCache = adapterProvider.getAdapterCredentialsCache();
+        this.managementCache = managementProvider.getDeviceManagementCache();
     }
 
     protected abstract CompletableFuture<OperationResult<Void>> processSet(String tenantId, String deviceId, Optional<String> resourceVersion, List<CommonCredential> credentials,

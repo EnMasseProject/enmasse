@@ -8,6 +8,7 @@ package io.enmasse.iot.registry.infinispan.device.impl;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PRECON_FAILED;
 import static java.util.concurrent.CompletableFuture.completedFuture;
@@ -24,7 +25,8 @@ import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsManagementService;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
@@ -34,8 +36,8 @@ import io.opentracing.Span;
 public class CredentialsManagementServiceImpl extends AbstractCredentialsManagementService {
 
     @Autowired
-    public CredentialsManagementServiceImpl(final DeviceCacheProvider provider) {
-        super(provider);
+    public CredentialsManagementServiceImpl(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
+        super(managementProvider, adapterProvider);
     }
 
     @Override
@@ -72,7 +74,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
                                     return completedFuture(OperationResult.empty(HTTP_PRECON_FAILED));
                                 }
 
-                                return completedFuture(OperationResult.empty(HTTP_OK));
+                                return completedFuture(OperationResult.empty(HTTP_NO_CONTENT));
 
                             });
 

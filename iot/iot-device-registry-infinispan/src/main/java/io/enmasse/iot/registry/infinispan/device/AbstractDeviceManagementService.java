@@ -7,8 +7,9 @@ package io.enmasse.iot.registry.infinispan.device;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsCacheEntry;
+import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
@@ -31,16 +32,16 @@ public abstract class AbstractDeviceManagementService implements DeviceManagemen
 
     // Adapter cache :
     // <( tenantId + authId + type), (credential + deviceId + sync-flag + registration data version)>
-    protected RemoteCache<CredentialsKey, CredentialsCacheEntry> adapterCache;
+    protected RemoteCache<CredentialsKey, AdapterCredentials> adapterCache;
 
     // Management cache
     // <(TenantId+DeviceId), (Device information + version + credentials)>
     protected RemoteCache<DeviceKey, DeviceInformation> managementCache;
 
     @Autowired
-    public AbstractDeviceManagementService(final DeviceCacheProvider provider) {
-        this.adapterCache = provider.getAdapterCredentialsCache();
-        this.managementCache = provider.getDeviceManagementCache();
+    public AbstractDeviceManagementService(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
+        this.adapterCache = adapterProvider.getAdapterCredentialsCache();
+        this.managementCache = managementProvider.getDeviceManagementCache();
     }
 
     protected abstract CompletableFuture<OperationResult<Id>> processCreateDevice(String tenantId, Optional<String> deviceId, Device device, Span span);

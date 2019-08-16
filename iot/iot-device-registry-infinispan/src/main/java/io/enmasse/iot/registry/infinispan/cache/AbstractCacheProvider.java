@@ -32,7 +32,7 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
     }
 
     @PostConstruct
-    public void start () throws Exception {
+    public void start() throws Exception {
 
         var config = new ConfigurationBuilder()
                 .addServer()
@@ -64,11 +64,10 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
 
     }
 
-    protected void customizeServerConfiguration(final ServerConfigurationBuilder configuration) {
-    }
+    protected void customizeServerConfiguration(final ServerConfigurationBuilder configuration) {}
 
     @PreDestroy
-    public void stop () throws Exception {
+    public void stop() throws Exception {
         this.remoteCacheManager.close();
     }
 
@@ -93,13 +92,16 @@ public abstract class AbstractCacheProvider implements AutoCloseable {
 
         log.debug("CacheConfig - {}\n{}", cacheName, configuration.toXMLString(cacheName));
 
-        if ( this.properties.isTryCreate() ) {
+        if (this.properties.isTryCreate()) {
             return this.remoteCacheManager
                     .administration()
                     .getOrCreateCache(cacheName, configuration);
         } else {
-            return this.remoteCacheManager
-                    .getCache(cacheName);
+            final RemoteCache<K,V> result = this.remoteCacheManager.getCache(cacheName);
+            if (result == null) {
+                throw new IllegalStateException(String.format("Cache '%s' not found, and not requested to create", cacheName));
+            }
+            return result;
         }
 
     }

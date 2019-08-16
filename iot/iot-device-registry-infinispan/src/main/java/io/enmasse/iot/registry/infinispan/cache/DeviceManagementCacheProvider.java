@@ -22,20 +22,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsCacheEntry;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
 
 @Component
-public class DeviceCacheProvider extends AbstractCacheProvider {
+public class DeviceManagementCacheProvider extends AbstractCacheProvider {
 
     private static final String GENERATED_PROTOBUF_FILE_NAME = "deviceRegistry.proto";
-    private static final Logger log = LoggerFactory.getLogger(DeviceCacheProvider.class);
+    private static final Logger log = LoggerFactory.getLogger(DeviceManagementCacheProvider.class);
 
     @Autowired
-    public DeviceCacheProvider(final InfinispanProperties properties) throws Exception {
+    public DeviceManagementCacheProvider(final InfinispanProperties properties) throws Exception {
         super(properties);
     }
 
@@ -54,12 +52,10 @@ public class DeviceCacheProvider extends AbstractCacheProvider {
         final SerializationContext serCtx = ProtoStreamMarshaller.getSerializationContext(remoteCacheManager);
 
         final String generatedSchema = new ProtoSchemaBuilder()
-                .addClass(CredentialsKey.class)
-                .addClass(DeviceCredential.class)
-                .addClass(CredentialsCacheEntry.class)
 
                 .addClass(DeviceKey.class)
                 .addClass(DeviceInformation.class)
+                .addClass(DeviceCredential.class)
 
                 .packageName("io.enmasse.iot.registry.infinispan.data")
                 .fileName(GENERATED_PROTOBUF_FILE_NAME)
@@ -104,10 +100,6 @@ public class DeviceCacheProvider extends AbstractCacheProvider {
                 .isolationLevel(IsolationLevel.READ_COMMITTED)
 
                 .build();
-    }
-
-    public RemoteCache<CredentialsKey, CredentialsCacheEntry> getAdapterCredentialsCache() {
-        return getOrCreateCache("adapterCredentialsCache", buildConfiguration());
     }
 
     public RemoteCache<DeviceKey, DeviceInformation> getDeviceManagementCache() {

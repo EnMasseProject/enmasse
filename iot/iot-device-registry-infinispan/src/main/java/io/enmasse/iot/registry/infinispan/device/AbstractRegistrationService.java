@@ -13,7 +13,7 @@ import org.eclipse.hono.util.RegistrationResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
 import io.opentracing.Span;
@@ -28,7 +28,7 @@ public abstract class AbstractRegistrationService extends org.eclipse.hono.servi
     protected RemoteCache<DeviceKey, DeviceInformation> managementCache;
 
     @Autowired
-    public AbstractRegistrationService(final DeviceCacheProvider provider) {
+    public AbstractRegistrationService(final DeviceManagementCacheProvider provider) {
         this.managementCache = provider.getDeviceManagementCache();
     }
 
