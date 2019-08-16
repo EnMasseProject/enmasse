@@ -153,6 +153,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
                         case 1:
                             return storeCacheEntry(key, r.getFirst());
                         default:
+                            log.warn("Found entry with multiple device mappings: {} -> {}", key, r);
                             return storeInvalidEntry();
                     }
 
