@@ -41,10 +41,12 @@ import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
 import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
+import io.enmasse.iot.registry.infinispan.device.data.CachedAdapterCredentials;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.opentracing.Span;
+import io.vertx.core.json.JsonObject;
 
 @Component
 public class CredentialsServiceImpl extends AbstractCredentialsService {
@@ -120,7 +122,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private Duration calculateRemainingTtl(MetadataValue<AdapterCredentials> result) {
+    private Duration calculateRemainingTtl(MetadataValue<?> result) {
 
         if (result.getLifespan() > 0 && result.getCreated() > 0) {
 
@@ -160,7 +162,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         return completedFuture(notFound(this.defaultTtl));
     }
 
-    private CompletionStage<CredentialsResult<AdapterCredentials>> storeCacheEntry(final CredentialsKey key, final AdapterCredentials cacheEntry) {
+    private CompletionStage<CredentialsResult<AdapterCredentials>> storeCacheEntry(final CredentialsKey key, final CachedAdapterCredentials cacheEntry) {
 
         final Duration ttl = this.defaultTtl;
 
@@ -182,7 +184,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
         return this.adapterCache
 
-                .putIfAbsentAsync(key, AdapterCredentials.empty(), ttl.toSeconds(), TimeUnit.SECONDS)
+                .putIfAbsentAsync(key, CachedAdapterCredentials.empty(), ttl.toSeconds(), TimeUnit.SECONDS)
                 .thenApply(putResult -> {
 
                     // we do not care about the result
@@ -197,7 +199,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      * @param key The search key.
      * @return The result of the search.
      */
-    private CompletableFuture<LinkedList<AdapterCredentials>> searchCredentials(final CredentialsKey key) {
+    private CompletableFuture<LinkedList<CachedAdapterCredentials>> searchCredentials(final CredentialsKey key) {
 
         final QueryFactory qf = Search.getQueryFactory(this.managementCache);
 
@@ -216,11 +218,11 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private static LinkedList<AdapterCredentials> mapCredentials(final CredentialsKey searchKey, final List<DeviceInformation> devices) {
+    private static LinkedList<CachedAdapterCredentials> mapCredentials(final CredentialsKey searchKey, final List<DeviceInformation> devices) {
 
         log.debug("Search result : {} -> {}", searchKey, devices);
 
-        final LinkedList<AdapterCredentials> result = new LinkedList<>();
+        final LinkedList<CachedAdapterCredentials> result = new LinkedList<>();
 
         // search through all found devices ...
 
@@ -242,7 +244,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                 // record matches
 
-                result.add(AdapterCredentials.fromInternal(deviceId, credential));
+                result.add(CachedAdapterCredentials.fromInternal(deviceId, credential));
 
             }
 
@@ -262,10 +264,10 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
 
-    private CredentialsResult<AdapterCredentials> found(final AdapterCredentials result, final Duration ttl) {
+    private CredentialsResult<AdapterCredentials> found(final CachedAdapterCredentials result, final Duration ttl) {
         return CredentialsResult.from(
                 HTTP_OK,
-                result,
+                result.map(AdapterCredentials::new, JsonObject::new),
                 toCacheDirective(ttl));
     }
 

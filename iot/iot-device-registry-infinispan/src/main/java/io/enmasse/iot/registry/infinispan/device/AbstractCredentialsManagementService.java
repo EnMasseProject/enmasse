@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
+import io.enmasse.iot.registry.infinispan.device.data.CachedAdapterCredentials;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
@@ -31,7 +31,7 @@ public abstract class AbstractCredentialsManagementService implements Credential
 
     // Adapter cache :
     // <(tenantId + authId + type), (credential + deviceId)>
-    protected final RemoteCache<CredentialsKey, AdapterCredentials> adapterCache;
+    protected final RemoteCache<CredentialsKey, CachedAdapterCredentials> adapterCache;
 
     // Management cache
     // <(tenantId + deviceId), (device information + version + credentials)>

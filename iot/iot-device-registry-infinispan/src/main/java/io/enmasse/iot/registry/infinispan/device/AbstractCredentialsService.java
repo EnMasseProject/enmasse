@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
+import io.enmasse.iot.registry.infinispan.device.data.CachedAdapterCredentials;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
@@ -30,7 +31,7 @@ public abstract class AbstractCredentialsService implements CredentialsService {
 
     // Adapter cache :
     // <( tenantId + authId + type), (credential + deviceId + sync-flag + registration data version)>
-    protected RemoteCache<CredentialsKey, AdapterCredentials> adapterCache;
+    protected RemoteCache<CredentialsKey, CachedAdapterCredentials> adapterCache;
 
     // Management cache
     // <(TenantId+DeviceId), (Device information + version + credentials)>
@@ -49,9 +50,12 @@ public abstract class AbstractCredentialsService implements CredentialsService {
         completeHandler(() -> {
             return processGet(tenantId, type, authId, span)
                     .thenApply(r -> {
-                        final var payload = r.getPayload();
+                        final var payload = r.getPayload() != null ? mapFrom(r.getPayload()) : null;
+
+
+
                         // FIXME: pass along application properties, when eclipse/hono#1447 is merged
-                        return CredentialsResult.from(r.getStatus(), payload != null ? mapFrom(payload) : null, r.getCacheDirective());
+                        return CredentialsResult.from(r.getStatus(), payload, r.getCacheDirective());
                     });
         }, resultHandler);
     }
