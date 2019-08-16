@@ -150,10 +150,10 @@ public class EventCache<T> implements WorkQueue<T> {
             String currentVersion = fieldExtractor.getResourceVersion(current);
             String replaceVersion = fieldExtractor.getResourceVersion(item);
             if (!hasVersionChanged(current, item)) {
-                log.info("Replacing {} (old {}, new {})", key, currentVersion, replaceVersion);
+                log.debug("Replacing {} (old {}, new {})", key, currentVersion, replaceVersion);
                 store.put(key, item);
             } else {
-                log.info("Not replacing {} (old {}, new {})", key, currentVersion, replaceVersion);
+                log.debug("Not replacing {} (old {}, new {})", key, currentVersion, replaceVersion);
             }
         }
     }

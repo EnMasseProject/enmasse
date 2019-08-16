@@ -468,7 +468,7 @@ public class AddressController implements Watcher<Address> {
     }
 
     private void checkAndRemoveDrainingBrokers(Set<Address> addresses) throws Exception {
-        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory);
+        BrokerStatusCollector brokerStatusCollector = new BrokerStatusCollector(kubernetes, brokerClientFactory, options);
         for (Address address : addresses) {
             List<BrokerStatus> brokerStatuses = new ArrayList<>();
             for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {

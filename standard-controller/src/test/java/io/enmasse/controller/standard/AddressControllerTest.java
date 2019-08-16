@@ -54,7 +54,7 @@ public class AddressControllerTest {
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
         Vertx vertx = Vertx.vertx();
-        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, new MutualTlsBrokerClientFactory(vertx, options.getCertDir()));
+        controller = new AddressController(options, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, new MutualTlsBrokerClientFactory(vertx, options));
     }
 
     @Test
