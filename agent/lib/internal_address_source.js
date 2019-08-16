@@ -64,6 +64,11 @@ function ready (addr) {
 }
 
 function same_allocation(a, b) {
+    if (a === b) {
+        return true;
+    } else if (a == null || b == null || a.length !== b.length) {
+        return false;
+    }
     for (var i in a) {
         var equal = false;
         for (var j in b) {
@@ -80,15 +85,14 @@ function same_allocation(a, b) {
 }
 
 function same_messages(a, b) {
+    if (a === b) {
+        return true;
+    } else if (a == null || b == null || a.length !== b.length) {
+        return false;
+    }
+
     for (var i in a) {
-        var equal = false;
-        for (var j in b) {
-            if (a[i] === b[j]) {
-                equal = true;
-                break;
-            }
-        }
-        if (!equal) {
+        if (!b.includes(a[i])) {
             return false;
         }
     }
