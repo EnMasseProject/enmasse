@@ -18,9 +18,11 @@ import java.util.concurrent.TimeUnit;
 public class MutualTlsBrokerClientFactory implements BrokerClientFactory {
     private final Vertx vertx;
     private final ProtonClientOptions protonClientOptions;
+    private final StandardControllerOptions options;
 
-    public MutualTlsBrokerClientFactory(Vertx vertx, String certDir) {
+    public MutualTlsBrokerClientFactory(Vertx vertx, StandardControllerOptions options) {
         this.vertx = vertx;
+        String certDir = options.getCertDir();
         this.protonClientOptions = new ProtonClientOptions()
                     .setSsl(true)
                     .setHostnameVerificationAlgorithm("")
@@ -29,6 +31,7 @@ public class MutualTlsBrokerClientFactory implements BrokerClientFactory {
                     .setPemKeyCertOptions(new PemKeyCertOptions()
                             .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
                             .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
+        this.options = options;
     }
 
     @Override
@@ -39,7 +42,7 @@ public class MutualTlsBrokerClientFactory implements BrokerClientFactory {
             CompletableFuture<Void> promise = new CompletableFuture<>();
             client.connect(host, port, protonClientOptions, "activemq.management", promise);
 
-            promise.get(10, TimeUnit.SECONDS);
+            promise.get(options.getManagementConnectTimeout().getSeconds(), TimeUnit.SECONDS);
         } catch (Exception e) {
             if (client != null) {
                 client.close();

@@ -22,11 +22,16 @@ import java.util.concurrent.TimeoutException;
  */
 public class Artemis implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(Artemis.class.getName());
-    private long requestTimeoutMillis = 10_000;
+    private final long requestTimeoutMillis;
     private final SyncRequestClient syncRequestClient;
 
     public Artemis(SyncRequestClient syncRequestClient) {
+        this(syncRequestClient, 10_000);
+    }
+
+    public Artemis(SyncRequestClient syncRequestClient, long requestTimeoutMillis) {
         this.syncRequestClient = syncRequestClient;
+        this.requestTimeoutMillis = requestTimeoutMillis;
     }
 
     private Message doOperation(String resource, String operation, Object ... parameters) throws TimeoutException {
