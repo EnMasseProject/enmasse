@@ -8,6 +8,8 @@ package io.enmasse.iot.registry.infinispan.debug;
 import static io.vertx.core.http.HttpHeaders.CACHE_CONTROL;
 
 import org.eclipse.hono.service.credentials.CredentialsService;
+import org.eclipse.hono.service.registration.RegistrationService;
+import org.eclipse.hono.util.RequestResponseResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -15,22 +17,32 @@ import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
 
 @Component
 @ConditionalOnProperty("debug")
 @ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".registry.debug")
-public class DebugCredentialsEndpoint extends AbstractVerticle {
+public class DebugEndpoint extends AbstractVerticle {
 
     @Autowired
     private CredentialsService crendentialService;
+
+    @Autowired
+    private RegistrationService registrationService;
 
     private int port = 0; // ephermal port by default
 
     public void setCrendentialService(final CredentialsService crendentialService) {
         this.crendentialService = crendentialService;
+    }
+
+    public void setRegistrationService(RegistrationService registrationService) {
+        this.registrationService = registrationService;
     }
 
     public void setPort(final int port) {
@@ -51,29 +63,19 @@ public class DebugCredentialsEndpoint extends AbstractVerticle {
                     var authId = ctx.pathParam("authId");
 
                     this.crendentialService.get(tenantId, type, authId, ar -> {
+                        handleResult(ctx, ar);
+                    });
+                });
 
-                        if (ar.failed()) {
-                            ctx.fail(500, ar.cause());
-                        } else {
+        router
+                .get("/debug/registration/:tenant/:device")
+                .handler(ctx -> {
 
-                            final var cache = ar.result().getCacheDirective();
-                            final var result = ar.result().getPayload();
+                    var tenantId = ctx.pathParam("tenant");
+                    var deviceId = ctx.pathParam("device");
 
-                            if (cache != null) {
-                                ctx.response()
-                                        .putHeader(CACHE_CONTROL, cache.toString());
-                            }
-
-                            ctx.response()
-                                    .setStatusCode(ar.result().getStatus());
-
-                            if (result != null) {
-                                ctx.response().end(Json.encode(result));
-                            } else {
-                                ctx.response().end();
-                            }
-                        }
-
+                    this.registrationService.assertRegistration(tenantId, deviceId, ar -> {
+                        handleResult(ctx, ar);
                     });
                 });
 
@@ -90,6 +92,30 @@ public class DebugCredentialsEndpoint extends AbstractVerticle {
                     }
                 });
 
+    }
+
+    private void handleResult(RoutingContext ctx, AsyncResult<? extends RequestResponseResult<JsonObject>> ar) {
+        if (ar.failed()) {
+            ctx.fail(500, ar.cause());
+        } else {
+
+            final var cache = ar.result().getCacheDirective();
+            final var result = ar.result().getPayload();
+
+            if (cache != null) {
+                ctx.response()
+                        .putHeader(CACHE_CONTROL, cache.toString());
+            }
+
+            ctx.response()
+                    .setStatusCode(ar.result().getStatus());
+
+            if (result != null) {
+                ctx.response().end(Json.encode(result));
+            } else {
+                ctx.response().end();
+            }
+        }
     }
 
 }
