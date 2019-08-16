@@ -10,6 +10,10 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.eclipse.hono.util.Constants;
+import org.eclipse.hono.util.CredentialsConstants;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
@@ -20,9 +24,16 @@ public abstract class AbstractAdapterCredentials<T> {
         T get(String deviceId, String authId, String type, List<S> secrets);
     }
 
+    @JsonProperty(Constants.JSON_FIELD_DEVICE_ID)
     private String deviceId;
+
+    @JsonProperty(CredentialsConstants.FIELD_AUTH_ID)
     private String authId;
+
+    @JsonProperty(CredentialsConstants.FIELD_TYPE)
     private String type;
+
+    @JsonProperty(CredentialsConstants.FIELD_SECRETS)
     private List<T> secrets;
 
     public AbstractAdapterCredentials(final String deviceId, final String authId, final String type, final List<T> secrets) {
