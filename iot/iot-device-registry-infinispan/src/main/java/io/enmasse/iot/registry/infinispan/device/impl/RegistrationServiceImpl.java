@@ -10,6 +10,8 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.util.RegistrationResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
@@ -20,6 +22,8 @@ import io.vertx.core.json.JsonObject;
 
 @Component
 public class RegistrationServiceImpl extends AbstractRegistrationService {
+
+    private static final Logger log = LoggerFactory.getLogger(RegistrationServiceImpl.class);
 
     public RegistrationServiceImpl(final DeviceManagementCacheProvider provider) {
         super(provider);
@@ -32,14 +36,16 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
 
         return this.managementCache
 
-                .getAsync(key)
+                .getWithMetadataAsync(key)
                 .thenApply(result -> {
 
                     if (result == null) {
                         return RegistrationResult.from(HTTP_NOT_FOUND);
                     }
 
-                    return RegistrationResult.from(HTTP_OK, convertTo(result.getRegistrationInformationAsJson()));
+                    log.debug("Found device: {}", result);
+
+                    return RegistrationResult.from(HTTP_OK, convertTo(result.getValue().getRegistrationInformationAsJson()));
                 });
 
     }

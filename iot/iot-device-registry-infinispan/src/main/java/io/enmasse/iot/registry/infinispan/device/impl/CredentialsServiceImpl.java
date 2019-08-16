@@ -17,6 +17,7 @@ import static org.eclipse.hono.util.CacheDirective.noCacheDirective;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.PreDestroy;
 
 import org.eclipse.hono.util.CacheDirective;
+import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsResult;
 import org.infinispan.client.hotrod.MetadataValue;
 import org.infinispan.client.hotrod.Search;
@@ -58,7 +60,8 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     private Duration defaultTtl;
 
-    public CredentialsServiceImpl(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider, final DeviceServiceProperties properties) {
+    public CredentialsServiceImpl(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider,
+            final DeviceServiceProperties properties) {
         super(managementProvider, adapterProvider);
         this.properties = properties;
         this.defaultTtl = this.properties.getCredentialsTtl();
@@ -183,7 +186,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
         return this.adapterCache
 
-                .putIfAbsentAsync(key, "" /*empty entry*/, ttl.toSeconds(), TimeUnit.SECONDS)
+                .putIfAbsentAsync(key, "" /* empty entry */, ttl.toSeconds(), TimeUnit.SECONDS)
                 .thenApply(putResult -> {
 
                     // we do not care about the result
@@ -217,7 +220,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private static LinkedList<JsonObject> mapCredentials(final CredentialsKey searchKey, final List<DeviceInformation> devices) {
+    private LinkedList<JsonObject> mapCredentials(final CredentialsKey searchKey, final List<DeviceInformation> devices) {
 
         log.debug("Search result : {} -> {}", searchKey, devices);
 
@@ -237,7 +240,29 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
                 final CredentialsKey key = new CredentialsKey(tenantId, credential.getAuthId(), credential.getType());
 
                 if (!key.equals(searchKey)) {
+                    log.debug("Result key doesn't match - expected: {}, actual: {}", searchKey, key);
                     // ... filter out non-matching entries
+                    continue;
+                }
+
+                if (credential.getEnabled() != null && !credential.getEnabled()) {
+                    log.debug("Credential is not enabled - enabled: {}", credential.getEnabled());
+                    // ... filter out disabled entries for adapter
+                    continue;
+                }
+
+                final var secrets = credential.getSecrets();
+                if (secrets == null) {
+                    log.debug("Secrets are 'null'");
+                    // ... null secrets list gets filtered out
+                    continue;
+                }
+
+                filterSecrets(secrets);
+
+                if (secrets.isEmpty()) {
+                    log.debug("Empty secrets list");
+                    // no more secrets after filtering ... remove entry from result
                     continue;
                 }
 
@@ -253,6 +278,29 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
         return result;
 
+    }
+
+    private void filterSecrets(final List<String> secrets) {
+        for (final Iterator<String> i = secrets.iterator(); i.hasNext();) {
+            try {
+                final JsonObject json = new JsonObject(i.next());
+                if ( !isValidSecret(json) ) {
+                    i.remove();
+                }
+            } catch (final Exception e) {
+                log.debug("Failed to filter secret, removing...", e);
+                // failed to parse
+                i.remove();
+            }
+        }
+    }
+
+    protected boolean isValidSecret(final JsonObject secret) {
+        if (!secret.getBoolean(CredentialsConstants.FIELD_ENABLED, Boolean.TRUE)) {
+            return false;
+        }
+
+        return true;
     }
 
     private <T> CredentialsResult<T> notFound(final Duration ttl) {
