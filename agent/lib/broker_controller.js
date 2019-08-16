@@ -22,6 +22,7 @@ var rhea = require('rhea');
 var artemis = require('./artemis.js');
 var myevents = require('./events.js');
 var myutils = require('./utils.js');
+var plimit = require('p-limit');
 
 function BrokerController(event_sink) {
     events.EventEmitter.call(this);
@@ -391,8 +392,9 @@ BrokerController.prototype.delete_address_and_settings = function (a) {
 };
 
 BrokerController.prototype.delete_addresses = function (addresses) {
-    var self = this;
-    return Promise.all(addresses.map(function (a) { return self.delete_address(a); }));
+    var limit = plimit(250);
+    let delete_fn = limit.bind(null, this.delete_address.bind(this));
+    return Promise.all(addresses.map(delete_fn));
 };
 
 BrokerController.prototype.create_address = function (a) {
@@ -440,8 +442,9 @@ BrokerController.prototype.create_address_and_settings = function (a, settings) 
 };
 
 BrokerController.prototype.create_addresses = function (addresses) {
-    var self = this;
-    return Promise.all(addresses.map(function (a) { return self.create_address(a); }));
+    var limit = plimit(250);
+    let create_fn = limit.bind(null, this.create_address.bind(this));
+    return Promise.all(addresses.map(create_fn));
 };
 
 BrokerController.prototype.check_broker_addresses = function () {
