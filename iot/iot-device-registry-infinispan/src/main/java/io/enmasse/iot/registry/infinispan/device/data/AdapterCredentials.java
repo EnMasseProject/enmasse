@@ -5,15 +5,15 @@
 
 package io.enmasse.iot.registry.infinispan.device.data;
 
+import static io.vertx.core.json.Json.decodeValue;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
-
-import io.vertx.core.json.Json;
 
 public class AdapterCredentials implements Serializable {
 
@@ -66,7 +66,7 @@ public class AdapterCredentials implements Serializable {
         return new AdapterCredentials(deviceId, internal.getAuthId(), internal.getType(),
                 internal.getSecrets()
                         .stream()
-                        .map(json -> Json.decodeValue(json, Map.class))
+                        .map(json -> decodeValue(json, new TypeReference<Map<String,Serializable>>() {}))
                         .collect(Collectors.toList()));
     }
 
