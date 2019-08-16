@@ -40,11 +40,10 @@ import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
-import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
-import io.enmasse.iot.registry.infinispan.device.data.CachedAdapterCredentials;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
+import io.enmasse.iot.registry.infinispan.util.Credentials;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;
 
@@ -82,7 +81,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected CompletableFuture<CredentialsResult<AdapterCredentials>> processGet(final String tenantId, final String type, final String authId, final Span span) {
+    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final String tenantId, final String type, final String authId, final Span span) {
 
         final CredentialsKey key = new CredentialsKey(tenantId, authId, type);
 
@@ -112,8 +111,8 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                     // return result
 
-                    if (result.getValue().getDeviceId() != null) {
-                        return completedFuture(found(result.getValue(), ttl));
+                    if (!result.getValue().isEmpty()) {
+                        return completedFuture(found(new JsonObject(result.getValue()), ttl));
                     } else {
                         return completedFuture(notFound(ttl));
                     }
@@ -136,7 +135,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         }
     }
 
-    private CompletionStage<CredentialsResult<AdapterCredentials>> resyncCacheEntry(final CredentialsKey key, final Span span) {
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final CredentialsKey key, final Span span) {
 
         return searchCredentials(key)
                 .thenCompose(r -> {
@@ -162,13 +161,13 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         return completedFuture(notFound(this.defaultTtl));
     }
 
-    private CompletionStage<CredentialsResult<AdapterCredentials>> storeCacheEntry(final CredentialsKey key, final CachedAdapterCredentials cacheEntry) {
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final CredentialsKey key, final JsonObject cacheEntry) {
 
         final Duration ttl = this.defaultTtl;
 
         return this.adapterCache
 
-                .putAsync(key, cacheEntry, ttl.toSeconds(), TimeUnit.SECONDS)
+                .putAsync(key, cacheEntry.encode(), ttl.toSeconds(), TimeUnit.SECONDS)
                 .thenApply(putResult -> {
 
                     // we do not care about the result
@@ -184,7 +183,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
         return this.adapterCache
 
-                .putIfAbsentAsync(key, CachedAdapterCredentials.empty(), ttl.toSeconds(), TimeUnit.SECONDS)
+                .putIfAbsentAsync(key, "" /*empty entry*/, ttl.toSeconds(), TimeUnit.SECONDS)
                 .thenApply(putResult -> {
 
                     // we do not care about the result
@@ -199,7 +198,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      * @param key The search key.
      * @return The result of the search.
      */
-    private CompletableFuture<LinkedList<CachedAdapterCredentials>> searchCredentials(final CredentialsKey key) {
+    private CompletableFuture<LinkedList<JsonObject>> searchCredentials(final CredentialsKey key) {
 
         final QueryFactory qf = Search.getQueryFactory(this.managementCache);
 
@@ -218,11 +217,11 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private static LinkedList<CachedAdapterCredentials> mapCredentials(final CredentialsKey searchKey, final List<DeviceInformation> devices) {
+    private static LinkedList<JsonObject> mapCredentials(final CredentialsKey searchKey, final List<DeviceInformation> devices) {
 
         log.debug("Search result : {} -> {}", searchKey, devices);
 
-        final LinkedList<CachedAdapterCredentials> result = new LinkedList<>();
+        final LinkedList<JsonObject> result = new LinkedList<>();
 
         // search through all found devices ...
 
@@ -244,7 +243,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
                 // record matches
 
-                result.add(CachedAdapterCredentials.fromInternal(deviceId, credential));
+                result.add(Credentials.fromInternalToAdapterJson(deviceId, credential));
 
             }
 
@@ -264,10 +263,10 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
 
-    private CredentialsResult<AdapterCredentials> found(final CachedAdapterCredentials result, final Duration ttl) {
+    private CredentialsResult<JsonObject> found(final JsonObject result, final Duration ttl) {
         return CredentialsResult.from(
                 HTTP_OK,
-                result.map(AdapterCredentials::new, JsonObject::new),
+                result,
                 toCacheDirective(ttl));
     }
 

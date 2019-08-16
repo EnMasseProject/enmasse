@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.GenericCredential;
+import org.eclipse.hono.util.Constants;
 import org.eclipse.hono.util.CredentialsConstants;
 
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
@@ -104,6 +105,21 @@ public final class Credentials {
 
     }
 
+    public static JsonObject fromInternalToAdapterJson(final String deviceId, final DeviceCredential credential) {
+        if (credential == null) {
+            return null;
+        }
+
+        final JsonObject result = new JsonObject();
+
+        result.put(Constants.JSON_FIELD_DEVICE_ID, deviceId);
+        result.put(CredentialsConstants.FIELD_AUTH_ID, credential.getAuthId());
+        result.put(CredentialsConstants.FIELD_TYPE, credential.getType());
+        result.put(CredentialsConstants.FIELD_SECRETS, mapSecrets(credential));
+
+        return result;
+    }
+
     public static CommonCredential fromInternal(final DeviceCredential credential) {
 
         // FIXME: very ugly
@@ -115,16 +131,19 @@ public final class Credentials {
         json.put(CredentialsConstants.FIELD_ENABLED, credential.getEnabled());
         json.put("comment", credential.getComment());
 
+        json.put(CredentialsConstants.FIELD_SECRETS, mapSecrets(credential));
+
+        return json.mapTo(CommonCredential.class);
+    }
+
+    private static JsonArray mapSecrets(final DeviceCredential credential) {
         final JsonArray secrets = new JsonArray();
         credential
                 .getSecrets()
                 .stream()
                 .map(JsonObject::new)
                 .forEach(secrets::add);
-
-        json.put(CredentialsConstants.FIELD_SECRETS, secrets);
-
-        return json.mapTo(CommonCredential.class);
+        return secrets;
     }
 
     public static List<CommonCredential> fromInternal(final List<DeviceCredential> credentials) {

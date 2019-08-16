@@ -6,8 +6,6 @@
 package io.enmasse.iot.registry.infinispan.device;
 
 import static io.enmasse.iot.registry.infinispan.util.MoreFutures.completeHandler;
-import static io.vertx.core.json.JsonObject.mapFrom;
-
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.service.credentials.CredentialsService;
@@ -17,8 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.data.AdapterCredentials;
-import io.enmasse.iot.registry.infinispan.device.data.CachedAdapterCredentials;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
@@ -30,8 +26,8 @@ import io.vertx.core.json.JsonObject;
 public abstract class AbstractCredentialsService implements CredentialsService {
 
     // Adapter cache :
-    // <( tenantId + authId + type), (credential + deviceId + sync-flag + registration data version)>
-    protected RemoteCache<CredentialsKey, CachedAdapterCredentials> adapterCache;
+    // <( tenantId + authId + type), (adapter credentials)>
+    protected RemoteCache<CredentialsKey, String> adapterCache;
 
     // Management cache
     // <(TenantId+DeviceId), (Device information + version + credentials)>
@@ -43,21 +39,11 @@ public abstract class AbstractCredentialsService implements CredentialsService {
         this.managementCache = managementProvider.getDeviceManagementCache();
     }
 
-    protected abstract CompletableFuture<CredentialsResult<AdapterCredentials>> processGet(String tenantId, String type, String authId, Span span);
+    protected abstract CompletableFuture<CredentialsResult<JsonObject>> processGet(String tenantId, String type, String authId, Span span);
 
     @Override
     public void get(final String tenantId, final String type, final String authId, final Span span, final Handler<AsyncResult<CredentialsResult<JsonObject>>> resultHandler) {
-        completeHandler(() -> {
-            return processGet(tenantId, type, authId, span)
-                    .thenApply(r -> {
-                        final var payload = r.getPayload() != null ? mapFrom(r.getPayload()) : null;
-
-
-
-                        // FIXME: pass along application properties, when eclipse/hono#1447 is merged
-                        return CredentialsResult.from(r.getStatus(), payload, r.getCacheDirective());
-                    });
-        }, resultHandler);
+        completeHandler(() -> processGet(tenantId, type, authId, span), resultHandler);
     }
 
     @Override
