@@ -71,6 +71,7 @@ public class EmbeddedHotRodServer {
         this.server.start(build, this.defaultCacheManager);
 
         final InfinispanProperties properties = new InfinispanProperties();
+        properties.setTryCreate(true);
         properties.setPort(server.getPort());
 
         this.deviceProvider = new DeviceManagementCacheProvider(properties);
