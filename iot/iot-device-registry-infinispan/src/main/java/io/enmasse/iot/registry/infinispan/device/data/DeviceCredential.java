@@ -7,6 +7,7 @@ package io.enmasse.iot.registry.infinispan.device.data;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.infinispan.protostream.annotations.ProtoDoc;
 import org.infinispan.protostream.annotations.ProtoField;
@@ -95,5 +96,35 @@ public class DeviceCredential {
     public String toString() {
       return toStringHelper().toString();
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                this.authId,
+                this.comment,
+                this.enabled,
+                this.secrets,
+                this.type);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final DeviceCredential other = (DeviceCredential) obj;
+        return Objects.equals(this.authId, other.authId) &&
+                Objects.equals(this.comment, other.comment) &&
+                Objects.equals(this.enabled, other.enabled) &&
+                Objects.equals(this.secrets, other.secrets) &&
+                Objects.equals(this.type, other.type);
+    }
+
 
 }

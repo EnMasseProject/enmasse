@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.util;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -30,7 +31,7 @@ public final class MoreFutures {
         try {
             future = supplier.get();
         } catch (final Exception e) {
-            log.debug("Failed to prepare future", e );
+            log.debug("Failed to prepare future", e);
             handler.handle(Future.failedFuture(e));
             return;
         }
@@ -44,6 +45,10 @@ public final class MoreFutures {
                 handler.handle(Future.failedFuture(error));
             }
         });
+    }
+
+    public static CompletableFuture<Void> allOf(final List<CompletableFuture<?>> futures) {
+        return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
     }
 
 }
