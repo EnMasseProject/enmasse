@@ -31,7 +31,7 @@ public class DeviceKey implements Serializable {
     @ProtoField(number = 2, required = true)
     protected String deviceId;
 
-    public DeviceKey() {}
+    protected DeviceKey() {}
 
     /**
      * Creates a new RegistrationKey. Used by CacheRegistrationService.
@@ -39,9 +39,17 @@ public class DeviceKey implements Serializable {
      * @param tenantId the id of the tenant owning the registration key.
      * @param deviceId the id of the device being registered.
      */
-    public DeviceKey(final String tenantId, final String deviceId) {
+    private DeviceKey(final String tenantId, final String deviceId) {
         this.tenantId = tenantId;
         this.deviceId = deviceId;
+    }
+
+    public String getTenantId() {
+        return this.tenantId;
+    }
+
+    public String getDeviceId() {
+        return this.deviceId;
     }
 
     @Override
@@ -59,23 +67,9 @@ public class DeviceKey implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(tenantId, deviceId);
-    }
-
-    public String getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(String tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public String getDeviceId() {
-        return deviceId;
-    }
-
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+        return Objects.hash(
+                this.tenantId,
+                this.deviceId);
     }
 
     protected ToStringHelper toStringHelper() {
@@ -87,5 +81,12 @@ public class DeviceKey implements Serializable {
     @Override
     public String toString() {
         return toStringHelper().toString();
+    }
+
+    public static DeviceKey device(final String tenantId, final String deviceId) {
+        Objects.requireNonNull(tenantId);
+        Objects.requireNonNull(deviceId);
+
+        return new DeviceKey(tenantId, deviceId);
     }
 }

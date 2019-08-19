@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
+import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.device;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -44,7 +45,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     protected CompletableFuture<OperationResult<Void>> processSet(final String tenantId, final String deviceId, final Optional<String> resourceVersion,
             final List<CommonCredential> credentials, final Span span) {
 
-        final DeviceKey key = new DeviceKey(tenantId, deviceId);
+        final DeviceKey key = device(tenantId, deviceId);
 
         return this.managementCache
 
@@ -85,11 +86,11 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     @Override
     protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(final String tenantId, final String deviceId, final Span span) {
 
-        final DeviceKey key = new DeviceKey(tenantId, deviceId);
+        final DeviceKey key = device(tenantId, deviceId);
 
         return this.managementCache
 
-                .getWithMetadataAsync(key)
+                .getAsync(key)
                 .thenApply(result -> {
 
                     if (result == null) {
@@ -98,9 +99,9 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
                     return ok(
                             HTTP_OK,
-                            fromInternal(result.getValue().getCredentials()),
+                            fromInternal(result.getCredentials()),
                             Optional.empty(),
-                            Optional.ofNullable(result.getValue().getVersion()));
+                            Optional.ofNullable(result.getVersion()));
                 });
 
     }
