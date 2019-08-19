@@ -29,7 +29,7 @@ cp -a "$SCRIPTPATH/../" "$TMPPROJ"
 "$SCRIPTPATH/update-codegen.sh" --output-base "$TMPBASE"
 
 echo "Comparing existing generated code with temporarily generated code"
-if diff -Nur "$SCRIPTPATH/.." "$TMPPROJ"; then
+if diff -Nur --no-dereference "$SCRIPTPATH/.." "$TMPPROJ"; then
     echo "No changes detected in generated code"
 else
     echo "Generated code is out of date. Run hack/update-codegen.sh and commit the changes."
