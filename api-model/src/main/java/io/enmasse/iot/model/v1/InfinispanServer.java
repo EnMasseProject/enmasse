@@ -6,7 +6,7 @@
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -21,23 +21,14 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-@JsonInclude(NON_NULL)
-public class InfinispanDeviceRegistry {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class InfinispanServer {
+    private ExternalInfinispanServer external;
 
-    private ContainerConfig container;
-    private InfinispanServer server;
-
-    public ContainerConfig getContainer() {
-        return container;
+    public void setExternal(ExternalInfinispanServer external) {
+        this.external = external;
     }
-    public void setContainer(ContainerConfig container) {
-        this.container = container;
-    }
-
-    public InfinispanServer getServer() {
-        return server;
-    }
-    public void setServer(InfinispanServer server) {
-        this.server = server;
+    public ExternalInfinispanServer getExternal() {
+        return external;
     }
 }
