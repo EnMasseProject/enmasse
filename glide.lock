@@ -1,5 +1,5 @@
-hash: 946bfcb844212b407e7d1dba73d0241742b5086499d24e1f508ec0ab6d4f3b70
-updated: 2019-04-01T13:28:20.456896087+02:00
+hash: ae27373ab16911ff58b5077911827adebf61ff98f46ab7f5ddb2f91aaf88684a
+updated: 2019-08-19T12:04:15.434917033+02:00
 imports:
 - name: cloud.google.com/go
   version: 3b1ae45394a234c385be014e9a488f2bb6eef821
@@ -148,7 +148,7 @@ imports:
 - name: github.com/spf13/pflag
   version: 298182f68c66c05229eb03ac171abe6e309ee79a
 - name: go.uber.org/atomic
-  version: 1ea20fb1cbb1cc08cbd0d913a96dead89aa18289
+  version: df976f2515e274675050de7b3f42545de80594fd
 - name: go.uber.org/multierr
   version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
 - name: go.uber.org/zap
@@ -196,7 +196,7 @@ imports:
   subpackages:
   - rate
 - name: golang.org/x/tools
-  version: e9f45831faab4562ce3f53f7196b67c08f948e86
+  version: aa82965741a9fecd12b026fbb3d3c6ed3231b8f8
 - name: google.golang.org/appengine
   version: 4a4468ece617fc8205e99368fa2200e9d1fad421
   subpackages:

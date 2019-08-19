@@ -23,7 +23,7 @@ jdk:
 python:
 - 2.7.14
 go:
-- 1.11.x
+- 1.12.x
 jobs:
   include:
   - stage: build
@@ -31,8 +31,8 @@ jobs:
     - ./.travis/find-qdrouterd-base-versions.sh
     - pip install --user requests[security] ansible
     - gem install asciidoctor
-    - gimme 1.11.6
-    - source ~/.gimme/envs/go1.11.6.env
+    - gimme 1.12.9
+    - source ~/.gimme/envs/go1.12.9.env
     - go version
     install: true
     before_script:

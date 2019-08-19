@@ -26,7 +26,7 @@ import:
   - package: github.com/spf13/pflag
     version: ~1.0
   - package: golang.org/x/tools
-    version: release-branch.go1.11
+    version: release-branch.go1.12
   - package: sigs.k8s.io/controller-runtime
     version: 0.1.9
   - package: github.com/operator-framework/operator-sdk
