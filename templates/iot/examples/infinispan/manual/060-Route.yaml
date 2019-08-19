@@ -1,0 +1,15 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: infinispan
+  labels:
+    app: infinispan
+spec:
+  to:
+    kind: Service
+    name: infinispan
+  port:
+    targetPort: management
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
