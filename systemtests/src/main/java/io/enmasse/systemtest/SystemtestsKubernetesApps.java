@@ -195,7 +195,7 @@ public class SystemtestsKubernetesApps {
         // wait for the deployment
 
         client
-                .apps().deployments()
+                .apps().statefulSets()
                 .inNamespace(namespace)
                 .withName(INFINISPAN_SERVER)
                 .waitUntilReady(2, TimeUnit.MINUTES);
