@@ -174,12 +174,12 @@ pipeline {
         always {
             script {
                 lib.postAction(env.ARTIFACTS_DIR)
+                sh "sudo ./systemtests/scripts/get_results_info.sh ./systemtest/target/surefire-reports/ '${env.TEST_CASE}' '${env.TEST_PROFILE}'"
+                lib.postGithubPrComment("results.json")
             }
         }
         failure {
             script {
-                sh "sudo ./systemtests/scripts/get_results_info.sh ./systemtest/target/surefire-reports/ ${env.TEST_CASE} ${env.TEST_PROFILE}"
-                lib.postGithubPrComment("results.json")
                 echo "build failed"
             }
         }
