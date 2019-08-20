@@ -670,7 +670,7 @@ public abstract class Kubernetes {
     }
 
     /***
-     * Returns log of conrainer in pod
+     * Returns log of container in pod
      * @param podName name of pod
      * @param containerName name of container in pod
      * @return log
