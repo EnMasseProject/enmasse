@@ -182,15 +182,15 @@ public class SystemtestsKubernetesApps {
 
         // setup replacement
 
-        final Map<String,String> values = new HashMap<>();
+        final Map<String, String> values = new HashMap<>();
         values.put("NAMESPACE", namespace);
         final Function<InputStream, InputStream> replace = in -> ReplaceValueStream.replaceValues(in, values);
 
         // apply "common" and "manual" folders
 
         var base = Paths.get(".").resolve("../templates/iot/examples/infinispan");
-        applyDirectory (client, base.resolve("common"), replace);
-        applyDirectory (client, base.resolve("manual"), replace);
+        applyDirectory(client, base.resolve("common"), replace);
+        applyDirectory(client, base.resolve("manual"), replace);
 
         // wait for the deployment
 
