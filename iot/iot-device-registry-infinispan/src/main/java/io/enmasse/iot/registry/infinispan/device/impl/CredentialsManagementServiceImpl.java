@@ -145,7 +145,15 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
     }
 
-    private static Map<CredentialKey, DeviceCredential> toMap(String tenantId, final List<DeviceCredential> entries) {
+    private static Map<CredentialKey, DeviceCredential> toMap(final String tenantId, final List<DeviceCredential> entries) {
+
+        // if the map is null or empty ...
+
+        if ( entries == null || entries.isEmpty()) {
+            // ... directly return an empty result
+            return new HashMap<>();
+        }
+
         final Map<CredentialKey, DeviceCredential> result = new HashMap<>(entries.size());
 
         for (final DeviceCredential credential : entries) {
@@ -159,6 +167,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
         }
 
         return result;
+
     }
 
     /**
