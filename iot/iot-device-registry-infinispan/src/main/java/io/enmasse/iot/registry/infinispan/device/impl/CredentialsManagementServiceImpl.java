@@ -6,7 +6,6 @@
 package io.enmasse.iot.registry.infinispan.device.impl;
 
 import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
-import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -54,10 +53,8 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Void>> processSet(final String tenantId, final String deviceId, final Optional<String> resourceVersion,
+    protected CompletableFuture<OperationResult<Void>> processSet(final DeviceKey key, final Optional<String> resourceVersion,
             final List<CommonCredential> credentials, final Span span) {
-
-        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.managementCache
 
@@ -77,7 +74,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
                     final Collection<CredentialKey> affectedKeys;
                     try {
-                        affectedKeys = calculateDifference(tenantId, currentValue.getValue().getCredentials(), newValue.getCredentials());
+                        affectedKeys = calculateDifference(key.getTenantId(), currentValue.getValue().getCredentials(), newValue.getCredentials());
                     } catch (final IllegalStateException e) {
                         return completedFuture(OperationResult.empty(HTTP_BAD_REQUEST));
                     }
@@ -187,9 +184,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Override
-    protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(final String tenantId, final String deviceId, final Span span) {
-
-        final DeviceKey key = deviceKey(tenantId, deviceId);
+    protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(final DeviceKey key, final Span span) {
 
         return this.managementCache
 

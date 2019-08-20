@@ -5,7 +5,9 @@
 
 package io.enmasse.iot.registry.infinispan.device;
 
+import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
 import static io.enmasse.iot.registry.infinispan.util.MoreFutures.completeHandler;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +24,7 @@ import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -37,15 +40,17 @@ public abstract class AbstractCredentialsManagementService implements Credential
     protected final RemoteCache<DeviceKey, DeviceInformation> managementCache;
 
     @Autowired
+    protected TenantInformationService tenantInformationService;
+
+    @Autowired
     public AbstractCredentialsManagementService(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
         this.adapterCache = adapterProvider.getAdapterCredentialsCache();
         this.managementCache = managementProvider.getDeviceManagementCache();
     }
 
-    protected abstract CompletableFuture<OperationResult<Void>> processSet(String tenantId, String deviceId, Optional<String> resourceVersion, List<CommonCredential> credentials,
-            Span span);
-
-    protected abstract CompletableFuture<OperationResult<List<CommonCredential>>> processGet(String tenantId, String deviceId, Span span);
+    public void setTenantInformationService(TenantInformationService tenantInformationService) {
+        this.tenantInformationService = tenantInformationService;
+    }
 
     @Override
     public void set(final String tenantId, final String deviceId, final Optional<String> resourceVersion, final List<CommonCredential> credentials, final Span span,
@@ -53,9 +58,32 @@ public abstract class AbstractCredentialsManagementService implements Credential
         completeHandler(() -> processSet(tenantId, deviceId, resourceVersion, credentials, span), resultHandler);
     }
 
+    protected CompletableFuture<OperationResult<Void>> processSet(final String tenantId, final String deviceId, final Optional<String> resourceVersion, final List<CommonCredential> credentials,
+            Span span) {
+
+        var key = deviceKey(tenantId, deviceId);
+
+        return this.tenantInformationService
+                .tenantExists(tenantId, HTTP_NOT_FOUND, span)
+                .thenCompose(x -> processSet(key, resourceVersion, credentials, span));
+    }
+
+    protected abstract CompletableFuture<OperationResult<Void>> processSet(DeviceKey key, Optional<String> resourceVersion, List<CommonCredential> credentials,
+            Span span);
+
     @Override
     public void get(String tenantId, String deviceId, Span span, Handler<AsyncResult<OperationResult<List<CommonCredential>>>> resultHandler) {
         completeHandler(() -> processGet(tenantId, deviceId, span), resultHandler);
     }
 
+    protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(final String tenantId, final String deviceId, final Span span) {
+
+        var key = deviceKey(tenantId, deviceId);
+
+        return this.tenantInformationService
+                .tenantExists(tenantId, HTTP_NOT_FOUND, span)
+                .thenCompose(x -> processGet(key, span));
+    }
+
+    protected abstract CompletableFuture<OperationResult<List<CommonCredential>>> processGet(DeviceKey key, Span span);
 }

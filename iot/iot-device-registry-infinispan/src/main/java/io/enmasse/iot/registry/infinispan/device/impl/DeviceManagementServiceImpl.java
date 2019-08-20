@@ -5,7 +5,6 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -17,10 +16,7 @@ import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.eclipse.hono.service.management.OperationResult.ok;
 
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
-
 import org.eclipse.hono.client.ServiceInvocationException;
 import org.eclipse.hono.service.management.Id;
 import org.eclipse.hono.service.management.OperationResult;
@@ -44,23 +40,17 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
     private static final Logger log = LoggerFactory.getLogger(DeviceManagementServiceImpl.class);
 
-    private final Supplier<String> deviceIdGenerator = () -> UUID.randomUUID().toString();
-
     @Autowired
     public DeviceManagementServiceImpl(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
         super(managementProvider, adapterProvider);
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Id>> processCreateDevice(String tenantId, Optional<String> optionalDeviceId, Device device, Span span) {
-
-        final String deviceId = optionalDeviceId.orElseGet(this.deviceIdGenerator);
-
-        final DeviceKey key = deviceKey(tenantId, deviceId);
+    protected CompletableFuture<OperationResult<Id>> processCreateDevice(final DeviceKey key, final Device device, final Span span) {
 
         final DeviceInformation value = new DeviceInformation();
-        value.setTenantId(tenantId);
-        value.setDeviceId(deviceId);
+        value.setTenantId(key.getTenantId());
+        value.setDeviceId(key.getDeviceId());
         value.setRegistrationInformation(Json.encode(device));
 
         return this.managementCache
@@ -68,7 +58,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
                 .thenApply(result -> {
                     if (result == null) {
                         return OperationResult.ok(HTTP_CREATED,
-                                Id.of(deviceId),
+                                Id.of(key.getDeviceId()),
                                 Optional.empty(),
                                 Optional.of(value.getVersion()));
                     } else {
@@ -79,9 +69,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Device>> processReadDevice(String tenantId, String deviceId, Span span) {
-
-        final DeviceKey key = deviceKey(tenantId, deviceId);
+    protected CompletableFuture<OperationResult<Device>> processReadDevice(final DeviceKey key, final Span span) {
 
         return this.managementCache
                 .getWithMetadataAsync(key)
@@ -102,9 +90,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     }
 
     @Override
-    protected CompletableFuture<OperationResult<Id>> processUpdateDevice(String tenantId, String deviceId, Device device, Optional<String> resourceVersion, Span span) {
-
-        final DeviceKey key = deviceKey(tenantId, deviceId);
+    protected CompletableFuture<OperationResult<Id>> processUpdateDevice(final DeviceKey key, final Device device, final Optional<String> resourceVersion, final Span span) {
 
         return this.managementCache
 
@@ -132,7 +118,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
                                 return ok(
                                         HTTP_NO_CONTENT,
-                                        Id.of(deviceId),
+                                        Id.of(key.getDeviceId()),
                                         Optional.empty(),
                                         Optional.ofNullable(newValue.getVersion()));
                             });
@@ -140,10 +126,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
                 });
     }
 
-    @Override
-    protected CompletableFuture<Result<Void>> processDeleteDevice(String tenantId, String deviceId, Optional<String> resourceVersion, Span span) {
-
-        final DeviceKey key = deviceKey(tenantId, deviceId);
+    protected CompletableFuture<Result<Void>> processDeleteDevice(final DeviceKey key, final Optional<String> resourceVersion, final Span span) {
 
         return this.managementCache
                 .getWithMetadataAsync(key)

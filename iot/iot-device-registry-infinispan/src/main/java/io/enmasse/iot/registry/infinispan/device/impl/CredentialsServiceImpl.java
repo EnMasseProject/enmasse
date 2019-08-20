@@ -85,9 +85,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     }
 
     @Override
-    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final String tenantId, final String type, final String authId, final Span span) {
-
-        final CredentialKey key = credentialKey(tenantId, authId, type);
+    protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final CredentialKey key, final Span span) {
 
         return this.adapterCache
                 .getWithMetadataAsync(key)
@@ -286,7 +284,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         for (final Iterator<String> i = secrets.iterator(); i.hasNext();) {
             try {
                 final JsonObject json = new JsonObject(i.next());
-                if ( !isValidSecret(json) ) {
+                if (!isValidSecret(json)) {
                     i.remove();
                 }
             } catch (final Exception e) {

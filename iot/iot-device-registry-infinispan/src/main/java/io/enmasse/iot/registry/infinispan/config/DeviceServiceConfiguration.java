@@ -16,6 +16,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.enmasse.iot.registry.infinispan.tenant.DummyTenantInformationService;
+import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.vertx.core.Vertx;
 
 @Configuration
@@ -65,6 +67,13 @@ public class DeviceServiceConfiguration {
     @Autowired
     public CredentialsManagementHttpEndpoint credentialsHttpEndpoint(final Vertx vertx) {
         return new CredentialsManagementHttpEndpoint(vertx);
+    }
+
+    @Bean
+    @Autowired
+    public TenantInformationService tenantInformationService () {
+        // FIXME: use a proper one
+        return new DummyTenantInformationService();
     }
 
 }
