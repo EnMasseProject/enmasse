@@ -46,6 +46,7 @@ function start(env) {
             }
 
             server_promise.then(() => {
+                address_source.start();
                 if (env.ADDRESS_SPACE_TYPE === 'brokered') {
                     bind_event(address_source, 'addresses_defined', console_server.metrics);
                     console_server.listen_health(env);
