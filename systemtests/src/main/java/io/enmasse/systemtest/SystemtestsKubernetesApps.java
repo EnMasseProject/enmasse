@@ -48,7 +48,7 @@ public class SystemtestsKubernetesApps {
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
-    private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("templates/iot/examples/infinispan");
+    private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
 
     public static String getMessagingAppPodName() throws Exception {
         TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
@@ -241,21 +241,21 @@ public class SystemtestsKubernetesApps {
         Files.walkFileTree(path, new SimpleFileVisitor<>() {
             public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
 
-                log.debug("Found: {}", path);
+                log.debug("Found: {}", file);
 
-                if (!Files.isRegularFile(path)) {
-                    log.debug("File is not a regular file: {}", path);
+                if (!Files.isRegularFile(file)) {
+                    log.debug("File is not a regular file: {}", file);
                     return FileVisitResult.CONTINUE;
                 }
 
                 if (!file.getFileName().toString().endsWith(".yaml")) {
-                    log.info("Skipping file: does not end with '.yaml': {}", path);
+                    log.info("Skipping file: does not end with '.yaml': {}", file);
                     return FileVisitResult.CONTINUE;
                 }
 
-                log.info("Processing: {}", path);
+                log.info("Processing: {}", file);
 
-                try (InputStream f = Files.newInputStream(path)) {
+                try (InputStream f = Files.newInputStream(file)) {
 
                     final InputStream in;
                     if (streamManipulator != null) {
