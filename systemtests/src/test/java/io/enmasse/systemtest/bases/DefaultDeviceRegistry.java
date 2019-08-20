@@ -22,10 +22,17 @@ public final class DefaultDeviceRegistry {
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewInfinispan()
                 .withNewServer()
+
                 .withNewExternal()
                 .withHost(infinispanEndpoint.getHost())
                 .withPort(infinispanEndpoint.getPort())
+                // credentials aligned with 'templates/iot/examples/infinispan/manual'
+                .withUsername("app")
+                .withPassword("test12")
+                .withSaslRealm("ApplicationRealm")
+                .withSaslServerName("hotrod")
                 .endExternal()
+
                 .endServer()
                 .endInfinispan()
                 .build();
