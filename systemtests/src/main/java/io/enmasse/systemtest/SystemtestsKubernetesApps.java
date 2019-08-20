@@ -48,6 +48,7 @@ public class SystemtestsKubernetesApps {
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
+    private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("templates/iot/examples/infinispan");
 
     public static String getMessagingAppPodName() throws Exception {
         TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
@@ -175,22 +176,22 @@ public class SystemtestsKubernetesApps {
         }
     }
 
+    private static Function<InputStream, InputStream> namespaceReplacer(final String namespace) {
+        final Map<String, String> values = new HashMap<>();
+        values.put("NAMESPACE", namespace);
+        return in -> ReplaceValueStream.replaceValues(in, values);
+    }
+
     public static Endpoint deployInfinispanServer(String namespace) throws Exception {
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
 
-        // setup replacement
-
-        final Map<String, String> values = new HashMap<>();
-        values.put("NAMESPACE", namespace);
-        final Function<InputStream, InputStream> replace = in -> ReplaceValueStream.replaceValues(in, values);
-
         // apply "common" and "manual" folders
 
-        var base = Paths.get(".").resolve("../templates/iot/examples/infinispan");
-        applyDirectory(client, base.resolve("common"), replace);
-        applyDirectory(client, base.resolve("manual"), replace);
+        applyDirectories(namespaceReplacer(namespace),
+                INFINISPAN_EXAMPLE_BASE.resolve("common"),
+                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
 
         // wait for the deployment
 
@@ -198,41 +199,42 @@ public class SystemtestsKubernetesApps {
                 .apps().statefulSets()
                 .inNamespace(namespace)
                 .withName(INFINISPAN_SERVER)
-                .waitUntilReady(2, TimeUnit.MINUTES);
+                .waitUntilReady(5, TimeUnit.MINUTES);
 
         // return hotrod enpoint
 
         return kubeCli.getEndpoint(INFINISPAN_SERVER, namespace, "hotrod");
     }
 
+
     public static void deleteInfinispanServer(final String namespace) throws Exception {
+
+        // delete "common" and "manual" folders
+
+        deleteDirectories(namespaceReplacer(namespace),
+                INFINISPAN_EXAMPLE_BASE.resolve("common"),
+                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+    }
+
+
+    public static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+        loadDirectories(streamManipulator, Applicable::createOrReplace, paths);
+    }
+
+    public static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+        loadDirectories(streamManipulator, Deletable::delete, paths);
+    }
+
+    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,Boolean>> consumer, final Path... paths) throws Exception {
+        for ( Path path : paths ) {
+            loadDirectory(streamManipulator, consumer, path);
+        }
+    }
+
+    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,Boolean>> consumer, final Path path) throws Exception {
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
-
-        // setup replacement
-
-        final Map<String, String> values = new HashMap<>();
-        values.put("NAMESPACE", namespace);
-        final Function<InputStream, InputStream> replace = in -> ReplaceValueStream.replaceValues(in, values);
-
-        // apply "common" and "manual" folders
-
-        var base = Paths.get(".").resolve("../templates/iot/examples/infinispan");
-        deleteDirectory(client, base.resolve("common"), replace);
-        deleteDirectory(client, base.resolve("manual"), replace);
-    }
-
-
-    public static void applyDirectory(final KubernetesClient client, final Path path, final Function<InputStream, InputStream> streamManipulator) throws Exception {
-        loadDirectory(client, path, streamManipulator, Applicable::createOrReplace);
-    }
-
-    public static void deleteDirectory(final KubernetesClient client, final Path path, final Function<InputStream, InputStream> streamManipulator) throws Exception {
-        loadDirectory(client, path, streamManipulator, Deletable::delete);
-    }
-
-    public static void loadDirectory(final KubernetesClient client, final Path path, final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,Boolean>> consumer) throws Exception {
 
         log.info("Loading resources from: {}", path);
 
