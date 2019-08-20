@@ -46,7 +46,6 @@ function start(env) {
             }
 
             server_promise.then(() => {
-                address_source.start();
                 if (env.ADDRESS_SPACE_TYPE === 'brokered') {
                     bind_event(address_source, 'addresses_defined', console_server.metrics);
                     console_server.listen_health(env);
@@ -69,6 +68,7 @@ function start(env) {
                     ragent.start_listening(env);
                     ragent.listen_health({HEALTH_PORT:8888});
                 }
+                address_source.start();
 
                 process.on('SIGTERM', function () {
                     log.info('Shutdown started');
