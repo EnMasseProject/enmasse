@@ -60,6 +60,7 @@ function start(env) {
             ragent.start_listening(env);
             ragent.listen_health({HEALTH_PORT:8888});
         }
+        address_source.start();
 
         setInterval(() => {
             log.info("Heap statistics : %j", v8.getHeapStatistics());

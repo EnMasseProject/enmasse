@@ -142,8 +142,12 @@ function AddressSource(config) {
     if (config.INFRA_UUID) {
         selector += ",infraUuid=" + config.INFRA_UUID;
     }
-    var options = myutils.merge({selector: selector}, this.config);
+    this.selector = selector;
     events.EventEmitter.call(this);
+}
+
+AddressSource.prototype.start = function() {
+    var options = myutils.merge({selector: this.selector}, this.config);
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
