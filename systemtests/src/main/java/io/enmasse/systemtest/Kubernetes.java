@@ -255,8 +255,9 @@ public abstract class Kubernetes {
         Map<String, String> terminatedPodsLogs = new HashMap<>();
         client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
             pod.getStatus().getContainerStatuses().forEach(containerStatus -> {
-                log.info("pod:'{}' : restart count '{}'",
+                log.info("pod:'{}', container:'{}' : restart count '{}'",
                         pod.getMetadata().getName(),
+                        containerStatus.getName(),
                         containerStatus.getRestartCount());
                 if (containerStatus.getRestartCount() > 0) {
                     String name = String.format("%s_%s", pod.getMetadata().getName(), containerStatus.getName());
