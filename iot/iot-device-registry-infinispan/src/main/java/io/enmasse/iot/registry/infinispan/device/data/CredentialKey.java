@@ -22,7 +22,7 @@ import com.google.common.base.MoreObjects.ToStringHelper;
  * See {@link CacheCredentialService CacheCredentialService} class.
  */
 @ProtoMessage
-public class CredentialsKey implements Serializable {
+public class CredentialKey implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -34,9 +34,9 @@ public class CredentialsKey implements Serializable {
     protected String type;
 
     /**
-     * Constructor without arguments for the protobuilder.
+     * No-arg constructor for protobuf.
      */
-    public CredentialsKey() {}
+    protected CredentialKey() {}
 
     /**
      * Creates a new CredentialsKey. Used by CacheCredentialsService.
@@ -45,7 +45,7 @@ public class CredentialsKey implements Serializable {
      * @param authId the auth-id used in the credential.
      * @param type the the type of the credential.
      */
-    public CredentialsKey(final String tenantId, final String authId, final String type) {
+    private CredentialKey(final String tenantId, final String authId, final String type) {
         this.tenantId = tenantId;
         this.authId = authId;
         this.type = type;
@@ -59,7 +59,7 @@ public class CredentialsKey implements Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final CredentialsKey that = (CredentialsKey) o;
+        final CredentialKey that = (CredentialKey) o;
         return Objects.equals(this.tenantId, that.tenantId) &&
                 Objects.equals(this.authId, that.authId) &&
                 Objects.equals(this.type, that.type);
@@ -104,5 +104,12 @@ public class CredentialsKey implements Serializable {
     @Override
     public String toString() {
         return toStringHelper().toString();
+    }
+
+    public static CredentialKey credentialKey(final String tenantId, final String authId, final String type) {
+        Objects.requireNonNull(tenantId);
+        Objects.requireNonNull(authId);
+        Objects.requireNonNull(type);
+        return new CredentialKey(tenantId, authId, type);
     }
 }

@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.device;
+import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +34,7 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
     @Override
     protected CompletableFuture<RegistrationResult> processGetDevice(final String tenantId, final String deviceId, final Span span) {
 
-        final DeviceKey key = device(tenantId, deviceId);
+        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.managementCache
 

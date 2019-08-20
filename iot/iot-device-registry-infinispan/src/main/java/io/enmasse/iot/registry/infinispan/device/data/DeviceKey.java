@@ -83,7 +83,7 @@ public class DeviceKey implements Serializable {
         return toStringHelper().toString();
     }
 
-    public static DeviceKey device(final String tenantId, final String deviceId) {
+    public static DeviceKey deviceKey(final String tenantId, final String deviceId) {
         Objects.requireNonNull(tenantId);
         Objects.requireNonNull(deviceId);
 

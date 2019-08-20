@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
+import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.time.Duration.between;
@@ -42,7 +43,7 @@ import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
+import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
@@ -86,7 +87,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
     @Override
     protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final String tenantId, final String type, final String authId, final Span span) {
 
-        final CredentialsKey key = new CredentialsKey(tenantId, authId, type);
+        final CredentialKey key = credentialKey(tenantId, authId, type);
 
         return this.adapterCache
                 .getWithMetadataAsync(key)
@@ -138,7 +139,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         }
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final CredentialsKey key, final Span span) {
+    private CompletionStage<CredentialsResult<JsonObject>> resyncCacheEntry(final CredentialKey key, final Span span) {
 
         return searchCredentials(key)
                 .thenCompose(r -> {
@@ -165,7 +166,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
         return completedFuture(notFound(this.defaultTtl));
     }
 
-    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final CredentialsKey key, final JsonObject cacheEntry) {
+    private CompletionStage<CredentialsResult<JsonObject>> storeCacheEntry(final CredentialKey key, final JsonObject cacheEntry) {
 
         final Duration ttl = this.defaultTtl;
 
@@ -181,7 +182,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final CredentialsKey key) {
+    private <T> CompletionStage<CredentialsResult<T>> storeNotFound(final CredentialKey key) {
 
         final Duration ttl = this.defaultTtl;
 
@@ -202,7 +203,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
      * @param key The search key.
      * @return The result of the search.
      */
-    private CompletableFuture<LinkedList<JsonObject>> searchCredentials(final CredentialsKey key) {
+    private CompletableFuture<LinkedList<JsonObject>> searchCredentials(final CredentialKey key) {
 
         final QueryFactory qf = Search.getQueryFactory(this.managementCache);
 
@@ -221,7 +222,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
     }
 
-    private LinkedList<JsonObject> mapCredentials(final CredentialsKey searchKey, final List<DeviceInformation> devices) {
+    private LinkedList<JsonObject> mapCredentials(final CredentialKey searchKey, final List<DeviceInformation> devices) {
 
         log.debug("Search result : {} -> {}", searchKey, devices);
 
@@ -238,7 +239,7 @@ public class CredentialsServiceImpl extends AbstractCredentialsService {
 
             for (final DeviceCredential credential : device.getCredentials()) {
 
-                final CredentialsKey key = new CredentialsKey(tenantId, credential.getAuthId(), credential.getType());
+                final CredentialKey key = credentialKey(tenantId, credential.getAuthId(), credential.getType());
 
                 if (!key.equals(searchKey)) {
                     log.debug("Result key doesn't match - expected: {}, actual: {}", searchKey, key);

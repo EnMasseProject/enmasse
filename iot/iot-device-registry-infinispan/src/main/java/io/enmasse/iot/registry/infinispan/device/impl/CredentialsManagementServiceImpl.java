@@ -5,7 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.device;
+import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
+import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.toInternal;
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -37,7 +38,7 @@ import org.springframework.stereotype.Component;
 import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsManagementService;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
+import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
@@ -56,7 +57,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     protected CompletableFuture<OperationResult<Void>> processSet(final String tenantId, final String deviceId, final Optional<String> resourceVersion,
             final List<CommonCredential> credentials, final Span span) {
 
-        final DeviceKey key = device(tenantId, deviceId);
+        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.managementCache
 
@@ -74,7 +75,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
                     final DeviceInformation newValue = currentValue.getValue().newVersion();
                     newValue.setCredentials(toInternal(credentials));
 
-                    final Collection<CredentialsKey> affectedKeys;
+                    final Collection<CredentialKey> affectedKeys;
                     try {
                         affectedKeys = calculateDifference(tenantId, currentValue.getValue().getCredentials(), newValue.getCredentials());
                     } catch (final IllegalStateException e) {
@@ -109,9 +110,9 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
     }
 
-    static Collection<CredentialsKey> calculateDifference(final String tenantId, final List<DeviceCredential> current, final List<DeviceCredential> next) {
+    static Collection<CredentialKey> calculateDifference(final String tenantId, final List<DeviceCredential> current, final List<DeviceCredential> next) {
 
-        final Set<CredentialsKey> result = new HashSet<>();
+        final Set<CredentialKey> result = new HashSet<>();
 
         final var currentMap = toMap(tenantId, current);
         final var nextMap = toMap(tenantId, next);
@@ -144,12 +145,12 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
 
     }
 
-    private static Map<CredentialsKey, DeviceCredential> toMap(String tenantId, final List<DeviceCredential> entries) {
-        final Map<CredentialsKey, DeviceCredential> result = new HashMap<>(entries.size());
+    private static Map<CredentialKey, DeviceCredential> toMap(String tenantId, final List<DeviceCredential> entries) {
+        final Map<CredentialKey, DeviceCredential> result = new HashMap<>(entries.size());
 
         for (final DeviceCredential credential : entries) {
 
-            final var key = new CredentialsKey(tenantId, credential.getAuthId(), credential.getType());
+            final var key = credentialKey(tenantId, credential.getAuthId(), credential.getType());
             if (result.put(key, credential) != null) {
                 // conflict adding
                 throw new IllegalStateException(String.format("Duplicate entries for '%s'", key));
@@ -166,10 +167,10 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
      * @param keys The keys to delete. May be empty, but must not be {@code null}.
      * @return The future which completes when all the delete operations are completed.
      */
-    protected CompletableFuture<?> clearAdapterEntries(final Collection<CredentialsKey> keys) {
+    protected CompletableFuture<?> clearAdapterEntries(final Collection<CredentialKey> keys) {
         final List<CompletableFuture<?>> futures = new ArrayList<>(keys.size());
 
-        for (final CredentialsKey key : keys) {
+        for (final CredentialKey key : keys) {
             futures.add(this.adapterCache.removeAsync(key));
         }
 
@@ -179,7 +180,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     @Override
     protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(final String tenantId, final String deviceId, final Span span) {
 
-        final DeviceKey key = device(tenantId, deviceId);
+        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.managementCache
 

@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.device;
+import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -56,7 +56,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
         final String deviceId = optionalDeviceId.orElseGet(this.deviceIdGenerator);
 
-        final DeviceKey key = device(tenantId, deviceId);
+        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         final DeviceInformation value = new DeviceInformation();
         value.setTenantId(tenantId);
@@ -81,7 +81,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     @Override
     protected CompletableFuture<OperationResult<Device>> processReadDevice(String tenantId, String deviceId, Span span) {
 
-        final DeviceKey key = device(tenantId, deviceId);
+        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.managementCache
                 .getWithMetadataAsync(key)
@@ -104,7 +104,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     @Override
     protected CompletableFuture<OperationResult<Id>> processUpdateDevice(String tenantId, String deviceId, Device device, Optional<String> resourceVersion, Span span) {
 
-        final DeviceKey key = device(tenantId, deviceId);
+        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.managementCache
 
@@ -143,7 +143,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
     @Override
     protected CompletableFuture<Result<Void>> processDeleteDevice(String tenantId, String deviceId, Optional<String> resourceVersion, Span span) {
 
-        final DeviceKey key = device(tenantId, deviceId);
+        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.managementCache
                 .getWithMetadataAsync(key)

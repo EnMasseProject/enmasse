@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
+import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
 import static io.enmasse.iot.registry.infinispan.device.impl.CredentialsManagementServiceImpl.calculateDifference;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -16,7 +17,6 @@ import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
 
 public class CredentialsManagementServiceImplTest {
@@ -38,7 +38,7 @@ public class CredentialsManagementServiceImplTest {
 
         var result = calculateDifference(TENANT, emptyList(), asList(cred1));
         assertThat(result, hasSize(1));
-        assertThat(result, hasItem(new CredentialsKey(TENANT, "auth1", "type1")));
+        assertThat(result, hasItem(credentialKey(TENANT, "auth1", "type1")));
     }
 
     @Test
@@ -50,7 +50,7 @@ public class CredentialsManagementServiceImplTest {
 
         var result = calculateDifference(TENANT, asList(cred1), emptyList());
         assertThat(result, hasSize(1));
-        assertThat(result, hasItem(new CredentialsKey(TENANT, "auth1", "type1")));
+        assertThat(result, hasItem(credentialKey(TENANT, "auth1", "type1")));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class CredentialsManagementServiceImplTest {
 
         var result = calculateDifference(TENANT, asList(cred1), asList(cred2));
         assertThat(result, hasSize(1));
-        assertThat(result, hasItem(new CredentialsKey(TENANT, "auth1", "type1")));
+        assertThat(result, hasItem(credentialKey(TENANT, "auth1", "type1")));
     }
 
     @Test
@@ -84,8 +84,8 @@ public class CredentialsManagementServiceImplTest {
 
         var result = calculateDifference(TENANT, asList(cred1), asList(cred2));
         assertThat(result, hasSize(2));
-        assertThat(result, hasItem(new CredentialsKey(TENANT, "auth1", "type1")));
-        assertThat(result, hasItem(new CredentialsKey(TENANT, "auth2", "type1")));
+        assertThat(result, hasItem(credentialKey(TENANT, "auth1", "type1")));
+        assertThat(result, hasItem(credentialKey(TENANT, "auth2", "type1")));
     }
 
 }

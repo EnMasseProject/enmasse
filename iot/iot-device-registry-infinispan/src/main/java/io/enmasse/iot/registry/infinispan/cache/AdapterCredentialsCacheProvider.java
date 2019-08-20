@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialsKey;
+import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
 
 @Component
 public class AdapterCredentialsCacheProvider extends AbstractCacheProvider {
@@ -37,7 +37,7 @@ public class AdapterCredentialsCacheProvider extends AbstractCacheProvider {
     }
 
 
-    public RemoteCache<CredentialsKey, String> getAdapterCredentialsCache() {
+    public RemoteCache<CredentialKey, String> getAdapterCredentialsCache() {
         return getOrCreateCache("adapterCredentialsCache", buildConfiguration());
     }
 
