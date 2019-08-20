@@ -278,6 +278,7 @@ describe('configmap backed address source', function() {
     });
     it('creates an address', function(done) {
         var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE: 'foo'});
+        source.start();
         source.once('addresses_defined', function () {
             source.create_address({address:'myqueue', type:'queue', plan:'clever'}).then(
                 function () {
@@ -299,10 +300,11 @@ describe('configmap backed address source', function() {
         configmaps.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');
         configmaps.add_address_definition({address:'bar', type:'topic'}, 'address-config-bar');
         var source = new AddressSource({port:configmaps.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start();
         source.on('addresses_defined', function () {
             source.delete_address({address:'foo', type:'queue', name:'address-config-foo'}).then(
                 function () {
-                    source.on('addresses_defined', function (addresses) {
+                    source.once('addresses_defined', function (addresses) {
                         assert.equal(addresses.length, 1);
                         assert.equal(addresses[0].address, 'bar');
                         assert.equal(addresses[0].type, 'topic');
