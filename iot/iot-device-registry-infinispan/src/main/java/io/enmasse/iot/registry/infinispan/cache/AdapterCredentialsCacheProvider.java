@@ -38,7 +38,7 @@ public class AdapterCredentialsCacheProvider extends AbstractCacheProvider {
 
 
     public RemoteCache<CredentialKey, String> getAdapterCredentialsCache() {
-        return getOrCreateCache("adapterCredentialsCache", buildConfiguration());
+        return getOrCreateCache(properties.getAdapterCredentialsCacheName(), buildConfiguration());
     }
 
 

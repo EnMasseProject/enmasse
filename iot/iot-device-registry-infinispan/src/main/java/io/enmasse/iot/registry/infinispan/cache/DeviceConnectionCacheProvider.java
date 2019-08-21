@@ -37,7 +37,7 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
     }
 
     public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
-        return getOrCreateCache("deviceState", buildConfiguration());
+        return getOrCreateCache(properties.getDeviceStatesCacheName(), buildConfiguration());
     }
 
 }

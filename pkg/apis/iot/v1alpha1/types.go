@@ -220,6 +220,14 @@ type ExternalInfinispanServer struct {
 
 	SaslServerName string `json:"saslServerName,omitempty"`
 	SaslRealm      string `json:"saslRealm,omitempty"`
+
+	CacheNames *ExternalCacheNames `json:"cacheNames,omitempty"`
+}
+
+type ExternalCacheNames struct {
+	Devices            string `json:"devices,omitempty"`
+	DeviceStates       string `json:"deviceStates,omitempty"`
+	AdapterCredentials string `json:"adapterCredentials,omitempty"`
 }
 
 type TenantServiceConfig struct {

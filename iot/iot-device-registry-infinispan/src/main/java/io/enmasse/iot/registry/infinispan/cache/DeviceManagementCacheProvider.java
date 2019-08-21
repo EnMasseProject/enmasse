@@ -103,7 +103,7 @@ public class DeviceManagementCacheProvider extends AbstractCacheProvider {
     }
 
     public RemoteCache<DeviceKey, DeviceInformation> getDeviceManagementCache() {
-        return getOrCreateCache("deviceManagementCache", buildConfiguration());
+        return getOrCreateCache(properties.getDevicesCacheName(), buildConfiguration());
     }
 
 }

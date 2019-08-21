@@ -161,8 +161,12 @@ func appendInfinispanExternalServer(container *v1.Container, external *iotv1alph
 	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_USERNAME", external.Username)
 	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_PASSWORD", external.Password)
 
-	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_SERVER_NAME", external.SaslServerName)
-	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_REALM", external.SaslRealm)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_ADAPTER_CREDENTIALS_CACHE_NAME", external.CacheNames.AdapterCredentials)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICES_CACHE_NAME", external.CacheNames.Devices)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICE_STATES_CACHE_NAME", external.CacheNames.DeviceStates)
+
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_SERVER_NAME", external.SaslServerName)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_REALM", external.SaslRealm)
 
 	return nil
 }

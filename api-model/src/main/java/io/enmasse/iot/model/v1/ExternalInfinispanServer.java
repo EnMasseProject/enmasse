@@ -34,6 +34,8 @@ public class ExternalInfinispanServer {
     private String saslServerName;
     private String saslRealm;
 
+    private ExternalCacheNames cacheNames;
+
     public String getHost() {
         return host;
     }
@@ -80,6 +82,14 @@ public class ExternalInfinispanServer {
 
     public void setSaslRealm(String saslRealm) {
         this.saslRealm = saslRealm;
+    }
+
+    public ExternalCacheNames getCacheNames() {
+        return cacheNames;
+    }
+
+    public void setCacheNames(ExternalCacheNames cacheNames) {
+        this.cacheNames = cacheNames;
     }
 
 }

@@ -328,7 +328,7 @@ data:
                             <indexing index="NONE" />
                         </distributed-cache>
 
-                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceManagementCache">
+                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices">
                            <locking isolation="READ_COMMITTED"/>
                            <indexing index="PRIMARY_OWNER">
                                <property name="default.indexmanager">
@@ -337,12 +337,12 @@ data:
                            </indexing>
                        </distributed-cache>
 
-                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentialsCache">
+                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
                            <transaction mode="NONE"/>
                            <indexing index="NONE"/>
                        </distributed-cache>
       
-                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceState">
+                       <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="deviceStates">
                            <transaction mode="NONE"/>
                            <indexing index="NONE"/>
                        </distributed-cache>
