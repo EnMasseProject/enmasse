@@ -64,11 +64,16 @@ function ready (addr) {
 }
 
 function same_allocation(a, b) {
+    if (a === b) {
+        return true;
+    } else if (a == null || b == null || a.length !== b.length) {
+        return false;
+    }
     for (var i in a) {
         var equal = false;
         for (var j in b) {
-            if (a[i].containerId == b[j].containerId && a[i].clusterId == b[j].clusterId && a[i].state == b[j].state) {
-                equal = false;
+            if (a[i].containerId === b[j].containerId && a[i].clusterId === b[j].clusterId && a[i].state === b[j].state) {
+                equal = true;
                 break;
             }
         }
@@ -79,16 +84,31 @@ function same_allocation(a, b) {
     return true;
 }
 
+function same_messages(a, b) {
+    if (a === b) {
+        return true;
+    } else if (a == null || b == null || a.length !== b.length) {
+        return false;
+    }
+
+    for (var i in a) {
+        if (!b.includes(a[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function same_address_definition(a, b) {
-    if (a.address === b.address && a.type === b.type && same_allocation(a.allocated_to, b.allocated_to)) {
+    if (a.address === b.address && a.type === b.type && !same_allocation(a.allocated_to, b.allocated_to)) {
         log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
     }
-    return a.address === b.address && a.type === b.type && a.allocated_to === b.allocated_to;
+    return a.address === b.address && a.type === b.type && same_allocation(a.allocated_to, b.allocated_to);
 }
 
 function same_address_status(a, b) {
     if (a === undefined) return b === undefined;
-    return a.isReady === b.isReady && a.phase === b.phase && a.message === b.message;
+    return a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages);
 }
 
 function same_address_definition_and_status(a, b) {
@@ -122,8 +142,12 @@ function AddressSource(config) {
     if (config.INFRA_UUID) {
         selector += ",infraUuid=" + config.INFRA_UUID;
     }
-    var options = myutils.merge({selector: selector}, this.config);
+    this.selector = selector;
     events.EventEmitter.call(this);
+}
+
+AddressSource.prototype.start = function() {
+    var options = myutils.merge({selector: this.selector}, this.config);
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};

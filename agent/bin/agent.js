@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var v8 = require('v8');
 var log = require("../lib/log.js").logger();
 var AddressSource = require('../lib/internal_address_source.js');
 var BrokerAddressSettings = require('../lib/broker_address_settings.js');
@@ -59,6 +60,11 @@ function start(env) {
             ragent.start_listening(env);
             ragent.listen_health({HEALTH_PORT:8888});
         }
+        address_source.start();
+
+        setInterval(() => {
+            log.info("Heap statistics : %j", v8.getHeapStatistics());
+        }, 60000);
 
         process.on('SIGTERM', function () {
             log.info('Shutdown started');
