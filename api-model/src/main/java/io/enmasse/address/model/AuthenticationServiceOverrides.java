@@ -4,12 +4,16 @@
  */
 package io.enmasse.address.model;
 
+import io.fabric8.kubernetes.api.model.SecretReference;
+
 import java.util.Objects;
 
 public class AuthenticationServiceOverrides {
     private String host;
     private Integer port;
     private String realm;
+    private SecretReference caCertSecret;
+    private SecretReference clientCertSecret;
 
     public String getHost() {
         return host;
@@ -35,6 +39,22 @@ public class AuthenticationServiceOverrides {
         this.realm = realm;
     }
 
+    public SecretReference getCaCertSecret() {
+        return caCertSecret;
+    }
+
+    public void setCaCertSecret(SecretReference caCertSecret) {
+        this.caCertSecret = caCertSecret;
+    }
+
+    public SecretReference getClientCertSecret() {
+        return clientCertSecret;
+    }
+
+    public void setClientCertSecret(SecretReference clientCertSecret) {
+        this.clientCertSecret = clientCertSecret;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -56,6 +76,8 @@ public class AuthenticationServiceOverrides {
                 "host='" + host + '\'' +
                 ", port=" + port +
                 ", realm='" + realm + '\'' +
+                ", caCertSecret='" + caCertSecret + '\'' +
+                ", clientCertSecret='" + realm + '\'' +
                 '}';
     }
 }

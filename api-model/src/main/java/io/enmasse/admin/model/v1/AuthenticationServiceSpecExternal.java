@@ -4,10 +4,23 @@
  */
 package io.enmasse.admin.model.v1;
 
+import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.SecretReference;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
 
 import java.util.Objects;
 
+@Buildable(
+    editableEnabled = false,
+    generateBuilderPackage = false,
+    builderPackage = "io.fabric8.kubernetes.api.builder",
+    refs= {
+        @BuildableReference(AbstractWithAdditionalProperties.class)
+    },
+    inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
+)
 public class AuthenticationServiceSpecExternal extends AbstractWithAdditionalProperties {
     private String host;
     private int port;
