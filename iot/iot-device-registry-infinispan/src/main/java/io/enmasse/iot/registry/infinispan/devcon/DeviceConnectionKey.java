@@ -8,6 +8,9 @@ package io.enmasse.iot.registry.infinispan.devcon;
 import java.io.Serializable;
 import java.util.Objects;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
+
 public class DeviceConnectionKey implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -23,7 +26,7 @@ public class DeviceConnectionKey implements Serializable {
     }
 
     public String getTenantId() {
-        return tenantId;
+        return this.tenantId;
     }
 
     public void setTenantId(String tenantId) {
@@ -31,7 +34,7 @@ public class DeviceConnectionKey implements Serializable {
     }
 
     public String getDeviceId() {
-        return deviceId;
+        return this.deviceId;
     }
 
     public void setDeviceId(String deviceId) {
@@ -40,19 +43,36 @@ public class DeviceConnectionKey implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(deviceId, tenantId);
+        return Objects.hash(
+                this.deviceId,
+                this.tenantId);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         DeviceConnectionKey other = (DeviceConnectionKey) obj;
-        return Objects.equals(deviceId, other.deviceId) && Objects.equals(tenantId, other.tenantId);
+        return Objects.equals(this.deviceId, other.deviceId) &&
+                Objects.equals(this.tenantId, other.tenantId);
+    }
+
+    protected ToStringHelper toStringHelper() {
+        return MoreObjects.toStringHelper(this)
+                .add("tenantId", this.tenantId)
+                .add("deviceId", this.deviceId);
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper().toString();
     }
 
 }

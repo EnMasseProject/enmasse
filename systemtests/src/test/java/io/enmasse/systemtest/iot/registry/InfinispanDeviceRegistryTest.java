@@ -4,23 +4,20 @@
  */
 package io.enmasse.systemtest.iot.registry;
 
-import java.nio.ByteBuffer;
+import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newInfinispanBased;
 
-import org.junit.jupiter.api.Disabled;
+import java.nio.ByteBuffer;
 
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.CertBundle;
-import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
 
-@Disabled("Disabled until new API is implemented")
 public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase{
 
     @Override
     protected IoTConfig provideIoTConfig() throws Exception {
-        Endpoint infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
         CertBundle certBundle = CertificateUtils.createCertBundle();
         return new IoTConfigBuilder()
                 .withNewMetadata()
@@ -28,11 +25,7 @@ public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase{
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
-                .withNewDeviceRegistry()
-                .withNewInfinispan()
-                .withServerAddress(infinispanEndpoint.toString())
-                .endInfinispan()
-                .endDeviceRegistry()
+                .withDeviceRegistry(newInfinispanBased())
                 .endServices()
                 .withNewAdapters()
                 .withNewMqtt()

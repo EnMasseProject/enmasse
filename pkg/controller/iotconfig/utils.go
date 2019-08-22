@@ -63,6 +63,7 @@ func AppendStandardHonoJavaOptions(container *corev1.Container) {
 
 func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig) {
 	deployment.Spec.Replicas = serviceConfig.Replicas
+	deployment.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 }
 
 func applyContainerConfig(container *corev1.Container, config *iotv1alpha1.ContainerConfig) {

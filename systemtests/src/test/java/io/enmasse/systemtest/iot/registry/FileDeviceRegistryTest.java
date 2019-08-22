@@ -4,6 +4,8 @@
  */
 package io.enmasse.systemtest.iot.registry;
 
+import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newFileBased;
+
 import java.nio.ByteBuffer;
 
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -22,10 +24,7 @@ public class FileDeviceRegistryTest extends DeviceRegistryTestBase{
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
-                .withNewDeviceRegistry()
-                .withNewFile()
-                .endFile()
-                .endDeviceRegistry()
+                .withDeviceRegistry(newFileBased())
                 .endServices()
                 .withNewAdapters()
                 .withNewMqtt()

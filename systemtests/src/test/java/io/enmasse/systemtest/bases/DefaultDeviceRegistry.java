@@ -17,16 +17,28 @@ public final class DefaultDeviceRegistry {
 
     private DefaultDeviceRegistry() {}
 
-    private static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
+    public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
         var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer(kubernetes.getInfraNamespace());
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewInfinispan()
-                .withServerAddress(infinispanEndpoint.toString())
+                .withNewServer()
+
+                .withNewExternal()
+                .withHost(infinispanEndpoint.getHost())
+                .withPort(infinispanEndpoint.getPort())
+                // credentials aligned with 'templates/iot/examples/infinispan/manual'
+                .withUsername("app")
+                .withPassword("test12")
+                .withSaslRealm("ApplicationRealm")
+                .withSaslServerName("hotrod")
+                .endExternal()
+
+                .endServer()
                 .endInfinispan()
                 .build();
     }
 
-    private static DeviceRegistryServiceConfig newFileBased() {
+    public static DeviceRegistryServiceConfig newFileBased() {
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewFile()
                 .withNumberOfDevicesPerTenant(100_000)

@@ -25,7 +25,7 @@ import io.sundr.builder.annotations.Inline;
 public class InfinispanDeviceRegistry {
 
     private ContainerConfig container;
-    private String serverAddress;
+    private InfinispanServer server;
 
     public ContainerConfig getContainer() {
         return container;
@@ -34,10 +34,10 @@ public class InfinispanDeviceRegistry {
         this.container = container;
     }
 
-    public String getServerAddress() {
-        return serverAddress;
+    public InfinispanServer getServer() {
+        return server;
     }
-    public void setServerAddress(String serverAddress) {
-        this.serverAddress = serverAddress;
+    public void setServer(InfinispanServer server) {
+        this.server = server;
     }
 }

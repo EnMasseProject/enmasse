@@ -5,15 +5,23 @@
 
 package io.enmasse.iot.registry.infinispan;
 
-import java.io.IOException;
+import java.net.ServerSocket;
+import java.util.UUID;
 
 import org.infinispan.client.hotrod.RemoteCache;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
+import org.infinispan.server.core.admin.embeddedserver.EmbeddedServerAdminOperationHandler;
 import org.infinispan.server.hotrod.HotRodServer;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfiguration;
 import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.registry.infinispan.cache.DeviceConnectionCacheProvider;
 import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.registry.infinispan.devcon.DeviceConnectionKey;
 
 /**
  * This is heavily inspired from Tristan Tarrant's SimpleEmbeddedHotRodServer.
@@ -23,39 +31,70 @@ import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
  */
 public class EmbeddedHotRodServer {
 
+    private static final Logger log = LoggerFactory.getLogger(EmbeddedHotRodServer.class);
+
     private final HotRodServer server;
     private final DefaultCacheManager defaultCacheManager;
-    private CacheProvider provider;
 
-    public EmbeddedHotRodServer() throws IOException {
+    private DeviceManagementCacheProvider deviceProvider;
+    private DeviceConnectionCacheProvider stateProvider;
+
+    public EmbeddedHotRodServer() throws Exception {
+
+        var globalConfig = new GlobalConfigurationBuilder()
+                .transport()
+                .clusterName(UUID.randomUUID().toString())
+                .defaultTransport()
+
+                .build();
 
         var config = new org.infinispan.configuration.cache.ConfigurationBuilder()
                 .build();
-        defaultCacheManager = new DefaultCacheManager(config);
+
+        this.defaultCacheManager = new DefaultCacheManager(globalConfig, config);
+
+        /*
+         * Unfortunately some parts of the hot rod server can't handle
+         * the ephemeral port zero.
+         */
+        int port = freePort();
+        log.info("Using port: {}", port);
 
         final HotRodServerConfiguration build = new HotRodServerConfigurationBuilder()
+                .adminOperationsHandler(new EmbeddedServerAdminOperationHandler())
+                .port(port)
+                .defaultCacheName("default")
+                .startTransport(true)
                 .build();
-        server = new HotRodServer();
-        server.start(build, defaultCacheManager);
+
+        this.server = new HotRodServer();
+        this.server.start(build, this.defaultCacheManager);
 
         final InfinispanProperties properties = new InfinispanProperties();
-        this.provider = new CacheProvider(properties);
+        properties.setTryCreate(true);
+        properties.setPort(server.getPort());
+
+        this.deviceProvider = new DeviceManagementCacheProvider(properties);
+        this.deviceProvider.start();
+        this.stateProvider = new DeviceConnectionCacheProvider(properties);
+        this.stateProvider.start();
     }
 
-    public <K, V> RemoteCache<K, V> getCache(String cacheName) {
-        var config = provider.buildConfiguration();
-
-        defaultCacheManager.defineConfiguration(cacheName, config);
-        return provider.getCache(cacheName);
+    private static int freePort() throws Exception {
+        try (ServerSocket server = new ServerSocket(0)) {
+            return server.getLocalPort();
+        }
     }
 
     public void stop() throws Exception {
-        try {
-            provider.close();
+        try (AutoCloseable x1 = this.deviceProvider; AutoCloseable x2 = this.stateProvider) {
         } finally {
-            defaultCacheManager.stop();
-            server.stop();
+            this.defaultCacheManager.stop();
+            this.server.stop();
         }
+    }
 
+    public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
+        return this.stateProvider.getDeviceStateCache();
     }
 }

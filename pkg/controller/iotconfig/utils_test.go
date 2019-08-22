@@ -34,7 +34,11 @@ func TestDeviceRegistryEval(t *testing.T) {
 			ServicesConfig: v1alpha1.ServicesConfig{
 				DeviceRegistry: v1alpha1.DeviceRegistryServiceConfig{
 					Infinispan: &v1alpha1.InfinispanDeviceRegistry{
-						ServerAddress: "127.0.0.1",
+						Server: v1alpha1.InfinispanServer{
+							External: &v1alpha1.ExternalInfinispanServer{
+								Host: "127.0.0.1",
+							},
+						},
 					},
 				},
 			},

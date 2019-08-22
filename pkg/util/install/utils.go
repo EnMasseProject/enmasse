@@ -402,6 +402,14 @@ func ApplyEnvSimple(container *corev1.Container, name string, value string) {
 	})
 }
 
+func ApplyOrRemoveEnvSimple(container *corev1.Container, name string, value string) {
+	if value != "" {
+		ApplyEnvSimple(container, name, value)
+	} else {
+		RemoveEnv(container, name)
+	}
+}
+
 func ApplyEnvSecret(container *corev1.Container, name string, secretKey string, secretName string) {
 	ApplyEnvOptionalSecret(container, name, secretKey, secretName, nil)
 }

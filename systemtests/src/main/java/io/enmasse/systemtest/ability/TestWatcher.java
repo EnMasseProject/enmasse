@@ -17,10 +17,8 @@ import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
 import org.slf4j.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -83,9 +81,9 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
                     for (Container c : containers) {
                         Path filePath = path.resolve(String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
                         try {
-                            Files.write(filePath, kube.getLog(p.getMetadata().getName(), c.getName()).getBytes());
+                            Files.writeString(filePath, kube.getLog(p.getMetadata().getName(), c.getName()));
                         } catch (IOException e) {
-                            log.warn("Cannot write file {}", filePath);
+                            log.warn("Cannot write file {}", filePath, e);
                         }
                     }
                 } catch (Exception ex) {
@@ -94,20 +92,20 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             }
 
             kube.getLogsOfTerminatedPods(kube.getInfraNamespace()).forEach((name, podLogTerminated) -> {
-                File filePath = new File(path.toString(), String.format("%s.terminated.log", name));
+                Path filePath = path.resolve(String.format("%s.terminated.log", name));
                 try {
-                    Files.write(filePath.toPath(), podLogTerminated.getBytes(StandardCharsets.UTF_8));
+                    Files.writeString(filePath, podLogTerminated);
                 } catch (IOException e) {
-                    log.warn("Cannot write file {}", filePath.getName());
+                    log.warn("Cannot write file {}", filePath, e);
                 }
             });
 
-            Files.write(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut().getBytes());
-            Files.write(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut().getBytes());
-            Files.write(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut().getBytes());
+            Files.writeString(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(kube.getInfraNamespace()).getStdOut());
+            Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
+            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
             log.info("Pod logs and describe successfully stored into {}", path);
         } catch (Exception ex) {
-            log.warn("Cannot save pod logs and info: ", ex);
+            log.warn("Cannot save pod logs and info", ex);
         }
         throw throwable;
     }

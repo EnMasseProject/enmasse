@@ -14,7 +14,7 @@
 
   <properties>
     <hono.version>1.0-M6</hono.version>
-    <infinispan.version>9.4.13.Final</infinispan.version>
+    <infinispan.version>9.4.15.Final</infinispan.version>
 
     <!-- align with Hono compatible versions -->
     <logback.version>1.2.3</logback.version>
@@ -94,6 +94,17 @@
         <artifactId>infinispan-client-hotrod</artifactId>
         <version>${infinispan.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-remote-query-client</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-query-dsl</artifactId>
+        <version>${infinispan.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-server-hotrod</artifactId>

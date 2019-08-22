@@ -7,7 +7,8 @@ package iotconfig
 
 import (
 	"context"
-	"strings"
+	"fmt"
+	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/api/core/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
@@ -58,13 +60,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
 
-	err := install.ApplyFsGroupOverride(deployment)
-
-	if err != nil {
-		return err
-	}
-
-	err = install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
+	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
 			return err
@@ -91,8 +87,6 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 		// environment
 
-		toks := strings.Split(config.Spec.ServicesConfig.DeviceRegistry.Infinispan.ServerAddress, ":")
-
 		container.Env = []corev1.EnvVar{
 			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
@@ -103,9 +97,6 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
-
-			{Name: "ENMASSE_IOT_DEVICE_REGISTRY_INFINISPAN_HOST", Value: toks[0]},
-			{Name: "ENMASSE_IOT_DEVICE_REGISTRY_INFINISPAN_PORT", Value: toks[1]},
 		}
 
 		AppendStandardHonoJavaOptions(container)
@@ -120,11 +111,22 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
+		install.DropVolumeMount(container, "registry")
 
 		// apply container options
 
 		if config.Spec.ServicesConfig.DeviceRegistry.Infinispan != nil {
 			applyContainerConfig(container, config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Container)
+		}
+
+		// apply infinispan server options
+
+		if config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Server.External != nil {
+			if err := appendInfinispanExternalServer(container, config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Server.External); err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("infinispan backend server configuration missing")
 		}
 
 		// return
@@ -139,6 +141,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	// volumes
 
 	install.ApplyConfigMapVolume(deployment, "config", nameDeviceRegistry+"-config")
+	install.DropVolume(deployment, "registry")
 
 	// inter service secrets
 
@@ -147,6 +150,40 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	}
 
 	// return
+
+	return nil
+}
+
+func appendInfinispanExternalServer(container *v1.Container, external *iotv1alpha1.ExternalInfinispanServer) error {
+
+	// basic connection
+
+	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_HOST", external.Host)
+	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_PORT", strconv.Itoa(int(external.Port)))
+	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_USERNAME", external.Username)
+	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_PASSWORD", external.Password)
+
+	// SASL
+
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_SERVER_NAME", external.SaslServerName)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_REALM", external.SaslRealm)
+
+	// cache names
+
+	adapterCredentials := ""
+	devices := ""
+	deviceStates := ""
+	if external.CacheNames != nil {
+		adapterCredentials = external.CacheNames.AdapterCredentials
+		devices = external.CacheNames.Devices
+		deviceStates = external.CacheNames.DeviceStates
+	}
+
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_ADAPTER_CREDENTIALS_CACHE_NAME", adapterCredentials)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICES_CACHE_NAME", devices)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICE_STATES_CACHE_NAME", deviceStates)
+
+	// done
 
 	return nil
 }
@@ -200,12 +237,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(config *
 
 	configMap.Data["application.yml"] = `
 hono:
-  app:
-    maxInstances: 1
-  healthCheck:
-    insecurePortBindAddress: 0.0.0.0
-    insecurePortEnabled: true
-    insecurePort: 8088
+
   auth:
     port: 5671
     keyPath: /etc/tls/tls.key
@@ -213,17 +245,37 @@ hono:
     keyFormat: PEM
     trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
-  registry:
-    amqp:
-      bindAddress: 0.0.0.0
-      keyPath: /etc/tls/tls.key
-      certPath: /etc/tls/tls.crt
-      keyFormat: PEM
-    rest:
-      bindAddress: 0.0.0.0
-      keyPath: /etc/tls/tls.key
-      certPath: /etc/tls/tls.crt
-      keyFormat: PEM
+
+enmasse:
+  iot:
+
+    app:
+      maxInstances: 1
+
+    healthCheck:
+      insecurePortBindAddress: 0.0.0.0
+      startupTimeout: 90
+
+    registry:
+
+      device:
+        credentials:
+          ttl: 1m
+
+      amqp:
+        bindAddress: 0.0.0.0
+        keyPath: /etc/tls/tls.key
+        certPath: /etc/tls/tls.crt
+        keyFormat: PEM
+      rest:
+        bindAddress: 0.0.0.0
+        keyPath: /etc/tls/tls.key
+        certPath: /etc/tls/tls.crt
+        keyFormat: PEM
+
+    credentials:
+      svc:
+        maxBcryptIterations: 10
 `
 	return nil
 }

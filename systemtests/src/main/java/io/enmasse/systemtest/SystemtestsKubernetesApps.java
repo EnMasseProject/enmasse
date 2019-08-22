@@ -10,15 +10,31 @@ import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.Applicable;
+import io.fabric8.kubernetes.client.dsl.Deletable;
+import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
+import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
+
 import org.slf4j.Logger;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class SystemtestsKubernetesApps {
     private static Logger log = CustomLogger.getLogger();
@@ -32,6 +48,7 @@ public class SystemtestsKubernetesApps {
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
+    private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
 
     public static String getMessagingAppPodName() throws Exception {
         TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
@@ -159,19 +176,103 @@ public class SystemtestsKubernetesApps {
         }
     }
 
-    public static Endpoint deployInfinispanServer(String namespace) throws Exception {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource(INFINISPAN_SERVER, 11222));
-        kubeCli.createDeploymentFromResource(namespace, getInfinispanDeployment());
-        return kubeCli.getEndpoint(INFINISPAN_SERVER, namespace, "http");
+    private static Function<InputStream, InputStream> namespaceReplacer(final String namespace) {
+        final Map<String, String> values = new HashMap<>();
+        values.put("NAMESPACE", namespace);
+        return in -> ReplaceValueStream.replaceValues(in, values);
     }
 
-    public static void deleteInfinispanServer(String namespace) {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        if (kubeCli.deploymentExists(namespace, INFINISPAN_SERVER)) {
-            kubeCli.deleteService(namespace, INFINISPAN_SERVER);
-            kubeCli.deleteDeployment(namespace, INFINISPAN_SERVER);
+    public static Endpoint deployInfinispanServer(String namespace) throws Exception {
+
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
+
+        // apply "common" and "manual" folders
+
+        applyDirectories(namespaceReplacer(namespace),
+                INFINISPAN_EXAMPLE_BASE.resolve("common"),
+                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+
+        // wait for the deployment
+
+        client
+                .apps().statefulSets()
+                .inNamespace(namespace)
+                .withName(INFINISPAN_SERVER)
+                .waitUntilReady(5, TimeUnit.MINUTES);
+
+        // return hotrod enpoint
+
+        return kubeCli.getEndpoint(INFINISPAN_SERVER, namespace, "hotrod");
+    }
+
+
+    public static void deleteInfinispanServer(final String namespace) throws Exception {
+
+        // delete "common" and "manual" folders
+
+        deleteDirectories(namespaceReplacer(namespace),
+                INFINISPAN_EXAMPLE_BASE.resolve("common"),
+                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+    }
+
+
+    public static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+        loadDirectories(streamManipulator, Applicable::createOrReplace, paths);
+    }
+
+    public static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+        loadDirectories(streamManipulator, Deletable::delete, paths);
+    }
+
+    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,Boolean>> consumer, final Path... paths) throws Exception {
+        for ( Path path : paths ) {
+            loadDirectory(streamManipulator, consumer, path);
         }
+    }
+
+    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,Boolean>> consumer, final Path path) throws Exception {
+
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
+
+        log.info("Loading resources from: {}", path);
+
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+
+                log.debug("Found: {}", file);
+
+                if (!Files.isRegularFile(file)) {
+                    log.debug("File is not a regular file: {}", file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                if (!file.getFileName().toString().endsWith(".yaml")) {
+                    log.info("Skipping file: does not end with '.yaml': {}", file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                log.info("Processing: {}", file);
+
+                try (InputStream f = Files.newInputStream(file)) {
+
+                    final InputStream in;
+                    if (streamManipulator != null) {
+                        in = streamManipulator.apply(f);
+                    } else {
+                        in = f;
+                    }
+
+                    if (in != null) {
+                        consumer.accept(client.load(in));
+                    }
+                }
+
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -425,31 +526,4 @@ public class SystemtestsKubernetesApps {
                 .build();
     }
 
-    private static Deployment getInfinispanDeployment() {
-        return new DeploymentBuilder()
-                .withNewMetadata()
-                .withName(INFINISPAN_SERVER)
-                .addToLabels("app", INFINISPAN_SERVER)
-                .addToLabels("template", INFINISPAN_SERVER)
-                .endMetadata()
-                .withNewSpec()
-                .withNewSelector()
-                .addToMatchLabels("app", INFINISPAN_SERVER)
-                .endSelector()
-                .withReplicas(1)
-                .withNewTemplate()
-                .withNewMetadata()
-                .addToLabels("app", INFINISPAN_SERVER)
-                .endMetadata()
-                .withNewSpec()
-                .addNewContainer()
-                .withName(INFINISPAN_SERVER)
-                .withImage("jboss/infinispan-server:9.4.11.Final")
-                .withImagePullPolicy("IfNotPresent")
-                .endContainer()
-                .endSpec()
-                .endTemplate()
-                .endSpec()
-                .build();
-    }
 }

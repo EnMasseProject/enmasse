@@ -1,0 +1,18 @@
+apiVersion: infinispan.org/v1
+kind: Infinispan
+metadata:
+  name: infinispan
+config:
+  sourceType: ConfigMap
+  sourceRef: infinispan-configuration
+spec:
+  replicas: 3
+  image: jboss/infinispan-server:9.4.11.Final
+  connector:
+    authentication:
+      type: Credentials
+      secretName: conn-auth-secret
+  management:
+    authentication:
+      type: Credentials
+      secretName: mgmt-auth-secret
