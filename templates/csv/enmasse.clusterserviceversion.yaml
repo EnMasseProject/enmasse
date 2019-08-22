@@ -553,14 +553,6 @@ spec:
                   value: extension-apiserver-authentication
                 - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
                   value: kube-system
-                - name: APISERVER_ROUTE_NAME
-                  value: restapi
-                - name: STANDARD_AUTHSERVICE_CONFIG_NAME
-                  value: keycloak-config
-                - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
-                  value: keycloak-credentials
-                - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
-                  value: standard-authservice-cert
                 image: ${API_SERVER_IMAGE}
                 imagePullPolicy: ${IMAGE_PULL_POLICY}
                 livenessProbe:

@@ -18,12 +18,8 @@ public class ApiServerOptions {
     private String certDir;
     private Duration resyncInterval;
     private boolean enableRbac;
-    private String standardAuthserviceConfigName;
-    private String standardAuthserviceCredentialsSecretName;
-    private String standardAuthserviceCertSecretName;
     private String apiserverClientCaConfigName;
     private String apiserverClientCaConfigNamespace;
-    private String restapiRouteName;
     private Duration userApiTimeout;
     private String version;
 
@@ -46,14 +42,9 @@ public class ApiServerOptions {
 
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
 
-        options.setStandardAuthserviceConfigName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CONFIG_NAME"));
-        options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
-        options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
-
         options.setApiserverClientCaConfigName(getEnv(env, "APISERVER_CLIENT_CA_CONFIG_NAME").orElse(null));
         options.setApiserverClientCaConfigNamespace(getEnv(env, "APISERVER_CLIENT_CA_CONFIG_NAMESPACE").orElse(null));
 
-        options.setRestapiRouteName(getEnv(env, "APISERVER_ROUTE_NAME").orElse(null));
         options.setVersion(getEnvOrThrow(env, "VERSION"));
 
         return options;
@@ -109,30 +100,6 @@ public class ApiServerOptions {
         this.enableRbac = enableRbac;
     }
 
-    public String getStandardAuthserviceConfigName() {
-        return standardAuthserviceConfigName;
-    }
-
-    public void setStandardAuthserviceConfigName(String standardAuthserviceConfigName) {
-        this.standardAuthserviceConfigName = standardAuthserviceConfigName;
-    }
-
-    public String getStandardAuthserviceCredentialsSecretName() {
-        return standardAuthserviceCredentialsSecretName;
-    }
-
-    public void setStandardAuthserviceCredentialsSecretName(String standardAuthserviceCredentialsSecretName) {
-        this.standardAuthserviceCredentialsSecretName = standardAuthserviceCredentialsSecretName;
-    }
-
-    public String getStandardAuthserviceCertSecretName() {
-        return standardAuthserviceCertSecretName;
-    }
-
-    public void setStandardAuthserviceCertSecretName(String standardAuthserviceCertSecretName) {
-        this.standardAuthserviceCertSecretName = standardAuthserviceCertSecretName;
-    }
-
     public String getApiserverClientCaConfigName() {
         return apiserverClientCaConfigName;
     }
@@ -147,14 +114,6 @@ public class ApiServerOptions {
 
     public void setApiserverClientCaConfigNamespace(String apiserverClientCaConfigNamespace) {
         this.apiserverClientCaConfigNamespace = apiserverClientCaConfigNamespace;
-    }
-
-    public String getRestapiRouteName() {
-        return restapiRouteName;
-    }
-
-    public void setRestapiRouteName(String restapiRouteName) {
-        this.restapiRouteName = restapiRouteName;
     }
 
     public Duration getUserApiTimeout() {
