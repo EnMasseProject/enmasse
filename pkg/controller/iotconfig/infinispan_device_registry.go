@@ -156,17 +156,34 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 func appendInfinispanExternalServer(container *v1.Container, external *iotv1alpha1.ExternalInfinispanServer) error {
 
+	// basic connection
+
 	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_HOST", external.Host)
 	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_PORT", strconv.Itoa(int(external.Port)))
 	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_USERNAME", external.Username)
 	install.ApplyEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_PASSWORD", external.Password)
 
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_ADAPTER_CREDENTIALS_CACHE_NAME", external.CacheNames.AdapterCredentials)
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICES_CACHE_NAME", external.CacheNames.Devices)
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICE_STATES_CACHE_NAME", external.CacheNames.DeviceStates)
+	// SASL
 
 	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_SERVER_NAME", external.SaslServerName)
 	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_SASL_REALM", external.SaslRealm)
+
+	// cache names
+
+	adapterCredentials := ""
+	devices := ""
+	deviceStates := ""
+	if external.CacheNames != nil {
+		adapterCredentials = external.CacheNames.AdapterCredentials
+		devices = external.CacheNames.Devices
+		deviceStates = external.CacheNames.DeviceStates
+	}
+
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_ADAPTER_CREDENTIALS_CACHE_NAME", adapterCredentials)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICES_CACHE_NAME", devices)
+	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REGISTRY_INFINISPAN_DEVICE_STATES_CACHE_NAME", deviceStates)
+
+	// done
 
 	return nil
 }
