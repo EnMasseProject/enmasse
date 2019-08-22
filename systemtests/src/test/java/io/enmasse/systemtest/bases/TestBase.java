@@ -688,7 +688,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         log.info("Waiting for following pods to be deleted {}", uids);
         assertWaitForValue(true, () -> (kubernetes.listPods(kubernetes.getInfraNamespace()).stream()
                 .filter(pod -> uids.contains(pod.getMetadata().getUid()))
-                .collect(Collectors.toList()).size() > 0), new TimeoutBudget(2, TimeUnit.MINUTES));
+                .collect(Collectors.toList()).size() == 0), new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 
     /**
