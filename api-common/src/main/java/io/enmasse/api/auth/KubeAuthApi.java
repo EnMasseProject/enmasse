@@ -182,6 +182,11 @@ public class KubeAuthApi implements AuthApi {
 
     @Override
     public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewResource(TokenReview tokenReview, String namespace, String resource, String verb, String apiGroup) {
+         return performSubjectAccessReviewResource(tokenReview, namespace, resource, null, verb, apiGroup);
+    }
+
+    @Override
+    public io.enmasse.api.auth.SubjectAccessReview performSubjectAccessReviewResource(TokenReview tokenReview, String namespace, String resource, String resourceName, String verb, String apiGroup) {
         if (client.isAdaptable(OkHttpClient.class)) {
             JsonObject body = new JsonObject();
 
@@ -194,6 +199,9 @@ public class KubeAuthApi implements AuthApi {
             resourceAttributes.put("group", apiGroup);
             resourceAttributes.put("namespace", namespace);
             resourceAttributes.put("resource", resource);
+            if (resourceName != null) {
+                resourceAttributes.put("name", resourceName);
+            }
             resourceAttributes.put("verb", verb);
 
             spec.put("resourceAttributes", resourceAttributes);

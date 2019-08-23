@@ -7,6 +7,7 @@ package io.enmasse.api.auth;
 public interface AuthApi {
     TokenReview performTokenReview(String token);
     SubjectAccessReview performSubjectAccessReviewResource(TokenReview tokenReview, String namespace, String resource, String verb, String apiGroup);
+    SubjectAccessReview performSubjectAccessReviewResource(TokenReview tokenReview, String namespace, String resource, String resourceName, String verb, String apiGroup);
     SubjectAccessReview performSubjectAccessReviewPath(TokenReview tokenReview, String path, String verb);
     String getCert(String secretName);
     String getNamespace();
