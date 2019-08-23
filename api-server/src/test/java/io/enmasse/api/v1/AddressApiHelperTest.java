@@ -56,7 +56,7 @@ public class AddressApiHelperTest {
         AddressSpace addressSpace = mock(AddressSpace.class);
         when(addressSpace.getSpec()).thenReturn(mock(AddressSpaceSpec.class));
         when(addressSpace.getMetadata()).thenReturn(mock(ObjectMeta.class));
-        when(addressSpace.getSpec().getType()).thenReturn("type1");
+        when(addressSpace.getSpec().getType()).thenReturn("brokered");
         AddressSpaceApi addressSpaceApi = mock(AddressSpaceApi.class);
         addressApi = mock(AddressApi.class);
         securityContext = mock(SecurityContext.class);
@@ -68,13 +68,18 @@ public class AddressApiHelperTest {
     }
 
     @Test
-    public void testCreateAddressResourceNameAlreadyExists() throws Exception {
-        when(addressApi.listAddresses(any())).thenReturn(Collections.singleton(createAddress("q1", "q1")));
-        Address invalidAddress = createAddress("someOtherName", "q1");
-        Throwable exception = assertThrows(BadRequestException.class, () -> helper.createAddress("test", invalidAddress));
-        assertEquals("Address 'q1' already exists with resource name 'q1'", exception.getMessage());
-        verify(addressApi, never()).createAddress(any(Address.class));
+    public void testReplaceAddressWithInvalidAddress() throws Exception {
+        Set<Address> addresses = new HashSet<>();
+        addresses.add(createAddress("q1", "q1"));
+        addresses.add(createAddress("q2", "q2"));
+        when(addressApi.listAddresses(any())).thenReturn(addresses);
+        when(addressApi.replaceAddress(any())).thenReturn(true);
+        Address invalidAddress = createAddress("q1", "q2");
+        Throwable exception = assertThrows(BadRequestException.class, () -> helper.replaceAddress("test", invalidAddress));
+        assertEquals("Address 'q2' already exists with resource name 'q2'", exception.getMessage());
+        verify(addressApi, never()).replaceAddress(any(Address.class));
     }
+
 
     @Test
     public void testCreateAddress() throws Exception {
@@ -144,18 +149,6 @@ public class AddressApiHelperTest {
         assertEquals("Address q1 not found", exception.getMessage());
     }
 
-    @Test
-    public void testReplaceAddressWithInvalidAddress() throws Exception {
-        Set<Address> addresses = new HashSet<>();
-        addresses.add(createAddress("q1", "q1"));
-        addresses.add(createAddress("q2", "q2"));
-        when(addressApi.listAddresses(any())).thenReturn(addresses);
-        when(addressApi.replaceAddress(any())).thenReturn(true);
-        Address invalidAddress = createAddress("q1", "q2");
-        Throwable exception = assertThrows(BadRequestException.class, () -> helper.replaceAddress("test", invalidAddress));
-        assertEquals("Address 'q2' already exists with resource name 'q2'", exception.getMessage());
-        verify(addressApi, never()).replaceAddress(any(Address.class));
-    }
 
     @Test
     public void testDeleteAddress() throws Exception {
@@ -180,17 +173,6 @@ public class AddressApiHelperTest {
         assertNull(helper.deleteAddress("ns", "test", address.getMetadata().getName()));
     }
 
-    @Test
-    public void testDuplicateAddresses() throws Exception {
-        when(addressApi.listAddresses(any())).thenReturn(Sets.newSet(createAddress("q1"), createAddress("q2")));
-
-        try {
-            helper.createAddress("test", createAddress("q3", "q1"));
-            fail("Expected exception for duplicate address");
-        } catch (BadRequestException e) {
-            assertThat(e.getMessage(), is("Address 'q1' already exists with resource name 'q1'"));
-        }
-    }
 
     @Test
     public void testParseLabelSelector() throws Exception {
