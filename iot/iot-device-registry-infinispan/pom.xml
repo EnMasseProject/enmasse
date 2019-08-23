@@ -112,6 +112,15 @@
       <artifactId>infinispan-remote-query-server</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>kubernetes-client</artifactId>
+      <version>${fabric8.kubernetes-client.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>api-common</artifactId>
+    </dependency>
   </dependencies>
 
   <build>

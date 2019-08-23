@@ -435,6 +435,14 @@ spec:
           resources: [ "configmaps" ]
           resourceNames: [ "extension-apiserver-authentication" ]
           verbs: [ "get" ]
+      - serviceAccountName: iot-device-registry
+        rules:
+        - apiGroups: [ "authentication.k8s.io" ]
+          resources: [ "tokenreviews" ]
+          verbs: [ "create" ]
+        - apiGroups: [ "authorization.k8s.io" ]
+          resources: [ "subjectaccessreviews" ]
+          verbs: [ "create" ]
       deployments:
       - name: enmasse-operator
         spec:

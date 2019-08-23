@@ -14,7 +14,7 @@ import io.enmasse.systemtest.CertBundle;
 import io.enmasse.systemtest.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
 
-public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase{
+public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase {
 
     @Override
     protected IoTConfig provideIoTConfig() throws Exception {

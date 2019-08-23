@@ -52,7 +52,6 @@ public class InfinispanRegistry extends AbstractBaseApplication {
 
             @SuppressWarnings("rawtypes")
             final List<Future> futures = new LinkedList<>();
-
             for (final Verticle verticle : this.verticles) {
                 log.info("Deploying: {}", verticle);
                 final Future<String> result = Future.future();

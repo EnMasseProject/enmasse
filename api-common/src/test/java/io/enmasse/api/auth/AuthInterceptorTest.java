@@ -93,7 +93,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", null, null, true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", false);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq(returnedTokenReview), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(returnedTokenReview), any(), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 
@@ -120,7 +120,7 @@ public class AuthInterceptorTest {
     public void testCertAuthorization() {
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("me", true);
         TokenReview tokenReview = new TokenReview("me", "", Collections.singleton("system:authenticated"), Map.of("custom-header", Collections.singletonList("customvalue")), true);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
         when(mockRequestContext.getHeaderString("X-Remote-Group")).thenReturn("system:authenticated");
         MultivaluedMap<String, String> map = new MultivaluedHashMap<>();
@@ -174,7 +174,7 @@ public class AuthInterceptorTest {
     public void testCertAuthorizationFailed() throws SSLPeerUnverifiedException {
         TokenReview tokenReview = new TokenReview("system:anonymous", "", null, null, false);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("system:anonymous", false);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), eq("create"), eq("enmasse.io"))).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(tokenReview), any(), any(), any(), eq("create"), eq("enmasse.io"))).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString("X-Remote-User")).thenReturn("me");
 
         HttpServerRequest request = mock(HttpServerRequest.class);
@@ -202,7 +202,7 @@ public class AuthInterceptorTest {
         TokenReview returnedTokenReview = new TokenReview("foo", "myid", null, null, true);
         when(mockAuthApi.performTokenReview("valid_token")).thenReturn(returnedTokenReview);
         SubjectAccessReview returnedSubjectAccessReview = new SubjectAccessReview("foo", true);
-        when(mockAuthApi.performSubjectAccessReviewResource(eq(returnedTokenReview), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
+        when(mockAuthApi.performSubjectAccessReviewResource(eq(returnedTokenReview), any(), any(), any(), eq("create"), any())).thenReturn(returnedSubjectAccessReview);
         when(mockRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer valid_token");
         when(mockRequestContext.getMethod()).thenReturn(HttpMethod.POST);
 

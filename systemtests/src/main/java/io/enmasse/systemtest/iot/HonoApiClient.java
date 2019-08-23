@@ -46,6 +46,7 @@ public abstract class HonoApiClient extends ApiClient {
         client.request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
             .as(BodyCodec.buffer())
             .timeout(120000)
+            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
             .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
             .sendBuffer(Optional.ofNullable(body).map(Buffer::buffer).orElse(null),
                     ar -> responseHandler(ar, responsePromise, expectedStatusCode, failureMessage, false));
