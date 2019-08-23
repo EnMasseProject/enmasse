@@ -21,7 +21,9 @@ import (
 
 const AddressNameTelemetry = "telemetry"
 const AddressNameEvent = "event"
-const AddressNameCommand = "control"
+const AddressNameCommandLegacy = "control"
+const AddressNameCommand = "command"
+const AddressNameCommandResponse = "command_response"
 
 func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (*iotv1alpha1.ExternalDownstreamStrategy, error) {
 
@@ -160,7 +162,19 @@ func (r *ReconcileIoTProject) reconcileAddressSet(ctx context.Context, project *
 		)
 	})
 	mt.Run(func() error {
+		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommandLegacy,
+			strategy.Addresses.Command.Plan,
+			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
+		)
+	})
+	mt.Run(func() error {
 		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommand,
+			strategy.Addresses.Command.Plan,
+			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
+		)
+	})
+	mt.Run(func() error {
+		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommandResponse,
 			strategy.Addresses.Command.Plan,
 			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
 		)
@@ -219,7 +233,10 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 
 	telemetryName := util.AddressName(project, AddressNameTelemetry)
 	eventName := util.AddressName(project, AddressNameEvent)
-	controlName := util.AddressName(project, AddressNameCommand)
+
+	commandLegacyName := util.AddressName(project, AddressNameCommandLegacy)
+	commandName := util.AddressName(project, AddressNameCommand)
+	commandResponseName := util.AddressName(project, AddressNameCommandResponse)
 
 	existing.Spec.Authorization = []userv1beta1.AuthorizationSpec{
 		{
@@ -228,8 +245,28 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				telemetryName + "/*",
 				eventName,
 				eventName + "/*",
-				controlName,
-				controlName + "/*",
+				commandResponseName,
+				commandResponseName + "/*",
+			},
+			Operations: []string{
+				"send",
+			},
+		},
+
+		{
+			Addresses: []string{
+				commandName,
+				commandName + "/*",
+			},
+			Operations: []string{
+				"recv",
+			},
+		},
+
+		{
+			Addresses: []string{
+				commandLegacyName,
+				commandLegacyName + "/*",
 			},
 			Operations: []string{
 				"send",

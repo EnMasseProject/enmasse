@@ -209,7 +209,7 @@ hono:
     insecurePortBindAddress: 0.0.0.0
     insecurePortEnabled: true
     insecurePort: 8088
-  http:
+  lora:
     bindAddress: 0.0.0.0
     keyPath: /etc/tls/tls.key
     certPath: /etc/tls/tls.crt

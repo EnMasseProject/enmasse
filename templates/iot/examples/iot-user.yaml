@@ -10,5 +10,9 @@ spec:
   authorization:
   - addresses:  [ "telemetry/myapp.iot", "telemetry/myapp.iot/*", "event/myapp.iot", "event/myapp.iot/*" ]
     operations: [ "recv" ]
-  - addresses:  [ "command/myapp.iot", "command/myapp.iot/*" ]
+  - addresses:  [ "control/myapp.iot", "control/myapp.iot/*" ]
     operations: [ "send", "recv" ]
+  - addresses:  [ "command/myapp.iot", "command/myapp.iot/*" ]
+    operations: [ "send" ]
+  - addresses:  [ "command_response/myapp.iot", "command_response/myapp.iot/*" ]
+    operations: [ "recv" ]

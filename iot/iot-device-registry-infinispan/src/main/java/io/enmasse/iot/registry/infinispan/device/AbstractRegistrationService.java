@@ -20,7 +20,6 @@ import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
-import io.opentracing.noop.NoopSpan;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
@@ -43,8 +42,8 @@ public abstract class AbstractRegistrationService extends org.eclipse.hono.servi
     }
 
     @Override
-    protected void getDevice(final String tenantId, final String deviceId, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
-        completeHandler(() -> processGetDevice(tenantId, deviceId, NoopSpan.INSTANCE), resultHandler);
+    protected void getDevice(final String tenantId, final String deviceId, final Span span, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
+        completeHandler(() -> processGetDevice(tenantId, deviceId, span), resultHandler);
     }
 
     protected CompletableFuture<RegistrationResult> processGetDevice(final String tenantId, final String deviceId, final Span span) {
