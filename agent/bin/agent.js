@@ -68,6 +68,7 @@ function start(env) {
                     ragent.start_listening(env);
                     ragent.listen_health({HEALTH_PORT:8888});
                 }
+                address_source.start();
 
                 process.on('SIGTERM', function () {
                     log.info('Shutdown started');

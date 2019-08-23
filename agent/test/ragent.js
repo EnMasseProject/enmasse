@@ -806,6 +806,7 @@ describe('cooperating ragent group', function() {
         routers = routers.concat(fill(3, new_router));
         //inform ragent instances of each other
         groups.forEach(function (g) {
+            g.ragent.sync_addresses([]);
             podserver.add_resource('pods', g.get_pod_definition());
         });
         groups.forEach(function(g) {
@@ -826,6 +827,7 @@ describe('cooperating ragent group', function() {
         });
         //inform ragent instances of each other
         groups.forEach(function (g) {
+            g.ragent.sync_addresses([]);
             podserver.add_resource('pods', g.get_pod_definition());
         });
         groups.forEach(function(g) {
