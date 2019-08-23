@@ -17,6 +17,8 @@ include::../modules/proc-iot-creating-project.adoc[leveloffset=+1]
 
 include::../modules/proc-iot-creating-device.adoc[leveloffset=+1]
 
+include::../modules/proc-iot-configuring-sigfox.adoc[leveloffset=+1]
+
 :api: telemetry
 
 include::../modules/proc-iot-api.adoc[leveloffset=+1]

@@ -11,22 +11,24 @@ After installing the IoT services and creating an IoT project, you can create an
 ifeval::["{cmdcli}" == "oc"]
 :registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
 endif::[]
-ifeval::["{cmdcli}" == "kubectl"]
+ifeval::["{cmdcli}" != "oc"]
 :registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
 endif::[]
 
 .Prerequisites
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-messaging-iot[The IoT services are installed].
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-messaging-iot[An IoT project is created].
-
-.Procedure
-
-. Export the device registry host:
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-{context}[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
+* Export the device registry host:
 +
 [options="nowrap",subs="attributes"]
 ----
 export REGISTRY_HOST={registry}
 ----
+
+[id='iot-creating-device-register-{context}']
+== Registering a new device
+
+.Procedure
 
 . Register a device with a defined ID (in this example we're using `4711`):
 +
@@ -34,6 +36,20 @@ export REGISTRY_HOST={registry}
 ----
 curl --insecure -X POST -i -H 'Content-Type: application/json' https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
 ----
+. If you need to provide additional registration information, you can provide
+  them as follows:
++
+[options="nowrap",subs="attributes"]
+----
+curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{
+	"via": ["gateway1"]
+}' https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
+----
+
+[id='iot-creating-device-set-password-{context}']
+== Setting username and password credentials for a device
+
+.Procedure
 
 . Add credentials for a device:
 +
@@ -47,4 +63,3 @@ curl --insecure -X PUT -i -H 'Content-Type: application/json' --data-binary '[{
 	}]
 }]' https://$REGISTRY_HOST/v1/credentials/myapp.iot/4711
 ----
-
