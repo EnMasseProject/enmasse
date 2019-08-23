@@ -92,6 +92,110 @@ public class AddressControllerTest {
     }
 
     @Test
+    public void testDuplicatePendingPendingAddresses() throws Exception {
+
+        Address a1 = new Address.Builder()
+                .setName("myspace.a1")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .build();
+
+        Address a2 = new Address.Builder()
+                .setName("myspace.a2")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .build();
+
+        controller.onUpdate(Arrays.asList(a1, a2));
+
+        assertEquals(Status.Phase.Configuring, a1.getStatus().getPhase());
+
+        assertEquals(Status.Phase.Pending, a2.getStatus().getPhase());
+        assertEquals("Address 'a' already exists with resource name 'myspace.a1'", a2.getStatus().getMessages().iterator().next());
+    }
+
+    @Test
+    public void testDuplicatePendingActiveAddresses() throws Exception {
+
+        Address a1 = new Address.Builder()
+                .setName("myspace.a1")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .build();
+
+        Address a2 = new Address.Builder()
+                .setName("myspace.a2")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active))
+                .build();
+
+        controller.onUpdate(Arrays.asList(a1, a2));
+
+        assertEquals(Status.Phase.Pending, a1.getStatus().getPhase());
+        assertEquals("Address 'a' already exists with resource name 'myspace.a2'", a1.getStatus().getMessages().iterator().next());
+
+        assertEquals(Status.Phase.Active, a2.getStatus().getPhase());
+    }
+
+    @Test
+    public void testDuplicateActivePendingAddresses() throws Exception {
+
+        Address a1 = new Address.Builder()
+                .setName("myspace.a1")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active))
+                .build();
+
+        Address a2 = new Address.Builder()
+                .setName("myspace.a2")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .build();
+
+        controller.onUpdate(Arrays.asList(a1, a2));
+
+        assertEquals(Status.Phase.Active, a1.getStatus().getPhase());
+
+        assertEquals(Status.Phase.Pending, a2.getStatus().getPhase());
+        assertEquals("Address 'a' already exists with resource name 'myspace.a1'", a2.getStatus().getMessages().iterator().next());
+    }
+
+    @Test
+    public void testDuplicateActiveActiveAddresses() throws Exception {
+
+        Address a1 = new Address.Builder()
+                .setName("myspace.a1")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active))
+                .build();
+
+        Address a2 = new Address.Builder()
+                .setName("myspace.a2")
+                .setAddress("a")
+                .setType("anycast")
+                .setPlan("small-anycast")
+                .setStatus(new Status(true).setPhase(Status.Phase.Active))
+                .build();
+
+        controller.onUpdate(Arrays.asList(a1, a2));
+
+        assertEquals(Status.Phase.Active, a1.getStatus().getPhase());
+
+        assertEquals(Status.Phase.Pending, a2.getStatus().getPhase());
+        assertEquals("Address 'a' already exists with resource name 'myspace.a1'", a2.getStatus().getMessages().iterator().next());
+    }
+
+    @Test
     public void testDeleteUnusedClusters() throws Exception {
         Address alive = new Address.Builder()
                 .setName("q1")

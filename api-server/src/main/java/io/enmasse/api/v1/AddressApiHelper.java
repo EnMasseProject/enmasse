@@ -68,11 +68,17 @@ public class AddressApiHelper {
 
     private void validateAddress(AddressSpace addressSpace, Address address) {
         AddressResolver addressResolver = getAddressResolver(addressSpace);
-        Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getNamespace());
-        addressResolver.validate(address);
-        for (Address existing : existingAddresses) {
-            if (address.getAddress().equals(existing.getAddress()) && !address.getName().equals(existing.getName())) {
-                throw new BadRequestException("Address '" + address.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
+        /*
+          Brokered address space has no operator that manipulates address phase and readiness, so we need to perform validation at API server.
+          For the standard address space, the validation is done in AddressController#onUpdate in order to avoid slowing down the request.
+         */
+        if (addressSpace.getType().equals("brokered")) {
+            Set<Address> existingAddresses = addressSpaceApi.withAddressSpace(addressSpace).listAddresses(address.getNamespace());
+            addressResolver.validate(address);
+            for (Address existing : existingAddresses) {
+                if (address.getAddress().equals(existing.getAddress()) && !address.getName().equals(existing.getName())) {
+                    throw new BadRequestException("Address '" + address.getAddress() + "' already exists with resource name '" + existing.getName() + "'");
+                }
             }
         }
     }
