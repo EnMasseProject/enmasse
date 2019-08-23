@@ -8,6 +8,6 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: alertmanager
-  namespace: enmass-monitoring
+  namespace: enmasse-monitoring
 userNames:
 - system:serviceaccount:enmasse-monitoring:alertmanager

@@ -4,70 +4,87 @@ metadata:
   creationTimestamp: null
   name: application-monitoring-operator
 rules:
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - services
-      - endpoints
-      - persistentvolumeclaims
-      - events
-      - configmaps
-      - secrets
-      - serviceaccounts
-    verbs:
-      - '*'
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-      - daemonsets
-      - replicasets
-      - statefulsets
-    verbs:
-      - '*'
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - alertmanagers
-      - prometheuses
-      - prometheusrules
-      - servicemonitors
-    verbs:
-      - get
-      - create
-  - apiGroups:
-      - applicationmonitoring.integreatly.org
-    resources:
-      - '*'
-    verbs:
-      - '*'
-  - apiGroups:
-      - integreatly.org
-    resources:
-      - grafanadashboards
-      - grafanas
-      - grafanas/finalizers
-    verbs:
-      - '*'
-  - apiGroups:
-      - route.openshift.io
-    resources:
-      - routes
-      - routes/custom-host
-    verbs:
-      - '*'
-  - apiGroups:
-      - rbac.authorization.k8s.io
-    attributeRestrictions: null
-    resources:
-      - rolebindings
-      - roles
-    verbs:
-      - '*'
-  - apiGroups:
-      - extensions
-    resources:
-      - ingresses
-    verbs:
-      - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  - serviceaccounts
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers
+  - prometheuses
+  - prometheusrules
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - applicationmonitoring.integreatly.org
+  resources:
+  - applicationmonitorings
+  - applicationmonitorings/finalizers
+  - blackboxtargets
+  - blackboxtargets/finalizers
+  verbs:
+  - '*'
+- apiGroups:
+  - integreatly.org
+  resources:
+  - grafanadatasources
+  - grafanadashboards
+  - grafanas
+  - grafanas/finalizers
+  - grafanadatasources/finalizers
+  - grafanadashboards/finalizers
+  verbs:
+  - '*'
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  - routes/custom-host
+  verbs:
+  - '*'
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  - roles
+  verbs:
+  - '*'
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - '*'
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create

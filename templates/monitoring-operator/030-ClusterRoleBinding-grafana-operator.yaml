@@ -3,10 +3,10 @@ kind: ClusterRoleBinding
 metadata:
   name: grafana-operator
 roleRef:
-  name: grafana-operator-cluster-role
+  name: grafana-operator
 subjects:
   - kind: ServiceAccount
-    name: grafana-serviceaccount
+    name: grafana-operator
     namespace: enmasse-monitoring
 userNames:
-  - system:serviceaccount:enmasse-monitoring:grafana-serviceaccount
+  - system:serviceaccount:enmasse-monitoring:grafana-operator
