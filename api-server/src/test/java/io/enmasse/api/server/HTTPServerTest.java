@@ -398,7 +398,7 @@ public class HTTPServerTest {
                 JsonObject data = buffer.toJsonObject();
                 System.out.println(data.toString());
                 assertTrue(data.containsKey("items"));
-                assertEquals(1, data.getJsonArray("items").size());
+                assertEquals(2, data.getJsonArray("items").size());
             });
         });
 
