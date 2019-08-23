@@ -63,6 +63,7 @@ function Ragent() {
     this.configure_handlers();
     this.status = new events.EventEmitter();
     this.disable_connectivity = false;
+    this.addresses_initialised = false;
 }
 
 Ragent.prototype.subscribe = function (context) {
@@ -156,6 +157,7 @@ function is_valid_address_definition(def) {
 }
 
 Ragent.prototype.sync_addresses = function (updated) {
+    this.addresses_initialised = true;
     this.addresses = updated.filter(is_valid_address_definition);
     log.debug('addresses updated: %j', this.addresses);
     this.addresses_updated();
@@ -342,7 +344,9 @@ Ragent.prototype.configure_handlers = function () {
                 router.retrieve_listeners();
                 router.retrieve_connectors();
                 router.on('synchronized', self.on_synchronized.bind(self));
-                router.sync_addresses(self.addresses);
+                if (self.addresses_initialised) {
+                    router.sync_addresses(self.addresses);
+                }
                 router.on('listeners_updated', self.connected_routers_updated.bind(self));//advertise only once have listeners
                 router.on('connectors_updated', self.check_router_connectors.bind(self));
                 router.on('provisioned', self.check_router_connectors.bind(self));
@@ -351,7 +355,9 @@ Ragent.prototype.configure_handlers = function () {
             var broker = broker_controller.create_controller(context.connection, self.event_sink);
             self.connected_brokers[broker.id] = broker;
             log.info('broker %s connected', broker.id);
-            self.sync_broker(broker);
+            if (self.addresses_initialised) {
+                self.sync_broker(broker);
+            }
             broker.on('synchronized', self.on_synchronized.bind(self));
             context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
             context.connection.on('connection_close', self.on_broker_disconnect.bind(self));
@@ -398,6 +404,7 @@ Ragent.prototype.listen = function (options) {
 Ragent.prototype.subscribe_to_addresses = function (env) {
     var address_source = new AddressSource(env);
     address_source.on('addresses_ready', this.sync_addresses.bind(this));
+    address_source.start();
     return address_source.watcher;
 };
 

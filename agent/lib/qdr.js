@@ -54,6 +54,8 @@ var Router = function (connection, router, agent) {
             self.health_check();
         }, interval);
     }
+
+    this.connection.setMaxListeners(0);
     this.connection.on('receiver_open', this.ready.bind(this));
     this.connection.on('disconnected', this.disconnected.bind(this));
     this.connection.on('sender_error', this.on_sender_error.bind(this));

@@ -18,7 +18,28 @@ import java.util.Collections;
 public class TestSchemaApi implements SchemaApi {
     public Schema getSchema() {
         return new SchemaBuilder()
-                .withAddressSpaceTypes(Collections.singletonList(
+                .withAddressSpaceTypes(Arrays.asList(
+                        new AddressSpaceTypeBuilder()
+                                .withName("brokered")
+                                .withDescription("Test Type")
+                                .withAddressTypes(Collections.singletonList(
+                                        new AddressTypeBuilder()
+                                                .withName("queue")
+                                                .withPlans(Arrays.asList(
+                                                        new AddressPlanBuilder()
+                                                                .withMetadata(new ObjectMetaBuilder()
+                                                                        .withName("plan1")
+                                                                        .build())
+                                                                .withAddressType("queue")
+                                                                .withRequiredResources(Arrays.asList(
+                                                                        new ResourceRequestBuilder()
+                                                                                .withName("broker")
+                                                                                .withCredit(0.1)
+                                                                                .build()))
+                                                                .build()
+                                                ))
+                                                .build()))
+                            .build(),
                         new AddressSpaceTypeBuilder()
                                 .withName("type1")
                                 .withDescription("Test Type")
@@ -80,7 +101,19 @@ public class TestSchemaApi implements SchemaApi {
                                                 .withVersion("1.0")
                                                 .build())
                                         .build()))
-                                .withPlans(Collections.singletonList(
+                                .withPlans(Arrays.asList(
+                                        new AddressSpacePlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder()
+                                                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra")
+                                                        .withName("myplan")
+                                                        .build())
+                                                .withAddressSpaceType("brokered")
+                                                .withResources(Arrays.asList(new ResourceAllowanceBuilder()
+                                                        .withName("broker")
+                                                        .withMax(1.0)
+                                                        .build()))
+                                                .withAddressPlans(Arrays.asList("plan1"))
+                                                .build(),
                                         new AddressSpacePlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder()
                                                         .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra")
