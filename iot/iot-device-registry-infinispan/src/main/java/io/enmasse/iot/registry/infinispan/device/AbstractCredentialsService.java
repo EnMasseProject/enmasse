@@ -6,7 +6,6 @@
 package io.enmasse.iot.registry.infinispan.device;
 
 import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.concurrent.CompletableFuture;
@@ -21,13 +20,14 @@ import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.registry.infinispan.service.AbstractInfinispanService;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
-public abstract class AbstractCredentialsService implements CredentialsService {
+public abstract class AbstractCredentialsService extends AbstractInfinispanService implements CredentialsService {
 
     // Adapter cache :
     // <( tenantId + authId + type), (adapter credentials)>
@@ -42,6 +42,7 @@ public abstract class AbstractCredentialsService implements CredentialsService {
 
     @Autowired
     public AbstractCredentialsService(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
+        super("CredentialsService");
         this.adapterCache = adapterProvider.getAdapterCredentialsCache();
         this.managementCache = managementProvider.getDeviceManagementCache();
     }

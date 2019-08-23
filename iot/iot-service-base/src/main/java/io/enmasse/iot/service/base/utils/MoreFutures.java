@@ -6,8 +6,8 @@
 package io.enmasse.iot.service.base.utils;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -24,9 +24,20 @@ public final class MoreFutures {
     private MoreFutures() {}
 
     public static <T> void completeHandler(final Supplier<CompletableFuture<T>> supplier, final Handler<AsyncResult<T>> handler) {
+
+        // fail with NPE, as we have no one to report to
+
+        Objects.requireNonNull(handler);
+
         if (supplier == null) {
+
+            // report to handler that we failed
+
             handler.handle(Future.failedFuture(new NullPointerException("'future' to handle must not be 'null'")));
+
         }
+
+        // create the future
 
         final CompletableFuture<T> future;
         try {
@@ -37,37 +48,29 @@ public final class MoreFutures {
             return;
         }
 
+        // test for null
+
+        if ( future == null ) {
+            handler.handle(Future.failedFuture("Supplier failed to provide an operation future"));
+            return;
+        }
+
+        // hook up completion
+
         future.whenComplete((result, error) -> {
             log.debug("Result - {}", result, error);
             if (error == null) {
                 handler.handle(Future.succeededFuture(result));
             } else {
                 log.debug("Future failed", error);
-                if (error instanceof CompletionException) {
-                    error = error.getCause();
-                }
                 handler.handle(Future.failedFuture(error));
             }
         });
+
     }
 
     public static CompletableFuture<Void> allOf(final List<CompletableFuture<?>> futures) {
         return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
-    }
-
-    public static <T> CompletableFuture<T> map(final Future<T> future) {
-
-        final CompletableFuture<T> result = new CompletableFuture<>();
-
-        future.setHandler(ar -> {
-            if (ar.succeeded()) {
-                result.complete(ar.result());
-            } else {
-                result.completeExceptionally(ar.cause());
-            }
-        });
-
-        return result;
     }
 
 }

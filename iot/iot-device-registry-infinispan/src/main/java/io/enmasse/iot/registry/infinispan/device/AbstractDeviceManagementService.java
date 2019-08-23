@@ -12,13 +12,12 @@ import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.registry.infinispan.service.AbstractInfinispanService;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-
 import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.Optional;
@@ -33,7 +32,7 @@ import org.eclipse.hono.service.management.device.Device;
 import org.eclipse.hono.service.management.device.DeviceManagementService;
 import org.infinispan.client.hotrod.RemoteCache;
 
-public abstract class AbstractDeviceManagementService implements DeviceManagementService {
+public abstract class AbstractDeviceManagementService extends AbstractInfinispanService implements DeviceManagementService {
 
     // Adapter cache :
     // <( tenantId + authId + type), (credential + deviceId + sync-flag + registration data version)>
@@ -50,6 +49,7 @@ public abstract class AbstractDeviceManagementService implements DeviceManagemen
 
     @Autowired
     public AbstractDeviceManagementService(final DeviceManagementCacheProvider managementProvider, final AdapterCredentialsCacheProvider adapterProvider) {
+        super("DeviceManagementService");
         this.adapterCache = adapterProvider.getAdapterCredentialsCache();
         this.managementCache = managementProvider.getDeviceManagementCache();
     }

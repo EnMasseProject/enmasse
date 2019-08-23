@@ -5,11 +5,12 @@
 
 package io.enmasse.iot.registry.infinispan.devcon;
 
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.eclipse.hono.util.DeviceConnectionResult.from;
+
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.util.DeviceConnectionConstants;
@@ -18,6 +19,7 @@ import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import io.enmasse.iot.registry.infinispan.cache.DeviceConnectionCacheProvider;
+import io.enmasse.iot.registry.infinispan.service.AbstractInfinispanService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -33,7 +35,7 @@ import io.vertx.core.json.JsonObject;
  *
  */
 @Component
-public class CacheDeviceConnectionService implements DeviceConnectionService {
+public class CacheDeviceConnectionService extends AbstractInfinispanService implements DeviceConnectionService {
 
     private final RemoteCache<DeviceConnectionKey, String> cache;
 
@@ -43,6 +45,7 @@ public class CacheDeviceConnectionService implements DeviceConnectionService {
     }
 
     CacheDeviceConnectionService(final RemoteCache<DeviceConnectionKey, String> cache) {
+        super("DeviceConnectionService");
         this.cache = cache;
     }
 
@@ -81,7 +84,7 @@ public class CacheDeviceConnectionService implements DeviceConnectionService {
         value.put(DeviceConnectionConstants.FIELD_GATEWAY_ID, gatewayId);
 
         final var future = this.cache
-                .putAsync(key, value.encode())
+                .putAsync(key, value.encode(), 30, TimeUnit.DAYS)
                 .thenApply(result -> {
                     return from(HTTP_NO_CONTENT);
                 });

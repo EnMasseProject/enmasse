@@ -6,11 +6,11 @@
 package io.enmasse.iot.registry.infinispan.device;
 
 import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
-import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.hono.service.registration.RegistrationService;
 import org.eclipse.hono.util.RegistrationResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +18,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.registry.infinispan.service.AbstractInfinispanService;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
-public abstract class AbstractRegistrationService extends org.eclipse.hono.service.registration.AbstractRegistrationService {
+public abstract class AbstractRegistrationService extends AbstractInfinispanService implements RegistrationService {
+
+    private org.eclipse.hono.service.registration.AbstractRegistrationService serviceAdapter = new org.eclipse.hono.service.registration.AbstractRegistrationService() {
+
+        @Override
+        protected void getDevice(final String tenantId, final String deviceId, final Span span, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
+            AbstractRegistrationService.this.getDevice(tenantId, deviceId, span, resultHandler);
+        }
+
+    };
 
     // Management cache
     // <(TenantId+DeviceId), (Device information + version + credentials)>
@@ -34,6 +44,7 @@ public abstract class AbstractRegistrationService extends org.eclipse.hono.servi
 
     @Autowired
     public AbstractRegistrationService(final DeviceManagementCacheProvider provider) {
+        super("RegistrationService");
         this.managementCache = provider.getDeviceManagementCache();
     }
 
@@ -41,9 +52,27 @@ public abstract class AbstractRegistrationService extends org.eclipse.hono.servi
         this.tenantInformationService = tenantInformationService;
     }
 
-    @Override
     protected void getDevice(final String tenantId, final String deviceId, final Span span, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
         completeHandler(() -> processGetDevice(tenantId, deviceId, span), resultHandler);
+    }
+
+    public void assertRegistration(final String tenantId, final String deviceId, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
+        this.serviceAdapter.assertRegistration(tenantId, deviceId, resultHandler);
+    }
+
+    @Override
+    public void assertRegistration(final String tenantId, final String deviceId, final String gatewayId, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
+        this.serviceAdapter.assertRegistration(tenantId, deviceId, gatewayId, resultHandler);
+    }
+
+    @Override
+    public void assertRegistration(final String tenantId, final String deviceId, final Span span, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
+        this.serviceAdapter.assertRegistration(tenantId, deviceId, span, resultHandler);
+    }
+
+    @Override
+    public void assertRegistration(final String tenantId, final String deviceId, final String gatewayId, final Span span, final Handler<AsyncResult<RegistrationResult>> resultHandler) {
+        this.serviceAdapter.assertRegistration(tenantId, deviceId, gatewayId, span, resultHandler);
     }
 
     protected CompletableFuture<RegistrationResult> processGetDevice(final String tenantName, final String deviceId, final Span span) {
