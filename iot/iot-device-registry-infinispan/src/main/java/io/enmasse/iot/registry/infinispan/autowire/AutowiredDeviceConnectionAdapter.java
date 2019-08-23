@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
  * in a Spring Boot environment.
  */
 @Component
-public final class AutowiredDeviceConnectionAdapter extends EventBusDeviceConnectionAdapter<Void> {
+public final class AutowiredDeviceConnectionAdapter extends EventBusDeviceConnectionAdapter {
 
     private DeviceConnectionService service;
 
@@ -29,10 +29,6 @@ public final class AutowiredDeviceConnectionAdapter extends EventBusDeviceConnec
     @Override
     protected DeviceConnectionService getService() {
         return this.service;
-    }
-
-    @Override
-    public void setConfig(final Void configuration) {
     }
 
 }

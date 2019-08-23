@@ -216,6 +216,21 @@ func (c *Configurator) syncSslProfile(object metav1.Object, certificate []byte) 
 	})
 }
 
+type RouteConfig struct {
+	Tag       string
+	Direction string
+	Prefix    string
+}
+
+var routes = []RouteConfig{
+	{"t", "in", "telemetry"},
+	{"e", "in", "event"},
+	{"cl_i", "in", "control"},
+	{"cl_o", "out", "control"},
+	{"c_i", "in", "command_response"},
+	{"c_o", "out", "command"},
+}
+
 func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 
 	endpoint := project.Status.DownstreamEndpoint
@@ -246,41 +261,16 @@ func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 		})
 	})
 
-	m.RunChange(func() (b bool, e error) {
-		return c.syncLinkRoute(qdr.LinkRoute{
-			NamedResource: namedResource(project, "linkRoute/t"),
-			Direction:     "in",
-			Pattern:       util.AddressName(project, "telemetry") + "/#",
-			Connection:    connectorName,
+	for _, r := range routes {
+		m.RunChange(func() (b bool, e error) {
+			return c.syncLinkRoute(qdr.LinkRoute{
+				NamedResource: namedResource(project, "linkRoute/"+r.Tag),
+				Direction:     r.Direction,
+				Pattern:       util.AddressName(project, r.Prefix) + "/#",
+				Connection:    connectorName,
+			})
 		})
-	})
-
-	m.RunChange(func() (b bool, e error) {
-		return c.syncLinkRoute(qdr.LinkRoute{
-			NamedResource: namedResource(project, "linkRoute/e"),
-			Direction:     "in",
-			Pattern:       util.AddressName(project, "event") + "/#",
-			Connection:    connectorName,
-		})
-	})
-
-	m.RunChange(func() (b bool, e error) {
-		return c.syncLinkRoute(qdr.LinkRoute{
-			NamedResource: namedResource(project, "linkRoute/c_i"),
-			Direction:     "in",
-			Pattern:       util.AddressName(project, "control") + "/#",
-			Connection:    connectorName,
-		})
-	})
-
-	m.RunChange(func() (b bool, e error) {
-		return c.syncLinkRoute(qdr.LinkRoute{
-			NamedResource: namedResource(project, "linkRoute/c_o"),
-			Direction:     "out",
-			Pattern:       util.AddressName(project, "control") + "/#",
-			Connection:    connectorName,
-		})
-	})
+	}
 
 	return m.Return()
 }
@@ -291,9 +281,9 @@ func (c *Configurator) deleteProject(object metav1.Object) error {
 
 	m := util.MultiTool{}
 
-	for _, tag := range []string{"t", "e", "c_i", "c_o"} {
+	for _, r := range routes {
 		m.RunChange(func() (b bool, e error) {
-			return true, c.manage.Delete(qdr.NamedLinkRoute(resourceName(object, "linkRoute/"+tag)))
+			return true, c.manage.Delete(qdr.NamedLinkRoute(resourceName(object, "linkRoute/"+r.Tag)))
 		})
 	}
 

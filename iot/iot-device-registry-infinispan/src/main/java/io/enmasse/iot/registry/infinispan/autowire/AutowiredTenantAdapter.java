@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnBean(TenantService.class)
-public final class AutowiredTenantAdapter extends EventBusTenantAdapter<Void> {
+public final class AutowiredTenantAdapter extends EventBusTenantAdapter {
 
     private TenantService service;
 
@@ -32,10 +32,6 @@ public final class AutowiredTenantAdapter extends EventBusTenantAdapter<Void> {
     @Override
     protected TenantService getService() {
         return this.service;
-    }
-
-    @Override
-    public void setConfig(final Void configuration) {
     }
 
 }

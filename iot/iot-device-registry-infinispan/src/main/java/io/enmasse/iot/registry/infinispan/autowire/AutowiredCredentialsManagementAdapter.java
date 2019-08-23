@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnBean(CredentialsManagementService.class)
-public final class AutowiredCredentialsManagementAdapter extends EventBusCredentialsManagementAdapter<Void> {
+public final class AutowiredCredentialsManagementAdapter extends EventBusCredentialsManagementAdapter {
 
     private CredentialsManagementService service;
 
@@ -31,10 +31,6 @@ public final class AutowiredCredentialsManagementAdapter extends EventBusCredent
     @Override
     protected CredentialsManagementService getService() {
         return this.service;
-    }
-
-    @Override
-    public void setConfig(final Void configuration) {
     }
 
 }

@@ -22,13 +22,25 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorization;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
+
+import org.hamcrest.Matcher;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static io.enmasse.user.model.v1.Operation.recv;
+import static io.enmasse.user.model.v1.Operation.send;
+import static java.util.Arrays.asList;
+import static java.util.EnumSet.of;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.AllOf.allOf;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(TestTag.sharedIot)
@@ -72,56 +84,109 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestBaseStandard {
 
     }
 
+    private static void assertAddressType (final Address address, final AddressType type, final String plan) {
+        assertEquals(type.toString(), address.getSpec().getType());
+        assertEquals(plan, address.getSpec().getPlan());
+    }
+
     private void assertManaged(IoTProject project) throws Exception {
-        //address space s
+        // address space s
         AddressSpace addressSpace = getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
 
-        //addresses
-        //{event/control/telemetry}/"project-namespace"."project-name"
-        String addressSuffix = "/" + project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
-        List<Address> addresses = AddressUtils.getAddresses(addressSpace);
-        assertEquals(3, addresses.size());
-        assertEquals(3, addresses.stream()
+        // addresses
+        // {event/control/telemetry}/"project-namespace"."project-name"
+        final String addressSuffix = "/" + project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
+        final List<Address> addresses = AddressUtils.getAddresses(addressSpace);
+        assertEquals(5, addresses.size());
+        assertEquals(5, addresses.stream()
                 .map(Address::getMetadata)
                 .map(ObjectMeta::getOwnerReferences)
                 .flatMap(List::stream)
                 .filter(reference -> isOwner(project, reference))
                 .count());
+
         int correctAddressesCounter = 0;
         for (Address address : addresses) {
-            if (address.getSpec().getAddress().equals(IOT_ADDRESS_EVENT + addressSuffix)) {
-                assertEquals(AddressType.QUEUE.toString(), address.getSpec().getType());
-                assertEquals(DestinationPlan.STANDARD_SMALL_QUEUE, address.getSpec().getPlan());
-                correctAddressesCounter++;
-            } else if (address.getSpec().getAddress().equals(IOT_ADDRESS_CONTROL + addressSuffix)
-                    || address.getSpec().getAddress().equals(IOT_ADDRESS_TELEMETRY + addressSuffix)) {
-                assertEquals(AddressType.ANYCAST.toString(), address.getSpec().getType());
-                assertEquals(DestinationPlan.STANDARD_SMALL_ANYCAST, address.getSpec().getPlan());
-                correctAddressesCounter++;
-            }
-        }
-        assertEquals(3, correctAddressesCounter, "There are incorrect IoT addresses " + addresses);
 
-        //username "adapter"
-        //name "project-address-space"+".adapter"
-        User user = getUser(addressSpace, "adapter");
+            final String addressName = address.getSpec().getAddress();
+
+            if (addressName.equals(IOT_ADDRESS_EVENT + addressSuffix)) {
+
+                assertAddressType(address, AddressType.QUEUE, DestinationPlan.STANDARD_SMALL_QUEUE);
+                correctAddressesCounter++;
+
+            } else if (addressName.equals(IOT_ADDRESS_CONTROL + addressSuffix)
+                    || addressName.equals(IOT_ADDRESS_TELEMETRY + addressSuffix)
+                    || addressName.equals(IOT_ADDRESS_COMMAND + addressSuffix)
+                    || addressName.equals(IOT_ADDRESS_COMMAND_RESPONSE + addressSuffix)) {
+
+                assertAddressType(address, AddressType.ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST);
+                correctAddressesCounter++;
+
+            }
+
+        }
+        assertEquals(5, correctAddressesCounter, "There are incorrect IoT addresses " + addresses);
+
+        // username "adapter"
+        // name "project-address-space"+".adapter"
+        final User user = getUser(addressSpace, "adapter");
         assertNotNull(user);
         assertEquals(1, user.getMetadata().getOwnerReferences().size());
         assertTrue(isOwner(project, user.getMetadata().getOwnerReferences().get(0)));
 
-        UserAuthorization actualAuthorization = user.getSpec().getAuthorization().stream().findFirst().get();
+        final List<UserAuthorization> authorizations = user.getSpec().getAuthorization();
 
-        assertThat(actualAuthorization.getOperations(), containsInAnyOrder(Operation.recv, Operation.send));
+        assertThat(authorizations, hasSize(3));
 
-        assertThat(actualAuthorization.getAddresses(), containsInAnyOrder(IOT_ADDRESS_EVENT + addressSuffix,
-                IOT_ADDRESS_CONTROL + addressSuffix,
-                IOT_ADDRESS_TELEMETRY + addressSuffix,
-                IOT_ADDRESS_EVENT + addressSuffix + "/*",
-                IOT_ADDRESS_CONTROL + addressSuffix + "/*",
-                IOT_ADDRESS_TELEMETRY + addressSuffix + "/*"));
+        assertThat(authorizations, containsInAnyOrder(
+                asList(
+                        assertAdapterAuthorization( of(send), expandAddresses(addressSuffix, IOT_ADDRESS_TELEMETRY, IOT_ADDRESS_EVENT, IOT_ADDRESS_COMMAND_RESPONSE)),
+                        assertAdapterAuthorization(of(recv), expandAddresses(addressSuffix, IOT_ADDRESS_COMMAND)),
+                        assertAdapterAuthorization( of(recv, send), expandAddresses(addressSuffix, IOT_ADDRESS_CONTROL)))));
+    }
+
+    /**
+     * Assert an authorization entry.
+     *
+     * @param operations The expected operations.
+     * @param addresses The expected addresses.
+     * @return A matcher, asserting the entry.
+     */
+    private static Matcher<UserAuthorization> assertAdapterAuthorization(final Set<Operation> operations, final Set<String> addresses) {
+
+        return allOf(asList(
+
+                hasProperty("operations", containsInAnyOrder(operations.toArray(Operation[]::new))),
+                hasProperty("addresses", containsInAnyOrder(addresses.toArray(String[]::new)))
+
+        ));
+
+    }
+
+    /**
+     * Expand addresses to match ACLs.
+     *
+     * @param addressSuffix The "suffix" (tenant) of the address.
+     * @return A set of all addresses.
+     */
+    private static Set<String> expandAddresses(final String addressSuffix, final String... baseAddresses) {
+
+        return Arrays
+
+                .stream(baseAddresses)
+
+                .flatMap(address -> {
+                    return Stream.of(
+                            address + addressSuffix,
+                            address + addressSuffix + "/*");
+                })
+
+                .collect(Collectors.toSet());
+
     }
 
     private boolean isOwner(IoTProject project, OwnerReference ownerReference) {

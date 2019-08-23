@@ -10,6 +10,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -41,8 +42,40 @@ public class CredentialsRegistryClient extends HonoApiClient {
         return "iot-credentials-registry";
     }
 
+    /**
+     * Truncate {@link Instant}s to second resolution manually.
+     * <br>
+     * <b>Note:</b> This method should be dropped once eclipse/hono#1463 is merged.
+     * @param credentials The credentials to process.
+     */
+    private static Instant fixInstant(final Instant instant) {
+        if (instant == null) {
+            return instant;
+        }
+
+        return instant.truncatedTo(ChronoUnit.SECONDS);
+    }
+
+    /**
+     * Truncate {@link Instant}s to second resolution manually.
+     * <br>
+     * <b>Note:</b> This method should be dropped once eclipse/hono#1463 is merged.
+     * @param credentials The credentials to process.
+     */
+    private static void fixInstants(final List<? extends CommonCredential> credentials) {
+        for (final CommonCredential c : credentials) {
+            if (c instanceof PasswordCredential) {
+                for (PasswordSecret s : ((PasswordCredential) c).getSecrets()) {
+                    s.setNotBefore(fixInstant(s.getNotBefore()));
+                    s.setNotAfter(fixInstant(s.getNotAfter()));
+                }
+            }
+        }
+    }
+
     public void setCredentials(final String tenantId, final String deviceId, final List<CommonCredential> credentials) throws Exception {
         var requestPath = String.format("/%s/%s/%s", CREDENTIALS_PATH, tenantId, deviceId);
+        fixInstants(credentials);
         var body = Json.encode(credentials.toArray(CommonCredential[]::new)); // jackson needs an array
         execute(HttpMethod.PUT, requestPath, body, HttpURLConnection.HTTP_NO_CONTENT, "Error setting credentials to device");
     }
