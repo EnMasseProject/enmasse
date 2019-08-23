@@ -92,10 +92,9 @@ public class AddressController implements Watcher<Address> {
         }
 
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
-        Set<Address> addressSet = new LinkedHashSet<>(addressList);
 
-        final Map<String, ProvisionState> previousStatus = addressSet.stream()
-                .collect(Collectors.toMap(a -> a.getSpec().getAddress(),
+        final Map<String, ProvisionState> previousStatus = addressList.stream()
+                .collect(Collectors.toMap(a -> a.getMetadata().getName(),
                                           a -> new ProvisionState(a.getStatus(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
@@ -106,13 +105,34 @@ public class AddressController implements Watcher<Address> {
 
         AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
+        Map<String, Address> validAddresses = new HashMap<>();
         List<Phase> readyPhases = Arrays.asList(Configuring, Active);
         for (Address address : addressList) {
             address.getStatus().clearMessages();
             if (readyPhases.contains(address.getStatus().getPhase())) {
                 address.getStatus().setReady(true);
             }
+
+            Address existing = validAddresses.get(address.getSpec().getAddress());
+            if (existing != null) {
+                if (!address.getStatus().getPhase().equals(Pending) && existing.getStatus().getPhase().equals(Pending)) {
+                    // If existing address is pending, and we are not pending, we take priority
+                    String errorMessage = String.format("Address '%s' already exists with resource name '%s'", address.getSpec().getAddress(), address.getMetadata().getName());
+                    existing.getStatus().setPhase(Pending);
+                    existing.getStatus().appendMessage(errorMessage);
+                    validAddresses.put(address.getSpec().getAddress(), address);
+                } else {
+                    // Existing address has already been accepted, or we are both pending, existing takes priority.
+                    String errorMessage = String.format("Address '%s' already exists with resource name '%s'", address.getSpec().getAddress(), existing.getMetadata().getName());
+                    address.getStatus().setPhase(Pending);
+                    address.getStatus().appendMessage(errorMessage);
+                }
+            } else {
+                validAddresses.put(address.getSpec().getAddress(), address);
+            }
         }
+
+        Set<Address> addressSet = new LinkedHashSet<>(validAddresses.values());
 
         Map<Phase, Long> countByPhase = countPhases(addressSet);
         log.info("Total: {}, Active: {}, Configuring: {}, Pending: {}, Terminating: {}, Failed: {}", addressSet.size(), countByPhase.get(Active), countByPhase.get(Configuring), countByPhase.get(Pending), countByPhase.get(Terminating), countByPhase.get(Failed));
@@ -169,8 +189,8 @@ public class AddressController implements Watcher<Address> {
         long upgradeClusters = System.nanoTime();
 
         int staleCount = 0;
-        for (Address address : addressSet) {
-            ProvisionState previous = previousStatus.get(address.getSpec().getAddress());
+        for (Address address : addressList) {
+            ProvisionState previous = previousStatus.get(address.getMetadata().getName());
             ProvisionState current = new ProvisionState(address.getStatus(), address.getAnnotation(AnnotationKeys.APPLIED_PLAN));
             if (!current.equals(previous)) {
                 try {
