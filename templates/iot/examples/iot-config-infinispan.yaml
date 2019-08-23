@@ -6,11 +6,14 @@ spec:
   services:
     deviceRegistry:
       infinispan:
-        external:
-          host: infinispan-server
-          port: 11222
-          username: admin
-          password: test1234
+        server:
+          external:
+            host: infinispan-server
+            port: 11222
+            username: app
+            password: test12
+            saslServerName: hotrod
+            saslRealm: ApplicationRealm
   adapters:
     mqtt:
       endpoint:
