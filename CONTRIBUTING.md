@@ -20,7 +20,8 @@ Follow [build instructions](HACKING.md) for building and testing.
 
 ### Starting Development
 
-Now you can start your contribution work.
+Now you can start your contribution work. See [development guidelines](DEVELOPING.md) for how we
+like EnMasse code to look like.
 
 #### Finding the issue
 
