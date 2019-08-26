@@ -1,5 +1,6 @@
 #!/usr/bin/env groovy
-def lib
+
+@Library('amq-ci') _
 
 pipeline {
 
@@ -26,14 +27,8 @@ pipeline {
         }
         stage('checkout') {
             steps {
-                checkout scm
-            }
-        }
-        stage('wait for agent ready') {
-            steps {
-                script {
-                    lib = evaluate readFile('.jenkins/jenkins-functions.groovy')
-                    lib.waitUntilAgentReady()
+                dir('enmasse') {
+                    checkout scm
                 }
             }
         }
@@ -76,7 +71,7 @@ pipeline {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
                     script {
-                        lib.startOpenshift()
+                        enmasse.startOpenshift()
                     }
                 }
             }
@@ -87,7 +82,7 @@ pipeline {
             }
             steps {
                 script {
-                    lib.buildEnmasse()
+                    enmasse.buildEnmasse()
                 }
             }
 
@@ -112,14 +107,16 @@ pipeline {
                 expression { env.TEST_PROFILE == 'upgrade' }
             }
             steps {
-                sh "sh ./systemtests/scripts/download_released_enmasse.sh ${env.UPGRADE_FROM}"
+                dir('enmasse') {
+                    sh "sh ./systemtests/scripts/download_released_enmasse.sh ${env.UPGRADE_FROM}"
+                }
             }
         }
         stage('[upgrade] login') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "./systemtests/scripts/login_cluster_user.sh true"
+                        enmasse.loginOCUser(true)
                     }
                 }
             }
@@ -136,8 +133,10 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        sh "make templates || true"
-                        lib.runSystemtests('systemtests-upgrade', 'upgrade.**')
+                        dir('enmasse') {
+                            sh "make templates || true"
+                            enmasse.runSystemtests('systemtests-upgrade', 'upgrade.**')
+                        }
                     }
                 }
             }
@@ -152,7 +151,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
+                        enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
                     }
                 }
             }
@@ -164,7 +163,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     script {
-                        lib.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
+                        enmasse.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
                     }
                 }
             }
@@ -173,9 +172,11 @@ pipeline {
     post {
         always {
             script {
-                lib.postAction(env.ARTIFACTS_DIR)
-                sh "sudo ./systemtests/scripts/get_results_info.sh ./systemtests/target/surefire-reports/ '${env.TEST_CASE}' '${env.TEST_PROFILE}'"
-                lib.postGithubPrComment("results.json")
+                dir('enmasse') {
+                    enmasse.postAction(env.ARTIFACTS_DIR)
+                    sh "sudo ./systemtests/scripts/get_results_info.sh ./systemtests/target/surefire-reports/ '${env.TEST_CASE}' '${env.TEST_PROFILE}'"
+                    enmasse.postGithubPrComment("results.json")
+                }
             }
         }
         failure {
