@@ -73,7 +73,7 @@ function same_allocation(a, b) {
         var equal = false;
         for (var j in b) {
             if (a[i].containerId === b[j].containerId && a[i].clusterId === b[j].clusterId && a[i].state === b[j].state) {
-                equal = false;
+                equal = true;
                 break;
             }
         }
@@ -100,10 +100,10 @@ function same_messages(a, b) {
 }
 
 function same_address_definition(a, b) {
-    if (a.address === b.address && a.type === b.type && same_allocation(a.allocated_to, b.allocated_to)) {
+    if (a.address === b.address && a.type === b.type && !same_allocation(a.allocated_to, b.allocated_to)) {
         log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
     }
-    return a.address === b.address && a.type === b.type && a.allocated_to === b.allocated_to;
+    return a.address === b.address && a.type === b.type && same_allocation(a.allocated_to, b.allocated_to);
 }
 
 function same_address_status(a, b) {
