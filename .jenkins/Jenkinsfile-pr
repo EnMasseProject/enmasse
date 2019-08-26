@@ -70,8 +70,10 @@ pipeline {
         stage('start openshift') {
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    script {
-                        enmasse.startOpenshift()
+                    dir('enmasse') {
+                        script {
+                            enmasse.startOpenshift()
+                        }
                     }
                 }
             }
@@ -81,8 +83,10 @@ pipeline {
                 environment name: 'TEST_ONLY', value: 'false'
             }
             steps {
-                script {
-                    enmasse.buildEnmasse()
+                dir('enmasse') {
+                    script {
+                        enmasse.buildEnmasse()
+                    }
                 }
             }
 
@@ -117,8 +121,10 @@ pipeline {
         stage('[upgrade] login') {
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        enmasse.loginOCUser(true)
+                    dir('enmasse') {
+                        script {
+                            enmasse.loginOCUser(true)
+                        }
                     }
                 }
             }
@@ -152,8 +158,10 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
+                    dir('enmasse') {
+                        script {
+                            enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
+                        }
                     }
                 }
             }
@@ -164,8 +172,10 @@ pipeline {
             }
             steps {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        enmasse.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
+                    dir('enmasse') {
+                        script {
+                            enmasse.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
+                        }
                     }
                 }
             }
