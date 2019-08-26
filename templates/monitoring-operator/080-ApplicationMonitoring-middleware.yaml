@@ -3,5 +3,4 @@ kind: ApplicationMonitoring
 metadata:
   name: middleware
 spec:
-  labelSelector:
-    monitoring-key: "middleware"
+  labelSelector: "middleware"

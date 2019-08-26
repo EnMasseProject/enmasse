@@ -11,3 +11,26 @@ spec:
     singular: applicationmonitoring
   scope: Namespaced
   version: v1alpha1
+  validation:
+    openAPIV3Schema:
+      required: ["spec"]
+      properties:
+        spec:
+          required: ["labelSelector"]
+          properties:
+            labelSelector:
+              type: string
+              minimum: 1
+              description: The selector used by the Prometheus and Grafana Operators to discover resources
+            additionalScrapeConfigSecretName:
+              type: string
+              description: The name of the secret from which additional scrape configs will be passed to the prometheus operator
+            additionalScrapeConfigSecretKey:
+              type: string
+              description: The key under which additional scrape configs are stored within the secret
+            prometheusRetention:
+              type: string
+              description: Retention time for prometheus data. See https://prometheus.io/docs/prometheus/latest/storage/
+            prometheusStorageRequest:
+              type: string
+              description: How much storage to assign to a volume claim for persisting Prometheus data. See https://github.com/coreos/prometheus-operator/blob/ca400fdc3edd0af0df896a338eca270e115b74d7/Documentation/api.md#storagespec
