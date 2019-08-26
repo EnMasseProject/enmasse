@@ -92,10 +92,12 @@ pipeline {
                 environment name: 'TEST_ONLY', value: 'false'
             }
             steps {
-                sh 'oc login -u test -p test --server localhost:8443 --insecure-skip-tls-verify'
-                sh 'oc new-project enmasseci'
-                sh '$DOCKER login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
-                sh 'make docker_push'
+                dir('enmasse') {
+                    sh 'oc login -u test -p test --server localhost:8443 --insecure-skip-tls-verify'
+                    sh 'oc new-project enmasseci'
+                    sh '$DOCKER login -u unused -p `oc whoami -t` $DOCKER_REGISTRY'
+                    sh 'make docker_push'
+                }
             }
         }
 
