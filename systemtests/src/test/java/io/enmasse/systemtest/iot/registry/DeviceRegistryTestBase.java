@@ -71,7 +71,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
      * Test if the enabled flag is set to "enabled".
      * <br>
      * The flag is considered "enabled", in case the value is "true" or missing.
-     * @param obj The value to test.
+     * @param enabled The value to test.
      */
     private static void assertDefaultEnabled(final Boolean enabled) {
         if ( enabled != null && !Boolean.TRUE.equals(enabled)) {
@@ -242,6 +242,41 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             // cache must be expired, new password can be used
 
             checkCredentials(authId, newPassword, false);
+
+            credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
+
+            client.deleteDeviceRegistration(tenantId(), randomDeviceId);
+            client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        }
+    }
+
+    @Test
+    void testCacheRefreshForNewDevice() throws Exception {
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+
+            final Duration cacheExpiration = Duration.ofMinutes(1);
+            final String authId = UUID.randomUUID().toString();
+            final String password = "password1234";
+
+            // first test, device not created yet
+
+            checkCredentials(authId, password, true);
+
+            // register device
+
+            client.registerDevice(tenantId(), randomDeviceId);
+            credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, password);
+
+            // second test, cache not filled yet
+
+            checkCredentials(authId, password, true);
+
+            log.info("Waiting {} for credentials to expire", cacheExpiration);
+            Thread.sleep(cacheExpiration.toMillis());
+
+            // Third test, cache should be updated.
+
+            checkCredentials(authId, password, false);
 
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
 
