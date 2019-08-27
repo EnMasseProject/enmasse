@@ -4,7 +4,8 @@ This document describes the development guidelines when writing and maintaining 
 
 ## General considerations
 
-As EnMasse is a polyglot project with multiple languages in the same repo, and uses `make` as the
+As EnMasse is a polyglot project with multiple languages in the same repo, it uses `make` as a
+single entry point for invoking a full project build. Make will invoke the language-specific build 
 single entry point for invoking a full project build. Make will invoke the language-specific build
 system.
 
