@@ -12,6 +12,7 @@
 :toc: left
 :linkattrs:
 :toclevels: 3
+:Asciidoctor:
 
 // Product attributes
 

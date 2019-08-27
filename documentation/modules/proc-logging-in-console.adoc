@@ -13,5 +13,10 @@
 
 . Log in with your OpenShift user credentials. The {ConsoleName} opens.
 
-image::{imagesdir}/console-screenshot.png[{ConsoleName}]
+ifdef::Asciidoctor[]
+image::console-screenshot.png[{ConsoleName}]
+endif::Asciidoctor[]
 
+ifndef::Asciidoctor[]
+image::{imagesdir}/console-screenshot.png[{ConsoleName}]
+endif::Asciidoctor[]

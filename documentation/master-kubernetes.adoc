@@ -5,7 +5,7 @@ include::common/attributes.adoc[]
 
 :parent-context: messaging
 :context: messaging
-:imagesdir: ../openshift/images
+:imagesdir: ../kubernetes/images
 :cmdcli: kubectl
 :KubePlatform: Kubernetes
 :OperatorNamespace: operators
