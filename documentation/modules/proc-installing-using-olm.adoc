@@ -48,6 +48,7 @@ spec:
   csDisplayName: EnMasse Operators
   csPublisher: EnMasse
   packages: enmasse
+  source: enmasse-operators
   targetNamespace: {OperatorNamespace}
 EOF
 ----
