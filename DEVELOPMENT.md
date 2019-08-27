@@ -36,8 +36,7 @@ Use `gofmt` to format all the source code.
 JavaScript dependencies are managed using `npm`, but it is invoked using maven and the
 `frontend-maven-plugin`.
 
-JavaScript code is indented using 4 spaces and most formatting rules used in Java applies in
-JavaScript as well with a few exceptions:
+JavaScript code generally follows [JavaScript Style Guide and Coding Conventions](https://www.w3schools.com/js/js_conventions.asp) with the most important being:
 
-* Variable names and functions use snake case
-* ...
+* 2 spaces indentation
+* Variable names and functions use camelcase
