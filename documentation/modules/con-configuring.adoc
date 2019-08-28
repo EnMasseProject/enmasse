@@ -17,5 +17,10 @@ When created, these resources define the configuration that is available to the 
 
 The following diagram illustrates the relationship between the different service configuration resources (green) and how they are referenced by the messaging tenant resources (blue).
 
-image::{imagesdir}/enmasse-entities.svg[{ProductName} entities]
+ifdef::Asciidoctor[]
+image::enmasse-entities.svg[{ProductName} entities]
+endif::Asciidoctor[]
 
+ifndef::Asciidoctor[]
+image::{imagesdir}/enmasse-entities.svg[{ProductName} entities]
+endif::Asciidoctor[]
