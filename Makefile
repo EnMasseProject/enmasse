@@ -1,5 +1,4 @@
-TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-include $(TOPDIR)/Makefile.env.mk
+include Makefile.env.mk
 
 GO_DIRS = \
 	controller-manager \
@@ -36,9 +35,6 @@ FULL_BUILD       = true
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
 INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
-
-ASCIIDOCTOR_EXTRA_FLAGS = --failure-level WARN
-ASCIIDOCTOR_FLAGS       = -v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCTOR_EXTRA_FLAGS)
 
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS=-DskipTests -Dmaven.test.skip=true
@@ -121,30 +117,17 @@ $(DOCKER_DIRS):
 systemtests:
 	make -C systemtests
 
-scripts/swagger2markup.jar:
-	curl -o scripts/swagger2markup.jar https://repo.maven.apache.org/maven2/io/github/swagger2markup/swagger2markup-cli/1.3.3/swagger2markup-cli-1.3.3.jar
-
-docu_swagger: scripts/swagger2markup.jar
-	java -jar scripts/swagger2markup.jar convert -i api-server/src/main/resources/swagger.json -f documentation/common/restapi-reference
-
-docu_html: docu_htmlclean docu_swagger docu_check
-	mkdir -p documentation/html
-	mkdir -p documentation/html/kubernetes
-	mkdir -p documentation/html/openshift
-	cp -vRL documentation/_images documentation/html/kubernetes/images
-	cp -vRL documentation/_images documentation/html/openshift/images
-	asciidoctor $(ASCIIDOCTOR_FLAGS) documentation/master-kubernetes.adoc -o documentation/html/kubernetes/index.html
-	asciidoctor $(ASCIIDOCTOR_FLAGS) documentation/master-openshift.adoc -o documentation/html/openshift/index.html
-	asciidoctor $(ASCIIDOCTOR_FLAGS) documentation/contributing/master.adoc -o documentation/html/contributing.html
+docu_html:
+	make -C documentation build
 
 docu_htmlclean:
-	rm -rf documentation/html
+	make -C documentation clean
 
 docu_check:
-	./scripts/check_docs.sh
+	make -C documentation check
 
 docu_clean: docu_htmlclean
-	rm scripts/swagger2markup.jar
+	make -C documentation clean
 
 .PHONY: test_go_vet test_go_plain build_go imageenv
-.PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_swagger docu_htmlclean docu_check
+.PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_htmlclean docu_check

@@ -1,4 +1,5 @@
 # Docker env
+TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 DOCKER_REGISTRY ?= quay.io
 DOCKER_ORG      ?= enmasse
 DOCKER          ?= docker
