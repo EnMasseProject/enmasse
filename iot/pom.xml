@@ -25,6 +25,7 @@
 
   <modules>
     <module>iot-application-base</module>
+    <module>iot-service-base</module>
     <module>iot-auth-service</module>
     <module>iot-device-registry-file</module>
     <module>iot-http-adapter</module>
@@ -39,6 +40,14 @@
 
   <dependencyManagement>
     <dependencies>
+
+      <!-- EnMasse IoT modules -->
+      <dependency>
+        <groupId>io.enmasse</groupId>
+        <artifactId>iot-service-base</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.eclipse.hono</groupId>
         <artifactId>hono-service-base</artifactId>

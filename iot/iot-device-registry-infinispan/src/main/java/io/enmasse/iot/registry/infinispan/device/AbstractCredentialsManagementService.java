@@ -6,7 +6,7 @@
 package io.enmasse.iot.registry.infinispan.device;
 
 import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
-import static io.enmasse.iot.registry.infinispan.util.MoreFutures.completeHandler;
+import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.List;
@@ -48,7 +48,7 @@ public abstract class AbstractCredentialsManagementService implements Credential
         this.managementCache = managementProvider.getDeviceManagementCache();
     }
 
-    public void setTenantInformationService(TenantInformationService tenantInformationService) {
+    public void setTenantInformationService(final TenantInformationService tenantInformationService) {
         this.tenantInformationService = tenantInformationService;
     }
 
@@ -61,11 +61,9 @@ public abstract class AbstractCredentialsManagementService implements Credential
     protected CompletableFuture<OperationResult<Void>> processSet(final String tenantId, final String deviceId, final Optional<String> resourceVersion, final List<CommonCredential> credentials,
             Span span) {
 
-        var key = deviceKey(tenantId, deviceId);
-
         return this.tenantInformationService
                 .tenantExists(tenantId, HTTP_NOT_FOUND, span)
-                .thenCompose(x -> processSet(key, resourceVersion, credentials, span));
+                .thenCompose(tenantHandle -> processSet(deviceKey(tenantHandle, deviceId), resourceVersion, credentials, span));
     }
 
     protected abstract CompletableFuture<OperationResult<Void>> processSet(DeviceKey key, Optional<String> resourceVersion, List<CommonCredential> credentials,
@@ -78,11 +76,9 @@ public abstract class AbstractCredentialsManagementService implements Credential
 
     protected CompletableFuture<OperationResult<List<CommonCredential>>> processGet(final String tenantId, final String deviceId, final Span span) {
 
-        var key = deviceKey(tenantId, deviceId);
-
         return this.tenantInformationService
                 .tenantExists(tenantId, HTTP_NOT_FOUND, span)
-                .thenCompose(x -> processGet(key, span));
+                .thenCompose(tenantHandle -> processGet(deviceKey(tenantHandle, deviceId), span));
     }
 
     protected abstract CompletableFuture<OperationResult<List<CommonCredential>>> processGet(DeviceKey key, Span span);

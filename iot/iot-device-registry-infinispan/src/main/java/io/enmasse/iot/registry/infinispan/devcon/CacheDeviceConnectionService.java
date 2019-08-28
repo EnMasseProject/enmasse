@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.devcon;
 
-import static io.enmasse.iot.registry.infinispan.util.MoreFutures.completeHandler;
+import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
 import static java.net.HttpURLConnection.HTTP_OK;

@@ -6,7 +6,7 @@
 package io.enmasse.iot.registry.infinispan.device;
 
 import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
-import static io.enmasse.iot.registry.infinispan.util.MoreFutures.completeHandler;
+import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.concurrent.CompletableFuture;
@@ -62,11 +62,9 @@ public abstract class AbstractCredentialsService implements CredentialsService {
 
     protected CompletableFuture<CredentialsResult<JsonObject>> processGet(final String tenantId, final String type, final String authId, final Span span) {
 
-        final CredentialKey key = credentialKey(tenantId, authId, type);
-
         return this.tenantInformationService
                 .tenantExists(tenantId, HTTP_NOT_FOUND, span )
-                .thenCompose(x -> processGet(key, span));
+                .thenCompose(tenantHandle -> processGet(credentialKey(tenantHandle, authId, type), span));
 
     }
 

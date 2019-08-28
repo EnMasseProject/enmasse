@@ -6,6 +6,7 @@ package io.enmasse.systemtest.iot.registry;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -276,8 +277,14 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
 
             client.deleteDeviceRegistration(tenantId(), randomDeviceId);
-            client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            client.getDeviceRegistration(tenantId(), randomDeviceId, HTTP_NOT_FOUND);
         }
+    }
+
+    @Test
+    void testCreateForNonExistingTenantFails() throws Exception {
+        var response = client.registerDeviceWithResponse("invalid-" + tenantId(), randomDeviceId);
+        assertEquals(HTTP_NOT_FOUND, response.statusCode());
     }
 
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {

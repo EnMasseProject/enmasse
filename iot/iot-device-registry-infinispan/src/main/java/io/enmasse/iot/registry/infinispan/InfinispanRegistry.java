@@ -48,19 +48,23 @@ public class InfinispanRegistry extends AbstractBaseApplication {
     @Override
     protected final Future<?> deployVerticles() {
 
-        return super.deployVerticles().compose(ok -> {
+        return super.deployVerticles()
 
-            @SuppressWarnings("rawtypes")
-            final List<Future> futures = new LinkedList<>();
-            for (final Verticle verticle : this.verticles) {
-                log.info("Deploying: {}", verticle);
-                final Future<String> result = Future.future();
-                getVertx().deployVerticle(verticle, result);
-            }
+                .compose(ok -> {
 
-            return CompositeFuture.all(futures);
+                    @SuppressWarnings("rawtypes")
+                    final List<Future> futures = new LinkedList<>();
 
-        });
+                    for (final Verticle verticle : this.verticles) {
+                        log.info("Deploying: {}", verticle);
+                        final Future<String> result = Future.future();
+                        getVertx().deployVerticle(verticle, result);
+                        futures.add(result);
+                    }
+
+                    return CompositeFuture.all(futures);
+
+                });
 
     }
 

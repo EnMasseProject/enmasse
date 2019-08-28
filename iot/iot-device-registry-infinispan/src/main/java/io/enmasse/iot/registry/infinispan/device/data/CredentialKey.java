@@ -14,6 +14,8 @@ import org.infinispan.protostream.annotations.ProtoMessage;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
+import io.enmasse.iot.registry.infinispan.tenant.TenantHandle;
+
 /**
  * A custom class to be used as key in the backend key-value storage.
  * This uses the uniques values of a credential to create a unique key to store the credentials
@@ -111,5 +113,12 @@ public class CredentialKey implements Serializable {
         Objects.requireNonNull(authId);
         Objects.requireNonNull(type);
         return new CredentialKey(tenantId, authId, type);
+    }
+
+    public static CredentialKey credentialKey(final TenantHandle tenantHandle, final String authId, final String type) {
+        Objects.requireNonNull(tenantHandle);
+        Objects.requireNonNull(authId);
+        Objects.requireNonNull(type);
+        return new CredentialKey(tenantHandle.getId(), authId, type);
     }
 }

@@ -41,7 +41,7 @@ import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
-import io.enmasse.iot.registry.infinispan.util.MoreFutures;
+import io.enmasse.iot.service.base.utils.MoreFutures;
 import io.opentracing.Span;
 
 @Component

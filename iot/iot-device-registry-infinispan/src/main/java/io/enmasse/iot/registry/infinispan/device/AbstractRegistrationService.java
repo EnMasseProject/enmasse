@@ -6,7 +6,7 @@
 package io.enmasse.iot.registry.infinispan.device;
 
 import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
-import static io.enmasse.iot.registry.infinispan.util.MoreFutures.completeHandler;
+import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.concurrent.CompletableFuture;
@@ -37,7 +37,7 @@ public abstract class AbstractRegistrationService extends org.eclipse.hono.servi
         this.managementCache = provider.getDeviceManagementCache();
     }
 
-    public void setTenantInformationService(TenantInformationService tenantInformationService) {
+    public void setTenantInformationService(final TenantInformationService tenantInformationService) {
         this.tenantInformationService = tenantInformationService;
     }
 
@@ -46,13 +46,11 @@ public abstract class AbstractRegistrationService extends org.eclipse.hono.servi
         completeHandler(() -> processGetDevice(tenantId, deviceId, span), resultHandler);
     }
 
-    protected CompletableFuture<RegistrationResult> processGetDevice(final String tenantId, final String deviceId, final Span span) {
-
-        final DeviceKey key = deviceKey(tenantId, deviceId);
+    protected CompletableFuture<RegistrationResult> processGetDevice(final String tenantName, final String deviceId, final Span span) {
 
         return this.tenantInformationService
-                .tenantExists(tenantId, HTTP_NOT_FOUND, span)
-                .thenCompose(x -> processGetDevice(key, span));
+                .tenantExists(tenantName, HTTP_NOT_FOUND, span)
+                .thenCompose(tenantId -> processGetDevice(deviceKey(tenantId, deviceId), span));
 
     }
 

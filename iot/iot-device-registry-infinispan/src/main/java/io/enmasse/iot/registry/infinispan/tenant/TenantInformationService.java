@@ -14,6 +14,6 @@ import io.opentracing.Span;
  */
 public interface TenantInformationService {
 
-    public CompletableFuture<?> tenantExists(String tenantId, int notFoundStatusCode, Span span);
+    public CompletableFuture<TenantHandle> tenantExists(String tenantName, int notFoundStatusCode, Span span);
 
 }

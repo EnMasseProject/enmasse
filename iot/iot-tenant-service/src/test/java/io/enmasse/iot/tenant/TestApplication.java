@@ -6,8 +6,7 @@
 package io.enmasse.iot.tenant;
 
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.tenant.utils.IoTProjects;
-import io.enmasse.iot.tenant.utils.IoTProjects.Client;
+import io.enmasse.iot.service.base.IoTProjects;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 
@@ -18,7 +17,7 @@ public class TestApplication {
 
         DefaultKubernetesClient client = new DefaultKubernetesClient(config);
 
-        Client iot = IoTProjects.forClient(client);
+        var iot = IoTProjects.clientForProject(client);
         IoTProject project = iot.inNamespace("hono").withName("default").get();
         System.out.println(project);
 

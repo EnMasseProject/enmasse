@@ -54,6 +54,7 @@ public class Application extends AbstractBaseApplication {
                 log.info("Deploying: {}", verticle);
                 final Future<String> result = Future.future();
                 getVertx().deployVerticle(verticle, result);
+                futures.add(result);
             }
 
             return CompositeFuture.all(futures);
@@ -69,10 +70,11 @@ public class Application extends AbstractBaseApplication {
      */
     @Override
     protected Future<Void> postRegisterServiceVerticles() {
-        return super.postRegisterServiceVerticles().compose(ok -> {
-            this.healthCheckProviders.forEach(this::registerHealthchecks);
-            return Future.succeededFuture();
-        });
+        return super.postRegisterServiceVerticles()
+                .compose(ok -> {
+                    this.healthCheckProviders.forEach(this::registerHealthchecks);
+                    return Future.succeededFuture();
+                });
     }
 
 

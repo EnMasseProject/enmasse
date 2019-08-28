@@ -18,7 +18,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 
 import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
-import static io.enmasse.iot.registry.infinispan.util.MoreFutures.completeHandler;
+import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
 import java.util.Optional;
@@ -74,11 +74,10 @@ public abstract class AbstractDeviceManagementService implements DeviceManagemen
     protected CompletableFuture<OperationResult<Id>> processCreateDevice(final String tenantId, final Optional<String> optionalDeviceId, final Device device, final Span span) {
 
         final String deviceId = optionalDeviceId.orElseGet(this.deviceIdGenerator);
-        final DeviceKey key = deviceKey(tenantId, deviceId);
 
         return this.tenantInformationService
                 .tenantExists(tenantId, HTTP_NOT_FOUND, span)
-                .thenCompose(x -> processCreateDevice(key, device, span));
+                .thenCompose(tenantHandle -> processCreateDevice(deviceKey(tenantHandle, deviceId), device, span));
 
     }
 
@@ -89,11 +88,9 @@ public abstract class AbstractDeviceManagementService implements DeviceManagemen
 
     protected CompletableFuture<OperationResult<Device>> processReadDevice(String tenantId, String deviceId, Span span) {
 
-        final DeviceKey key = deviceKey(tenantId, deviceId);
-
         return this.tenantInformationService
                 .tenantExists(tenantId, HTTP_NOT_FOUND, span)
-                .thenCompose(x -> processReadDevice(key, span));
+                .thenCompose(tenantHandle -> processReadDevice(deviceKey(tenantHandle, deviceId), span));
 
     }
 
@@ -105,11 +102,9 @@ public abstract class AbstractDeviceManagementService implements DeviceManagemen
 
     protected CompletableFuture<OperationResult<Id>> processUpdateDevice(String tenantId, String deviceId, Device device, Optional<String> resourceVersion, Span span) {
 
-        final DeviceKey key = deviceKey(tenantId, deviceId);
-
         return this.tenantInformationService
                 .tenantExists(tenantId, HTTP_NOT_FOUND, span)
-                .thenCompose(x -> processUpdateDevice(key, device, resourceVersion, span));
+                .thenCompose(tenantHandle -> processUpdateDevice(deviceKey(tenantHandle, deviceId), device, resourceVersion, span));
 
     }
 
@@ -120,11 +115,9 @@ public abstract class AbstractDeviceManagementService implements DeviceManagemen
 
     protected CompletableFuture<Result<Void>> processDeleteDevice(String tenantId, String deviceId, Optional<String> resourceVersion, Span span) {
 
-        final DeviceKey key = deviceKey(tenantId, deviceId);
-
         return this.tenantInformationService
                 .tenantExists(tenantId, HTTP_NOT_FOUND, span)
-                .thenCompose(x -> processDeleteDevice(key, resourceVersion, span));
+                .thenCompose(tenantHandle -> processDeleteDevice(deviceKey(tenantHandle, deviceId), resourceVersion, span));
 
     }
 
