@@ -16,11 +16,6 @@ const DefaultLogbackConfig = `<?xml version="1.0" encoding="UTF-8"?>
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
 	</root>
-	<springProfile name="dev">
-		<logger name="org.eclipse.hono" level="DEBUG"/>
-	</springProfile>
-	<springProfile name="prod">
-		<logger name="org.eclipse.hono" level="INFO"/>
-	</springProfile>
+	<logger name="org.eclipse.hono" level="INFO"/>
 </configuration>
 `

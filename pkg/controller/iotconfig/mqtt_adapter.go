@@ -32,8 +32,9 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 
 	rc := &recon.ReconcileContext{}
 
+	adapter := findAdapter("mqtt")
+	enabled := adapter.IsEnabled(config)
 	adapterConfig := config.Spec.AdaptersConfig.MqttAdapterConfig
-	enabled := IsAdapterEnabled("mqtt", adapterConfig.AdapterConfig)
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameMqttAdapter, config, !enabled, r.reconcileMqttAdapterDeployment)
@@ -71,7 +72,8 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
 
-	err := install.ApplyContainerWithError(deployment, "mqtt-adapter", func(container *corev1.Container) error {
+	install.DropContainer(deployment, "mqtt-adapter")
+	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-mqtt-adapter", config); err != nil {
 			return err
@@ -109,7 +111,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 		AppendStandardHonoJavaOptions(container)
 
-		if err := AppendHonoAdapterEnvs(config, container, "mqtt-adapter@HONO", config.Status.Adapters["mqtt"].InterServicePassword); err != nil {
+		if err := AppendHonoAdapterEnvs(config, container, findAdapter("mqtt")); err != nil {
 			return err
 		}
 

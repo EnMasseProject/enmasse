@@ -13,34 +13,41 @@ import (
 
 func TestAdapterStatus(t *testing.T) {
 
-	as := make(map[string]iotv1alpha1.AdapterStatus)
+	config := &iotv1alpha1.IoTConfig{
+		Status: iotv1alpha1.IoTConfigStatus{
+			Adapters: map[string]iotv1alpha1.AdapterStatus{},
+		},
+	}
 
-	as["foo"] = iotv1alpha1.AdapterStatus{}
-	as["bar"] = iotv1alpha1.AdapterStatus{}
-	as["boo"] = iotv1alpha1.AdapterStatus{
+	as := config.Status.Adapters
+
+	as["mqtt"] = iotv1alpha1.AdapterStatus{}
+	as["lorawan"] = iotv1alpha1.AdapterStatus{}
+	as["http"] = iotv1alpha1.AdapterStatus{
 		InterServicePassword: "foobar",
 	}
 
-	as = ensureAdapterStatus(as, "foo", "baz", "boo")
+	config.Status.Adapters = ensureAdapterStatus(as)
+	as = config.Status.Adapters
 
-	err := ensureAdapterAuthCredentials(as)
+	err := initConfigStatus(config)
 	if err != nil {
-		t.Fatal("ensureAdapterAuthCredentials failed: ", err)
+		t.Fatal("initConfigStatus failed: ", err)
 		return
 	}
 
-	if len(as) != 3 {
-		t.Fatalf("Length must be 3, but was %d", len(as))
+	if len(as) != 4 {
+		t.Fatalf("Length must be 4, but was %d", len(as))
 		return
 	}
 
-	if as["foo"].InterServicePassword == "" {
-		t.Error("InterServicePassword for 'foo' is not set")
+	if as["mqtt"].InterServicePassword == "" {
+		t.Error("InterServicePassword for 'mqtt' is not set")
 	}
-	if as["baz"].InterServicePassword == "" {
-		t.Error("InterServicePassword for 'baz' is not set")
+	if as["lorawan"].InterServicePassword == "" {
+		t.Error("InterServicePassword for 'lorawan' is not set")
 	}
-	if as["boo"].InterServicePassword != "foobar" {
-		t.Error("InterServicePassword for 'boo' has changed")
+	if as["http"].InterServicePassword != "foobar" {
+		t.Error("InterServicePassword for 'http' has changed")
 	}
 }

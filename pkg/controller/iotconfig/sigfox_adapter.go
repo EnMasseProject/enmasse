@@ -31,8 +31,9 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 
 	rc := &recon.ReconcileContext{}
 
+	adapter := findAdapter("sigfox")
+	enabled := adapter.IsEnabled(config)
 	adapterConfig := config.Spec.AdaptersConfig.SigfoxAdapterConfig
-	enabled := IsAdapterEnabled("sigfox", adapterConfig.AdapterConfig)
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameSigfoxAdapter, config, !enabled, r.reconcileSigfoxAdapterDeployment)
@@ -70,7 +71,8 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
 
-	err := install.ApplyContainerWithError(deployment, "sigfox-adapter", func(container *corev1.Container) error {
+	install.DropContainer(deployment, "sigfox-adapter")
+	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-sigfox-adapter", config); err != nil {
 			return err
@@ -108,7 +110,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 
 		AppendStandardHonoJavaOptions(container)
 
-		if err := AppendHonoAdapterEnvs(config, container, "sigfox-adapter@HONO", config.Status.Adapters["sigfox"].InterServicePassword); err != nil {
+		if err := AppendHonoAdapterEnvs(config, container, findAdapter("sigfox")); err != nil {
 			return err
 		}
 

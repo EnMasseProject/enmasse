@@ -89,6 +89,24 @@ func ApplyContainer(deployment *appsv1.Deployment, name string, mutator func(*co
 	})
 }
 
+func DropContainer(deployment *appsv1.Deployment, name string) {
+	if deployment.Spec.Template.Spec.Containers == nil {
+		return
+	}
+
+	// removing an entry from an array in go is tricky ...
+
+	for i := len(deployment.Spec.Template.Spec.Containers) - 1; i >= 0; i-- {
+		c := deployment.Spec.Template.Spec.Containers[i]
+		if c.Name == name {
+			deployment.Spec.Template.Spec.Containers = append(
+				deployment.Spec.Template.Spec.Containers[:i],
+				deployment.Spec.Template.Spec.Containers[i+1:]...,
+			)
+		}
+	}
+}
+
 func ApplyContainerWithError(deployment *appsv1.Deployment, name string, mutator func(*corev1.Container) error) error {
 
 	if deployment.Spec.Template.Spec.Containers == nil {
