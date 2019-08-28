@@ -287,7 +287,8 @@ type IoTConfigStatus struct {
 }
 
 type AdapterStatus struct {
-	InterServicePassword string `json:"interServicePassword"`
+	InterServicePassword string `json:"interServicePassword,omitempty"`
+	Enabled              bool   `json:"enabled"`
 }
 
 const (

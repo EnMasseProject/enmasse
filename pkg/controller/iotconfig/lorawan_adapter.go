@@ -31,8 +31,9 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 
 	rc := &recon.ReconcileContext{}
 
+	adapter := findAdapter("lorawan")
+	enabled := adapter.IsEnabled(config)
 	adapterConfig := config.Spec.AdaptersConfig.LoraWanAdapterConfig
-	enabled := IsAdapterEnabled("lorawan", adapterConfig.AdapterConfig)
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameLoraWanAdapter, config, !enabled, r.reconcileLoraWanAdapterDeployment)
@@ -70,7 +71,8 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
 
-	err := install.ApplyContainerWithError(deployment, "lorawan-adapter", func(container *corev1.Container) error {
+	install.DropContainer(deployment, "lorawan-adapter")
+	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-lorawan-adapter", config); err != nil {
 			return err
@@ -108,7 +110,7 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 
 		AppendStandardHonoJavaOptions(container)
 
-		if err := AppendHonoAdapterEnvs(config, container, "lorawan-adapter@HONO", config.Status.Adapters["lorawan"].InterServicePassword); err != nil {
+		if err := AppendHonoAdapterEnvs(config, container, findAdapter("lorawan")); err != nil {
 			return err
 		}
 

@@ -65,6 +65,7 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
+	deployment.Annotations[RegistryTypeAnnotation] = "file"
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
 

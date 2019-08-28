@@ -22,6 +22,63 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+type adapter struct {
+	Name                  string
+	AdapterConfigProvider func(*iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig
+}
+
+var adapters = []adapter{
+	{
+		Name: "mqtt",
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
+			return &config.Spec.AdaptersConfig.MqttAdapterConfig.AdapterConfig
+		},
+	},
+	{
+		Name: "http",
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
+			return &config.Spec.AdaptersConfig.HttpAdapterConfig.AdapterConfig
+		},
+	},
+	{
+		Name: "lorawan",
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
+			return &config.Spec.AdaptersConfig.LoraWanAdapterConfig.AdapterConfig
+		},
+	},
+	{
+		Name: "sigfox",
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
+			return &config.Spec.AdaptersConfig.SigfoxAdapterConfig.AdapterConfig
+		},
+	},
+}
+
+func (a adapter) IsEnabled(config *iotv1alpha1.IoTConfig) bool {
+
+	// find adapter config
+
+	adapterConfig := a.AdapterConfigProvider(config)
+
+	if adapterConfig != nil && adapterConfig.Enabled != nil {
+		return *adapterConfig.Enabled
+	}
+
+	// return setting from env-var
+
+	return globalIsAdapterEnabled(a.Name)
+}
+
+func findAdapter(name string) adapter {
+	for _, a := range adapters {
+		if a.Name == name {
+			return a
+		}
+	}
+
+	panic(fmt.Errorf("failed to find adapter '%s'", name))
+}
+
 func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, containers iotv1alpha1.CommonAdapterContainers) error {
 
 	err := install.ApplyContainerWithError(deployment, "qdr-cfg", func(container *corev1.Container) error {
@@ -106,7 +163,10 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 	return nil
 }
 
-func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Container, username string, password string) error {
+func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Container, adapter adapter) error {
+
+	username := adapter.Name + "-adapter@HONO"
+	password := config.Status.Adapters[adapter.Name].InterServicePassword
 
 	container.Env = append(container.Env, []corev1.EnvVar{
 		{Name: "HONO_MESSAGING_HOST", Value: "localhost"},
@@ -258,13 +318,6 @@ func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.C
 		return nil
 	})
 
-}
-
-func IsAdapterEnabled(name string, config iotv1alpha1.AdapterConfig) bool {
-	if config.Enabled != nil {
-		return *config.Enabled
-	}
-	return globalIsAdapterEnabled(name)
 }
 
 func globalIsAdapterEnabled(name string) bool {

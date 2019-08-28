@@ -159,25 +159,6 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.I
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
-	// JSON encode passwords
-
-	httpPassword, err := json.Marshal(config.Status.Adapters["http"].InterServicePassword)
-	if err != nil {
-		return err
-	}
-	mqttPassword, err := json.Marshal(config.Status.Adapters["mqtt"].InterServicePassword)
-	if err != nil {
-		return err
-	}
-	lorawanPassword, err := json.Marshal(config.Status.Adapters["lorawan"].InterServicePassword)
-	if err != nil {
-		return err
-	}
-	sigfoxPassword, err := json.Marshal(config.Status.Adapters["sigfox"].InterServicePassword)
-	if err != nil {
-		return err
-	}
-
 	// create config map data
 
 	if configMap.Data == nil {
@@ -207,7 +188,25 @@ hono:
       permissionsPath: file:///etc/config/permissions.json
 `
 
-	configMap.Data["permissions.json"] = `
+	// create permissions files
+
+	permissions, err := generatePermissions(config, adapters)
+	if err != nil {
+		return err
+	}
+	configMap.Data["permissions.json"] = permissions
+
+	// record for config hash
+
+	configCtx.AddString(configMap.Data["application.yml"])
+	configCtx.AddString(configMap.Data["permissions.json"])
+
+	return nil
+}
+
+func generatePermissions(config *iotv1alpha1.IoTConfig, adapters []adapter) (string, error) {
+
+	result := `
 {
 	"roles":{
 		"protocol-adapter":[
@@ -254,27 +253,33 @@ hono:
 		]
 	},
 	"users":{
-		"http-adapter@HONO":{
+`
+
+	// append snippets for adapters
+
+	for _, a := range adapters {
+
+		if !a.IsEnabled(config) {
+			continue
+		}
+
+		encodedPassword, err := json.Marshal(config.Status.Adapters[a.Name].InterServicePassword)
+		if err != nil {
+			return "", err
+		}
+
+		result += `		"` + a.Name + `-adapter@HONO":{
 			"mechanism":"PLAIN",
-			"password":` + string(httpPassword) + `,
+			"password":` + string(encodedPassword) + `,
 			"authorities":["protocol-adapter"]
 		},
-		"mqtt-adapter@HONO":{
-			"mechanism":"PLAIN",
-			"password":` + string(mqttPassword) + `,
-			"authorities":["protocol-adapter"]
-		},
-		"lorawan-adapter@HONO":{
-			"mechanism":"PLAIN",
-			"password":` + string(lorawanPassword) + `,
-			"authorities":["protocol-adapter"]
-		},
-		"sigfox-adapter@HONO":{
-			"mechanism":"PLAIN",
-			"password":` + string(sigfoxPassword) + `,
-			"authorities":["protocol-adapter"]
-		},
-		"device-registry":{
+`
+
+	}
+
+	// append device registry snippet
+
+	result += `		"device-registry":{
 			"mechanism":"EXTERNAL",
 			"authorities":[]
 		}
@@ -282,8 +287,6 @@ hono:
 }
 `
 
-	configCtx.AddString(configMap.Data["application.yml"])
-	configCtx.AddString(configMap.Data["permissions.json"])
+	return result, nil
 
-	return nil
 }

@@ -23,9 +23,6 @@ func (r *ReconcileIoTConfig) reconcileCollectorDeployment(config *iotv1alpha1.Io
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	var ONE int32 = 1
-	deployment.Spec.Replicas = &ONE
-
 	err := install.ApplyContainerWithError(deployment, "collector", func(container *corev1.Container) error {
 		if err := install.SetContainerImage(container, "iot-gc", config); err != nil {
 			return err

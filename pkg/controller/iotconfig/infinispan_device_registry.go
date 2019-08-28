@@ -57,6 +57,7 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
+	deployment.Annotations[RegistryTypeAnnotation] = "infinispan"
 
 	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
 

@@ -31,8 +31,9 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 
 	rc := &recon.ReconcileContext{}
 
+	adapter := findAdapter("http")
+	enabled := adapter.IsEnabled(config)
 	adapterConfig := config.Spec.AdaptersConfig.HttpAdapterConfig
-	enabled := IsAdapterEnabled("http", adapterConfig.AdapterConfig)
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameHttpAdapter, config, !enabled, r.reconcileHttpAdapterDeployment)
@@ -70,7 +71,8 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig)
 
-	err := install.ApplyContainerWithError(deployment, "http-adapter", func(container *corev1.Container) error {
+	install.DropContainer(deployment, "http-adapter")
+	err := install.ApplyContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-http-adapter", config); err != nil {
 			return err
@@ -108,7 +110,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 		AppendStandardHonoJavaOptions(container)
 
-		if err := AppendHonoAdapterEnvs(config, container, "http-adapter@HONO", config.Status.Adapters["http"].InterServicePassword); err != nil {
+		if err := AppendHonoAdapterEnvs(config, container, findAdapter("http")); err != nil {
 			return err
 		}
 

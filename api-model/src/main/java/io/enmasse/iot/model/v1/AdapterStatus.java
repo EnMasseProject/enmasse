@@ -25,12 +25,22 @@ public class AdapterStatus {
 
     private String interServicePassword;
 
+    private boolean enabled;
+
     public String getInterServicePassword() {
         return interServicePassword;
     }
 
     public void setInterServicePassword(String interServicePassword) {
         this.interServicePassword = interServicePassword;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
 }

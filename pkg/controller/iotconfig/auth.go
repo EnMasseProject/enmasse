@@ -10,31 +10,37 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 )
 
-func ensureAdapterAuthCredentials(status map[string]iotv1alpha1.AdapterStatus) error {
+func initConfigStatus(config *iotv1alpha1.IoTConfig) error {
+
+	status := config.Status.Adapters
 
 	for k, v := range status {
-		if v.InterServicePassword == "" {
+		v.Enabled = findAdapter(k).IsEnabled(config)
+		if v.Enabled && v.InterServicePassword == "" {
 			pwd, err := util.GeneratePassword(64)
 			if err != nil {
 				return err
 			}
 			v.InterServicePassword = pwd
-			status[k] = v
 		}
+		if !v.Enabled {
+			v.InterServicePassword = ""
+		}
+		status[k] = v
 	}
 
 	return nil
 }
 
 // Ensure that we have exactly the require entries
-func ensureAdapterStatus(currentStatus map[string]iotv1alpha1.AdapterStatus, names ...string) map[string]iotv1alpha1.AdapterStatus {
+func ensureAdapterStatus(currentStatus map[string]iotv1alpha1.AdapterStatus) map[string]iotv1alpha1.AdapterStatus {
 
 	var result = make(map[string]iotv1alpha1.AdapterStatus)
 
 	// prefill
 
-	for _, k := range names {
-		result[k] = iotv1alpha1.AdapterStatus{}
+	for _, k := range adapters {
+		result[k.Name] = iotv1alpha1.AdapterStatus{}
 	}
 
 	if currentStatus == nil {

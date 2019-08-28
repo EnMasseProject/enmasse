@@ -35,6 +35,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
+const RegistryTypeAnnotation = "iot.enmasse.io/registry.type"
+
 var log = logf.Log.WithName("controller_iotconfig")
 
 type DeviceRegistryImplementation int
@@ -417,11 +419,11 @@ func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, co
 
 	// ensure we have all adapter status entries we want
 
-	config.Status.Adapters = ensureAdapterStatus(config.Status.Adapters, "mqtt", "http", "lorawan", "sigfox")
+	config.Status.Adapters = ensureAdapterStatus(config.Status.Adapters)
 
 	// generate adapter users
 
-	if err := ensureAdapterAuthCredentials(config.Status.Adapters); err != nil {
+	if err := initConfigStatus(config); err != nil {
 		return err
 	}
 
