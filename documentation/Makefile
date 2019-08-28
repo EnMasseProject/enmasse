@@ -22,13 +22,15 @@ build: swagger check
 	asciidoctor $(ASCIIDOCTOR_FLAGS) master-openshift.adoc -o html/openshift/index.html
 	asciidoctor $(ASCIIDOCTOR_FLAGS) contributing/master.adoc -o html/contributing.html
 
+ifdef PUBLISH_DEST
 .PHONY: publish
 publish: build
-ifndef PUBLISH_DEST
-$(error PUBLISH_DEST is not set)
-endif
 	rsync -av html/* $(PUBLISH_DEST)/
-
+else
+.PHONY: publish
+publish:
+	@echo "PUBLISH_DEST not set"
+endif
 
 .PHONY: clean
 clean:
