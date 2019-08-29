@@ -20,7 +20,7 @@ the Sigfox backend integration.
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-{context}[The IoT services are installed].
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
 * Properly deployed TLS in your cluster. The Sigfox protocol adapter endpoint
-  must be properly validated with with TLS.
+  must be properly validated with TLS.
 * Set up an account at https://backend.sigfox.com and register your Sigfox devices.
 * Be familiar with the Sigfox backend. You can find the documentation at https://backend.sigfox.com/cms/ once you
   are logged in.
