@@ -37,7 +37,7 @@ export REGISTRY_HOST={registry}
 curl --insecure -X POST -i -H 'Content-Type: application/json' https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
 ----
 . If you need to provide additional registration information, you can provide
-  them as follows:
+  it as follows:
 +
 [options="nowrap",subs="attributes"]
 ----

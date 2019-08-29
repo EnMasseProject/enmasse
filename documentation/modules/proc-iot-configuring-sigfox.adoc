@@ -22,21 +22,21 @@ the Sigfox backend integration.
 * Properly deployed TLS in your cluster. The Sigfox protocol adapter endpoint
   must be properly validated with TLS.
 * Set up an account at https://backend.sigfox.com and register your Sigfox devices.
-* Be familiar with the Sigfox backend. You can find the documentation at https://backend.sigfox.com/cms/ once you
+* Be familiar with the Sigfox backend. You can find the documentation at https://backend.sigfox.com/cms/ after you
   are logged in.
 
 [id='iot-configure-sigfox-register-gateway-{context}']
 == Registering the Sigfox backend as a gateway device
 
-The Sigfox backend itself will be setup up in {ProductName} as a gateway device.
+The Sigfox backend will be set up in {ProductName} as a gateway device.
 The credentials assigned to this device will be required for the configuration
 of the "callback" in the Sigfox backend. The actual devices will be configured
 to use this gateway device as their transport.
 
 .Procedure
 
-. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-register-{context}[Register a new device]. Choose an arbitrary name,
-  (for example `sigfox-backend`).
+. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-register-{context}[Register a new device]. Choose a name, 
+  for example, `sigfox-backend`.
 . link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-set-password-{context}[Set up password credentials] for this device (for example `sigfox-user` / `sigfox-password`).
 
 [id='iot-configure-sigfox-register-device-{context}']
@@ -47,28 +47,29 @@ to use this gateway device as their transport.
 
 .Procedure
 
-. Get the device ID from your Sigfox device.
+. Obtain the device ID from your Sigfox device.
 . link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-register-{context}[Register a new device].
-  Use the device ID as a name (for example `1AB2C3`) and set the `via` field as part of
++
+Specify the device ID as the name (for example, `1AB2C3`) and specify the `via` field as part of
   the registration information (for example, `["via": "sigfox-backend"]`).
 . Do not set a password for this device!
 
 [id='iot-configure-sigfox-connection-information-{context}']
-== Prepare connection information
+== Preparing Sigfox connection information
 
 Prepare the following connection information, which will be used in the
 following steps.
 
 IoT tenant name::
-The name of the IoT tenant consists of the Kubernetes namespace and the name
+The name of the IoT tenant consists of the {KubePlatform} namespace and the name
 of the IoT project resource. For example, `namespace.iotproject`.
 
 HTTP authorization header::
-In order for the Sigfox backend to authenticate
-Convert the username and password combination of the gateway device into
-and HTTP "Basic Authorization" header. Be sure to use the full username
-consisting of _authentication id_ plus the character `@` plus the _IoT tenant
-name_.
+For the Sigfox backend to authenticate
+convert the username and password combination of the gateway device into
+an HTTP "Basic Authorization" header. Be sure to use the full username
+using the following syntax:  `_authentication id_ @_IoT tenant
+name_`.
 +
 Example: `sigfox-user@namespace.iotproject`
 +
@@ -81,33 +82,32 @@ echo "Basic $(echo -n "sigfox-user@namespace.iotproject:password" | base64)"
 ----
 
 URL pattern::
-The URL pattern consists of the URL to the Sigfox protocol adapter, and some
-Sigfox specific query parameters:
+The URL pattern consists of the URL to the Sigfox protocol adapter and
+Sigfox-specific query parameters:
 +
 [options="nowrap",subs="verbatim,attributes"]
 ----
 https://<ADAPTER URL>/data/telemetry/<TENANT>?device={device}&data={data}
 ----
 +
-The URL of the protocol adapter can be acquired by executing the following
-command:
+Run the following command to obtain the URL of the protocol adapter:
 +
 [options="nowrap",subs="attributes"]
 ----
 {cmd-get-adapter}
 ----
 +
-The path segment `/data/telemetry` indicates to the protocol adapter that
-messages should be treated as _telemetry_ data. You can use `/data/event`
+The path segment `/data/telemetry` indicates to the protocol adapter
+to handle messages as _telemetry_ data. You can use `/data/event`
 instead to process messages as _events_.
 +
-The query parameters `?device={device}&data={data}` should be appended as is.
+Append the query parameters `?device={device}&data={data}` as is.
 +
 NOTE: `{device}` and `{data}` are literal values, and must not be replaced.
 
 
 [id='iot-configure-sigfox-callback-{context}']
-== Create a new callback in the Sigfox backend
+== Creating a new callback in the Sigfox backend
 
 .Prerequisites
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-configure-sigfox-generate-auth-header-{context}[Generate the authentication header for the gateway device].
@@ -127,7 +127,7 @@ Headers:: `Authorization` – `Basic…`
 Send SNI:: ☑ (Enabled)
 
 [id='iot-configure-sigfox-callback-command-{context}']
-== Enable command & control
+== Enabling command and control
 
 .Prerequisites
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-configure-sigfox-callback-{context}[Created a callack in the Sigfox backend].
@@ -137,7 +137,7 @@ Send SNI:: ☑ (Enabled)
 . Log in to https://backend.sigfox.com.
 . In the `Device Type` open the type for editing and switch to the `Callbacks`
   section.
-. Edit the callback configuration you want to enable command & control for.
+. Edit the callback configuration for which you want to enable command and control.
 +
 Type:: Switch to `DATA` –  `BIDIR`
 Url Pattern:: Add the `ack` parameter. For example, `\https://iot-sigfox-adapter.my.cluster/data/telemetry/<TENANT>?device={device}&data={data}**&ack={ack}**`
