@@ -12,10 +12,8 @@ import io.enmasse.systemtest.*;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -193,6 +191,127 @@ class CommonTest extends TestBase {
 //        Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
 //        kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
 //        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+    }
+
+    //https://github.com/EnMasseProject/enmasse/issues/3098
+    @Test
+    void testRestartAdminComponent() throws Exception {
+        List<Label> labels = new LinkedList<>();
+        labels.add(new Label("name", "admin"));
+
+        UserCredentials user = new UserCredentials("frantisek", "dobrota");
+        AddressSpace brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("space-restart-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("space-restart-standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        createAddressSpaceList(standard, brokered);
+        createOrUpdateUser(brokered, user);
+        createOrUpdateUser(standard, user);
+
+        List<Address> brokeredAddresses = Arrays.asList(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(brokered.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(brokered, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.BROKERED_QUEUE)
+                        .endSpec()
+                        .build());
+
+        List<Address> standardAddresses = Arrays.asList(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(standard.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(standard, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(standard.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(standard, "test-queue-sharded"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue-sharded")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                        .endSpec()
+                        .build());
+
+
+
+        setAddresses(brokeredAddresses.toArray(new Address[0]));
+        setAddresses(standardAddresses.toArray(new Address[0]));
+
+        assertCanConnect(brokered, user, brokeredAddresses);
+        assertCanConnect(standard, user, standardAddresses);
+
+        log.info("Sending messages before admin pod restart");
+
+        for (Address addr : brokeredAddresses) {
+            sendDurableMessages(brokered, addr, user, 15);
+        }
+
+        for (Address addr : standardAddresses) {
+            sendDurableMessages(standard, addr, user, 15);
+        }
+
+        log.info("------------------------------------------------------------");
+        log.info("------------------- Start with restating -------------------");
+        log.info("------------------------------------------------------------");
+
+        List<Pod> pods = kubernetes.listPods();
+        int runningPodsBefore = pods.size();
+        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+
+        for (Label label : labels) {
+            log.info("Restarting {}", label.labelValue);
+            KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+            Thread.sleep(30_000);
+            TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+        }
+
+        log.info("Receiving messages after admin pod restart");
+
+        for (Address addr : brokeredAddresses) {
+            receiveDurableMessages(brokered, addr, user, 15);
+        }
+
+        for (Address addr : standardAddresses) {
+            receiveDurableMessages(standard, addr, user, 15);
+        }
+
     }
 
     @Test
