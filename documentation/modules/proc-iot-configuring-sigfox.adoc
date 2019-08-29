@@ -50,7 +50,7 @@ to use this gateway device as their transport.
 . Get the device ID from your Sigfox device.
 . link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-register-{context}[Register a new device].
   Use the device ID as a name (for example `1AB2C3`) and set the `via` field as part of
-  the registration information (for example `["via": "sigfox-backend"]`)
+  the registration information (for example, `["via": "sigfox-backend"]`).
 . Do not set a password for this device!
 
 [id='iot-configure-sigfox-connection-information-{context}']
