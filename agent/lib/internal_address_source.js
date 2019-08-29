@@ -182,6 +182,10 @@ AddressSource.prototype.add_readiness_record = function (definition) {
     }
 };
 
+AddressSource.prototype.update_readiness_record = function (definition) {
+    this.readiness[definition.address].ready = definition.status.isReady;
+};
+
 AddressSource.prototype.delete_readiness_record = function (definition) {
     delete this.readiness[definition.address];
 };
@@ -192,6 +196,9 @@ AddressSource.prototype.update_readiness = function (changes) {
     }
     if (changes.removed.length > 0) {
         changes.removed.forEach(this.delete_readiness_record.bind(this));
+    }
+    if (changes.modified.length > 0) {
+        changes.modified.forEach(this.update_readiness_record.bind(this));
     }
 };
 
