@@ -120,14 +120,11 @@ systemtests:
 docu_html:
 	make -C documentation build
 
-docu_htmlclean:
-	make -C documentation clean
-
 docu_check:
 	make -C documentation check
 
-docu_clean: docu_htmlclean
+docu_clean:
 	make -C documentation clean
 
 .PHONY: test_go_vet test_go_plain build_go imageenv
-.PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_htmlclean docu_check
+.PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_check docu_clean
