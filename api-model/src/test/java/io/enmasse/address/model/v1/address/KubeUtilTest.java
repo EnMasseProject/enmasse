@@ -145,7 +145,7 @@ public class KubeUtilTest {
                 .withName("foo")
                 .withLivenessProbe(new ProbeBuilder()
                         .withInitialDelaySeconds(1)
-                        .withNewPeriodSeconds(2)
+                        .withPeriodSeconds(2)
                         .withFailureThreshold(4).build()).build();
         Container desiredContainer = new ContainerBuilder()
                 .withName("foo")
