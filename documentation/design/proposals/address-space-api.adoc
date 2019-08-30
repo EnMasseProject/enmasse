@@ -49,6 +49,8 @@ We want the consoleUI to be able to receive upates on the data they are viewing.
 * The front-end would end up making multple api calls to aggregate the dynamic data, with the data available from the custom resources.  This keeps the majority of the api calls similar to the kubernetes calls.
 * We would have enhanced api calls that match the kubernetes api calls, with extra parameters for pagination, and sorting
 
+* link:rest-api.yaml[proposed OpenAPI]
+
 === Option 2) GraphQL with Subscription Operation
 
 GraphQL offers several advantages (https://graphql.org/)

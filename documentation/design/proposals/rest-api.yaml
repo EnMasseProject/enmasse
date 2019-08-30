@@ -1,0 +1,817 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Address Space Api
+  
+  license:
+    name: Apache License 2.0
+servers:
+  - url: http://localhost/v1
+paths:
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}:
+    get:
+      summary: Info for a specific addressSpace
+      tags:
+      - addressSpace
+      operationId: getAddressSpace
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Expected response to a valid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AddressSpace"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      tags:
+      - addressSpace
+      summary: Deletes an addressSpace
+      description: ""
+      operationId: deleteAddressSpace
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve
+          schema:
+            type: string
+      responses:
+        '204':
+          description: addressSpace deleted
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}/address:
+    get:
+      summary: List addresses
+      operationId: getAddressesByAddressSpaceId
+      tags:
+        - address
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve the addresses for
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: offset
+          in: query
+          description: The index of the first entry to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: sort_by
+          in: query
+          description: The field to sorty by (stored messages, senders, or receivers)
+          required: false
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          description: The index of the first entry to return
+          required: false
+          schema:
+            type: integer
+            enum: 
+              - asc
+              - desc
+        - name: nameFilter
+          in: query
+          description: Filter the results by the name
+          required: false
+          schema:
+            type: string
+        - name: addressTypeFilter
+          in: query
+          description: Filter the results by the type
+          required: false
+          schema:
+            type: string
+        - name: statusFilter
+          in: query
+          description: Filter the results by the status
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A paged array of addresses
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Addresses"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a new address in address space
+      tags:
+      - address
+      operationId: createAddress
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to use
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to create the address in
+          schema:
+            type: string
+      requestBody:
+        $ref: '#/components/requestBodies/AddressCreateBody'
+      responses:
+        '200':
+          description: Create Address Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}/address/{name}/client:
+    get:
+      summary: Get clients for an address
+      operationId: getClients
+      tags:
+        - address
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve the addresses for
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          description: The name of the address to update
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: offset
+          in: query
+          description: The index of the first entry to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: sort_by
+          in: query
+          description: The field to sort by (deliver rate, or backlog))
+          required: false
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          description: The order to sort by
+          required: false
+          schema:
+            type: integer
+            enum: 
+              - asc
+              - desc
+        - name: nameFilter
+          in: query
+          description: Filter the results by the name
+          required: false
+          schema:
+            type: string
+        - name: rolerFilter
+          in: query
+          description: Filter the results by the role
+          required: false
+          schema:
+            type: integer
+            enum: 
+              - receiver
+              - sender
+        - name: containerIdFilter
+          in: query
+          description: Filter the results by the container id
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A detailed address
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Clients"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      tags:
+        - address
+      summary: Update plan
+      operationId: updateAddress
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to use
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to create the address in
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          description: The name of the address to update
+          schema:
+            type: string            
+      requestBody:
+        $ref: '#/components/requestBodies/AddressUpdateBody'
+      responses:
+        '200':
+          description: pet response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Address'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+      - address
+      summary: Deletes an address
+      description: ""
+      operationId: deleteAddress
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to delete the address from
+          schema:
+            type: string
+        - name: name
+          in: path
+          required: true
+          description: The name of the address to update
+          schema:
+            type: string            
+      responses:
+        '204':
+          description: address deleted
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}/configuration:
+    get:
+      summary: get command to create address
+      operationId: getConfiguration
+      tags:
+        - address
+        
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve the addresses for
+          schema:
+            type: string
+        - name: name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: addressName
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: addressType
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: plan
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The yaml to manually create the address
+          content:
+            application/json:    
+              schema:
+                type: object
+                properties:
+                  cmd:
+                    type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}/plans:
+    get:
+      summary: get list of available plans
+      operationId: getPlans
+      tags:
+        - addressSpace
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve the addresses for
+          schema:
+            type: string
+        - name: addressType
+          in: query
+          description: filter the plans, based on the type
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of plans
+          content:
+            application/json:    
+              schema:
+                type: array
+                items:
+                  type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}/connection:
+    get:
+      summary: Get connections
+      operationId: getConnections
+      tags:
+        - addressSpace
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve the addresses for
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: offset
+          in: query
+          description: The index of the first entry to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: sort_by
+          in: query
+          description: The field to sort by (senders, receivers)
+          required: false
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          description: The order to sort by
+          required: false
+          schema:
+            type: integer
+            enum: 
+              - asc
+              - desc
+        - name: containerIdFilter
+          in: query
+          description: Filter the results by the container name
+          required: false
+          schema:
+            type: string
+        - name: addressNameFilter
+          in: query
+          description: Filter the results by AddressName
+          required: false
+          schema:
+            type: string
+        - name: roleFilter
+          in: query
+          description: Filter the results by the role
+          required: false
+          schema:
+            type: string            
+      responses:
+        '200':
+          description: The connections
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Connections"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}/link:
+    get:
+      summary: Get client links
+      operationId: getLinks
+      tags:
+        - addressSpace
+      parameters:
+        - name: namespaceName
+          in: path
+          required: true
+          description: The namespace to find the addressSpace in
+          schema:
+            type: string
+        - name: addressSpaceName
+          in: path
+          required: true
+          description: The name of the addressSpace to retrieve the addresses for
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: offset
+          in: query
+          description: The index of the first entry to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: sort_by (deliveries, accepted, name, rejected, released, modified, presettled, undelivered)
+          in: query
+          description: The field to sort by
+          required: false
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          description: The order to sort by
+          required: false
+          schema:
+            type: integer
+            enum: 
+              - asc
+              - desc
+        - name: roleFilter
+          in: query
+          description: Filter the results by the role
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The client links
+          content:
+            application/json:    
+              schema:
+                $ref: "#/components/schemas/Links"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  requestBodies:
+    AddressUpdateBody:
+      description: A JSON object containing address information
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+            - name
+            - addressName
+            - plan
+            properties:
+              name:
+                type: string
+              addressName:
+                type: string
+              plan:
+                type: string
+    AddressCreateBody:
+      description: A JSON object containing address information
+      required: true
+      content:
+        application/json:
+          schema:
+            required:
+            - name
+            - addressName
+            - plan
+            - addressType
+            properties:
+              name:
+                type: string
+              addressName:
+                type: string
+              addressType:
+                $ref: '#/components/schemas/AddressType'
+              plan:
+                type: string
+  schemas:
+    AddressSpace:
+      type: object
+      required:
+        - name
+        - namespace
+        - adressSpaceType
+        - createDate
+      properties:
+        name:
+          type: string
+        namespace:
+          type: string
+        addressSpaceType:
+          $ref: '#/components/schemas/AddressSpaceType'
+        createDate:
+          type: string
+    AddressSpaceType:
+      type: string
+      enum: 
+        - standard
+        - brokered
+    Address:
+      type: object
+      required:
+        - name
+        - addressName
+        - addressType
+        - plan
+      properties:
+        name:
+          type: string
+        addressName:
+          type: string
+        addressType:
+          $ref: '#/components/schemas/AddressType'
+        plan:
+          type: string
+        status:
+          $ref: '#/components/schemas/AddressStatuses'
+        stats:
+          $ref: '#/components/schemas/AddressStats'
+    AddressStats:
+      type: object
+      properties:
+        storedMessages:
+          type: integer
+        senders:
+          type: integer
+        receivers: 
+          type: integer
+        shards:
+          type: integer
+        messageStats:
+          $ref: '#/components/schemas/MessageIntervalStats'
+    MessageIntervalStats:
+      type: object
+      properties:
+        messagesIn:
+          type: integer
+        messagesOut:
+          type: integer
+        timeInterval:
+          type: number
+    AddressStatuses:
+      type: string
+      enum: 
+        - Pending
+        - Configuring
+        - Active
+        - Failed
+        - Terminating
+    AddressType:
+      type: string
+      enum: 
+        - Queue
+        - Topic
+        - Subscription
+        - Multicast
+        - Anycast
+    Addresses:
+      type: array
+      items:
+        $ref: "#/components/schemas/Address"
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    Client:
+      type: object
+      required:
+        - role
+        - containerID
+        - name
+        - deliverRate 
+        - backlog
+      properties:
+        role:
+          type: string
+        containerId:
+          type: string
+        name:
+          type: string
+        deliverRate:
+          type: integer
+          format: int32
+        backlog:
+          type: number
+    Clients:
+      type: array
+      items:
+        $ref: "#/components/schemas/Client"
+    Connection:
+      type: object
+      required:
+        - hostname
+        - containerID
+        - protocol
+        - senders
+        - receivers
+      properties:
+        hostname:
+          type: string
+        containerId:
+          type: string
+        protocol:
+          type: string
+        messageIn:
+          type: integer
+          format: int32
+        messageOut:
+          type: integer
+          format: int32
+        senders:
+          type: integer
+          format: int32
+        receivers:
+          type: integer
+          format: int32
+        version:
+          type: integer
+          format: int32
+        platform:
+          type: string
+    Connections:
+      type: array
+      items:
+        $ref: "#/components/schemas/Connection"
+    Link:
+      type: object
+      required:
+        - role
+        - address
+        - deliveries
+      properties:
+        role:
+          type: string
+        address:
+          type: string
+        deliveries:
+          type: string
+        addressType:
+          $ref: "#/components/schemas/StandardLinkStats"
+    Links:
+      type: array
+      items:
+        $ref: "#/components/schemas/Link"
+    StandardLinkStats:
+      type: object
+      properties:
+        accepted:
+          type: string
+        rejected:
+          type: integer
+          format: int32
+        released:
+          type: integer
+          format: int32
+        modified:
+          type: integer
+          format: int32
+        presettled:
+          type: integer
+          format: int32
+        undelivered:
+          type: string
