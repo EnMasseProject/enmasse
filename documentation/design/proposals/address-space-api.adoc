@@ -1,0 +1,73 @@
+== Overview
+￼
+Address Space Console allows the viewing and management of:
+
+* addresses within an address space, and
+* messaging connections made by applications within that address space.
+* statistics
+
+The console requires easy to access backend data.  This data comes from:
+
+* Custom Resources that can be accessed through the Kubernetes API
+* Message Statitistcs: includes time based calculations
+* Connections: To dynamic to be stored in custom resources
+
+The following assumptions are made:
+
+1. 5 or 6 people using this at any given time
+1. later will expose to prometheus
+1. Use RBAC controls to monitor access to address space.
+1. Later we will want to expose this to prometheus.  TODO: Any issues with prometheus using graphQL?
+
+== Design
+
+Using the Kubernetes Api directly is limiting.  
+1. It does not support sorting yet (https://github.com/kubernetes/kubernetes/issues/81875) 
+2. It does not support pagination.  However, it does let you restrict the number of responses, but they must be fetched in order with: limit=500&continue=ENCODED_CONTINUE_TOKEN
+3. The client would need to make multiple calls, one to get the list, and another to get the details
+
+=== Language
+
+We need a backend server.  To reduce the number of technologies we should use java or golang.  golang, for its advanced kubernetes api, and there are graphql implementations.
+
+There are two alternatives that I am proposing:
+
+1. Restful api with resteasy.  Along with websockets
+1. GraphQL with Subscription Operation (using websockets as the implementation).
+￼
+
+=== Option 1) Restful API
+
+Using rest api calls, provide a well known method, without adding new technologies.  Adding in websockets would allow the console UI to receive updates.
+
+We want the consoleUI to be able to receive upates on the data they are viewing.  This can be achieved by:
+
+* openning a websocket connection with query parameters for:page, limit, sort, filtering.  These parameters would be stored in the websocket.session
+* the websocket would be closed when the user traverses to another page, or modifies the search terms. 
+* The sorting and filtering would be stored on the client page, if they open another browser tab, they could have a different sort for that tab.
+* One of the mobile screens has fewer fields displayed.  For the first iteration, the server will return all the information, that is displayed on any console page.
+* The front-end would end up making multple api calls to aggregate the dynamic data, with the data available from the custom resources.  This keeps the majority of the api calls similar to the kubernetes calls.
+* We would have enhanced api calls that match the kubernetes api calls, with extra parameters for pagination, and sorting
+
+=== Option 2) GraphQL with Subscription Operation
+
+GraphQL offers several advantages (https://graphql.org/)
+
+* schema that describes all the entities
+* utilities exist to allow the front-end to generate mocks from the schema for testing.
+* There is only one endpoint, and the client write queries, to gets back the aggregated data requested.
+* Simplifies sorting, filtering
+* Would be best that our GraphQL server has an in-memory cache, that gets updated by watches.  This would make aggregating the response data quicker.
+* For updates the subscription operation will let us use websockets.
+* go libraries: https://github.com/graphql-go/graphql and https://github.com/99designs/gqlgen gqlgen is the recommended one
+ 
+=== Authorization
+
+With the two proposed methods, the server will need to run with permissions to view all address spaces.  And we will need to check that the user has permission to see the data for the requested address space.  The caching, and the message stats make this our responsibility.
+
+
+== Testing
+￼
+== Documentation
+￼
+￼ 
