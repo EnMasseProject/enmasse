@@ -22,7 +22,10 @@ If you need a function or class utility that requires adding a new dependency, f
 
 Java source code is built using Maven.
 
-Follow the [Oracle Java Code Conventions](https://www.oracle.com/technetwork/java/codeconvtoc-136057.html).
+Source code should follow the [Google Java Style Guide](https://google.github.io/styleguide/javaguide.html) with the following amendments:
+
+* Use 4 spaces indentation
+* Newlines should be used between annotations and function/class definitions
 
 Prefer to use plain Java whenever you can. Code should be easy to understand without intimate knowledge of specific frameworks. VertX, Jackson, JAX-RS and tests framework annotations such as Junit are in use at present, and should be preferred instead of introducing other frameworks. However, some dependencies like Eclipse Hono uses Spring, in which case it cannot be ignored.
 
