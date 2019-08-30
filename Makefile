@@ -1,5 +1,5 @@
 TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-include Makefile.env.mk
+include $(TOPDIR)/Makefile.env.mk
 
 GO_DIRS = \
 	controller-manager \
