@@ -1,3 +1,4 @@
+TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/..
 include ../Makefile.env.mk
 
 ASCIIDOCTOR_EXTRA_FLAGS ?= --failure-level WARN
