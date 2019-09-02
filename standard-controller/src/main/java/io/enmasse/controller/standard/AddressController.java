@@ -317,9 +317,10 @@ public class AddressController implements Watcher<Address> {
                     log.info("Upgrading broker {}", cluster.getClusterId());
                     cluster.updateResources(upgradedCluster, desiredConfig);
                     boolean updatePersistentVolumeClaim = desiredConfig.getUpdatePersistentVolumeClaim();
+                    boolean shouldReplaceStatefulSet = cluster.shouldReplace();
                     List<HasMetadata> itemsToBeApplied = new ArrayList<>(cluster.getResources().getItems());
                     try {
-                        kubernetes.apply(cluster.getResources(), updatePersistentVolumeClaim, itemsToBeApplied::remove);
+                        kubernetes.apply(cluster.getResources(), updatePersistentVolumeClaim, shouldReplaceStatefulSet, itemsToBeApplied::remove);
                     } catch (KubernetesClientException original) {
                         // Workaround for #2880 Failure executing: PATCH... Message: Unable to access invalid index: 20.
                         if (!itemsToBeApplied.isEmpty() && original.getMessage() != null && original.getMessage().contains("Unable to access invalid index")) {
@@ -337,7 +338,7 @@ public class AddressController implements Watcher<Address> {
                                         spec.setReplicas(0);
                                     }
                                     Kubernetes.addObjectAnnotation(failedResource, AnnotationKeys.APPLIED_INFRA_CONFIG, new ObjectMapper().writeValueAsString(currentConfig));
-                                    kubernetes.apply(failedResource, updatePersistentVolumeClaim);
+                                    kubernetes.apply(failedResource, updatePersistentVolumeClaim, shouldReplaceStatefulSet);
                                     log.warn("Applied #2880 workaround for {} of {}, next upgrade cycle should complete upgrade.", failedResource.getMetadata(), cluster.getClusterId());
                                 } catch (KubernetesClientException e) {
                                     log.error("Failed to apply failed resource {} of {} for #2880 workaround. " +
