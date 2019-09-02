@@ -25,7 +25,7 @@ endif::[]
 export REGISTRY_HOST={registry}
 ----
 
-[id='iot-creating-device-register-{context}']
+[id='iot-proc-register-new-device-{context}']
 == Registering a new device
 
 .Procedure

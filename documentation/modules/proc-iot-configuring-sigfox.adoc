@@ -25,7 +25,7 @@ the Sigfox backend integration.
 * Be familiar with the Sigfox backend. You can find the documentation at https://backend.sigfox.com/cms/ after you
   are logged in.
 
-[id='iot-configure-sigfox-register-gateway-{context}']
+[id='iot-proc-register-sigfox-backend-gateway-device-{context}']
 == Registering the Sigfox backend as a gateway device
 
 The Sigfox backend will be set up in {ProductName} as a gateway device.
@@ -39,7 +39,7 @@ to use this gateway device as their transport.
   for example, `sigfox-backend`.
 . link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-set-password-{context}[Set up password credentials] for this device (for example `sigfox-user` / `sigfox-password`).
 
-[id='iot-configure-sigfox-register-device-{context}']
+[id='iot-proc-register-sigfox-device-{context}']
 == Registering the Sigfox device
 
 .Prerequisites
@@ -52,9 +52,10 @@ to use this gateway device as their transport.
 +
 Specify the device ID as the name (for example, `1AB2C3`) and specify the `via` field as part of
   the registration information (for example, `["via": "sigfox-backend"]`).
-. Do not set a password for this device!
++
+NOTE: Do not set a password for this device. 
 
-[id='iot-configure-sigfox-connection-information-{context}']
+[id='iot-ref-prepare-sigfox-connection-information-{context}']
 == Preparing Sigfox connection information
 
 Prepare the following connection information, which will be used in the
@@ -106,7 +107,7 @@ Append the query parameters `?device={device}&data={data}` as is.
 NOTE: `{device}` and `{data}` are literal values, and must not be replaced.
 
 
-[id='iot-configure-sigfox-callback-{context}']
+[id='iot-proc-creating-new-sigfox-callback-{context}']
 == Creating a new callback in the Sigfox backend
 
 .Prerequisites
@@ -126,7 +127,7 @@ Use HTTP Method:: `GET`
 Headers:: `Authorization` – `Basic…`
 Send SNI:: ☑ (Enabled)
 
-[id='iot-configure-sigfox-callback-command-{context}']
+[id='iot-proc-enable-sigfox-command-and-control-{context}']
 == Enabling command and control
 
 .Prerequisites
