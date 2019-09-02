@@ -42,6 +42,7 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.IoTUtils;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 
 @Tag(sharedIot)
 @Tag(smoke)
@@ -335,5 +336,12 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     public IoTProject getSharedIoTProject() {
         return iotProject;
     }
+
+    protected void assertCorrectRegistryType(final String type) {
+        final Deployment deployment = kubernetes.getClient().apps().deployments().inNamespace(iotProjectNamespace).withName("iot-device-registry").get();
+        assertNotNull(deployment);
+        assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
+    }
+
 
 }

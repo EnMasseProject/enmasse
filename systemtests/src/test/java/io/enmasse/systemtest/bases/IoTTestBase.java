@@ -56,23 +56,25 @@ public abstract class IoTTestBase extends TestBase {
         try {
             if (!environment.skipCleanup()) {
                 //FIXME maybe collect logs of iot related pods?
+                // delete projects
                 log.info("All IoTProjects will be removed");
                 for (IoTProject project : iotProjects) {
                     var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
                     if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
                         IoTUtils.deleteIoTProjectAndWait(kubernetes, project);
                     } else {
-                        log.info("IoTProject '" + project.getMetadata().getName() + "' doesn't exists!");
+                        log.info("IoTProject '{}' doesn't exists!", project.getMetadata().getName());
                     }
                 }
                 iotProjects.clear();
+                // delete configs
                 log.info("All IoTConfigs will be removed");
                 var iotConfigApiClient = kubernetes.getIoTConfigClient();
                 for (IoTConfig config : iotConfigs) {
                     if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
                         IoTUtils.deleteIoTConfigAndWait(kubernetes, config);
                     } else {
-                        log.info("IoTConfig '" + config.getMetadata().getName() + "' doesn't exists!");
+                        log.info("IoTConfig '{}' doesn't exists!", config.getMetadata().getName());
                     }
                 }
                 iotConfigs.clear();

@@ -8,6 +8,8 @@ import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newInfinispanBas
 
 import java.nio.ByteBuffer;
 
+import org.junit.jupiter.api.Test;
+
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.CertBundle;
@@ -45,6 +47,11 @@ public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase {
     protected void removeIoTConfig() throws Exception {
         super.removeIoTConfig();
         SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+    }
+
+    @Test
+    public void testCorrectTypeDeployed () {
+        assertCorrectRegistryType("infinispan");
     }
 
 }
