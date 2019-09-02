@@ -20,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -31,6 +32,7 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -88,6 +90,18 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             IoTUtils.deleteIoTConfigAndWait(kubernetes, iotConfig);
         } else {
             log.info("IoTConfig '{}' doesn't exists!", iotConfig.getMetadata().getName());
+        }
+    }
+
+    @BeforeAll
+    void forceTeardown() throws Exception {
+        var kubernetes = Kubernetes.getInstance();
+        log.info("Deleting all IoT resources before start");
+        for (IoTProject project : kubernetes.getIoTProjectClient(iotProjectNamespace).list().getItems()) {
+            IoTUtils.deleteIoTProjectAndWait(kubernetes, project);
+        }
+        for (IoTConfig config : kubernetes.getIoTConfigClient(Kubernetes.getInstance().getInfraNamespace()).list().getItems()) {
+            IoTUtils.deleteIoTConfigAndWait(kubernetes, config);
         }
     }
 
@@ -338,7 +352,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     }
 
     protected void assertCorrectRegistryType(final String type) {
-        final Deployment deployment = kubernetes.getClient().apps().deployments().inNamespace(iotProjectNamespace).withName("iot-device-registry").get();
+        final Deployment deployment = kubernetes.getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
     }
