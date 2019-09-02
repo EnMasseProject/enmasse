@@ -51,7 +51,7 @@ to use this gateway device as their transport.
 . link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-device-register-{context}[Register a new device].
 +
 Specify the device ID as the name (for example, `1AB2C3`) and specify the `via` field as part of
-  the registration information (for example, `["via": "sigfox-backend"]`).
+the registration information (for example, `{"via": ["sigfox-backend"]}`).
 +
 NOTE: Do not set a password for this device. 
 
