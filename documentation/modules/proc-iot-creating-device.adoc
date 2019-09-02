@@ -11,7 +11,7 @@ After installing the IoT services and creating an IoT project, you can create an
 ifeval::["{cmdcli}" == "oc"]
 :registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
 endif::[]
-ifeval::["{cmdcli}" != "oc"]
+ifeval::["{cmdcli}" == "kubectl"]
 :registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
 endif::[]
 
@@ -25,7 +25,7 @@ endif::[]
 export REGISTRY_HOST={registry}
 ----
 
-[id='iot-proc-register-new-device-{context}']
+[id='iot-proc-creating-device-register-new-device-{context}']
 == Registering a new device
 
 .Procedure
