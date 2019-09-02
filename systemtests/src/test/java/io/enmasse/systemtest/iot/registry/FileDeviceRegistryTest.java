@@ -8,6 +8,7 @@ import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newFileBased;
 
 import java.nio.ByteBuffer;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -45,5 +46,11 @@ public class FileDeviceRegistryTest extends DeviceRegistryTestBase{
     @Test
     public void testCorrectTypeDeployed () {
         assertCorrectRegistryType("file");
+    }
+
+    @Disabled("Not supported by file based device registry")
+    @Override
+    void testCreateForNonExistingTenantFails() throws Exception {
+        super.testCreateForNonExistingTenantFails();
     }
 }
