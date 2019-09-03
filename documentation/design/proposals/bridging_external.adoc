@@ -57,6 +57,7 @@ The sending and receiving messages to a remote AMQP endpoint via local address s
 
 The forwarding use cases are covered by creating a connector and a forwarder referencing the connector. The direction field will determine if messages are forwarded from remote to local or from local to remote.
 
+Authorization for remote addresses will work the same as for local addresses. MessagingUser with address patterns matching remote addresses are allowed to send/recv from those.
 
 == Implementation
 
