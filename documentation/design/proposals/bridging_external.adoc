@@ -27,9 +27,9 @@ spec:
   plan: standard-small
   connectors:
   - name: remote1
-    host: example.com
-    port: 5671
-    failoverHost/s:
+    endpointHosts:
+    - host: example.com
+      port: 5671
     - host: failover.example.com
       port: 5671
     tls: # If not specified, do not enable TLS. Use just 'tls: {}' to enable TLS without any cert configuration.
