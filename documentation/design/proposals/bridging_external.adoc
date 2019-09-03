@@ -9,6 +9,8 @@ The use cases covered by this proposal are:
 1. Sending messages to a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
 1. Receiving messages from a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
 
+The external bridging feature requires a dispatch router to support the above use cases. This means that this feature will only be available in the standard address space to start off with, but may be implemented in the brokered address space as well by adding a router to handle the bridging.
+
 == Design
 
 The address space specification would be expanded with 2 addition sub-objects, `connectors` and `forwarders`. A connector configures the infrastructure to connect to a remote AMQP endpoint and add address matching rules with the specified addresses. A forwarder specifies message routing rules to/from a local address to a remote address.  
