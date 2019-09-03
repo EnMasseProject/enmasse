@@ -27,10 +27,11 @@ spec:
   plan: standard-small
   connectors:
   - name: remote1
-    hostname: example.com
-    port: 5672
-    failoverUrls:
-    - amqps://failover.example.com:5671 // On the form [(amqp|amqps|ws|wss)://]host_or_ip[:port]
+    host: example.com
+    port: 5671
+    failoverHost/s:
+    - host: failover.example.com
+      port: 5671
     tls: # If not specified, do not enable TLS. Use just 'tls: {}' to enable TLS without any cert configuration.
       caCertSecret:
         name: remote1-secret # Secret containing CA to be trusted for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
@@ -49,7 +50,7 @@ status:
   connectors:
   - name: remote1
     ready: true
-    messages: [] // Error messages if not ready
+    messages: [] # Error messages if not ready
 ```
 
 The sending and receiving messages to a remote AMQP endpoint via local address space use cases are covered by simply creating a connector and attaching client to 'connectorname/address'.
@@ -69,7 +70,7 @@ kind: Address
 spec:
   ...
   address: myqueue
-  type: queue | subscription // Queue allows direction in and out. Subscription only allows direction out.
+  type: queue | subscription # Queue allows direction in and out. Subscription only allows direction out.
   forwarders:
   - name: fwd1
     remoteAddress: foo/queue1 
@@ -78,7 +79,7 @@ status:
   forwarders:
   - name: fwd1
     ready: true
-    messages: [] // Error messages
+    messages: [] # Error messages
 ```
 
 NOTE: A forwarding rule will only be applied if remoteAddress is matched by any of the entries in the address space connector `addresses` field. Sanity checking on the forwarders and connectors is needed to ensure that invalid forwarding rules cannot be applied.
