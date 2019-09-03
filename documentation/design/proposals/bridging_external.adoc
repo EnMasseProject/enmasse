@@ -68,7 +68,7 @@ The api server will need to perform an extra set of validation when creating add
 
 The address space controller will need to pass additional configuration to the router when starting up. When creating the address space, the router config configmap need to be programatically crafted in order for the additional information to be optionally added to the config. The connector and forwarder definitions will essentially end up defining a set of connectors and autoLinks in the router config.
 
-This kind of fine-grained reconsiliation is a direction we're likely to go in when moving the address-space-controller logic to the controller-manager (enmasse-operator) in the future, but will create additional code that have to be rewritten if we implement this in the address-space-controller.
+This kind of fine-grained reconciliation is a direction we're likely to go in when moving the address-space-controller logic to the controller-manager (enmasse-operator) in the future, but will create additional code that have to be rewritten if we implement this in the address-space-controller.
 
 To avoid that, as an alternative, we could put the responsibility of creating the router config configmap to the controller-manager as a first step in this direction (the configmap would then have to be removed from the template). From a maintenance POV it it might be better to have the logic in the same 'place' though, and the controller-manager would not be aware of any processing error in the address-space-controller such as failing to create the address space, in which case one would end up with a stale configmap.
 
