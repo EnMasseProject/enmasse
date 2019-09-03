@@ -4,7 +4,6 @@ include $(TOPDIR)/Makefile.env.mk
 GO_DIRS = \
 	controller-manager \
 	iot/iot-proxy-configurator \
-	iot/iot-gc \
 
 DOCKER_DIRS = \
 	agent \

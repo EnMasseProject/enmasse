@@ -33,7 +33,6 @@
     <module>iot-mqtt-adapter</module>
     <module>iot-sigfox-adapter</module>
     <module>iot-tenant-service</module>
-    <module>iot-gc</module>
     <module>iot-proxy-configurator</module>
     <module>iot-device-registry-infinispan</module>
   </modules>
