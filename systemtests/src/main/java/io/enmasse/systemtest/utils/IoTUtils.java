@@ -26,7 +26,6 @@ public class IoTUtils {
     private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
             "iot-auth-service",
             "iot-device-registry",
-            "iot-gc",
             "iot-http-adapter",
             "iot-lorawan-adapter",
             "iot-mqtt-adapter",

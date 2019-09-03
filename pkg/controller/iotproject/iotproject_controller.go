@@ -9,6 +9,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
+
+	"github.com/enmasseproject/enmasse/pkg/util/recon"
+
 	"github.com/enmasseproject/enmasse/pkg/util"
 
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
@@ -204,6 +208,19 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		return reconcile.Result{}, err
 	}
 
+	// start reconcile process
+
+	rc := &recon.ReconcileContext{}
+
+	rc.Process(func() (result reconcile.Result, e error) {
+		return finalizer.ProcessFinalizers(ctx, r.client, project, finalizers)
+	})
+
+	if rc.Error() != nil || rc.NeedRequeue() {
+		// processing finalizers required to requeue already, or failed
+		return rc.Result()
+	}
+
 	// set the tenant name in the status section
 
 	project.Status.TenantName = project.TenantName()
@@ -217,8 +234,10 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Handle as external")
 
-		status, err := r.reconcileExternal(ctx, &request, project)
-		return r.applyUpdate(ctx, status, err, &request, project)
+		rc.Process(func() (result reconcile.Result, e error) {
+			status, err := r.reconcileExternal(ctx, &request, project)
+			return r.applyUpdate(ctx, status, err, &request, project)
+		})
 
 	} else if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy != nil {
 
@@ -226,8 +245,10 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Handle as provided")
 
-		status, err := r.reconcileProvided(ctx, &request, project)
-		return r.applyUpdate(ctx, status, err, &request, project)
+		rc.Process(func() (result reconcile.Result, e error) {
+			status, err := r.reconcileProvided(ctx, &request, project)
+			return r.applyUpdate(ctx, status, err, &request, project)
+		})
 
 	} else if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
 
@@ -236,8 +257,10 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Handle as managed")
 
-		status, err := r.reconcileManaged(ctx, &request, project)
-		return r.applyUpdate(ctx, status, err, &request, project)
+		rc.Process(func() (result reconcile.Result, e error) {
+			status, err := r.reconcileManaged(ctx, &request, project)
+			return r.applyUpdate(ctx, status, err, &request, project)
+		})
 
 	} else {
 
@@ -246,9 +269,13 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 		reqLogger.Info("Missing or unknown downstream strategy")
 
-		err = r.updateProjectStatusError(ctx, &request, project)
-		return reconcile.Result{}, err
+		rc.Process(func() (result reconcile.Result, e error) {
+			err = r.updateProjectStatusError(ctx, &request, project)
+			return reconcile.Result{}, err
+		})
 
 	}
+
+	return rc.Result()
 
 }

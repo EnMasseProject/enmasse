@@ -24,8 +24,19 @@ import (
 
 type DeletePredicate func(interface{}) bool
 
+type BulkItemOperation func(context.Context, client.Client, interface{}) error
+type BulkItemEvaluator func(interface{}) (BulkItemOperation, error)
+
+type OwnerResult int
+
+const (
+	NotFound OwnerResult = iota
+	Found
+	FoundAndEmpty
+)
+
 // Function to check if an object is owned by another object
-func OwnedBy(obj v1.Object, owner runtime.Object, controller bool) bool {
+func ProcessOwnedBy(obj v1.Object, owner runtime.Object, controller bool, remove bool) (OwnerResult, error) {
 
 	ownerKind := owner.GetObjectKind()
 	ownerKindName := ownerKind.GroupVersionKind().Kind
@@ -35,7 +46,7 @@ func OwnedBy(obj v1.Object, owner runtime.Object, controller bool) bool {
 
 	oma, ok := owner.(v1.ObjectMetaAccessor)
 	if !ok {
-		return false
+		return NotFound, fmt.Errorf("failed to get object metadata, wrong type: %T", owner)
 	}
 	meta := oma.GetObjectMeta()
 
@@ -43,7 +54,7 @@ func OwnedBy(obj v1.Object, owner runtime.Object, controller bool) bool {
 
 	refs := obj.GetOwnerReferences()
 
-	for _, r := range refs {
+	for i, r := range refs {
 
 		if controller {
 			if r.Controller == nil || !*r.Controller {
@@ -67,34 +78,50 @@ func OwnedBy(obj v1.Object, owner runtime.Object, controller bool) bool {
 			continue
 		}
 
-		return true
+		if !remove {
+			// we should only find it ... we did
+			return Found, nil
+		} else {
+			// find and remove
+			refs = append(refs[:i], refs[i+1:]...)
+			obj.SetOwnerReferences(refs)
+			if len(refs) == 0 {
+				// this was the last owner
+				return FoundAndEmpty, nil
+			} else {
+				// there are more owners
+				return Found, nil
+			}
+		}
 
 	}
 
-	return false
+	return NotFound, nil
 
 }
 
-// Create a new predicate, calling OwnedBy
-func IsOwnedByPredicate(owner runtime.Object, controller bool) DeletePredicate {
+func IsOwnedBy(owner runtime.Object, obj interface{}, controller bool) (bool, error) {
+	r, err := ProcessOwnedByObject(owner, obj, controller, false)
+	return r == Found, err
+}
 
-	return func(obj interface{}) bool {
-		uo, ok := obj.(unstructured.Unstructured)
-		if ok {
-			return OwnedBy(&uo, owner, controller)
-		}
+// same as, ProcessOwnedBy, but handles interfaces (structured and unstructured)
+func ProcessOwnedByObject(owner runtime.Object, obj interface{}, controller bool, remove bool) (OwnerResult, error) {
 
-		oma, ok := obj.(v1.ObjectMetaAccessor)
-		if ok {
-			return OwnedBy(oma.GetObjectMeta(), owner, controller)
-		}
-
-		return false
+	switch v := obj.(type) {
+	case *unstructured.Unstructured:
+		return ProcessOwnedBy(v, owner, controller, remove)
+	case v1.ObjectMetaAccessor:
+		return ProcessOwnedBy(v.GetObjectMeta(), owner, controller, remove)
+	default:
+		return NotFound, fmt.Errorf("provided unknown type: %T", v)
 	}
+
 }
 
 // Delete object, ignore if it is already gone.
 func DeleteIgnoreNotFound(ctx context.Context, client client.Client, obj runtime.Object, opts ...client.DeleteOptionFunc) error {
+
 	err := client.Delete(ctx, obj, opts...)
 
 	if err == nil || errors.IsNotFound(err) {
@@ -105,16 +132,42 @@ func DeleteIgnoreNotFound(ctx context.Context, client client.Client, obj runtime
 
 }
 
+func UpdateItemOperation(ctx context.Context, client client.Client, obj interface{}) error {
+
+	switch o := obj.(type) {
+	case runtime.Object:
+		return client.Update(ctx, o)
+	case *unstructured.Unstructured:
+		return client.Update(ctx, o)
+	default:
+		return fmt.Errorf("type %T is not supported", o)
+	}
+
+}
+
+func DeleteItemOperation(ctx context.Context, client client.Client, obj interface{}) error {
+
+	switch o := obj.(type) {
+	case runtime.Object:
+		return client.Delete(ctx, o)
+	case *unstructured.Unstructured:
+		return client.Delete(ctx, o)
+	default:
+		return fmt.Errorf("type %T is not supported", o)
+	}
+
+}
+
 // Bulk delete
 // The "obj" provided must by a Kubernetes List type, having an "Items" field
-func BulkDelete(ctx context.Context, client client.Client, obj runtime.Object, opts client.ListOptions, predicate DeletePredicate) (int, error) {
+func BulkProcess(ctx context.Context, client client.Client, list runtime.Object, opts client.ListOptions, evaluator BulkItemEvaluator) (int, error) {
 
-	if err := client.List(ctx, &opts, obj); err != nil {
+	if err := client.List(ctx, &opts, list); err != nil {
 		log.Error(err, "Failed to list items to delete")
 		return -1, err
 	}
 
-	val := reflect.ValueOf(obj).Elem()
+	val := reflect.ValueOf(list).Elem()
 	items := val.FieldByName("Items")
 
 	if items.Kind() != reflect.Slice {
@@ -126,48 +179,71 @@ func BulkDelete(ctx context.Context, client client.Client, obj runtime.Object, o
 	for i := 0; i < l; i++ {
 		item := items.Index(i)
 
-		obj := item.Interface()
+		obj := item.Addr().Interface()
 
-		if predicate != nil && !predicate(obj) {
+		op, err := evaluator(obj)
+		if err != nil {
+			return -1, err
+		}
+
+		if op == nil {
 			continue
 		}
 
 		n++
 
-		o, ok := obj.(runtime.Object)
-		if ok {
-			if err := client.Delete(ctx, o); err != nil {
-				return -1, err
-			}
-		}
-		o2, ok := obj.(unstructured.Unstructured)
-		if ok {
-			if err := client.Delete(ctx, &o2); err != nil {
-				return -1, err
-			}
+		if err := op(ctx, client, obj); err != nil {
+			return -1, err
 		}
 	}
 
 	return n, nil
 }
 
-// Bulk delete objects by a LabelSelector, defined as a map
-// The "obj" provided must by a Kubernetes List type, having an "Items" field
-func BulkDeleteByLabelMap(ctx context.Context, c client.Client, obj runtime.Object, namespace string, l map[string]string, predicate DeletePredicate) (int, error) {
-
+func LabelSelectorFromMap(l map[string]string) (labels.Selector, error) {
 	ls := labels.NewSelector()
 
 	for k, v := range l {
 		r, err := labels.NewRequirement(k, selection.Equals, []string{v})
 		if err != nil {
-			return -1, err
+			return nil, err
 		}
 		ls = ls.Add(*r)
 	}
 
-	return BulkDelete(ctx, c, obj, client.ListOptions{
-		Namespace:     namespace,
-		LabelSelector: ls,
-	}, predicate)
+	return ls, nil
+}
+
+// Process an object type, and remove the owner, from the owner list. If this was the last owner. Delete the object.
+// The "obj" provided must by a Kubernetes List type, having an "Items" field
+// It returns the number of entries found which did contain the owner of the provided object.
+func BulkRemoveOwner(ctx context.Context, c client.Client, owner runtime.Object, controller bool, list runtime.Object, opts client.ListOptions) (int, error) {
+
+	return BulkProcess(ctx, c, list, opts, func(i interface{}) (BulkItemOperation, error) {
+
+		// process ownership
+
+		result, err := ProcessOwnedByObject(owner, i, controller, true)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// check result
+
+		switch result {
+		case Found:
+			// owner remaining
+			return UpdateItemOperation, nil
+		case FoundAndEmpty:
+			// delete object
+			return DeleteItemOperation, nil
+		}
+
+		// do nothing
+
+		return nil, nil
+
+	})
 
 }

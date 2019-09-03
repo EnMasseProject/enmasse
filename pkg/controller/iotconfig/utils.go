@@ -8,6 +8,8 @@ package iotconfig
 import (
 	"context"
 
+	"sigs.k8s.io/controller-runtime/pkg/client"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -92,11 +94,15 @@ func (r *ReconcileIoTConfig) cleanupSecrets(ctx context.Context, config *iotv1al
 	ul.SetKind("SecretList")
 	ul.SetAPIVersion("")
 
-	n, err := install.BulkDeleteByLabelMap(
-		ctx, r.client, &ul,
-		config.GetNamespace(), install.CreateDefaultLabels(nil, "iot", adapterName+"-tls"),
-		install.IsOwnedByPredicate(config, true),
-	)
+	ls, err := install.LabelSelectorFromMap(install.CreateDefaultLabels(nil, "iot", adapterName+"-tls"))
+	if err != nil {
+		return err
+	}
+
+	n, err := install.BulkRemoveOwner(ctx, r.client, config, true, &ul, client.ListOptions{
+		Namespace:     config.GetNamespace(),
+		LabelSelector: ls,
+	})
 
 	if err == nil {
 		log.Info("cleaned up adapter secrets", "adapter", adapterName, "secretsDeleted", n)

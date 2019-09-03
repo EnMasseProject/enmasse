@@ -7,10 +7,10 @@ metadata:
 rules:
   - apiGroups: [ "enmasse.io" ]
     resources: [ "addressspaces", "addresses" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "user.enmasse.io" ]
     resources: [ "messagingusers" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "iot.enmasse.io" ]
     resources: [ "iotconfigs", "iotprojects" ]
-    verbs: [ "get", "list", "watch", "update", "create", "patch" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
