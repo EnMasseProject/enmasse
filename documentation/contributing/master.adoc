@@ -14,6 +14,8 @@ include::styleguide.adoc[leveloffset=+1]
 
 include::screenshots.adoc[leveloffset=+1]
 
+include::make-tooling.adoc[leveloffset=+1]
+
 [appendix]
 include::files.adoc[leveloffset=+1]
 
