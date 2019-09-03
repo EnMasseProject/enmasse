@@ -62,7 +62,7 @@ public class KubernetesHelper implements Kubernetes {
                 } else if (resource instanceof NetworkPolicy) {
                     client.network().networkPolicies().withName(resource.getMetadata().getName()).createOrReplace((NetworkPolicy) resource);
                 } else if (resource instanceof PersistentVolumeClaim && patchPersistentVolumeClaims) {
-                    client.persistentVolumeClaims().withName(resource.getMetadata().getName()).patch((PersistentVolumeClaim) resource);
+                    client.persistentVolumeClaims().withName(resource.getMetadata().getName()).replace((PersistentVolumeClaim) resource);
                 }
             } catch (KubernetesClientException e) {
                 if (e.getCode() == 404) {

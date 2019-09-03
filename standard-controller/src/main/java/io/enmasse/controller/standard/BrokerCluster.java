@@ -10,49 +10,27 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetStatus;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Represents a cluster of resources for a given destination.
  */
 public class BrokerCluster {
     private static final ObjectMapper mapper = new ObjectMapper();
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        BrokerCluster that = (BrokerCluster) o;
-
-        if (!clusterId.equals(that.clusterId)) return false;
-        return resources.equals(that.resources);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = clusterId.hashCode();
-        result = 31 * result + resources.hashCode();
-        return result;
-    }
-
-    @Override
-    public String toString() {
-        return clusterId;
-    }
-
     private final String clusterId;
     private final int replicas;
     private KubernetesList resources;
     private int newReplicas;
     private final int readyReplicas;
+    private boolean shouldReplace = false;
 
     public BrokerCluster(String clusterId, KubernetesList resources) {
         this.clusterId = clusterId;
@@ -128,16 +106,70 @@ public class BrokerCluster {
 
     public void updateResources(BrokerCluster upgradedCluster, StandardInfraConfig infraConfig) throws Exception {
         if (upgradedCluster != null) {
+
+            List<PersistentVolumeClaim> oldClaims = Collections.emptyList();
+            for (HasMetadata item : resources.getItems()) {
+                if (item instanceof StatefulSet) {
+                    oldClaims = ((StatefulSet) item).getSpec().getVolumeClaimTemplates();
+                }
+            }
+            this.shouldReplace = false;
             this.resources = upgradedCluster.getResources();
             for (HasMetadata item : resources.getItems()) {
                 if (item instanceof StatefulSet) {
+                    if (isClaimsChanged(oldClaims, ((StatefulSet) item).getSpec().getVolumeClaimTemplates())) {
+                        shouldReplace = true;
+                    }
                     Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(infraConfig));
                 }
             }
         }
     }
 
+    private boolean isClaimsChanged(List<PersistentVolumeClaim> oldClaims, List<PersistentVolumeClaim> newClaims) {
+        Set<String> remains = newClaims.stream().map(c -> c.getMetadata().getName()).collect(Collectors.toSet());
+        for (PersistentVolumeClaim oldClaim : oldClaims) {
+            for (PersistentVolumeClaim newClaim : newClaims) {
+                if (oldClaim.getMetadata().getName().equals(newClaim.getMetadata().getName())) {
+                    remains.remove(oldClaim.getMetadata().getName());
+                    if (!oldClaim.getSpec().getAccessModes().equals(newClaim.getSpec().getAccessModes()) ||
+                            !oldClaim.getSpec().getResources().getRequests().equals(newClaim.getSpec().getResources().getRequests())) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return !remains.isEmpty();
+    }
+
+    public boolean shouldReplace() {
+        return shouldReplace;
+    }
+
     public int getReadyReplicas() {
         return readyReplicas;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BrokerCluster that = (BrokerCluster) o;
+
+        if (!clusterId.equals(that.clusterId)) return false;
+        return resources.equals(that.resources);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = clusterId.hashCode();
+        result = 31 * result + resources.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return clusterId;
     }
 }

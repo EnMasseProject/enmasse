@@ -47,9 +47,9 @@ public interface Kubernetes {
 
     void create(KubernetesList resources);
 
-    void apply(KubernetesList resources, boolean patchPersistentVolumeClaims, Consumer<HasMetadata> failedResourceSupplier);
+    void apply(KubernetesList resources, boolean patchPersistentVolumeClaims, boolean replaceStatefulSets, Consumer<HasMetadata> failedResourceSupplier);
 
-    void apply(HasMetadata resource, boolean patchPersistentVolumeClaims);
+    void apply(HasMetadata resource, boolean patchPersistentVolumeClaims, boolean replaceStatefulSets);
 
     void delete(KubernetesList resources);
 
