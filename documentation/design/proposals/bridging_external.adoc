@@ -33,17 +33,27 @@ spec:
     - host: failover.example.com
       port: 5671
     tls: # If not specified, do not enable TLS. Use just 'tls: {}' to enable TLS without any cert configuration.
-      caCertSecret:
-        name: remote1-secret # Secret containing CA to be trusted for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
-      clientCertSecret:
-        name: client-remot1-secret # Secret containing client cert to be used for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
+      caCert:
+	value: "" # PEM encoded value or
+	secret: # Certificate stored in secret
+          name: remote1-secret # Secret containing CA to be trusted for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
+	   key:  ca.crt # If using something different than default
+      clientCert:
+	value: "" # PEM encoded value or
+	secret: # Certificate stored in secret
+	   name: client-remot1-secret # Secret containing client cert to be used for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
     credentials:
-      username: foo # Allow specifying credentials in plain text
+      username:
+        value: foo # Allow specifying credentials in plain text or
+	secret: # Using a secret
+	  name: mysecret
+          key: username # Optional, default is `username`
+      password:
+        value: bar # Allow specifying credentials in plain text or
+	secret: # Using a secret
+	  name: mysecret
+          key: password # Optional, default is `password`
       password: bar
-      secret: # Allow specifying credentials in the secret using the k
-        name:  mysecret
-        usernameKeyRef: username # Optional, default is 'username'
-        passwordKeyRef: password # Optional, default is 'password'
     addresses: # A list of remote addresses accessible via this address space. The addresses will be prefixed with the connector name (remote1/foo*). Addresses can be suffixed by a 'match all' wildcard.
     - name: foo*
 status:
