@@ -62,6 +62,8 @@ Metrics about each connector may be exposed in the address space controller prom
 
 To meet the forwarding use case, the `Address` resources is extended to enabled forwarding for address types that support it:
 
+Should the need arise in the future, a separate `Connector` custom resource will be defined, and the entries in the connector list may specify the field `reference: connector1` to reference the connectors to be created.
+
 ```
 kind: Address
 spec:
