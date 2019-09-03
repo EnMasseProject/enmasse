@@ -35,22 +35,22 @@ spec:
     tls: # If not specified, do not enable TLS. Use just 'tls: {}' to enable TLS without any cert configuration.
       caCert:
 	value: "" # PEM encoded value or
-	secret: # Certificate stored in secret
+	valueFromSecret: # Certificate stored in secret
           name: remote1-secret # Secret containing CA to be trusted for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
 	   key:  ca.crt # If using something different than default
       clientCert:
 	value: "" # PEM encoded value or
-	secret: # Certificate stored in secret
+	valueFromSecret: # Certificate stored in secret
 	   name: client-remot1-secret # Secret containing client cert to be used for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
     credentials:
       username:
         value: foo # Allow specifying credentials in plain text or
-	secret: # Using a secret
+	valueFromSecret: # Using a secret
 	  name: mysecret
           key: username # Optional, default is `username`
       password:
         value: bar # Allow specifying credentials in plain text or
-	secret: # Using a secret
+	valueFromSecret: # Using a secret
 	  name: mysecret
           key: password # Optional, default is `password`
       password: bar

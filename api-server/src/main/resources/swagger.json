@@ -1474,6 +1474,7 @@
                 },
 		"connectors": {
 		    "type": "array",
+		    "description": "List of connectors to create.",
 		    "properties": {
 			"items": {
 			    "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpaceSpecConnector"
@@ -1526,7 +1527,7 @@
 				    "type": "string",
 				    "description": "PEM encoded value of CA certificate"
 				},
-				"secret": {
+				"valueFromSecret": {
 				    "type": "object",
 				    "description": "Secret containing CA certificate to be used by the connector.",
 				    "properties": {
@@ -1551,7 +1552,7 @@
 				    "type": "string",
 				    "description": "PEM encoded value of client certificate"
 				},
-				"secret": {
+				"valueFromSecret": {
 				    "type": "object",
 				    "description": "Secret containing client certificate to be used by the connector.",
 				    "properties": {
@@ -1581,7 +1582,7 @@
 				"value": {
 				    "type": "string"
 				},
-				"secret": {
+				"valueFromSecret": {
 				    "type": "object",
 				    "properties": {
 					"name": {
@@ -1604,7 +1605,7 @@
 				"value": {
 				    "type": "string"
 				},
-				"secret": {
+				"valueFromSecret": {
 				    "type": "object",
 				    "properties": {
 					"name": {
