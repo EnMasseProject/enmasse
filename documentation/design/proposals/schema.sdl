@@ -1,0 +1,123 @@
+
+input CreateAddressInput {
+  namespaceName: String!
+  addressSpaceName: String!
+  addressName: String
+  addressType: AddressTypeEnum
+  plan: String
+}
+
+input UpdateAddressPlanInput {
+  namespaceName: String!
+  addressSpaceName: String!
+  name: String
+  plan: String
+}
+type Mutation {
+  createAddress(input: CreateAddressInput!): Address!
+  updateAddressPlan(input: UpdateAddressPlanInput!): Address!
+  deleteAddress(namespaceName: String!, addressSpaceName: String!, name: String!): String!
+  deleteAddressSpace(namespaceName: String!, addressSpaceName: String!): String!
+}
+type Query {
+  addressSpace(namespaceName: String!, addressSpaceName: String!): AddressSpace
+  addresses(namespaceName: String!, addressSpaceName: String!): AddressResult
+  clients(namespaceName: String!, addressSpaceName: String!, name: String!): ClientResult
+  createAddressConfiguration(input: CreateAddressInput!): Address!
+  plans(namespaceName: String!, addressSpaceName: String!, addressType: AddressTypeEnum!): [String]!
+  connections(namespaceName: String!, name: addressSpaceName: String!, limit: Int, offset: Int, sort_by: String, order_by: String, containerIdFilter: String, addressNameFilter: String, roleFilter: String): ConnectionResult
+  links(namespaceName: String!, addressSpaceName: String!, limit: Int, offset: Int, sort_by: String, order_by: String, roleFilter: String): LinkResult
+}
+type AddressSpace {
+  name: String!
+  namespace: String!
+  addressSpaceType: AddressSpaceTypeEnum!
+  createDate: String
+  addresses: [Address]
+}
+enum AddressSpaceTypeEnum {
+  STANDARD
+  BROKERED
+}
+enum AddressStatusesEnum {
+  PENDING
+  CONFIGURING
+  ACTIVE
+  FAILED
+  TERMINATING
+}
+enum AddressTypeEnum {
+  QUEUE
+  TOPIC
+  SUBSCRIPTION
+  MULTICAST
+  ANYCAST
+}
+type Address {
+  name: String!
+  addressName: String!
+  addressType: AddressTypeEnum!
+  plan: String!
+  status: AddressStatusesEnum
+  stats: AddressStats 
+}
+type AddressesResult {
+  addresses: [Address]
+  totalCount: Int
+}
+type AddressStats {
+  storedMessages: Int
+  senders: Int
+  receivers: Int
+  shards: Int
+  messageStats: MessageIntervalStats
+}
+type MessageIntervalStats {
+  messagesIn: Int
+  messagesOut: Int
+  timeInterval: Int
+}
+type Client {
+  role: String!
+  containerId: String!
+  name: String!
+  deliverRate: Int!
+  backlog: Int!
+}
+type ClientsResult {
+  clients: [Client]
+  totalCount: Int
+}
+type Connection {
+  hostname: String!
+  containerId: String!
+  protocol: String
+  messageIn: Int
+  messageOut: Int
+  senders: Int
+  receivers: Int
+  version: Int
+  platform: String
+}
+type ConnectionsResult {
+  connections: [Connection]
+  totalCount: Int
+}
+type Link {
+  role: String
+  address: String
+  deliveries: String
+  addressType: StrandardLinkStats
+}
+type StandardLinkStats {
+  accepted: String
+  rejected: Int
+  released: Int
+  modified: Int
+  presettled: Int
+  undelivered: String
+}
+type LinksResult {
+  links: [Link]
+  totalCount: Int
+}

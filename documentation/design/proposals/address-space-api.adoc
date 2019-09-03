@@ -13,8 +13,7 @@ The console requires easy to access backend data.  This data comes from:
 * Connections: To dynamic to be stored in custom resources
 
 The following assumptions are made:
-
-1. 5 or 6 people using this at any given time
+1. 5 or 6 people using this at any given time per address space
 1. later will expose to prometheus
 1. Use RBAC controls to monitor access to address space.
 1. Later we will want to expose this to prometheus.  TODO: Any issues with prometheus using graphQL?
@@ -62,10 +61,15 @@ GraphQL offers several advantages (https://graphql.org/)
 * Would be best that our GraphQL server has an in-memory cache, that gets updated by watches.  This would make aggregating the response data quicker.
 * For updates the subscription operation will let us use websockets.
 * go libraries: https://github.com/graphql-go/graphql and https://github.com/99designs/gqlgen gqlgen is the recommended one
- 
+* In our schmema, we could have too many connections to load at once.  Therefore, we can't nest them into the parent object.
+
+* link:schema.sdl[proposed Schema]
+
 === Authorization
 
 With the two proposed methods, the server will need to run with permissions to view all address spaces.  And we will need to check that the user has permission to see the data for the requested address space.  The caching, and the message stats make this our responsibility.
+
+* must log from console
 
 
 == Testing

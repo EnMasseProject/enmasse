@@ -268,6 +268,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /namespace/{namespaceName}/addressSpace/{addressSpaceName}/address/{name}/
     put:
       tags:
         - address
@@ -703,6 +704,24 @@ components:
         - Multicast
         - Anycast
     Addresses:
+      type: object
+      properties:
+        totalCount:
+          type:integer
+        items:
+          $ref: "#/components/schemas/AddressArray"
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
+    AddressArray:
       type: array
       items:
         $ref: "#/components/schemas/Address"
@@ -738,6 +757,13 @@ components:
         backlog:
           type: number
     Clients:
+      type: object
+      properties:
+        totalCount:
+	  type: integer
+        items:
+          $ref: "#/components/schemas/ClientArray"
+    ClientArray:
       type: array
       items:
         $ref: "#/components/schemas/Client"
@@ -774,6 +800,13 @@ components:
         platform:
           type: string
     Connections:
+      type: object
+      properties:
+        totalCount:
+	  type: integer
+        items:
+          $ref: "#/components/schemas/ConnectionArray"
+    ConnectionArray:
       type: array
       items:
         $ref: "#/components/schemas/Connection"
@@ -793,6 +826,13 @@ components:
         addressType:
           $ref: "#/components/schemas/StandardLinkStats"
     Links:
+      type: object
+      properties:
+        totalCount:
+	  type: integer
+        items:
+          $ref: "#/components/schemas/LinkArray"
+    LinkArray:
       type: array
       items:
         $ref: "#/components/schemas/Link"
