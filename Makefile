@@ -101,7 +101,7 @@ clean_java:
 template_clean:
 	$(MAKE) -C templates clean
 
-clean: clean_java clean_go docu_htmlclean template_clean
+clean: clean_java clean_go docu_clean template_clean
 	rm -rf build
 
 coverage: java_coverage
