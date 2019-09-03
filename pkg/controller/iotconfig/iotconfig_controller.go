@@ -8,6 +8,7 @@ package iotconfig
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
@@ -162,9 +163,18 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	rc := &recon.ReconcileContext{}
 
-	rc.ProcessSimple(func() error {
+	// update and store credentials
+
+	rc.Process(func() (result reconcile.Result, e error) {
 		return r.processGeneratedCredentials(ctx, config)
 	})
+
+	if rc.Error() != nil || rc.NeedRequeue() {
+		return rc.Result()
+	}
+
+	// start normal reconcile
+
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processQdrProxyConfig(ctx, config)
 	})
@@ -200,13 +210,14 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processLoraWanAdapter(ctx, config)
 	})
 
-	return r.updateStatus(ctx, config, rc)
+	return r.updateFinalStatus(ctx, config, rc)
 }
 
-func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, err error) error {
 
 	// we are initialized when there is no error
-	config.Status.Initialized = rc.Error() == nil
+
+	config.Status.Initialized = err == nil
 
 	if config.Status.Initialized {
 		config.Status.State = iotv1alpha1.ConfigStateRunning
@@ -214,10 +225,15 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alph
 		config.Status.State = iotv1alpha1.ConfigStateFailed
 	}
 
+	return r.client.Status().Update(ctx, config)
+}
+
+func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, rc *recon.ReconcileContext) (reconcile.Result, error) {
+
 	// do a status update
 
 	rc.ProcessSimple(func() error {
-		return r.client.Status().Update(ctx, config)
+		return r.updateStatus(ctx, config, rc.Error())
 	})
 
 	// return result ... including status update
@@ -405,14 +421,16 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 	return nil
 }
 
-func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, config *iotv1alpha1.IoTConfig) error {
+func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+
+	original := config.DeepCopy()
 
 	// generate auth service PSK
 
 	if config.Status.AuthenticationServicePSK == nil {
 		s, err := util.GeneratePassword(128)
 		if err != nil {
-			return err
+			return reconcile.Result{}, err
 		}
 		config.Status.AuthenticationServicePSK = &s
 	}
@@ -424,10 +442,16 @@ func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, co
 	// generate adapter users
 
 	if err := initConfigStatus(config); err != nil {
-		return err
+		return reconcile.Result{}, err
 	}
 
-	// return
+	// compare
 
-	return nil
+	if !reflect.DeepEqual(original, config) {
+		log.Info("Credentials change detected. Updating status and re-queuing.")
+		return reconcile.Result{Requeue: true}, r.updateStatus(ctx, config, nil)
+	} else {
+		return reconcile.Result{}, nil
+	}
+
 }

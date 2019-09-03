@@ -16,6 +16,17 @@ func Max(x, y int64) int64 {
 	return x
 }
 
+func Min(x, y int64) int64 {
+	if y < x {
+		return y
+	}
+	return x
+}
+
 func MaxDuration(x, y time.Duration) time.Duration {
 	return time.Duration(Max(int64(x), int64(y)))
+}
+
+func MinDuration(x, y time.Duration) time.Duration {
+	return time.Duration(Min(int64(x), int64(y)))
 }
