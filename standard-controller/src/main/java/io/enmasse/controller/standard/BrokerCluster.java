@@ -107,7 +107,7 @@ public class BrokerCluster {
     public void updateResources(BrokerCluster upgradedCluster, StandardInfraConfig infraConfig) throws Exception {
         if (upgradedCluster != null) {
 
-            List<PersistentVolumeClaim> oldClaims = null;
+            List<PersistentVolumeClaim> oldClaims = Collections.emptyList();
             for (HasMetadata item : resources.getItems()) {
                 if (item instanceof StatefulSet) {
                     oldClaims = ((StatefulSet) item).getSpec().getVolumeClaimTemplates();
