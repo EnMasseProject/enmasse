@@ -1,0 +1,232 @@
+
+:toc:
+:toclevels: 4
+
+== Global Console Phase 2.
+
+=== Introduction
+
+Currently, the Console in EnMasse actually comprises two separate web-applications that are hyperlinked together.  These are
+known as the Global Console (which allows create/read/update/delete of address spaces), and the Address Space Console
+which allows the addresses within an address space to be managed and the connections to the address space to be seen.
+In addition the Address Space Console exposed address and connection level statistics.
+
+For this phase, the reposibilities of for address management, address statistics, connection view and connection statistics
+will be transfered to Global Console.  This will allow the Address Space Console to be retired and the agent relieved of
+responsibilities for serving the Address Space Console application.
+
+
+== Design Goals
+
+- A design goal is that the console is pluggable, so that it is possible to use the console to manage CR belongs to components other than EnMasse.
+- The statistics displayed by the console should be available to the user for re-use in their own applications via a standard mechanism to allow for further analysis in tools such as Grafana.
+- The console needs access to instantaneous statistic values (e.g. queue depths), rates (e.g. publishing rates msg/s), and time-series to support the drawing of simple graphs.
+
+== High Level
+
+There will be a new *console-server* component which will replace the existing oauth-proxy/HTTPD sidecar.  It will provide
+a proxy to the Kubernetes API (allowing the UI to view/mutate the resources)  and it will provide a Metrics API capable of providing metrics for any (configured) resource type.  The metrics will be sourced from a Prometheus instance which will belong to the Console.
+
+For connection metadata, as Connections are not exposed as a Kubernetes resource, the console-server will have an additional
+responsibility to expose a read-only REST API for connections.  This will be capable for listing connections that exist for a partiular address space.
+
+The agent component will be responsible for exposing additional Prometheus metrics for address-spaces, addresses, and connections.  It loses its responsibilities to serve the Address Space Console or the existing AMQP management interface will be removed.  It acquires a responsibilty for exposing connections to the addressspace over a REST API.  
+
+A Prometheus instance will be deployed with the console-server (side-car) whose responsibility is to scrape statistics
+from the agents of the address spaces.  These will be discovered using kubernetes_sd_configs type configuration.  The
+Prometheus instance will be configured with relatively short rentention policies - sufficient for the console's use-cases.
+
+
+== Components
+
+=== console-server
+
+The console-server will replace oauth-proxy and the HTTP sidecar.  
+
+It will have the following responsibilities:
+
+* authentication
+* create/read/update/delete/list of kubernetes resources (i.e. proxy the kubernetes API) avoiding the need for CORS.
+* provide an all namespace list for any resource type.
+* serve static content of the console.
+* provide a mechanism to retrieve metrics for each resource from Prometheus
+* provide read-only connection API listing connections 
+
+Later, it will be extended to provide:
+
+* server side sorting/paging/filtering
+* support watching for resources and statistics
+* caching 
+* connection DELETE API for management close of an existing connection.
+
+==== authentication
+
+The console-server will offer OAuth2 (the default for OpenShift deployments), OpenID Connect (for Kubernetes when configured with to use OpenID Connect). 
+
+authentication will establish a HTTP session which will keep the user's access token. 
+
+A later phase might offer a simpler authentication mechanism to help Kubernetes users who have not configured OpenID Connect (authenticate with an existing token).
+
+==== create/read/update/delete/list of resources
+
+The console-server will proxy the kubernetes API for create/read/update/delete/list operations, passing user's access token.
+This will work like oauth-proxy today except it won't require the Apache HTTPD side-car to mod-write the headers (i.e. avoids https://github.com/openshift/oauth-proxy/pull/111).
+
+==== cluster wide list for any resource type
+
+The console UI is required to present all resources available to the user across all accessible namespaces.  This burdens the console with the need to chain many API requests, one for each namespace, and handle the possiblity of 403s for namespaces to which the user has no access.
+
+To simplify the UI, the console-server will offer an cluster wide list of resources. This will provide every instance of the required type from all namespaces.  If a user has no access to a particular namespace, then that namespace will be omited from the result set, rather than an error occuring.
+
+To signal a query across all namespaces, a * is used.
+
+<endpont>/api/v1/namespaces/*/address
+
+[TBH - I'd prefer the UI design to be changed so that the user selects a namespace, as they already do in the OpenShift Console]
+
+==== exposing metrics
+
+The console-server will accept configuration that defines the statistics avaiable for each configured resource type.  This will take the form a list of named PromQL that are associated with each resource type (e.g. address).  These PromQL queries will ultimately produce the values that we wish to display on the console.  
+
+```
+address:
+  prometheus_queries:
+   - name: console_message_stored
+     value: enmasse_messages_stored{addressspace="<addressspace>",addressname!=''}
+   - name: console_message_in_rate
+     value: rate(enmasse_messages_in_total{addressspace="<addressspace>",addressname!=''}[5m])
+```
+
+The metrics API will accept a resource type as an argument.  The response will be the Prometheus results for that
+response type.  The UI will parse the results and use the values to populate the display.
+
+The metrics request API will be able to limit the results set using an expression.  This feature will be used
+to constrain the size of the result set to the information that needs be go on-screen.
+
+In the first development iteration the UI will poll for query results.  In a later iteration, a watch feature will be avaiable to avoid the poll.
+
+==== exposing connection
+
+As EnMasse connections are not presented as a Kubernetes object, we need to make alternative arrangements to allow the Console
+user to view and manage them.
+
+The console-server API will present connections to the console as if they were a kubernetes resource.  The console-server will present the following endpoint:
+
+
+```
+apis/enmasse.io/v1beta1/namespaces/<namespace>/connections
+```
+
+which will support GET and later DELETE, to allow connections to be closed.
+
+The caller must pass the selector addressspace=<addressspace> in order to signal the addressspace for which connections must be returned. The console-server will call out to the agent associated with target addressspace in order to obtain the results-set.  API requests without the addressspace selector will be rejected.
+
+
+=== agent
+
+The Address Space Console and the server side support for the AMQP management interface is removed.
+
+Agent acquires a responsibility for exposing connections to the addressspace over HTTP.  This endpoint will require authentication (bearer token).  For the authorisation check, it will perform a self subject review for a GET on the addresspace.  If the user has permission to view the addresses, they also have permission to view its connections.
+
+The Agent will be changed to expose the additional metrics listed in the next section.  The existing metrics produced by 
+agent will be maintained.   The Prometheus documentation [https://prometheus.io/docs/practices/naming/#labels](warns) against metrics whose labels may exhibit high cardinality.  The connection and address metrics depending on the messaging use-case
+present this problem.  For this reason the metrics endpoint will disable these statistics by default.  This will avoid changes to the configuration for the existing EnMasse Monitoring .  For the inbuilt Prometheus, the connection and address metrics would be enabled.
+
+=== global console
+
+The code that currently aggregates the addresssspace list from all namespaces can be replaced with use of the *all namespace list* feature.   The console will continue to manage the addressspace using the proxied kubernetes api. 
+
+For addresses and connections, the pattern already established by addressspaces can be followed.  The fact that connections are not a kubernetes object will be hidden from the console.
+
+It will the responsibility of the console to poll the statistics api to gather than metrics for the resource(s) that are being viewed.  There will be some common code produces that will simplify the marrying of the kubernetes result set to the statistics results.
+
+The console must  torrerate to a metric it expects being absent from the result set.
+
+== Metrics
+
+
+=== AddressSpaces
+
+* enmasse_addresses(labels:<addressspace>)  (instantaneous value, number of addresses currently defined) 
+* enmasse_connections(labels:<addressspace>) (instantaneous value, number of connections currently made) 
+* enmasse_messages_in_total(labels:<addressspace>)  (monotonically increasing cumulative metric)
+* enmasse_messages_in_total(labels:<addressspace>) (monotonically increasing cumulative metric)
+
+=== Addresses
+
+* enmasse_messages_in_total(labels:<addressspace>,<address>)  (monotonically increasing cumulative metric)
+* enmasse_messages_out_total(labels:<addressspace>,<address>)  (monotonically increasing cumulative metric)
+* enmasse_messages_stored(labels:<addressspace>,<address>) (instantaneous value)
+* enmasse_senders(labels:<addressspace>,<address>) (instantaneous value)
+* enmasse_receivers(labels:<addressspace>,<address>) (instantaneous value)
+* enmasse_shards(labels:<addressspace>,<address>) (instantaneous value)  Do we really want this?
+
+
+=== AddressDetails
+
+(captures each sender/receiver attached to the address, capturing container id, role and the link name)
+* enmasse_messages_in_total(labels:<addressspace>,<address>,<containerid>,<linkid>)  (monotonically increasing cumulative metric)
+* enmasse_messages_out_total(labels:<addressspace>,<address>,<containerid>,<linkid>)  (monotonically increasing cumulative metric)
+* enmasse_backlog(labels:<addressspace>,<address>,<containerid>,<linkid>)  (instantaneous value)
+
+=== Connection
+
+(captures each connection to the service: hostname:port, container id, protocol, secure)
+
+* enmasse_messages_in_total(labels:<remote hostport>,<remote containerid>)  (monotonically increasing cumulative metric)
+* enmasse_messages_out_total(labels:<remote hostport>,<remote containerid>)  (monotonically increasing cumulative metric)
+* enmasse_senders(labels:<remote hostport>,<remote containerid>) (instantaneous value)
+* enmasse_receivers(labels:<remote hostport>,<remote containerid>) (instantaneous value)
+
+=== ConnectionDetails
+
+(captures each sender/receiver attached of the connection,capturing role, link name, address)
+
+foreach l in Deliveries, Rejected,Released, Modified,Presettled,Undelivered
+
+* enmasse_link_stat(labels:<remote hostport>,<remote containerid>,<linkid>,<address>,l) (instantaneous value)
+
+
+
+
+
+Notes:
+
+
+
+https://www.robustperception.io/using-sample_limit-to-avoid-overload
+https://promcon.io/2017-munich/slides/best-practices-and-beastly-pitfalls.pdf
+
+"Unbounded label values will blow up Prometheus"
+https://prometheus.io/docs/practices/naming/
+
+
+CAUTION: Remember that every unique combination of key-value label pairs represents a new time series, which can dramatically increase the amount of data stored. Do not use labels to store dimensions with high cardinality (many different label values), such as user IDs, email addresses, or other unbounded sets of values.
+
+
+https://stackoverflow.com/questions/46373442/how-dangerous-are-high-cardinality-labels-in-prometheus
+https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels
+
+
+
+https://danielfm.me/prometheus-for-developers/
+
+
+Make timeseries use a different endpoint?
+
+
+https://github.com/prometheus/prometheus/issues/3200
+
+Storage retention
+
+https://www.robustperception.io/configuring-prometheus-storage-retention
+
+
+
+
+
+
+
+
+
+
