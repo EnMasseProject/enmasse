@@ -29,6 +29,8 @@ spec:
   - name: remote1
     hostname: example.com
     port: 5672
+    failoverUrls:
+    - amqps://failover.example.com:5671 // On the form [(amqp|amqps|ws|wss)://]host_or_ip[:port]
     tls: # If not specified, do not enable TLS. Use just 'tls: {}' to enable TLS without any cert configuration.
       caCertSecret:
         name: remote1-secret # Secret containing CA to be trusted for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
@@ -43,40 +45,76 @@ spec:
         passwordKeyRef: password # Optional, default is 'password'
     addresses: # A list of remote addresses accessible via this address space. The addresses will be prefixed with the connector name (remote1/foo*). Addresses can be suffixed by a 'match all' wildcard.
     - name: foo*
-  forwarders:
-  - name: fwd1
-    connector: remote1 # Reference to the connector used for the forwarding
-    localAddress: myqueue # Address within local address space
-    remoteAddress: foo/queue1 
-    direction: in | out # Specifies if messages are forwarded from localAddress to remoteAddress or from remoteAddress to localAddress.
+status:
+  connectors:
+  - name: remote1
+    ready: true
+    messages: [] // Error messages if not ready
 ```
-
-NOTE: The localAddress of a forwarder may not exist locally at the point of creating the address space. A forwarding rule will only be applied if the localAddress exists and if the remoteAddress is matched by any of the entries in the connector `addresses` field. Sanity checking on the forwarders and connectors is needed to ensure that invalid forwarding rules cannot be applied.
 
 The sending and receiving messages to a remote AMQP endpoint via local address space use cases are covered by simply creating a connector and attaching client to 'connectorname/address'.
 
-The forwarding use cases are covered by creating a connector and a forwarder referencing the connector. The direction field will determine if messages are forwarded from remote to local or from local to remote.
-
 Authorization for remote addresses will work the same as for local addresses. MessagingUser with address patterns matching remote addresses are allowed to send/recv from those.
+
+Readiness of an address space is not affected by failing connectors. The `.status.connectors` field can be checked to view the state of connectors.
+
+Metrics about each connector may be exposed in the address space controller prometheus endpoint.
+
+To meet the forwarding use case, the `Address` resources is extended to enabled forwarding for address types that support it:
+
+```
+kind: Address
+spec:
+  ...
+  address: myqueue
+  type: queue | subscription // Queue allows direction in and out. Subscription only allows direction out.
+  forwarders:
+  - name: fwd1
+    remoteAddress: foo/queue1 
+    direction: in | out # Specifies if messages are pushed to remoteAddress or pulled from remoteAddress.
+status:
+  forwarders:
+  - name: fwd1
+    ready: true
+    messages: [] // Error messages
+```
+
+NOTE: A forwarding rule will only be applied if remoteAddress is matched by any of the entries in the address space connector `addresses` field. Sanity checking on the forwarders and connectors is needed to ensure that invalid forwarding rules cannot be applied.
+
+NOTE: A tenant may create a forwarder that pushes from a local queue to a remote queue without needing credentials to do so. This is acceptable at this point, but if stricter separation of roles is needed, one would need to add credentials for consuming from the local queue.
+
+Readiness of an address is not affected by failing forwarders. The `.status.forwarders` field can be checked to view the state of forwarders.
+
+The forwarding use cases are covered by creating a connector and setting forwarders field on an address. The direction field will determine if messages are forwarded from remote to local or from local to remote.
+
+Metrics about the forwarders may be exposed in the standard controller prometheus endpoint.
 
 == Implementation
 
 ==== Api server
 
-The api server will need to perform an extra set of validation when creating address spaces to ensure that references from forwarder to connector are correct and that remoteAddress matches an address in the connector. The api-server should not require remoteAddress in forwarders to exist because it may not have been created yet.
+The api server will need to perform an extra set of validation when creating addresses to ensure that remoteAddress matches an address in the connector of its address space. It will also ensure that only queues and subscriptions can have forwarders (and subscriptions only in outgoing direction).
 
 ==== Address space controller
 
-The address space controller will need to pass additional configuration to the router when starting up. When creating the address space, the router config configmap need to be programatically crafted in order for the additional information to be optionally added to the config. The connector and forwarder definitions will essentially end up defining a set of connectors and autoLinks in the router config.
+The address space controller will need to pass additional configuration to the router when starting up. When creating the address space, the router config configmap need to be programatically crafted in order for the additional information to be optionally added to the config. The connector definitions will essentially end up defining a set of connectors in the router config.
 
-This kind of fine-grained reconciliation is a direction we're likely to go in when moving the address-space-controller logic to the controller-manager (enmasse-operator) in the future, but will create additional code that have to be rewritten if we implement this in the address-space-controller.
+NOTE: This kind of fine-grained reconciliation is a direction we're likely to go in when moving the address-space-controller logic to the controller-manager (enmasse-operator) in the future, but will create additional code that have to be rewritten if we implement this in the address-space-controller. The agreement is that we will go ahead with implementing it in the address-space-controller for now, and migrate code to controller-manager as part of a larger refactoring.
 
-To avoid that, as an alternative, we could put the responsibility of creating the router config configmap to the controller-manager as a first step in this direction (the configmap would then have to be removed from the template). From a maintenance POV it it might be better to have the logic in the same 'place' though, and the controller-manager would not be aware of any processing error in the address-space-controller such as failing to create the address space, in which case one would end up with a stale configmap.
+The address space controller will collect statistics about connectors and attach to address space status. 
+
+==== Standard controller
+
+The standard controller will collect statistics about forwarders and attach to address status.
+
+==== Agent
+
+For each forwarder on an address, the agent will create an autoLink pointing to a connector matching the address pattern.
 
 == Testing
 
 * Set up an AMQP broker (i.e. Artemis) on a remote host
-* Configure an address space with connectors and forwarders for the 4 different use cases listed initially
+* Configure an address space with connectors and create addresses with forwarders for the 4 different use cases listed initially
 
 == Documentation
 
