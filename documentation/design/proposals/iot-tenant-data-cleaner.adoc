@@ -1,0 +1,31 @@
+== Overview
+
+The iot tenants data is stored in the corresponding iot project CRD. The devices data are stored
+in the device registry database. These two data sources are not synced.
+
+When a tenant is deleted, the operation needs to be cascaded to the device registry database.
+
+== Design Proposal
+
+A small java application take the tenant ID as argument, connects to infinispan, does the clean up and terminate.
+
+This job is scheduled by the iot controller through a finalizer attached to the corresponding iot project.
+When the job complete (i.e. the pod terminate without error), the iot project CRD deletion is completed.
+
+Bonus points : use the quarkus infinispan client to get a fast and light application :)
+
+== Testing
+
+Querying a device belonging to a deleted should return `404`.
+Maybe the tests should query the infinispan cluster to verify the data is actually deleted, as the current
+device registry implementation will return `404` if the tenant is marked for deletion or doesn't exist without querying
+the database.
+
+== Further considerations
+
+This application could serve as a base to build a set-up and maintenance application for the infinspan later on.
+(i.e. upload / update the protobuff schema, create appropriates caches on a new cluster etc..)
+
+== Documentation
+
+What documentation will be created?
