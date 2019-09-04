@@ -5,6 +5,7 @@
 package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Secret;

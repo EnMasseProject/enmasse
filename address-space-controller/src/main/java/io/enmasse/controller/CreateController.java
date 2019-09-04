@@ -134,7 +134,7 @@ public class CreateController implements Controller {
         AddressSpacePlan addressSpacePlan = addressSpaceResolver.getPlan(addressSpaceType, addressSpace.getSpec().getPlan());
 
         InfraConfig desiredInfraConfig = getInfraConfig(addressSpace);
-        InfraConfig currentInfraConfig = parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace);
+        InfraConfig currentInfraConfig = parseCurrentInfraConfig(addressSpace);
         if (currentInfraConfig == null && !kubernetes.existsAddressSpace(addressSpace)) {
             KubernetesList resourceList = new KubernetesListBuilder()
                     .addAllToItems(infraResourceFactory.createInfraResources(addressSpace, desiredInfraConfig))
@@ -145,7 +145,7 @@ public class CreateController implements Controller {
 
             kubernetes.create(resourceList);
             eventLogger.log(AddressSpaceCreated, "Created address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
-            addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+            InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
             // TODO: Remove conditional after 0.28.0 is released
             if (addressSpace.getStatus().getPhase() != null) {
@@ -170,7 +170,7 @@ public class CreateController implements Controller {
 
                 kubernetes.apply(resourceList,desiredInfraConfig.getUpdatePersistentVolumeClaim());
                 eventLogger.log(AddressSpaceUpgraded, "Upgraded address space", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
-                addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+                InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
                 addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
             } else {
                 log.info("Version of desired config ({}) does not match controller version ({}), skipping upgrade", desiredInfraConfig.getVersion(), version);
@@ -193,7 +193,7 @@ public class CreateController implements Controller {
 
             kubernetes.apply(resourceList, desiredInfraConfig.getUpdatePersistentVolumeClaim());
             eventLogger.log(AddressSpaceChanged, "Changed address space plan", Normal, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
-            addressSpace.putAnnotation(AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(desiredInfraConfig));
+            InfraConfigs.setCurrentInfraConfig(addressSpace, desiredInfraConfig);
             addressSpace.putAnnotation(AnnotationKeys.APPLIED_PLAN, addressSpace.getSpec().getPlan());
         }
 
@@ -247,7 +247,7 @@ public class CreateController implements Controller {
     private void addAppliedInfraConfigAnnotation(KubernetesList resourceList, InfraConfig infraConfig) throws JsonProcessingException {
         for (HasMetadata item : resourceList.getItems()) {
             if (item instanceof StatefulSet) {
-                Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(infraConfig));
+                InfraConfigs.setCurrentInfraConfig(item, infraConfig);
             }
         }
     }

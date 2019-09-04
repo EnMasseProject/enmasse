@@ -81,7 +81,7 @@ public class StatusController implements Controller {
 
     private void checkComponentsReady(AddressSpace addressSpace) {
         try {
-            InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(schemaProvider.getSchema(), addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
+            InfraConfig infraConfig = Optional.ofNullable(parseCurrentInfraConfig(addressSpace)).orElseGet(() -> getInfraConfig(addressSpace));
             List<HasMetadata> requiredResources = infraResourceFactory.createInfraResources(addressSpace, infraConfig);
 
             checkDeploymentsReady(addressSpace, requiredResources);

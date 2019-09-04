@@ -1625,7 +1625,7 @@
 		},
 		"addresses": {
 		    "type": "array",
-		    "description": "List of addresses to make be accessible via this address space. The addresses will be prefixed by the connector name and a forward slash ('myconnector/').",
+		    "description": "List of addresses to make be accessible via this address space. The addresses will be prefixed by the connector name and a forward slash ('myconnector/') and may be expressed as a pattern. A pattern consists of one or more tokens separated by a forward slash /. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.",
 		    "items": {
 			"type": "string"
 		    }

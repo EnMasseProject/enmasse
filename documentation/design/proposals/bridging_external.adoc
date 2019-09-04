@@ -54,7 +54,7 @@ spec:
 	  name: mysecret
           key: password # Optional, default is `password`
       password: bar
-    addresses: # A list of remote addresses accessible via this address space. The addresses will be prefixed with the connector name (remote1/foo*). Addresses can be suffixed by a 'match all' wildcard.
+    addresses: # A list of remote addresses accessible via this address space. The addresses will be prefixed with the connector name (remote1/foo*). Addresses follows the pattern format as described in https://qpid.apache.org/releases/qpid-dispatch-master/man/qdrouterd.conf.html#_address
     - name: foo*
 status:
   connectors:

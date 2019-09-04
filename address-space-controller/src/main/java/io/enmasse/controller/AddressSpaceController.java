@@ -73,8 +73,9 @@ public class AddressSpaceController {
         CertProviderFactory certProviderFactory = createCertProviderFactory(options, certManager);
         AuthController authController = new AuthController(certManager, eventLogger, certProviderFactory);
         AuthenticationServiceRegistry authenticationServiceRegistry = new SchemaAuthenticationServiceRegistry(schemaProvider);
+        AuthenticationServiceResolver authenticationServiceResolver = new AuthenticationServiceResolver(authenticationServiceRegistry);
 
-        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceRegistry, System.getenv(), isOpenShift, schemaProvider);
+        InfraResourceFactory infraResourceFactory = new TemplateInfraResourceFactory(kubernetes, authenticationServiceResolver, System.getenv(), schemaProvider);
 
         Clock clock = Clock.systemUTC();
         KeycloakFactory keycloakFactory = new KubeKeycloakFactory(controllerClient);
@@ -87,6 +88,7 @@ public class AddressSpaceController {
         Metrics metrics = new Metrics();
         controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
+        controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
         controllerChain.addController(new RealmController(keycloakUserApi, authenticationServiceRegistry));
         controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, userApi));

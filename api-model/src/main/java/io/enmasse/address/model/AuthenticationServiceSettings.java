@@ -4,11 +4,29 @@
  */
 package io.enmasse.address.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
+import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.SecretReference;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
 
 import java.util.Objects;
 
-public class AuthenticationServiceOverrides {
+@Buildable(
+        editableEnabled = false,
+        generateBuilderPackage = false,
+        builderPackage = "io.fabric8.kubernetes.api.builder",
+        refs= {@BuildableReference(AbstractWithAdditionalProperties.class)},
+        inline = @Inline(
+                type = Doneable.class,
+                prefix = "Doneable",
+                value = "done"
+        )
+)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class AuthenticationServiceSettings extends AbstractWithAdditionalProperties {
     private String host;
     private Integer port;
     private String realm;
@@ -59,7 +77,7 @@ public class AuthenticationServiceOverrides {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AuthenticationServiceOverrides that = (AuthenticationServiceOverrides) o;
+        AuthenticationServiceSettings that = (AuthenticationServiceSettings) o;
         return Objects.equals(host, that.host) &&
                 Objects.equals(port, that.port) &&
                 Objects.equals(realm, that.realm);

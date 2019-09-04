@@ -15,7 +15,6 @@ DOCKER_DIRS = \
 	none-authservice \
 	standard-controller \
 	keycloak-plugin \
-	router \
 	mqtt-gateway \
 	mqtt-lwt \
 	service-broker \
