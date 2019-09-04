@@ -760,7 +760,7 @@ components:
       type: object
       properties:
         totalCount:
-	  type: integer
+          type: integer
         items:
           $ref: "#/components/schemas/ClientArray"
     ClientArray:
@@ -803,7 +803,7 @@ components:
       type: object
       properties:
         totalCount:
-	  type: integer
+          type: integer
         items:
           $ref: "#/components/schemas/ConnectionArray"
     ConnectionArray:
@@ -829,7 +829,7 @@ components:
       type: object
       properties:
         totalCount:
-	  type: integer
+          type: integer
         items:
           $ref: "#/components/schemas/LinkArray"
     LinkArray:
