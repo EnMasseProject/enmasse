@@ -1969,19 +1969,21 @@ __required__||enum (AddressSpaceList)
 [[_io_enmasse_v1beta1_addressspacespec]]
 === io.enmasse.v1beta1.AddressSpaceSpec
 
-[options="header", cols=".^3a,.^4a"]
+[options="header", cols=".^3a,.^11a,.^4a"]
 |===
-|Name|Schema
+|Name|Description|Schema
 |**authenticationService** +
-__optional__|<<_io_enmasse_v1beta1_addressspacespec_authenticationservice,authenticationService>>
+__optional__||<<_io_enmasse_v1beta1_addressspacespec_authenticationservice,authenticationService>>
+|**connectors** +
+__optional__|List of connectors to create.|<<_io_enmasse_v1beta1_addressspacespec_connectors,connectors>>
 |**endpoints** +
-__optional__|< <<_io_enmasse_v1beta1_addressspacespec_endpoints,endpoints>> > array
+__optional__||< <<_io_enmasse_v1beta1_addressspacespec_endpoints,endpoints>> > array
 |**networkPolicy** +
-__optional__|<<_io_enmasse_v1beta1_addressspacespec_networkpolicy,networkPolicy>>
+__optional__||<<_io_enmasse_v1beta1_addressspacespec_networkpolicy,networkPolicy>>
 |**plan** +
-__required__|string
+__required__||string
 |**type** +
-__required__|<<_io_enmasse_v1beta1_addressspacetype,io.enmasse.v1beta1.AddressSpaceType>>
+__required__||<<_io_enmasse_v1beta1_addressspacetype,io.enmasse.v1beta1.AddressSpaceType>>
 |===
 
 [[_io_enmasse_v1beta1_addressspacespec_authenticationservice]]
@@ -2010,6 +2012,16 @@ __optional__|string
 __optional__|integer
 |**realm** +
 __optional__|string
+|===
+
+[[_io_enmasse_v1beta1_addressspacespec_connectors]]
+**connectors**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**items** +
+__optional__|<<_io_enmasse_v1beta1_addressspacespecconnector,io.enmasse.v1beta1.AddressSpaceSpecConnector>>
 |===
 
 [[_io_enmasse_v1beta1_addressspacespec_endpoints]]
@@ -2093,18 +2105,175 @@ __optional__|< <<_io_k8s_api_networking_v1_networkpolicyingressrule,io.k8s.api.n
 |===
 
 
-[[_io_enmasse_v1beta1_addressspacestatus]]
-=== io.enmasse.v1beta1.AddressSpaceStatus
+[[_io_enmasse_v1beta1_addressspacespecconnector]]
+=== io.enmasse.v1beta1.AddressSpaceSpecConnector
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**addresses** +
+__optional__|List of addresses to make be accessible via this address space. The addresses will be prefixed by the connector name and a forward slash ('myconnector/').|< string > array
+|**credentials** +
+__optional__|Credentials used when connecting to endpoints. Either 'username' and 'password', or 'secret' must be defined.|<<_io_enmasse_v1beta1_addressspacespecconnector_credentials,credentials>>
+|**endpointHosts** +
+__required__|List of hosts that should be connected to. Must contain at least 1 entry.|< <<_io_enmasse_v1beta1_addressspacespecconnector_endpointhosts,endpointHosts>> > array
+|**name** +
+__required__|Name of the connector.|string
+|**tls** +
+__optional__|TLS settings for the connectors. If not specified, TLS will not be used.|<<_io_enmasse_v1beta1_addressspacespecconnector_tls,tls>>
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_credentials]]
+**credentials**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**password** +
+__optional__|Password to use for connector. Either 'value' or 'secret' must be specified.|<<_io_enmasse_v1beta1_addressspacespecconnector_password,password>>
+|**username** +
+__optional__|Username to use for connector. Either 'value' or 'secret' must be specified.|<<_io_enmasse_v1beta1_addressspacespecconnector_username,username>>
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_password]]
+**password**
 
 [options="header", cols=".^3a,.^4a"]
 |===
 |Name|Schema
+|**value** +
+__optional__|string
+|**valueFromSecret** +
+__optional__|<<_io_enmasse_v1beta1_addressspacespecconnector_password_valuefromsecret,valueFromSecret>>
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_password_valuefromsecret]]
+**valueFromSecret**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**key** +
+__optional__|Key to use for looking up password entry. +
+**Default** : `"password"`|string
+|**name** +
+__optional__|Name of Secret containing password.|string
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_username]]
+**username**
+
+[options="header", cols=".^3a,.^4a"]
+|===
+|Name|Schema
+|**value** +
+__optional__|string
+|**valueFromSecret** +
+__optional__|<<_io_enmasse_v1beta1_addressspacespecconnector_username_valuefromsecret,valueFromSecret>>
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_username_valuefromsecret]]
+**valueFromSecret**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**key** +
+__optional__|Key to use for looking up username entry. +
+**Default** : `"username"`|string
+|**name** +
+__optional__|Name of Secret containing username.|string
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_endpointhosts]]
+**endpointHosts**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**host** +
+__required__|Host to connect to.|string
+|**port** +
+__required__|Port to connect to.|integer
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_tls]]
+**tls**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**caCert** +
+__optional__|CA certificate to be used by the connector. Either 'value' or 'secret'.|<<_io_enmasse_v1beta1_addressspacespecconnector_cacert,caCert>>
+|**clientCert** +
+__optional__|Client certificate to be used by the connector. Either 'value' or 'secret'.|<<_io_enmasse_v1beta1_addressspacespecconnector_clientcert,clientCert>>
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_cacert]]
+**caCert**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**value** +
+__optional__|PEM encoded value of CA certificate|string
+|**valueFromSecret** +
+__optional__|Secret containing CA certificate to be used by the connector.|<<_io_enmasse_v1beta1_addressspacespecconnector_cacert_valuefromsecret,valueFromSecret>>
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_cacert_valuefromsecret]]
+**valueFromSecret**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**key** +
+__optional__|Key to use for looking up CA certificate entry. +
+**Default** : `"ca.crt"`|string
+|**name** +
+__optional__|Name of Secret containing CA certificate.|string
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_clientcert]]
+**clientCert**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**value** +
+__optional__|PEM encoded value of client certificate|string
+|**valueFromSecret** +
+__optional__|Secret containing client certificate to be used by the connector.|<<_io_enmasse_v1beta1_addressspacespecconnector_clientcert_valuefromsecret,valueFromSecret>>
+|===
+
+[[_io_enmasse_v1beta1_addressspacespecconnector_clientcert_valuefromsecret]]
+**valueFromSecret**
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**key** +
+__optional__|Key to use for looking up client certificate entry. +
+**Default** : `"ca.crt"`|string
+|**name** +
+__optional__|Name of Secret containing client certificate.|string
+|===
+
+
+[[_io_enmasse_v1beta1_addressspacestatus]]
+=== io.enmasse.v1beta1.AddressSpaceStatus
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**connectorStatuses** +
+__optional__|List of connectors with status.|< object > array
 |**endpointStatuses** +
-__optional__|< <<_io_enmasse_v1beta1_addressspacestatus_endpointstatuses,endpointStatuses>> > array
+__optional__||< <<_io_enmasse_v1beta1_addressspacestatus_endpointstatuses,endpointStatuses>> > array
 |**isReady** +
-__optional__|boolean
+__optional__||boolean
 |**messages** +
-__optional__|< string > array
+__optional__||< string > array
 |===
 
 [[_io_enmasse_v1beta1_addressspacestatus_endpointstatuses]]
@@ -2152,6 +2321,21 @@ __optional__|integer
 |===
 
 
+[[_io_enmasse_v1beta1_addressspacestatusconnector]]
+=== io.enmasse.v1beta1.AddressSpaceStatusConnector
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**isReady** +
+__optional__|'true' if connector is operating as expected, 'false' if not.|boolean
+|**messages** +
+__optional__|Messages describing the connector state.|< string > array
+|**name** +
+__optional__|Name of connector.|string
+|===
+
+
 [[_io_enmasse_v1beta1_addressspacetype]]
 === io.enmasse.v1beta1.AddressSpaceType
 AddressSpaceType is the type of address space (standard, brokered). Each type supports different types of addresses and semantics for those types.
@@ -2162,30 +2346,64 @@ __Type__ : enum (standard, brokered)
 [[_io_enmasse_v1beta1_addressspec]]
 === io.enmasse.v1beta1.AddressSpec
 
-[options="header", cols=".^3a,.^4a"]
+[options="header", cols=".^3a,.^11a,.^4a"]
 |===
-|Name|Schema
+|Name|Description|Schema
 |**address** +
-__required__|string
+__required__||string
+|**forwarders** +
+__optional__|List of forwarders to enable for this address.|< object > array
 |**plan** +
-__required__|string
+__required__||string
 |**type** +
-__required__|<<_io_enmasse_v1beta1_addresstype,io.enmasse.v1beta1.AddressType>>
+__required__||<<_io_enmasse_v1beta1_addresstype,io.enmasse.v1beta1.AddressType>>
+|===
+
+
+[[_io_enmasse_v1beta1_addressspecforwarder]]
+=== io.enmasse.v1beta1.AddressSpecForwarder
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**direction** +
+__required__|Direction of forwarder. 'in' means pulling from 'remoteAddress' into this address. 'out' means pushing from this address to 'remoteAddress'.|enum (in, out)
+|**name** +
+__required__|Name of forwarder.|string
+|**remoteAddress** +
+__required__|Remote address to send/receive messages to.|string
 |===
 
 
 [[_io_enmasse_v1beta1_addressstatus]]
 === io.enmasse.v1beta1.AddressStatus
 
-[options="header", cols=".^3a,.^4a"]
+[options="header", cols=".^3a,.^11a,.^4a"]
 |===
-|Name|Schema
+|Name|Description|Schema
+|**forwarderStatuses** +
+__optional__|List of forwarders with status.|< object > array
 |**isReady** +
-__optional__|boolean
+__optional__||boolean
 |**messages** +
-__optional__|< string > array
+__optional__||< string > array
 |**phase** +
-__optional__|enum (Pending, Configuring, Active, Failed, Terminating)
+__optional__||enum (Pending, Configuring, Active, Failed, Terminating)
+|===
+
+
+[[_io_enmasse_v1beta1_addressstatusforwarder]]
+=== io.enmasse.v1beta1.AddressStatusForwarder
+
+[options="header", cols=".^3a,.^11a,.^4a"]
+|===
+|Name|Description|Schema
+|**isReady** +
+__optional__|'true' if forwarder is operating as expected, 'false' if not.|boolean
+|**messages** +
+__optional__|Messages describing the forwarder state.|< string > array
+|**name** +
+__optional__|Name of forwarder.|string
 |===
 
 

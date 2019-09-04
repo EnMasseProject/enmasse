@@ -1471,9 +1471,167 @@
                             }
                         }
                     }
-                }
+                },
+		"connectors": {
+		    "type": "array",
+		    "description": "List of connectors to create.",
+		    "properties": {
+			"items": {
+			    "$ref": "#/definitions/io.enmasse.v1beta1.AddressSpaceSpecConnector"
+			}
+		    }
+		}
             }
         },
+	"io.enmasse.v1beta1.AddressSpaceSpecConnector": {
+	    "type": "object",
+	    "required": [
+		"name",
+		"endpointHosts"
+	    ],
+	    "properties": {
+		"name": {
+		    "type": "string",
+		    "description": "Name of the connector."
+		},
+		"endpointHosts": {
+		    "type": "array",
+		    "description": "List of hosts that should be connected to. Must contain at least 1 entry.",
+		    "items": {
+			"type": "object",
+			"required": [
+			    "host",
+			    "port"
+			],
+			"properties": {
+			    "host": {
+				"type": "string",
+				"description": "Host to connect to."
+			    },
+			    "port": {
+				"type": "integer",
+				"description": "Port to connect to."
+			    }
+			}
+		    }
+		},
+		"tls": {
+		    "type": "object",
+		    "description": "TLS settings for the connectors. If not specified, TLS will not be used.",
+		    "properties": {
+			"caCert": {
+			    "type": "object",
+			    "description": "CA certificate to be used by the connector. Either 'value' or 'secret'.",
+			    "properties": {
+				"value": {
+				    "type": "string",
+				    "description": "PEM encoded value of CA certificate"
+				},
+				"valueFromSecret": {
+				    "type": "object",
+				    "description": "Secret containing CA certificate to be used by the connector.",
+				    "properties": {
+					"name": {
+					    "type": "string",
+					    "description": "Name of Secret containing CA certificate."
+					},
+					"key": {
+					    "type": "string",
+					    "default": "ca.crt",
+					    "description": "Key to use for looking up CA certificate entry."
+					}
+				    }
+				}
+			    }
+			},
+			"clientCert": {
+			    "type": "object",
+			    "description": "Client certificate to be used by the connector. Either 'value' or 'secret'.",
+			    "properties": {
+				"value": {
+				    "type": "string",
+				    "description": "PEM encoded value of client certificate"
+				},
+				"valueFromSecret": {
+				    "type": "object",
+				    "description": "Secret containing client certificate to be used by the connector.",
+				    "properties": {
+					"name": {
+					    "type": "string",
+					    "description": "Name of Secret containing client certificate."
+					},
+					"key": {
+					    "type": "string",
+					    "default": "ca.crt",
+					    "description": "Key to use for looking up client certificate entry."
+					}
+				    }
+				}
+			    }
+			}
+		    }
+		},
+		"credentials": {
+		    "type": "object",
+		    "description": "Credentials used when connecting to endpoints. Either 'username' and 'password', or 'secret' must be defined.",
+		    "properties": {
+			"username": {
+			    "type": "object",
+			    "description": "Username to use for connector. Either 'value' or 'secret' must be specified.",
+			    "properties": {
+				"value": {
+				    "type": "string"
+				},
+				"valueFromSecret": {
+				    "type": "object",
+				    "properties": {
+					"name": {
+					    "type": "string",
+					    "description": "Name of Secret containing username."
+					},
+					"key": {
+					    "type": "string",
+					    "default": "username",
+					    "description": "Key to use for looking up username entry."
+					}
+				    }
+				}
+			    }
+			},
+			"password": {
+			    "type": "object",
+			    "description": "Password to use for connector. Either 'value' or 'secret' must be specified.",
+			    "properties": {
+				"value": {
+				    "type": "string"
+				},
+				"valueFromSecret": {
+				    "type": "object",
+				    "properties": {
+					"name": {
+					    "type": "string",
+					    "description": "Name of Secret containing password."
+					},
+					"key": {
+					    "type": "string",
+					    "default": "password",
+					    "description": "Key to use for looking up password entry."
+					}
+				    }
+				}
+			    }
+			}
+		    }
+		},
+		"addresses": {
+		    "type": "array",
+		    "description": "List of addresses to make be accessible via this address space. The addresses will be prefixed by the connector name and a forward slash ('myconnector/').",
+		    "items": {
+			"type": "string"
+		    }
+		}
+	    }
+	},
         "io.enmasse.v1beta1.AddressSpaceStatus": {
             "type": "object",
             "properties": {
@@ -1486,6 +1644,13 @@
                         "type": "string"
                     }
                 },
+		"connectorStatuses": {
+		    "type": "array",
+		    "description": "List of connectors with status.",
+		    "items": {
+			"type": "#/definitions/io.enmasse.v1beta1.AddressSpaceStatusConnector"
+		    }
+		},
                 "endpointStatuses": {
                     "type": "array",
                     "items": {
@@ -1532,6 +1697,26 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "io.enmasse.v1beta1.AddressSpaceStatusConnector": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+		    "description": "Name of connector."
+                },
+                "isReady": {
+                    "type": "boolean",
+		    "description": "'true' if connector is operating as expected, 'false' if not."
+                },
+                "messages": {
+                    "type": "array",
+		    "description": "Messages describing the connector state.",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }
@@ -1613,7 +1798,40 @@
                 },
                 "address": {
                     "type": "string"
-                }
+                },
+		"forwarders": {
+		    "type": "array",
+		    "description": "List of forwarders to enable for this address.",
+		    "items": {
+			"type": "#/definitions/io.enmasse.v1beta1.AddressSpecForwarder"
+		    }
+		}
+            }
+        },
+        "io.enmasse.v1beta1.AddressSpecForwarder": {
+            "type": "object",
+            "required": [
+                "name",
+                "direction",
+                "remoteAddress"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string",
+		    "description": "Name of forwarder."
+                },
+                "direction": {
+                    "type": "string",
+		    "description": "Direction of forwarder. 'in' means pulling from 'remoteAddress' into this address. 'out' means pushing from this address to 'remoteAddress'.",
+                    "enum": [
+			"in",
+			"out"
+		    ]
+                },
+		"remoteAddress": {
+		    "type": "string",
+		    "description": "Remote address to send/receive messages to."
+		}
             }
         },
         "io.enmasse.v1beta1.AddressStatus": {
@@ -1634,6 +1852,33 @@
                 },
                 "messages": {
                     "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+		"forwarderStatuses": {
+		    "type": "array",
+		    "description": "List of forwarders with status.",
+		    "items": {
+			"type": "#/definitions/io.enmasse.v1beta1.AddressStatusForwarder"
+		    }
+		}
+            }
+        },
+        "io.enmasse.v1beta1.AddressStatusForwarder": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+		    "description": "Name of forwarder."
+                },
+                "isReady": {
+                    "type": "boolean",
+		    "description": "'true' if forwarder is operating as expected, 'false' if not."
+                },
+                "messages": {
+                    "type": "array",
+		    "description": "Messages describing the forwarder state.",
                     "items": {
                         "type": "string"
                     }
