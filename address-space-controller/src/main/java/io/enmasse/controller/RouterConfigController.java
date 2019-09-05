@@ -222,7 +222,6 @@ public class RouterConfigController implements Controller {
         amqpsInternal.setHost("0.0.0.0");
         amqpsInternal.setPort(55671);
         amqpsInternal.setSslProfile("inter_router_tls");
-        amqpsInternal.setRequireSsl(true);
         amqpsInternal.setSaslMechanisms("EXTERNAL");
         amqpsInternal.setAuthenticatePeer(true);
 

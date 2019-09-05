@@ -46,10 +46,6 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
     @Valid
     private AuthenticationService authenticationService;
 
-/*    @JsonSetter(nulls = Nulls.AS_EMPTY)
-    private List<@Valid AddressSpaceSpecConnector> connectors = Collections.emptyList();
-    */
-
     public AddressSpaceSpec() {
     }
 
