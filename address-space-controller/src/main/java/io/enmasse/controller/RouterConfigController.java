@@ -279,30 +279,30 @@ public class RouterConfigController implements Controller {
         // LinkRoutes
         LinkRoute mqttLwtInLinkRoute = new LinkRoute();
         mqttLwtInLinkRoute.setName("override.lwt_in");
-        mqttLwtInLinkRoute.setPrefix("$lwt");
+        mqttLwtInLinkRoute.setPrefix("$${dummy}lwt");
         mqttLwtInLinkRoute.setDirection(LinkRoute.Direction.in);
         mqttLwtInLinkRoute.setContainerId("lwt-service");
 
         LinkRoute mqttLwtOutLinkRoute = new LinkRoute();
         mqttLwtOutLinkRoute.setName("override.lwt_out");
-        mqttLwtOutLinkRoute.setPrefix("$lwt");
+        mqttLwtOutLinkRoute.setPrefix("$${dummy}lwt");
         mqttLwtOutLinkRoute.setDirection(LinkRoute.Direction.out);
         mqttLwtOutLinkRoute.setContainerId("lwt-service");
 
         // Addresses
         Address mqttAddress = new Address();
         mqttAddress.setName("override.mqtt");
-        mqttAddress.setPrefix("$mqtt");
+        mqttAddress.setPrefix("$${dummy}mqtt");
         mqttAddress.setDistribution(Distribution.balanced);
 
         Address subctrlAddress = new Address();
         subctrlAddress.setName("override.subctrl");
-        subctrlAddress.setPrefix("$subctrl");
+        subctrlAddress.setPrefix("$${dummy}subctrl");
         subctrlAddress.setDistribution(Distribution.balanced);
 
         Address tempAddress = new Address();
         tempAddress.setName("override.temp");
-        tempAddress.setPrefix("$temp");
+        tempAddress.setPrefix("$${dummy}temp");
         tempAddress.setDistribution(Distribution.balanced);
 
         return new RouterConfig(router,
@@ -353,7 +353,7 @@ public class RouterConfigController implements Controller {
             vhostPolicy.setMaxConnectionsPerUser(policy.getMaxConnectionsPerUser());
         }
 
-        vhostPolicy.setGroups(Collections.singletonMap("$default", group));
+        vhostPolicy.setGroups(Collections.singletonMap("$${dummy}default", group));
 
         VhostPolicyGroup internalGroup = new VhostPolicyGroup();
         internalGroup.setRemoteHosts("*");
@@ -363,9 +363,9 @@ public class RouterConfigController implements Controller {
         internalGroup.setAllowAnonymousSender(true);
 
         VhostPolicy internalVhostPolicy = new VhostPolicy();
-        internalVhostPolicy.setHostname("$default");
+        internalVhostPolicy.setHostname("$${dummy}default");
         internalVhostPolicy.setAllowUnknownUser(true);
-        internalVhostPolicy.setGroups(Collections.singletonMap("$default", internalGroup));
+        internalVhostPolicy.setGroups(Collections.singletonMap("$${dummy}default", internalGroup));
 
         return Arrays.asList(internalVhostPolicy, vhostPolicy);
     }
