@@ -21,16 +21,13 @@ spec:
     port: 5671 <3>
     caCertSecret: <4>
       name: my-ca-cert
-    clientCertSecret: <5>
-      name: my-client-cert
-    allowOverride: true <6>
+    allowOverride: true <5>
 ----
 <1> (Optional) The `realm` is passed in the authentication request. If not specified, an identifier in the form of _namespace-addressspace_ is used as the realm.
 <2> The host name of the external authentication server.
 <3> The port number of the external authentication server.
 <4> (Optional) The CA certificate to trust when connecting to the authentication server.
-<5> (Optional) The certificate that the client presents when connecting to the authentication server.
-<6> (Optional) Specifies whether address space overrides are allowed to the host name, port number, and realm. Valid values are `true` or `false`. If not specified, the default value is `false`.
+<5> (Optional) Specifies whether address space overrides are allowed to the host name, port number, realm, and CA certificate. Valid values are `true` or `false`. If not specified, the default value is `false`.
 
 The external authentication server must implement the API described in the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-external-authentication-server-api-messaging[External authentication server API].
 

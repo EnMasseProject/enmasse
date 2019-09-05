@@ -31,6 +31,9 @@ spec:
       realm: {ProductNamespace}-space-standard-auth
       host: standard-authservice-{ProductNamespace}.apps.wfd-28d9.openshiftworkshop.com
       port: 5671
+      caCertSecret:
+        name: my-ca-cert
+
 ----
 <1> The authentication service name depends on the available authentication services configured by the {ProductName} administrator. To view the available authentication services for your address space type, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-list-available-auth-services-messaging[Listing available authentication services].
 <2> Specifies the override values.
