@@ -26,16 +26,7 @@ type ReconcileContext struct {
 }
 
 func (r *ReconcileContext) Process(processor func() (reconcile.Result, error)) {
-	result, err := processor()
-
-	if err != nil {
-		r.error = multierr.Append(r.error, err)
-	} else {
-		if result.Requeue {
-			r.requeue = true
-		}
-		r.requeueAfter = util.MaxDuration(r.requeueAfter, result.RequeueAfter)
-	}
+	r.AddResult(processor())
 }
 
 func (r *ReconcileContext) ProcessSimple(processor func() error) {
@@ -51,8 +42,19 @@ func (r *ReconcileContext) Delete(ctx context.Context, client client.Client, obj
 	})
 }
 
+func (r *ReconcileContext) AddResult(result reconcile.Result, err error) {
+	if err != nil {
+		r.error = multierr.Append(r.error, err)
+	} else {
+		if result.Requeue {
+			r.requeue = true
+		}
+		r.requeueAfter = util.MaxDuration(r.requeueAfter, result.RequeueAfter)
+	}
+}
+
 func (r *ReconcileContext) NeedRequeue() bool {
-	return r.requeue
+	return r.requeue || r.requeueAfter > 0
 }
 
 func (r *ReconcileContext) Error() error {

@@ -58,8 +58,9 @@ public class IoTUtils {
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception{
+        log.info("Deleting IoTConfig: {}", config.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
-        kubernetes.getIoTConfigClient().withName(config.getMetadata().getName()).cascading(true).delete();
+        kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName()).cascading(true).delete();
         waitForIoTConfigDeleted(kubernetes);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -118,6 +119,7 @@ public class IoTUtils {
     }
 
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
+        log.info("Deleting IoTProject: {}", project.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_PROJECT);
         kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).delete();
         IoTUtils.waitForIoTProjectDeleted(kubernetes, project);

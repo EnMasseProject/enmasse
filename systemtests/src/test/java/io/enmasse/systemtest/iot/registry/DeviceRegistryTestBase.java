@@ -6,6 +6,7 @@ package io.enmasse.systemtest.iot.registry;
 
 import static io.enmasse.systemtest.TestTag.sharedIot;
 import static io.enmasse.systemtest.TestTag.smoke;
+import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
@@ -30,6 +32,7 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -41,6 +44,7 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.IoTUtils;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 
 @Tag(sharedIot)
 @Tag(smoke)
@@ -86,6 +90,18 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             IoTUtils.deleteIoTConfigAndWait(kubernetes, iotConfig);
         } else {
             log.info("IoTConfig '{}' doesn't exists!", iotConfig.getMetadata().getName());
+        }
+    }
+
+    @BeforeAll
+    void forceTeardown() throws Exception {
+        var kubernetes = Kubernetes.getInstance();
+        log.info("Deleting all IoT resources before start");
+        for (IoTProject project : kubernetes.getIoTProjectClient(iotProjectNamespace).list().getItems()) {
+            IoTUtils.deleteIoTProjectAndWait(kubernetes, project);
+        }
+        for (IoTConfig config : kubernetes.getIoTConfigClient(Kubernetes.getInstance().getInfraNamespace()).list().getItems()) {
+            IoTUtils.deleteIoTConfigAndWait(kubernetes, config);
         }
     }
 
@@ -276,8 +292,14 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
             credentialsClient.deleteAllCredentials(tenantId(), randomDeviceId);
 
             client.deleteDeviceRegistration(tenantId(), randomDeviceId);
-            client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            client.getDeviceRegistration(tenantId(), randomDeviceId, HTTP_NOT_FOUND);
         }
+    }
+
+    @Test
+    void testCreateForNonExistingTenantFails() throws Exception {
+        var response = client.registerDeviceWithResponse("invalid-" + tenantId(), randomDeviceId);
+        assertEquals(HTTP_NOT_FOUND, response.statusCode());
     }
 
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {
@@ -328,5 +350,12 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     public IoTProject getSharedIoTProject() {
         return iotProject;
     }
+
+    protected void assertCorrectRegistryType(final String type) {
+        final Deployment deployment = kubernetes.getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
+        assertNotNull(deployment);
+        assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
+    }
+
 
 }

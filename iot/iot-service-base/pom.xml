@@ -12,12 +12,12 @@
     <relativePath>../iot-application-base</relativePath>
   </parent>
 
-  <artifactId>iot-tenant-service</artifactId>
+  <artifactId>iot-service-base</artifactId>
 
   <dependencies>
     <dependency>
-      <groupId>io.enmasse</groupId>
-      <artifactId>iot-service-base</artifactId>
+      <groupId>org.eclipse.hono</groupId>
+      <artifactId>hono-service-base</artifactId>
     </dependency>
 
     <dependency>
@@ -64,14 +64,5 @@
     </dependency>
 
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
 
 </project>

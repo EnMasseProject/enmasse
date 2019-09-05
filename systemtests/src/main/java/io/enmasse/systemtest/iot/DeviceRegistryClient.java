@@ -7,10 +7,13 @@ package io.enmasse.systemtest.iot;
 
 import java.net.HttpURLConnection;
 import org.eclipse.hono.service.management.device.Device;
+
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Kubernetes;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
+import io.vertx.ext.web.client.HttpResponse;
 
 public class DeviceRegistryClient extends HonoApiClient {
 
@@ -28,6 +31,11 @@ public class DeviceRegistryClient extends HonoApiClient {
     public void registerDevice(String tenantId, String deviceId) throws Exception {
         var requestPath = String.format("/%s/%s/%s", DEVICES_PATH, tenantId, deviceId);
         execute(HttpMethod.POST, requestPath, "{}", HttpURLConnection.HTTP_CREATED, "Error registering a device");
+    }
+
+    public HttpResponse<Buffer> registerDeviceWithResponse(String tenantId, String deviceId) throws Exception {
+        var requestPath = String.format("/%s/%s/%s", DEVICES_PATH, tenantId, deviceId);
+        return execute(HttpMethod.POST, requestPath, "{}");
     }
 
     public Device getDeviceRegistration(String tenantId, String deviceId) throws Exception {
