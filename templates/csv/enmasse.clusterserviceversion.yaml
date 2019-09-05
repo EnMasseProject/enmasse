@@ -443,6 +443,9 @@ spec:
         - apiGroups: [ "authorization.k8s.io" ]
           resources: [ "subjectaccessreviews" ]
           verbs: [ "create" ]
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotprojects" ]
+          verbs: [ "get", "list", "watch" ]
       deployments:
       - name: enmasse-operator
         spec:
