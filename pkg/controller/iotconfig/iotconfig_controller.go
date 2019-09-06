@@ -181,6 +181,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.ProcessSimple(func() error {
 		return r.processCollector(ctx, config)
 	})
+	rc.ProcessSimple(func() error {
+		return r.processProjectOperator(ctx, config)
+	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processAuthService(ctx, config)
 	})

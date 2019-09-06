@@ -31,6 +31,7 @@ public class IoTUtils {
             "iot-http-adapter",
             "iot-lorawan-adapter",
             "iot-mqtt-adapter",
+            "iot-operator",
             "iot-sigfox-adapter",
             "iot-tenant-service",
     };

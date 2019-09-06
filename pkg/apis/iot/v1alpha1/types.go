@@ -153,6 +153,7 @@ type ServicesConfig struct {
 	Authentication AuthenticationServiceConfig `json:"authentication,omitempty"`
 	Tenant         TenantServiceConfig         `json:"tenant,omitempty"`
 	Collector      CollectorConfig             `json:"collector,omitempty"`
+	Operator       OperatorConfig              `json:"operator,omitempty"`
 }
 
 type AdaptersConfig struct {
@@ -196,6 +197,12 @@ type CommonAdapterContainers struct {
 }
 
 type CollectorConfig struct {
+	Container *ContainerConfig `json:"container,omitempty"`
+}
+
+type OperatorConfig struct {
+	ServiceConfig `json:",inline"`
+
 	Container *ContainerConfig `json:"container,omitempty"`
 }
 
