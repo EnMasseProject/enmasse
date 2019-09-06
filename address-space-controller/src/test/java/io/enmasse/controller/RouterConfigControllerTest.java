@@ -129,23 +129,23 @@ public class RouterConfigControllerTest {
         assertEquals(20, amqpPublic.getInitialHandshakeTimeoutSeconds());
         assertEquals(50, amqpPublic.getLinkCapacity());
 
-        VhostPolicy internal = getPolicyForHostname("$default", actual.getVhosts());
+        VhostPolicy internal = getPolicyForHostname("$${dummy}default", actual.getVhosts());
         assertNotNull(internal);
         assertNull(internal.getMaxConnections());
         assertNull(internal.getMaxConnectionsPerHost());
         assertNull(internal.getMaxConnectionsPerUser());
-        assertNull(internal.getGroups().get("$default").getMaxSessions());
-        assertNull(internal.getGroups().get("$default").getMaxSenders());
-        assertNull(internal.getGroups().get("$default").getMaxReceivers());
+        assertNull(internal.getGroups().get("$${dummy}default").getMaxSessions());
+        assertNull(internal.getGroups().get("$${dummy}default").getMaxSenders());
+        assertNull(internal.getGroups().get("$${dummy}default").getMaxReceivers());
 
         VhostPolicy pub = getPolicyForHostname("public", actual.getVhosts());
         assertNotNull(pub);
         assertEquals(30, pub.getMaxConnections());
         assertEquals(10, pub.getMaxConnectionsPerUser());
         assertEquals(10, pub.getMaxConnectionsPerHost());
-        assertEquals(4, pub.getGroups().get("$default").getMaxSessions());
-        assertEquals(3, pub.getGroups().get("$default").getMaxSenders());
-        assertEquals(2, pub.getGroups().get("$default").getMaxReceivers());
+        assertEquals(4, pub.getGroups().get("$${dummy}default").getMaxSessions());
+        assertEquals(3, pub.getGroups().get("$${dummy}default").getMaxSenders());
+        assertEquals(2, pub.getGroups().get("$${dummy}default").getMaxReceivers());
 
 
         appliedConfig.getSpec().getRouter().setIdleTimeout(20);
@@ -185,23 +185,23 @@ public class RouterConfigControllerTest {
 
         assertEquals(2, policyList.size());
 
-        VhostPolicy internal = getPolicyForHostname("$default", policyList);
+        VhostPolicy internal = getPolicyForHostname("$${dummy}default", policyList);
         assertNotNull(internal);
         assertNull(internal.getMaxConnections());
         assertNull(internal.getMaxConnectionsPerHost());
         assertNull(internal.getMaxConnectionsPerUser());
-        assertNull(internal.getGroups().get("$default").getMaxSessions());
-        assertNull(internal.getGroups().get("$default").getMaxSenders());
-        assertNull(internal.getGroups().get("$default").getMaxReceivers());
+        assertNull(internal.getGroups().get("$${dummy}default").getMaxSessions());
+        assertNull(internal.getGroups().get("$${dummy}default").getMaxSenders());
+        assertNull(internal.getGroups().get("$${dummy}default").getMaxReceivers());
 
         VhostPolicy pub = getPolicyForHostname("public", policyList);
         assertNotNull(pub);
         assertEquals(1000, pub.getMaxConnections());
         assertEquals(10, pub.getMaxConnectionsPerUser());
         assertEquals(10, pub.getMaxConnectionsPerHost());
-        assertEquals(5, pub.getGroups().get("$default").getMaxSessions());
-        assertEquals(5, pub.getGroups().get("$default").getMaxSenders());
-        assertEquals(5, pub.getGroups().get("$default").getMaxReceivers());
+        assertEquals(5, pub.getGroups().get("$${dummy}default").getMaxSessions());
+        assertEquals(5, pub.getGroups().get("$${dummy}default").getMaxSenders());
+        assertEquals(5, pub.getGroups().get("$${dummy}default").getMaxReceivers());
     }
 
     private Listener getListenerOnPort(int port, List<Listener> listeners) {
