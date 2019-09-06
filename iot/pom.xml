@@ -107,6 +107,16 @@
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-remote-query-client</artifactId>
         <version>${infinispan.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.squareup</groupId>
+            <artifactId>protoparser</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.infinispan</groupId>
