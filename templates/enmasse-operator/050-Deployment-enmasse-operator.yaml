@@ -89,6 +89,3 @@ spec:
           value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
         - name: CONSOLE_HTTPD_IMAGE
           value: "${CONSOLE_HTTPD_IMAGE}"
-        resources:
-          limits:
-            memory: 128Mi
