@@ -93,10 +93,7 @@ function wait_until_enmasse_up() {
     expected_pods=7
     if [[ ${OC_VERSION} == "4" ]]; then
         # no service catalog nor service broker in ocp4
-        expected_pods=6
-    fi
-    if [[ "${DEPLOY_IOT}" == "true" ]]; then
-        expected_pods=$(($expected_pods + 1))
+        expected_pods=$(($expected_pods - 1))
     fi
     if [[ "${CLUSTER_TYPE}" == "kubernetes" ]]; then
         # console won't be deployed on kubernettes by default

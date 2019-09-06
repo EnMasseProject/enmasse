@@ -167,7 +167,24 @@ metadata:
           "metadata": {
             "name": "default"
           },
-          "spec": {}
+          "spec": {
+            "adapters": {
+              "mqtt": {
+                "endpoint": {
+                  "secretNameStrategy": {
+                    "secretName": "iot-mqtt-adapter-tls"
+                  }
+                }
+              }
+            },
+            "services": {
+              "deviceRegistry": {
+                "file": {
+                  "numberOfDevicesPerTenant": 1000
+                }
+              }
+            }
+          }
         },
         {
           "apiVersion": "enmasse.io/v1beta1",
@@ -176,6 +193,34 @@ metadata:
             "name": "undefined"
           },
           "spec": {}
+        },
+        {
+          "apiVersion": "iot.enmasse.io/v1alpha1",
+          "kind": "IoTProject",
+          "metadata": {
+            "name": "iot"
+          },
+          "spec": {
+            "downstreamStrategy": {
+              "managedStrategy": {
+                "addressSpace": {
+                  "name": "iot",
+                  "plan": "standard-unlimited"
+                },
+                "addresses": {
+                  "command": {
+                    "plan": "standard-small-anycast"
+                  },
+                  "event": {
+                    "plan": "standard-small-queue"
+                  },
+                  "telemetry": {
+                    "plan": "standard-small-anycast"
+                  }
+                }
+              }
+            }
+          }
         }
       ]
 
@@ -299,6 +344,31 @@ spec:
       * *Address space* – A container for addresses
       * *Address* – A messaging address (address, topic, queue, and so on)
       * *Messaging user* – Manages access to an address
+
+    ## Enabling the IoT messaging layer (tech-preview)
+
+    ${SHORT_PRODUCT_NAME} contains an IoT messaging layer, which is not enabled
+    by default. You may enable it by creating an `IoTConfig` resource, in the
+    namespace of the ${SHORT_PRODUCT_NAME} installation. The name of the resource
+    must be `default`.
+
+    You can then create resources of the type `IoTProject`, which allow you to
+    register and connect devices via HTTP, MQTT, Sigfox and LoRaWAN.
+
+    *Note:* The default `IoTConfig` example uses the "file based" device registry.
+    It allows you to quicky evaluate the IoT layer. However you must not use this
+    in any productive environment.
+
+    *Note:* The default `IoTConfig` examples configures the MQTT adapter with an
+    explicit TLS key/certificate stored in the secret `iot-mqtt-adapter-tls`. You
+    must provide this secret, under the configured name, in order for the
+    MQTT protocol adapter to pick it up.
+
+    *Note*: The `IoTProject` examples assume that you have deployed the example
+    plans. If you did not deploy the example plans, or changed their names, you
+    must adapt the names in the IoT examples as well.
+
+    For more information on the IoT layer, see: [Getting Started with Internet of Things (IoT) on ${SHORT_PRODUCT_NAME}](${EVAL_IOT_DOC_URL})
 
   version: ${MAVEN_VERSION}
   keywords: ['${ADDITIONAL_KEYWORDS}messaging', 'amqp', 'iot', 'mqtt']
@@ -435,6 +505,17 @@ spec:
           resources: [ "configmaps" ]
           resourceNames: [ "extension-apiserver-authentication" ]
           verbs: [ "get" ]
+      - serviceAccountName: iot-operator
+        rules:
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addressspaces", "addresses" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+        - apiGroups: [ "user.enmasse.io" ]
+          resources: [ "messagingusers" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotprojects" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -494,6 +575,8 @@ spec:
                   value: "true"
                 - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
                   value: "true"
+                - name: CONTROLLER_MANAGER_IMAGE
+                  value: ${CONTROLLER_MANAGER_IMAGE}
                 - name: IOT_AUTH_SERVICE_IMAGE
                   value: ${IOT_AUTH_SERVICE_IMAGE}
                 - name: IOT_DEVICE_REGISTRY_FILE_IMAGE
@@ -1052,9 +1135,85 @@ spec:
             path: host
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:label'
+
       - group: iot.enmasse.io
         version: v1alpha1
         kind: IoTConfig
         name: iotconfigs.iot.enmasse.io
         displayName: IoT Config
         description: IoT Infrastructure Configuration Singleton
+        specDescriptors:
+
+          # HTTP adapter
+
+          - description: The number of replicas for the HTTP protocol adapter
+            displayName: HTTP adapter replicas
+            path: adapters.http.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+
+          # MQTT adapter
+
+          - description: The number of replicas for the MQTT protocol adapter
+            displayName: MQTT adapter replicas
+            path: adapters.mqtt.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+
+          # Sigfox adapter
+
+          - description: The number of replicas for the Sigfox protocol adapter
+            displayName: Sigfox adapter replicas
+            path: adapters.sigfox.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+
+          # LoRaWAN adapter
+
+          - description: The number of replicas for the LoRaWAN protocol adapter
+            displayName: LoRaWAN adapter replicas
+            path: adapters.lorawan.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+
+          # Services
+
+          - description: The number of replicas for the device registry
+            displayName: Device registry replicas
+            path: services.deviceRegistry.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+
+          - description: The number of replicas for the tenant service
+            displayName: Tenant service replicas
+            path: services.tenant.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+
+          - description: The number of replicas for the authentication service
+            displayName: Authentication service replicas
+            path: services.authentication.replicas
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
+
+        statusDescriptors:
+
+          - description: State
+            displayName: State
+            path: state
+            x-descriptors:
+              - 'urn:alm:descriptor:text'
+
+      - group: iot.enmasse.io
+        version: v1alpha1
+        kind: IoTProject
+        name: iotprojects.iot.enmasse.io
+        displayName: IoT Project
+        description: An IoT project instance
+
+        statusDescriptors:
+          - description: The name of the tenant, when used in context of IoT functionality.
+            displayName: IoT tenant name
+            path: tenantName
+            x-descriptors:
+              - 'urn:alm:descriptor:text'

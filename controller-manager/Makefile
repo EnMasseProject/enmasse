@@ -6,6 +6,7 @@ build: build/operatorImageMap.yaml build/$(CMD)
 build/operatorImageMap.yaml:
 	echo "" > "$@"
 	
+	echo "controller-manager: $(CONTROLLER_MANAGER_IMAGE)" >> "$@"
 	echo "iot-auth-service: $(IOT_AUTH_SERVICE_IMAGE)" >> "$@"
 	echo "iot-device-registry-file: $(IOT_DEVICE_REGISTRY_FILE_IMAGE)" >> "$@"
 	echo "iot-device-registry-infinispan: $(IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE)" >> "$@"

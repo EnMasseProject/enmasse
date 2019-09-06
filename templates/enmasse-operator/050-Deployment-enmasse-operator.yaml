@@ -51,6 +51,8 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
           value: "true"
+        - name: CONTROLLER_MANAGER_IMAGE
+          value: ${CONTROLLER_MANAGER_IMAGE}
         - name: IOT_AUTH_SERVICE_IMAGE
           value: ${IOT_AUTH_SERVICE_IMAGE}
         - name: IOT_DEVICE_REGISTRY_FILE_IMAGE
