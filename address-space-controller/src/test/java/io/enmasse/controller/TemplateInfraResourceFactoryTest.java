@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.admin.model.v1.AuthenticationService;
@@ -77,8 +76,8 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                         client,
                         new File("src/test/resources/templates"),
                         true),
-                authenticationServiceRegistry,
-                Collections.emptyMap(), true, schemaProvider);
+                new AuthenticationServiceResolver(authenticationServiceRegistry),
+                Collections.emptyMap(), schemaProvider);
     }
 
     @Test
@@ -213,22 +212,6 @@ public class TemplateInfraResourceFactoryTest extends JULInitializingTest {
                 }
             }
         }
-    }
-
-    @Test
-    public void testVhostPolicyGen() throws JsonProcessingException {
-        RouterPolicySpec policySpec = new RouterPolicySpecBuilder()
-                .withMaxConnections(1000)
-                .withMaxConnectionsPerHost(10)
-                .withMaxConnectionsPerUser(10)
-                .withMaxSendersPerConnection(5)
-                .withMaxReceiversPerConnection(5)
-                .withMaxSessionsPerConnection(5)
-                .build();
-
-        String policyJson = TemplateInfraResourceFactory.createVhostPolicyJson(policySpec);
-        String expected = "[[\"vhost\",{\"hostname\":\"$default\",\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"sources\":\"*\",\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"targets\":\"*\"}}},{\"hostname\":\"public\",\"maxConnectionsPerUser\":10,\"allowUnknownUser\":true,\"groups\":{\"$default\":{\"allowDynamicSource\":true,\"maxSessions\":5,\"sources\":\"*\",\"maxSenders\":5,\"allowAnonymousSender\":true,\"remoteHosts\":\"*\",\"maxReceivers\":5,\"targets\":\"*\"}},\"maxConnectionsPerHost\":10,\"maxConnections\":1000}]]";
-        assertEquals(expected, policyJson);
     }
 
     private <T> T findItem(Class<T> clazz, String kind, String name, List<HasMetadata> items) {

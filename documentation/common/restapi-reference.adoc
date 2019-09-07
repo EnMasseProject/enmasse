@@ -2112,7 +2112,7 @@ __optional__|< <<_io_k8s_api_networking_v1_networkpolicyingressrule,io.k8s.api.n
 |===
 |Name|Description|Schema
 |**addresses** +
-__optional__|List of addresses to make be accessible via this address space. The addresses will be prefixed by the connector name and a forward slash ('myconnector/').|< string > array
+__optional__|List of addresses to make be accessible via this address space. The addresses will be prefixed by the connector name and a forward slash ('myconnector/') and may be expressed as a pattern. A pattern consists of one or more tokens separated by a forward slash /. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.|< string > array
 |**credentials** +
 __optional__|Credentials used when connecting to endpoints. Either 'username' and 'password', or 'secret' must be defined.|<<_io_enmasse_v1beta1_addressspacespecconnector_credentials,credentials>>
 |**endpointHosts** +

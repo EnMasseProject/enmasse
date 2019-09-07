@@ -32,7 +32,7 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
 
     private String name;
 
-    private AuthenticationServiceOverrides overrides;
+    private AuthenticationServiceSettings overrides;
 
     // TODO: Keep for backwards compatibility
     private AuthenticationServiceType type;
@@ -56,11 +56,11 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
         this.name = name;
     }
 
-    public void setOverrides(AuthenticationServiceOverrides overrides) {
+    public void setOverrides(AuthenticationServiceSettings overrides) {
         this.overrides = overrides;
     }
 
-    public AuthenticationServiceOverrides getOverrides() {
+    public AuthenticationServiceSettings getOverrides() {
         return overrides;
     }
 

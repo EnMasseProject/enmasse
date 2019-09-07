@@ -4,22 +4,16 @@
  */
 package io.enmasse.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.AuthenticationServiceType;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.controller.common.TemplateParameter;
-import io.enmasse.k8s.api.AuthenticationServiceRegistry;
+import io.enmasse.controller.router.config.*;
 import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.SecretReference;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.slf4j.Logger;
@@ -37,61 +31,26 @@ import static io.enmasse.address.model.KubeUtil.lookupResource;
 public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private static final String FS_GROUP_OVERRIDE = "FS_GROUP_OVERRIDE";
     private static final Logger log = LoggerFactory.getLogger(TemplateInfraResourceFactory.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
     private final String WELL_KNOWN_CONSOLE_SERVICE_NAME = "console";
 
     private final Kubernetes kubernetes;
-    private final AuthenticationServiceRegistry authenticationServiceRegistry;
+    private final AuthenticationServiceResolver authenticationServiceResolver;
     private final Map<String, String> env;
     private final SchemaProvider schemaProvider;
     private final Long fsGroupOverride;
 
-    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceRegistry authenticationServiceRegistry, Map<String, String> env, boolean openShift, SchemaProvider schemaProvider) {
+    public TemplateInfraResourceFactory(Kubernetes kubernetes, AuthenticationServiceResolver authenticationServiceResolver, Map<String, String> env, SchemaProvider schemaProvider) {
         this.kubernetes = kubernetes;
-        this.authenticationServiceRegistry = authenticationServiceRegistry;
+        this.authenticationServiceResolver = authenticationServiceResolver;
         this.env = env;
         this.schemaProvider = schemaProvider;
         this.fsGroupOverride = getFsGroupOverride();
     }
 
-    private void prepareParameters(InfraConfig infraConfig,
-                                   AddressSpace addressSpace,
+    private void prepareParameters(AddressSpace addressSpace,
                                    Map<String, String> parameters) {
 
-        AuthenticationService authService = authenticationServiceRegistry.findAuthenticationService(addressSpace.getSpec().getAuthenticationService())
-                .orElseThrow(() -> new IllegalArgumentException("Unable to find authentication service " + addressSpace.getSpec().getAuthenticationService()));
-
-        if (authService.getStatus() == null) {
-            throw new IllegalArgumentException("Authentication service '" + authService.getMetadata().getName() + "' is not yet deployed");
-        }
-
-        String authServiceHost = authService.getStatus().getHost();
-        int authServicePort = authService.getStatus().getPort();
-        String authServiceRealm = authService.getSpec().getRealm() != null ? authService.getSpec().getRealm() : addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-        SecretReference authServiceCaCertSecret = authService.getStatus().getCaCertSecret();
-        SecretReference authServiceClientCertSecret = authService.getStatus().getClientCertSecret();
-
-
-        if (authService.getSpec().getType().equals(AuthenticationServiceType.external) && authService.getSpec().getExternal() != null && authService.getSpec().getExternal().isAllowOverride()) {
-            if (addressSpace.getSpec().getAuthenticationService().getOverrides() != null) {
-                AuthenticationServiceOverrides overrides = addressSpace.getSpec().getAuthenticationService().getOverrides();
-                if (overrides.getHost() != null) {
-                    authServiceHost = overrides.getHost();
-                }
-                if (overrides.getPort() != null) {
-                    authServicePort = overrides.getPort();
-                }
-                if (overrides.getRealm() != null) {
-                    authServiceRealm = overrides.getRealm();
-                }
-                if (overrides.getCaCertSecret() != null) {
-                    authServiceCaCertSecret = overrides.getCaCertSecret();
-                }
-                if (overrides.getClientCertSecret() != null) {
-                    authServiceClientCertSecret = overrides.getClientCertSecret();
-                }
-            }
-        }
+        AuthenticationServiceSettings authServiceSettings = authenticationServiceResolver.resolve(addressSpace);
 
         Optional<ConsoleService> console = schemaProvider.getSchema().findConsoleService(WELL_KNOWN_CONSOLE_SERVICE_NAME);
         if (console.isEmpty()) {
@@ -103,11 +62,11 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         parameters.put(TemplateParameter.ADDRESS_SPACE, addressSpace.getMetadata().getName());
         parameters.put(TemplateParameter.INFRA_UUID, infraUuid);
         parameters.put(TemplateParameter.ADDRESS_SPACE_NAMESPACE, addressSpace.getMetadata().getNamespace());
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authServiceHost);
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authServicePort));
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_HOST, authServiceSettings.getHost());
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_PORT, String.valueOf(authServiceSettings.getPort()));
         parameters.put(TemplateParameter.ADDRESS_SPACE_PLAN, addressSpace.getSpec().getPlan());
 
-        String encodedCaCert = Optional.ofNullable(authServiceCaCertSecret)
+        String encodedCaCert = Optional.ofNullable(authServiceSettings.getCaCertSecret())
                 .map(secretName ->
                     kubernetes.getSecret(secretName.getName()).map(secret ->
                             secret.getData().get("tls.crt"))
@@ -120,11 +79,11 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                     }
                 });
         parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CA_CERT, encodedCaCert);
-        if (authServiceClientCertSecret != null) {
-            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, authServiceClientCertSecret.getName());
+        if (authServiceSettings.getClientCertSecret() != null) {
+            parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_CLIENT_SECRET, authServiceSettings.getClientCertSecret().getName());
         }
 
-        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authServiceRealm);
+        parameters.put(TemplateParameter.AUTHENTICATION_SERVICE_SASL_INIT_HOST, authServiceSettings.getRealm());
 
         Map<String, CertSpec> serviceCertMapping = new HashMap<>();
         for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
@@ -188,7 +147,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         Map<String, String> parameters = new HashMap<>();
 
-        prepareParameters(standardInfraConfig, addressSpace, parameters);
+        prepareParameters(addressSpace, parameters);
 
         if (standardInfraConfig.getSpec().getBroker() != null) {
             if (standardInfraConfig.getSpec().getBroker().getResources() != null) {
@@ -212,33 +171,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         if (standardInfraConfig.getSpec().getRouter() != null) {
             if (standardInfraConfig.getSpec().getRouter().getResources() != null && standardInfraConfig.getSpec().getRouter().getResources().getMemory() != null) {
                 parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
-            }
-
-            if (standardInfraConfig.getSpec().getRouter().getLinkCapacity() != null) {
-                parameters.put(TemplateParameter.ROUTER_LINK_CAPACITY, String.valueOf(standardInfraConfig.getSpec().getRouter().getLinkCapacity()));
-            }
-
-            if (standardInfraConfig.getSpec().getRouter().getHandshakeTimeout() != null) {
-                parameters.put(TemplateParameter.ROUTER_HANDSHAKE_TIMEOUT, String.valueOf(standardInfraConfig.getSpec().getRouter().getHandshakeTimeout()));
-            }
-
-            if (standardInfraConfig.getSpec().getRouter().getIdleTimeout() != null) {
-                parameters.put(TemplateParameter.ROUTER_IDLE_TIMEOUT, String.valueOf(standardInfraConfig.getSpec().getRouter().getIdleTimeout()));
-            }
-
-            if (standardInfraConfig.getSpec().getRouter().getWorkerThreads() != null) {
-                parameters.put(TemplateParameter.ROUTER_WORKER_THREADS, String.valueOf(standardInfraConfig.getSpec().getRouter().getWorkerThreads()));
-            }
-
-            if (standardInfraConfig.getSpec().getRouter().getPolicy() != null) {
-                try {
-                    String vhostPolicyJson = createVhostPolicyJson(standardInfraConfig.getSpec().getRouter().getPolicy());
-                    parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_NAME, "public");
-                    parameters.put(TemplateParameter.ROUTER_VHOST_POLICY_JSON, vhostPolicyJson);
-                    parameters.put(TemplateParameter.ROUTER_ENABLE_VHOST_POLICY, "true");
-                } catch (Exception e) {
-                    log.warn("Error setting router policy settings, ignoring", e);
-                }
             }
         }
 
@@ -299,64 +231,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
     }
 
-    static String createVhostPolicyJson(RouterPolicySpec policy) throws JsonProcessingException {
-        // Public settings derived from infra config settings
-        Map<String, Object> publicGroupPolicy = new HashMap<>();
-        publicGroupPolicy.put("remoteHosts", "*");
-        publicGroupPolicy.put("sources", "*");
-        publicGroupPolicy.put("targets", "*");
-        publicGroupPolicy.put("allowDynamicSource", true);
-        publicGroupPolicy.put("allowAnonymousSender", true);
-
-        if (policy.getMaxSessionsPerConnection() != null) {
-            publicGroupPolicy.put("maxSessions", policy.getMaxSessionsPerConnection());
-        }
-
-        if (policy.getMaxSendersPerConnection() != null) {
-            publicGroupPolicy.put("maxSenders", policy.getMaxSendersPerConnection());
-        }
-
-        if (policy.getMaxReceiversPerConnection() != null) {
-            publicGroupPolicy.put("maxReceivers", policy.getMaxReceiversPerConnection());
-        }
-
-        Map<String, Object> publicVhostPolicy = new HashMap<>();
-        publicVhostPolicy.put("hostname", "public");
-        publicVhostPolicy.put("allowUnknownUser", true);
-
-        if (policy.getMaxConnections() != null) {
-            publicVhostPolicy.put("maxConnections", policy.getMaxConnections());
-        }
-
-        if (policy.getMaxConnectionsPerHost() != null) {
-            publicVhostPolicy.put("maxConnectionsPerHost", policy.getMaxConnectionsPerHost());
-        }
-
-        if (policy.getMaxConnectionsPerUser() != null) {
-            publicVhostPolicy.put("maxConnectionsPerUser", policy.getMaxConnectionsPerUser());
-        }
-
-        publicVhostPolicy.put("groups", Collections.singletonMap("$default", publicGroupPolicy));
-
-        // Internal settings, used by internal components
-        Map<String, Object> internalGroupPolicy = new HashMap<>();
-        internalGroupPolicy.put("remoteHosts", "*");
-        internalGroupPolicy.put("sources", "*");
-        internalGroupPolicy.put("targets", "*");
-        internalGroupPolicy.put("allowDynamicSource", true);
-        internalGroupPolicy.put("allowAnonymousSender", true);
-
-        Map<String, Object> internalVhostPolicy = new HashMap<>();
-        internalVhostPolicy.put("hostname", "$default");
-        internalVhostPolicy.put("allowUnknownUser", true);
-        internalVhostPolicy.put("groups", Collections.singletonMap("$default", internalGroupPolicy));
-
-        List<Object> values = new ArrayList<>();
-        values.add("vhost");
-        values.add(internalVhostPolicy);
-        values.add(publicVhostPolicy);
-        return mapper.writeValueAsString(Collections.singletonList(values));
-    }
 
     private String getAnnotation(Map<String, String> annotations, String key, String defaultValue) {
         return Optional.ofNullable(annotations)
@@ -367,7 +241,7 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
     private List<HasMetadata> createBrokeredInfra(AddressSpace addressSpace, BrokeredInfraConfig brokeredInfraConfig) {
         Map<String, String> parameters = new HashMap<>();
 
-        prepareParameters(brokeredInfraConfig, addressSpace, parameters);
+        prepareParameters(addressSpace, parameters);
 
         if (brokeredInfraConfig.getSpec().getBroker() != null) {
             if (brokeredInfraConfig.getSpec().getBroker().getResources() != null) {
@@ -465,4 +339,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             throw new IllegalArgumentException("Unknown address space type " + addressSpace.getSpec().getType());
         }
     }
+
+
 }

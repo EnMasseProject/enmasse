@@ -47,189 +47,6 @@ objects:
     selector:
       capability: router
       infraUuid: ${INFRA_UUID}
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: qdrouterd-policies.${INFRA_UUID}
-    labels:
-      app: enmasse
-      infraType: standard
-      infraUuid: ${INFRA_UUID}
-  data:
-    policies.json: ${ROUTER_VHOST_POLICY_JSON}
-- apiVersion: v1
-  kind: ConfigMap
-  metadata:
-    name: qdrouterd-config.${INFRA_UUID}
-    labels:
-      app: enmasse
-      infraType: standard
-      infraUuid: ${INFRA_UUID}
-  data:
-    qdrouterd.conf: |-
-      router {
-        mode: interior
-        id: ${HOSTNAME}
-        workerThreads: ${ROUTER_WORKER_THREADS}
-        defaultDistribution: unavailable
-        allowResumableLinkRoute: false
-        timestampsInUTC: true
-      }
-
-      sslProfile {
-        name: auth_service_ssl
-        caCertFile: /etc/qpid-dispatch/authservice-ca/tls.crt
-      }
-
-      authServicePlugin {
-        name: auth_service
-        host: ${AUTHENTICATION_SERVICE_HOST}
-        port: ${AUTHENTICATION_SERVICE_PORT}
-        realm: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
-        sslProfile: auth_service_ssl
-      }
-
-      listener {
-        host: 127.0.0.1
-        port: 7777
-        authenticatePeer: no
-      }
-
-      listener {
-        host: 127.0.0.1
-        port: 7770
-        authenticatePeer: no
-        http: true
-        metrics: false
-        healthz: true
-        websockets: false
-        httpRootDir: invalid
-      }
-
-      listener {
-        host: 0.0.0.0
-        port: 5672
-        saslPlugin: auth_service
-        authenticatePeer: yes
-        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
-        linkCapacity: ${ROUTER_LINK_CAPACITY}
-        initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
-        policyVhost: ${ROUTER_VHOST_POLICY_NAME}
-      }
-
-      listener {
-        host: 0.0.0.0
-        port: 55672
-        role: inter-router
-        authenticatePeer: yes
-        sslProfile: inter_router_tls
-        saslMechanisms: EXTERNAL
-        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
-        linkCapacity: ${ROUTER_LINK_CAPACITY}
-      }
-
-      listener {
-        host: 0.0.0.0
-        port: 8443
-        saslPlugin: auth_service
-        sslProfile: ssl_details
-        http: true
-        authenticatePeer: yes
-        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
-        linkCapacity: ${ROUTER_LINK_CAPACITY}
-        policyVhost: ${ROUTER_VHOST_POLICY_NAME}
-      }
-
-      sslProfile {
-        name: ssl_details
-        certFile: /etc/qpid-dispatch/ssl/tls.crt
-        privateKeyFile: /etc/qpid-dispatch/ssl/tls.key
-      }
-
-      listener {
-        host: 0.0.0.0
-        port: 5671
-        saslPlugin: auth_service
-        sslProfile: ssl_details
-        requireSsl: true
-        authenticatePeer: yes
-        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
-        linkCapacity: ${ROUTER_LINK_CAPACITY}
-        initialHandshakeTimeoutSeconds: ${ROUTER_HANDSHAKE_TIMEOUT}
-        policyVhost: ${ROUTER_VHOST_POLICY_NAME}
-      }
-
-      sslProfile {
-        name: inter_router_tls
-        certFile: /etc/enmasse-certs/tls.crt
-        privateKeyFile: /etc/enmasse-certs/tls.key
-        caCertFile: /etc/enmasse-certs/ca.crt
-      }
-
-      listener {
-        host: 0.0.0.0
-        port: 55671
-        sslProfile: inter_router_tls
-        saslMechanisms: EXTERNAL
-        authenticatePeer: yes
-        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
-        linkCapacity: ${ROUTER_LINK_CAPACITY}
-      }
-
-      listener {
-        host: 0.0.0.0
-        port: 56671
-        sslProfile: inter_router_tls
-        saslMechanisms: EXTERNAL
-        role: route-container
-        authenticatePeer: yes
-        idleTimeoutSeconds: ${ROUTER_IDLE_TIMEOUT}
-        linkCapacity: ${ROUTER_LINK_CAPACITY}
-      }
-
-      policy {
-        policyDir: /etc/qpid-dispatch/policies
-        enableVhostPolicy: ${ROUTER_ENABLE_VHOST_POLICY}
-      }
-
-      connector {
-        host: ragent-${INFRA_UUID}
-        port: 5671
-        sslProfile: inter_router_tls
-        verifyHostname: no
-      }
-
-      linkRoute {
-        name: override.lwt_in
-        prefix: $lwt
-        direction: in
-        containerId: lwt-service
-      }
-
-      linkRoute {
-        name: override.lwt_out
-        prefix: $lwt
-        direction: out
-        containerId: lwt-service
-      }
-
-      address {
-        name: override.mqtt
-        prefix: $mqtt
-        distribution: balanced
-      }
-
-      address {
-        name: override.subctrl
-        prefix: $subctrl
-        distribution: balanced
-      }
-
-      address {
-        name: override.temp
-        prefix: $temp
-        distribution: balanced
-      }
 - apiVersion: apps/v1
   kind: StatefulSet
   metadata:
@@ -279,8 +96,10 @@ objects:
       spec:
         containers:
         - env:
+          - name: QDROUTERD_CONF_TYPE
+            value: json
           - name: QDROUTERD_CONF
-            value: "/etc/qpid-dispatch/config/qdrouterd.conf"
+            value: "/etc/qpid-dispatch/config/qdrouterd.json"
           - name: QDROUTERD_AUTO_MESH_DISCOVERY
             value: "INFER"
           - name: QDROUTERD_AUTO_MESH_SERVICE_NAME
@@ -342,8 +161,6 @@ objects:
             readOnly: true
           - mountPath: /etc/qpid-dispatch/config
             name: qdrouterd-config
-          - mountPath: /etc/qpid-dispatch/policies
-            name: qdrouterd-policies
         volumes:
         - name: ssl-certs
           secret:
@@ -357,9 +174,6 @@ objects:
         - name: qdrouterd-config
           configMap:
             name: qdrouterd-config.${INFRA_UUID}
-        - name: qdrouterd-policies
-          configMap:
-            name: qdrouterd-policies.${INFRA_UUID}
 - apiVersion: v1
   data:
     tls.crt: ${AUTHENTICATION_SERVICE_CA_CERT}
@@ -713,12 +527,6 @@ parameters:
 - name: ADDRESS_SPACE_PLAN
   description: Name of address space plan followed
   required: true
-- description: The link capacity setting for router
-  name: ROUTER_LINK_CAPACITY
-  value: '250'
-- description: The timeout for establishing reaching open state on client connections
-  name: ROUTER_HANDSHAKE_TIMEOUT
-  value: '30'
 - description: The hostname to use for the exposed route for messaging
   name: CONSOLE_SECRET
   required: true
@@ -768,21 +576,6 @@ parameters:
 - description: Memory limits for router
   name: ROUTER_MEMORY_LIMIT
   value: 512Mi
-- description: Idle timeout for router listeners
-  name: ROUTER_IDLE_TIMEOUT
-  value: '16'
-- description: Router worker threads
-  name: ROUTER_WORKER_THREADS
-  value: '4'
-- description: Router listener vhost policy name
-  name: ROUTER_VHOST_POLICY_NAME
-  value: '$default'
-- description: Enable router vhost policies
-  name: ROUTER_ENABLE_VHOST_POLICY
-  value: 'false'
-- description: Router vhost policy json
-  name: ROUTER_VHOST_POLICY_JSON
-  value: '[]'
 - name: IMAGE_PULL_POLICY
   description: Image Pull Policy
   value: ${env.IMAGE_PULL_POLICY}

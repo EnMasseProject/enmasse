@@ -70,6 +70,11 @@ public class RealmController implements Controller {
                 continue;
             }
 
+            if (!authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard)) {
+                log.debug("Will only process standard authentication services");
+                continue;
+            }
+
             AuthServiceEntry entry = authserviceMap.computeIfAbsent(authenticationService.getMetadata().getName(), k -> new AuthServiceEntry(authenticationService));
             entry.addAddressSpace(addressSpace);
         }

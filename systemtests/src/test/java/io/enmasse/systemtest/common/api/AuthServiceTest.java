@@ -121,7 +121,7 @@ class AuthServiceTest extends TestBase {
         SecretReference validCert = new SecretReference();
         validCert.setName("standard-authservice-cert");
 
-        AuthenticationServiceOverrides authServiceOverrides = new AuthenticationServiceOverrides();
+        AuthenticationServiceSettings authServiceOverrides = new AuthenticationServiceSettings();
         authServiceOverrides.setHost(standardAuth.getMetadata().getName());
         authServiceOverrides.setPort(5671);
         authServiceOverrides.setRealm(addressSpaceStandardAuth.getMetadata().getNamespace() + "-" + addressSpaceStandardAuth.getMetadata().getName());
