@@ -9,5 +9,5 @@ The brokered address space is designed to support broker-specific features, at t
 scale in terms of the number of connections and addresses. This address space supports JMS
 transactions, message groups, and selectors on queues and topics.
 
-Clients can connect and send and receive messages in this address space using the AMQP, CORE, OpenWire, and MQTT protocols.
+Clients can connect as well as send and receive messages in this address space using the AMQP, CORE, OpenWire, and MQTT protocols. For the brokered address space only, the STOMP protocol is enabled over ports 5672, 5671 (for TLS on-cluster), and 443 (for TLS external route).
 
