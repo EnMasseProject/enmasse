@@ -142,12 +142,10 @@ pipeline {
                 START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
             }
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    script {
-                        dir('enmasse') {
-                            sh "make templates || true"
-                            enmasse.runSystemtests('systemtests-upgrade', 'upgrade.**')
-                        }
+                script {
+                    dir('enmasse') {
+                        sh "make templates || true"
+                        enmasse.runSystemtests('systemtests-upgrade', 'upgrade.**')
                     }
                 }
             }
@@ -160,11 +158,9 @@ pipeline {
                 expression { env.TEST_PROFILE != 'upgrade' }
             }
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    dir('enmasse') {
-                        script {
-                            enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
-                        }
+                dir('enmasse') {
+                    script {
+                        enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
                     }
                 }
             }
@@ -174,11 +170,9 @@ pipeline {
                 expression { env.TEST_PROFILE != 'upgrade' }
             }
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    dir('enmasse') {
-                        script {
-                            enmasse.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
-                        }
+                dir('enmasse') {
+                    script {
+                        enmasse.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
                     }
                 }
             }
