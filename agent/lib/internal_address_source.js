@@ -183,7 +183,9 @@ AddressSource.prototype.add_readiness_record = function (definition) {
 };
 
 AddressSource.prototype.update_readiness_record = function (definition) {
-    this.readiness[definition.address].ready = definition.status.isReady;
+    if (this.readiness[definition.address] !== undefined) {
+        this.readiness[definition.address].ready = definition.status.isReady;
+    }
 };
 
 AddressSource.prototype.delete_readiness_record = function (definition) {
