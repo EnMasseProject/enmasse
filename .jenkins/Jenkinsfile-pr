@@ -117,7 +117,9 @@ pipeline {
             }
             steps {
                 dir('enmasse') {
-                    enmasse.downloadEnmasse(env.UPGRADE_FROM)
+                    script {
+                        enmasse.downloadEnmasse(env.UPGRADE_FROM)
+                    }
                 }
             }
         }
