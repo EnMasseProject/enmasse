@@ -13,6 +13,8 @@ pipeline {
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
         OPENSHIFT_PROJECT = "enmasse-infra"
+        OPENSHIFT_PASSWD = "developer"
+        OPENSHIFT_USER = "developer"
     }
     agent {
         node {
@@ -69,13 +71,12 @@ pipeline {
         }
         stage('Start or connect to openshift env') {
             steps {
-                withCredentials([usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    timeout(time: 10, unit: 'MINUTES') {
-                        dir('enmasse') {
-                            script {
-                                enmasse.prepareLogDirs()
-                                enmasse.setupTestEnvironment()
-                            }
+                timeout(time: 10, unit: 'MINUTES') {
+                    dir('enmasse') {
+                        script {
+                            enmasse.prepareLogDirs()
+                            enmasse.setupTestEnvironment()
+                            enmasse.exportTestEnvVariables()
                         }
                     }
                 }
@@ -125,12 +126,9 @@ pipeline {
         }
         stage('[upgrade] login') {
             steps {
-                withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
-                    dir('enmasse') {
-                        script {
-                            kubernetes.login(env.KUBERNETES_API_URL, env.OPENSHIFT_USER, env.OPENSHIFT_PASSWD)
-                            enmasse.exportTestEnvVariables()
-                        }
+                dir('enmasse') {
+                    script {
+                        kubernetes.login(env.KUBERNETES_API_URL, env.OPENSHIFT_USER, env.OPENSHIFT_PASSWD)
                     }
                 }
             }
@@ -166,7 +164,6 @@ pipeline {
                     dir('enmasse') {
                         script {
                             enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
-                            enmasse.exportTestEnvVariables()
                         }
                     }
                 }
