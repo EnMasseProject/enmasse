@@ -12,6 +12,8 @@ import io.enmasse.api.auth.TokenReview;
 import static io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthHandler.METHOD;
 import static io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthHandler.TENANT;
 import static io.enmasse.iot.registry.infinispan.util.DeviceRegistryTokenAuthHandler.TOKEN;
+import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.vertx.core.AsyncResult;
@@ -37,7 +39,7 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
     public DeviceRegistryTokenAuthProvider() {
         this.client = new DefaultKubernetesClient();
-        authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
+        this.authApi = new KubeAuthApi(this.client, this.client.getConfiguration().getOauthToken());
     }
 
     @Override
@@ -52,6 +54,13 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
         }
 
         final String[] tenant = authInfo.getString(TENANT).split("\\.");
+        if (tenant.length != 2) {
+            resultHandler.handle(Future.failedFuture(new HttpStatusException(HTTP_BAD_REQUEST,
+                    new JsonObject()
+                            .put("error", "Tenant in wrong format: namespace.project")
+                            .toString())));
+            return;
+        }
         final String namespace = tenant[0];
         final String iotProject = tenant[1];
 
@@ -63,7 +72,8 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
                 log.info("Bearer token not authorized");
                 resultHandler.handle(Future.failedFuture(UNAUTHORIZED));
             }
-            //TODO It's possible to cache authorities in the user object implementation based on review.getUserName()
+            // TODO It's possible to cache authorities in the user object implementation based on
+            // review.getUserName()
             resultHandler.handle(Future.succeededFuture());
         } else {
             log.info("Bearer token not authenticated");
