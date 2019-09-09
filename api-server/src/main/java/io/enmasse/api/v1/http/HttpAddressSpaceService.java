@@ -235,6 +235,7 @@ public class HttpAddressSpaceService {
                     .withEndpoints(addressSpace.getSpec().getEndpoints())
                     .withNetworkPolicy(addressSpace.getSpec().getNetworkPolicy())
                     .withPlan(addressSpace.getSpec().getPlan())
+                    .withConnectors(addressSpace.getSpec().getConnectors())
                     .endSpec()
 
                     .build();

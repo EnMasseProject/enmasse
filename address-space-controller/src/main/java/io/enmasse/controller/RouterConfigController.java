@@ -4,26 +4,27 @@
  */
 package io.enmasse.controller;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AuthenticationServiceSettings;
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.RouterPolicySpec;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.router.config.Address;
 import io.enmasse.controller.router.config.*;
-import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class RouterConfigController implements Controller {
+    private static final Logger log = LoggerFactory.getLogger(RouterConfigController.class);
 
     private final NamespacedKubernetesClient client;
     private final String namespace;
@@ -40,6 +41,8 @@ public class RouterConfigController implements Controller {
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
 
         if (infraConfig instanceof StandardInfraConfig) {
+            resetConnectorStatuses(addressSpace);
+            reconcileRouterSetSecrets(addressSpace);
             reconcileRouterConfig(addressSpace, (StandardInfraConfig) infraConfig);
         }
         return addressSpace;
@@ -59,6 +62,17 @@ public class RouterConfigController implements Controller {
                 .endMetadata();
     }
 
+    private void resetConnectorStatuses(AddressSpace addressSpace) {
+        List<AddressSpaceStatusConnector> connectorStatuses = addressSpace.getSpec().getConnectors()
+        .stream()
+        .map(connector -> new AddressSpaceStatusConnectorBuilder()
+                .withName(connector.getName())
+                .withReady(true)
+                .build())
+        .collect(Collectors.toList());
+        addressSpace.getStatus().setConnectorStatuses(connectorStatuses);
+    }
+
     private void reconcileRouterConfig(AddressSpace addressSpace, StandardInfraConfig infraConfig) throws IOException {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         ConfigMap config = client.configMaps().inNamespace(namespace).withName(routerConfigName(infraUuid)).get();
@@ -66,9 +80,9 @@ public class RouterConfigController implements Controller {
         if (config != null) {
             current = RouterConfig.fromMap(config.getData());
         }
-
-        RouterConfig desired = generateConfig(infraUuid, authenticationServiceResolver.resolve(addressSpace), infraConfig);
+        RouterConfig desired = generateConfig(addressSpace, authenticationServiceResolver.resolve(addressSpace), infraConfig);
         if (!desired.equals(current)) {
+            log.debug("Router config updated. Before: '{}', After: '{}'", current, desired);
             Map<String, String> data = desired.toMap();
             if (config == null) {
                 config = createNewConfigMap(infraUuid)
@@ -78,11 +92,150 @@ public class RouterConfigController implements Controller {
             } else {
                 config.setData(data);
                 client.configMaps().inNamespace(namespace).withName(config.getMetadata().getName()).replace(config);
+
+                // Rolling restart of router
+                StatefulSet router = client.apps().statefulSets().inNamespace(namespace).withName(KubeUtil.getRouterSetName(addressSpace)).get();
+                if (router != null) {
+                    Map<String, String> annotations = router.getSpec().getTemplate().getMetadata().getAnnotations();
+                    if (annotations == null) {
+                        annotations = new HashMap<>();
+                    }
+                    long generation = Optional.ofNullable(annotations.get(AnnotationKeys.GENERATION)).map(Long::parseLong).orElse(0L);
+                    annotations.put(AnnotationKeys.GENERATION, String.valueOf(generation + 1));
+                    router.getSpec().getTemplate().getMetadata().setAnnotations(annotations);
+                    client.apps().statefulSets().inNamespace(namespace).withName(router.getMetadata().getName()).cascading(false).patch(router);
+                }
             }
         }
     }
 
-    private static RouterConfig generateConfig(String infraUuid, AuthenticationServiceSettings authServiceSettings, StandardInfraConfig infraConfig) {
+    private void reconcileRouterSetSecrets(AddressSpace addressSpace) {
+
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
+        Map<String, String> secretToConnector = new HashMap<>();
+        for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
+            String secretName = String.format("external-connector-%s-%s", infraUuid, connector.getName());
+            Secret connectorSecret = client.secrets().inNamespace(namespace).withName(secretName).get();
+            if (connectorSecret == null) {
+                connectorSecret = new SecretBuilder()
+                        .editOrNewMetadata()
+                        .withName(secretName)
+                        .withNamespace(namespace)
+                        .addToLabels(LabelKeys.INFRA_TYPE, infraUuid)
+                        .addToLabels(LabelKeys.INFRA_TYPE, "standard")
+                        .endMetadata()
+                        .withData(new HashMap<>())
+                        .build();
+            }
+
+            boolean needsUpdate = reconcileConnectorSecret(connectorSecret, connector, addressSpace);
+            if (needsUpdate) {
+                client.secrets().createOrReplace(connectorSecret);
+                secretToConnector.put(secretName, connector.getName());
+            }
+        }
+
+        StatefulSet router = client.apps().statefulSets().inNamespace(namespace).withName(KubeUtil.getRouterSetName(addressSpace)).get();
+        if (router == null) {
+            log.warn("Unable to find expected router statefulset {}", KubeUtil.getRouterSetName(addressSpace));
+            return;
+        }
+
+        Set<String> missingSecrets = new HashSet<>(secretToConnector.keySet());
+        boolean hasChanged = false;
+
+        // Remove secrets for non-existing connectors
+        String secretPrefix = String.format("external-connector-%s-", infraUuid);
+        Iterator<Volume> volumeIt = router.getSpec().getTemplate().getSpec().getVolumes().iterator();
+        while (volumeIt.hasNext()) {
+            Volume volume = volumeIt.next();
+            if (volume.getSecret() != null) {
+                if (missingSecrets.contains(volume.getSecret().getSecretName())) {
+                    missingSecrets.remove(volume.getSecret().getSecretName());
+                } else if (volume.getSecret().getSecretName().startsWith(secretPrefix) &&
+                        !secretToConnector.keySet().contains(volume.getSecret().getSecretName())) {
+                    volumeIt.remove();
+                    router.getSpec().getTemplate().getSpec().getContainers().get(0).getVolumeMounts()
+                            .removeIf(m -> m.getName().equals(volume.getName()));
+                    hasChanged = true;
+                }
+            }
+        }
+
+        // Add volume for secrets that are missing
+        for (String secretName : missingSecrets) {
+            router.getSpec().getTemplate().getSpec().getVolumes().add(
+                new VolumeBuilder()
+                    .withName(secretName)
+                    .withNewSecret()
+                    .withSecretName(secretName)
+                    .endSecret()
+                    .build());
+            router.getSpec().getTemplate().getSpec().getContainers().get(0).getVolumeMounts().add(
+                new VolumeMountBuilder()
+                    .withMountPath(String.format("/etc/enmasse-connectors/%s", secretToConnector.get(secretName)))
+                    .withName(secretName)
+                    .withReadOnly(true)
+                    .build());
+            hasChanged = true;
+        }
+
+        if (hasChanged) {
+            client.apps().statefulSets().inNamespace(namespace).withName(router.getMetadata().getName()).cascading(false).patch(router);
+        }
+    }
+
+    private boolean reconcileConnectorSecret(Secret connectorSecret, AddressSpaceSpecConnector connector, AddressSpace addressSpace) {
+        boolean needsUpdate = false;
+        if (connector.getTls() != null) {
+            if (connector.getTls().getCaCert() != null) {
+                String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getCaCert(), "ca.crt").orElse(null);
+                if (data == null) {
+                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for caCert", addressSpace.getStatus().getConnectorStatuses());
+                } else if (!data.equals(connectorSecret.getData().get("ca.crt"))) {
+                    connectorSecret.getData().put("ca.crt", data);
+                    needsUpdate = true;
+                }
+            }
+
+            if (connector.getTls().getClientCert() != null) {
+                String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getClientCert(), "tls.crt").orElse(null);
+                if (data == null) {
+                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for clientCert", addressSpace.getStatus().getConnectorStatuses());
+                } else if (!data.equals(connectorSecret.getData().get("tls.crt"))) {
+                    connectorSecret.getData().put("tls.crt", data);
+                    needsUpdate = true;
+                }
+            }
+
+            if (connector.getTls().getClientKey() != null) {
+                String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getClientKey(), "tls.key").orElse(null);
+                if (data == null) {
+                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for clientKey", addressSpace.getStatus().getConnectorStatuses());
+                } else if (!data.equals(connectorSecret.getData().get("tls.key"))) {
+                    connectorSecret.getData().put("tls.key", data);
+                    needsUpdate = true;
+                }
+            }
+        }
+        return needsUpdate;
+    }
+
+    private Optional<String> getSelectorValue(String namespace, StringOrSecretSelector selector, String defaultKey) {
+        if (selector.getValue() != null) {
+            return Optional.of(selector.getValue());
+        } else if (selector.getValueFromSecret() != null) {
+            Secret secret = client.secrets().inNamespace(namespace).withName(selector.getValueFromSecret().getName()).get();
+            if (secret == null) {
+                return Optional.empty();
+            }
+            return Optional.ofNullable(secret.getData().get(Optional.ofNullable(selector.getValueFromSecret().getKey()).orElse(defaultKey)));
+        }
+        return Optional.empty();
+    }
+
+    private RouterConfig generateConfig(AddressSpace addressSpace, AuthenticationServiceSettings authServiceSettings, StandardInfraConfig infraConfig) {
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         Router router = new Router();
         StandardInfraConfigSpecRouter routerSpec = infraConfig.getSpec() != null ? infraConfig.getSpec().getRouter() : null;
         if (routerSpec != null && routerSpec.getWorkerThreads() != null) {
@@ -90,20 +243,24 @@ public class RouterConfigController implements Controller {
         }
 
         // SSL Profiles
+        List<SslProfile> sslProfiles = new ArrayList<>();
         SslProfile authServiceSsl = new SslProfile();
         authServiceSsl.setName("auth_service_ssl");
         authServiceSsl.setCaCertFile("/etc/qpid-dispatch/authservice-ca/tls.crt");
+        sslProfiles.add(authServiceSsl);
 
         SslProfile sslDetails = new SslProfile();
         sslDetails.setName("ssl_details");
         sslDetails.setCertFile("/etc/qpid-dispatch/ssl/tls.crt");
         sslDetails.setPrivateKeyFile("/etc/qpid-dispatch/ssl/tls.key");
+        sslProfiles.add(sslDetails);
 
         SslProfile interRouterTls = new SslProfile();
         interRouterTls.setName("inter_router_tls");
         interRouterTls.setCaCertFile("/etc/enmasse-certs/ca.crt");
         interRouterTls.setCertFile("/etc/enmasse-certs/tls.crt");
         interRouterTls.setPrivateKeyFile("/etc/enmasse-certs/tls.key");
+        sslProfiles.add(interRouterTls);
 
         // Authenticationservice plugin
         AuthServicePlugin authService = new AuthServicePlugin();
@@ -270,49 +427,171 @@ public class RouterConfigController implements Controller {
         }
 
         // Connectors
+        List<Connector> connectors = new ArrayList<>();
         Connector ragentConnector = new Connector();
         ragentConnector.setHost("ragent-" + infraUuid);
         ragentConnector.setPort(5671);
         ragentConnector.setSslProfile("inter_router_tls");
         ragentConnector.setVerifyHostname(false);
+        connectors.add(ragentConnector);
+
+        // Addresses
+        List<Address> addresses = new ArrayList<>();
+        Address mqttAddress = new Address();
+        mqttAddress.setName("override.mqtt");
+        mqttAddress.setPrefix("$${dummy}mqtt");
+        mqttAddress.setDistribution(Distribution.balanced);
+        addresses.add(mqttAddress);
+
+        Address subctrlAddress = new Address();
+        subctrlAddress.setName("override.subctrl");
+        subctrlAddress.setPrefix("$${dummy}subctrl");
+        subctrlAddress.setDistribution(Distribution.balanced);
+        addresses.add(subctrlAddress);
+
+        Address tempAddress = new Address();
+        tempAddress.setName("override.temp");
+        tempAddress.setPrefix("$${dummy}temp");
+        tempAddress.setDistribution(Distribution.balanced);
+        addresses.add(tempAddress);
 
         // LinkRoutes
+        List<LinkRoute> linkRoutes = new ArrayList<>();
         LinkRoute mqttLwtInLinkRoute = new LinkRoute();
         mqttLwtInLinkRoute.setName("override.lwt_in");
         mqttLwtInLinkRoute.setPrefix("$${dummy}lwt");
         mqttLwtInLinkRoute.setDirection(LinkRoute.Direction.in);
         mqttLwtInLinkRoute.setContainerId("lwt-service");
+        linkRoutes.add(mqttLwtInLinkRoute);
 
         LinkRoute mqttLwtOutLinkRoute = new LinkRoute();
         mqttLwtOutLinkRoute.setName("override.lwt_out");
         mqttLwtOutLinkRoute.setPrefix("$${dummy}lwt");
         mqttLwtOutLinkRoute.setDirection(LinkRoute.Direction.out);
         mqttLwtOutLinkRoute.setContainerId("lwt-service");
+        linkRoutes.add(mqttLwtOutLinkRoute);
 
-        // Addresses
-        Address mqttAddress = new Address();
-        mqttAddress.setName("override.mqtt");
-        mqttAddress.setPrefix("$${dummy}mqtt");
-        mqttAddress.setDistribution(Distribution.balanced);
+        // Connectors and addresses based on Connectors configured by user
+        for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
+            Connector remoteConnector = new Connector();
+            remoteConnector.setName(connector.getName());
+            AddressSpaceStatusConnector connectorStatus = addressSpace.getStatus().getConnectorStatuses().stream()
+                    .filter(status -> status.getName().equals(connector.getName()))
+                    .findFirst().orElse(null);
 
-        Address subctrlAddress = new Address();
-        subctrlAddress.setName("override.subctrl");
-        subctrlAddress.setPrefix("$${dummy}subctrl");
-        subctrlAddress.setDistribution(Distribution.balanced);
+            // Don't bother adding connector status if it already failed
+            if (connectorStatus == null || !connectorStatus.isReady()) {
+                continue;
+            }
 
-        Address tempAddress = new Address();
-        tempAddress.setName("override.temp");
-        tempAddress.setPrefix("$${dummy}temp");
-        tempAddress.setDistribution(Distribution.balanced);
+            Iterator<AddressSpaceSpecConnectorEndpoint> endpointIt = connector.getEndpointHosts().iterator();
+            // If connector is missing initial host:
+            if (!endpointIt.hasNext()) {
+                updateConnectorStatus(connector.getName(), false, "Missing at least one endpoint on connector", addressSpace.getStatus().getConnectorStatuses());
+                continue;
+            }
+
+            AddressSpaceSpecConnectorEndpoint first = endpointIt.next();
+            remoteConnector.setHost(first.getHost());
+            remoteConnector.setPort(connector.getPort(first.getPort()));
+
+            List<String> failoverUrls = new ArrayList<>();
+            while (endpointIt.hasNext()) {
+                AddressSpaceSpecConnectorEndpoint failover = endpointIt.next();
+                String protocol = "amqp" + (connector.getTls() != null ? "s" : "");
+                failoverUrls.add(String.format("%s://%s:%d", protocol, failover.getHost(), connector.getPort(failover.getPort())));
+            }
+            if (!failoverUrls.isEmpty()) {
+                remoteConnector.setFailoverUrls(String.join(",", failoverUrls));
+            }
+
+            List<String> saslMechanisms = new ArrayList<>();
+
+            // If tls field is set, we will enable TLS
+            AddressSpaceSpecConnectorTls tls = connector.getTls();
+            if (tls != null) {
+                String sslProfileName = String.format("connector_%s_settings", connector.getName());
+                remoteConnector.setSslProfile(sslProfileName);
+
+                SslProfile sslProfile = new SslProfile();
+                sslProfile.setName(sslProfileName);
+
+                if (tls.getCaCert() != null) {
+                    sslProfile.setCaCertFile(String.format("/etc/enmasse-connectors/%s/ca.crt", connector.getName()));
+                }
+
+                if (tls.getClientCert() != null || tls.getClientKey() != null) {
+                    if (tls.getClientCert() == null) {
+                        updateConnectorStatus(connector.getName(), false, "Both clientCert and clientKey must be specified (only clientKey is specified)", addressSpace.getStatus().getConnectorStatuses());
+                        continue;
+                    }
+
+                    if (tls.getClientKey() == null) {
+                        updateConnectorStatus(connector.getName(), false, "Both clientCert and clientKey must be specified (only clientCert is specified)", addressSpace.getStatus().getConnectorStatuses());
+                        continue;
+                    }
+
+                    sslProfile.setCertFile(String.format("/etc/enmasse-connectors/%s/tls.crt", connector.getName()));
+                    sslProfile.setPrivateKeyFile(String.format("/etc/enmasse-connectors/%s/tls.key", connector.getName()));
+                }
+
+                sslProfiles.add(sslProfile);
+                saslMechanisms.add("EXTERNAL");
+            }
+
+            AddressSpaceSpecConnectorCredentials credentials = connector.getCredentials();
+            if (credentials != null) {
+                if (connector.getCredentials().getUsername() != null) {
+                    String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getCredentials().getUsername(), "username").orElse(null);
+                    if (data == null) {
+                        updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for username", addressSpace.getStatus().getConnectorStatuses());
+                        continue;
+                    }
+                    remoteConnector.setSaslUsername(data);
+                }
+
+                if (connector.getCredentials().getPassword() != null) {
+                    String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getCredentials().getPassword(), "password").orElse(null);
+                    if (data == null) {
+                        updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for password", addressSpace.getStatus().getConnectorStatuses());
+                        continue;
+                    }
+                    remoteConnector.setSaslPassword(data);
+                }
+
+                saslMechanisms.add("PLAIN");
+            }
+
+            remoteConnector.setSaslMechanisms(String.join(" ", saslMechanisms));
+
+            for (AddressSpaceSpecConnectorAddressRule rule : connector.getAddresses()) {
+                LinkRoute linkRouteIn = new LinkRoute();
+                linkRouteIn.setName("override.connector." + connector.getName() + "." + rule.getName() + ".in");
+                linkRouteIn.setPattern(connector.getName() + "/" + rule.getPattern());
+                linkRouteIn.setDirection(LinkRoute.Direction.in);
+                linkRouteIn.setConnection(connector.getName());
+                linkRoutes.add(linkRouteIn);
+
+                LinkRoute linkRouteOut = new LinkRoute();
+                linkRouteOut.setName("override.connector." + connector.getName() + "." + rule.getName() + ".out");
+                linkRouteOut.setPattern(connector.getName() + "/" + rule.getPattern());
+                linkRouteOut.setDirection(LinkRoute.Direction.out);
+                linkRouteOut.setConnection(connector.getName());
+                linkRoutes.add(linkRouteOut);
+            }
+
+            remoteConnector.setRole(Role.route_container);
+            connectors.add(remoteConnector);
+        }
 
         return new RouterConfig(router,
-                Arrays.asList(authServiceSsl, sslDetails, interRouterTls),
+                sslProfiles,
                 Collections.singletonList(authService),
                 Arrays.asList(localBypass, livenessProbe, httpsPublic, amqpPublic, amqpsPublic, amqpsInternal, amqpsRouteContainer, interRouter),
                 policies,
-                Collections.singletonList(ragentConnector),
-                Arrays.asList(mqttLwtInLinkRoute, mqttLwtOutLinkRoute),
-                Arrays.asList(mqttAddress, subctrlAddress, tempAddress),
+                connectors,
+                linkRoutes,
+                addresses,
                 vhostPolicies);
     }
 
@@ -368,6 +647,15 @@ public class RouterConfigController implements Controller {
         internalVhostPolicy.setGroups(Collections.singletonMap("$${dummy}default", internalGroup));
 
         return Arrays.asList(internalVhostPolicy, vhostPolicy);
+    }
+
+    private static void updateConnectorStatus(String name, boolean isReady, String message, List<AddressSpaceStatusConnector> connectorStatuses) {
+        connectorStatuses.stream()
+                .filter(c -> c.getName().equals(name))
+                .findFirst().ifPresent(s -> {
+            s.setReady(isReady);
+            s.appendMessage(message);
+        });
     }
 
     @Override

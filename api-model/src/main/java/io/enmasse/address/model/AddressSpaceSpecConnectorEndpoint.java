@@ -28,7 +28,8 @@ import javax.validation.constraints.NotNull;
 public class AddressSpaceSpecConnectorEndpoint extends AbstractWithAdditionalProperties {
     @NotNull
     private String host;
-    private int port;
+
+    private Integer port;
 
     public String getHost() {
         return host;
@@ -38,11 +39,11 @@ public class AddressSpaceSpecConnectorEndpoint extends AbstractWithAdditionalPro
         this.host = host;
     }
 
-    public int getPort() {
+    public Integer getPort() {
         return port;
     }
 
-    public void setPort(int port) {
+    public void setPort(Integer port) {
         this.port = port;
     }
 

@@ -12,8 +12,10 @@ import java.util.Objects;
 public class LinkRoute {
     private String name;
     private String prefix;
+    private String pattern;
     private Direction direction;
     private String containerId;
+    private String connection;
 
     public String getName() {
         return name;
@@ -47,13 +49,31 @@ public class LinkRoute {
         this.containerId = containerId;
     }
 
+    public String getConnection() {
+        return connection;
+    }
+
+    public void setConnection(String connection) {
+        this.connection = connection;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
+
     @Override
     public String toString() {
         return "LinkRoute{" +
                 "name='" + name + '\'' +
                 ", prefix='" + prefix + '\'' +
+                ", pattern='" + pattern + '\'' +
                 ", direction=" + direction +
                 ", containerId='" + containerId + '\'' +
+                ", connection='" + connection + '\'' +
                 '}';
     }
 
@@ -64,13 +84,15 @@ public class LinkRoute {
         LinkRoute linkRoute = (LinkRoute) o;
         return Objects.equals(name, linkRoute.name) &&
                 Objects.equals(prefix, linkRoute.prefix) &&
+                Objects.equals(pattern, linkRoute.pattern) &&
                 direction == linkRoute.direction &&
-                Objects.equals(containerId, linkRoute.containerId);
+                Objects.equals(containerId, linkRoute.containerId) &&
+                Objects.equals(connection, linkRoute.connection);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, prefix, direction, containerId);
+        return Objects.hash(name, prefix, pattern, direction, containerId, connection);
     }
 
     public enum Direction {

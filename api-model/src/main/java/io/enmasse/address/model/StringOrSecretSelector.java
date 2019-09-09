@@ -47,7 +47,6 @@ public class StringOrSecretSelector extends AbstractWithAdditionalProperties {
     @Override
     public String toString() {
         return "StringOrSecretSelector{" +
-                "value='" + value + '\'' +
                 ", valueFromSecret=" + valueFromSecret +
                 '}';
     }

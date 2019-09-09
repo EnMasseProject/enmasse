@@ -4,6 +4,7 @@
  */
 package io.enmasse.address.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
@@ -18,7 +19,6 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -37,14 +37,10 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
     private String name;
 
     @NotEmpty
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid  AddressSpaceSpecConnectorEndpoint> endpointHosts = Collections.emptyList();
 
     private AddressSpaceSpecConnectorCredentials credentials;
-
     private AddressSpaceSpecConnectorTls tls;
-
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<AddressSpaceSpecConnectorAddressRule> addresses = Collections.emptyList();
 
     public String getName() {
@@ -85,6 +81,17 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
 
     public void setAddresses(List<AddressSpaceSpecConnectorAddressRule> addresses) {
         this.addresses = addresses;
+    }
+
+    @JsonIgnore
+    public int getPort(Integer port) {
+        if (port != null) {
+            return port;
+        } else if (tls != null) {
+            return 5671; // IANA AMQPS
+        } else {
+            return 5672; // IANA AMQP
+        }
     }
 
     @Override
