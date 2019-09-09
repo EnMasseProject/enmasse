@@ -67,12 +67,15 @@ pipeline {
                 }
             }
         }
-        stage('start openshift') {
+        stage('Start or connect to openshift env') {
             steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    dir('enmasse') {
-                        script {
-                            enmasse.startOpenshift()
+                withCredentials([usernamePassword(credentialsId: params.OPENSHIFT_CREDENTIALS_CREDENTIAL_ID, passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
+                    timeout(time: 10, unit: 'MINUTES') {
+                        dir('enmasse') {
+                            script {
+                                enmasse.prepareLogDirs()
+                                enmasse.setupTestEnvironment()
+                            }
                         }
                     }
                 }
@@ -114,7 +117,7 @@ pipeline {
             }
             steps {
                 dir('enmasse') {
-                    sh "sh ./systemtests/scripts/download_released_enmasse.sh ${env.UPGRADE_FROM}"
+                    enmasse.downloadEnmasse(env.UPGRADE_FROM)
                 }
             }
         }
@@ -123,7 +126,8 @@ pipeline {
                 withCredentials([string(credentialsId: 'openshift-host', variable: 'OPENSHIFT_URL'), usernamePassword(credentialsId: 'openshift-credentials', passwordVariable: 'OPENSHIFT_PASSWD', usernameVariable: 'OPENSHIFT_USER')]) {
                     dir('enmasse') {
                         script {
-                            enmasse.loginOCUser(true)
+                            kubernetes.login(env.KUBERNETES_API_URL, env.OPENSHIFT_USER, env.OPENSHIFT_PASSWD)
+                            enmasse.exportTestEnvVariables()
                         }
                     }
                 }
@@ -134,7 +138,6 @@ pipeline {
                 expression { env.TEST_PROFILE == 'upgrade' }
             }
             environment {
-                USE_DUMMY_ADDRESS = true
                 UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
                 START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
             }
@@ -161,6 +164,7 @@ pipeline {
                     dir('enmasse') {
                         script {
                             enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot')
+                            enmasse.exportTestEnvVariables()
                         }
                     }
                 }
