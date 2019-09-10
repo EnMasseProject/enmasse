@@ -4,30 +4,20 @@
  */
 package io.enmasse.controller;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
-import io.enmasse.metrics.api.Metric;
-import io.enmasse.metrics.api.Metrics;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.util.Arrays;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 public class ControllerChainTest {
     private TestAddressSpaceApi testApi;
@@ -44,8 +34,7 @@ public class ControllerChainTest {
     @Test
     public void testController() throws Exception {
         EventLogger testLogger = mock(EventLogger.class);
-        Metrics metrics = new Metrics();
-        ControllerChain controllerChain = new ControllerChain(kubernetes, testApi, new TestSchemaProvider(), testLogger, metrics, "1.0", Duration.ofSeconds(5), Duration.ofSeconds(5));
+        ControllerChain controllerChain = new ControllerChain(testApi, new TestSchemaProvider(), testLogger, Duration.ofSeconds(5), Duration.ofSeconds(5));
         Controller mockController = mock(Controller.class);
         controllerChain.addController(mockController);
 
@@ -84,10 +73,7 @@ public class ControllerChainTest {
         verify(mockController).reconcile(eq(a1));
         verify(mockController).reconcile(eq(a2));
 
-        List<Metric> metricList = metrics.snapshot();
-        assertThat(metricList.size(), is(4));
-        assertTrue(a1.getStatus().isReady());
-        assertTrue(a2.getStatus().isReady());
+
     }
 }
 

@@ -23,7 +23,6 @@ import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
-import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +86,7 @@ public class AddressSpaceController {
                 AuthenticationServiceType.standard, keycloakUserApi));
 
         Metrics metrics = new Metrics();
-        controllerChain = new ControllerChain(kubernetes, addressSpaceApi, schemaProvider, eventLogger, metrics, options.getVersion(), options.getRecheckInterval(), options.getResyncInterval());
+        controllerChain = new ControllerChain(addressSpaceApi, schemaProvider, eventLogger, options.getRecheckInterval(), options.getResyncInterval());
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
         controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
         controllerChain.addController(new RealmController(keycloakUserApi, authenticationServiceRegistry));
@@ -98,6 +97,7 @@ public class AddressSpaceController {
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);
         controllerChain.addController(new DeleteController(kubernetes));
+        controllerChain.addController(new MetricsReporterController(metrics, options.getVersion()));
         controllerChain.start();
 
         metricsServer = new HTTPServer(8080, metrics);
