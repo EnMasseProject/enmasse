@@ -12,7 +12,7 @@ pipeline {
         TAG = "latest"
         ARTIFACTS_DIR = 'artifacts'
         ANSIBLE_FORCE_COLOR = true
-        OPENSHIFT_PROJECT = "enmasse-infra"
+        KUBERNETES_NAMESPACE = "enmasse-infra"
         OPENSHIFT_PASSWD = "developer"
         OPENSHIFT_USER = "developer"
     }
@@ -32,6 +32,7 @@ pipeline {
                 dir('enmasse') {
                     checkout scm
                 }
+                enmasse.getAmqCiRepo()
             }
         }
         stage('parse parameters from comment') {
