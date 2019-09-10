@@ -8,6 +8,7 @@ package iotconfig
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 
@@ -54,7 +55,8 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.Authentication.ServiceConfig)
+	service := config.Spec.ServicesConfig.Authentication
+	applyDefaultDeploymentConfig(deployment, service.ServiceConfig)
 
 	// set the permissions hash on the pod template to re-deploy, in case the permissions.json changed
 	deployment.Spec.Template.Annotations["iot.enmasse.io/config-hash"] = configCtx.HashString()
@@ -91,6 +93,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
 			{Name: "HONO_AUTH_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+			{Name: "HONO_AUTH_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.IsNativeTlsRequired(config))},
 		}
 		if err := AppendTrustStores(config, container, []string{"HONO_AUTH_AMQP_TRUST_STORE_PATH"}); err != nil {
 			return err
@@ -105,7 +108,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 		// apply container options
 
-		applyContainerConfig(container, config.Spec.ServicesConfig.Authentication.Container)
+		applyContainerConfig(container, service.Container)
 
 		// return
 

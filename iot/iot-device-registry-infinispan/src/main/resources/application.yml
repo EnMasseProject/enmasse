@@ -1,12 +1,3 @@
-hono:
-
-   auth:
-     host: localhost #hono-service-auth.hono
-     port: 35672
-     name: device-registry
-     validation:
-       sharedSecret: 1234567890123456789012345678901234567890123456789012345678901234
-
 enmasse:
   iot:
 
@@ -15,7 +6,6 @@ enmasse:
 
     healthCheck:
       insecurePortBindAddress: 0.0.0.0
-      startupTimeout: 90
 
     registry:
       amqp:

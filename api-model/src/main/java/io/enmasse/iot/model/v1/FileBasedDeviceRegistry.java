@@ -27,6 +27,7 @@ import io.sundr.builder.annotations.Inline;
 public class FileBasedDeviceRegistry {
 
     private ContainerConfig container;
+    private JavaContainerOptions java;
     private Integer numberOfDevicesPerTenant;
 
     public ContainerConfig getContainer() {
@@ -41,5 +42,12 @@ public class FileBasedDeviceRegistry {
     }
     public void setNumberOfDevicesPerTenant(Integer numberOfDevicesPerTenant) {
         this.numberOfDevicesPerTenant = numberOfDevicesPerTenant;
+    }
+
+    public void setJava(JavaContainerOptions java) {
+        this.java = java;
+    }
+    public JavaContainerOptions getJava() {
+        return java;
     }
 }

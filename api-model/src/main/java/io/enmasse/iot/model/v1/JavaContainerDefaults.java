@@ -2,7 +2,6 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -18,7 +17,19 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
-                value = "done"))
+                value = "done"
+                )
+        )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthenticationServiceConfig extends CommonServiceConfig {
+public class JavaContainerDefaults {
+
+    private Boolean requireNativeTls;
+
+    public Boolean getRequireNativeTls() {
+        return requireNativeTls;
+    }
+
+    public void setRequireNativeTls(Boolean requireNativeTls) {
+        this.requireNativeTls = requireNativeTls;
+    }
 }

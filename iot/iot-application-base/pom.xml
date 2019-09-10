@@ -19,8 +19,8 @@
     <dependency>
       <groupId>io.netty</groupId>
       <artifactId>netty-transport-native-epoll</artifactId>
-      <scope>runtime</scope>
       <classifier>linux-x86_64</classifier>
+      <scope>runtime</scope>
     </dependency>
 
     <dependency>
@@ -31,6 +31,13 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-tcnative</artifactId>
+      <classifier>linux-x86_64-fedora</classifier>
+      <scope>runtime</scope>
     </dependency>
 
   </dependencies>

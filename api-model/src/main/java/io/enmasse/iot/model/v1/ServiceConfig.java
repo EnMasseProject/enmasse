@@ -25,7 +25,6 @@ import io.sundr.builder.annotations.Inline;
 public class ServiceConfig {
     private Integer replicas;
 
-
     public Integer getReplicas() {
         return replicas;
     }

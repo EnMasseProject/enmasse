@@ -69,3 +69,30 @@ func (a *AdapterEndpointConfig) HasCustomCertificate() bool {
 	return a.KeyCertificateStrategy != nil ||
 		a.SecretNameStrategy != nil
 }
+
+func (c *IoTConfigSpec) DefaultNativeTlsRequired() bool {
+	if c.JavaDefaults.RequireNativeTls != nil {
+		return *c.JavaDefaults.RequireNativeTls
+	}
+	return util.DefaultJavaRequiresNativeTls()
+}
+
+func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTConfig) bool {
+	if c.Java == nil {
+		return config.Spec.DefaultNativeTlsRequired()
+	}
+	if c.Java.RequireNativeTls == nil {
+		return config.Spec.DefaultNativeTlsRequired()
+	}
+	return *c.Java.RequireNativeTls
+}
+
+func (c *CommonServiceConfig) IsNativeTlsRequired(config *IoTConfig) bool {
+	if c.Java == nil {
+		return config.Spec.DefaultNativeTlsRequired()
+	}
+	if c.Java.RequireNativeTls == nil {
+		return config.Spec.DefaultNativeTlsRequired()
+	}
+	return *c.Java.RequireNativeTls
+}

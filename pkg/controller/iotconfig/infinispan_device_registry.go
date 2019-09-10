@@ -61,7 +61,8 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-device-registry"
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "infinispan"
 
-	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.DeviceRegistry.ServiceConfig)
+	service := config.Spec.ServicesConfig.DeviceRegistry
+	applyDefaultDeploymentConfig(deployment, service.ServiceConfig)
 
 	err := install.ApplyContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
 
@@ -88,6 +89,15 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 		SetHonoProbes(container)
 
+		// eval native TLS flag
+
+		var nativeTls bool
+		if service.Infinispan != nil {
+			nativeTls = service.Infinispan.IsNativeTlsRequired(config)
+		} else {
+			nativeTls = false
+		}
+
 		// environment
 
 		container.Env = []corev1.EnvVar{
@@ -100,6 +110,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
 			{Name: "HONO_REGISTRY_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+			{Name: "ENMASSE_IOT_REGISTRY_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
 		}
 
 		AppendStandardHonoJavaOptions(container)
@@ -118,13 +129,13 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 
 		// apply container options
 
-		if config.Spec.ServicesConfig.DeviceRegistry.Infinispan != nil {
-			applyContainerConfig(container, config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Container)
+		if service.Infinispan != nil {
+			applyContainerConfig(container, service.Infinispan.Container)
 		}
 
 		// apply infinispan server options
 
-		if config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Server.External != nil {
+		if service.Infinispan.Server.External != nil {
 			if err := appendInfinispanExternalServer(container, config.Spec.ServicesConfig.DeviceRegistry.Infinispan.Server.External); err != nil {
 				return err
 			}
@@ -254,6 +265,9 @@ enmasse:
 
     app:
       maxInstances: 1
+
+    vertx:
+      preferNative: true
 
     healthCheck:
       insecurePortBindAddress: 0.0.0.0

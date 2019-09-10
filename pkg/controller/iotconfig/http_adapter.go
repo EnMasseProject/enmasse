@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"strconv"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -105,7 +106,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 
-			{Name: "HONO_HTTP_NATIVE_TLS_REQUIRED", Value: "false"},
+			{Name: "HONO_HTTP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(adapter.IsNativeTlsRequired(config))},
 		}
 
 		AppendStandardHonoJavaOptions(container)
