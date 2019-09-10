@@ -29,10 +29,12 @@ pipeline {
         }
         stage('checkout') {
             steps {
-                dir('enmasse') {
-                    checkout scm
+                script {
+                    dir('enmasse') {
+                        checkout scm
+                    }
+                    enmasse.getAmqCiRepo()
                 }
-                enmasse.getAmqCiRepo()
             }
         }
         stage('parse parameters from comment') {
