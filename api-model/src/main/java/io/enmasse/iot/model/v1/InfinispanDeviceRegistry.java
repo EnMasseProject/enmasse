@@ -25,6 +25,7 @@ import io.sundr.builder.annotations.Inline;
 public class InfinispanDeviceRegistry {
 
     private ContainerConfig container;
+    private JavaContainerOptions java;
     private InfinispanServer server;
 
     public ContainerConfig getContainer() {
@@ -39,5 +40,12 @@ public class InfinispanDeviceRegistry {
     }
     public void setServer(InfinispanServer server) {
         this.server = server;
+    }
+
+    public void setJava(JavaContainerOptions java) {
+        this.java = java;
+    }
+    public JavaContainerOptions getJava() {
+        return java;
     }
 }

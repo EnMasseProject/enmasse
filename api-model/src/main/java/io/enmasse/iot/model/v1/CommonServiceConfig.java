@@ -20,5 +20,22 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthenticationServiceConfig extends CommonServiceConfig {
+public class CommonServiceConfig extends ServiceConfig {
+
+    private ContainerConfig container;
+    private JavaContainerOptions java;
+
+    public ContainerConfig getContainer() {
+        return container;
+    }
+    public void setContainer(ContainerConfig container) {
+        this.container = container;
+    }
+
+    public void setJava(JavaContainerOptions java) {
+        this.java = java;
+    }
+    public JavaContainerOptions getJava() {
+        return java;
+    }
 }

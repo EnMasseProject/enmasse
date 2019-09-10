@@ -120,8 +120,18 @@ type IoTConfigSpec struct {
 
 	InterServiceCertificates *InterServiceCertificates `json:"interServiceCertificates,omitempty"`
 
+	JavaDefaults JavaContainerDefaults `json:"java,omitempty"`
+
 	ServicesConfig ServicesConfig `json:"services"`
 	AdaptersConfig AdaptersConfig `json:"adapters"`
+}
+
+type JavaContainerDefaults struct {
+	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
+}
+
+type JavaContainerOptions struct {
+	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
 }
 
 type InterServiceCertificates struct {
@@ -196,18 +206,6 @@ type DeviceRegistryServiceConfig struct {
 	Infinispan *InfinispanDeviceRegistry `json:"infinispan,omitempty"`
 }
 
-type FileBasedDeviceRegistry struct {
-	NumberOfDevicesPerTenant *uint32 `json:"numberOfDevicesPerTenant,omitempty"`
-
-	Container *ContainerConfig `json:"container,omitempty"`
-}
-
-type InfinispanDeviceRegistry struct {
-	Server InfinispanServer `json:"server"`
-
-	Container *ContainerConfig `json:"container,omitempty"`
-}
-
 type InfinispanServer struct {
 	External *ExternalInfinispanServer `json:"external,omitempty"`
 }
@@ -230,52 +228,57 @@ type ExternalCacheNames struct {
 	AdapterCredentials string `json:"adapterCredentials,omitempty"`
 }
 
-type TenantServiceConfig struct {
-	ServiceConfig `json:",inline"`
+// Common options for a single container Java service
+type CommonServiceConfig struct {
+	Container *ContainerConfig      `json:"container,omitempty"`
+	Java      *JavaContainerOptions `json:"java,omitempty"`
+}
 
-	Container *ContainerConfig `json:"container,omitempty"`
+type TenantServiceConfig struct {
+	ServiceConfig       `json:",inline"`
+	CommonServiceConfig `json:",inline"`
 }
 
 type AuthenticationServiceConfig struct {
-	ServiceConfig `json:",inline"`
+	ServiceConfig       `json:",inline"`
+	CommonServiceConfig `json:",inline"`
+}
 
-	Container *ContainerConfig `json:"container,omitempty"`
+type FileBasedDeviceRegistry struct {
+	NumberOfDevicesPerTenant *uint32 `json:"numberOfDevicesPerTenant,omitempty"`
+	CommonServiceConfig      `json:",inline"`
+}
+
+type InfinispanDeviceRegistry struct {
+	Server              InfinispanServer `json:"server"`
+	CommonServiceConfig `json:",inline"`
+}
+
+// Common options for a standard 3-pod protocol adapter
+type CommonAdapterConfig struct {
+	ServiceConfig `json:",inline"`
+	AdapterConfig `json:",inline"`
+
+	Containers CommonAdapterContainers `json:"containers,omitempty"`
+	Java       *JavaContainerOptions   `json:"java,omitempty"`
+
+	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
 }
 
 type HttpAdapterConfig struct {
-	ServiceConfig `json:",inline"`
-	AdapterConfig `json:",inline"`
-
-	Containers CommonAdapterContainers `json:"containers,omitempty"`
-
-	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+	CommonAdapterConfig `json:",inline"`
 }
 
 type SigfoxAdapterConfig struct {
-	ServiceConfig `json:",inline"`
-	AdapterConfig `json:",inline"`
-
-	Containers CommonAdapterContainers `json:"containers,omitempty"`
-
-	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+	CommonAdapterConfig `json:",inline"`
 }
 
 type LoraWanAdapterConfig struct {
-	ServiceConfig `json:",inline"`
-	AdapterConfig `json:",inline"`
-
-	Containers CommonAdapterContainers `json:"containers,omitempty"`
-
-	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+	CommonAdapterConfig `json:",inline"`
 }
 
 type MqttAdapterConfig struct {
-	ServiceConfig `json:",inline"`
-	AdapterConfig `json:",inline"`
-
-	Containers CommonAdapterContainers `json:"containers,omitempty"`
-
-	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+	CommonAdapterConfig `json:",inline"`
 }
 
 type IoTConfigStatus struct {

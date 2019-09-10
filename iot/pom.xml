@@ -20,7 +20,7 @@
     <logback.version>1.2.3</logback.version>
     <spring.boot.version>2.1.5.RELEASE</spring.boot.version>
     <micrometer.version>1.1.4</micrometer.version>
-    <netty-tcnative.version>2.0.17.Final</netty-tcnative.version>
+    <netty-tcnative.version>2.0.25.Final</netty-tcnative.version>
   </properties>
 
   <modules>
@@ -85,6 +85,19 @@
         <groupId>io.netty</groupId>
         <artifactId>netty-tcnative</artifactId>
         <version>${netty-tcnative.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-tcnative</artifactId>
+        <version>${netty-tcnative.version}</version>
+        <classifier>linux-x86_64-fedora</classifier>
+      </dependency>
+
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-transport-native-epoll</artifactId>
+        <version>${netty.version}</version>
       </dependency>
 
       <dependency>

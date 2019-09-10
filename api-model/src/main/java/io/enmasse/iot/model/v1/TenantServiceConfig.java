@@ -20,13 +20,5 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TenantServiceConfig extends ServiceConfig {
-    private ContainerConfig container;
-
-    public ContainerConfig getContainer() {
-        return container;
-    }
-    public void setContainer(ContainerConfig container) {
-        this.container = container;
-    }
+public class TenantServiceConfig extends CommonServiceConfig {
 }

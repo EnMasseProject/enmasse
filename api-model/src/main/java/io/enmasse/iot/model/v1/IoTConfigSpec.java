@@ -30,6 +30,7 @@ public class IoTConfigSpec {
     private InterServiceCertificates interServiceCertificates;
     private AdaptersConfig adapters;
     private ServicesConfig services;
+    private JavaContainerDefaults java;
 
     public Boolean getEnableDefaultRoutes() {
         return enableDefaultRoutes;
@@ -64,6 +65,13 @@ public class IoTConfigSpec {
     }
     public void setServices(ServicesConfig services) {
         this.services = services;
+    }
+
+    public void setJava(JavaContainerDefaults java) {
+        this.java = java;
+    }
+    public JavaContainerDefaults getJava() {
+        return java;
     }
 
 }

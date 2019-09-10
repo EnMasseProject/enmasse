@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	"strconv"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -45,7 +46,8 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, config.Spec.ServicesConfig.Tenant.ServiceConfig)
+	service := config.Spec.ServicesConfig.Tenant
+	applyDefaultDeploymentConfig(deployment, service.ServiceConfig)
 
 	err := install.ApplyContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
 
@@ -80,7 +82,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "ENMASSE_IOT_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: "false"},
+			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.IsNativeTlsRequired(config))},
 		}
 
 		AppendStandardHonoJavaOptions(container)
@@ -96,7 +98,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 		// apply container options
 
-		applyContainerConfig(container, config.Spec.ServicesConfig.Tenant.Container)
+		applyContainerConfig(container, service.Container)
 
 		// return
 

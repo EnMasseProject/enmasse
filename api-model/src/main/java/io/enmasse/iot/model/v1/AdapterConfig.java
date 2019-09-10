@@ -26,6 +26,7 @@ public class AdapterConfig extends ServiceConfig {
 
     private EndpointConfig endpoint;
     private CommonAdapterContainers containers;
+    private JavaContainerOptions java;
 
     public EndpointConfig getEndpoint() {
         return endpoint;
@@ -41,4 +42,10 @@ public class AdapterConfig extends ServiceConfig {
         this.containers = containers;
     }
 
+    public void setJava(JavaContainerOptions java) {
+        this.java = java;
+    }
+    public JavaContainerOptions getJava() {
+        return java;
+    }
 }
