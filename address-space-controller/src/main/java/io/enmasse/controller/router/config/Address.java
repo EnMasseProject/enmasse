@@ -12,6 +12,8 @@ import java.util.Objects;
 public class Address {
     private String name;
     private String prefix;
+    private String pattern;
+    private Boolean waypoint;
     private Distribution distribution;
 
     public String getName() {
@@ -38,11 +40,29 @@ public class Address {
         this.distribution = distribution;
     }
 
+    public String getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
+
+    public Boolean getWaypoint() {
+        return waypoint;
+    }
+
+    public void setWaypoint(Boolean waypoint) {
+        this.waypoint = waypoint;
+    }
+
     @Override
     public String toString() {
         return "Address{" +
                 "name='" + name + '\'' +
                 ", prefix='" + prefix + '\'' +
+                ", pattern='" + pattern + '\'' +
+                ", waypoint=" + waypoint +
                 ", distribution=" + distribution +
                 '}';
     }
@@ -54,11 +74,13 @@ public class Address {
         Address address = (Address) o;
         return Objects.equals(name, address.name) &&
                 Objects.equals(prefix, address.prefix) &&
+                Objects.equals(pattern, address.pattern) &&
+                Objects.equals(waypoint, address.waypoint) &&
                 distribution == address.distribution;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, prefix, distribution);
+        return Objects.hash(name, prefix, pattern, waypoint, distribution);
     }
 }

@@ -6,14 +6,21 @@ package io.enmasse.controller.router.config;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.List;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Connector {
+    private String name;
     private String host;
     private int port;
     private String sslProfile;
     private Boolean verifyHostname;
+    private String saslUsername;
+    private String saslPassword;
+    private String saslMechanisms;
+    private String failoverUrls;
+    private Role role;
 
     public String getHost() {
         return host;
@@ -47,13 +54,65 @@ public class Connector {
         this.verifyHostname = verifyHostname;
     }
 
+    public String getSaslUsername() {
+        return saslUsername;
+    }
+
+    public void setSaslUsername(String saslUsername) {
+        this.saslUsername = saslUsername;
+    }
+
+    public String getSaslPassword() {
+        return saslPassword;
+    }
+
+    public void setSaslPassword(String saslPassword) {
+        this.saslPassword = saslPassword;
+    }
+
+    public String getSaslMechanisms() {
+        return saslMechanisms;
+    }
+
+    public void setSaslMechanisms(String saslMechanisms) {
+        this.saslMechanisms = saslMechanisms;
+    }
+
+    public String getFailoverUrls() {
+        return failoverUrls;
+    }
+
+    public void setFailoverUrls(String failoverUrls) {
+        this.failoverUrls = failoverUrls;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     @Override
     public String toString() {
         return "Connector{" +
-                "host='" + host + '\'' +
+                "name='" + name + '\'' +
+                ", host='" + host + '\'' +
                 ", port=" + port +
                 ", sslProfile='" + sslProfile + '\'' +
                 ", verifyHostname=" + verifyHostname +
+                ", saslMechanisms='" + saslMechanisms + '\'' +
+                ", failoverUrls='" + failoverUrls + '\'' +
+                ", role=" + role +
                 '}';
     }
 
@@ -63,13 +122,19 @@ public class Connector {
         if (o == null || getClass() != o.getClass()) return false;
         Connector connector = (Connector) o;
         return port == connector.port &&
+                Objects.equals(name, connector.name) &&
                 Objects.equals(host, connector.host) &&
                 Objects.equals(sslProfile, connector.sslProfile) &&
-                Objects.equals(verifyHostname, connector.verifyHostname);
+                Objects.equals(verifyHostname, connector.verifyHostname) &&
+                Objects.equals(saslUsername, connector.saslUsername) &&
+                Objects.equals(saslPassword, connector.saslPassword) &&
+                Objects.equals(saslMechanisms, connector.saslMechanisms) &&
+                Objects.equals(failoverUrls, connector.failoverUrls) &&
+                role == connector.role;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(host, port, sslProfile, verifyHostname);
+        return Objects.hash(name, host, port, sslProfile, verifyHostname, saslUsername, saslPassword, saslMechanisms, failoverUrls, role);
     }
 }

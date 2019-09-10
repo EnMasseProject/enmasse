@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.valueextraction.ExtractedValue;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -45,6 +46,8 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
     private String plan;
     @Valid
     private AuthenticationService authenticationService;
+
+    private List<@Valid AddressSpaceSpecConnector> connectors;
 
     public AddressSpaceSpec() {
     }
@@ -89,6 +92,14 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
         return authenticationService;
     }
 
+    public List<AddressSpaceSpecConnector> getConnectors() {
+        return connectors;
+    }
+
+    public void setConnectors(List<AddressSpaceSpecConnector> connectors) {
+        this.connectors = connectors;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("{");
@@ -97,9 +108,9 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
                 .append("type=").append(type).append(",")
                 .append("plan=").append(plan).append(",")
                 .append("endpoints=").append(endpoints).append(",")
-                .append("networkPolicy=").append(networkPolicy);
+                .append("networkPolicy=").append(networkPolicy).append(",")
+                .append("connectors=").append(connectors);
 
         return sb.toString();
     }
-
 }

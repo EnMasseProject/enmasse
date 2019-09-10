@@ -53,6 +53,9 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     @ValidBase64
     private String caCert;
 
+    @JsonSetter(nulls = Nulls.AS_EMPTY)
+    private List<AddressSpaceStatusConnector> connectorStatuses = new ArrayList<>();
+
     public AddressSpaceStatus() {
     }
 
@@ -63,6 +66,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     public AddressSpaceStatus(AddressSpaceStatus other) {
         this.ready = other.isReady();
         this.endpointStatuses = new ArrayList<>(other.getEndpointStatuses());
+        this.connectorStatuses = new ArrayList<>(other.getConnectorStatuses());
         this.messages.addAll(other.getMessages());
         this.phase = other.getPhase();
     }
@@ -123,12 +127,13 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
         return ready == status.ready &&
                 phase == status.phase &&
                 Objects.equals(endpointStatuses, status.endpointStatuses) &&
-                Objects.equals(messages, status.messages);
+                Objects.equals(messages, status.messages) &&
+                Objects.equals(connectorStatuses, status.connectorStatuses);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, phase, endpointStatuses, messages);
+        return Objects.hash(ready, phase, endpointStatuses, messages, connectorStatuses);
     }
 
     @Override
@@ -138,6 +143,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
                 .append(",").append("phase=").append(phase)
                 .append(",").append("endpointStatuses=").append(endpointStatuses)
                 .append(",").append("messages=").append(messages)
+                .append(",").append("connectorStatuses=").append(connectorStatuses)
                 .append("}")
                 .toString();
     }
@@ -151,4 +157,18 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
         endpointStatuses.add(endpointStatus);
         return this;
     }
+
+    public AddressSpaceStatus appendConnectorStatus(AddressSpaceStatusConnector connectorStatus) {
+        connectorStatuses.add(connectorStatus);
+        return this;
+    }
+
+    public List<AddressSpaceStatusConnector> getConnectorStatuses() {
+        return connectorStatuses;
+    }
+
+    public void setConnectorStatuses(List<AddressSpaceStatusConnector> connectorStatuses) {
+        this.connectorStatuses = connectorStatuses;
+    }
+
 }

@@ -1625,9 +1625,23 @@
 		},
 		"addresses": {
 		    "type": "array",
-		    "description": "List of addresses to make be accessible via this address space. The addresses will be prefixed by the connector name and a forward slash ('myconnector/') and may be expressed as a pattern. A pattern consists of one or more tokens separated by a forward slash /. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.",
+		    "description": "Addresses to make be accessible via this address space.",
 		    "items": {
-			"type": "string"
+			"type": "object",
+			"required": [
+			    "name",
+			    "pattern"
+			],
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "description": "Identifier of address pattern. Used to uniquely identify a pattern"
+                            },
+                            "pattern": {
+                                "type": "string",
+                                "description": "Pattern used to match addresses. The pattern will be prefixed by the connector name and a forward slash ('myconnector/'). A pattern consists of one or more tokens separated by a forward slash /. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence."
+                            }
+			}
 		    }
 		}
 	    }
