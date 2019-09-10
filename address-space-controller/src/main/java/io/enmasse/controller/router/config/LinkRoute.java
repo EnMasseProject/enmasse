@@ -13,6 +13,7 @@ public class LinkRoute {
     private String name;
     private String prefix;
     private String pattern;
+    private String delExternalPrefix;
     private Direction direction;
     private String containerId;
     private String connection;
@@ -65,12 +66,21 @@ public class LinkRoute {
         this.pattern = pattern;
     }
 
+    public String getDelExternalPrefix() {
+        return delExternalPrefix;
+    }
+
+    public void setDelExternalPrefix(String delExternalPrefix) {
+        this.delExternalPrefix = delExternalPrefix;
+    }
+
     @Override
     public String toString() {
         return "LinkRoute{" +
                 "name='" + name + '\'' +
                 ", prefix='" + prefix + '\'' +
                 ", pattern='" + pattern + '\'' +
+                ", delExternalPrefix='" + delExternalPrefix + '\'' +
                 ", direction=" + direction +
                 ", containerId='" + containerId + '\'' +
                 ", connection='" + connection + '\'' +
@@ -85,6 +95,7 @@ public class LinkRoute {
         return Objects.equals(name, linkRoute.name) &&
                 Objects.equals(prefix, linkRoute.prefix) &&
                 Objects.equals(pattern, linkRoute.pattern) &&
+                Objects.equals(delExternalPrefix, linkRoute.delExternalPrefix) &&
                 direction == linkRoute.direction &&
                 Objects.equals(containerId, linkRoute.containerId) &&
                 Objects.equals(connection, linkRoute.connection);
@@ -92,7 +103,7 @@ public class LinkRoute {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, prefix, pattern, direction, containerId, connection);
+        return Objects.hash(name, prefix, pattern, delExternalPrefix, direction, containerId, connection);
     }
 
     public enum Direction {

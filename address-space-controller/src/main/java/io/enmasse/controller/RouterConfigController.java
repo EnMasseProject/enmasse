@@ -564,10 +564,12 @@ public class RouterConfigController implements Controller {
 
             remoteConnector.setSaslMechanisms(String.join(" ", saslMechanisms));
 
+            String prefix = String.format("%s/", connector.getName());
             for (AddressSpaceSpecConnectorAddressRule rule : connector.getAddresses()) {
                 LinkRoute linkRouteIn = new LinkRoute();
                 linkRouteIn.setName("override.connector." + connector.getName() + "." + rule.getName() + ".in");
-                linkRouteIn.setPattern(connector.getName() + "/" + rule.getPattern());
+                linkRouteIn.setPattern(prefix + rule.getPattern());
+                linkRouteIn.setDelExternalPrefix(prefix);
                 linkRouteIn.setDirection(LinkRoute.Direction.in);
                 linkRouteIn.setConnection(connector.getName());
                 linkRoutes.add(linkRouteIn);
@@ -575,6 +577,7 @@ public class RouterConfigController implements Controller {
                 LinkRoute linkRouteOut = new LinkRoute();
                 linkRouteOut.setName("override.connector." + connector.getName() + "." + rule.getName() + ".out");
                 linkRouteOut.setPattern(connector.getName() + "/" + rule.getPattern());
+                linkRouteOut.setDelExternalPrefix(prefix);
                 linkRouteOut.setDirection(LinkRoute.Direction.out);
                 linkRouteOut.setConnection(connector.getName());
                 linkRoutes.add(linkRouteOut);
