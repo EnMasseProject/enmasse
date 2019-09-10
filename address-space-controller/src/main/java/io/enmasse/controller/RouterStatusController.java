@@ -152,7 +152,7 @@ public class RouterStatusController implements Controller {
             }
         }
 
-        // If the primary of failover for any connector is up, we are ok
+        // Assumption/decision: If the primary or failover for any connector is up, we are ok
         List<ConnectionStatus> found = connectionStatuses.values().stream()
                 .filter(ConnectionStatus::isFound)
                 .collect(Collectors.toList());
