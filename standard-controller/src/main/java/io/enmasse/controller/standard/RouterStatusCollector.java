@@ -4,40 +4,24 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.amqp.ProtonRequestClient;
-import io.enmasse.amqp.SyncRequestClient;
+import io.enmasse.amqp.RouterEntity;
+import io.enmasse.amqp.RouterManagement;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerPort;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.vertx.core.Vertx;
-import io.vertx.core.net.PemKeyCertOptions;
-import io.vertx.core.net.PemTrustOptions;
-import io.vertx.proton.ProtonClientOptions;
-import org.apache.qpid.proton.Proton;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
-import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 class RouterStatusCollector {
     private static final Logger log = LoggerFactory.getLogger(RouterStatusCollector.class);
-    private final Vertx vertx;
-    private final String certDir;
-    private final Duration managementConnectTimeout;
-    private final Duration managementQueryTimeout;
+    private final RouterManagement routerManagement;
 
-    public RouterStatusCollector(Vertx vertx, StandardControllerOptions options) {
-        this.vertx = vertx;
-        this.certDir = options.getCertDir();
-        this.managementConnectTimeout = options.getManagementConnectTimeout();
-        this.managementQueryTimeout = options.getManagementQueryTimeout();
+    public RouterStatusCollector(RouterManagement routerManagement) {
+        this.routerManagement = routerManagement;
     }
 
     public RouterStatus collect(Pod router) throws Exception {
@@ -53,111 +37,60 @@ class RouterStatusCollector {
         }
 
         if (port != 0) {
-            return doCollectStatusWithRetry(router, port);
+            return doCollectStatus(router, port);
         } else {
             log.info("Unable to find appropriate port for router {}, skipping address check", router.getMetadata().getName());
             return null;
         }
     }
 
-    private RouterStatus doCollectStatusWithRetry(Pod router, int port) throws Exception {
-        int attempt = 1;
-        final int allowedAttempts = 3;
-        Exception lastException = null;
-        do {
-            try {
-                return doCollectStatus(router, port);
-            } catch (Exception e) {
-                log.error("Failed to collect router {} status (attempt {}/{}})", router.getMetadata().getName(), attempt, allowedAttempts, e);
-                lastException = e;
-                try {
-                    Thread.sleep(5 * 1000);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-                attempt++;
-            }
-        } while (allowedAttempts >= attempt);
+    private static final RouterEntity address = new RouterEntity("org.apache.qpid.dispatch.router.config.address", "prefix");
+    private static final RouterEntity autoLink = new RouterEntity("org.apache.qpid.dispatch.router.config.autoLink", "address", "containerId", "direction", "operStatus");
 
-        throw lastException;
-    }
+    private static final RouterEntity linkRoute = new RouterEntity("org.apache.qpid.dispatch.router.config.linkRoute", "prefix", "containerId", "direction", "operStatus");
+    private static final RouterEntity connection = new RouterEntity("org.apache.qpid.dispatch.connection", "container");
+
+    private static final RouterEntity[] entities = new RouterEntity[]{
+            address,
+            autoLink,
+            linkRoute,
+            connection
+    };
 
     private RouterStatus doCollectStatus(Pod router, int port) throws Exception {
+        String host = router.getStatus().getPodIP();
         log.debug("Checking router status of router : {}", router.getMetadata().getName());
-        ProtonClientOptions clientOptions = new ProtonClientOptions()
-                .setSsl(true)
-                .addEnabledSaslMechanism("EXTERNAL")
-                .setHostnameVerificationAlgorithm("")
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertPath(new File(certDir, "ca.crt").getAbsolutePath()))
-                .setPemKeyCertOptions(new PemKeyCertOptions()
-                        .setCertPath(new File(certDir, "tls.crt").getAbsolutePath())
-                        .setKeyPath(new File(certDir, "tls.key").getAbsolutePath()));
-        try (ProtonRequestClient client = new ProtonRequestClient(vertx, "standard-controller")) {
-            CompletableFuture<Void> promise = new CompletableFuture<>();
-            client.connect(router.getStatus().getPodIP(), port, clientOptions, "$management", promise);
 
-            promise.get(managementConnectTimeout.getSeconds(), TimeUnit.SECONDS);
+        Map<RouterEntity, List<List>> results = routerManagement.query(host, port, entities);
 
-            List<String> addresses = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.router.config.address",
-                    Collections.singletonList("prefix")), 0);
-
-            List<List<String>> autoLinks = collectRouter(client, "org.apache.qpid.dispatch.router.config.autoLink",
-                    Arrays.asList("addr", "containerId", "dir", "operStatus"));
-            List<List<String>> linkRoutes = collectRouter(client, "org.apache.qpid.dispatch.router.config.linkRoute",
-                    Arrays.asList("prefix", "containerId", "dir", "operStatus"));
-            List<String> connections = filterOnAttribute(collectRouter(client, "org.apache.qpid.dispatch.connection",
-                    Collections.singletonList("container")), 0);
-
-
-            String routerId = router.getMetadata().getName();
-            return new RouterStatus(routerId, addresses, autoLinks, linkRoutes, connections);
-        }
+        String routerId = router.getMetadata().getName();
+        return new RouterStatus(routerId,
+                filterOnAttribute(String.class, 0, results.get(address)),
+                toTyped(String.class, results.get(autoLink)),
+                toTyped(String.class, results.get(linkRoute)),
+                filterOnAttribute(String.class, 0, results.get(connection)));
     }
 
-    private List<String> filterOnAttribute(List<List<String>> list, int attrNum) {
-        List<String> filtered = new ArrayList<>();
-        for (List<String> entry : list) {
-            String filteredValue = entry.get(attrNum);
+    private static <T> List<List<T>> toTyped(Class<T> type, List<List> list) {
+        List<List<T>> typed = new ArrayList<>();
+        for (List<?> entry : list) {
+            List<T> values = new ArrayList<>();
+            for (Object value : entry) {
+                values.add(type.cast(value));
+            }
+            typed.add(values);
+        }
+        return typed;
+    }
+
+    private static <T> List<T> filterOnAttribute(Class<T> type, int attrNum, List<List> list) {
+        List<T> filtered = new ArrayList<>();
+        for (List entry : list) {
+            T filteredValue = type.cast(entry.get(attrNum));
             if (filteredValue != null) {
                 filtered.add(filteredValue);
             }
         }
         return filtered;
-    }
-
-    private List<List<String>> collectRouter(SyncRequestClient client, String entityType, List<String> attributeNames) throws Exception {
-        Map<String, Object> properties = new LinkedHashMap<>();
-        properties.put("operation", "QUERY");
-        properties.put("entityType", entityType);
-        Map<String, Object> body = new LinkedHashMap<>();
-
-        body.put("attributeNames", attributeNames);
-
-        Message message = Proton.message();
-        message.setApplicationProperties(new ApplicationProperties(properties));
-        message.setBody(new AmqpValue(body));
-
-        long timeoutSeconds = this.managementQueryTimeout.getSeconds();
-        Message response = client.request(message, timeoutSeconds, TimeUnit.SECONDS);
-        if (response == null) {
-            throw new IllegalArgumentException(String.format("No response received within timeout : %s(s)", timeoutSeconds));
-        }
-        AmqpValue value = (AmqpValue) response.getBody();
-        if (value == null) {
-            throw new IllegalArgumentException("Unexpected null body");
-        }
-        Map<?,?> values = (Map<?,?>) value.getValue();
-        if (values == null) {
-            throw new IllegalArgumentException("Unexpected null body value");
-        }
-
-        @SuppressWarnings("unchecked")
-        List<List<String>> results = (List<List<String>>) values.get("results");
-        if (results == null) {
-            throw new IllegalArgumentException("Unexpected null results list");
-        }
-        return results;
     }
 }
