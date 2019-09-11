@@ -17,7 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Ensure that controller owner is set
+// Ensure that a controller owner is set
 // As there may only be one, we only to this when the creation timestamp is zero
 func (r *ReconcileIoTProject) ensureControllerOwnerIsSet(owner, object v1.Object) error {
 
@@ -31,6 +31,7 @@ func (r *ReconcileIoTProject) ensureControllerOwnerIsSet(owner, object v1.Object
 	return nil
 }
 
+// Ensure that an owner is set
 func (r *ReconcileIoTProject) ensureOwnerIsSet(owner, object v1.Object) error {
 
 	ro, ok := owner.(runtime.Object)

@@ -194,7 +194,7 @@ func findEndpointSpec(addressSpace *enmassev1beta1.AddressSpace, endpointStatus 
 func isTls(
 	addressSpace *enmassev1beta1.AddressSpace,
 	endpointStatus *enmassev1beta1.EndpointStatus,
-	_port *enmassev1beta1.Port,
+	_ *enmassev1beta1.Port,
 	forceTls *bool) (bool, error) {
 
 	if forceTls != nil {

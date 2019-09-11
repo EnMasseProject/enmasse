@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileIoTProject) reconcileProvided(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (*iotv1alpha1.ExternalDownstreamStrategy, error) {
+func (r *ReconcileIoTProject) reconcileProvided(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
 
 	log.Info("Reconcile project with provided strategy")
 
@@ -22,10 +22,17 @@ func (r *ReconcileIoTProject) reconcileProvided(ctx context.Context, request *re
 	endpointName, portName, endpointMode, err := getOrDefaults(strategy)
 
 	if err != nil {
-		return nil, err
+		return reconcile.Result{}, err
 	}
 
-	return r.processProvided(strategy, endpointMode, endpointName, portName)
+	endpoint, err := r.processProvided(strategy, endpointMode, endpointName, portName)
+
+	project.Status.DownstreamEndpoint = nil
+	if endpoint != nil {
+		project.Status.DownstreamEndpoint = endpoint.DeepCopy()
+	}
+
+	return reconcile.Result{}, err
 }
 
 func (r *ReconcileIoTProject) processProvided(strategy *iotv1alpha1.ProvidedDownstreamStrategy, endpointMode iotv1alpha1.EndpointMode, endpointName string, portName string) (*iotv1alpha1.ExternalDownstreamStrategy, error) {

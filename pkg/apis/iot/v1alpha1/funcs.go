@@ -12,6 +12,9 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ v1beta1.ImageOverridesProvider = &IoTConfig{}
@@ -95,4 +98,55 @@ func (c *CommonServiceConfig) IsNativeTlsRequired(config *IoTConfig) bool {
 		return config.Spec.DefaultNativeTlsRequired()
 	}
 	return *c.Java.RequireNativeTls
+}
+
+func (p *IoTProjectStatus) GetProjectCondition(t ProjectConditionType) *ProjectCondition {
+	for i, c := range p.Conditions {
+		if c.Type == t {
+			return &p.Conditions[i]
+		}
+	}
+
+	nc := ProjectCondition{
+		Type: t,
+		CommonCondition: CommonCondition{
+			Status:             corev1.ConditionUnknown,
+			LastTransitionTime: metav1.Now(),
+		},
+	}
+
+	p.Conditions = append(p.Conditions, nc)
+
+	return &p.Conditions[len(p.Conditions)-1]
+}
+
+func (c *CommonCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
+
+	if c.Status != status {
+		c.Status = status
+		c.LastTransitionTime = metav1.Now()
+	}
+
+	c.Reason = reason
+	c.Message = message
+
+}
+
+func (c *CommonCondition) IsOk() bool {
+	return c.Status == corev1.ConditionTrue
+}
+
+// Sets the status to "True". "Reason" and "Message" to empty.
+func (c *CommonCondition) SetStatusOk() {
+	c.SetStatus(corev1.ConditionTrue, "", "")
+}
+
+// Call SetStatusOk() when "ok" is true. Otherwise calls SetStatus() with the provided
+// reason and message.
+func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message string) {
+	if ok {
+		c.SetStatusOk()
+	} else {
+		c.SetStatus(corev1.ConditionTrue, "", "")
+	}
 }
