@@ -4,8 +4,10 @@
  */
 package io.enmasse.address.model;
 
+import java.util.List;
 import java.util.Objects;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -38,6 +40,8 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     @NotNull
     private String plan;
     private String topic;
+
+    private List<@Valid AddressSpecForwarder> forwarders;
 
     public void setAddress(String address) {
         this.address = address;
@@ -83,16 +87,27 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
         return this.topic;
     }
 
+    public List<AddressSpecForwarder> getForwarders() {
+        return forwarders;
+    }
+
+    public void setForwarders(List<AddressSpecForwarder> forwarders) {
+        this.forwarders = forwarders;
+    }
+
     @Override
     public String toString() {
 
          final StringBuilder sb = new StringBuilder("{");
 
-         sb.append("address=").append(address).append(",");
-         sb.append("type=").append(type).append(",");
-         sb.append("plan=").append(plan).append(",");
+         sb.append("address=").append(address);
+         sb.append(",type=").append(type);
+         sb.append(",plan=").append(plan);
          if (topic != null) {
-             sb.append("topic=").append(topic);
+             sb.append(",topic=").append(topic);
+         }
+         if (forwarders != null) {
+             sb.append(",forwarders=").append(forwarders);
          }
          sb.append("}");
 
@@ -116,5 +131,4 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     public int hashCode() {
         return Objects.hash(address, addressSpace);
     }
-
 }

@@ -8,7 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.Phase;
-import io.enmasse.address.model.Status;
+import io.enmasse.address.model.AddressStatus;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.address.model.validation.ValidationMatchers.isValid;
@@ -116,7 +116,7 @@ public class AddressTest {
                 .withAddressSpace("myspace")
                 .endSpec()
 
-                .withStatus(new Status(true).setPhase(Phase.Active).appendMessage("foo"))
+                .withStatus(new AddressStatus(true).setPhase(Phase.Active).appendMessage("foo"))
                 .build();
 
         Address b = new AddressBuilder(a).build();
@@ -144,7 +144,7 @@ public class AddressTest {
                 .withType("t1")
                 .endSpec()
 
-                .withStatus(new Status(true).setPhase(Phase.Active).appendMessage("foo"))
+                .withStatus(new AddressStatus(true).setPhase(Phase.Active).appendMessage("foo"))
                 .build();
 
         Address b = new AddressBuilder(a).build();

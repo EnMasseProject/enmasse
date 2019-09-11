@@ -117,7 +117,16 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
     return ensure_queue(subscription_id, pods).then(
         function (pod) {
             log.info('after ensure looking at pod ' + JSON.stringify(pod.name) + " with broker undefined " + (pod.broker === undefined));
-            return pod.broker.ensureConnectorService(subscription_id, subscription_id, subscription_id).then(
+	    var connector = {
+		name: subscription_id,
+		clusterId: subscription_id,
+		linkName: subscription_id,
+		sourceAddress: subscription_id,
+		targetAddress: subscription_id,
+		containerId: subscription_id,
+		direction: 'out'
+	    };
+            return pod.broker.ensureConnectorService(connector).then(
                 function () {
                     return Promise.all(Object.keys(topics).map(
                         function (topic) {

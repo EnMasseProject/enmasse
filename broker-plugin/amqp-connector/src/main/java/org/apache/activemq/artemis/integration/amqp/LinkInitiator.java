@@ -10,7 +10,7 @@
  * (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *    http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,24 +24,20 @@ import io.netty.buffer.ByteBuf;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.EventHandler;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.ProtonHandler;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
+import org.apache.qpid.proton.amqp.messaging.Received;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
-import org.apache.qpid.proton.engine.Connection;
-import org.apache.qpid.proton.engine.Delivery;
-import org.apache.qpid.proton.engine.Link;
-import org.apache.qpid.proton.engine.Sender;
-import org.apache.qpid.proton.engine.Session;
-import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.engine.*;
 
 /**
  * Event handler for establishing outgoing links
  */
 public class LinkInitiator implements EventHandler {
-   private final SubscriberInfo subscriberInfo;
+   private final LinkInfo linkInfo;
 
-   public LinkInitiator(SubscriberInfo subscriberInfo) {
-      this.subscriberInfo = subscriberInfo;
+   public LinkInitiator(LinkInfo linkInfo) {
+      this.linkInfo = linkInfo;
    }
 
    @Override
@@ -51,12 +47,12 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public void onSaslRemoteMechanismChosen(ProtonHandler handler, String mech) {
-      
+
    }
 
    @Override
    public void onAuthFailed(final ProtonHandler protonHandler, final Connection connection) {
-      
+
    }
 
    @Override
@@ -111,7 +107,7 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public void onRemoteOpen(Session session) throws Exception {
-      createSender(session);
+      createLink(session);
    }
 
    @Override
@@ -181,7 +177,7 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public boolean flowControl(ReadyListener readyListener) {
-       return true;
+      return true;
    }
 
    @Override
@@ -194,14 +190,48 @@ public class LinkInitiator implements EventHandler {
 
    }
 
-   private void createSender(org.apache.qpid.proton.engine.Session session) throws Exception {
-      Sender sender = session.sender(subscriberInfo.getClientId());
+   private void createLink(org.apache.qpid.proton.engine.Session session) throws Exception {
+      switch (linkInfo.getDirection()) {
+         case out:
+            createSender(session);
+            break;
+         case in:
+            createReceiver(session);
+            break;
+      }
+   }
+
+   private void createReceiver(Session session) {
+      Receiver receiver;
+      if (linkInfo.getLinkName() != null) {
+         receiver = session.receiver(linkInfo.getLinkName());
+      } else {
+         receiver = session.receiver(linkInfo.getSourceAddress());
+      }
       Target target = new Target();
-      target.setAddress(subscriberInfo.getClientAddress());
+      target.setAddress(linkInfo.getTargetAddress());
+      receiver.setTarget(target);
+
+      Source source = new Source();
+      source.setAddress(linkInfo.getSourceAddress());
+      source.setDurable(TerminusDurability.UNSETTLED_STATE);
+      receiver.setSource(source);
+      receiver.open();
+   }
+
+   private void createSender(Session session) {
+      Sender sender;
+      if (linkInfo.getLinkName() != null) {
+         sender = session.sender(linkInfo.getLinkName());
+      } else {
+         sender = session.sender(linkInfo.getTargetAddress());
+      }
+      Target target = new Target();
+      target.setAddress(linkInfo.getTargetAddress());
       sender.setTarget(target);
 
       Source source = new Source();
-      source.setAddress(subscriberInfo.getClientAddress());
+      source.setAddress(linkInfo.getSourceAddress());
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
       sender.setSource(source);
 

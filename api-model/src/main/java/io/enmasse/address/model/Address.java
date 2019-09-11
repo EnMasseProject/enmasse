@@ -10,6 +10,7 @@ import java.util.*;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressName;
@@ -43,7 +44,7 @@ public class Address extends AbstractHasMetadata<Address> implements AddressOrAd
     @NotNull @Valid
     private AddressSpec spec = new AddressSpec();
     @NotNull @Valid
-    private Status status = new Status();
+    private AddressStatus status = new AddressStatus();
 
     public Address() {
         super(KIND, CoreCrd.API_VERSION);
@@ -59,11 +60,11 @@ public class Address extends AbstractHasMetadata<Address> implements AddressOrAd
         return spec;
     }
 
-    public void setStatus(Status status) {
+    public void setStatus(AddressStatus status) {
         this.status = status;
     }
 
-    public Status getStatus() {
+    public AddressStatus getStatus() {
         return status;
     }
 
@@ -130,5 +131,10 @@ public class Address extends AbstractHasMetadata<Address> implements AddressOrAd
             return addressValue;
         }
         return extractAddressFromName(address);
+    }
+
+    @JsonIgnore
+    public String getForwarderLinkName(AddressSpecForwarder forwarder) {
+        return String.format("%s.%s.%s", getMetadata().getName(), forwarder.getName(), forwarder.getDirection().name());
     }
 }

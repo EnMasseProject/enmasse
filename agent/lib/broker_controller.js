@@ -28,7 +28,7 @@ function BrokerController(event_sink) {
     events.EventEmitter.call(this);
     this.check_in_progress = false;
     this.post_event = event_sink || function (event) { log.debug('event: %j', event); };
-    this.serial_sync = require('./utils.js').serialize(this._sync_broker_addresses.bind(this));
+    this.serial_sync = require('./utils.js').serialize(this._sync_addresses_and_forwarders.bind(this));
     this.addresses_synchronized = false;
     this.busy_count = 0;
     this.retrieve_count = 0;
@@ -155,7 +155,7 @@ function transform_address_stats(address) {
 function transform_connection_stats(raw) {
     return {
         id: raw.connectionID,
-        host: raw.clientAddress,
+        host: raw.targetAddress,
         container: 'not available',
         user: raw.sessions.length ? raw.sessions[0].principal : '',
         senders: [],
@@ -478,6 +478,7 @@ BrokerController.prototype.check_broker_addresses = function () {
     }
 };
 
+// Only used in tests
 BrokerController.prototype._sync_addresses = function (addresses) {
     this.addresses = addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {});
     return this._sync_broker_addresses();
@@ -518,45 +519,81 @@ BrokerController.prototype._sync_broker_addresses = function (retry) {
     });
 };
 
-BrokerController.prototype.destroy_connector = function (address) {
+BrokerController.prototype.destroy_connector = function (connector) {
     var self = this;
-    log.info('[%s] Deleting connector for "%s"...', self.id, address);
-    return self.broker.destroyConnectorService(address).then(function() {
-        log.info('[%s] Deleted connector for "%s"', self.id, address);
+    log.info('[%s] Deleting connector for "%s"...', self.id, connector.name);
+    return self.broker.destroyConnectorService(connector.name).then(function() {
+        log.info('[%s] Deleted connector for "%s"', self.id, connector.name);
     }).catch(function (error) {
-        log.error('[%s] Failed to delete connector for "%s": %s', self.id, address, error);
+        log.error('[%s] Failed to delete connector for "%s": %s', self.id, connector.name, error);
     });
 };
 
-BrokerController.prototype.create_connector = function (address) {
+BrokerController.prototype.create_connector = function (connector) {
     var self = this;
-    log.info('[%s] Creating connector for "%s"...', self.id, address);
-    return self.broker.createConnectorService(address).then(function() {
-        log.info('[%s] Created connector for "%s"', self.id, address);
+    log.info('[%s] Creating connector "%j"...', self.id, connector);
+    return self.broker.createConnectorService(connector).then(function() {
+        log.info('[%s] Created connector for "%s"', self.id, connector.name);
     }).catch(function (error) {
-        log.error('[%s] Failed to create connector for "%s": %s', self.id, address, error);
+        log.error('[%s] Failed to create connector for "%s": %s', self.id, connector.name, error);
     });
 };
 
-BrokerController.prototype.destroy_connectors = function (addresses) {
-    return Promise.all(addresses.map(this.destroy_connector.bind(this)));
+BrokerController.prototype.destroy_connectors = function (connectors) {
+    return Promise.all(connectors.map(this.destroy_connector.bind(this)));
 };
 
-BrokerController.prototype.create_connectors = function (addresses) {
-    return Promise.all(addresses.map(this.create_connector.bind(this)));
+BrokerController.prototype.create_connectors = function (connectors) {
+    return Promise.all(connectors.map(this.create_connector.bind(this)));
 };
 
 function connectors_of_interest(name) {
-    return name !== 'amqp-connector' && name !== 'router-connector';
+    return name !== 'amqp-connector' && name !== 'router-connector-in' && name !== 'router-connector-out' && name !== 'amqp-connector-in' && name !== 'amqp-connector-out';
 }
 
-BrokerController.prototype._ensure_connectors = function (desired) {
+function connector_compare(a, b) {
+    return myutils.string_compare(a.name, b.name);
+}
+
+BrokerController.prototype._sync_broker_forwarders = function () {
     var self = this;
+    var desired = [];
+    for (var address in this.addresses) {
+	var address_type = this.addresses[address].type;
+	// We will only check queues and subscriptions for forwarders
+	if (address_type == "queue" || address_type == "subscription") {
+	    var address_name = this.addresses[address].name;
+	    var forwarders = this.addresses[address].forwarders;
+	    if (forwarders !== undefined) {
+		for (var fwdidx in forwarders) {
+		    var forwarder = forwarders[fwdidx];
+		    var forwarder_name = address_name + "." + forwarder.name + "." + forwarder.direction;
+		    // Only create forwarder for subscriptions if the direction is outward
+		    if (address_type === "queue" || (address_type === "subscription" && forwarder.direction === "out")) {
+			var forwarder_entry = {
+			    name: forwarder_name,
+			    clusterId: address_name,
+			    containerId: address_name,
+			    linkName: forwarder_name,
+			    targetAddress: forwarder.remoteAddress,
+			    sourceAddress: address,
+			    direction: forwarder.direction
+			};
+			desired.push(forwarder_entry);
+		    }
+		}
+	    }
+	}
+    }
+    log.debug("desired connectors: %j", desired);
     return this.broker.getConnectorServices().then(function (results) {
         var actual = results.filter(connectors_of_interest);
         actual.sort();
+	actual = actual.map(function (name) {
+	    return {name: name}
+	});
 
-        var difference = myutils.changes(actual, desired, myutils.string_compare);
+        var difference = myutils.changes(actual, desired, connector_compare);
         if (difference) {
             log.info('[%s] %d connectors missing, %d to be removed', self.id, difference.added.length, difference.removed.length);
             return self.destroy_connectors(difference.removed).then(function () {
@@ -570,10 +607,8 @@ BrokerController.prototype._ensure_connectors = function (desired) {
     });
 };
 
-BrokerController.prototype._sync_addresses_and_connectors = function () {
-    var desired = Object.keys(this.addresses);
-    desired.sort();
-    return this._sync_broker_addresses().then(this._ensure_connectors.bind(this, desired));
+BrokerController.prototype._sync_addresses_and_forwarders = function () {
+    return this._sync_broker_addresses().then(this._sync_broker_forwarders());
 }
 
 module.exports.create_controller = function (connection, event_sink) {

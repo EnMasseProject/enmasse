@@ -37,10 +37,12 @@ import java.util.concurrent.ScheduledExecutorService;
  * Connector service factory for AMQP Connector Services that can be used to establish outgoing AMQP connections.
  */
 public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
-   private static final String CONTAINER = "containerId";
+   private static final String CONTAINER_ID = "containerId";
    private static final String CLUSTER = "clusterId";
    private static final String SOURCE_ADDRESS = "sourceAddress";
-   private static final String CLIENT_ADDRESS = "clientAddress";
+   private static final String TARGET_ADDRESS = "targetAddress";
+   private static final String LINK_NAME = "linkName";
+   private static final String DIRECTION = "direction";
    private static final String NETTY_THREADS = "nettyThreads";
    private static final String IDLE_TIMEOUT = "idleTimeoutMs";
 
@@ -49,9 +51,11 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
 
    private static Set<String> initializeAllowedProperties() {
       Set<String> properties = initializeRequiredProperties();
-      properties.add(CLIENT_ADDRESS);
+      properties.add(TARGET_ADDRESS);
       properties.add(SOURCE_ADDRESS);
-      properties.add(CONTAINER);
+      properties.add(DIRECTION);
+      properties.add(LINK_NAME);
+      properties.add(CONTAINER_ID);
       properties.add(TransportConstants.SSL_ENABLED_PROP_NAME);
       properties.add(TransportConstants.SSL_PROVIDER);
       properties.add(TransportConstants.VERIFY_HOST_PROP_NAME);
@@ -99,20 +103,22 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       setOrDefault(configuration, connectorConfig, TransportConstants.SSL_PROVIDER, "OPENSSL");
 
       Optional<String> sourceAddress = Optional.ofNullable((String)configuration.get(SOURCE_ADDRESS));
-      Optional<String> clientAddress = Optional.ofNullable((String)configuration.get(CLIENT_ADDRESS));
-      Optional<String> container = Optional.ofNullable((String)configuration.get(CONTAINER));
+      Optional<String> targetAddress = Optional.ofNullable((String)configuration.get(TARGET_ADDRESS));
+      Optional<Direction> direction = Optional.ofNullable((String)configuration.get(DIRECTION)).map(Direction::valueOf);
+      Optional<String> linkName = Optional.ofNullable((String)configuration.get(LINK_NAME));
+      String containerId = Optional.ofNullable((String)configuration.get(CONTAINER_ID)).orElse(clusterId);
 
       int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Integer::parseInt).orElse(4);
       int idleTimeout = Optional.ofNullable((String)configuration.get(IDLE_TIMEOUT)).map(Integer::parseInt).orElse(16_000);
 
-      Optional<SubscriberInfo> info = sourceAddress.flatMap(s ->
-              clientAddress.flatMap(c ->
-                      container.map(o -> new SubscriberInfo(o, s, c))));
+      Optional<LinkInfo> linkInfo = sourceAddress.flatMap(s ->
+              targetAddress.flatMap(t ->
+                      direction.map(d -> new LinkInfo(linkName.orElse(null), s, t, d))));
 
-      ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME));
-      String containerId = clusterId;
-      if (container.isPresent()) {
-         containerId = container.get();
+      if (linkInfo.isPresent()) {
+         ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s with link %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME), linkInfo.get());
+      } else {
+         ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME));
       }
 
       ExecutorService nettyThreadPool = Executors.newFixedThreadPool(nettyThreads, new DefaultThreadFactory("connector-" + connectorName));
@@ -120,7 +126,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
               connectorConfig,
               containerId,
               clusterId,
-              info,
+              linkInfo,
               ((PostOfficeImpl)postOffice).getServer(),
               scheduledExecutorService,
               nettyThreadPool,

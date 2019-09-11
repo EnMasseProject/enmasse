@@ -13,15 +13,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 class RouterStatusCollector {
     private static final Logger log = LoggerFactory.getLogger(RouterStatusCollector.class);
     private final RouterManagement routerManagement;
+    private final boolean checkRouterLinks;
 
-    public RouterStatusCollector(RouterManagement routerManagement) {
+    public RouterStatusCollector(RouterManagement routerManagement, boolean checkRouterLinks) {
         this.routerManagement = routerManagement;
+        this.checkRouterLinks = checkRouterLinks;
     }
 
     public RouterStatus collect(Pod router) throws Exception {
@@ -50,25 +53,26 @@ class RouterStatusCollector {
     private static final RouterEntity linkRoute = new RouterEntity("org.apache.qpid.dispatch.router.config.linkRoute", "prefix", "containerId", "direction", "operStatus");
     private static final RouterEntity connection = new RouterEntity("org.apache.qpid.dispatch.connection", "container");
 
-    private static final RouterEntity[] entities = new RouterEntity[]{
-            address,
-            autoLink,
-            linkRoute,
-            connection
-    };
+    private static final RouterEntity link = new RouterEntity("org.apache.qpid.dispatch.router.link", "linkName", "operStatus", "linkDir");
 
     private RouterStatus doCollectStatus(Pod router, int port) throws Exception {
         String host = router.getStatus().getPodIP();
         log.debug("Checking router status of router : {}", router.getMetadata().getName());
 
-        Map<RouterEntity, List<List>> results = routerManagement.query(host, port, entities);
+        Map<RouterEntity, List<List>> results;
+        if (checkRouterLinks) {
+            results = routerManagement.query(host, port, address, autoLink, linkRoute, connection, link);
+        } else {
+            results = routerManagement.query(host, port, address, autoLink, linkRoute, connection);
+        }
 
         String routerId = router.getMetadata().getName();
         return new RouterStatus(routerId,
                 filterOnAttribute(String.class, 0, results.get(address)),
                 toTyped(String.class, results.get(autoLink)),
                 toTyped(String.class, results.get(linkRoute)),
-                filterOnAttribute(String.class, 0, results.get(connection)));
+                filterOnAttribute(String.class, 0, results.get(connection)),
+                toTyped(String.class, results.getOrDefault(link, Collections.emptyList())));
     }
 
     private static <T> List<List<T>> toTyped(Class<T> type, List<List> list) {

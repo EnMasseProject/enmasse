@@ -193,7 +193,7 @@ function MockBroker (name) {
             if (self.objects.some(function (o) { return o.type === 'connector' && o.name === name; })) {
                 throw new Error('connector for ' + name + ' already exists!');
             } else {
-                self.add_connector(name, {name: name, source: params.sourceAddress, target: params.clientAddress});
+                self.add_connector(name, {name: name, source: params.sourceAddress, target: params.targetAddress});
             }
         },
         destroyConnectorService : function (name) {

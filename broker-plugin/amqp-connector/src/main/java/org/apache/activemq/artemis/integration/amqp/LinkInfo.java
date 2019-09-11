@@ -20,26 +20,42 @@
  */
 package org.apache.activemq.artemis.integration.amqp;
 
-public class SubscriberInfo {
-   private final String clientId;
+public class LinkInfo {
+   private final String linkName;
    private final String sourceAddress;
-   private final String clientAddress;
+   private final String targetAddress;
+   private final Direction direction;
 
-   public SubscriberInfo(String clientId, String sourceAddress, String clientAddress) {
-      this.clientId = clientId;
+   public LinkInfo(String linkName, String sourceAddress, String targetAddress, Direction direction) {
+      this.linkName = linkName;
       this.sourceAddress = sourceAddress;
-      this.clientAddress = clientAddress;
+      this.targetAddress = targetAddress;
+      this.direction = direction;
    }
 
-   public String getClientAddress() {
-      return clientAddress;
+   public String getTargetAddress() {
+      return targetAddress;
    }
 
-   public String getClientId() {
-      return clientId;
+   public String getLinkName() {
+      return linkName;
    }
 
    public String getSourceAddress() {
       return sourceAddress;
+   }
+
+   public Direction getDirection() {
+      return direction;
+   }
+
+   @Override
+   public String toString() {
+      return "LinkInfo{" +
+              "linkName='" + linkName + '\'' +
+              ", sourceAddress='" + sourceAddress + '\'' +
+              ", targetAddress='" + targetAddress + '\'' +
+              ", direction=" + direction +
+              '}';
    }
 }

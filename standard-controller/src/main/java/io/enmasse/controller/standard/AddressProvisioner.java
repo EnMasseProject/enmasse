@@ -143,7 +143,7 @@ public class AddressProvisioner {
             Map<String, Map<String, UsageInfo>> newUsageMap, Map<String, Double> limits) {
         for (Address address : pending) {
             if (!Phase.Configuring.equals(address.getStatus().getPhase())) {
-                Status previousStatus = new Status(address.getStatus());
+                AddressStatus previousStatus = new AddressStatus(address.getStatus());
 
                 Map<String, Map<String, UsageInfo>> neededMap = checkQuotaForAddress(limits, newUsageMap, address, all);
                 if (neededMap != null) {
@@ -254,7 +254,7 @@ public class AddressProvisioner {
 
     private Map<String, Map<String, UsageInfo>> checkQuotaForAddress(Map<String, Double> limits, Map<String, Map<String, UsageInfo>> usage, Address address, Set<Address> addressSet) {
         AddressPlan desiredPlan = addressResolver.getDesiredPlan(address);
-        AddressPlanStatus appliedPlan = Optional.ofNullable(address.getStatus()).map(Status::getPlanStatus).orElse(null);
+        AddressPlanStatus appliedPlan = Optional.ofNullable(address.getStatus()).map(AddressStatus::getPlanStatus).orElse(null);
 
         Map<String, Map<String, UsageInfo>> needed = copyUsageMap(usage);
 

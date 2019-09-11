@@ -123,7 +123,7 @@ The standard controller will collect statistics about forwarders and attach to a
 
 ==== Agent
 
-For each forwarder on an address, the agent will create an autoLink pointing to a connector matching the address pattern.
+For each forwarder on an address, the agent will create a connector from the broker to the remote address. 
 
 == Testing
 
