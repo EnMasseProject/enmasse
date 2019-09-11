@@ -13,6 +13,8 @@
   </parent>
 
   <artifactId>iot-device-registry-infinispan</artifactId>
+  <!-- used in the banner -->
+  <name>EnMasse IoT Device Registry (Infinispan)</name>
 
   <properties>
     <junit4.version>4.12</junit4.version>

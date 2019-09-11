@@ -7,7 +7,7 @@
  |______|_| |_|_|  |_|\__,_|___/___/\___| |_____\___/|_|   
                                                            
 
-EnMasse IoT Tenant Service ${application.formatted-version}
-using Spring Boot ${spring-boot.formatted-version}
+${application.title}${application.formatted-version}
+using Spring Boot${spring-boot.formatted-version}
 
 Go to https://enmasse.io for more information.
