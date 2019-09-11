@@ -11,6 +11,7 @@ import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+import io.enmasse.amqp.RouterManagement;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.enmasse.metrics.api.*;
@@ -55,6 +56,7 @@ public class AddressController implements Watcher<Address> {
     private final Metrics metrics;
     private final BrokerIdGenerator brokerIdGenerator;
     private final BrokerClientFactory brokerClientFactory;
+    private final RouterManagement routerManagement;
     private int routerCheckFailures;
 
     public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
@@ -68,6 +70,7 @@ public class AddressController implements Watcher<Address> {
         this.metrics = metrics;
         this.brokerIdGenerator = brokerIdGenerator;
         this.brokerClientFactory = brokerClientFactory;
+        this.routerManagement = RouterManagement.withCertsInDir(vertx, "standard-controller", options.getManagementConnectTimeout(), options.getManagementQueryTimeout(), options.getCertDir());
         this.routerCheckFailures = 0;
     }
 
@@ -489,7 +492,7 @@ public class AddressController implements Watcher<Address> {
 
     private List<RouterStatus> checkRouterStatuses() throws Exception {
 
-        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(vertx, options.getCertDir());
+        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(routerManagement);
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
             if (Readiness.isPodReady(router)) {

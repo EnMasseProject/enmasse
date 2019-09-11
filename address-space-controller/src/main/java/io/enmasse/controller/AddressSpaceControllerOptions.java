@@ -32,6 +32,8 @@ public final class AddressSpaceControllerOptions {
     private String standardAuthserviceCredentialsSecretName;
     private String standardAuthserviceCertSecretName;
 
+    private Duration managementQueryTimeout;
+    private Duration managementConnectTimeout;
 
     public File getTemplateDir() {
         return templateDir;
@@ -96,6 +98,14 @@ public final class AddressSpaceControllerOptions {
                 .orElse(Duration.ofMinutes(5)));
 
         options.setRecheckInterval(getEnv(env, "CHECK_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setManagementQueryTimeout(getEnv(env, "MANAGEMENT_QUERY_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(60)));
+
+        options.setManagementConnectTimeout(getEnv(env, "MANAGEMENT_CONNECT_TIMEOUT")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
 
@@ -198,6 +208,8 @@ public final class AddressSpaceControllerOptions {
                 ", standardAuthserviceConfigName='" + standardAuthserviceConfigName + '\'' +
                 ", standardAuthserviceCredentialsSecretName='" + standardAuthserviceCredentialsSecretName + '\'' +
                 ", standardAuthserviceCertSecretName='" + standardAuthserviceCertSecretName + '\'' +
+                ", managementQueryTimeout='" + managementQueryTimeout + '\'' +
+                ", managementConnectTimeout='" + managementConnectTimeout + '\'' +
                 '}';
     }
 
@@ -207,5 +219,21 @@ public final class AddressSpaceControllerOptions {
 
     public void setInstallDefaultResources(boolean installDefaultResources) {
         this.installDefaultResources = installDefaultResources;
+    }
+
+    public Duration getManagementQueryTimeout() {
+        return managementQueryTimeout;
+    }
+
+    public void setManagementQueryTimeout(Duration managementQueryTimeout) {
+        this.managementQueryTimeout = managementQueryTimeout;
+    }
+
+    public Duration getManagementConnectTimeout() {
+        return managementConnectTimeout;
+    }
+
+    public void setManagementConnectTimeout(Duration managementConnectTimeout) {
+        this.managementConnectTimeout = managementConnectTimeout;
     }
 }
