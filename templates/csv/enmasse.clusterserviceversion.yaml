@@ -514,7 +514,7 @@ spec:
           resources: [ "messagingusers" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "iot.enmasse.io" ]
-          resources: [ "iotprojects" ]
+          resources: [ "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
       - serviceAccountName: iot-device-registry
         rules:

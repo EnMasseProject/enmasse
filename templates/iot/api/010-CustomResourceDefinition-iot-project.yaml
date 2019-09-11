@@ -36,3 +36,5 @@ spec:
     type: boolean
     description: If the IoT project is ready
     JSONPath: .status.isReady
+  subresources:
+    status: {}

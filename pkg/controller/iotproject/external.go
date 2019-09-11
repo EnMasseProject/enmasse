@@ -12,8 +12,24 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileIoTProject) reconcileExternal(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (*iotv1alpha1.ExternalDownstreamStrategy, error) {
-	// we simply copy over the external information
+func (r *ReconcileIoTProject) reconcileExternal(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
 
-	return project.Spec.DownstreamStrategy.ExternalDownstreamStrategy, nil
+	// we simply copy over the external information
+	// so everything is expected to be ready
+
+	project.Status.
+		GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesCreated).
+		SetStatusOk()
+	project.Status.
+		GetProjectCondition(iotv1alpha1.ProjectConditionTypeResourcesReady).
+		SetStatusOk()
+	project.Status.
+		GetProjectCondition(iotv1alpha1.ProjectConditionTypeReady).
+		SetStatusOk()
+
+	project.Status.DownstreamEndpoint = project.Spec.DownstreamStrategy.ExternalDownstreamStrategy.DeepCopy()
+	project.Status.IsReady = true
+
+	return reconcile.Result{}, nil
+
 }
