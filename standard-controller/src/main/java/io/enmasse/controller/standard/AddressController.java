@@ -174,12 +174,10 @@ public class AddressController implements Watcher<Address> {
         List<RouterStatus> routerStatusList = checkRouterStatuses();
 
         Set<String> subserveTopics = Collections.emptySet();
-        if (!routerStatusList.isEmpty()) {
-            if (withMqtt) {
-                subserveTopics = checkRegisteredSubserveTopics();
-            }
-            checkAddressStatuses(liveAddresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
+        if (withMqtt) {
+            subserveTopics = checkRegisteredSubserveTopics();
         }
+        checkAddressStatuses(liveAddresses, addressResolver, routerStatusList, subserveTopics, withMqtt);
 
         long checkStatuses = System.nanoTime();
         for (Address address : liveAddresses) {
