@@ -109,7 +109,6 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase implements ITest
                         log.info("IoTProject '{}' doesn't exists!", sharedProject.getMetadata().getName());
                     }
                     sharedProject = null;
-                    sharedConfig = null;
                 }
                 if (sharedConfig != null) {
                     log.info("Shared IoTConfig will be removed");
@@ -127,7 +126,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase implements ITest
                 log.warn("Remove shared iotproject when test failed - SKIPPED!");
             }
         }
-
+        sharedConfig = null;
+        sharedProject = null;
     }
 
     @AfterEach
