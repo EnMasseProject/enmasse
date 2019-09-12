@@ -189,7 +189,7 @@
         <profile>
             <id>isolated</id>
             <properties>
-                <groups>isolated &amp; !marathon &amp; !shared-iot &amp; !olm</groups>
+                <groups>(isolated | isolated-broker | isolated-standard) &amp; !marathon &amp; !shared-iot &amp; !olm</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
