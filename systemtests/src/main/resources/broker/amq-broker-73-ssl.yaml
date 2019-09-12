@@ -1,0 +1,372 @@
+apiVersion: v1
+kind: Template
+labels:
+  template: amq-broker-73-ssl
+  xpaas: 1.4.16
+message: A new messaging service with SSL support has been created in your project. It will handle the protocol(s) "${AMQ_PROTOCOL}". The username/password for accessing the service is ${AMQ_USER}/${AMQ_PASSWORD}. Please be sure to create a secret named "${AMQ_SECRET}" containing the trust store and key store files ("${AMQ_TRUSTSTORE}" and "${AMQ_KEYSTORE}") used for serving secure content. 
+metadata:
+  annotations:
+    description: An example Red Hat AMQ Broker application.  This template supports SSL and requires usage of OpenShift secrets.
+    iconClass: icon-amq
+    openshift.io/display-name: Red Hat AMQ Broker 7.3 (Ephemeral, with SSL)
+    openshift.io/provider-display-name: Red Hat, Inc.
+    tags: messaging,amq,xpaas
+    template.openshift.io/documentation-url: 'https://access.redhat.com/documentation/en/red-hat-amq/'
+    template.openshift.io/long-description: >-
+      This template defines resources needed to develop a Red Hat AMQ Broker 7.3 based application, including a deployment configuration, using ephemeral (temporary) storage and secure communication using SSL.
+    template.openshift.io/support-url: 'https://access.redhat.com'    
+    version: 1.4.16
+  name: amq-broker-73-ssl
+objects:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's console and Jolokia port.
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${AMQ_NAME}-amq-jolokia
+  spec:
+    ports:
+    - port: 8161
+      targetPort: 8161
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}-amq
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's AMQP port.
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${AMQ_NAME}-amq-amqp
+  spec:
+    ports:
+    - port: 5672
+      targetPort: 5672
+      name: amqp
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}-amq
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      description: The broker's AMQP SSL port.
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${AMQ_NAME}-amq-amqp-ssl
+  spec:
+    ports:
+      - port: 5671
+        targetPort: 5671
+        name: amqps
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}-amq      
+# - apiVersion: v1
+#   kind: Service
+#   metadata:
+#     annotations:
+#       description: The broker's MQTT port.
+#     labels:
+#       application: ${APPLICATION_NAME}
+#     name: ${AMQ_NAME}-amq-mqtt
+#   spec:
+#     ports:
+#     - port: 1883
+#       targetPort: 1883
+#     selector:
+#       deploymentConfig: ${APPLICATION_NAME}-amq
+# - apiVersion: v1
+#   kind: Service
+#   metadata:
+#     annotations:
+#       description: The broker's MQTT SSL port.
+#     labels:
+#       application: ${APPLICATION_NAME}
+#     name: ${AMQ_NAME}-amq-mqtt-ssl
+#   spec:
+#     ports:
+#       - port: 8883
+#         targetPort: 8883
+#     selector:
+#       deploymentConfig: ${APPLICATION_NAME}-amq
+# - apiVersion: v1
+#   kind: Service
+#   metadata:
+#     annotations:
+#       description: The broker's STOMP port.
+#     labels:
+#       application: ${APPLICATION_NAME}
+#     name: ${AMQ_NAME}-amq-stomp
+#   spec:
+#     ports:
+#     - port: 61613
+#       targetPort: 61613
+#     selector:
+#       deploymentConfig: ${APPLICATION_NAME}-amq
+# - apiVersion: v1
+#   kind: Service
+#   metadata:
+#     annotations:
+#       description: The broker's STOMP SSL port.
+#     labels:
+#       application: ${APPLICATION_NAME}
+#     name: ${AMQ_NAME}-amq-stomp-ssl
+#   spec:
+#     ports:
+#       - port: 61612
+#         targetPort: 61612
+#     selector:
+#       deploymentConfig: ${APPLICATION_NAME}-amq      
+# - apiVersion: v1
+#   kind: Service
+#   metadata:
+#     annotations:
+#       description: The broker's OpenWire port.
+#       service.alpha.openshift.io/dependencies: '[{"name": "${AMQ_NAME}-amq-amqp",
+#         "kind": "Service"},{"name": "${AMQ_NAME}-amq-mqtt", "kind": "Service"},{"name":
+#         "${AMQ_NAME}-amq-stomp", "kind": "Service"}]'
+#     labels:
+#       application: ${APPLICATION_NAME}
+#     name: ${AMQ_NAME}-amq-tcp
+#   spec:
+#     ports:
+#     - port: 61616
+#       targetPort: 61616
+#     selector:
+#       deploymentConfig: ${APPLICATION_NAME}-amq
+# - apiVersion: v1
+#   kind: Service
+#   metadata:
+#     annotations:
+#       description: The broker's OpenWire (SSL) port.
+#       service.alpha.openshift.io/dependencies: '[{"name": "${AMQ_NAME}-amq-tcp", "kind": "Service"},{"name":
+#         "${AMQ_NAME}-amq-amqp", "kind": "Service"},{"name":
+#         "${AMQ_NAME}-amq-mqtt", "kind": "Service"},{"name":
+#         "${AMQ_NAME}-amq-stomp", "kind": "Service"},{"name":
+#         "${AMQ_NAME}-amq-amqp-ssl", "kind": "Service"},{"name":
+#         "${AMQ_NAME}-amq-mqtt-ssl", "kind": "Service"},{"name":
+#         "${AMQ_NAME}-amq-stomp-ssl", "kind": "Service"}]'
+#     labels:
+#       application: ${APPLICATION_NAME}
+#     name: ${AMQ_NAME}-amq-tcp-ssl
+#   spec:
+#     ports:
+#       - port: 61617
+#         targetPort: 61617
+#     selector:
+#       deploymentConfig: ${APPLICATION_NAME}-amq        
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: ${APPLICATION_NAME}-amq
+  spec:
+    replicas: 1
+    selector:
+      deploymentConfig: ${APPLICATION_NAME}-amq
+    strategy:
+      rollingParams:
+        maxSurge: 0
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          application: ${APPLICATION_NAME}
+          deploymentConfig: ${APPLICATION_NAME}-amq
+        name: ${APPLICATION_NAME}-amq
+      spec:
+        containers:
+          - env:
+            - name: AMQ_USER
+              value: ${AMQ_USER}
+            - name: AMQ_PASSWORD
+              value: ${AMQ_PASSWORD}
+            - name: AMQ_ROLE
+              value: ${AMQ_ROLE}
+            - name: AMQ_NAME
+              value: ${AMQ_NAME}
+            - name: AMQ_TRANSPORTS
+              value: ${AMQ_PROTOCOL}
+            - name: AMQ_QUEUES
+              value: ${AMQ_QUEUES}
+            - name: AMQ_ADDRESSES
+              value: ${AMQ_ADDRESSES}
+            - name: AMQ_KEYSTORE_TRUSTSTORE_DIR
+              value: /etc/amq-secret-volume
+            - name: AMQ_TRUSTSTORE
+              value: ${AMQ_TRUSTSTORE}
+            - name: AMQ_TRUSTSTORE_PASSWORD
+              value: ${AMQ_TRUSTSTORE_PASSWORD}
+            - name: AMQ_KEYSTORE
+              value: ${AMQ_KEYSTORE}
+            - name: AMQ_KEYSTORE_PASSWORD
+              value: ${AMQ_KEYSTORE_PASSWORD}
+            - name: AMQ_GLOBAL_MAX_SIZE
+              value: ${AMQ_GLOBAL_MAX_SIZE}
+            - name: AMQ_REQUIRE_LOGIN
+              value: ${AMQ_REQUIRE_LOGIN}
+            - name: AMQ_EXTRA_ARGS
+              value: ${AMQ_EXTRA_ARGS}
+            - name: AMQ_ANYCAST_PREFIX
+              value: ${AMQ_ANYCAST_PREFIX}
+            - name: AMQ_MULTICAST_PREFIX
+              value: ${AMQ_MULTICAST_PREFIX}
+            image: ${IMAGE}
+            imagePullPolicy: Always
+            readinessProbe:
+              exec:
+                command:
+                - "/bin/bash"
+                - "-c"
+                - "/opt/amq/bin/readinessProbe.sh"
+            name: ${APPLICATION_NAME}-amq
+            ports:
+            - containerPort: 8161
+              name: console-jolokia
+              protocol: TCP
+            - containerPort: 5672
+              name: amqp
+              protocol: TCP
+            - containerPort: 5671
+              name: amqp-ssl
+              protocol: TCP
+            - containerPort: 1883
+              name: mqtt
+              protocol: TCP
+            - containerPort: 8883
+              name: mqtt-ssl
+              protocol: TCP
+            - containerPort: 61613
+              name: stomp
+              protocol: TCP
+            - containerPort: 61612
+              name: stomp-ssl
+              protocol: TCP
+            - containerPort: 61616
+              name: artemis
+              protocol: TCP
+            - containerPort: 61617
+              name: tcp-ssl
+              protocol: TCP
+            volumeMounts:
+              - mountPath: /etc/amq-secret-volume
+                name: broker-secret-volume
+                readOnly: true            
+        terminationGracePeriodSeconds: 60
+        volumes:
+        - name: broker-secret-volume
+          secret:
+            secretName: ${AMQ_SECRET}      
+    triggers:
+    - type: ConfigChange
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: console
+  spec:
+    tls:
+      termination: passthrough
+    to:
+      kind: Service
+      name: ${AMQ_NAME}-amq-jolokia
+- apiVersion: v1
+  kind: Route
+  metadata:
+    labels:
+      application: ${APPLICATION_NAME}
+    name: amqp-ssl
+  spec:
+    tls:
+      termination: passthrough
+    to:
+      kind: Service
+      name: ${AMQ_NAME}-amq-amqp-ssl
+parameters:
+- description: The name for the application.
+  displayName: Application Name
+  name: APPLICATION_NAME
+  required: true
+  value: broker
+- description: 'Protocols to configure, separated by commas. Allowed values are: `openwire`, `amqp`, `stomp`, `mqtt` and `hornetq`.'
+  displayName: AMQ Protocols
+  name: AMQ_PROTOCOL
+  value: openwire,amqp,stomp,mqtt,hornetq
+- description: Queue names, separated by commas. These queues will be automatically created when the broker starts. If left empty, queues will be still created dynamically.
+  displayName: Queues
+  name: AMQ_QUEUES
+- description: Address names, separated by commas. These addresses will be automatically created when the broker starts. If left empty, addresses will be still created dynamically.
+  displayName: Addresses
+  name: AMQ_ADDRESSES
+- description: User name for standard broker user. It is required for connecting to the broker. If left empty, it will be generated.
+  displayName: AMQ Username
+  from: user[a-zA-Z0-9]{3}
+  generate: expression
+  name: AMQ_USER
+- description: Password for standard broker user. It is required for connecting to the broker. If left empty, it will be generated.
+  displayName: AMQ Password
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: AMQ_PASSWORD
+- description: User role for standard broker user.
+  displayName: AMQ Role
+  name: AMQ_ROLE
+  value: admin
+- description: The name of the broker
+  displayName: AMQ Name
+  name: AMQ_NAME
+  value: broker
+- description: Name of a secret containing SSL related files
+  displayName: Secret Name
+  name: AMQ_SECRET
+  required: true
+  value: amq-app-secret
+- description: SSL trust store filename
+  displayName: Trust Store Filename
+  name: AMQ_TRUSTSTORE
+  required: true
+  value: broker.ts
+- description: SSL trust store password
+  displayName: Trust Store Password
+  name: AMQ_TRUSTSTORE_PASSWORD
+  required: true
+- description: SSL key store filename
+  displayName: AMQ Keystore Filename
+  name: AMQ_KEYSTORE
+  required: true
+  value: broker.ks
+- description: Password for accessing SSL keystore
+  displayName: AMQ Keystore Password
+  name: AMQ_KEYSTORE_PASSWORD
+  required: true  
+- description: "Maximum amount of memory which message data may consume (Default: Undefined, half of the system's memory)."
+  displayName: AMQ Global Max Size
+  name: AMQ_GLOBAL_MAX_SIZE
+  value: 100 gb
+- description: "Determines whether or not the broker will allow anonymous access, or require login"
+  displayName: AMQ Require Login
+  name: AMQ_REQUIRE_LOGIN
+- description: Extra arguments for broker creation
+  name: AMQ_EXTRA_ARGS
+  required: false
+- description: Anycast prefix applied to the multiplexed protocol ports 61616 and 61617
+  displayName: AMQ Anycast Prefix
+  name: AMQ_ANYCAST_PREFIX
+  required: false
+- description: Multicast prefix applied to the multiplexed protocol ports 61616 and 61617
+  displayName: AMQ Multicast Prefix
+  name: AMQ_MULTICAST_PREFIX
+  required: false
+- description: Namespace in which the ImageStreams for Red Hat Middleware images are installed. These ImageStreams are normally installed in the openshift namespace. You should only need to modify this if you've installed the ImageStreams in a different namespace/project.
+  displayName: ImageStream Namespace
+  name: IMAGE_STREAM_NAMESPACE
+  required: true
+  value: openshift
+- description: Broker Image
+  displayName: Image
+  name: IMAGE
+  required: true
+  value: registry.redhat.io/amq-broker-7/amq-broker-73-openshift:7.3

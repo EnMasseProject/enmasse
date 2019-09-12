@@ -17,8 +17,10 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
@@ -53,6 +55,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -70,6 +73,8 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+    private static final String AMQ_BROKER_TEMPLATE = "src/main/resources/broker/amq-broker-73-ssl.yaml";
+    private static final String AMQ_BROKER_SSL_SECRET_NAME = "amq-app-secret";
 
     public static String getMessagingAppPodName() throws Exception {
         TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
@@ -237,6 +242,61 @@ public class SystemtestsKubernetesApps {
                 INFINISPAN_EXAMPLE_BASE.resolve("manual"));
     }
 
+    public static Endpoint deployAMQBroker(String namespace, String user, String password) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        if (!kubeCli.namespaceExists(namespace)) {
+            kubeCli.createNamespace(namespace);
+        }
+
+        if(!kubeCli.secretExists(namespace, AMQ_BROKER_SSL_SECRET_NAME)) {
+            kubeCli.createSecret(namespace, getAmqBrokerSSLSecret());
+        }
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("AMQ_USER", user);
+        parameters.put("AMQ_PASSWORD", password);
+        parameters.put("AMQ_TRUSTSTORE_PASSWORD", "123456");
+        parameters.put("AMQ_KEYSTORE_PASSWORD", "123456");
+        parameters.put("AMQ_QUEUES", "queue1,queue2");
+
+        KubernetesList brokerItems = kubeCli.processTemplate(namespace, new File(AMQ_BROKER_TEMPLATE), parameters);
+        kubeCli.getClient().lists().inNamespace(namespace).create(brokerItems);
+
+        TestUtils.waitUntilCondition("Broker deployed", phase -> {
+            Optional<Pod> brokerPod = kubeCli.getClient().pods()
+                .inNamespace(namespace)
+                .withLabel("deploymentConfig", "broker-amq")
+                .withLabel("application", "broker")
+                .list()
+                .getItems()
+                .stream()
+                .findFirst();
+            if(brokerPod.isPresent()) {
+                return TestUtils.isPodReady(brokerPod.get(), true);
+            }
+            return false;
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+
+        return kubeCli.getExternalEndpoint("amqp-ssl", namespace);
+    }
+
+    public static void deleteAMQBroker(String namespace) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+
+        kubeCli.deleteSecret(namespace, AMQ_BROKER_SSL_SECRET_NAME);
+
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("AMQ_USER", "admin");
+        parameters.put("AMQ_PASSWORD", "admin");
+        parameters.put("AMQ_TRUSTSTORE_PASSWORD", "123456");
+        parameters.put("AMQ_KEYSTORE_PASSWORD", "123456");
+
+        KubernetesList brokerItems = kubeCli.processTemplate(namespace, new File(AMQ_BROKER_TEMPLATE), parameters);
+        log.info("Template items are going to be removed");
+        kubeCli.getClient().lists().inNamespace(namespace).delete(brokerItems);
+
+        Thread.sleep(5000);
+    }
 
     public static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
         loadDirectories(streamManipulator, Applicable::createOrReplace, paths);
@@ -545,6 +605,22 @@ public class SystemtestsKubernetesApps {
                 .addToData("database-user", Base64.getEncoder().encodeToString("darthvader".getBytes(StandardCharsets.UTF_8)))
                 .addToData("database-password", Base64.getEncoder().encodeToString("anakinisdead".getBytes(StandardCharsets.UTF_8)))
                 .build();
+    }
+
+    private static Secret getAmqBrokerSSLSecret() throws IOException {
+        File keystore = new File("src/main/resources/broker/broker.ks");
+        File truststore = new File("src/main/resources/broker/broker.ts");
+        byte[] keystoreContent = Files.readAllBytes(keystore.toPath());
+        byte[] truststoreContent = Files.readAllBytes(truststore.toPath());
+
+        Secret brokerSecret = new SecretBuilder()
+            .withNewMetadata()
+            .withName(AMQ_BROKER_SSL_SECRET_NAME)
+            .endMetadata()
+            .addToData("broker.ks", Base64.getEncoder().encodeToString(keystoreContent))
+            .addToData("broker.ts", Base64.getEncoder().encodeToString(truststoreContent))
+            .build();
+        return brokerSecret;
     }
 
 }

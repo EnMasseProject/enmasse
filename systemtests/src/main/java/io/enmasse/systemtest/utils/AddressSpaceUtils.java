@@ -5,7 +5,10 @@
 package io.enmasse.systemtest.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceStatus;
+import io.enmasse.address.model.AddressSpaceStatusConnector;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
 import io.enmasse.systemtest.Endpoint;
@@ -19,12 +22,15 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
@@ -223,4 +229,56 @@ public class AddressSpaceUtils {
     public boolean isBrokered(AddressSpace addressSpace) {
         return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
     }
+
+    public static AddressSpace waitForAddressSpaceConnectorsReady(AddressSpace addressSpace) throws Exception {
+        waitForAddressSpaceReady(addressSpace);
+        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        boolean isReady = false;
+        var client = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
+
+        String name = addressSpace.getMetadata().getName();
+        AddressSpace clientAddressSpace = addressSpace;
+        while (budget.timeLeft() >= 0 && !isReady) {
+            clientAddressSpace = client.withName(name).get();
+            isReady = areAddressSpaceConnectorsReady(clientAddressSpace);
+            if (!isReady) {
+                Thread.sleep(10000);
+            }
+            log.info("Waiting until connectors of address space: '{}' messages {} will be in ready state", name, getConnectorStatuses(clientAddressSpace));
+        }
+
+        if (!isReady) {
+            throw new IllegalStateException(String.format("Connectors of Address Space %s are not in Ready state within timeout: %s", name, getConnectorStatuses(clientAddressSpace)));
+        }
+        log.info("Connectors of address space {} are ready for use", name);
+        return clientAddressSpace;
+    }
+
+    /**
+     * Returns true only if all connectorStatuses report isReady=true
+     * @param addressSpace
+     * @return
+     */
+    public static boolean areAddressSpaceConnectorsReady(AddressSpace addressSpace) {
+        return Optional.ofNullable(addressSpace)
+            .map(AddressSpace::getStatus)
+            .map(AddressSpaceStatus::getConnectorStatuses)
+            .map(Stream::of)
+            .orElseGet(Stream::empty)
+            .flatMap(Collection::stream)
+            .map(AddressSpaceStatusConnector::isReady)
+            .allMatch(ready -> ready == true);
+    }
+
+    public static String getConnectorStatuses(AddressSpace addressSpace) {
+        return Optional.ofNullable(addressSpace)
+            .map(AddressSpace::getStatus)
+            .map(AddressSpaceStatus::getConnectorStatuses)
+            .map(Stream::of)
+            .orElseGet(Stream::empty)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList())
+            .toString();
+    }
+
 }

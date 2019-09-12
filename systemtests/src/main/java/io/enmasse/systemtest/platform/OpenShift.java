@@ -8,6 +8,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.utils.HttpClientUtils;
@@ -19,7 +20,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * Handles interaction with openshift cluster
@@ -109,4 +112,11 @@ public class OpenShift extends Kubernetes {
             return getEndpoint(endpointName, namespace, port);
         }
     }
+
+    @Override
+    public KubernetesList processTemplate(String namespace, File template, Map<String, String> parameters) {
+        OpenShiftClient oc = client.adapt(OpenShiftClient.class);
+        return oc.templates().load(template).process(parameters);
+    }
+
 }
