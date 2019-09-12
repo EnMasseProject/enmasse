@@ -78,12 +78,6 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase implements ITest
             createIoTProject(sharedProject);
         }
 
-        AddressSpace addressSpace = kubernetes.getAddressSpaceClient().inNamespace(sharedProject.getMetadata().getNamespace())
-                .list().getItems().stream().filter(addressSpace1 -> addressSpace1.getMetadata().getName()
-                        .equals(sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()))
-                .collect(Collectors.toList()).get(0);
-        CommonResourcesManager.getInstance().initFactories(addressSpace);
-
         this.iotAmqpClientFactory = createAmqpClientFactory();
         this.iotAmqpClient = this.iotAmqpClientFactory.createQueueClient();
     }
@@ -132,7 +126,8 @@ public abstract class IoTTestBaseWithShared extends IoTTestBase implements ITest
                 log.warn("Remove shared iotproject when test failed - SKIPPED!");
             }
         }
-
+        sharedConfig = null;
+        sharedProject = null;
     }
 
     @AfterEach
