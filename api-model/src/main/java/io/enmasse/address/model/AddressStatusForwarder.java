@@ -52,7 +52,7 @@ public class AddressStatusForwarder extends AbstractWithAdditionalProperties {
     }
 
     public void setMessages(List<String> messages) {
-        this.messages = messages;
+        this.messages = new ArrayList<>(messages);
     }
 
     @Override

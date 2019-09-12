@@ -62,13 +62,15 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
         for (BrokerStatus brokerStatus : other.getBrokerStatuses()) {
             brokerStatuses.add(new BrokerStatus(brokerStatus.getClusterId(), brokerStatus.getContainerId(), brokerStatus.getState()));
         }
-        this.forwarderStatuses = new ArrayList<>();
-        for (AddressStatusForwarder forwarderStatus : other.getForwarderStatuses()) {
-            forwarderStatuses.add(new AddressStatusForwarderBuilder()
-                    .withName(forwarderStatus.getName())
-                    .withReady(forwarderStatus.isReady())
-                    .withMessages(forwarderStatus.getMessages())
-                    .build());
+        if (other.getForwarderStatuses() != null) {
+            this.forwarderStatuses = new ArrayList<>();
+            for (AddressStatusForwarder forwarderStatus : other.getForwarderStatuses()) {
+                forwarderStatuses.add(new AddressStatusForwarderBuilder()
+                        .withName(forwarderStatus.getName())
+                        .withReady(forwarderStatus.isReady())
+                        .withMessages(new ArrayList<>(forwarderStatus.getMessages()))
+                        .build());
+            }
         }
 
     }
@@ -174,6 +176,6 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     }
 
     public void setForwarderStatuses(List<AddressStatusForwarder> forwarderStatuses) {
-        this.forwarderStatuses = forwarderStatuses;
+        this.forwarderStatuses = new ArrayList<>(forwarderStatuses);
     }
 }
