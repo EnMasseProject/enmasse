@@ -10,11 +10,15 @@ import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.manager.CommonResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import org.junit.jupiter.api.Tag;
 
 import java.util.List;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
+
+@Tag(ISOLATED)
 public interface ITestBaseIsolated extends ITestBase {
-     CommonResourcesManager commonResourcesManager = CommonResourcesManager.getInstance();
+    CommonResourcesManager commonResourcesManager = CommonResourcesManager.getInstance();
     List<AddressSpace> currentAddressSpaces = commonResourcesManager.getCurrentAddressSpaces();
 
     default AmqpClientFactory getAmqpClientFactory() {
