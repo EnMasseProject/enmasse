@@ -137,17 +137,18 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public void onRemoteOpen(Link link) throws Exception {
-
+      ActiveMQAMQPLogger.LOGGER.infov("{0} onRemoteOpen", link.getName());
    }
 
    @Override
    public void onLocalClose(Link link) throws Exception {
-
+      ActiveMQAMQPLogger.LOGGER.infov("{0} onLocalClose", link.getName());
    }
 
    @Override
    public void onRemoteClose(Link link) throws Exception {
-
+      ActiveMQAMQPLogger.LOGGER.infov("Link {0} closed. Closing connection", link.getName());
+      link.getSession().getConnection().close();
    }
 
    @Override
@@ -162,12 +163,13 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public void onRemoteDetach(Link link) throws Exception {
-
+      ActiveMQAMQPLogger.LOGGER.infov("Link {0} detached. Closing connection", link.getName());
+      link.getSession().getConnection().close();
    }
 
    @Override
    public void onLocalDetach(Link link) throws Exception {
-
+      ActiveMQAMQPLogger.LOGGER.infov("{0} onLocalDetach", link.getName());
    }
 
    @Override
@@ -177,6 +179,9 @@ public class LinkInitiator implements EventHandler {
 
    @Override
    public boolean flowControl(ReadyListener readyListener) {
+      if (this.linkInfo.getDirection().equals(Direction.in)) {
+         readyListener.readyForWriting();
+      }
       return true;
    }
 
