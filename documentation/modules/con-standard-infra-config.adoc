@@ -65,13 +65,28 @@ the `.broker.resources.storage` setting does not configure the existing broker s
 
 The `router` object specifies the settings you can configure for the `router` components.
 
-For `admin`, `broker` and `router` you can configure `podTemplate` settings like `metadata.labels`,
-`spec.priorityClassName`, `spec.tolerations` and `spec.affinity`.
+For `admin`, `broker`, and `router` you can configure `podTemplate` settings such as `metadata.labels`,
+`spec.priorityClassName`, `spec.tolerations`, `spec.affinity`, `spec.containers`, and `environment-variables`. For more information, see the following Related links section.
+
+.Related links
+
+* For more information about how to set a readiness probe timeout, see:
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-override-probe-timeout-messaging[Overriding the readiness probe timing for brokered infrastructure configuration]
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-override-probe-timeout-messaging[Overriding the readiness probe timing for standard infrastructure configuration]
 
 ifeval::["{cmdcli}" == "oc"]
-See link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority], link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations], and link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity] for more information.
+* For more information see the following {KubePlatform} documentation:
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority]
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations]
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity]
+** link:https://docs.openshift.com/container-platform/3.11/dev_guide/environment_variables.html#list-environment-variables[Environment variables]
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
-See link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority], link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations], and link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity] for more information.
+* For more information see the following {KubePlatform} documentation:
+** link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority]
+** link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations]
+** link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity]
+** link:[Environment variables]
 endif::[]
+
 

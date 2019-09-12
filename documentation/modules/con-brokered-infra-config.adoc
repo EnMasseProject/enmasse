@@ -9,7 +9,7 @@
 spaces. The brokered infrastructure configuration is referenced by address space plans in their
 `spec.infraConfigRef` field. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans]. 
 
-For detailed information about the available brokered infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-fields-messaging[Brokered infrastructure configuration fields table].
+Only specific fields are pulled in from {KubePlatform}. For detailed information about the available brokered infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-fields-messaging[Brokered infrastructure configuration fields table].
 
 [source,yaml,options="nowrap",subs="attributes"]
 ----
@@ -18,8 +18,8 @@ kind: BrokeredInfraConfig
 metadata:
   name: brokered-infra-config-example
 spec:
-  version: "{EnMasseVersion}"
-  admin:
+  version: "{EnMasseVersion}" <1>
+  admin: <2>
     resources:
       memory: 256Mi
     podTemplate:
@@ -31,28 +31,41 @@ spec:
       memory: 2Gi
       storage: 100Gi
     addressFullPolicy: PAGE
-    podTemplate:
+    podTemplate: <4>
       spec:
         priorityClassName: messaging
 ----
 
-The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
+<1> The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
 this field to determine whether to upgrade the infrastructure to the requested version. If omitted,
 the version will be assumed to be the same as the controllers reading the config.
 
-The `admin` object specifies the settings you can configure for the `admin` components.
+<2> The `admin` object specifies the settings you can configure for the `admin` components.
 
-The `broker` object specifies the settings you can configure for the `broker` components. Changing
+<3> The `broker` object specifies the settings you can configure for the `broker` components. Changing
 the `.broker.resources.storage` setting does not configure the existing broker storage size.
 
-For both `admin` and `broker` you can configure `podTemplate` settings like `metadata.labels`,
-`spec.priorityClassName`, `spec.tolerations` and `spec.affinity`.
+<4> For both `admin` and `broker` you can configure `podTemplate` settings such as `metadata.labels`,
+`spec.priorityClassName`, `spec.tolerations`, `spec.affinity`, `spec.containers`, and `environment-variables`.
 
+.Related links
+
+* For more information about how to set a readiness probe timeout, see:
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-override-probe-timeout-messaging[Overriding the readiness probe timing for brokered infrastructure configuration]
+** link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-override-probe-timeout-messaging[Overriding the readiness probe timing for standard infrastructure configuration]
 
 ifeval::["{cmdcli}" == "oc"]
-For more information see link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority], link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations], and link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity].
+* For more information see the following {KubePlatform} documentation:
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority]
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations]
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity]
+** link:https://docs.openshift.com/container-platform/3.11/dev_guide/environment_variables.html#list-environment-variables[Environment variables]
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
-For more information see link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority], link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations], and link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity].
+* For more information see the following {KubePlatform} documentation:
+** link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority]
+** link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations]
+** link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity]
+** link:[Environment variables]
 endif::[]
 

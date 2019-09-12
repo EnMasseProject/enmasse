@@ -1,0 +1,40 @@
+// Module included in the following assemblies:
+//
+// assembly-infrastructure-configuration.adoc
+
+[id='ref-brokered-infra-config-override-probe-timeout-{context}']
+= Overriding the readiness probe timing for brokered infrastructure configuration
+
+You can override the default value for the readiness probe timing
+
+The following example shows 
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: brokered-infra-config
+spec:
+  broker:
+     ...
+    podTemplate:
+      spec:
+        containers:
+          - name: broker <1>
+            readinessProbe:
+              failureThreshold: 6
+              initialDelaySeconds: 20 <2>
+              timeoutSeconds?: <3>
+
+----
+<1> The `name` value must match the target container name. For a broker, the podTemplate name is `broker`.
+<2> Specifies the number of seconds before performing the first probe after the container starts.
+<3> Specifies the number of seconds between probes.
+
+ifeval::["{cmdcli}" == "oc"]
+.Related links
+* link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html/developer_guide/dev-guide-application-health [OpenShift 3.11 documentation on readiness probe]
+* link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html-single/nodes/index#nodes-nodes-health [OpenShift 4.1 documentation on readiness probe]
+endif::[]
+
