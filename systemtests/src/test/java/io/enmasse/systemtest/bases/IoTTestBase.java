@@ -162,6 +162,11 @@ public abstract class IoTTestBase extends TestBase implements ITestBaseIsolated 
         IoTUtils.waitForIoTProjectReady(kubernetes, project);
         IoTUtils.syncIoTProject(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
+        AddressSpace addressSpace = kubernetes.getAddressSpaceClient().inNamespace(project.getMetadata().getNamespace())
+                .list().getItems().stream().filter(addressSpace1 -> addressSpace1.getMetadata().getName()
+                        .equals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()))
+                .collect(Collectors.toList()).get(0);
+        CommonResourcesManager.getInstance().initFactories(addressSpace);
     }
 
     protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
