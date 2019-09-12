@@ -183,8 +183,8 @@ public abstract class ResourceManager {
     }
 
     public void createAuthService(AuthenticationService authenticationService) throws Exception {
-        LOGGER.info("AuthService {} will be created {}", authenticationService.getMetadata().getName(), authenticationService);
         var client = Kubernetes.getInstance().getAuthenticationServiceClient();
+        LOGGER.info("AuthService {} will be created {}", authenticationService.getMetadata().getName(), authenticationService);
         client.create(authenticationService);
         waitForAuthPods(authenticationService);
     }

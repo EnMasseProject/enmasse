@@ -94,30 +94,34 @@ public class CommonResourcesManager extends ResourceManager {
                 Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
             }
+            addressSpacePlans.clear();
 
             for (AddressPlan addressPlan : addressPlans) {
                 Kubernetes.getInstance().getAddressPlanClient().withName(addressPlan.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Address plan {} deleted", addressPlan.getMetadata().getName());
             }
+            addressPlans.clear();
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
                 Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
+            standardInfraConfigs.clear();
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
                 Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
+            brokeredInfraConfigs.clear();
 
             for (AuthenticationService authService : authServices) {
                 Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
                 TestUtils.waitForNReplicas(0, false, Map.of("name", authService.getMetadata().getName()), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
                 LOGGER.info("AuthService {} deleted", authService.getMetadata().getName());
             }
+            authServices.clear();
 
-            addressPlans.clear();
-            addressSpacePlans.clear();
+
             closeClientFactories(amqpClientFactory, mqttClientFactory);
             amqpClientFactory = null;
             mqttClientFactory = null;
@@ -219,12 +223,19 @@ public class CommonResourcesManager extends ResourceManager {
         }
     }
 
+    public void createAuthService(AuthenticationService authenticationService) throws Exception {
+        super.createAuthService(authenticationService);
+        authServices.add(authenticationService);
+    }
+
+
     public void removeAuthService(AuthenticationService authService) throws Exception {
         super.removeAuthService(authService);
         authServices.removeIf(authserviceId -> authserviceId.getMetadata().getName().equals(authService.getMetadata().getName()));
     }
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        LOGGER.warn("Address space " + addressSpace);
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             super.createAddressSpace(addressSpace);
             currentAddressSpaces.add(addressSpace);
@@ -252,7 +263,6 @@ public class CommonResourcesManager extends ResourceManager {
             if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
                 LOGGER.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
                 spaces.add(addressSpace);
-                currentAddressSpaces.add(addressSpace);
             } else {
                 LOGGER.warn("Address space '" + addressSpace + "' already exists.");
             }

@@ -45,7 +45,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
     void setUpSelenium() throws Exception {
         brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withName("ccreateAddressSpacePlanrd-address-space")
+                .withName("crd-address-space")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
