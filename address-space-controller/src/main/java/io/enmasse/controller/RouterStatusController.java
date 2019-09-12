@@ -193,7 +193,6 @@ public class RouterStatusController implements Controller {
         return filtered;
     }
 
-
     @Override
     public String toString() {
         return "RouterStatusController";
