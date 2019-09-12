@@ -40,7 +40,7 @@ GRAFANA_IMAGE ?= grafana/grafana:5.3.1
 APPLICATION_MONITORING_OPERATOR_IMAGE ?= quay.io/integreatly/application-monitoring-operator:0.0.23
 KUBE_STATE_METRICS_IMAGE ?= quay.io/coreos/kube-state-metrics:v1.4.0
 QDROUTERD_BASE_IMAGE ?= quay.io/interconnectedcloud/qdrouterd:1.8.0
-BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.9.0
+BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.10.0
 
 CONTROLLER_MANAGER_IMAGE   ?= $(DOCKER_REGISTRY_PREFIX)$(DOCKER_ORG)/controller-manager:$(IMAGE_VERSION)
 
