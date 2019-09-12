@@ -19,12 +19,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 
+import io.enmasse.systemtest.platform.Kubernetes;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
 import org.eclipse.hono.service.management.credentials.PasswordSecret;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 
@@ -46,7 +46,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
      * Truncate {@link Instant}s to second resolution manually.
      * <br>
      * <b>Note:</b> This method should be dropped once eclipse/hono#1463 is merged.
-     * @param credentials The credentials to process.
+     * @param instant The credentials to process.
      */
     private static Instant fixInstant(final Instant instant) {
         if (instant == null) {

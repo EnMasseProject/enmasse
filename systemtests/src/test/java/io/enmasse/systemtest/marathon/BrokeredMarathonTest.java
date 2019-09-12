@@ -5,13 +5,14 @@
 package io.enmasse.systemtest.marathon;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.AddressSpacePlans;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.ability.ITestBaseBrokered;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
+import io.enmasse.systemtest.bases.marathon.MarathonTestBase;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
-class BrokeredMarathonTest extends MarathonTestBase implements ITestBaseBrokered {
+class BrokeredMarathonTest extends MarathonTestBase implements ITestIsolatedBrokered {
 
     @Test
     void testCreateDeleteAddressSpaceLong() throws Exception {

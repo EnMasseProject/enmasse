@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.resolvers;
 
-import io.enmasse.systemtest.ArtemisManagement;
+import io.enmasse.systemtest.broker.ArtemisManagement;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;

@@ -8,9 +8,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointStatus;
-import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
-import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.SystemtestsOperation;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
@@ -213,5 +218,9 @@ public class AddressSpaceUtils {
 
     private static EndpointStatus getEndpointByServiceName(String serviceName, List<EndpointStatus> endpoints) {
         return endpoints.stream().filter(endpointStatus -> endpointStatus.getServiceHost().startsWith(serviceName)).findAny().get();
+    }
+
+    public boolean isBrokered(AddressSpace addressSpace) {
+        return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
     }
 }

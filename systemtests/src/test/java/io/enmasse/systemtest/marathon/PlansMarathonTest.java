@@ -12,12 +12,13 @@ import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.standard.QueueTest;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.bases.marathon.MarathonTestBase;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -28,9 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class PlansMarathonTest extends MarathonTestBase {
-
-    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
+class PlansMarathonTest extends MarathonTestBase implements ITestIsolatedStandard {
 
     @AfterEach
     void tearDown() throws Exception {
@@ -43,7 +42,7 @@ class PlansMarathonTest extends MarathonTestBase {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
         AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        adminManager.createAddressPlan(xxsQueuePlan);
+        commonResourcesManager.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -53,7 +52,7 @@ class PlansMarathonTest extends MarathonTestBase {
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        adminManager.createAddressSpacePlan(manyAddressesPlan);
+        resourcesManager.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = new AddressSpaceBuilder()
@@ -70,10 +69,10 @@ class PlansMarathonTest extends MarathonTestBase {
                 .endSpec()
                 .build();
 
-        createAddressSpace(manyAddressesSpace);
+        commonResourcesManager.createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
-        createOrUpdateUser(manyAddressesSpace, cred);
+        resourcesManager.createOrUpdateUser(manyAddressesSpace, cred);
 
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 3900;
@@ -91,19 +90,19 @@ class PlansMarathonTest extends MarathonTestBase {
                     .endSpec()
                     .build());
         }
-        setAddresses(dest.toArray(new Address[0]));
+        resourcesManager.setAddresses(dest.toArray(new Address[0]));
 
         for (int i = 0; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }
 
-        AmqpClient queueClient = amqpClientFactory.createQueueClient(manyAddressesSpace);
+        AmqpClient queueClient = getAmqpClientFactory().createQueueClient(manyAddressesSpace);
         queueClient.getConnectOptions().setCredentials(cred);
         for (int i = 0; i < destCount; i += 100) {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
+        commonResourcesManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (int i = toDeleteCount; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }

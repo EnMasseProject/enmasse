@@ -13,35 +13,29 @@ import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.AdminResourcesManager;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
-import io.enmasse.systemtest.standard.QueueTest;
-import io.enmasse.systemtest.standard.TopicTest;
+import io.enmasse.systemtest.shared.standard.QueueTest;
+import io.enmasse.systemtest.shared.standard.TopicTest;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Tag;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static io.enmasse.systemtest.TestTag.isolated;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@Tag(isolated)
-public abstract class WebConsolePlansTest extends TestBase {
+public abstract class WebConsolePlansTest extends TestBase implements ITestIsolatedStandard {
     SeleniumProvider selenium = SeleniumProvider.getInstance();
-    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
-
     private ConsoleWebPage consoleWebPage;
-
 
     @AfterEach
     public void tearDownDrivers() throws Exception {
@@ -66,9 +60,9 @@ public abstract class WebConsolePlansTest extends TestBase {
         AddressPlan consoleTopicPlan2 = PlanUtils.createAddressPlanObject("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
         AddressPlan consoleQueuePlan3 = PlanUtils.createAddressPlanObject("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
 
-        adminManager.createAddressPlan(consoleQueuePlan1);
-        adminManager.createAddressPlan(consoleTopicPlan2);
-        adminManager.createAddressPlan(consoleQueuePlan3);
+        commonResourcesManager.createAddressPlan(consoleQueuePlan1);
+        commonResourcesManager.createAddressPlan(consoleTopicPlan2);
+        commonResourcesManager.createAddressPlan(consoleQueuePlan3);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -78,7 +72,7 @@ public abstract class WebConsolePlansTest extends TestBase {
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
         AddressSpacePlan consolePlan = PlanUtils.createAddressSpacePlanObject("console-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
-        adminManager.createAddressSpacePlan(consolePlan);
+        commonResourcesManager.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
         AddressSpace consoleAddrSpace = new AddressSpaceBuilder()
@@ -95,11 +89,11 @@ public abstract class WebConsolePlansTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createAddressSpace(consoleAddrSpace);
+        commonResourcesManager.createAddressSpace(consoleAddrSpace);
 
         //create new user
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
-        createOrUpdateUser(consoleAddrSpace, user);
+        commonResourcesManager.createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
@@ -145,11 +139,11 @@ public abstract class WebConsolePlansTest extends TestBase {
         assertEquals(q3.getSpec().getPlan(), consoleWebPage.getAddressItem(q3).getPlan(), assertMessage);
 
         //simple send/receive
-        amqpClientFactory = new AmqpClientFactory(consoleAddrSpace, user);
-        AmqpClient queueClient = amqpClientFactory.createQueueClient(consoleAddrSpace);
+        resourcesManager.setAmqpClientFactory(new AmqpClientFactory(consoleAddrSpace, user));
+        AmqpClient queueClient = getAmqpClientFactory().createQueueClient(consoleAddrSpace);
         queueClient.getConnectOptions().setCredentials(user);
 
-        AmqpClient topicClient = amqpClientFactory.createTopicClient(consoleAddrSpace);
+        AmqpClient topicClient = getAmqpClientFactory().createTopicClient(consoleAddrSpace);
         topicClient.getConnectOptions().setCredentials(user);
 
         QueueTest.runQueueTest(queueClient, q1, 333);

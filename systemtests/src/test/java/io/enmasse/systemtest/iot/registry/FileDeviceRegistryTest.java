@@ -4,19 +4,18 @@
  */
 package io.enmasse.systemtest.iot.registry;
 
-import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newFileBased;
-
-import java.nio.ByteBuffer;
-
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.utils.CertificateUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.systemtest.CertBundle;
-import io.enmasse.systemtest.utils.CertificateUtils;
+import java.nio.ByteBuffer;
 
-public class FileDeviceRegistryTest extends DeviceRegistryTestBase{
+import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newFileBased;
+
+public class FileDeviceRegistryTest extends DeviceRegistryTestBase {
 
     @Override
     protected IoTConfig provideIoTConfig() throws Exception {

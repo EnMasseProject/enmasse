@@ -8,9 +8,17 @@ import com.paulhammant.ngwebdriver.ByAngular;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AuthenticationServiceType;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
-import io.enmasse.systemtest.selenium.resources.*;
+import io.enmasse.systemtest.selenium.resources.AddressWebItem;
+import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
+import io.enmasse.systemtest.selenium.resources.FilterType;
+import io.enmasse.systemtest.selenium.resources.SortType;
+import io.enmasse.systemtest.selenium.resources.ToolbarType;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
@@ -720,6 +728,7 @@ public class ConsoleWebPage implements IWebPage {
         //click on delete
         clickOnRemoveButton();
 
+        AddressUtils.waitForAddressDeleted(destination, new TimeoutBudget(5, TimeUnit.MINUTES));
         selenium.waitUntilItemNotPresent(60, () -> getAddressItem(destination));
 
         //check if address deleted

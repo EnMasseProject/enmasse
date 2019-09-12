@@ -6,10 +6,16 @@ package io.enmasse.systemtest.bases.authz;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.systemtest.*;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
-import io.enmasse.systemtest.bases.TestBaseWithShared;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.shared.ITestBaseShared;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -33,7 +39,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class AuthorizationTestBase extends TestBaseWithShared {
+public abstract class AuthorizationTestBase extends TestBase implements ITestBaseShared {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -46,8 +52,8 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
     private void initAddresses() throws Exception {
         queue = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-queue"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "authz-queue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -56,10 +62,10 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .endSpec()
                 .build();
 
-        topic =  new AddressBuilder()
+        topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-topic"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "authz-topic"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -70,8 +76,8 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
         anycast = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-anycast"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "authz-anycast"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("anycast")
@@ -82,8 +88,8 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
 
         multicast = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "authz-multicast"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "authz-multicast"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("multicast")
@@ -99,7 +105,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
             addresses.add(anycast);
             addresses.add(multicast);
         }
-        setAddresses(addresses.toArray(new Address[0]));
+        resourcesManager.setAddresses(addresses.toArray(new Address[0]));
     }
 
     protected void doTestSendAuthz() throws Exception {
@@ -107,16 +113,17 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         UserCredentials allowedUser = new UserCredentials("sender", "senderPa55");
         UserCredentials noAllowedUser = new UserCredentials("notallowedsender", "nobodyPa55");
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(allowedUser)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(allowedUser)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder().withAddresses("*").withOperations(Operation.send).build()))
                 .endSpec()
                 .done());
+        Thread.sleep(100);
         assertSend(allowedUser);
-        removeUser(sharedAddressSpace, allowedUser.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(allowedUser)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(allowedUser)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
@@ -124,15 +131,15 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                                 .withOperations(Operation.send).build()))
                 .endSpec()
                 .done());
-
+        Thread.sleep(100);
         assertSend(allowedUser);
-        removeUser(sharedAddressSpace, allowedUser.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(noAllowedUser).done());
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(noAllowedUser).done());
         assertCannotSend(noAllowedUser);
-        removeUser(sharedAddressSpace, noAllowedUser.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), noAllowedUser.getUsername());
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(noAllowedUser)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(noAllowedUser)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
@@ -141,7 +148,7 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .endSpec()
                 .done());
         assertCannotSend(noAllowedUser);
-        removeUser(sharedAddressSpace, noAllowedUser.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), noAllowedUser.getUsername());
     }
 
     protected void doTestReceiveAuthz() throws Exception {
@@ -149,16 +156,16 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         UserCredentials allowedUser = new UserCredentials("receiver", "receiverPa55");
         UserCredentials noAllowedUser = new UserCredentials("notallowedreceiver", "nobodyPa55");
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(allowedUser)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(allowedUser)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder().withAddresses("*").withOperations(Operation.recv).build()))
                 .endSpec()
                 .done());
         assertReceive(allowedUser);
-        removeUser(sharedAddressSpace, allowedUser.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(allowedUser)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(allowedUser)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
@@ -167,9 +174,9 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .endSpec()
                 .done());
         assertReceive(allowedUser);
-        removeUser(sharedAddressSpace, allowedUser.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), allowedUser.getUsername());
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(noAllowedUser)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(noAllowedUser)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
@@ -178,14 +185,14 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .endSpec()
                 .done());
         assertCannotReceive(noAllowedUser);
-        removeUser(sharedAddressSpace, noAllowedUser.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), noAllowedUser.getUsername());
     }
 
     protected void doTestUserPermissionAfterRemoveAuthz() throws Exception {
         initAddresses();
         UserCredentials user = new UserCredentials("pepa", "pepaPa55");
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(user)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(user)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
@@ -194,10 +201,10 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .endSpec()
                 .done());
         assertReceive(user);
-        removeUser(sharedAddressSpace, user.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername());
         Thread.sleep(5000);
 
-        createOrUpdateUser(sharedAddressSpace, UserUtils.createUserResource(user)
+        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), UserUtils.createUserResource(user)
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
@@ -206,34 +213,34 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
                 .endSpec()
                 .done());
         assertCannotReceive(user);
-        removeUser(sharedAddressSpace, user.getUsername());
+        resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername());
     }
 
     protected void doTestSendAuthzWithWIldcards() throws Exception {
-        List<Address> addresses = getAddressesWildcard(sharedAddressSpace);
-        List<User> users = createUsersWildcard(sharedAddressSpace, Operation.send);
+        List<Address> addresses = getAddressesWildcard(getSharedAddressSpace());
+        List<User> users = createUsersWildcard(getSharedAddressSpace(), Operation.send);
 
-        setAddresses(addresses.toArray(new Address[0]));
+        resourcesManager.setAddresses(addresses.toArray(new Address[0]));
 
         for (User user : users) {
             for (Address destination : addresses) {
                 assertSendWildcard(user, destination);
             }
-            removeUser(sharedAddressSpace, user.getSpec().getUsername());
+            resourcesManager.removeUser(getSharedAddressSpace(), user.getSpec().getUsername());
         }
     }
 
     protected void doTestReceiveAuthzWithWIldcards() throws Exception {
-        List<Address> addresses = getAddressesWildcard(sharedAddressSpace);
-        List<User> users = createUsersWildcard(sharedAddressSpace, Operation.recv);
+        List<Address> addresses = getAddressesWildcard(getSharedAddressSpace());
+        List<User> users = createUsersWildcard(getSharedAddressSpace(), Operation.recv);
 
-        setAddresses(addresses.toArray(new Address[0]));
+        resourcesManager.setAddresses(addresses.toArray(new Address[0]));
 
         for (User user : users) {
             for (Address destination : addresses) {
                 assertReceiveWildcard(user, destination);
             }
-            removeUser(sharedAddressSpace, user.getSpec().getUsername());
+            resourcesManager.removeUser(getSharedAddressSpace(), user.getSpec().getUsername());
         }
     }
 
@@ -388,13 +395,13 @@ public abstract class AuthorizationTestBase extends TestBaseWithShared {
         switch (dest.getSpec().getType()) {
             case "queue":
             case "anycast":
-                client = amqpClientFactory.createQueueClient(sharedAddressSpace);
+                client = getAmqpClientFactory().createQueueClient(getSharedAddressSpace());
                 break;
             case "topic":
-                client = amqpClientFactory.createTopicClient(sharedAddressSpace);
+                client = getAmqpClientFactory().createTopicClient(getSharedAddressSpace());
                 break;
             case "multicast":
-                client = amqpClientFactory.createBroadcastClient(sharedAddressSpace);
+                client = getAmqpClientFactory().createBroadcastClient(getSharedAddressSpace());
                 break;
         }
 

@@ -4,15 +4,18 @@
  */
 package io.enmasse.systemtest.bases;
 
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.WaitPhase;
+import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageType;
-import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
-import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.time.SystemtestsOperation;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
@@ -25,11 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.apiclients.Predicates.any;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 
-public abstract class IoTTestBase extends TestBase {
+public abstract class IoTTestBase extends TestBase implements ITestBaseIsolated {
 
     protected static final String IOT_ADDRESS_EVENT = "event";
     protected static final String IOT_ADDRESS_TELEMETRY = "telemetry";
@@ -38,11 +42,42 @@ public abstract class IoTTestBase extends TestBase {
     protected static final String IOT_ADDRESS_COMMAND_RESPONSE = "command_response";
 
     private static Logger log = CustomLogger.getLogger();
-
+    protected String iotProjectNamespace = "iot-project-ns";
     private List<IoTConfig> iotConfigs = new ArrayList<>();
     private List<IoTProject> iotProjects = new ArrayList<>();
 
-    protected String iotProjectNamespace = "iot-project-ns";
+    protected static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+        JsonObject json = new JsonObject(Map.of("a", "b"));
+        String message = "First successful " + type.name().toLowerCase() + " message";
+        TestUtils.waitUntilCondition(message, (phase) -> {
+            try {
+                switch (type) {
+                    case EVENT: {
+                        var response = adapterClient.sendEvent(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    case TELEMETRY: {
+                        var response = adapterClient.sendTelemetry(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    default:
+                        return true;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+
+        log.info("First {} message accepted", type.name().toLowerCase());
+    }
+
+    private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
+        if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
+            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
+        }
+    }
 
     @BeforeEach
     public void setupIoT() throws Exception {
@@ -131,39 +166,6 @@ public abstract class IoTTestBase extends TestBase {
 
     protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
         waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
-    }
-
-    protected static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
-        JsonObject json = new JsonObject(Map.of("a", "b"));
-        String message = "First successful " + type.name().toLowerCase() + " message";
-        TestUtils.waitUntilCondition(message, (phase) -> {
-            try {
-                switch(type) {
-                    case EVENT: {
-                        var response = adapterClient.sendEvent(json, any());
-                        logResponseIfLastTryFailed(phase, response, message);
-                        return response.statusCode() == HTTP_ACCEPTED;
-                    }
-                    case TELEMETRY: {
-                        var response = adapterClient.sendTelemetry(json, any());
-                        logResponseIfLastTryFailed(phase, response, message);
-                        return response.statusCode() == HTTP_ACCEPTED;
-                    }
-                    default:
-                        return true;
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }, new TimeoutBudget(3, TimeUnit.MINUTES));
-
-        log.info("First {} message accepted", type.name().toLowerCase());
-    }
-
-    private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
-        if(phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
-            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
-        }
     }
 
     public String tenantId(IoTProject project) {

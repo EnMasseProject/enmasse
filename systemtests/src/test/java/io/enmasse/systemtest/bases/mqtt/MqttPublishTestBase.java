@@ -4,9 +4,19 @@
  */
 package io.enmasse.systemtest.bases.mqtt;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.shared.ITestBaseShared;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
+import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -16,21 +26,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.slf4j.Logger;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.systemtest.AddressType;
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.bases.TestBaseWithShared;
-import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
-import io.enmasse.systemtest.mqtt.MqttUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
-
-public abstract class MqttPublishTestBase extends TestBaseWithShared {
+public abstract class MqttPublishTestBase extends TestBase implements ITestBaseShared {
 
     private static final String MYTOPIC = "mytopic";
     private static final Logger log = CustomLogger.getLogger();
@@ -68,8 +68,8 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
     public void testRetainedMessages() throws Exception {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, "test-topic1"))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -77,7 +77,7 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
                 .withPlan(topicPlan())
                 .endSpec()
                 .build();
-        setAddresses(topic);
+        resourcesManager.setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
         retainedMessage.setQos(1);
@@ -86,7 +86,7 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
         retainedMessage.setRetained(true);
 
         // send retained message to the topic
-        Builder publisherBuilder = mqttClientFactory.build();
+        Builder publisherBuilder = getMqttClientFactory().build();
         customizeClient(publisherBuilder);
         IMqttClient publisher = publisherBuilder.create();
         publisher.connect();
@@ -94,7 +94,7 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
         publisher.disconnect();
 
         // each client which will subscribe to the topic should receive retained message!
-        Builder subscriberBuilder = mqttClientFactory.build();
+        Builder subscriberBuilder = getMqttClientFactory().build();
         customizeClient(subscriberBuilder);
         IMqttClient subscriber = subscriberBuilder.create();
         subscriber.connect();
@@ -110,8 +110,8 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(sharedAddressSpace.getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(sharedAddressSpace, MYTOPIC))
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), MYTOPIC))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -119,12 +119,12 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
                 .withPlan(topicPlan())
                 .endSpec()
                 .build();
-        setAddresses(dest);
+        resourcesManager.setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setConnectionTimeout(options.getConnectionTimeout() * 2);  //Default is 30 seconds, increase it to 1 min.
         options.setAutomaticReconnect(true);
-        Builder clientBuilder = mqttClientFactory.build().mqttConnectionOptions(options);
+        Builder clientBuilder = getMqttClientFactory().build().mqttConnectionOptions(options);
         customizeClient(clientBuilder);
         IMqttClient client = clientBuilder.create();
 
@@ -145,7 +145,7 @@ public abstract class MqttPublishTestBase extends TestBaseWithShared {
                     receivedCount, is(messages.size()));
         } finally {
             log.info("Disconnecting");
-            if ( client != null ) {
+            if (client != null) {
                 client.disconnect();
             }
         }

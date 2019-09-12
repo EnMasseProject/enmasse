@@ -5,10 +5,9 @@
 package io.enmasse.systemtest.selenium.page;
 
 
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
-import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;

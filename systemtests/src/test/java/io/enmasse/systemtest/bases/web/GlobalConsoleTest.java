@@ -7,21 +7,25 @@ package io.enmasse.systemtest.bases.web;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.ExposeType;
+import io.enmasse.address.model.TlsTermination;
 import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.systemtest.AddressSpacePlans;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.AdminResourcesManager;
-import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.common.Credentials;
+import io.enmasse.systemtest.isolated.Credentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.page.GlobalConsolePage;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 
 import java.util.Optional;
@@ -30,11 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public abstract class GlobalConsoleTest extends TestBase {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
-
+    private static final CommonResourcesManager commonResourcesManager = CommonResourcesManager.getInstance();
     private static Logger log = CustomLogger.getLogger();
+    SeleniumProvider selenium = SeleniumProvider.getInstance();
     private GlobalConsolePage globalConsolePage;
-    private static final AdminResourcesManager adminManager = AdminResourcesManager.getInstance();
 
     //============================================================================================
     //============================ do test methods ===============================================
@@ -47,7 +50,7 @@ public abstract class GlobalConsoleTest extends TestBase {
     }
 
     protected void doTestCreateAddressSpace(AddressSpace addressSpace) throws Exception {
-        addToAddressSpacess(addressSpace);
+        commonResourcesManager.addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -56,7 +59,7 @@ public abstract class GlobalConsoleTest extends TestBase {
     }
 
     protected void doTestConnectToAddressSpaceConsole(AddressSpace addressSpace) throws Exception {
-        addToAddressSpacess(addressSpace);
+        commonResourcesManager.addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
@@ -67,7 +70,7 @@ public abstract class GlobalConsoleTest extends TestBase {
 
     protected void doTestCreateAddrSpaceWithCustomAuthService() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
-        adminManager.createAuthService(standardAuth);
+        commonResourcesManager.replaceAuthService(standardAuth);
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -82,7 +85,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        addToAddressSpacess(addressSpace);
+        commonResourcesManager.addToAddressSpaces(addressSpace);
 
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
@@ -105,7 +108,7 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createAddressSpace(addressSpace);
+        commonResourcesManager.createAddressSpace(addressSpace);
 
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
@@ -147,7 +150,7 @@ public abstract class GlobalConsoleTest extends TestBase {
         }
     }
 
-    protected void doTestSwitchAddressSpacePlan() throws Exception{
+    protected void doTestSwitchAddressSpacePlan() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-addr-space-api")
@@ -161,23 +164,23 @@ public abstract class GlobalConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        addToAddressSpacess(addressSpace);
+        commonResourcesManager.addToAddressSpaces(addressSpace);
         globalConsolePage = new GlobalConsolePage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         globalConsolePage.openGlobalConsolePage();
         globalConsolePage.createAddressSpace(addressSpace);
         waitUntilAddressSpaceActive(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_MEDIUM,
-                getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+                CommonResourcesManager.getInstance().getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
         globalConsolePage.switchAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
         AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
-                getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+                CommonResourcesManager.getInstance().getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
     }
 
     private void waitUntilAddressSpaceActive(AddressSpace addressSpace) throws Exception {
         String name = addressSpace.getMetadata().getName();
-        waitForAddressSpaceReady(addressSpace);
+        commonResourcesManager.waitForAddressSpaceReady(addressSpace);
         Boolean active = Optional.ofNullable(selenium.waitUntilItemPresent(60, () -> globalConsolePage.getAddressSpaceItem(addressSpace)))
                 .map(webItem -> webItem.getStatus().contains("Active"))
                 .orElseGet(() -> {
@@ -185,5 +188,48 @@ public abstract class GlobalConsoleTest extends TestBase {
                     return false;
                 });
         assertTrue(active, String.format("Address space %s not marked active in UI within timeout", name));
+    }
+
+    protected void doTestOpenConsoleCustomRoute() throws Exception {
+        String endpointPrefix = "test-endpoint-";
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+
+                .addNewEndpoint()
+                .withName(endpointPrefix + "console")
+                .withService("console")
+                .editOrNewExpose()
+                .withType(ExposeType.route)
+                .withRouteTlsTermination(TlsTermination.reencrypt)
+                .withRouteServicePort("https")
+                .endExpose()
+                .endEndpoint()
+
+                .endSpec()
+                .build();
+        commonResourcesManager.createAddressSpace(addressSpace);
+        log.warn("Addressspace::     " + addressSpace);
+        log.warn("Finding: " + endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+
+        //try to get all external endpoints
+        kubernetes.getExternalEndpoint(endpointPrefix + "console-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+
+        ConsoleWebPage console = new ConsoleWebPage(
+                selenium,
+                getConsoleRoute(addressSpace),
+                addressSpace,
+                clusterUser);
+        console.openWebConsolePage();
+        console.openAddressesPageWebConsole();
     }
 }

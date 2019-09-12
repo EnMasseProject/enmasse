@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.selenium.resources;
 
-import io.enmasse.systemtest.AddressStatus;
+import io.enmasse.systemtest.model.address.AddressStatus;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 

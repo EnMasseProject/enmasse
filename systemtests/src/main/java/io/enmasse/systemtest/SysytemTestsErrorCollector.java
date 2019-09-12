@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.logs.CustomLogger;
 import org.hamcrest.Matcher;
 import org.slf4j.Logger;
 
@@ -19,6 +20,13 @@ public class SysytemTestsErrorCollector {
     static final Logger log = CustomLogger.getLogger();
 
     private List<Exception> collector = new ArrayList<>();
+
+    public static String getStackTrace(final Throwable throwable) {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw, true);
+        throwable.printStackTrace(pw);
+        return sw.getBuffer().toString();
+    }
 
     public void clear() {
         this.collector.clear();
@@ -38,13 +46,6 @@ public class SysytemTestsErrorCollector {
 
     public boolean verify() {
         return this.collector.isEmpty();
-    }
-
-    public static String getStackTrace(final Throwable throwable) {
-        final StringWriter sw = new StringWriter();
-        final PrintWriter pw = new PrintWriter(sw, true);
-        throwable.printStackTrace(pw);
-        return sw.getBuffer().toString();
     }
 
     @Override

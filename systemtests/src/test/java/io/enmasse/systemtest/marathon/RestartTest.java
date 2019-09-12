@@ -7,15 +7,19 @@ package io.enmasse.systemtest.marathon;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.AddressSpacePlans;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.bases.marathon.MarathonTestBase;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -26,7 +30,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-class RestartTest extends MarathonTestBase {
+@Tag(TestTag.ISOLATED)
+class RestartTest extends MarathonTestBase implements ITestBaseIsolated {
     private static Logger log = CustomLogger.getLogger();
     private ScheduledExecutorService deleteService;
 
@@ -43,7 +48,7 @@ class RestartTest extends MarathonTestBase {
     }
 
     @Test
-    void testRandomDeletePods() throws Exception {
+    public void testRandomDeletePods() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
         AddressSpace standard = new AddressSpaceBuilder()
@@ -72,18 +77,18 @@ class RestartTest extends MarathonTestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        createAddressSpaceList(standard, brokered);
-        createOrUpdateUser(brokered, user);
-        createOrUpdateUser(standard, user);
+        commonResourcesManager.createAddressSpaceList(standard, brokered);
+        resourcesManager.createOrUpdateUser(brokered, user);
+        resourcesManager.createOrUpdateUser(standard, user);
 
         List<Address> brokeredAddresses = getAllBrokeredAddresses(brokered);
         List<Address> standardAddresses = getAllStandardAddresses(standard);
 
-        setAddresses(brokeredAddresses.toArray(new Address[0]));
-        setAddresses(standardAddresses.toArray(new Address[0]));
+        resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
+        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
 
-        assertCanConnect(brokered, user, brokeredAddresses);
-        assertCanConnect(standard, user, standardAddresses);
+        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
+        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
 
         //set up restart scheduler
         deleteService.scheduleAtFixedRate(() -> {
@@ -104,7 +109,7 @@ class RestartTest extends MarathonTestBase {
 
     @Test
     @Disabled("Due to issue #2127")
-    void testHAqdrouter() throws Exception {
+    public void testHAqdrouter() throws Exception {
 
         UserCredentials user = new UserCredentials("test-user", "passsswooooord");
         AddressSpace standard = new AddressSpaceBuilder()
@@ -120,14 +125,14 @@ class RestartTest extends MarathonTestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        createAddressSpaceList(standard);
-        createOrUpdateUser(standard, user);
+        commonResourcesManager.createAddressSpaceList(standard);
+        resourcesManager.createOrUpdateUser(standard, user);
 
         List<Address> standardAddresses = getAllStandardAddresses(standard);
 
-        setAddresses(standardAddresses.toArray(new Address[0]));
+        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
 
-        assertCanConnect(standard, user, standardAddresses);
+        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
 
         //set up restart scheduler
         deleteService.scheduleAtFixedRate(() -> {
@@ -143,22 +148,22 @@ class RestartTest extends MarathonTestBase {
         }, 5, 75, TimeUnit.SECONDS);
 
         runTestInLoop(30, () ->
-                assertCanConnect(standard, user, standardAddresses));
+                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager));
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Address> brAddresses, List<Address> stAddresses) throws Exception {
         log.info("Check if system works");
-        TestUtils.runUntilPass(60, () -> getAddressSpace(brokered.getMetadata().getName()));
-        TestUtils.runUntilPass(60, () -> getAddressSpace(standard.getMetadata().getName()));
-        TestUtils.runUntilPass(60, () -> createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));
-        TestUtils.runUntilPass(60, () -> createOrUpdateUser(standard, new UserCredentials("jura", "fura")));
+        TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(brokered.getMetadata().getName()));
+        TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(standard.getMetadata().getName()));
+        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));
+        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura")));
         TestUtils.runUntilPass(60, () -> {
-            assertCanConnect(brokered, existingUser, brAddresses);
+            getClientUtils().assertCanConnect(brokered, existingUser, brAddresses, resourcesManager);
             return true;
         });
         TestUtils.runUntilPass(60, () -> {
-            assertCanConnect(standard, existingUser, stAddresses);
+            getClientUtils().assertCanConnect(standard, existingUser, stAddresses, resourcesManager);
             return true;
         });
     }

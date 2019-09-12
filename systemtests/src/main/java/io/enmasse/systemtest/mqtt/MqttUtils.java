@@ -4,12 +4,11 @@
  */
 package io.enmasse.systemtest.mqtt;
 
+import io.enmasse.systemtest.logs.CustomLogger;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-
 import org.slf4j.Logger;
-import io.enmasse.systemtest.CustomLogger;
 
 import java.util.Iterator;
 import java.util.List;
@@ -26,6 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class MqttUtils {
 
     private static Logger log = CustomLogger.getLogger();
+
     public static <T> int awaitAndReturnCode(List<CompletableFuture<T>> futures, int timeout, TimeUnit timeUnit) throws InterruptedException, ExecutionException {
         CompletableFuture<Void> future = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
         try {

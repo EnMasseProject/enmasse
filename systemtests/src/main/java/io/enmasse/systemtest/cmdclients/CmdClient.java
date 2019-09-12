@@ -4,26 +4,26 @@
  */
 package io.enmasse.systemtest.cmdclients;
 
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.executor.Executor;
+import io.enmasse.systemtest.logs.CustomLogger;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.List;
 
 public abstract class CmdClient {
-    private static Logger log = CustomLogger.getLogger();
     protected static final Object lock = new Object();
     protected static final Environment env = Environment.getInstance();
+    private static Logger log = CustomLogger.getLogger();
 
-    protected static ExecutionResultData execute(int timeout, boolean logToOutput, String ...cmd) {
-        return execute(Arrays.asList(cmd),timeout, logToOutput, true);
+    protected static ExecutionResultData execute(int timeout, boolean logToOutput, String... cmd) {
+        return execute(Arrays.asList(cmd), timeout, logToOutput, true);
     }
 
     public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput) {
-        return execute(command,timeout, logToOutput, true);
+        return execute(command, timeout, logToOutput, true);
     }
 
     public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator) {

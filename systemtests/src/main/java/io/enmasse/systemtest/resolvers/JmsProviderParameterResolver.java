@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.resolvers;
 
-import io.enmasse.systemtest.JmsProvider;
+import io.enmasse.systemtest.utils.JmsProvider;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;

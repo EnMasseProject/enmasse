@@ -5,7 +5,15 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.message.Message;
+import org.opentest4j.AssertionFailedError;
+import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.LinkedList;
@@ -15,16 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.message.Message;
-import org.opentest4j.AssertionFailedError;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.amqp.AmqpClient;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Run a message send test.
@@ -37,81 +36,16 @@ import io.vertx.core.json.JsonObject;
 public class MessageSendTester {
 
     private static final Logger log = CustomLogger.getLogger();
-
-    public static enum Type {
-        TELEMETRY(MessageType.TELEMETRY), EVENT(MessageType.EVENT);
-
-        private MessageType type;
-
-        private Type(final MessageType type) {
-            this.type = type;
-        }
-
-        public MessageType type() {
-            return this.type;
-        }
-    }
-
-    public static enum Consume {
-        BEFORE, AFTER;
-    }
-
-    @FunctionalInterface
-    public interface Sender {
-        /**
-         * Send a single message.
-         *
-         * @param type the type to send.
-         * @param payload the payload to send, may be {@code null}.
-         * @param sendTimeout timeout for the send operation.
-         * @return {@code true} if the message was accepted, {@code false} otherwise.
-         * @throws Exception In case anything went wrong.
-         */
-        public boolean send(Type type, JsonObject payload, Duration sendTimeout) throws Exception;
-    }
-
-    @FunctionalInterface
-    public interface ConsumerFactory {
-
-        public AutoCloseable start(Type type, Consumer<Message> messageConsumer);
-
-        public static ConsumerFactory of(final AmqpClient client, final String tenantId) {
-            return new ConsumerFactory() {
-
-                @Override
-                public AutoCloseable start(final Type type, final Consumer<Message> messageConsumer) {
-
-                    var receiver = client.recvMessagesWithStatus(type.type().address() + "/" + tenantId, msg -> {
-                        messageConsumer.accept(msg);
-                        return false;
-                    });
-
-                    return new AutoCloseable() {
-
-                        @Override
-                        public void close() throws Exception {
-                            receiver.close();
-                        }
-                    };
-                }
-            };
-        }
-    }
-
     private Type type = Type.TELEMETRY;
     private int amount = 1;
     private Consume consume = Consume.BEFORE;
     private Duration delay = Duration.ofSeconds(1);
     private Duration additionalSendTimeout = Duration.ZERO;
-
     private double sendRepeatFactor = 4.0; // 4 times each message
-
     private Duration defaultReceiveSlot = Duration.ofMillis(100);
     private Duration additionalReceiveTimeout = Duration.ofSeconds(1);
     private Duration receiveTimeout;
-
     private int acceptableMessageLoss = 0;
-
     private Sender sender;
     private ConsumerFactory consumerFactory;
 
@@ -251,6 +185,66 @@ public class MessageSendTester {
         return sendDuration.plus(MessageSendTester.this.additionalSendTimeout);
     }
 
+    public static enum Type {
+        TELEMETRY(MessageType.TELEMETRY), EVENT(MessageType.EVENT);
+
+        private MessageType type;
+
+        private Type(final MessageType type) {
+            this.type = type;
+        }
+
+        public MessageType type() {
+            return this.type;
+        }
+    }
+
+    public static enum Consume {
+        BEFORE, AFTER;
+    }
+
+    @FunctionalInterface
+    public interface Sender {
+        /**
+         * Send a single message.
+         *
+         * @param type        the type to send.
+         * @param payload     the payload to send, may be {@code null}.
+         * @param sendTimeout timeout for the send operation.
+         * @return {@code true} if the message was accepted, {@code false} otherwise.
+         * @throws Exception In case anything went wrong.
+         */
+        public boolean send(Type type, JsonObject payload, Duration sendTimeout) throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface ConsumerFactory {
+
+        public static ConsumerFactory of(final AmqpClient client, final String tenantId) {
+            return new ConsumerFactory() {
+
+                @Override
+                public AutoCloseable start(final Type type, final Consumer<Message> messageConsumer) {
+
+                    var receiver = client.recvMessagesWithStatus(type.type().address() + "/" + tenantId, msg -> {
+                        messageConsumer.accept(msg);
+                        return false;
+                    });
+
+                    return new AutoCloseable() {
+
+                        @Override
+                        public void close() throws Exception {
+                            receiver.close();
+                        }
+                    };
+                }
+            };
+        }
+
+        public AutoCloseable start(Type type, Consumer<Message> messageConsumer);
+    }
+
     /**
      * A received message.
      */
@@ -279,7 +273,6 @@ public class MessageSendTester {
      * This method does the actual work of the {@link MessageSendTester}. Although it is a non-static
      * nested class, it must not alter the state of the {@link MessageSendTester} instance. Any mutable
      * state must go into the instance of this class.
-     *
      */
     private class Executor implements AutoCloseable {
 
@@ -343,7 +336,7 @@ public class MessageSendTester {
             final Duration receiveTimeout = calcReceiveTimeout();
             log.info("Receive timeout: {}", receiveTimeout);
             var receiveBudget = TimeoutBudget.ofDuration(receiveTimeout);
-            var receiveSleep = Math.min(receiveTimeout.toMillis()/10, 1_000);
+            var receiveSleep = Math.min(receiveTimeout.toMillis() / 10, 1_000);
             log.info("Receive sleep period: {}", receiveSleep);
             while (!isConsumerReady(receiveBudget)) {
                 if (receiveBudget.timeoutExpired()) {
@@ -364,7 +357,7 @@ public class MessageSendTester {
 
             final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
 
-            if ( missing <= 0 ) {
+            if (missing <= 0) {
                 // we received all messages we expected - success
                 return true;
             }
@@ -381,7 +374,7 @@ public class MessageSendTester {
 
         private void assertResult() {
 
-            double avgMessageTime = ((double)this.sendTime) / ((double)this.receivedMessages.size());
+            double avgMessageTime = ((double) this.sendTime) / ((double) this.receivedMessages.size());
             log.info("Average message RTT: {} ms", String.format("%.2f", avgMessageTime));
 
             final int missing = MessageSendTester.this.amount - this.receivedMessages.size();
@@ -420,7 +413,8 @@ public class MessageSendTester {
             handleValidMessage(message, timestamp, json);
         }
 
-        private void handleInvalidMessage(final Message message) {}
+        private void handleInvalidMessage(final Message message) {
+        }
 
         private void handleValidMessage(final Message message, int timestamp, final JsonObject payload) {
             var diff = System.currentTimeMillis() - timestamp;

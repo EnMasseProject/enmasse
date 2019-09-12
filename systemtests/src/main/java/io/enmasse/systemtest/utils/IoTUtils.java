@@ -8,9 +8,13 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
-import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
-import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.SystemtestsOperation;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -20,8 +24,6 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class IoTUtils {
-
-    private static Logger log = CustomLogger.getLogger();
 
     private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
             "iot-auth-service",
@@ -34,6 +36,7 @@ public class IoTUtils {
     };
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
+    private static Logger log = CustomLogger.getLogger();
 
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
@@ -56,7 +59,7 @@ public class IoTUtils {
         TestUtils.waitForNReplicas(EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
     }
 
-    public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception{
+    public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
         log.info("Deleting IoTConfig: {}", config.getMetadata().getName());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
         kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName()).cascading(true).delete();
@@ -64,7 +67,7 @@ public class IoTUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception{
+    private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception {
         TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(2, TimeUnit.MINUTES), 5000);
     }
 

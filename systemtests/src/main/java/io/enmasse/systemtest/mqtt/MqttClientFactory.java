@@ -6,18 +6,38 @@
 package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import org.eclipse.paho.client.mqttv3.*;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttCallback;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttClientPersistence;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 
-import javax.net.ssl.*;
-
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -25,7 +45,11 @@ import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.BiFunction;
 
@@ -115,11 +139,6 @@ public class MqttClientFactory {
         return build().createAsync();
     }
 
-    @FunctionalInterface
-    private interface ConnectionFactory<C> {
-        C newInstance(String serverUri, String clientId, MqttClientPersistence persistence) throws MqttException;
-    }
-
     private <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator, Endpoint endpoint, AddressSpace addressSpace, MqttConnectOptions options, String clientId) throws Exception {
 
         Endpoint mqttEndpoint;
@@ -173,6 +192,26 @@ public class MqttClientFactory {
         connectedClients.clear();
     }
 
+    @FunctionalInterface
+    private interface ConnectionFactory<C> {
+        C newInstance(String serverUri, String clientId, MqttClientPersistence persistence) throws MqttException;
+    }
+
+
+    public interface Builder {
+
+        Builder endpoint(Endpoint endpoint);
+
+        Builder addressSpace(AddressSpace addressSpace);
+
+        Builder mqttConnectionOptions(MqttConnectOptions options);
+
+        Builder clientId(String clientId);
+
+        IMqttClient create() throws Exception;
+
+        IMqttAsyncClient createAsync() throws Exception;
+    }
 
     private static class SNISettingSSLSocketFactory extends SSLSocketFactory {
         private final SSLSocketFactory socketFactory;
@@ -242,7 +281,6 @@ public class MqttClientFactory {
             return setHostnameParameter(socketFactory.createSocket(inetAddress, i, inetAddress1, i1));
         }
     }
-
 
     private static class MyX509TrustManager implements X509TrustManager {
         @Override
@@ -611,20 +649,5 @@ public class MqttClientFactory {
             connectedClients.remove(this);
             this.mqttClient.close();
         }
-    }
-
-    public interface Builder {
-
-        Builder endpoint(Endpoint endpoint);
-
-        Builder addressSpace(AddressSpace addressSpace);
-
-        Builder mqttConnectionOptions(MqttConnectOptions options);
-
-        Builder clientId(String clientId);
-
-        IMqttClient create() throws Exception;
-
-        IMqttAsyncClient createAsync() throws Exception;
     }
 }

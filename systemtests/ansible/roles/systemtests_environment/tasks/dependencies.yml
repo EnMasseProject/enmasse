@@ -34,8 +34,8 @@
 
 - name: OpenShift | Remove old symlink
   file:
-   path: "/usr/bin/oc"
-   state: absent
+    path: "/usr/bin/oc"
+    state: absent
 
 - name: OpenShift | Create symlink
   file:
@@ -69,8 +69,8 @@
 
 - name: Kubectl | Remove old symlink
   file:
-   path: "/usr/bin/kubectl"
-   state: absent
+    path: "/usr/bin/kubectl"
+    state: absent
 
 - name: Kubectl | Create symlink
   file:
@@ -104,8 +104,8 @@
 
 - name: Minikube | Remove old symlink
   file:
-   path: "/usr/bin/minikube"
-   state: absent
+    path: "/usr/bin/minikube"
+    state: absent
 
 - name: Minikube | Create symlink
   file:

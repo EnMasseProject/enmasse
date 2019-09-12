@@ -4,16 +4,15 @@
  */
 package io.enmasse.systemtest.utils;
 
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.executor.Executor;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.UUID;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-
-import io.enmasse.systemtest.CertBundle;
-import io.enmasse.systemtest.executor.Executor;
 
 public class CertificateUtils {
 
@@ -56,7 +55,7 @@ public class CertificateUtils {
     }
 
     private static void deleteFiles(File... files) {
-        for(File file : files) {
+        for (File file : files) {
             FileUtils.deleteQuietly(file);
         }
     }

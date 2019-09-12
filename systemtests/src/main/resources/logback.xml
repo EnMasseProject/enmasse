@@ -2,14 +2,14 @@
 <!DOCTYPE xml>
 <configuration>
 
-  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <encoder>
-      <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} %highlight(%-5p) [%c{0}] %m%n</pattern>
-    </encoder>
-  </appender>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} %highlight(%-5p) [%c{0}] %m%n</pattern>
+        </encoder>
+    </appender>
 
-  <root level="${LOG_LEVEL:-info}">
-    <appender-ref ref="STDOUT" />
-  </root>
+    <root level="${LOG_LEVEL:-info}">
+        <appender-ref ref="STDOUT"/>
+    </root>
 
 </configuration>

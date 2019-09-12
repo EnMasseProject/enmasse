@@ -22,13 +22,13 @@ public class UserCredentials {
         return username;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
     public UserCredentials setUsername(String username) {
         this.username = username;
         return this;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public UserCredentials setPassword(String password) {

@@ -5,10 +5,10 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.Assert.assertNotNull;
+import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
-import io.vertx.core.json.JsonObject;
+import static org.junit.Assert.assertNotNull;
 
 public class CredentialsTest {
 

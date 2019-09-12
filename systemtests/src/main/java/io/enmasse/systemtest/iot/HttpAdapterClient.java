@@ -5,11 +5,22 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.iot.MessageType.EVENT;
-import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.time.Duration.ofSeconds;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.apiclients.ApiClient;
+import io.enmasse.systemtest.apiclients.Predicates;
+import io.enmasse.systemtest.iot.MessageSendTester.Sender;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClientOptions;
+import org.apache.http.entity.ContentType;
+import org.slf4j.Logger;
 
+import javax.ws.rs.core.HttpHeaders;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
@@ -18,23 +29,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import javax.ws.rs.core.HttpHeaders;
-
-import org.apache.http.entity.ContentType;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.CustomLogger;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
-import io.enmasse.systemtest.apiclients.ApiClient;
-import io.enmasse.systemtest.apiclients.Predicates;
-import io.enmasse.systemtest.iot.MessageSendTester.Sender;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpRequest;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.ext.web.client.WebClient;
-import io.vertx.ext.web.client.WebClientOptions;
+import static io.enmasse.systemtest.iot.MessageType.EVENT;
+import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.time.Duration.ofSeconds;
 
 public class HttpAdapterClient extends ApiClient {
 
@@ -43,6 +41,10 @@ public class HttpAdapterClient extends ApiClient {
     public HttpAdapterClient(Kubernetes kubernetes, Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
         super(kubernetes, () -> endpoint, "");
         this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
+    }
+
+    private static String contentType(final JsonObject payload) {
+        return payload != null ? ContentType.APPLICATION_JSON.getMimeType() : "application/vnd.eclipse-hono-empty-notification";
     }
 
     @Override
@@ -59,21 +61,17 @@ public class HttpAdapterClient extends ApiClient {
     }
 
     @Override
-    public void close () {
+    public void close() {
         this.client.close();
     }
 
-    private static String contentType (final JsonObject payload) {
-        return payload != null ? ContentType.APPLICATION_JSON.getMimeType() : "application/vnd.eclipse-hono-empty-notification";
-    }
-
     public HttpResponse<?> send(MessageType messageType, JsonObject payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
-            Duration responseTimeout) throws Exception {
+                                Duration responseTimeout) throws Exception {
         return send(messageType, null, payload, expectedCodePredicate, requestCustomizer, responseTimeout);
     }
 
     public HttpResponse<?> send(MessageType messageType, String pathSuffix, JsonObject payload, Predicate<Integer> expectedCodePredicate,
-            Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
+                                Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
 
         CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
         var ms = responseTimeout.toMillis();
@@ -111,15 +109,15 @@ public class HttpAdapterClient extends ApiClient {
             }
 
             final CompletableFuture<Buffer> nf = new CompletableFuture<>();
-            log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage() );
-            if ( ar.failed() ) {
+            log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage());
+            if (ar.failed()) {
                 log.debug("Request failed", ar.cause());
                 nf.completeExceptionally(ar.cause());
             } else {
                 var response = ar.result();
-                var code =  response.statusCode();
+                var code = response.statusCode();
                 log.info("POST: code {} -> {}", code, response.bodyAsString());
-                if ( !expectedCodePredicate.test(code)) {
+                if (!expectedCodePredicate.test(code)) {
                     nf.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code)));
                 } else {
                     nf.complete(response.body());

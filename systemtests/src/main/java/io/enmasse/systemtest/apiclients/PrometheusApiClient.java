@@ -4,18 +4,19 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import java.net.HttpURLConnection;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
 
-public class PrometheusApiClient extends ApiClient{
+import java.net.HttpURLConnection;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
+public class PrometheusApiClient extends ApiClient {
 
     public PrometheusApiClient(Kubernetes kubernetes, Endpoint endpoint) {
         super(kubernetes, () -> endpoint, "");

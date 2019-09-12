@@ -5,9 +5,9 @@
 package io.enmasse.systemtest.selenium.page;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.AddressSpaceType;
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.AddressSpaceWebItem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -211,7 +211,7 @@ public class GlobalConsolePage implements IWebPage {
         selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//a[contains(text(), 'Edit')]")));
         selenium.clickOnItem(selenium.getDriver().findElement(By.id("form-planName")));
         selenium.clickOnItem(selenium.getDriver()
-                .findElement(By.xpath("//option[@value='" + addressSpacePlan +"']")));
+                .findElement(By.xpath("//option[@value='" + addressSpacePlan + "']")));
         selenium.clickOnItem(selenium.getDriver().findElement(By.id("button-edit-save")));
         selenium.refreshPage();
         addressSpace.getSpec().setPlan(addressSpacePlan);

@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
@@ -18,12 +18,12 @@ import java.util.concurrent.CompletableFuture;
 public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
     private static final Logger log = CustomLogger.getLogger();
+    private static final Symbol unauthorizedAccess = Symbol.getSymbol("amqp:unauthorized-access");
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;
-    private final String containerId;
-    private static final Symbol unauthorizedAccess = Symbol.getSymbol("amqp:unauthorized-access");
     protected final CompletableFuture<Void> connectPromise;
     protected final CompletableFuture<T> resultPromise;
+    private final String containerId;
 
     public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<T> resultPromise, String containerId) {
         this.clientOptions = clientOptions;

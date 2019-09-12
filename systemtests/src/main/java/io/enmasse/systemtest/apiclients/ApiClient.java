@@ -4,10 +4,10 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import io.enmasse.systemtest.CustomLogger;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Kubernetes;
 import io.enmasse.systemtest.VertxFactory;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.zjsonpatch.internal.guava.Strings;
 import io.vertx.core.AsyncResult;
@@ -82,11 +82,11 @@ public abstract class ApiClient implements AutoCloseable {
 
     protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, int expectedCode,
                                        String warnMessage, boolean throwException) {
-        responseHandler(ar, promise, (responseCode)-> responseCode == expectedCode, String.valueOf(expectedCode), warnMessage, throwException);
+        responseHandler(ar, promise, (responseCode) -> responseCode == expectedCode, String.valueOf(expectedCode), warnMessage, throwException);
     }
 
     protected <T> void responseHandler(AsyncResult<HttpResponse<T>> ar, CompletableFuture<T> promise, Predicate<Integer> expectedCodePredicate,
-            String warnMessage, boolean throwException) {
+                                       String warnMessage, boolean throwException) {
 
         responseHandler(ar, promise, expectedCodePredicate, expectedCodePredicate.toString(), warnMessage, throwException);
 
@@ -102,9 +102,9 @@ public abstract class ApiClient implements AutoCloseable {
                     log.error("expected-code: {}, response-code: {}, body: {}, op: {}", expectedCodeOrCodes, response.statusCode(), response.body(), warnMessage);
                     promise.completeExceptionally(new RuntimeException("Status " + response.statusCode() + " body: " + (body != null ? body.toString() : null)));
                 } else if (response.statusCode() < HTTP_OK || response.statusCode() >= HttpURLConnection.HTTP_MULT_CHOICE) {
-                    if(throwException) {
+                    if (throwException) {
                         promise.completeExceptionally(new RuntimeException(body == null ? "null" : body.toString()));
-                    }else {
+                    } else {
                         promise.complete(ar.result().body());
                     }
                 } else {

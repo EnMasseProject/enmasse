@@ -4,6 +4,41 @@
  */
 package io.enmasse.systemtest.iot;
 
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
+import io.enmasse.systemtest.utils.CertificateUtils;
+import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.user.model.v1.Operation;
+import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import java.net.HttpURLConnection;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -15,45 +50,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import io.enmasse.systemtest.CustomLogger;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.CertBundle;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.TimeoutBudget;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.WaitPhase;
-import io.enmasse.systemtest.ability.ITestBaseStandard;
-import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.IoTTestBase;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.utils.CertificateUtils;
-import io.enmasse.systemtest.utils.IoTUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.user.model.v1.Operation;
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserAuthenticationType;
-import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import io.enmasse.user.model.v1.UserBuilder;
-import org.slf4j.Logger;
-
-@Tag(TestTag.sharedIot)
-@Tag(TestTag.smoke)
-public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStandard {
+@Tag(TestTag.SHARED_IOT)
+@Tag(TestTag.SMOKE)
+public class MultipleProjectsTest extends IoTTestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
 
     private DeviceRegistryClient registryClient;
@@ -95,7 +94,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
 
-        for(int i=1; i<=numberOfProjects; i++) {
+        for (int i = 1; i <= numberOfProjects; i++) {
             String projectName = String.format("project-%s", i);
 
             if (!kubernetes.namespaceExists(projectName)) {
@@ -119,7 +118,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
             logCollector.collectHttpAdapterQdrProxyState();
         }
 
-        for(IoTProjectTestContext ctx : projects) {
+        for (IoTProjectTestContext ctx : projects) {
             cleanDeviceSide(ctx);
             cleanAmqpSide(ctx);
         }
@@ -154,7 +153,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     }
 
     private void configureAmqpSide(IoTProjectTestContext ctx) throws Exception {
-        AddressSpace addressSpace = getAddressSpace(ctx.getNamespace(), ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = commonResourcesManager.getAddressSpace(ctx.getNamespace(), ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         User amqpUser = configureAmqpUser(ctx.getProject(), addressSpace);
         ctx.setAmqpUser(amqpUser);
         AmqpClient amqpClient = configureAmqpClient(addressSpace, amqpUser);
@@ -191,10 +190,10 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestBaseStanda
     }
 
     private AmqpClient configureAmqpClient(AddressSpace addressSpace, User user) throws Exception {
-        AmqpClient amqpClient = amqpClientFactory.createQueueClient(addressSpace);
+        AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
         amqpClient.getConnectOptions()
-            .setUsername(user.getSpec().getUsername())
-            .setPassword(new String(Base64.getDecoder().decode(user.getSpec().getAuthentication().getPassword())));
+                .setUsername(user.getSpec().getUsername())
+                .setPassword(new String(Base64.getDecoder().decode(user.getSpec().getAuthentication().getPassword())));
         return amqpClient;
     }
 

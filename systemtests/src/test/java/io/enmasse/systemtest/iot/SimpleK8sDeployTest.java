@@ -11,8 +11,10 @@ import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.Kubernetes;
+import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -24,29 +26,26 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static java.time.Duration.ofMinutes;
-import static java.util.Collections.singletonMap;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.enmasse.systemtest.TestTag.sharedIot;
-import static io.enmasse.systemtest.TestTag.smoke;
-import static io.enmasse.systemtest.TimeoutBudget.ofDuration;
+import static io.enmasse.systemtest.TestTag.SHARED_IOT;
+import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static java.time.Duration.ofMinutes;
+import static java.util.Collections.singletonMap;
 
-@Tag(sharedIot)
-@Tag(smoke)
+@Tag(SHARED_IOT)
+@Tag(SMOKE)
 @EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
-class SimpleK8sDeployTest {
+class SimpleK8sDeployTest extends IoTTestBaseWithShared implements ITestIsolatedStandard {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleK8sDeployTest.class);
     private static final String NAMESPACE = Environment.getInstance().namespace();
-
-    private Kubernetes client = Kubernetes.getInstance();
-
     private static IoTConfig config;
+    private Kubernetes client = Kubernetes.getInstance();
 
     @BeforeAll
     static void setup() throws Exception {

@@ -5,14 +5,22 @@
 
 package io.enmasse.systemtest.utils;
 
+import com.google.common.io.BaseEncoding;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.systemtest.*;
-import io.enmasse.systemtest.timemeasuring.SystemtestsOperation;
-import io.enmasse.systemtest.timemeasuring.TimeMeasuringSystem;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.time.SystemtestsOperation;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -26,13 +34,18 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 
-import com.google.common.io.BaseEncoding;
-
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -43,9 +56,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TestUtils {
-    private static Logger log = CustomLogger.getLogger();
-
     private static final Random R = new Random();
+    private static Logger log = CustomLogger.getLogger();
 
     /**
      * scale up/down specific pod (type: Deployment) in address space
@@ -444,7 +456,7 @@ public class TestUtils {
     /**
      * Repeat command n-times.
      *
-     * @param retries Number of retries.
+     * @param retries  Number of retries.
      * @param callable Code to execute.
      */
     public static void runUntilPass(int retries, ThrowingCallable callable) throws InterruptedException {
@@ -600,20 +612,16 @@ public class TestUtils {
         }, e -> new Thread(e).start());
     }
 
-    @FunctionalInterface
-    public static interface ThrowingCallable {
-        void call() throws Exception;
-    }
-
     /**
      * Return a number of random characters in the range of {@code 0-9a-f}.
+     *
      * @param length the number of characters to return
      * @return The random string, never {@code null}.
      */
     public static String randomCharacters(int length) {
-        var b = new byte[(int) Math.ceil(length/2.0)];
+        var b = new byte[(int) Math.ceil(length / 2.0)];
         R.nextBytes(b);
-        return BaseEncoding.base16().encode(b).substring(length%2);
+        return BaseEncoding.base16().encode(b).substring(length % 2);
     }
 
     public static void waitUntilDeployed(String namespace) throws Exception {
@@ -662,5 +670,10 @@ public class TestUtils {
         addPlanClient.list().getItems().forEach(cr -> addPlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
         authServiceClient.list().getItems().forEach(cr -> authServiceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
         consoleClient.list().getItems().forEach(cr -> consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+    }
+
+    @FunctionalInterface
+    public static interface ThrowingCallable {
+        void call() throws Exception;
     }
 }
