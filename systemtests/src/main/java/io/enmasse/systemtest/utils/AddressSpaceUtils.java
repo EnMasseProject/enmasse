@@ -231,8 +231,11 @@ public class AddressSpaceUtils {
     }
 
     public static AddressSpace waitForAddressSpaceConnectorsReady(AddressSpace addressSpace) throws Exception {
+        return waitForAddressSpaceConnectorsReady(addressSpace, new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    public static AddressSpace waitForAddressSpaceConnectorsReady(AddressSpace addressSpace, TimeoutBudget budget) throws Exception {
         waitForAddressSpaceReady(addressSpace);
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
         boolean isReady = false;
         var client = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
 

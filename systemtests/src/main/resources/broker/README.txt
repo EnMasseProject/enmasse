@@ -1,5 +1,4 @@
-This folder stores all required files to deploy the amq-broker to openshift.
-Note that for simplicity all required keystores and truststores are already generated, the password is 123456 for all of them.
+This folder, for simplicity, stores one truststore and one keystore needed to deploy the amq-broker to openshift, the password is 123456 for both of them.
 
 Steps:
 - Create a secret with the provided keystore and truststore

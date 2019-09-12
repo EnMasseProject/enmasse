@@ -12,9 +12,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import io.enmasse.address.model.Address;
@@ -38,6 +40,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.shared.standard.QueueTest;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.proton.ProtonClientOptions;
@@ -46,6 +49,7 @@ import io.vertx.proton.ProtonQoS;
 @Tag(TestTag.ISOLATED)
 public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
 
+    //tested usecases
     //Sending messages to a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
     //Receiving messages from a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
     //If I config a connector to refer to a host that does not exist, I'd expect the addressspace overall to report ready true, whereas the connector's status should report the failure.
@@ -60,15 +64,20 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
 
     @BeforeEach
     public void deployBroker() throws Exception {
-        remoteBrokerEndpoint = SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerUsername, remoteBrokerPassword);
-        remoteBrokerEndpointNoSSL = kubernetes.getEndpoint("broker-amq-amqp", remoteBrokerNamespace, "amqp");
+        SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerUsername, remoteBrokerPassword);
+        remoteBrokerEndpoint = SystemtestsKubernetesApps.getAMQBrokerSSLEndpoint(remoteBrokerNamespace);
+        remoteBrokerEndpointNoSSL = SystemtestsKubernetesApps.getAMQBrokerEndpoint(remoteBrokerNamespace);
         log.info("Endpoints to remote broker:");
         log.info("Route with SSL: {}", remoteBrokerEndpoint);
         log.info("Service without SSL: {}", remoteBrokerEndpointNoSSL);
     }
 
     @AfterEach
-    public void undeployBroker() throws Exception {
+    public void undeployBroker(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) { //test failed
+            logCollector.collectLogsOfPodsInNamespace(remoteBrokerNamespace);
+            logCollector.collectEvents(remoteBrokerNamespace);
+        }
         SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace);
     }
 
@@ -109,10 +118,9 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
         doTestSendThroughConnector("*");
     }
 
-    //this test is currently failing, it's maybe showing a bug
     @Test
     public void testSendThroughConnector2() throws Exception {
-        doTestSendThroughConnector("queue*");
+        doTestSendThroughConnector("queue/*");
     }
 
     @Test
@@ -122,7 +130,44 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
 
     @Test
     public void testReceiveThroughConnector2() throws Exception {
-        doTestReceiveThroughConnector("queue*");
+        doTestReceiveThroughConnector("queue/*");
+    }
+
+    @Test
+    public void testBadConfiguration() throws Exception {
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName("send-to-connector")
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withConnectors(new AddressSpaceSpecConnectorBuilder()
+                        .withName("remote1")
+                        .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
+                                .withHost("nonexistinghost.jeje.hola")
+                                .withPort(8080)
+                                .build())
+                        .withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
+                                .withNewUsername()
+                                    .withValue("dummy")
+                                    .endUsername()
+                                .withNewPassword()
+                                    .withValue("dummy")
+                                    .endPassword()
+                                .build())
+                        .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
+                                .withName("queuesrule")
+                                .withPattern("*")
+                                .build())
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.createAddressSpace(space);
+        Assertions.assertThrows(IllegalStateException.class, () -> {
+            AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space, new TimeoutBudget(1, TimeUnit.MINUTES));
+        });
     }
 
     private void doTestSendThroughConnector(String addressRule) throws Exception, InterruptedException, ExecutionException, TimeoutException {
@@ -133,7 +178,7 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
                 .withConnectors(new AddressSpaceSpecConnectorBuilder()
                         .withName("remote1")
 //                        .withNewTls()
@@ -195,7 +240,7 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
                 .withConnectors(new AddressSpaceSpecConnectorBuilder()
                         .withName("remote1")
 //                        .withNewTls()

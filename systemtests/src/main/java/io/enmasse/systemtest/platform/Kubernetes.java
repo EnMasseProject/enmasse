@@ -580,14 +580,13 @@ public abstract class Kubernetes {
      * @param resources service resource
      * @return endpoint of new service
      */
-    public Endpoint createServiceFromResource(String namespace, Service resources) {
+    public void createServiceFromResource(String namespace, Service resources) {
         if (!serviceExists(namespace, resources.getMetadata().getName())) {
             Service serRes = client.services().inNamespace(namespace).create(resources);
             log.info("Service {} created", serRes.getMetadata().getName());
         } else {
             log.info("Service {} already exists", resources.getMetadata().getName());
         }
-        return getEndpoint(resources.getMetadata().getName(), namespace, "http");
     }
 
     /**
