@@ -118,7 +118,7 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
         function (pod) {
             log.info('after ensure looking at pod ' + JSON.stringify(pod.name) + " with broker undefined " + (pod.broker === undefined));
 	    var connector = {
-		name: subscription_id,
+		name: "$override." + subscription_id,
 		clusterId: subscription_id,
 		linkName: subscription_id,
 		sourceAddress: subscription_id,
