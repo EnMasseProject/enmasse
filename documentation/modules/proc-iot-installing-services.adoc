@@ -10,6 +10,12 @@ To get started using the IoT feature on {ProductName}, you must first install th
 
 .Procedure
 
+. (Optional) If you want to deploy to a project other than `{ProductNamespace}` you must run the following command and substitute `{ProductNamespace}` in subsequent steps:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+sed -i 's/{ProductNamespace}/_my-project_/' install/preview-bundles/iot/*.yaml
+----
 . Deploy the IoT bundles:
 +
 [options="nowrap",subs="attributes"]
