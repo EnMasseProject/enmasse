@@ -205,13 +205,8 @@ public class GlobalLogCollector {
     private String[] enmasseRouterCmd(String cmd, String... extraArgs) {
         List<String> allArgs = new ArrayList<>();
         allArgs.add(cmd);
-        allArgs.add("--sasl-mechanisms=EXTERNAL");
-        allArgs.add("--ssl-certificate=/etc/enmasse-certs/tls.crt");
-        allArgs.add("--ssl-key=/etc/enmasse-certs/tls.key");
-        allArgs.add("--ssl-trustfile=/etc/enmasse-certs/ca.crt");
-        allArgs.add("--ssl-disable-peer-name-verify");
         allArgs.add("-b");
-        allArgs.add("127.0.0.1:55671");
+        allArgs.add("127.0.0.1:7777");
         allArgs.addAll(Arrays.asList(extraArgs));
         return allArgs.toArray(String[]::new);
     }
