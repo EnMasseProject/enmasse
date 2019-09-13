@@ -249,7 +249,8 @@ public class AddressSpaceUtils {
             }
             log.info("Waiting until connectors of address space: '{}' messages {} will be in ready state", name, getConnectorStatuses(clientAddressSpace));
         }
-
+        clientAddressSpace = client.withName(name).get();
+        isReady = areAddressSpaceConnectorsReady(clientAddressSpace);
         if (!isReady) {
             throw new IllegalStateException(String.format("Connectors of Address Space %s are not in Ready state within timeout: %s", name, getConnectorStatuses(clientAddressSpace)));
         }

@@ -53,7 +53,6 @@ import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -80,7 +79,6 @@ import okhttp3.Response;
 import org.slf4j.Logger;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
@@ -916,7 +914,4 @@ public abstract class Kubernetes {
         return client.customResourceDefinitions().withName(name).get();
     }
 
-    public KubernetesList processTemplate(String namespace, File template, Map<String, String> parameters) {
-        return null;
-    }
 }
