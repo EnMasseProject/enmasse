@@ -14,7 +14,6 @@ import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -28,7 +27,6 @@ import io.enmasse.address.model.AddressSpaceSpecConnectorBuilder;
 import io.enmasse.address.model.AddressSpaceSpecConnectorCredentialsBuilder;
 import io.enmasse.address.model.AddressSpaceSpecConnectorEndpointBuilder;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
@@ -46,7 +44,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 
-@Tag(TestTag.ISOLATED)
 public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
 
     //tested usecases
