@@ -475,7 +475,7 @@ public class AddressControllerTest {
         ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
         verify(mockApi).replaceAddress(captor.capture());
         Address captured = captor.getValue();
-        assertEquals(captured.getStatus().getForwarderStatuses().size(), a.getSpec().getForwarders().size());
-        assertFalse(captured.getStatus().getForwarderStatuses().get(0).isReady());
+        assertEquals(captured.getStatus().getForwarders().size(), a.getSpec().getForwarders().size());
+        assertFalse(captured.getStatus().getForwarders().get(0).isReady());
     }
 }

@@ -11,6 +11,8 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import javax.validation.constraints.NotNull;
+
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
@@ -24,7 +26,10 @@ import io.sundr.builder.annotations.Inline;
 )
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AddressSpaceSpecConnectorCredentials extends AbstractWithAdditionalProperties {
+    @NotNull
     private StringOrSecretSelector username;
+
+    @NotNull
     private StringOrSecretSelector password;
 
     public StringOrSecretSelector getUsername() {

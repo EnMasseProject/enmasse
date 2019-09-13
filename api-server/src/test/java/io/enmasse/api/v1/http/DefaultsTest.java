@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.address.model.Address;
@@ -33,7 +35,7 @@ public class DefaultsTest {
 
                 .build();
 
-        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", "address-space", inputAddress, null);
+        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", createAddressSpace("address-space"), inputAddress, null);
 
         assertNotNull(resultAddress.getMetadata());
         assertEquals("ns", resultAddress.getMetadata().getNamespace());
@@ -56,7 +58,7 @@ public class DefaultsTest {
                 .endMetadata()
                 .build();
 
-        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", "address-space", inputAddress, existing);
+        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", createAddressSpace("address-space"), inputAddress, existing);
 
         assertNotNull(resultAddress.getMetadata());
         assertEquals("ns", resultAddress.getMetadata().getNamespace());
@@ -80,7 +82,7 @@ public class DefaultsTest {
         inputAddress.getMetadata().setAnnotations(null);
         inputAddress.getMetadata().setLabels(null);
 
-        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", "address-space", inputAddress, existing);
+        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", createAddressSpace("address-space"), inputAddress, existing);
 
         assertNotNull(resultAddress.getMetadata());
         assertEquals("ns", resultAddress.getMetadata().getNamespace());
@@ -105,7 +107,7 @@ public class DefaultsTest {
                 .endMetadata()
                 .build();
 
-        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", "address-space", inputAddress, existing);
+        final Address resultAddress = HttpAddressServiceBase.setAddressDefaults("ns", createAddressSpace("address-space"), inputAddress, existing);
 
         assertNotNull(resultAddress.getMetadata());
         assertEquals("ns", resultAddress.getMetadata().getNamespace());
@@ -121,4 +123,15 @@ public class DefaultsTest {
         assertNotNull(resultAddress.getSpec());
     }
 
+    private static AddressSpace createAddressSpace(String name) {
+        return new AddressSpaceBuilder()
+                .editOrNewMetadata()
+                .withName(name)
+                .endMetadata()
+                .editOrNewSpec()
+                .withType("standard")
+                .withPlan("small")
+                .endSpec()
+                .build();
+    }
 }

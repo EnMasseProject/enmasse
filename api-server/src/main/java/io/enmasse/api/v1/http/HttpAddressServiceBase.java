@@ -106,9 +106,10 @@ public class HttpAddressServiceBase {
         });
     }
 
-    Response internalCreateAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, Address address) throws Exception {
+    Response internalCreateAddress(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpaceName, Address address) throws Exception {
         checkRequestBodyNotNull(address);
         DefaultValidator.validate(address);
+        AddressSpace addressSpace = apiHelper.getAddressSpace(namespace, addressSpaceName);
         Address finalAddress = setAddressDefaults(namespace, addressSpace, address, null);
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
@@ -119,21 +120,22 @@ public class HttpAddressServiceBase {
         });
     }
 
-    Response internalCreateAddresses(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpace, AddressList addressList) throws Exception {
+    Response internalCreateAddresses(SecurityContext securityContext, UriInfo uriInfo, String namespace, String addressSpaceName, AddressList addressList) throws Exception {
         checkRequestBodyNotNull(addressList);
         DefaultValidator.validate(addressList);
+        AddressSpace addressSpace = apiHelper.getAddressSpace(namespace, addressSpaceName);
         Set<Address> finalAddresses = addressList.getItems().stream()
                 .map(a -> setAddressDefaults(namespace, addressSpace, a, null))
                 .collect(Collectors.toSet());
         return doRequest("Error creating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.create);
-            apiHelper.createAddresses(addressSpace, finalAddresses);
+            apiHelper.createAddresses(addressSpaceName, finalAddresses);
             return Response.created(uriInfo.getAbsolutePathBuilder().build()).build();
         });
     }
 
     @SuppressWarnings("deprecation")
-    static Address setAddressDefaults(String namespace, String addressSpace, Address address, Address existing) {
+    static Address setAddressDefaults(String namespace, AddressSpace addressSpace, Address address, Address existing) {
         if (existing == null) {
             if (address.getMetadata().getNamespace() == null || address.getMetadata().getName() == null) {
                 AddressBuilder builder = new AddressBuilder(address);
@@ -142,7 +144,7 @@ public class HttpAddressServiceBase {
                 }
 
                 if (address.getMetadata().getName() == null) {
-                    builder.editOrNewMetadata().withName(Address.generateName(addressSpace, address.getSpec().getAddress())).endMetadata();
+                    builder.editOrNewMetadata().withName(Address.generateName(addressSpace.getMetadata().getName(), address.getSpec().getAddress())).endMetadata();
                 }
 
                 address = builder.build();
@@ -162,6 +164,7 @@ public class HttpAddressServiceBase {
 
                     .editOrNewSpec()
                     .withPlan(address.getSpec().getPlan())
+                    .withForwarders(address.getSpec().getForwarders())
                     .endSpec()
 
                     .build();
@@ -170,8 +173,39 @@ public class HttpAddressServiceBase {
         // validate the addressspace
 
         if ( address.getSpec().getAddressSpace() != null ) {
-            if ( !addressSpace.equals(address.getSpec().getAddressSpace())) {
+            if ( !addressSpace.getMetadata().getName().equals(address.getSpec().getAddressSpace())) {
                 throw new BadRequestException(String.format("Address space in spec section does not match address space in request URI"));
+            }
+        }
+
+        // validate forwarders
+        if (address.getSpec().getForwarders() != null && !address.getSpec().getForwarders().isEmpty()) {
+            if (addressSpace.getSpec().getConnectors() == null || addressSpace.getSpec().getConnectors().isEmpty()) {
+                throw new BadRequestException(String.format("Unable to create forwarders: There are no connectors configured for address space '%s'", addressSpace.getMetadata().getName()));
+            }
+
+            if (!"standard".equals(addressSpace.getSpec().getType())) {
+                throw new BadRequestException(String.format("Unable to create forwarders for addresses in address space type '%s': Forwarders can only be created for addresses in the 'standard' address space type", addressSpace.getSpec().getType()));
+            }
+
+            if (!Arrays.asList("queue", "subscription").contains(address.getSpec().getType())) {
+                throw new BadRequestException(String.format("Unable to create forwarders for address type '%s': Forwarders can only be created for address types 'queue' and 'subscription'", address.getSpec().getType()));
+            }
+
+            for (AddressSpecForwarder forwarder : address.getSpec().getForwarders()) {
+                boolean found = false;
+                for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
+                    if (forwarder.getRemoteAddress().startsWith(connector.getName())) {
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    throw new BadRequestException(String.format("Unable to create forwarder '%s': remoteAddress '%s' is not prefixed with any connector in address space '%s'", forwarder.getName(), forwarder.getRemoteAddress(), address.getMetadata().getName()));
+                }
+
+                if ("subscription".equals(address.getSpec().getType()) && AddressSpecForwarderDirection.in.equals(forwarder.getDirection())) {
+                    throw new BadRequestException(String.format("Unable to create forwarder '%s': direction 'in' is not allowed on 'subscription' address type", forwarder.getName()));
+                }
             }
         }
 
@@ -235,13 +269,14 @@ public class HttpAddressServiceBase {
         }
     }
 
-    Response internalReplaceAddress(SecurityContext securityContext, String namespace, String addressSpace, String addressNameFromURL, Address payload) throws Exception {
+    Response internalReplaceAddress(SecurityContext securityContext, String namespace, String addressSpaceName, String addressNameFromURL, Address payload) throws Exception {
         checkRequestBodyNotNull(payload);
         checkAddressObjectNameNotNull(payload, addressNameFromURL);
         checkMatchingAddressName(addressNameFromURL, payload);
         DefaultValidator.validate(payload);
         return doRequest("Error updating address", () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.update);
+            AddressSpace addressSpace = apiHelper.getAddressSpace(namespace, addressSpaceName);
             Address existing = apiHelper.getAddress(namespace, addressSpace, addressNameFromURL).orElse(null);
             if (existing == null) {
                 return Response.status(404).entity(Status.notFound("Address", addressNameFromURL)).build();
@@ -283,11 +318,12 @@ public class HttpAddressServiceBase {
         });
     }
 
-    protected Response patchInternal(@Context SecurityContext securityContext, String namespace, String addressSpace, String addressName,
+    protected Response patchInternal(@Context SecurityContext securityContext, String namespace, String addressSpaceName, String addressName,
                                      CheckedFunction<JsonNode, JsonNode, JsonPatchException> patcher) throws Exception {
         return doRequest("Error patching address space " + addressName, () -> {
             verifyAuthorized(securityContext, namespace, ResourceVerb.patch);
 
+            AddressSpace addressSpace = apiHelper.getAddressSpace(namespace, addressSpaceName);
             Optional<Address> existing = apiHelper.getAddress(namespace, addressSpace, addressName);
 
             if (!existing.isPresent()) {

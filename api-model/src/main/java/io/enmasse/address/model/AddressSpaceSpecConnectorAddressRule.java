@@ -6,6 +6,8 @@ package io.enmasse.address.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
+import io.enmasse.model.validation.AddressSpaceConnectorAddressRuleName;
+import io.enmasse.model.validation.AddressSpaceConnectorAddressRulePattern;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
@@ -25,6 +27,8 @@ import javax.validation.constraints.NotNull;
         )
 )
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@AddressSpaceConnectorAddressRuleName
+@AddressSpaceConnectorAddressRulePattern
 public class AddressSpaceSpecConnectorAddressRule {
     @NotNull
     private String name;

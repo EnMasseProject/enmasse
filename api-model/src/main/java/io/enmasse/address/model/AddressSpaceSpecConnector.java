@@ -9,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
+import io.enmasse.model.validation.AddressSpaceConnectorName;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
@@ -32,16 +33,19 @@ import java.util.List;
         )
 )
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@AddressSpaceConnectorName
 public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties {
     @NotNull
     private String name;
 
+    @NotNull
     @NotEmpty
     private List<@Valid  AddressSpaceSpecConnectorEndpoint> endpointHosts = Collections.emptyList();
 
     private AddressSpaceSpecConnectorCredentials credentials;
     private AddressSpaceSpecConnectorTls tls;
-    private List<AddressSpaceSpecConnectorAddressRule> addresses = Collections.emptyList();
+
+    private List<@Valid AddressSpaceSpecConnectorAddressRule> addresses = Collections.emptyList();
 
     public String getName() {
         return name;

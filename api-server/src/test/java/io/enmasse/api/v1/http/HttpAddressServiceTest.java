@@ -137,7 +137,7 @@ public class HttpAddressServiceTest {
         addressApi.createAddress(address1);
 
         final JsonPatch patch = mapper.readValue("[" +
-                "{\"op\":\"replace\",\"path\":\"/metadata/name\",\"value\":\"newname\"}," +
+                "{\"op\":\"replace\",\"path\":\"/metadata/name\",\"value\":\"myspace.newname\"}," +
                 "{\"op\":\"replace\",\"path\":\"/metadata/namespace\",\"value\":\"newnamespace\"}," +
                 "{\"op\":\"add\",\"path\":\"/metadata/labels/mylabel\",\"value\":\"myvalue\"}" +
                 "]", JsonPatch.class);

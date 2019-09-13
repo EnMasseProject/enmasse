@@ -91,14 +91,18 @@ public class AddressApiHelper {
         return new AddressResolver(type);
     }
 
-    private AddressSpace getAddressSpace(String namespace, String addressSpaceId) throws Exception {
+    public AddressSpace getAddressSpace(String namespace, String addressSpaceId) throws Exception {
         return addressSpaceApi.getAddressSpaceWithName(namespace, addressSpaceId)
                 .orElseThrow(() -> new NotFoundException("Address space " + addressSpaceId + " not found"));
     }
 
+    public Optional<Address> getAddress(String namespace, AddressSpace addressSpace, String address) throws Exception {
+        return addressSpaceApi.withAddressSpace(addressSpace).getAddressWithName(namespace, address);
+    }
+
     public Optional<Address> getAddress(String namespace, String addressSpaceId, String address) throws Exception {
         AddressSpace addressSpace = getAddressSpace(namespace, addressSpaceId);
-        return addressSpaceApi.withAddressSpace(addressSpace).getAddressWithName(namespace, address);
+        return getAddress(namespace, addressSpace, address);
     }
 
     public Address deleteAddress(String namespace, String addressSpaceId, String name) throws Exception {
@@ -109,8 +113,7 @@ public class AddressApiHelper {
         return addressOptional.filter(addressApi::deleteAddress).orElse(null);
     }
 
-    public Address createAddress(String addressSpaceId, Address address) throws Exception {
-        AddressSpace addressSpace = getAddressSpace(address.getMetadata().getNamespace(), addressSpaceId);
+    public Address createAddress(AddressSpace addressSpace, Address address) throws Exception {
         validateAddress(addressSpace, address);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         addressApi.createAddress(address);
@@ -158,8 +161,7 @@ public class AddressApiHelper {
         apiMap.forEach((addr, api) -> api.createAddress(addr));
     }
 
-    public Address replaceAddress(String addressSpaceId, Address address) throws Exception {
-        AddressSpace addressSpace = getAddressSpace(address.getMetadata().getNamespace(), addressSpaceId);
+    public Address replaceAddress(AddressSpace addressSpace, Address address) throws Exception {
         validateAddress(addressSpace, address);
         AddressApi addressApi = addressSpaceApi.withAddressSpace(addressSpace);
         if (!addressApi.replaceAddress(address)) {

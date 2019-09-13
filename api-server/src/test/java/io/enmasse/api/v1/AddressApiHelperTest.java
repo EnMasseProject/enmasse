@@ -5,37 +5,6 @@
 
 package io.enmasse.api.v1;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.core.SecurityContext;
-
-import org.apache.http.auth.BasicUserPrincipal;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.internal.util.collections.Sets;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -43,19 +12,36 @@ import io.enmasse.address.model.AddressSpaceSpec;
 import io.enmasse.api.server.TestSchemaProvider;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import org.apache.http.auth.BasicUserPrincipal;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.SecurityContext;
+import java.util.*;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 public class AddressApiHelperTest {
 
     private AddressApiHelper helper;
     private AddressApi addressApi;
     private SecurityContext securityContext;
+    private AddressSpace addressSpace;
 
     @BeforeEach
     public void setup() {
-        AddressSpace addressSpace = mock(AddressSpace.class);
+        addressSpace = mock(AddressSpace.class);
         when(addressSpace.getSpec()).thenReturn(mock(AddressSpaceSpec.class));
-        when(addressSpace.getMetadata()).thenReturn(mock(ObjectMeta.class));
+        when(addressSpace.getMetadata()).thenReturn(new ObjectMetaBuilder()
+                .withName("test")
+                .build());
         when(addressSpace.getSpec().getType()).thenReturn("brokered");
         AddressSpaceApi addressSpaceApi = mock(AddressSpaceApi.class);
         addressApi = mock(AddressApi.class);
@@ -75,7 +61,7 @@ public class AddressApiHelperTest {
         when(addressApi.listAddresses(any())).thenReturn(addresses);
         when(addressApi.replaceAddress(any())).thenReturn(true);
         Address invalidAddress = createAddress("q1", "q2");
-        Throwable exception = assertThrows(BadRequestException.class, () -> helper.replaceAddress("test", invalidAddress));
+        Throwable exception = assertThrows(BadRequestException.class, () -> helper.replaceAddress(addressSpace, invalidAddress));
         assertEquals("Address 'q2' already exists with resource name 'q2'", exception.getMessage());
         verify(addressApi, never()).replaceAddress(any(Address.class));
     }
@@ -86,7 +72,7 @@ public class AddressApiHelperTest {
         when(addressApi.listAddresses(any())).thenReturn(Collections.emptySet());
 
         Address addr = createAddress("someOtherName", "q1");
-        helper.createAddress("test", addr);
+        helper.createAddress(addressSpace, addr);
         verify(addressApi).createAddress(eq(addr));
     }
 
@@ -138,14 +124,14 @@ public class AddressApiHelperTest {
     public void testReplaceAddress() throws Exception {
         when(addressApi.replaceAddress(any())).thenReturn(true);
 
-        helper.replaceAddress("test", createAddress("q1"));
+        helper.replaceAddress(addressSpace, createAddress("q1"));
         verify(addressApi).replaceAddress(eq(createAddress("q1")));
     }
 
     @Test
     public void testReplaceAddressNotFound() throws Exception {
         when(addressApi.replaceAddress(any())).thenReturn(false);
-        Throwable exception = assertThrows(NotFoundException.class, () -> helper.replaceAddress("test", createAddress("q1")));
+        Throwable exception = assertThrows(NotFoundException.class, () -> helper.replaceAddress(addressSpace, createAddress("q1")));
         assertEquals("Address q1 not found", exception.getMessage());
     }
 

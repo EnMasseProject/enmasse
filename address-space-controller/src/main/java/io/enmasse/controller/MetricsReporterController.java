@@ -37,9 +37,9 @@ public class MetricsReporterController implements Controller {
             MetricLabel[] labels = new MetricLabel[]{new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
             readyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 1 : 0, now, labels));
             notReadyValues.add(new MetricValue(addressSpace.getStatus().isReady() ? 0 : 1, now, labels));
-            numConnectors.add(new MetricValue(addressSpace.getStatus().getConnectorStatuses().size(), now, labels));
+            numConnectors.add(new MetricValue(addressSpace.getStatus().getConnectors().size(), now, labels));
 
-            for (AddressSpaceStatusConnector connectorStatus : addressSpace.getStatus().getConnectorStatuses()) {
+            for (AddressSpaceStatusConnector connectorStatus : addressSpace.getStatus().getConnectors()) {
 
                 MetricLabel[] connectorLabels = new MetricLabel[]{new MetricLabel("name", addressSpace.getMetadata().getName()), new MetricLabel("namespace", addressSpace.getMetadata().getNamespace())};
                 readyConnectorValues.add(new MetricValue(connectorStatus.isReady() ? 1 : 0, now, connectorLabels));

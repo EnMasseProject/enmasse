@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -45,7 +44,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     private List<@Valid BrokerStatus> brokerStatuses = new ArrayList<>();
     private AddressPlanStatus planStatus;
 
-    private List<@Valid AddressStatusForwarder> forwarderStatuses;
+    private List<@Valid AddressStatusForwarder> forwarders;
 
     public AddressStatus() {
     }
@@ -62,10 +61,10 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
         for (BrokerStatus brokerStatus : other.getBrokerStatuses()) {
             brokerStatuses.add(new BrokerStatus(brokerStatus.getClusterId(), brokerStatus.getContainerId(), brokerStatus.getState()));
         }
-        if (other.getForwarderStatuses() != null) {
-            this.forwarderStatuses = new ArrayList<>();
-            for (AddressStatusForwarder forwarderStatus : other.getForwarderStatuses()) {
-                forwarderStatuses.add(new AddressStatusForwarderBuilder()
+        if (other.getForwarders() != null) {
+            this.forwarders = new ArrayList<>();
+            for (AddressStatusForwarder forwarderStatus : other.getForwarders()) {
+                forwarders.add(new AddressStatusForwarderBuilder()
                         .withName(forwarderStatus.getName())
                         .withReady(forwarderStatus.isReady())
                         .withMessages(new ArrayList<>(forwarderStatus.getMessages()))
@@ -137,12 +136,12 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 Objects.equals(messages, status.messages) &&
                 Objects.equals(brokerStatuses, status.brokerStatuses) &&
                 Objects.equals(planStatus, status.planStatus) &&
-                Objects.equals(forwarderStatuses, status.forwarderStatuses);
+                Objects.equals(forwarders, status.forwarders);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ready, phase, messages, brokerStatuses, planStatus, forwarderStatuses);
+        return Objects.hash(ready, phase, messages, brokerStatuses, planStatus, forwarders);
     }
 
 
@@ -154,7 +153,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 .append(",").append("messages=").append(messages)
                 .append(",").append("brokerStatuses=").append(brokerStatuses)
                 .append(",").append("planStatus=").append(planStatus)
-                .append(",").append("forwarderStatuses=").append(forwarderStatuses)
+                .append(",").append("forwarders=").append(forwarders)
                 .append("}")
                 .toString();
     }
@@ -171,11 +170,11 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
         this.planStatus = planStatus;
     }
 
-    public List<AddressStatusForwarder> getForwarderStatuses() {
-        return forwarderStatuses;
+    public List<AddressStatusForwarder> getForwarders() {
+        return forwarders;
     }
 
-    public void setForwarderStatuses(List<AddressStatusForwarder> forwarderStatuses) {
-        this.forwarderStatuses = new ArrayList<>(forwarderStatuses);
+    public void setForwarders(List<AddressStatusForwarder> forwarders) {
+        this.forwarders = new ArrayList<>(forwarders);
     }
 }

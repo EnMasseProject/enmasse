@@ -168,7 +168,7 @@ public class AddressUtils {
     public static boolean areForwardersReady(Address address) {
         return Optional.ofNullable(address)
                 .map(Address::getStatus)
-                .map(AddressStatus::getForwarderStatuses)
+                .map(AddressStatus::getForwarders)
                 .map(Stream::of)
                 .orElseGet(Stream::empty)
                 .flatMap(Collection::stream)

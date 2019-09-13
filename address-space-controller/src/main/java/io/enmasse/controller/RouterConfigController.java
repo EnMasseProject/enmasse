@@ -70,7 +70,7 @@ public class RouterConfigController implements Controller {
                 .withReady(true)
                 .build())
         .collect(Collectors.toList());
-        addressSpace.getStatus().setConnectorStatuses(connectorStatuses);
+        addressSpace.getStatus().setConnectors(connectorStatuses);
     }
 
     private void reconcileRouterConfig(AddressSpace addressSpace, StandardInfraConfig infraConfig) throws IOException {
@@ -191,7 +191,7 @@ public class RouterConfigController implements Controller {
             if (connector.getTls().getCaCert() != null) {
                 String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getCaCert(), "ca.crt").orElse(null);
                 if (data == null) {
-                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for caCert", addressSpace.getStatus().getConnectorStatuses());
+                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for caCert", addressSpace.getStatus().getConnectors());
                 } else if (!data.equals(connectorSecret.getData().get("ca.crt"))) {
                     connectorSecret.getData().put("ca.crt", data);
                     needsUpdate = true;
@@ -201,7 +201,7 @@ public class RouterConfigController implements Controller {
             if (connector.getTls().getClientCert() != null) {
                 String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getClientCert(), "tls.crt").orElse(null);
                 if (data == null) {
-                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for clientCert", addressSpace.getStatus().getConnectorStatuses());
+                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for clientCert", addressSpace.getStatus().getConnectors());
                 } else if (!data.equals(connectorSecret.getData().get("tls.crt"))) {
                     connectorSecret.getData().put("tls.crt", data);
                     needsUpdate = true;
@@ -211,7 +211,7 @@ public class RouterConfigController implements Controller {
             if (connector.getTls().getClientKey() != null) {
                 String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getClientKey(), "tls.key").orElse(null);
                 if (data == null) {
-                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for clientKey", addressSpace.getStatus().getConnectorStatuses());
+                    updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for clientKey", addressSpace.getStatus().getConnectors());
                 } else if (!data.equals(connectorSecret.getData().get("tls.key"))) {
                     connectorSecret.getData().put("tls.key", data);
                     needsUpdate = true;
@@ -475,7 +475,7 @@ public class RouterConfigController implements Controller {
         for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
             Connector remoteConnector = new Connector();
             remoteConnector.setName(connector.getName());
-            AddressSpaceStatusConnector connectorStatus = addressSpace.getStatus().getConnectorStatuses().stream()
+            AddressSpaceStatusConnector connectorStatus = addressSpace.getStatus().getConnectors().stream()
                     .filter(status -> status.getName().equals(connector.getName()))
                     .findFirst().orElse(null);
 
@@ -487,7 +487,7 @@ public class RouterConfigController implements Controller {
             Iterator<AddressSpaceSpecConnectorEndpoint> endpointIt = connector.getEndpointHosts().iterator();
             // If connector is missing initial host:
             if (!endpointIt.hasNext()) {
-                updateConnectorStatus(connector.getName(), false, "Missing at least one endpoint on connector", addressSpace.getStatus().getConnectorStatuses());
+                updateConnectorStatus(connector.getName(), false, "Missing at least one endpoint on connector", addressSpace.getStatus().getConnectors());
                 continue;
             }
 
@@ -522,12 +522,12 @@ public class RouterConfigController implements Controller {
 
                 if (tls.getClientCert() != null || tls.getClientKey() != null) {
                     if (tls.getClientCert() == null) {
-                        updateConnectorStatus(connector.getName(), false, "Both clientCert and clientKey must be specified (only clientKey is specified)", addressSpace.getStatus().getConnectorStatuses());
+                        updateConnectorStatus(connector.getName(), false, "Both clientCert and clientKey must be specified (only clientKey is specified)", addressSpace.getStatus().getConnectors());
                         continue;
                     }
 
                     if (tls.getClientKey() == null) {
-                        updateConnectorStatus(connector.getName(), false, "Both clientCert and clientKey must be specified (only clientCert is specified)", addressSpace.getStatus().getConnectorStatuses());
+                        updateConnectorStatus(connector.getName(), false, "Both clientCert and clientKey must be specified (only clientCert is specified)", addressSpace.getStatus().getConnectors());
                         continue;
                     }
 
@@ -544,7 +544,7 @@ public class RouterConfigController implements Controller {
                 if (connector.getCredentials().getUsername() != null) {
                     String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getCredentials().getUsername(), "username").orElse(null);
                     if (data == null) {
-                        updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for username", addressSpace.getStatus().getConnectorStatuses());
+                        updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for username", addressSpace.getStatus().getConnectors());
                         continue;
                     }
                     remoteConnector.setSaslUsername(data);
@@ -553,7 +553,7 @@ public class RouterConfigController implements Controller {
                 if (connector.getCredentials().getPassword() != null) {
                     String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getCredentials().getPassword(), "password").orElse(null);
                     if (data == null) {
-                        updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for password", addressSpace.getStatus().getConnectorStatuses());
+                        updateConnectorStatus(connector.getName(), false, "Unable to locate value or secret for password", addressSpace.getStatus().getConnectors());
                         continue;
                     }
                     remoteConnector.setSaslPassword(data);
