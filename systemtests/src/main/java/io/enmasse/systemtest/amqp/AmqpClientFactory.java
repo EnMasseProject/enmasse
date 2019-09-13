@@ -125,7 +125,7 @@ public class AmqpClientFactory {
         return createClient(connectOptions);
     }
 
-    protected AmqpClient createClient(AmqpConnectOptions connectOptions) {
+    public AmqpClient createClient(AmqpConnectOptions connectOptions) {
         AmqpClient client = new AmqpClient(connectOptions);
         clients.add(client);
         return client;

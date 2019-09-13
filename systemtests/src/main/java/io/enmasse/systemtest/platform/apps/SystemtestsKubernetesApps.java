@@ -14,6 +14,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -70,6 +71,7 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+    private static final String AMQ_BROKER = "amq-broker";
 
     public static String getMessagingAppPodName() throws Exception {
         TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
@@ -237,6 +239,34 @@ public class SystemtestsKubernetesApps {
                 INFINISPAN_EXAMPLE_BASE.resolve("manual"));
     }
 
+    public static Endpoint getAMQBrokerEndpoint(String namespace) {
+        return Kubernetes.getInstance().getEndpoint("amqp", namespace, "amqp");
+    }
+
+    public static void deployAMQBroker(String namespace, String user, String password, String... queues) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        if (!kubeCli.namespaceExists(namespace)) {
+            kubeCli.createNamespace(namespace);
+        }
+
+        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(user, password, queues));
+        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource("amqp", AMQ_BROKER, 5672, "amqp"));
+
+        kubeCli.getClient()
+            .apps().deployments()
+            .inNamespace(namespace)
+            .withName(AMQ_BROKER)
+            .waitUntilReady(5, TimeUnit.MINUTES);
+
+        Thread.sleep(5000);
+    }
+
+    public static void deleteAMQBroker(String namespace) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        kubeCli.deleteService(namespace, "amqp");
+        kubeCli.deleteDeployment(namespace, AMQ_BROKER);
+        Thread.sleep(5000);
+    }
 
     public static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
         loadDirectories(streamManipulator, Applicable::createOrReplace, paths);
@@ -384,6 +414,23 @@ public class SystemtestsKubernetesApps {
                 .withName("http")
                 .withPort(port)
                 .withProtocol("TCP")
+                .endPort()
+                .endSpec()
+                .build();
+    }
+
+    private static Service getSystemtestsServiceResource(String serviceName, String appName, int port, String portName) {
+        return new ServiceBuilder()
+                .withNewMetadata()
+                .withName(serviceName)
+                .addToLabels("run", appName)
+                .endMetadata()
+                .withNewSpec()
+                .addToSelector("app", appName)
+                .addNewPort()
+                .withName(portName)
+                .withPort(port)
+                .withTargetPort(new IntOrString(port))
                 .endPort()
                 .endSpec()
                 .build();
@@ -544,6 +591,59 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .addToData("database-user", Base64.getEncoder().encodeToString("darthvader".getBytes(StandardCharsets.UTF_8)))
                 .addToData("database-password", Base64.getEncoder().encodeToString("anakinisdead".getBytes(StandardCharsets.UTF_8)))
+                .build();
+    }
+
+    private static Deployment getBrokerDeployment(String user, String password, String... queues) {
+        return new DeploymentBuilder()
+                .withNewMetadata()
+                .withName(AMQ_BROKER)
+                .addToLabels("app", AMQ_BROKER)
+                .addToLabels("template", AMQ_BROKER)
+                .endMetadata()
+                .withNewSpec()
+                .withNewSelector()
+                .addToMatchLabels("app", AMQ_BROKER)
+                .endSelector()
+                .withReplicas(1)
+                .withNewTemplate()
+                .withNewMetadata()
+                .addToLabels("app", AMQ_BROKER)
+                .endMetadata()
+                .withNewSpec()
+                .addNewInitContainer()
+                    .withName("artemis-init")
+                    .withImage("quay.io/enmasse/artemis-base:2.10.0")
+                    .withCommand("/bin/sh")
+                    .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user "+user+" --password "+password+" --role admin --queues "+String.join(",", queues))
+                    .withVolumeMounts(new VolumeMountBuilder()
+                            .withName("data")
+                            .withMountPath("/var/run/artemis")
+                            .build())
+                .endInitContainer()
+                .addNewContainer()
+                    .withName(AMQ_BROKER)
+                    .withImage("quay.io/enmasse/artemis-base:2.10.0")
+                    .withImagePullPolicy("IfNotPresent")
+                    .withCommand("/bin/sh")
+                    .withArgs("-c", "/var/run/artemis/bin/artemis run")
+                    .addToPorts(new ContainerPortBuilder()
+                            .withContainerPort(5672)
+                            .withName("amqp")
+                            .build())
+                    .withVolumeMounts(new VolumeMountBuilder()
+                            .withName("data")
+                            .withMountPath("/var/run/artemis")
+                            .build())
+                    .endContainer()
+                .addNewVolume()
+                .withName("data")
+                .withNewEmptyDir()
+                .endEmptyDir()
+                .endVolume()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
                 .build();
     }
 

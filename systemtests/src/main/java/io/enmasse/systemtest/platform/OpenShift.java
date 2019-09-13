@@ -109,4 +109,5 @@ public class OpenShift extends Kubernetes {
             return getEndpoint(endpointName, namespace, port);
         }
     }
+
 }
