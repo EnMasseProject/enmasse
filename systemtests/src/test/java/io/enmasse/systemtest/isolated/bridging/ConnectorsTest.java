@@ -54,22 +54,26 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
     //Receiving messages from a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
     //If I config a connector to refer to a host that does not exist, I'd expect the addressspace overall to report ready true, whereas the connector's status should report the failure.
 
+    private static final String REMOTE_NAME = "remote1";
+    private static final String BASIC_QUEUE1 = "basic1";
+    private static final String BASIC_QUEUE2 = "basic2";
+    private static final String SLASHED_QUEUE1 = "dummy/foo";
+    private static final String SLASHED_QUEUE2 = "dummy/baz";
+    private static final String BASIC_QUEUES_PATTERN = "*";
+    private static final String SLASHED_QUEUES_PATTERN = "dummy/*";
+
     private static Logger log = CustomLogger.getLogger();
 
     private final String remoteBrokerNamespace = "systemtests-external-broker";
     private final String remoteBrokerUsername = "test-user";
     private final String remoteBrokerPassword = "test-password";
     private Endpoint remoteBrokerEndpoint;
-    private Endpoint remoteBrokerEndpointNoSSL;
 
     @BeforeEach
     public void deployBroker() throws Exception {
-        SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerUsername, remoteBrokerPassword);
-        remoteBrokerEndpoint = SystemtestsKubernetesApps.getAMQBrokerSSLEndpoint(remoteBrokerNamespace);
-        remoteBrokerEndpointNoSSL = SystemtestsKubernetesApps.getAMQBrokerEndpoint(remoteBrokerNamespace);
-        log.info("Endpoints to remote broker:");
-        log.info("Route with SSL: {}", remoteBrokerEndpoint);
-        log.info("Service without SSL: {}", remoteBrokerEndpointNoSSL);
+        SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerUsername, remoteBrokerPassword, SLASHED_QUEUE1, SLASHED_QUEUE2, BASIC_QUEUE1, BASIC_QUEUE2);
+        remoteBrokerEndpoint = SystemtestsKubernetesApps.getAMQBrokerEndpoint(remoteBrokerNamespace);
+        log.info("Broker endpoint: {}", remoteBrokerEndpoint);
     }
 
     @AfterEach
@@ -90,23 +94,7 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
                 .withName("testtt")
                 .endMetadata()
                 .withNewSpec()
-                .withAddress("queue1")
-                .endSpec()
-                .build();
-        QueueTest.runQueueTest(client, testQueue);
-        client.close();
-    }
-
-    @Test
-    public void testBrokerDeploymentNonSSL() throws Exception {
-        AmqpClient client = createClientToRemoteBrokerNoSSL();
-
-        Address testQueue = new AddressBuilder()
-                .withNewMetadata()
-                .withName("testtt")
-                .endMetadata()
-                .withNewSpec()
-                .withAddress("queue1")
+                .withAddress(SLASHED_QUEUE1)
                 .endSpec()
                 .build();
         QueueTest.runQueueTest(client, testQueue);
@@ -115,22 +103,22 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
 
     @Test
     public void testSendThroughConnector1() throws Exception {
-        doTestSendThroughConnector("*");
+        doTestSendThroughConnector(BASIC_QUEUES_PATTERN, new String[] {BASIC_QUEUE1, BASIC_QUEUE2});
     }
 
     @Test
     public void testSendThroughConnector2() throws Exception {
-        doTestSendThroughConnector("queue/*");
+        doTestSendThroughConnector(SLASHED_QUEUES_PATTERN, new String [] {SLASHED_QUEUE1, SLASHED_QUEUE2});
     }
 
     @Test
     public void testReceiveThroughConnector1() throws Exception {
-        doTestReceiveThroughConnector("*");
+        doTestReceiveThroughConnector(BASIC_QUEUES_PATTERN, new String[] {BASIC_QUEUE1, BASIC_QUEUE2});
     }
 
     @Test
     public void testReceiveThroughConnector2() throws Exception {
-        doTestReceiveThroughConnector("queue/*");
+        doTestReceiveThroughConnector(SLASHED_QUEUES_PATTERN, new String [] {SLASHED_QUEUE1, SLASHED_QUEUE2});
     }
 
     @Test
@@ -144,7 +132,7 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
                 .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(AddressSpacePlans.STANDARD_SMALL)
                 .withConnectors(new AddressSpaceSpecConnectorBuilder()
-                        .withName("remote1")
+                        .withName(REMOTE_NAME)
                         .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
                                 .withHost("nonexistinghost.jeje.hola")
                                 .withPort(8080)
@@ -159,7 +147,7 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
                                 .build())
                         .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
                                 .withName("queuesrule")
-                                .withPattern("*")
+                                .withPattern(BASIC_QUEUES_PATTERN)
                                 .build())
                         .build())
                 .endSpec()
@@ -170,42 +158,8 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
         });
     }
 
-    private void doTestSendThroughConnector(String addressRule) throws Exception, InterruptedException, ExecutionException, TimeoutException {
-        AddressSpace space = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withNamespace(kubernetes.getInfraNamespace())
-                .withName("send-to-connector")
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_SMALL)
-                .withConnectors(new AddressSpaceSpecConnectorBuilder()
-                        .withName("remote1")
-//                        .withNewTls()
-//                        .endTls()
-                        .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
-                                .withHost(remoteBrokerEndpointNoSSL.getHost())
-                                .withPort(remoteBrokerEndpointNoSSL.getPort())
-                                .build())
-                        .withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
-                                .withNewUsername()
-                                    .withValue(remoteBrokerUsername)
-                                    .endUsername()
-                                .withNewPassword()
-                                    .withValue(remoteBrokerPassword)
-                                    .endPassword()
-                                .build())
-                        .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
-                                .withName("queuesrule")
-                                .withPattern(addressRule)
-                                .build())
-                        .build())
-                .endSpec()
-                .build();
-        resourcesManager.createAddressSpace(space);
-        AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
-
-        Thread.sleep(30000);
+    private void doTestSendThroughConnector(String addressRule, String[] remoteQueues) throws Exception, InterruptedException, ExecutionException, TimeoutException {
+        AddressSpace space = createAddressSpace("send-to-connector", addressRule);
 
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
@@ -217,37 +171,65 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
-        localClient.sendMessages("remote1/queue1", TestUtils.generateMessages(messagesBatch));
-
-        localClient.sendMessages("remote1/queue2", TestUtils.generateMessages(messagesBatch));
+        for(String remoteQueue : remoteQueues) {
+            String connectorQueue = REMOTE_NAME + "/" + remoteQueue;
+            localClient.sendMessages(connectorQueue, TestUtils.generateMessages(messagesBatch));
+        }
 
         //receive in remote broker
 
         AmqpClient clientToRemote = createClientToRemoteBroker();
 
-        var receivedFromQueue1 = clientToRemote.recvMessages("queue1", messagesBatch);
-        var receivedFromQueue2 = clientToRemote.recvMessages("queue2", messagesBatch);
+        for(String remoteQueue : remoteQueues) {
+            var receivedFromQueue = clientToRemote.recvMessages(remoteQueue, messagesBatch);
+            assertThat("Wrong count of messages received from queue: "+remoteQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        }
 
-        assertThat("Wrong count of messages received from queue1", receivedFromQueue1.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
-        assertThat("Wrong count of messages received from queue2", receivedFromQueue2.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
-    private void doTestReceiveThroughConnector(String addressRule) throws Exception, InterruptedException, ExecutionException, TimeoutException {
+    private void doTestReceiveThroughConnector(String addressRule, String[] remoteQueues) throws Exception, InterruptedException, ExecutionException, TimeoutException {
+        AddressSpace space = createAddressSpace("receive-from-connector", addressRule);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+
+        //send to remote broker
+
+        AmqpClient clientToRemote = createClientToRemoteBroker();
+
+        for(String remoteQueue : remoteQueues) {
+            clientToRemote.sendMessages(remoteQueue, TestUtils.generateMessages(messagesBatch));
+        }
+
+        //receive through connector
+
+        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        localClient.getConnectOptions().setCredentials(localUser);
+
+        for(String remoteQueue : remoteQueues) {
+            String connectorQueue = REMOTE_NAME + "/" + remoteQueue;
+            var receivedFromQueue = localClient.recvMessages(connectorQueue, messagesBatch);
+            assertThat("Wrong count of messages received from connector queue: "+connectorQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        }
+
+    }
+
+    private AddressSpace createAddressSpace(String name, String addressRule) throws Exception {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withNamespace(kubernetes.getInfraNamespace())
-                .withName("receive-from-connector")
+                .withName(name)
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(AddressSpacePlans.STANDARD_SMALL)
                 .withConnectors(new AddressSpaceSpecConnectorBuilder()
-                        .withName("remote1")
-//                        .withNewTls()
-//                        .endTls()
+                        .withName(REMOTE_NAME)
                         .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
-                                .withHost(remoteBrokerEndpointNoSSL.getHost())
-                                .withPort(remoteBrokerEndpointNoSSL.getPort())
+                                .withHost(remoteBrokerEndpoint.getHost())
+                                .withPort(remoteBrokerEndpoint.getPort())
                                 .build())
                         .withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
                                 .withNewUsername()
@@ -266,61 +248,17 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
                 .build();
         resourcesManager.createAddressSpace(space);
         AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
-
-        Thread.sleep(30000);
-
-        UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
-
-        int messagesBatch = 50;
-
-        //send to remote broker
-
-        AmqpClient clientToRemote = createClientToRemoteBroker();
-
-        clientToRemote.sendMessages("remote1/queue1", TestUtils.generateMessages(messagesBatch));
-
-        clientToRemote.sendMessages("remote1/queue2", TestUtils.generateMessages(messagesBatch));
-
-        //receive through connector
-
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
-
-        var receivedFromQueue1 = localClient.recvMessages("queue1", messagesBatch);
-        var receivedFromQueue2 = localClient.recvMessages("queue2", messagesBatch);
-
-        assertThat("Wrong count of messages received from queue1", receivedFromQueue1.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
-        assertThat("Wrong count of messages received from queue2", receivedFromQueue2.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        return space;
     }
 
     private AmqpClient createClientToRemoteBroker() {
+
         ProtonClientOptions clientOptions = new ProtonClientOptions();
-        clientOptions.setSsl(true);
-        clientOptions.setTrustAll(true);
-        clientOptions.setHostnameVerificationAlgorithm("");
+        clientOptions.setSsl(false);
 
         AmqpConnectOptions connectOptions = new AmqpConnectOptions()
                 .setTerminusFactory(new QueueTerminusFactory())
                 .setEndpoint(remoteBrokerEndpoint)
-                .setProtonClientOptions(clientOptions)
-                .setQos(ProtonQoS.AT_LEAST_ONCE)
-                .setUsername(remoteBrokerUsername)
-                .setPassword(remoteBrokerPassword);
-
-        return getAmqpClientFactory().createClient(connectOptions);
-    }
-
-    private AmqpClient createClientToRemoteBrokerNoSSL() {
-
-        ProtonClientOptions clientOptions = new ProtonClientOptions();
-        clientOptions.setSsl(false);
-        clientOptions.setTrustAll(true);
-        clientOptions.setHostnameVerificationAlgorithm("");
-
-        AmqpConnectOptions connectOptions = new AmqpConnectOptions()
-                .setTerminusFactory(new QueueTerminusFactory())
-                .setEndpoint(remoteBrokerEndpointNoSSL)
                 .setProtonClientOptions(clientOptions)
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setUsername(remoteBrokerUsername)

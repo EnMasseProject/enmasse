@@ -16,18 +16,13 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.ExecActionBuilder;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
-import io.fabric8.kubernetes.api.model.ProbeBuilder;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
@@ -76,8 +71,6 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
-    private static final String AMQ_BROKER_TEMPLATE = "src/main/resources/broker/amq-broker-73-ssl.yaml";
-    private static final String AMQ_BROKER_SSL_SECRET_NAME = "amq-app-secret";
     private static final String AMQ_BROKER = "amq-broker";
 
     public static String getMessagingAppPodName() throws Exception {
@@ -250,44 +243,28 @@ public class SystemtestsKubernetesApps {
         return Kubernetes.getInstance().getEndpoint("amqp", namespace, "amqp");
     }
 
-    public static Endpoint getAMQBrokerSSLEndpoint(String namespace) {
-        return Kubernetes.getInstance().getEndpoint("amqps", namespace, "amqps");
-    }
-
-    public static void deployAMQBroker(String namespace, String user, String password) throws Exception {
+    public static void deployAMQBroker(String namespace, String user, String password, String... queues) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
         if (!kubeCli.namespaceExists(namespace)) {
             kubeCli.createNamespace(namespace);
         }
 
-        if(!kubeCli.secretExists(namespace, AMQ_BROKER_SSL_SECRET_NAME)) {
-            kubeCli.createSecret(namespace, getAmqBrokerSSLSecret());
-        }
-
-        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(user, password));
-
+        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(user, password, queues));
         kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource("amqp", AMQ_BROKER, 5672, "amqp"));
-        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource("amqps", AMQ_BROKER, 5671, "amqps"));
 
         kubeCli.getClient()
             .apps().deployments()
             .inNamespace(namespace)
             .withName(AMQ_BROKER)
-            .waitUntilReady(10, TimeUnit.MINUTES);
+            .waitUntilReady(5, TimeUnit.MINUTES);
 
         Thread.sleep(5000);
     }
 
     public static void deleteAMQBroker(String namespace) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-
-        kubeCli.deleteSecret(namespace, AMQ_BROKER_SSL_SECRET_NAME);
-
         kubeCli.deleteService(namespace, "amqp");
-        kubeCli.deleteService(namespace, "amqps");
-
         kubeCli.deleteDeployment(namespace, AMQ_BROKER);
-
         Thread.sleep(5000);
     }
 
@@ -617,40 +594,7 @@ public class SystemtestsKubernetesApps {
                 .build();
     }
 
-    private static Secret getAmqBrokerSSLSecret() throws IOException {
-        File keystore = new File("src/main/resources/broker/broker.ks");
-        File truststore = new File("src/main/resources/broker/broker.ts");
-        byte[] keystoreContent = Files.readAllBytes(keystore.toPath());
-        byte[] truststoreContent = Files.readAllBytes(truststore.toPath());
-
-        Secret brokerSecret = new SecretBuilder()
-            .withNewMetadata()
-            .withName(AMQ_BROKER_SSL_SECRET_NAME)
-            .endMetadata()
-            .addToData("broker.ks", Base64.getEncoder().encodeToString(keystoreContent))
-            .addToData("broker.ts", Base64.getEncoder().encodeToString(truststoreContent))
-            .build();
-        return brokerSecret;
-    }
-
-    private static Deployment getBrokerDeployment(String user, String password) {
-
-        Map<String, String> envVars = new HashMap<>();
-        envVars.put("AMQ_USER", user);
-        envVars.put("AMQ_PASSWORD", password);
-        envVars.put("AMQ_ROLE", "admin");
-        envVars.put("AMQ_NAME", "amq-broker");
-        envVars.put("AMQ_QUEUES", "queue1,queue2");
-        envVars.put("AMQ_TRANSPORTS", "amqp");
-        envVars.put("AMQ_KEYSTORE_TRUSTSTORE_DIR", "/etc/amq-secret-volume");
-        envVars.put("AMQ_TRUSTSTORE", "broker.ts");
-        envVars.put("AMQ_TRUSTSTORE_PASSWORD", "123456");
-        envVars.put("AMQ_KEYSTORE", "broker.ks");
-        envVars.put("AMQ_KEYSTORE_PASSWORD", "123456");
-        EnvVar[] envVarsArray = envVars.entrySet().stream()
-            .map(e -> new EnvVarBuilder().withName(e.getKey()).withValue(e.getValue()).build())
-            .toArray(EnvVar[]::new);
-
+    private static Deployment getBrokerDeployment(String user, String password, String... queues) {
         return new DeploymentBuilder()
                 .withNewMetadata()
                 .withName(AMQ_BROKER)
@@ -667,36 +611,35 @@ public class SystemtestsKubernetesApps {
                 .addToLabels("app", AMQ_BROKER)
                 .endMetadata()
                 .withNewSpec()
+                .addNewInitContainer()
+                    .withName("artemis-init")
+                    .withImage("quay.io/enmasse/artemis-base:2.10.0")
+                    .withCommand("/bin/sh")
+                    .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user "+user+" --password "+password+" --role admin --queues "+String.join(",", queues))
+                    .withVolumeMounts(new VolumeMountBuilder()
+                            .withName("data")
+                            .withMountPath("/var/run/artemis")
+                            .build())
+                .endInitContainer()
                 .addNewContainer()
                     .withName(AMQ_BROKER)
-                    .withImage("registry.redhat.io/amq-broker-7/amq-broker-73-openshift:7.3")
+                    .withImage("quay.io/enmasse/artemis-base:2.10.0")
                     .withImagePullPolicy("IfNotPresent")
-                    .withReadinessProbe(new ProbeBuilder()
-                            .withExec(new ExecActionBuilder()
-                                    .withCommand("/bin/bash", "-c", "/opt/amq/bin/readinessProbe.sh")
-                                    .build())
-                            .build())
+                    .withCommand("/bin/sh")
+                    .withArgs("-c", "/var/run/artemis/bin/artemis run")
                     .addToPorts(new ContainerPortBuilder()
                             .withContainerPort(5672)
                             .withName("amqp")
-                            .build(),
-                            new ContainerPortBuilder()
-                            .withContainerPort(5671)
-                            .withName("amqp-ssl")
                             .build())
-                    .addToEnv(envVarsArray)
                     .withVolumeMounts(new VolumeMountBuilder()
-                            .withMountPath("/etc/amq-secret-volume")
-                            .withName("broker-secret-volume")
-                            .withNewReadOnly(true)
+                            .withName("data")
+                            .withMountPath("/var/run/artemis")
                             .build())
                     .endContainer()
-                .withTerminationGracePeriodSeconds(60L)
                 .addNewVolume()
-                .withName("broker-secret-volume")
-                .withSecret(new SecretVolumeSourceBuilder()
-                        .withSecretName(AMQ_BROKER_SSL_SECRET_NAME)
-                        .build())
+                .withName("data")
+                .withNewEmptyDir()
+                .endEmptyDir()
                 .endVolume()
                 .endSpec()
                 .endTemplate()
