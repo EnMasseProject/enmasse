@@ -133,9 +133,9 @@ public class CommonResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
     // Address plans
     //------------------------------------------------------------------------------------------------
-    @Override
+
     public void createAddressPlan(AddressPlan addressPlan) throws Exception {
-        createAddressPlan(addressPlan);
+        super.createAddressPlan(addressPlan);
         addressPlans.add(addressPlan);
     }
 
@@ -156,7 +156,6 @@ public class CommonResourcesManager extends ResourceManager {
     // Address space plans
     //------------------------------------------------------------------------------------------------
 
-    @Override
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         super.createAddressSpacePlan(addressSpacePlan);
         addressSpacePlans.add(addressSpacePlan);
