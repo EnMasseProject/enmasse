@@ -548,7 +548,15 @@ BrokerController.prototype.create_connectors = function (connectors) {
 };
 
 function connectors_of_interest(name) {
-    return name !== 'amqp-connector' && name !== 'router-connector-in' && name !== 'router-connector-out' && name !== 'amqp-connector-in' && name !== 'amqp-connector-out' && !name.startsWith("$override");
+    return name !== 'amqp-connector' &&
+	name !== 'router-connector-in' &&
+	name !== 'router-connector-out' &&
+	name !== 'amqp-connector-in' &&
+	name !== 'amqp-connector-out' &&
+	name !== 'address-connector-in' &&
+	name !== 'address-connector-out' &&
+	name !== 'ragent-connector' &&
+	!name.startsWith("$override";
 }
 
 function connector_compare(a, b) {
