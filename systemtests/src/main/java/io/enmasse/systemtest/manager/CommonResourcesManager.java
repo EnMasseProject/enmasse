@@ -133,9 +133,9 @@ public class CommonResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
     // Address plans
     //------------------------------------------------------------------------------------------------
-
+    @Override
     public void createAddressPlan(AddressPlan addressPlan) throws Exception {
-        createAddressPlan(addressPlan, false);
+        createAddressPlan(addressPlan);
         addressPlans.add(addressPlan);
     }
 
@@ -144,8 +144,8 @@ public class CommonResourcesManager extends ResourceManager {
         addressPlans.removeIf(addressPlanIter -> addressPlanIter.getMetadata().getName().equals(addressPlan.getMetadata().getName()));
     }
 
-    public void replaceAddressPlan(AddressPlan plan) throws Exception {
-        super.createAddressPlan(plan, true);
+    public void replaceAddressPlan(AddressPlan plan) throws InterruptedException {
+        super.replaceAddressPlan(plan);
     }
 
     public AddressPlan getAddressPlan(String name) throws Exception {
@@ -156,6 +156,7 @@ public class CommonResourcesManager extends ResourceManager {
     // Address space plans
     //------------------------------------------------------------------------------------------------
 
+    @Override
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         super.createAddressSpacePlan(addressSpacePlan);
         addressSpacePlans.add(addressSpacePlan);
@@ -235,7 +236,6 @@ public class CommonResourcesManager extends ResourceManager {
     }
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
-        LOGGER.warn("Address space " + addressSpace);
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             super.createAddressSpace(addressSpace);
             currentAddressSpaces.add(addressSpace);

@@ -90,23 +90,22 @@ public abstract class ResourceManager {
     // Address plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressPlan(AddressPlan addressPlan, boolean replaceExisting) throws Exception {
+    public void createAddressPlan(AddressPlan addressPlan) throws Exception {
         LOGGER.info("Address plan {} will be created {}", addressPlan.getMetadata().getName(), addressPlan);
         var client = Kubernetes.getInstance().getAddressPlanClient();
-        if (replaceExisting) {
-            client.createOrReplace(addressPlan);
-        } else {
-            client.create(addressPlan);
-        }
+        client.create(addressPlan);
+        Thread.sleep(1000);
+    }
+
+    public void replaceAddressPlan(AddressPlan addressPlan) throws InterruptedException {
+        LOGGER.info("Address plan {} will be replaced {}", addressPlan.getMetadata().getName(), addressPlan);
+        var client = Kubernetes.getInstance().getAddressPlanClient();
+        client.createOrReplace(addressPlan);
         Thread.sleep(1000);
     }
 
     public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
         Kubernetes.getInstance().getAddressPlanClient().withName(addressPlan.getMetadata().getName()).cascading(true).delete();
-    }
-
-    public void replaceAddressPlan(AddressPlan plan) throws Exception {
-        Kubernetes.getInstance().getAddressPlanClient().createOrReplace(plan);
     }
 
     public AddressPlan getAddressPlan(String name) throws Exception {
@@ -118,17 +117,9 @@ public abstract class ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
-        createAddressSpacePlan(addressSpacePlan, false);
-    }
-
-    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean replaceExisting) throws Exception {
         LOGGER.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
         var client = Kubernetes.getInstance().getAddressSpacePlanClient();
-        if (replaceExisting) {
-            client.createOrReplace(addressSpacePlan);
-        } else {
-            client.create(addressSpacePlan);
-        }
+        client.create(addressSpacePlan);
         Thread.sleep(1000);
     }
 
