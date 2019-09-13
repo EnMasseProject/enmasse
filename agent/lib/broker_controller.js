@@ -556,7 +556,7 @@ function connectors_of_interest(name) {
 	name !== 'address-connector-in' &&
 	name !== 'address-connector-out' &&
 	name !== 'ragent-connector' &&
-	!name.startsWith("$override";
+	!name.startsWith("$override");
 }
 
 function connector_compare(a, b) {
