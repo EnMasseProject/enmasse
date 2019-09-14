@@ -135,8 +135,8 @@ public class CommonResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     public void createAddressPlan(AddressPlan addressPlan) throws Exception {
-        super.createAddressPlan(addressPlan);
         addressPlans.add(addressPlan);
+        super.createAddressPlan(addressPlan);
     }
 
     public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
@@ -157,8 +157,8 @@ public class CommonResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
-        super.createAddressSpacePlan(addressSpacePlan);
         addressSpacePlans.add(addressSpacePlan);
+        super.createAddressSpacePlan(addressSpacePlan);
     }
 
     public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
@@ -184,11 +184,11 @@ public class CommonResourcesManager extends ResourceManager {
 
     public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         if (infraConfigDefinition instanceof StandardInfraConfig) {
-            super.createInfraConfig((StandardInfraConfig) infraConfigDefinition);
             standardInfraConfigs.add((StandardInfraConfig) infraConfigDefinition);
+            super.createInfraConfig((StandardInfraConfig) infraConfigDefinition);
         } else {
-            super.createInfraConfig((BrokeredInfraConfig) infraConfigDefinition);
             brokeredInfraConfigs.add((BrokeredInfraConfig) infraConfigDefinition);
+            super.createInfraConfig((BrokeredInfraConfig) infraConfigDefinition);
         }
     }
 
@@ -224,8 +224,8 @@ public class CommonResourcesManager extends ResourceManager {
     }
 
     public void createAuthService(AuthenticationService authenticationService) throws Exception {
-        super.createAuthService(authenticationService);
         authServices.add(authenticationService);
+        super.createAuthService(authenticationService);
     }
 
 
@@ -236,8 +236,8 @@ public class CommonResourcesManager extends ResourceManager {
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
-            super.createAddressSpace(addressSpace);
             currentAddressSpaces.add(addressSpace);
+            super.createAddressSpace(addressSpace);
         } else {
             super.waitForAddressSpaceReady(addressSpace);
         }
