@@ -31,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserApiSharedBrokeredTest extends TestBase implements ITestSharedBrokered {
+public class UserApiTest extends TestBase implements ITestSharedBrokered {
 
     private Map<AddressSpace, User> users = new HashMap<>();
     private Logger LOGGER = CustomLogger.getLogger();

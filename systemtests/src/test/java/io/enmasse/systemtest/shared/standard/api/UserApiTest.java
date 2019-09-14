@@ -37,7 +37,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserApiSharedStandardTest extends TestBase implements ITestSharedStandard {
+public class UserApiTest extends TestBase implements ITestSharedStandard {
 
     private Map<AddressSpace, User> users = new HashMap<>();
     private Logger LOGGER = CustomLogger.getLogger();
