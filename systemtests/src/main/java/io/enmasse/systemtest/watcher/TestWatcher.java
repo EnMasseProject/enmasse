@@ -37,13 +37,9 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
 
     @Override
     public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
-      LOGGER.info("Teardown section: ");
-        if ((testInfo.getTests().size() != 1) && testInfo.getCurrentTestIndex() != testInfo.getTests().size() - 1) {
-            if (testInfo.isTestShared() && sharedResourcesManager.getSharedAddressSpace() != null) {
-                tearDownSharedResources();
-            } else {
-                tearDownCommonResources();
-            }
+        LOGGER.info("Teardown section: ");
+        if (testInfo.isTestShared() && sharedResourcesManager.getSharedAddressSpace() != null) {
+            tearDownSharedResources();
         } else {
             tearDownCommonResources();
         }
