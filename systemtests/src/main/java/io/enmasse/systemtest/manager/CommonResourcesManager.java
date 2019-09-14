@@ -12,6 +12,7 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -76,12 +77,20 @@ public class CommonResourcesManager extends ResourceManager {
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
+    public void initFactories(AddressSpace addressSpace, UserCredentials userCredentials) throws Exception {
+        closeClientFactories(amqpClientFactory, mqttClientFactory);
+        amqpClientFactory = new AmqpClientFactory(addressSpace, userCredentials);
+        mqttClientFactory = new MqttClientFactory(addressSpace, userCredentials);
+    }
+
     @Override
     public void setup() {
-        if (!reuseAddressSpace) {
-            currentAddressSpaces = new ArrayList<>();
+        if (currentAddressSpaces.size() != 0) {
+            initFactories(currentAddressSpaces.get(0));
+        } else {
             initFactories(null);
         }
+
     }
 
     @Override
