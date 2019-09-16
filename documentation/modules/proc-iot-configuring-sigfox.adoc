@@ -4,10 +4,10 @@
 // assembly-IoT.adoc
 
 ifeval::["{cmdcli}" == "oc"]
-:cmd-get-adapter: echo "https://$(oc -n enmasse-infra get routes iot-sigfox-adapter --template='{{ .spec.host }}')"
+:cmd-get-adapter: echo "https://$(oc -n {ProductNamespace} get routes iot-sigfox-adapter --template='{{ .spec.host }}')"
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
-:cmd-get-adapter: echo "https://$(kubectl -n enmasse-infra get service iot-sigfox-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443"
+:cmd-get-adapter: echo "https://$(kubectl -n {ProductNamespace} get service iot-sigfox-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443"
 endif::[]
 
 [id='iot-proc-configuring-sigfox-{context}']
@@ -35,7 +35,7 @@ to use this gateway device as their transport.
 
 .Procedure
 
-. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-device-register-new-device-{context}[Register a new device]. Choose a name, 
+. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-device-register-new-device-{context}[Register a new device]. Choose a name,
   for example, `sigfox-backend`.
 . link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-device-set-password-{context}[Set up password credentials] for this device (for example `sigfox-user` / `sigfox-password`).
 
@@ -54,7 +54,7 @@ to use this gateway device as their transport.
 Specify the device ID as the name (for example, `1AB2C3`) and specify name of the gateway device in the `via` field,
 as part of the registration information (for example, `{"via": ["sigfox-backend"]}`).
 
-NOTE: Do not set a password for this device. 
+NOTE: Do not set a password for this device.
 
 [id='iot-proc-configuring-sigfox-connection-information-{context}']
 == Preparing Sigfox connection information
