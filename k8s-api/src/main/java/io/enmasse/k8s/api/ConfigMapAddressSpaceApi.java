@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.api.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +36,6 @@ import io.enmasse.k8s.api.cache.ListOptions;
 import io.enmasse.k8s.api.cache.ListerWatcher;
 import io.enmasse.k8s.api.cache.Reflector;
 import io.enmasse.k8s.api.cache.WorkQueue;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
-import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.RequestConfig;
@@ -55,7 +53,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
         this.client = client;
     }
 
-    private static String getConfigMapName(String namespace, String name) {
+    public static String getConfigMapName(String namespace, String name) {
         return namespace + "." + name;
     }
 
@@ -245,7 +243,15 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
 
     @Override
     public AddressApi withAddressSpace(AddressSpace addressSpace) {
-        return new ConfigMapAddressApi(client, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID));
+        OwnerReference ownerReference = new OwnerReferenceBuilder()
+                .withApiVersion("v1")
+                .withKind("ConfigMap")
+                .withBlockOwnerDeletion(true)
+                .withController(true)
+                .withName(getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()))
+                .withUid(addressSpace.getMetadata().getUid())
+                .build();
+        return new ConfigMapAddressApi(client, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID), ownerReference);
     }
 
     @SuppressWarnings("unused")
