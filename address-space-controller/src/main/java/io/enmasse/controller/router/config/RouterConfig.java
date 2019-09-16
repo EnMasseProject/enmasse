@@ -101,7 +101,7 @@ public class RouterConfig {
     }
 
     public static RouterConfig fromMap(Map<String, String> data) throws IOException {
-        byte [] json = data.get("qdrouterd.json").getBytes(StandardCharsets.UTF_8);
+        byte [] json = Optional.ofNullable(data.get("qdrouterd.json")).orElse("[]").getBytes(StandardCharsets.UTF_8);
         return RouterConfig.fromJson(json);
     }
 
