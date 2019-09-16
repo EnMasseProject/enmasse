@@ -564,6 +564,77 @@ metric_bucket{le="bla"} 3.14
 			in:  "metric{l=\"\xbd\"} 3.14\n",
 			err: "text format parsing error in line 1: invalid label value \"\\xbd\"",
 		},
+		// 20: Go 1.13 sometimes allows underscores in numbers.
+		{
+			in:  "foo 1_2\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 21: Go 1.13 supports hex floating point.
+		{
+			in:  "foo 0x1p-3\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 22: Check for various other literals variants, just in case.
+		{
+			in:  "foo 0x1P-3\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 23:
+		{
+			in:  "foo 0B1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 24:
+		{
+			in:  "foo 0O1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 25:
+		{
+			in:  "foo 0X1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 26:
+		{
+			in:  "foo 0x1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 27:
+		{
+			in:  "foo 0b1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 28:
+		{
+			in:  "foo 0o1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 29:
+		{
+			in:  "foo 0x1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 30:
+		{
+			in:  "foo 0x1\n",
+			err: "text format parsing error in line 1: expected float as value",
+		},
+		// 31: Check histogram label.
+		{
+			in: `
+# TYPE metric histogram
+metric_bucket{le="0x1p-3"} 3.14
+`,
+			err: "text format parsing error in line 3: expected float as value for 'le' label",
+		},
+		// 32: Check quantile label.
+		{
+			in: `
+# TYPE metric summary
+metric{quantile="0x1p-3"} 3.14
+`,
+			err: "text format parsing error in line 3: expected float as value for 'quantile' label",
+		},
 	}
 
 	for i, scenario := range scenarios {
