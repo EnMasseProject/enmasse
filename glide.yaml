@@ -7,22 +7,22 @@ import:
   - package: github.com/openshift/api
     version: release-3.11
   - package: go.uber.org/multierr
-    version: ^1.1
+    version: ^1
   - package: go.uber.org/atomic
     version: ^1
   - package: github.com/google/uuid
-    version: ^1.1
+    version: ^1
   - package: gopkg.in/yaml.v2
-    version: ^2.2
+    version: ^2
 
   - package: k8s.io/code-generator
-    version: kubernetes-1.12.5
+    version: kubernetes-1.12.10
   - package: k8s.io/apimachinery
-    version: kubernetes-1.12.5
+    version: kubernetes-1.12.10
   - package: k8s.io/api
-    version: kubernetes-1.12.5
+    version: kubernetes-1.12.10
   - package: k8s.io/gengo
-    version: 7a1b7fb0289f3b6f206589cdcfcad73009b6e840
+    version: ebc107f98eab922ef99d645781b87caca01f4f48
   - package: github.com/spf13/pflag
     version: ~1.0
   - package: golang.org/x/tools
