@@ -10,6 +10,8 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -27,6 +29,7 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -162,6 +165,17 @@ public class AddressUtils {
         return isReady;
     }
 
+    public static boolean areForwardersReady(Address address) {
+        return Optional.ofNullable(address)
+                .map(Address::getStatus)
+                .map(AddressStatus::getForwarderStatuses)
+                .map(Stream::of)
+                .orElseGet(Stream::empty)
+                .flatMap(Collection::stream)
+                .map(AddressStatusForwarder::isReady)
+                .allMatch(ready -> ready == true);
+    }
+
     private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
         List<String> namespaces = Stream.of(destinations)
                 .map(Address::getMetadata)
@@ -193,6 +207,13 @@ public class AddressUtils {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_BROKER_DRAINED);
         Thread.sleep(2000);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::areBrokersDrained, destinations));
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void waitForForwardersReady(TimeoutBudget budget, Address... destinations) throws Exception {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_FORWARDERS);
+        Thread.sleep(2000);
+        waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::areForwardersReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
