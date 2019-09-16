@@ -1,0 +1,144 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+// assembly-IoT.adoc
+
+ifeval::["{cmdcli}" == "oc"]
+:cmd-get-adapter: echo "https://$(oc -n {ProductNamespace} get routes iot-sigfox-adapter --template='{{ .spec.host }}')"
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+:cmd-get-adapter: echo "https://$(kubectl -n {ProductNamespace} get service iot-sigfox-adapter-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443"
+endif::[]
+
+[id='iot-proc-configuring-sigfox-{context}']
+= Configuring the Sigfox integration
+
+After installing the IoT services and creating an IoT project, you can configure
+the Sigfox backend integration.
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-{context}[The IoT services are installed].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
+* Properly deployed TLS in your cluster. The Sigfox protocol adapter endpoint
+  must be properly validated with TLS.
+* Set up an account at https://backend.sigfox.com and register your Sigfox devices.
+* Be familiar with the Sigfox backend. You can find the documentation at https://backend.sigfox.com/cms/ after you
+  are logged in.
+
+[id='iot-proc-configuring-sigfox-registering-backend-gateway-device-{context}']
+== Registering the Sigfox backend as a gateway device
+
+The Sigfox backend will be set up in {ProductName} as a gateway device.
+The credentials assigned to this device will be required for the configuration
+of the "callback" in the Sigfox backend. The actual devices will be configured
+to use this gateway device as their transport.
+
+.Procedure
+
+. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-device-register-new-device-{context}[Register a new device]. Choose a name,
+  for example, `sigfox-backend`.
+. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-device-set-password-{context}[Set up password credentials] for this device (for example `sigfox-user` / `sigfox-password`).
+
+[id='iot-proc-configuring-sigfox-register-sigfox-device-{context}']
+== Registering the Sigfox device
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-configuring-sigfox-registering-backend-gateway-device-{context}[Registered the Sigfox backend as a gateway device].
+
+.Procedure
+
+. Obtain the _device ID_ for the Sigfox device you want to register. You will get this ID as part of the registration
+  process in the Sigfox backend.
+. link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-device-register-new-device-{context}[Register a new device].
++
+Specify the device ID as the name (for example, `1AB2C3`) and specify name of the gateway device in the `via` field,
+as part of the registration information (for example, `{"via": ["sigfox-backend"]}`).
+
+NOTE: Do not set a password for this device.
+
+[id='iot-proc-configuring-sigfox-connection-information-{context}']
+== Preparing Sigfox connection information
+
+Prepare the following connection information, which will be used in the
+following steps.
+
+IoT tenant name::
+The name of the IoT tenant consists of the {KubePlatform} namespace and the name
+of the IoT project resource. For example, `namespace.iotproject`.
+
+HTTP authorization header::
+For the Sigfox backend to authenticate
+convert the username and password combination of the gateway device into
+an HTTP "Basic Authorization" header. Be sure to use the full username
+using the following syntax:  `_authentication id_ @_IoT tenant
+name_`.
++
+Example: `sigfox-user@namespace.iotproject`
++
+The basic authentication header value can be generated on the command line using
+the following command:
++
+[options="nowrap",subs="attributes"]
+----
+echo "Basic $(echo -n "sigfox-user@namespace.iotproject:password" | base64)"
+----
+
+URL pattern::
+The URL pattern consists of the URL to the Sigfox protocol adapter and
+Sigfox-specific query parameters:
++
+[options="nowrap",subs="verbatim,attributes"]
+----
+https://<ADAPTER URL>/data/telemetry/<TENANT>?device={device}&data={data}
+----
++
+Run the following command to obtain the URL of the protocol adapter:
++
+[options="nowrap",subs="attributes"]
+----
+{cmd-get-adapter}
+----
++
+The path segment `/data/telemetry` indicates to the protocol adapter
+to handle messages as _telemetry_ data. You can use `/data/event`
+instead to process messages as _events_.
++
+Append the query parameters `?device={device}&data={data}` as is.
++
+NOTE: `{device}` and `{data}` are literal values, and must not be replaced.
+
+[id='iot-proc-creating-new-sigfox-callback-{context}']
+== Creating a new callback in the Sigfox backend
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-configuring-sigfox-connection-information-{context}[Prepared the Sigfox connection information].
+
+.Procedure
+
+. Log in to https://backend.sigfox.com.
+. In the `Device Type` open a type for editing and switch to the `Callbacks`
+  section.
+. Create a new "Custom" callback, with the following settings:
++
+Type:: `DATA` – `UPLINK`
+Channel:: `URL`
+Url pattern:: The _URL pattern_. For example, `\https://iot-sigfox-adapter.my.cluster/data/telemetry/<TENANT>?device={device}&data={data}`
+Use HTTP Method:: `GET`
+Headers:: `Authorization` – `Basic…`
+Send SNI:: ☑ (Enabled)
+
+[id='iot-proc-configuring-sigfox-enable-command-and-control-{context}']
+== Enabling command and control
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-proc-creating-new-sigfox-callback-{context}[Created a callback in the Sigfox backend].
+
+.Procedure
+
+. Log in to https://backend.sigfox.com.
+. In the `Device Type` open the type for editing and switch to the `Callbacks`
+  section.
+. Edit the callback configuration for which you want to enable command and control.
++
+Type:: Switch to `DATA` –  `BIDIR`
+Url Pattern:: Add the `ack` parameter. For example, `\https://iot-sigfox-adapter.my.cluster/data/telemetry/<TENANT>?device={device}&data={data}**&ack={ack}**`
