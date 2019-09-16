@@ -44,7 +44,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 
-public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
+class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
 
     //tested usecases
     //Sending messages to a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
@@ -67,14 +67,14 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
     private Endpoint remoteBrokerEndpoint;
 
     @BeforeEach
-    public void deployBroker() throws Exception {
+    void deployBroker() throws Exception {
         SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerUsername, remoteBrokerPassword, SLASHED_QUEUE1, SLASHED_QUEUE2, BASIC_QUEUE1, BASIC_QUEUE2);
         remoteBrokerEndpoint = SystemtestsKubernetesApps.getAMQBrokerEndpoint(remoteBrokerNamespace);
         log.info("Broker endpoint: {}", remoteBrokerEndpoint);
     }
 
     @AfterEach
-    public void undeployBroker(ExtensionContext context) throws Exception {
+    void undeployBroker(ExtensionContext context) throws Exception {
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectLogsOfPodsInNamespace(remoteBrokerNamespace);
             logCollector.collectEvents(remoteBrokerNamespace);
@@ -83,7 +83,7 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
     }
 
     @Test
-    public void testBrokerDeployment() throws Exception {
+    void testBrokerDeployment() throws Exception {
         AmqpClient client = createClientToRemoteBroker();
 
         Address testQueue = new AddressBuilder()
@@ -99,27 +99,27 @@ public class ConnectorsTest extends TestBase implements ITestIsolatedStandard{
     }
 
     @Test
-    public void testSendThroughConnector1() throws Exception {
+    void testSendThroughConnector1() throws Exception {
         doTestSendThroughConnector(BASIC_QUEUES_PATTERN, new String[] {BASIC_QUEUE1, BASIC_QUEUE2});
     }
 
     @Test
-    public void testSendThroughConnector2() throws Exception {
+    void testSendThroughConnector2() throws Exception {
         doTestSendThroughConnector(SLASHED_QUEUES_PATTERN, new String [] {SLASHED_QUEUE1, SLASHED_QUEUE2});
     }
 
     @Test
-    public void testReceiveThroughConnector1() throws Exception {
+    void testReceiveThroughConnector1() throws Exception {
         doTestReceiveThroughConnector(BASIC_QUEUES_PATTERN, new String[] {BASIC_QUEUE1, BASIC_QUEUE2});
     }
 
     @Test
-    public void testReceiveThroughConnector2() throws Exception {
+    void testReceiveThroughConnector2() throws Exception {
         doTestReceiveThroughConnector(SLASHED_QUEUES_PATTERN, new String [] {SLASHED_QUEUE1, SLASHED_QUEUE2});
     }
 
     @Test
-    public void testBadConfiguration() throws Exception {
+    void testBadConfiguration() throws Exception {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withNamespace(kubernetes.getInfraNamespace())

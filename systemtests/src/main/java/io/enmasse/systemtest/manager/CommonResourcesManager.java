@@ -12,6 +12,7 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -76,12 +77,20 @@ public class CommonResourcesManager extends ResourceManager {
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
+    public void initFactories(AddressSpace addressSpace, UserCredentials userCredentials) throws Exception {
+        closeClientFactories(amqpClientFactory, mqttClientFactory);
+        amqpClientFactory = new AmqpClientFactory(addressSpace, userCredentials);
+        mqttClientFactory = new MqttClientFactory(addressSpace, userCredentials);
+    }
+
     @Override
     public void setup() {
-        if (!reuseAddressSpace) {
-            currentAddressSpaces = new ArrayList<>();
+        if (currentAddressSpaces.size() != 0) {
+            initFactories(currentAddressSpaces.get(0));
+        } else {
             initFactories(null);
         }
+
     }
 
     @Override
@@ -94,30 +103,34 @@ public class CommonResourcesManager extends ResourceManager {
                 Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
             }
+            addressSpacePlans.clear();
 
             for (AddressPlan addressPlan : addressPlans) {
                 Kubernetes.getInstance().getAddressPlanClient().withName(addressPlan.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Address plan {} deleted", addressPlan.getMetadata().getName());
             }
+            addressPlans.clear();
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
                 Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
+            standardInfraConfigs.clear();
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
                 Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
                 LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
+            brokeredInfraConfigs.clear();
 
             for (AuthenticationService authService : authServices) {
                 Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
                 TestUtils.waitForNReplicas(0, false, Map.of("name", authService.getMetadata().getName()), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
                 LOGGER.info("AuthService {} deleted", authService.getMetadata().getName());
             }
+            authServices.clear();
 
-            addressPlans.clear();
-            addressSpacePlans.clear();
+
             closeClientFactories(amqpClientFactory, mqttClientFactory);
             amqpClientFactory = null;
             mqttClientFactory = null;
@@ -131,8 +144,8 @@ public class CommonResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     public void createAddressPlan(AddressPlan addressPlan) throws Exception {
-        createAddressPlan(addressPlan, false);
         addressPlans.add(addressPlan);
+        super.createAddressPlan(addressPlan);
     }
 
     public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
@@ -140,8 +153,8 @@ public class CommonResourcesManager extends ResourceManager {
         addressPlans.removeIf(addressPlanIter -> addressPlanIter.getMetadata().getName().equals(addressPlan.getMetadata().getName()));
     }
 
-    public void replaceAddressPlan(AddressPlan plan) throws Exception {
-        super.createAddressPlan(plan, true);
+    public void replaceAddressPlan(AddressPlan plan) throws InterruptedException {
+        super.replaceAddressPlan(plan);
     }
 
     public AddressPlan getAddressPlan(String name) throws Exception {
@@ -153,8 +166,8 @@ public class CommonResourcesManager extends ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
-        super.createAddressSpacePlan(addressSpacePlan);
         addressSpacePlans.add(addressSpacePlan);
+        super.createAddressSpacePlan(addressSpacePlan);
     }
 
     public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
@@ -180,11 +193,11 @@ public class CommonResourcesManager extends ResourceManager {
 
     public void createInfraConfig(InfraConfig infraConfigDefinition) throws Exception {
         if (infraConfigDefinition instanceof StandardInfraConfig) {
-            super.createInfraConfig((StandardInfraConfig) infraConfigDefinition);
             standardInfraConfigs.add((StandardInfraConfig) infraConfigDefinition);
+            super.createInfraConfig((StandardInfraConfig) infraConfigDefinition);
         } else {
-            super.createInfraConfig((BrokeredInfraConfig) infraConfigDefinition);
             brokeredInfraConfigs.add((BrokeredInfraConfig) infraConfigDefinition);
+            super.createInfraConfig((BrokeredInfraConfig) infraConfigDefinition);
         }
     }
 
@@ -219,6 +232,12 @@ public class CommonResourcesManager extends ResourceManager {
         }
     }
 
+    public void createAuthService(AuthenticationService authenticationService) throws Exception {
+        authServices.add(authenticationService);
+        super.createAuthService(authenticationService);
+    }
+
+
     public void removeAuthService(AuthenticationService authService) throws Exception {
         super.removeAuthService(authService);
         authServices.removeIf(authserviceId -> authserviceId.getMetadata().getName().equals(authService.getMetadata().getName()));
@@ -226,8 +245,8 @@ public class CommonResourcesManager extends ResourceManager {
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
-            super.createAddressSpace(addressSpace);
             currentAddressSpaces.add(addressSpace);
+            super.createAddressSpace(addressSpace);
         } else {
             super.waitForAddressSpaceReady(addressSpace);
         }
@@ -252,7 +271,6 @@ public class CommonResourcesManager extends ResourceManager {
             if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
                 LOGGER.info("Address space '" + addressSpace + "' doesn't exist and will be created.");
                 spaces.add(addressSpace);
-                currentAddressSpaces.add(addressSpace);
             } else {
                 LOGGER.warn("Address space '" + addressSpace + "' already exists.");
             }

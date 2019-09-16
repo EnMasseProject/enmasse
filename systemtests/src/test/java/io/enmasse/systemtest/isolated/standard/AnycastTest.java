@@ -9,6 +9,8 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
@@ -34,6 +36,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class AnycastTest extends TestBase implements ITestIsolatedStandard {
 
     private AddressSpace addressSpace;
+    private UserCredentials userCredentials = new UserCredentials("test", "test");
+
 
     public static void runAnycastTest(Address dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
         if (clients.length == 0) {
@@ -75,6 +79,8 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     void testMultipleReceivers() throws Exception {
+
+
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(addressSpace.getMetadata().getNamespace())
@@ -87,6 +93,10 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         resourcesManager.setAddresses(dest);
+
+        resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
+        commonResourcesManager.initFactories(addressSpace, userCredentials);
+
         AmqpClient client1 = getAmqpClientFactory().createQueueClient();
         AmqpClient client2 = getAmqpClientFactory().createQueueClient();
         AmqpClient client3 = getAmqpClientFactory().createQueueClient();
@@ -143,6 +153,9 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.setAddresses(dest.toArray(new Address[0]));
 
         waitForRouterReplicas(addressSpace, 3);
+
+        resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
+        commonResourcesManager.initFactories(addressSpace, userCredentials);
 
         //simple send/receive
         AmqpClient client1 = getAmqpClientFactory().createQueueClient();

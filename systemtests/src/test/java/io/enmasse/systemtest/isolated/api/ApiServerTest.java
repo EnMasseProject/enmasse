@@ -73,7 +73,7 @@ public class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     void testRestApiGetSchema() throws Exception {
         AddressPlan queuePlan = PlanUtils.createAddressPlanObject("test-schema-rest-api-addr-plan", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0.0)));
-        resourcesManager.createAddressPlan(queuePlan, false);
+        resourcesManager.createAddressPlan(queuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(

@@ -85,7 +85,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
 
-        resourcesManager.createAddressPlan(exampleAddressPlan, false);
+        resourcesManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()

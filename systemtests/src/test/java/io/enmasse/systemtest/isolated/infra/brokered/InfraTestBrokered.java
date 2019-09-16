@@ -67,7 +67,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-brokered", AddressType.QUEUE,
                 Collections.singletonList(new ResourceRequest("broker", 1.0)));
 
-        resourcesManager.createAddressPlan(exampleAddressPlan, false);
+        resourcesManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()

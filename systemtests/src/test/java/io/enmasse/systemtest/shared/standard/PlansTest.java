@@ -33,10 +33,10 @@ class PlansTest extends TestBase implements ITestSharedStandard {
         List<ResourceRequest> addressResources = Collections.singletonList(new ResourceRequest("broker", 0.1));
         String weakQueuePlanName = "pooled-standard-queue-weak";
         AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject(weakQueuePlanName, AddressType.QUEUE, addressResources);
-        resourcesManager.createAddressPlan(weakQueuePlan, false);
+        resourcesManager.createAddressPlan(weakQueuePlan);
 
         AddressSpacePlan standardPlan = resourcesManager.getAddressSpacePlan("standard");
-        resourcesManager.createAddressPlan(weakQueuePlan, false);
+        resourcesManager.createAddressPlan(weakQueuePlan);
         standardPlan = new DoneableAddressSpacePlan(standardPlan).addNewAddressPlan(weakQueuePlanName).done();
         resourcesManager.removeAddressSpacePlan(standardPlan);
 
