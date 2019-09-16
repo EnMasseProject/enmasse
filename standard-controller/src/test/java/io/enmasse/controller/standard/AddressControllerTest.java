@@ -391,7 +391,7 @@ public class AddressControllerTest {
                 .withPlan("small-queue")
                 .endSpec()
 
-                .withStatus(new Status(true).setPhase(Phase.Active)
+                .withStatus(new AddressStatus(true).setPhase(Phase.Active)
                         .appendBrokerStatus(new BrokerStatus("broker-infra-0", "broker-infra-0-0", BrokerState.Migrating))
                         .appendBrokerStatus(new BrokerStatus("broker-infra-1", "broker-infra-1-0", BrokerState.Active)))
 
@@ -444,5 +444,38 @@ public class AddressControllerTest {
         assertEquals(1, alive.getStatus().getBrokerStatuses().size());
         assertEquals("broker-infra-1", alive.getStatus().getBrokerStatuses().get(0).getClusterId());
         assertEquals(BrokerState.Active, alive.getStatus().getBrokerStatuses().get(0).getState());
+    }
+
+    @Test
+    public void testForwarderStatus() throws Exception {
+        Address a = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .withNamespace("ns")
+                .endMetadata()
+
+                .withNewSpec()
+                .withAddress("q1")
+                .withType("queue")
+                .withPlan("small-queue")
+                .addNewForwarder()
+                .withName("fwd1")
+                .withRemoteAddress("remote1/queue1")
+                .withDirection(AddressSpecForwarderDirection.in)
+                .endForwarder()
+                .endSpec()
+                .withNewStatus()
+                .withReady(true)
+                .withPhase(Phase.Configuring)
+                .endStatus()
+                .build();
+
+
+        controller.onUpdate(Arrays.asList(a));
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi).replaceAddress(captor.capture());
+        Address captured = captor.getValue();
+        assertEquals(captured.getStatus().getForwarderStatuses().size(), a.getSpec().getForwarders().size());
+        assertFalse(captured.getStatus().getForwarderStatuses().get(0).isReady());
     }
 }

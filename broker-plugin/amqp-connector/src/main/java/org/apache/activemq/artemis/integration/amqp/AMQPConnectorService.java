@@ -59,7 +59,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    private volatile boolean started = false;
    private final Map<String, Object> connectorConfig;
 
-   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<SubscriberInfo> subscriberInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, ExecutorService nettyThreadPool, int idleTimeout) {
+   public AMQPConnectorService(String connectorName, Map<String, Object> connectorConfig, String containerId, String groupId, Optional<LinkInfo> linkInfo, ActiveMQServer server, ScheduledExecutorService scheduledExecutorService, ExecutorService nettyThreadPool, int idleTimeout) {
       this.name = connectorName;
       this.connectorConfig = connectorConfig;
       this.server = server;
@@ -96,7 +96,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       } else  {
          ActiveMQAMQPLogger.LOGGER.infov("Disabling SSL for AMQP Connector {0}", name);
       }
-      this.lifecycleHandler = new ProtonClientConnectionManager(factory, subscriberInfo.map(LinkInitiator::new), saslClientFactory);
+      this.lifecycleHandler = new ProtonClientConnectionManager(factory, linkInfo.map(LinkInitiator::new), saslClientFactory);
    }
 
    @Override

@@ -560,16 +560,29 @@ Artemis.prototype.findDivert = function (name) {
     );
 };
 
-Artemis.prototype.createConnectorService = function (name, source, target) {
+Artemis.prototype.createConnectorService = function (connector) {
     var parameters = {
         "host": process.env.MESSAGING_SERVICE_HOST,
         "port": process.env.MESSAGING_SERVICE_PORT_AMQPS_BROKER,
-        "containerId": name,
-        "clusterId": name,
-        "clientAddress": target,
-        "sourceAddress": source
+        "clusterId": connector.clusterId
     };
-    return this._request('broker', 'createConnectorService', [name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
+
+    if (connector.containerId !== undefined) {
+	parameters.containerId = connector.containerId;
+    }
+    if (connector.linkName !== undefined) {
+	parameters.linkName = connector.linkName;
+    }
+    if (connector.targetAddress !== undefined) {
+	parameters.targetAddress = connector.targetAddress;
+    }
+    if (connector.sourceAddress !== undefined) {
+	parameters.sourceAddress = connector.sourceAddress;
+    }
+    if (connector.direction !== undefined) {
+	parameters.direction = connector.direction;
+    }
+    return this._request('broker', 'createConnectorService', [connector.name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
 }
 
 
@@ -625,12 +638,12 @@ Artemis.prototype.getGlobalMaxSize = function ()
 /**
  * Create connector service if one does not already exist.
  */
-Artemis.prototype.ensureConnectorService = function (name, source, target) {
+Artemis.prototype.ensureConnectorService = function (connector) {
     var broker = this;
-    return broker.findConnectorService(name).then(
+    return broker.findConnectorService(connector.name).then(
         function (found) {
             if (!found) {
-                return broker.createConnectorService(name, source, target);
+                return broker.createConnectorService(connector);
             }
         }
     );

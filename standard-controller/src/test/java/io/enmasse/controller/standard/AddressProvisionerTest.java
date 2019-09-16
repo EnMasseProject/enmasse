@@ -35,22 +35,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpec;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.internal.util.collections.Sets;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressPlanStatus;
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.address.model.BrokerState;
-import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.address.model.BrokerStatusBuilder;
-import io.enmasse.address.model.Phase;
-import io.enmasse.address.model.StatusBuilder;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.EventLogger;
@@ -133,7 +124,7 @@ public class AddressProvisionerTest {
                 .withType("queue")
                 .endSpec()
 
-                .withStatus(new StatusBuilder()
+                .withStatus(new AddressStatusBuilder()
                         .withReady(true)
                         .addToBrokerStatuses(new BrokerStatus("broker-0", "broker-0-0").setState(BrokerState.Active))
                         .build())

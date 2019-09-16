@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -123,6 +124,17 @@ public class AddressController implements Watcher<Address> {
                 address.getStatus().setReady(true);
             }
 
+            if (address.getSpec().getForwarders() != null) {
+                List<AddressStatusForwarder> forwarderStatuses = new ArrayList<>();
+                for (AddressSpecForwarder forwarder : address.getSpec().getForwarders()) {
+                    forwarderStatuses.add(new AddressStatusForwarderBuilder()
+                            .withName(forwarder.getName())
+                            .withReady(true)
+                            .build());
+                }
+                address.getStatus().setForwarderStatuses(forwarderStatuses);
+            }
+
             Address existing = validAddresses.get(address.getSpec().getAddress());
             if (existing != null) {
                 if (!address.getStatus().getPhase().equals(Pending) && existing.getStatus().getPhase().equals(Pending)) {
@@ -171,7 +183,11 @@ public class AddressController implements Watcher<Address> {
         long provisionResources = System.nanoTime();
 
         Set<Address> liveAddresses = filterByPhases(addressSet, EnumSet.of(Configuring, Active));
-        List<RouterStatus> routerStatusList = checkRouterStatuses();
+        boolean checkRouterLinks = liveAddresses.stream()
+                .anyMatch(a -> Arrays.asList("queue", "subscription").contains(a.getSpec().getType()) &&
+                        a.getSpec().getForwarders() != null && !a.getSpec().getForwarders().isEmpty());
+
+        List<RouterStatus> routerStatusList = checkRouterStatuses(checkRouterLinks);
 
         Set<String> subserveTopics = Collections.emptySet();
         if (withMqtt) {
@@ -243,6 +259,11 @@ public class AddressController implements Watcher<Address> {
             notReady = Float.NaN;
 
         }
+
+        Set<Address> addressesWithForwarders = filterBy(addressSet, address -> (address.getStatus().getForwarderStatuses() != null && !address.getStatus().getForwarderStatuses().isEmpty()));
+        long readyForwarders = countForwardersReady(addressesWithForwarders, true);
+        long notReadyForwarders = countForwardersReady(addressesWithForwarders, false);
+
         metrics.reportMetric(new Metric("addresses_ready_total", "Total number of addresses in ready state", MetricType.gauge, new MetricValue(ready, now, metricLabels)));
         metrics.reportMetric(new Metric("addresses_not_ready_total", "Total number of address in a not ready state", MetricType.gauge, new MetricValue(notReady, now, metricLabels)));
         metrics.reportMetric(new Metric("addresses_total", "Total number of addresses", MetricType.gauge, new MetricValue(addressList.size(), now, metricLabels)));
@@ -253,11 +274,27 @@ public class AddressController implements Watcher<Address> {
         metrics.reportMetric(new Metric("addresses_configuring_total", "Total number of addresses in Configuring state", MetricType.gauge, new MetricValue(countByPhase.get(Configuring), now, metricLabels)));
         metrics.reportMetric(new Metric("addresses_active_total", "Total number of addresses in Active state", MetricType.gauge, new MetricValue(countByPhase.get(Active), now, metricLabels)));
 
+        metrics.reportMetric(new Metric("addresses_forwarders_total", "Total number of forwarders", MetricType.gauge, new MetricValue(readyForwarders + notReadyForwarders, now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_forwarders_ready_total", "Total number of forwarders in ready state", MetricType.gauge, new MetricValue(readyForwarders, now, metricLabels)));
+        metrics.reportMetric(new Metric("addresses_forwarders_not_ready_total", "Total number of forwarders in not ready state", MetricType.gauge, new MetricValue(notReadyForwarders, now, metricLabels)));
+
         long totalTime = gcTerminating - start;
         metrics.reportMetric(new Metric("standard_controller_loop_duration_seconds", "Time spent in controller loop", MetricType.gauge, new MetricValue((double) totalTime / 1_000_000_000.0, now, metricLabels)));
 
         metrics.reportMetric(new Metric("standard_controller_router_check_failures_total", "Number of RouterCheckFailures", MetricType.counter, new MetricValue(routerCheckFailures, now, metricLabels)));
 
+    }
+
+    private long countForwardersReady(Set<Address> addressesWithForwarders, boolean desired) {
+        long total = 0;
+        for (Address address : addressesWithForwarders) {
+            for (AddressStatusForwarder forwarder : address.getStatus().getForwarderStatuses()) {
+                if (forwarder.isReady() == desired) {
+                    total++;
+                }
+            }
+        }
+        return total;
     }
 
     private Set<String> checkRegisteredSubserveTopics() {
@@ -489,9 +526,9 @@ public class AddressController implements Watcher<Address> {
         }
     }
 
-    private List<RouterStatus> checkRouterStatuses() throws Exception {
+    private List<RouterStatus> checkRouterStatuses(boolean checkRouterLinks) throws Exception {
 
-        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(routerManagement);
+        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(routerManagement, checkRouterLinks);
         List<RouterStatus> routerStatusList = new ArrayList<>();
         for (Pod router : kubernetes.listRouters()) {
             if (Readiness.isPodReady(router)) {
@@ -530,6 +567,10 @@ public class AddressController implements Watcher<Address> {
                         ok += routerStatus.checkAutoLinks(address);
                     }
                     ok += RouterStatus.checkActiveAutoLink(address, routerStatusList);
+                    ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
+                    break;
+                case "subscription":
+                    ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
                     break;
                 case "topic":
                     ok += checkBrokerStatus(address, clusterOk);
@@ -587,11 +628,11 @@ public class AddressController implements Watcher<Address> {
     }
 
     private class ProvisionState {
-        private final Status status;
+        private final AddressStatus status;
         private final String plan;
 
-        public ProvisionState(Status status, String plan) {
-            this.status = new Status(status);
+        public ProvisionState(AddressStatus status, String plan) {
+            this.status = new AddressStatus(status);
             this.plan = plan;
         }
 

@@ -8,8 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.*;
 
 class RouterStatus {
     private final String routerId;
@@ -17,13 +16,15 @@ class RouterStatus {
     private final List<List<String>> autoLinks;
     private final List<List<String>> linkRoutes;
     private final List<String> connections;
+    private final List<List<String>> links;
 
-    RouterStatus(String routerId, List<String> addresses, List<List<String>> autoLinks, List<List<String>> linkRoutes, List<String> connections) {
+    RouterStatus(String routerId, List<String> addresses, List<List<String>> autoLinks, List<List<String>> linkRoutes, List<String> connections, List<List<String>> links) {
         this.routerId = routerId;
         this.addresses = addresses;
         this.autoLinks = autoLinks;
         this.linkRoutes = linkRoutes;
         this.connections = connections;
+        this.links = links;
     }
 
     public String getRouterId() {
@@ -160,6 +161,50 @@ class RouterStatus {
         return ok;
     }
 
+    public static int checkForwarderLinks(Address address, List<RouterStatus> routerStatusList) {
+        if (address.getSpec().getForwarders() == null || address.getSpec().getForwarders().isEmpty()) {
+            return 0;
+        }
+
+        int ok = 0;
+        for (AddressSpecForwarder forwarder : address.getSpec().getForwarders()) {
+            boolean found = false;
+            boolean isUp = false;
+            for (RouterStatus routerStatus : routerStatusList) {
+                for (List<String> entry : routerStatus.links) {
+                    String linkName = entry.get(0);
+                    if (linkName.equals(address.getForwarderLinkName(forwarder))) {
+                        found = true;
+                        String operStatus = entry.get(1);
+
+                        if ("up".equals(operStatus)) {
+                            isUp = true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (!found) {
+                updateForwarderStatus(forwarder.getName(), false, "Unable to find link for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarderStatuses());
+            } else if (!isUp) {
+                updateForwarderStatus(forwarder.getName(), false, "Unable to find link in the up state for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarderStatuses());
+            } else {
+                ok++;
+            }
+        }
+        return ok;
+    }
+
+    private static void updateForwarderStatus(String name, boolean isReady, String message, List<AddressStatusForwarder> forwarderStatuses) {
+        forwarderStatuses.stream()
+                .filter(c -> c.getName().equals(name))
+                .findFirst().ifPresent(s -> {
+            s.setReady(isReady);
+            s.appendMessage(message);
+        });
+    }
+
     @Override
     public String toString() {
         return new StringBuilder()
@@ -167,7 +212,8 @@ class RouterStatus {
                 .append("addresses=").append(addresses).append(",")
                 .append("autoLinks=").append(autoLinks).append(",")
                 .append("linkRoutes=").append(linkRoutes).append(",")
-                .append("connections=").append(connections).append("}")
+                .append("connections=").append(connections).append(",")
+                .append("links=").append(links).append("}")
                 .toString();
     }
 }
