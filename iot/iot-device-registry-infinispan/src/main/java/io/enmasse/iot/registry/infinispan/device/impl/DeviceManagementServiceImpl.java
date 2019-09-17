@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.service.base.infinispan.cache.AdapterCredentialsCacheProvider;
+import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.device.AbstractDeviceManagementService;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
+import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
 import io.opentracing.Span;
 import io.vertx.core.json.Json;
 

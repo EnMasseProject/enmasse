@@ -13,7 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
+import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
 import io.vertx.core.Vertx;
 
 @Configuration
@@ -25,7 +25,7 @@ public class HealthConfiguration {
      * @return The health check configuration properties.
      */
     @Bean
-    @ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".health-check")
+    @ConfigurationProperties(InfinispanProperties.CONFIG_BASE + ".health-check")
     public ServerConfig healthCheckConfigProperties() {
         return new ServerConfig();
     }

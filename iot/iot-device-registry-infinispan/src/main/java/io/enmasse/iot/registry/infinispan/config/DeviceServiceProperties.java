@@ -10,10 +10,10 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
+import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
 
 @Configuration
-@ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".registry.device")
+@ConfigurationProperties(InfinispanProperties.CONFIG_BASE + ".registry.device")
 public class DeviceServiceProperties {
 
     private static final int DEFAULT_TASK_EXECUTOR_QUEUE_SIZE = 1024;

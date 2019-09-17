@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import static io.enmasse.iot.registry.infinispan.device.data.CredentialKey.credentialKey;
+import static io.enmasse.iot.service.base.infinispan.device.CredentialKey.credentialKey;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.time.Duration.between;
@@ -39,13 +39,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.cache.AdapterCredentialsCacheProvider;
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.service.base.infinispan.cache.AdapterCredentialsCacheProvider;
+import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.registry.infinispan.config.DeviceServiceProperties;
 import io.enmasse.iot.registry.infinispan.device.AbstractCredentialsService;
-import io.enmasse.iot.registry.infinispan.device.data.CredentialKey;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
+import io.enmasse.iot.service.base.infinispan.device.CredentialKey;
+import io.enmasse.iot.service.base.infinispan.device.DeviceCredential;
+import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
 import io.enmasse.iot.registry.infinispan.util.Credentials;
 import io.opentracing.Span;
 import io.vertx.core.json.JsonObject;

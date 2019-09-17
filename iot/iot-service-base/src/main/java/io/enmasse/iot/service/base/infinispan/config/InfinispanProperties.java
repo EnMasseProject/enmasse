@@ -3,16 +3,16 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.registry.infinispan.config;
+package io.enmasse.iot.service.base.infinispan.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
-
 @Configuration
-@ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".registry.infinispan")
+@ConfigurationProperties(InfinispanProperties.CONFIG_BASE + ".registry.infinispan")
 public class InfinispanProperties {
+
+    public static final String CONFIG_BASE = "enmasse.iot";
 
     private static final boolean DEFAULT_TRY_CREATE = false;
 
