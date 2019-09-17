@@ -37,6 +37,7 @@
     <module>iot-tenant-service</module>
     <module>iot-proxy-configurator</module>
     <module>iot-device-registry-infinispan</module>
+    <module>iot-tenant-cleaner</module>
   </modules>
 
   <dependencyManagement>
