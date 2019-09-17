@@ -58,6 +58,14 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace);
     }
 
+    protected void scaleDownBroker() throws Exception {
+        SystemtestsKubernetesApps.scaleDownAMQBroker(remoteBrokerNamespace);
+    }
+
+    protected void scaleUpBroker() throws Exception {
+        SystemtestsKubernetesApps.scaleUpAMQBroker(remoteBrokerNamespace);
+    }
+
     protected AddressSpace createAddressSpace(String name, String addressRule) throws Exception {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()

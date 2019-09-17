@@ -366,8 +366,8 @@ public abstract class Kubernetes {
         return logs;
     }
 
-    public void setDeploymentReplicas(String name, int numReplicas) {
-        client.apps().deployments().inNamespace(infraNamespace).withName(name).scale(numReplicas, true);
+    public void setDeploymentReplicas(String namespace, String name, int numReplicas) {
+        client.apps().deployments().inNamespace(namespace).withName(name).scale(numReplicas, true);
     }
 
     public void setStatefulSetReplicas(String name, int numReplicas) {

@@ -63,7 +63,7 @@ public class TestUtils {
      * scale up/down specific pod (type: Deployment) in address space
      */
     public static void setReplicas(Kubernetes kubernetes, String infraUuid, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        kubernetes.setDeploymentReplicas(deployment, numReplicas);
+        kubernetes.setDeploymentReplicas(kubernetes.getInfraNamespace(), deployment, numReplicas);
         Map<String, String> labels = new HashMap<>();
         labels.put("name", deployment);
         if (infraUuid != null) {
