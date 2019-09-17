@@ -266,7 +266,7 @@ public class AddressSpaceUtils {
     public static boolean areAddressSpaceConnectorsReady(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
             .map(AddressSpace::getStatus)
-            .map(AddressSpaceStatus::getConnectorStatuses)
+            .map(AddressSpaceStatus::getConnectors)
             .map(Stream::of)
             .orElseGet(Stream::empty)
             .flatMap(Collection::stream)
@@ -277,7 +277,7 @@ public class AddressSpaceUtils {
     public static String getConnectorStatuses(AddressSpace addressSpace) {
         return Optional.ofNullable(addressSpace)
             .map(AddressSpace::getStatus)
-            .map(AddressSpaceStatus::getConnectorStatuses)
+            .map(AddressSpaceStatus::getConnectors)
             .map(Stream::of)
             .orElseGet(Stream::empty)
             .flatMap(Collection::stream)

@@ -265,7 +265,7 @@ public class RouterConfigControllerTest {
 
         configController.reconcile(addressSpace);
 
-        AddressSpaceStatusConnector status = addressSpace.getStatus().getConnectorStatuses().get(0);
+        AddressSpaceStatusConnector status = addressSpace.getStatus().getConnectors().get(0);
         assertNotNull(status);
         assertEquals("remote1", status.getName());
         assertFalse(status.isReady());
@@ -334,7 +334,7 @@ public class RouterConfigControllerTest {
         assertEquals("remote1", lrOut.getConnection());
 
 
-        status = addressSpace.getStatus().getConnectorStatuses().get(0);
+        status = addressSpace.getStatus().getConnectors().get(0);
         assertNotNull(status);
         assertEquals("remote1", status.getName());
         assertTrue(status.isReady());

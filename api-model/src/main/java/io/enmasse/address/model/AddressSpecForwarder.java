@@ -6,11 +6,13 @@ package io.enmasse.address.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
+import io.enmasse.model.validation.AddressForwarderName;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
 @Buildable(
@@ -25,10 +27,12 @@ import javax.validation.constraints.NotNull;
         )
 )
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@AddressForwarderName
 public class AddressSpecForwarder extends AbstractWithAdditionalProperties {
     @NotNull
     private String name;
     @NotNull
+    @NotEmpty
     private String remoteAddress;
     @NotNull
     private AddressSpecForwarderDirection direction;

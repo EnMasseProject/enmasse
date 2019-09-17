@@ -186,9 +186,9 @@ class RouterStatus {
             }
 
             if (!found) {
-                updateForwarderStatus(forwarder.getName(), false, "Unable to find link for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarderStatuses());
+                updateForwarderStatus(forwarder.getName(), false, "Unable to find link for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarders());
             } else if (!isUp) {
-                updateForwarderStatus(forwarder.getName(), false, "Unable to find link in the up state for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarderStatuses());
+                updateForwarderStatus(forwarder.getName(), false, "Unable to find link in the up state for forwarder '" + forwarder.getName() + "'", address.getStatus().getForwarders());
             } else {
                 ok++;
             }

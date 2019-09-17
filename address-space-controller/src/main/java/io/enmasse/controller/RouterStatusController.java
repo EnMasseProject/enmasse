@@ -46,7 +46,7 @@ public class RouterStatusController implements Controller {
         InfraConfig infraConfig = InfraConfigs.parseCurrentInfraConfig(addressSpace);
 
         if (infraConfig instanceof StandardInfraConfig) {
-            if (!addressSpace.getStatus().getConnectorStatuses().isEmpty()) {
+            if (!addressSpace.getStatus().getConnectors().isEmpty()) {
                 checkConnectorStatuses(addressSpace);
             }
         }
@@ -113,7 +113,7 @@ public class RouterStatusController implements Controller {
             connectorMap.put(connector.getName(), connector);
         }
 
-        for (AddressSpaceStatusConnector connector : addressSpace.getStatus().getConnectorStatuses()) {
+        for (AddressSpaceStatusConnector connector : addressSpace.getStatus().getConnectors()) {
             checkConnectorStatus(connector, connectorMap.get(connector.getName()), results);
         }
     }

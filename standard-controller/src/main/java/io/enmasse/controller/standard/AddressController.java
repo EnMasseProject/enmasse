@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -132,7 +131,7 @@ public class AddressController implements Watcher<Address> {
                             .withReady(true)
                             .build());
                 }
-                address.getStatus().setForwarderStatuses(forwarderStatuses);
+                address.getStatus().setForwarders(forwarderStatuses);
             }
 
             Address existing = validAddresses.get(address.getSpec().getAddress());
@@ -260,7 +259,7 @@ public class AddressController implements Watcher<Address> {
 
         }
 
-        Set<Address> addressesWithForwarders = filterBy(addressSet, address -> (address.getStatus().getForwarderStatuses() != null && !address.getStatus().getForwarderStatuses().isEmpty()));
+        Set<Address> addressesWithForwarders = filterBy(addressSet, address -> (address.getStatus().getForwarders() != null && !address.getStatus().getForwarders().isEmpty()));
         long readyForwarders = countForwardersReady(addressesWithForwarders, true);
         long notReadyForwarders = countForwardersReady(addressesWithForwarders, false);
 
@@ -288,7 +287,7 @@ public class AddressController implements Watcher<Address> {
     private long countForwardersReady(Set<Address> addressesWithForwarders, boolean desired) {
         long total = 0;
         for (Address address : addressesWithForwarders) {
-            for (AddressStatusForwarder forwarder : address.getStatus().getForwarderStatuses()) {
+            for (AddressStatusForwarder forwarder : address.getStatus().getForwarders()) {
                 if (forwarder.isReady() == desired) {
                     total++;
                 }
