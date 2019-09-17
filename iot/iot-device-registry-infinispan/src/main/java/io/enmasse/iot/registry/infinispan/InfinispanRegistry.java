@@ -20,6 +20,7 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan("org.eclipse.hono.service.auth")
 @ComponentScan("org.eclipse.hono.service.metric")
 @ComponentScan("io.enmasse.iot.registry.infinispan")
+@ComponentScan("io.enmasse.iot.service.base")
 @EnableAutoConfiguration
 public class InfinispanRegistry extends AbstractBaseApplication {
 
