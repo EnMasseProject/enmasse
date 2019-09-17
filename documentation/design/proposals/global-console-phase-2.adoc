@@ -119,6 +119,8 @@ which will initially support GET and in a later development iteration, DELETE, t
 
 The caller must pass the selector addressspace=<addressspace> in order to signal the addressspace for which connections must be returned. The console-server will call out to the agent associated with target addressspace in order to obtain the results-set.  API requests without the addressspace selector will be rejected.
 
+In order to locate the agent endpoint, it will populate a cache. It will do this by watching for agent services.  When an agent service appears, it will resolve its addressspace using the `infraUuid`.
+
 === agent
 
 The Address Space Console and the server side support for the AMQP management interface is removed.
@@ -140,6 +142,19 @@ For addresses and connections, the pattern already established by addressspaces 
 It will the responsibility of the console to poll the statistics api to gather than metrics for the resource(s) that are being viewed.  There will be some common code produces that will simplify the marrying of the kubernetes result set to the statistics results.
 
 The console must  torrerate to a metric it expects being absent from the result set.
+
+
+=== console-owned prometheus instance
+
+A Prometheus instance will be deployed with the console-server (side-car) whose responsibility is to scrape addressspace, address and connnection metrics from the each agent.  Agent instance will be discovered using `kubernetes_sd_configs` type configuration.
+
+The prometheus documentation warns:
+
+> CAUTION: Remember that every unique combination of key-value label pairs represents a new time series, which can dramatically increase the amount of data stored. Do not use labels to store dimensions with high cardinality (many different label values), such as user IDs, email addresses, or other unbounded sets of values.
+
+This could present a problem for some of the connection and address metrics for use-cases involving large numbers of connections or queues.  Some common messaging anti-patterns (connection per message) may explode the number of connections gathered.    
+
+To counter this, the Prometheus instance will be configured with short rentention policy and a small retention size.  In addition the prometheus configuration will be exposed so it can altered without a code change just in case the metrics scraping proved problematic for a use-case.
 
 == Metrics
 
@@ -185,7 +200,15 @@ foreach l in Deliveries, Rejected,Released, Modified,Presettled,Undelivered
 * enmasse_link_stat(labels:<remote hostport>,<remote containerid>,<linkid>,<address>,l) (instantaneous value)
 
 
+== Alternatives
 
+=== Avoiding the need for a console-owned Prometheus
+
+The design above requires a prometheus instance which would be co-locate with the console-server.
+
+It is possible to avoid the need for this instance as follows.
+
+The console-server would scrape the metrics from the discovered agent instances directly and build an internal cache of the metrics. The statistics API would operate against this cache.  In this approach we would not have the richness of the PromQL to compute statistics (rates etc), so would need an alternative mechanism for these metrics.   For the first development interation we opt for a simple configuration driven mechanism.  Unfortunately the PromQL library is not released separately and it does not appear to lend itself to re-use.
 
 
 = Notes
@@ -210,6 +233,7 @@ https://github.com/prometheus/prometheus/issues/3200
 Storage retention
 
 https://www.robustperception.io/configuring-prometheus-storage-retention
+
 
 
 
