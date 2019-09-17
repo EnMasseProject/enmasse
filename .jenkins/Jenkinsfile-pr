@@ -148,7 +148,7 @@ pipeline {
                 script {
                     dir('enmasse') {
                         sh "make templates || true"
-                        enmasse.runSystemtests('systemtests-upgrade', 'upgrade.**')
+                        enmasse.runSystemtests('upgrade', 'upgrade.**')
                     }
                 }
             }
