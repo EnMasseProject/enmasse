@@ -142,7 +142,7 @@ List of functionalities/behaviours to test:
   - [tested] Forwarding messages from a local queue in a local address space to a destination on a remote AMQP endpoint
   - [tested] Forwarding messages to a local queue in a local address space from a destination on a remote AMQP endpoint
   - forward to FULL remote queue
-  - forward from FULL remote queue
+  - forward to FULL local queue
   - try to forward messages when the remote broker is unavailable , and check how the messages are automatically forwarded when the remote broker comes back up
 
 == Documentation
