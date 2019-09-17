@@ -1,0 +1,90 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-address-spaces.adoc
+
+[id='ref-address-space-example-connectors-{context}']
+= Address space connector examples
+
+Address space connectors are most commonly used in two ways. One use case is to map addresses on a remote AMQP endpoint into an address space. For example, a broker is running on the host `messaging.example.com` that you want to access by connecting using the {ProductName} endpoints. Another use case is to enable address forwarding. For more information about address forwarding, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-example-forwarders-messaging[Address forwarding examples].
+
+The following address space examples show how you can configure connectors.
+
+== Connector using SASL PLAIN
+
+SASL PLAIN can be used when you do not want to use mutual TLS for authentication. Not enabling TLS is not recommended, since any usernames and passwords are then sent as clear text. 
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  type: standard
+  plan: standard-unlimited
+  connectors:
+  - name: remote1 <1>
+    endpointHosts: <2>
+    - host: messaging.example.com
+      port: 5672
+    - host: messaging2.example.com
+    tls: {} <3>
+    credentials: <4>
+      username:
+        value: test
+      password:
+        valueFromSecret:
+          name: password-secret
+          key: password.txt
+    addresses: <5>
+    - name: p1
+      pattern: "prices/*"
+    - name: p2
+      pattern: "clients/*/1"
+----
+<1> (Required) Specifies the name of the connector. All remote addresses are prefixed with the connector name and a forward slash, `/`.
+<2> (Required) Specifies a list of endpoints for this connector. This list must contain at least one entry, and any additional entries are used for failover. If not otherwise specified, the `port` field value is set to the registered IANA port for AMQP (or AMQPS if TLS is enabled).
+<3> (Optional) Enable TLS. The connector trusts global root CAs by default. To use a custom CA, specify a value for the `caCert` field.
+<4> (Optional) Specifies the username and password credentials to use for this connector. The values can be specified inline or by referencing a secret along with an optional key specifying the location within the secret. The secret must be readable by the {ProductName} `address-space-controller` service account.
+<5> (Required) Specifies a list of patterns matching addresses to be exposed on the remote endpoint. The pattern consists of one or more tokens separated by a forward slash, `/`. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.
+
+== Connector using mutual TLS
+
+Configuring a client TLS certificate enables SASL EXTERNAL to be used for authentication. The certificates can be specified inline or using a secret reference.
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: AddressSpace
+metadata:
+  name: myspace
+spec:
+  type: standard
+  plan: standard-unlimited
+  connectors:
+  - name: remote1 <1>
+    endpointHosts: <2>
+    - host: messaging.example.com
+      port: 5671
+    tls: 
+      caCert: <3>
+        valueFromSecret:
+          name: remote-certs
+          key: ca.crt
+      clientCert: <4>
+        valueFromSecret:
+          name: remote-certs
+          key: tls.crt
+      clientKey: <5>
+        valueFromSecret:
+          name: remote-certs
+          key: tls.key
+    addresses:
+    - name: p1
+      pattern: "*"
+----
+<1> (Required) Specifies the name of the connector. All remote addresses are prefixed with the connector name and a forward slash, `/`.
+<2> (Required) Specifies a list of endpoints for this connector. This list must contain at least one entry, and any additional entries are used for failover. If not otherwise specified, the `port` field value is set to the registered IANA port for AMQP (or AMQPS if TLS is enabled).
+<3> (Optional) Specifies the CA certificate to trust for the remote connection. The referenced secret must be readable by the {ProductName} `address-space-controller` service account.
+<4> (Optional) Specifies the client certificate to use for mutual TLS authentication. The referenced secret must be readable by the {ProductName} `address-space-controller` service account.
+<5> (Optional) Specifies the client private key to use for mutual TLS authentication. The referenced secret must be readable by the {ProductName} `address-space-controller` service account.
