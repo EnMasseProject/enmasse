@@ -155,7 +155,7 @@ function transform_address_stats(address) {
 function transform_connection_stats(raw) {
     return {
         id: raw.connectionID,
-        host: raw.targetAddress,
+        host: raw.clientAddress,
         container: 'not available',
         user: raw.sessions.length ? raw.sessions[0].principal : '',
         senders: [],
