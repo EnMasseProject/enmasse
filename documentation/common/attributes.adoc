@@ -36,7 +36,7 @@
 :cpp: C++
 :BaseProductVersion: master
 :ConsoleName: {ProductName} Console
-
+:DataGridProductName: Infinispan
 
 // Component attributes
 :BrokerName: Apache ActiveMQ Artemis
