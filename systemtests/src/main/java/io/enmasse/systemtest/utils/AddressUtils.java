@@ -209,7 +209,6 @@ public class AddressUtils {
 
     public static void waitForForwardersReady(TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_FORWARDERS);
-        Thread.sleep(2000);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::areForwardersReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
