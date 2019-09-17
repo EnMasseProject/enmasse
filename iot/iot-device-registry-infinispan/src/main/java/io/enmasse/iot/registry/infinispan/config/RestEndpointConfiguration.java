@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import io.enmasse.iot.registry.infinispan.InfinispanRegistry;
+import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
 
 @Configuration
 public class RestEndpointConfiguration {
@@ -24,7 +24,7 @@ public class RestEndpointConfiguration {
      */
     @Qualifier(Constants.QUALIFIER_REST)
     @Bean
-    @ConfigurationProperties(InfinispanRegistry.CONFIG_BASE + ".registry.rest")
+    @ConfigurationProperties(InfinispanProperties.CONFIG_BASE + ".registry.rest")
     public ServiceConfigProperties restProperties() {
         final ServiceConfigProperties props = new ServiceConfigProperties();
         return props;
