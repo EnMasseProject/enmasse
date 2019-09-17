@@ -10,9 +10,11 @@ After installing the IoT services and creating an IoT project, you can create an
 
 ifeval::["{cmdcli}" == "oc"]
 :registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
+:headers: -H 'Content-Type: application/json' -H "Authorization: Bearer ${TOKEN}"
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 :registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
+:headers: -H 'Content-Type: application/json'
 endif::[]
 
 .Prerequisites
@@ -25,6 +27,16 @@ endif::[]
 export REGISTRY_HOST={registry}
 ----
 
+ifeval::["{cmdcli}" == "oc"]
+* Export current user session token
++
+[options="nowrap",subs="attributes"]
+----
+export TOKEN=$(oc whoami --show-token)
+----
+This token is used to authenticate against device registry management API.
+endif::[]
+
 [id='iot-proc-creating-device-register-new-device-{context}']
 == Registering a new device
 
@@ -34,14 +46,14 @@ export REGISTRY_HOST={registry}
 +
 [options="nowrap",subs="attributes"]
 ----
-curl --insecure -X POST -i -H 'Content-Type: application/json' https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
+curl --insecure -X POST -i {headers} https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
 ----
 . If you need to provide additional registration information, you can provide
   it as follows:
 +
 [options="nowrap",subs="attributes"]
 ----
-curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{
+curl --insecure -X POST -i {headers} --data-binary '{
 	"via": ["gateway1"]
 }' https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
 ----
@@ -55,7 +67,7 @@ curl --insecure -X POST -i -H 'Content-Type: application/json' --data-binary '{
 +
 [options="nowrap",subs="attributes"]
 ----
-curl --insecure -X PUT -i -H 'Content-Type: application/json' --data-binary '[{
+curl --insecure -X PUT -i {headers} --data-binary '[{
 	"type": "hashed-password",
 	"auth-id": "sensor1",
 	"secrets": [{

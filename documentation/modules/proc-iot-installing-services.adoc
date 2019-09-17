@@ -52,6 +52,16 @@ CLUSTER=x.x.x.x.nip.io install/components/iot/examples/k8s-tls/create
 ----
 ====
 
+ifeval::["{cmdcli}" == "oc"]
+. Install {DataGridProductName} server
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/iot/examples/infinispan/common
+{cmdcli} apply -f install/components/iot/examples/infinispan/manual
+----
+endif::[]
+
 . Install an example IoT infrastructure configuration:
 +
 [options="nowrap",subs="attributes"]
