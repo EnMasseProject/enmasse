@@ -19,7 +19,7 @@ public class StringOrSecretSelectorValidator implements ConstraintValidator<Stri
             return true;
         }
 
-        return (selector.getValue() == null || selector.getValueFromSecret() == null);
+        return (selector.getValue() == null ^ selector.getValueFromSecret() == null);
     }
 }
 
