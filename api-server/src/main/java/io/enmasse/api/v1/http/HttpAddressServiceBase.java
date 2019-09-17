@@ -197,6 +197,7 @@ public class HttpAddressServiceBase {
                 for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
                     if (forwarder.getRemoteAddress().startsWith(connector.getName())) {
                         found = true;
+                        break;
                     }
                 }
                 if (!found) {
