@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 
+import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -268,6 +269,32 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     protected void doTestCreateForNonExistingTenantFails() throws Exception {
         var response = client.registerDeviceWithResponse("invalid-" + isolatedIoTManager.getTenantId(), randomDeviceId);
         assertEquals(HTTP_NOT_FOUND, response.statusCode());
+    }
+
+    protected void doTestTenantDeletionTriggersDevicesDeletion() throws Exception {
+        var tenantId = isolatedIoTManager.getTenantId();
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+            client.registerDevice(tenantId, randomDeviceId);
+
+            final String authId = UUID.randomUUID().toString();
+            final Duration expiry = Duration.ofSeconds(30);
+            final Instant notAfter = Instant.now().plus(expiry);
+            final String newPassword = "password1234";
+
+            credentialsClient.addCredentials(tenantId, randomDeviceId, authId, newPassword, notAfter);
+
+            // first check, must succeed
+
+            IoTUtils.checkCredentials(authId, newPassword, false, httpAdapterEndpoint, amqpClient, iotProject);
+
+            // Now delete the tenant
+            IoTUtils.deleteIoTProjectAndWait(kubernetes, iotProject);
+
+            // second check, the credentials and device should be deleted
+
+            IoTUtils.checkCredentials(authId, newPassword, true, httpAdapterEndpoint, amqpClient, iotProject);
+            client.getDeviceRegistration(tenantId, randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        }
     }
 
     protected void doCreateDuplicateDeviceFails() throws Exception {
