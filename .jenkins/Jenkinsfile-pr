@@ -141,8 +141,8 @@ pipeline {
                 expression { env.TEST_PROFILE == 'upgrade' }
             }
             environment {
-                UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
-                START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
+                UPGRADE_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.TAG}"
+                START_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.UPGRADE_FROM}"
             }
             steps {
                 script {
