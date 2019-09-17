@@ -132,6 +132,7 @@ pipeline {
                 dir('enmasse') {
                     script {
                         kubernetes.login(env.KUBERNETES_API_URL, env.OPENSHIFT_USER, env.OPENSHIFT_PASSWD)
+                        enmasse.addSystemPullerRights(env.KUBERNETES_NAMESPACE, 'enmasseci')
                     }
                 }
             }
@@ -141,14 +142,14 @@ pipeline {
                 expression { env.TEST_PROFILE == 'upgrade' }
             }
             environment {
-                UPGRADE_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.TAG}"
-                START_TEMPLATES = "${WORKSPACE}/templates/build/enmasse-${env.UPGRADE_FROM}"
+                UPGRADE_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.TAG}"
+                START_TEMPLATES = "${WORKSPACE}/enmasse/templates/build/enmasse-${env.UPGRADE_FROM}"
             }
             steps {
                 script {
                     dir('enmasse') {
                         sh "make templates || true"
-                        enmasse.runSystemtests('systemtests-upgrade', 'upgrade.**')
+                        enmasse.runSystemtests('upgrade', 'upgrade.**')
                     }
                 }
             }
