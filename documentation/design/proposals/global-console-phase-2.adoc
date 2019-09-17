@@ -30,10 +30,10 @@ a proxy to the Kubernetes API (allowing the UI to view/mutate the resources)  an
 For connection metadata, as Connections are not exposed as a Kubernetes resource, the console-server will have an additional
 responsibility to expose a read-only REST API for connections.  This will be capable for listing connections that exist for a partiular address space.
 
-The agent component will be responsible for exposing additional Prometheus metrics for address-spaces, addresses, and connections.  It loses its responsibilities to serve the Address Space Console or the existing AMQP management interface will be removed.  It acquires a responsibilty for exposing connections to the addressspace over a REST API.  
+The agent component will be responsible for exposing additional Prometheus metrics for address-spaces, addresses, and connections.  It loses its responsibilities to serve the Address Space Console and the existing AMQP management interface will be removed.  It acquires a responsibilty for connection metadata over a REST API.  
 
 A Prometheus instance will be deployed with the console-server (side-car) whose responsibility is to scrape statistics
-from the agents of the address spaces.  These will be discovered using kubernetes_sd_configs type configuration.  The
+from the agent of each addressspaces.  These will be discovered using kubernetes_sd_configs type configuration.  The
 Prometheus instance will be configured with relatively short rentention policies - sufficient for the console's use-cases.
 
 
@@ -74,11 +74,11 @@ This will work like oauth-proxy today except it won't require the Apache HTTPD s
 
 ==== cluster wide list for any resource type
 
-The console UI is required to present all resources available to the user across all accessible namespaces.  This burdens the console with the need to chain many API requests, one for each namespace, and handle the possiblity of 403s for namespaces to which the user has no access.
+The console UI is required to present all resources available to the user across all namespaces to which the user has access.  This burdens the console with the need to chain many API requests, one for each namespace, and handle the possiblity of 403s for namespaces to which the user has no access.
 
 To simplify the UI, the console-server will offer an cluster wide list of resources. This will provide every instance of the required type from all namespaces.  If a user has no access to a particular namespace, then that namespace will be omited from the result set, rather than an error occuring.
 
-To signal a query across all namespaces, a * is used.
+To signal a query across all namespaces, a * is used in the path name element.
 
 <endpont>/api/v1/namespaces/*/address
 
@@ -86,7 +86,7 @@ To signal a query across all namespaces, a * is used.
 
 ==== exposing metrics
 
-The console-server will accept configuration that defines the statistics avaiable for each configured resource type.  This will take the form a list of named PromQL that are associated with each resource type (e.g. address).  These PromQL queries will ultimately produce the values that we wish to display on the console.  
+The console-server will accept configuration that defines the statistics avaiable for each configured resource type.  This will take the form a list of named PromQL queries that are associated with each resource type (e.g. address).  These PromQL queries will ultimately produce the values that we wish to display on the console.  The idea is to avoid the need for the console UI to compute values itself.  
 
 ```
 address:
@@ -97,15 +97,13 @@ address:
      value: rate(enmasse_messages_in_total{addressspace="<addressspace>",addressname!=''}[5m])
 ```
 
-The metrics API will accept a resource type as an argument.  The response will be the Prometheus results for that
-response type.  The UI will parse the results and use the values to populate the display.
+The metrics API will accept a resource type as an argument.  This must refer to a configured resource type.  The response will be the Prometheus results.  The UI will parse the results and use the values to populate the display.
 
-The metrics request API will be able to limit the results set using an expression.  This feature will be used
-to constrain the size of the result set to the information that needs be go on-screen.
+The metrics request API will accept a filter.  This filter will limit the resource instances considered for processing.  This allows the console to limit the metrics query to those items that need to be displayed on screen, thus reducing the data that needs to be transfered between client/server and keeps the UI responsive.
 
-In the first development iteration the UI will poll for query results.  In a later iteration, a watch feature will be avaiable to avoid the poll.
+In the first development iteration the UI will poll for query results.  In a later iteration, a watch feature will be introduced that allows the console to avoid the poll.  This will require the introduction of a metric cache.
 
-==== exposing connection
+==== exposing connections
 
 As EnMasse connections are not presented as a Kubernetes object, we need to make alternative arrangements to allow the Console
 user to view and manage them.
@@ -117,10 +115,9 @@ The console-server API will present connections to the console as if they were a
 apis/enmasse.io/v1beta1/namespaces/<namespace>/connections
 ```
 
-which will support GET and later DELETE, to allow connections to be closed.
+which will initially support GET and in a later development iteration, DELETE, to allow connections to be closed.
 
 The caller must pass the selector addressspace=<addressspace> in order to signal the addressspace for which connections must be returned. The console-server will call out to the agent associated with target addressspace in order to obtain the results-set.  API requests without the addressspace selector will be rejected.
-
 
 === agent
 
@@ -131,6 +128,8 @@ Agent acquires a responsibility for exposing connections to the addressspace ove
 The Agent will be changed to expose the additional metrics listed in the next section.  The existing metrics produced by 
 agent will be maintained.   The Prometheus documentation [https://prometheus.io/docs/practices/naming/#labels](warns) against metrics whose labels may exhibit high cardinality.  The connection and address metrics depending on the messaging use-case
 present this problem.  For this reason the metrics endpoint will disable these statistics by default.  This will avoid changes to the configuration for the existing EnMasse Monitoring .  For the inbuilt Prometheus, the connection and address metrics would be enabled.
+
+A later development interation will add support for DELETE connection to allow a connection to be closed.  This will require the the user has update permission to the address space.
 
 === global console
 
@@ -143,7 +142,6 @@ It will the responsibility of the console to poll the statistics api to gather t
 The console must  torrerate to a metric it expects being absent from the result set.
 
 == Metrics
-
 
 === AddressSpaces
 
@@ -190,9 +188,7 @@ foreach l in Deliveries, Rejected,Released, Modified,Presettled,Undelivered
 
 
 
-Notes:
-
-
+= Notes
 
 https://www.robustperception.io/using-sample_limit-to-avoid-overload
 https://promcon.io/2017-munich/slides/best-practices-and-beastly-pitfalls.pdf
@@ -207,12 +203,6 @@ CAUTION: Remember that every unique combination of key-value label pairs represe
 https://stackoverflow.com/questions/46373442/how-dangerous-are-high-cardinality-labels-in-prometheus
 https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels
 
-
-
-https://danielfm.me/prometheus-for-developers/
-
-
-Make timeseries use a different endpoint?
 
 
 https://github.com/prometheus/prometheus/issues/3200
