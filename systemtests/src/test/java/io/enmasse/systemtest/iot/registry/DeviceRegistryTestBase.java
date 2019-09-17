@@ -303,6 +303,32 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         assertEquals(HTTP_NOT_FOUND, response.statusCode());
     }
 
+    @Test
+    void testTenantDeletionTriggersDevicesDeletion() throws Exception {
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+            client.registerDevice(tenantId(), randomDeviceId);
+
+            final String authId = UUID.randomUUID().toString();
+            final Duration expiry = Duration.ofSeconds(30);
+            final Instant notAfter = Instant.now().plus(expiry);
+            final String newPassword = "password1234";
+
+            credentialsClient.addCredentials(tenantId(), randomDeviceId, authId, newPassword, notAfter);
+
+            // first check, must succeed
+
+            checkCredentials(authId, newPassword, false);
+
+            // Now delete the tenant
+            IoTUtils.deleteIoTProjectAndWait(kubernetes, iotProject);
+
+            // second check, the credentials and device should be deleted
+
+            checkCredentials(authId, newPassword, true);;
+            client.getDeviceRegistration(tenantId(), randomDeviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        }
+    }
+
     private void checkCredentials(String authId, String password, boolean authFail) throws Exception {
 
         try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantId(), password)) {
