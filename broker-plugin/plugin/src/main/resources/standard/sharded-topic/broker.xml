@@ -87,7 +87,9 @@ under the License.
          <!--default for catch all-->
          <address-setting match="#">
             <max-delivery-attempts>-1</max-delivery-attempts>
-            <redelivery-delay>0</redelivery-delay>
+            <redelivery-delay>1</redelivery-delay>
+            <redelivery-delay-multiplier>1.5</redelivery-delay-multiplier>
+            <max-redelivery-delay>10000</max-redelivery-delay>
             <!-- with -1 only the global-max-size is in use for limiting -->
             <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
