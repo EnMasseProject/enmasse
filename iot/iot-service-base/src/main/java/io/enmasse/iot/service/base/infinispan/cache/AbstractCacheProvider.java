@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.registry.infinispan.cache;
+package io.enmasse.iot.service.base.infinispan.cache;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -16,7 +16,7 @@ import org.infinispan.configuration.cache.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
 
 public abstract class AbstractCacheProvider implements AutoCloseable {
 

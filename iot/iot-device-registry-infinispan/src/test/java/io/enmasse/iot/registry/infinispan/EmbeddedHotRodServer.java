@@ -18,10 +18,10 @@ import org.infinispan.server.hotrod.configuration.HotRodServerConfigurationBuild
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.cache.DeviceConnectionCacheProvider;
-import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.registry.infinispan.devcon.DeviceConnectionKey;
+import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.service.base.infinispan.cache.DeviceConnectionCacheProvider;
+import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.service.base.infinispan.devcon.DeviceConnectionKey;
 
 /**
  * This is heavily inspired from Tristan Tarrant's SimpleEmbeddedHotRodServer.

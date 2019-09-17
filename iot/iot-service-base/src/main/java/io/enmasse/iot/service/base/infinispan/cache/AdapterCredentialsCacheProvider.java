@@ -3,22 +3,22 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.registry.infinispan.cache;
+package io.enmasse.iot.service.base.infinispan.cache;
 
+import io.enmasse.iot.service.base.infinispan.device.CredentialKey;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.configuration.cache.CacheMode;
 import org.infinispan.configuration.cache.Index;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.registry.infinispan.devcon.DeviceConnectionKey;
+import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
 
 @Component
-public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
+public class AdapterCredentialsCacheProvider extends AbstractCacheProvider {
 
     @Autowired
-    public DeviceConnectionCacheProvider(final InfinispanProperties properties) throws Exception {
+    public AdapterCredentialsCacheProvider(final InfinispanProperties properties) throws Exception {
         super(properties);
     }
 
@@ -36,8 +36,10 @@ public class DeviceConnectionCacheProvider extends AbstractCacheProvider {
                 .build();
     }
 
-    public RemoteCache<DeviceConnectionKey, String> getDeviceStateCache() {
-        return getOrCreateCache(properties.getDeviceStatesCacheName(), buildConfiguration());
+
+    public RemoteCache<CredentialKey, String> getAdapterCredentialsCache() {
+        return getOrCreateCache(properties.getAdapterCredentialsCacheName(), buildConfiguration());
     }
+
 
 }

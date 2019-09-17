@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.devcon;
 
+import io.enmasse.iot.service.base.infinispan.devcon.DeviceConnectionKey;
 import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
@@ -17,7 +18,7 @@ import org.eclipse.hono.util.DeviceConnectionResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import io.enmasse.iot.registry.infinispan.cache.DeviceConnectionCacheProvider;
+import io.enmasse.iot.service.base.infinispan.cache.DeviceConnectionCacheProvider;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

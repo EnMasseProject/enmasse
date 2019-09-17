@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.iot.registry.infinispan.cache;
+package io.enmasse.iot.service.base.infinispan.cache;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -21,10 +21,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.registry.infinispan.config.InfinispanProperties;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceCredential;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.service.base.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.service.base.infinispan.device.DeviceCredential;
+import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
+import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
 
 @Component
 public class DeviceManagementCacheProvider extends AbstractCacheProvider {

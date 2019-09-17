@@ -5,7 +5,7 @@
 
 package io.enmasse.iot.registry.infinispan.device;
 
-import static io.enmasse.iot.registry.infinispan.device.data.DeviceKey.deviceKey;
+import static io.enmasse.iot.service.base.infinispan.device.DeviceKey.deviceKey;
 import static io.enmasse.iot.service.base.utils.MoreFutures.completeHandler;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
@@ -15,9 +15,9 @@ import org.eclipse.hono.util.RegistrationResult;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import io.enmasse.iot.registry.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceInformation;
-import io.enmasse.iot.registry.infinispan.device.data.DeviceKey;
+import io.enmasse.iot.service.base.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.service.base.infinispan.device.DeviceInformation;
+import io.enmasse.iot.service.base.infinispan.device.DeviceKey;
 import io.enmasse.iot.registry.infinispan.tenant.TenantInformationService;
 import io.opentracing.Span;
 import io.vertx.core.AsyncResult;
