@@ -251,12 +251,18 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
                 TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
                 Exception lastException = null;
+                int maxRetries = 10;
+                int retry = 0;
                 while (!timeout.timeoutExpired()) {
                     try {
                         log.info("Making request to openshift-cert-validator {}", request);
                         JsonObject response = client.test(request);
                         if (response.containsKey("error")) {
-                            fail("Error testing openshift provider " + response.getString("error"));
+                            if (retry < maxRetries) {
+                                retry++;
+                            } else {
+                                fail("Error testing openshift provider " + response.getString("error"));
+                            }
                         } else {
                             testSucceeded = true;
                             return;
