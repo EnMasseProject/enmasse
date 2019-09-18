@@ -31,4 +31,5 @@ public interface AnnotationKeys {
     String OPENSHIFT_SERVING_CERT_SECRET_NAME = "service.alpha.openshift.io/serving-cert-secret-name";
     String APPLIED_PLAN = "enmasse.io/applied-plan";
     String GENERATION = "enmasse.io/generation";
+    String VERSION = "enmasse.io/version";
 }

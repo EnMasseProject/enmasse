@@ -7,7 +7,9 @@ package io.enmasse.controller.standard;
 import java.time.Clock;
 import java.util.Map;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
@@ -100,9 +102,23 @@ public class StandardController {
                 .withUid(addressSpace.getMetadata().getUid())
                 .build();
 
+        ConfigMapAddressApi addressApi = new ConfigMapAddressApi(kubeClient, options.getInfraUuid(), ownerReference);
+
+        // Replace resources as part of upgrade if version is different
+        for (Address address : addressApi.listAddresses(options.getAddressSpaceNamespace())) {
+            if (!options.getVersion().equals(address.getAnnotation(AnnotationKeys.VERSION))) {
+                try {
+                    address.putAnnotation(AnnotationKeys.VERSION, options.getVersion());
+                    addressApi.replaceAddress(address);
+                } catch (Exception e) {
+                    log.warn("Error replacing {}", address.getMetadata().getName(), e);
+                }
+            }
+        }
+
         addressController = new AddressController(
                 options,
-                new ConfigMapAddressApi(kubeClient, options.getInfraUuid(), ownerReference),
+                addressApi,
                 kubernetes,
                 clusterGenerator,
                 eventLogger,
