@@ -54,7 +54,10 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
 
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeSigfoxAdapter, config, !routesEnabled, r.reconcileSigfoxAdapterRoute)
+			endpoint := config.Status.Adapters["sigfox"]
+			err := r.processRoute(ctx, routeSigfoxAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileSigfoxAdapterRoute)
+			config.Status.Adapters["sigfox"] = endpoint
+			return err
 		})
 	}
 	rc.ProcessSimple(func() error {
@@ -234,7 +237,7 @@ hono:
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileSigfoxAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileSigfoxAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
@@ -271,6 +274,10 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterRoute(config *iotv1alpha1.IoT
 
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = nameSigfoxAdapter
+
+	// Update endpoint
+
+	updateEndpointStatus("https", false, route, endpointStatus)
 
 	// return
 

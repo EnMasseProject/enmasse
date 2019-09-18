@@ -203,11 +203,26 @@ type IoTConfigStatus struct {
 
 	AuthenticationServicePSK *string                  `json:"authenticationServicePSK"`
 	Adapters                 map[string]AdapterStatus `json:"adapters,omitempty"`
+	Services                 map[string]ServiceStatus `json:"services,omitempty"`
+}
+
+type CommonStatus struct {
+	Endpoint EndpointStatus `json:"endpoint,omitempty"`
 }
 
 type AdapterStatus struct {
+	CommonStatus `json:",inline"`
+
 	InterServicePassword string `json:"interServicePassword,omitempty"`
 	Enabled              bool   `json:"enabled"`
+}
+
+type ServiceStatus struct {
+	CommonStatus `json:",inline"`
+}
+
+type EndpointStatus struct {
+	URI string `json:"uri,omitempty"`
 }
 
 const (

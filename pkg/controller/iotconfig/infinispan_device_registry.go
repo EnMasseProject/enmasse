@@ -47,7 +47,10 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context
 		routesEnabled := config.WantDefaultRoutes(nil)
 
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, r.reconcileInfinispanDeviceRegistryRoute)
+			endpoint := config.Status.Services["deviceRegistry"]
+			err := r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, &endpoint.Endpoint, r.reconcileInfinispanDeviceRegistryRoute)
+			config.Status.Services["deviceRegistry"] = endpoint
+			return err
 		})
 	}
 
@@ -309,7 +312,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryPersistentVolumeCl
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
@@ -336,6 +339,10 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryRoute(config *iotv
 
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = nameDeviceRegistry
+
+	// Update endpoint
+
+	updateEndpointStatus("https", false, route, endpointStatus)
 
 	// return
 

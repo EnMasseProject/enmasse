@@ -55,7 +55,10 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
 
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeMqttAdapter, config, !routesEnabled, r.reconcileMqttAdapterRoute)
+			endpoint := config.Status.Adapters["mqtt"]
+			err := r.processRoute(ctx, routeMqttAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileMqttAdapterRoute)
+			config.Status.Adapters["mqtt"] = endpoint
+			return err
 		})
 	}
 	rc.ProcessSimple(func() error {
@@ -235,7 +238,7 @@ hono:
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileMqttAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
@@ -271,6 +274,10 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterRoute(config *iotv1alpha1.IoTCo
 
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = nameMqttAdapter
+
+	// Update endpoint
+
+	updateEndpointStatus("ssl", true, route, endpointStatus)
 
 	// return
 

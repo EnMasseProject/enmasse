@@ -396,13 +396,14 @@ func (r *ReconcileIoTConfig) processPersistentVolumeClaim(ctx context.Context, n
 	return nil
 }
 
-func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, service *routev1.Route) error) error {
+func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, endpointStatus *iotv1alpha1.EndpointStatus, manipulator func(config *iotv1alpha1.IoTConfig, service *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error) error {
 
 	route := routev1.Route{
 		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
 	}
 
 	if delete {
+		endpointStatus.URI = ""
 		return install.DeleteIgnoreNotFound(ctx, r.client, &route, client.PropagationPolicy(v1.DeletePropagationForeground))
 	}
 
@@ -413,7 +414,7 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 			return err
 		}
 
-		return manipulator(config, existingRoute)
+		return manipulator(config, existingRoute, endpointStatus)
 	})
 
 	if err != nil {
@@ -425,6 +426,10 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 }
 
 func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+
+	if config.Status.Services == nil {
+		config.Status.Services = make(map[string]iotv1alpha1.ServiceStatus)
+	}
 
 	original := config.DeepCopy()
 

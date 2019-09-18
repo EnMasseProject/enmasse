@@ -2,17 +2,21 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
+        refs= {@BuildableReference(ResourceRequirements.class)},
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(
                 type = Doneable.class,
@@ -21,26 +25,13 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AdapterStatus extends CommonStatus {
+public class EndpointStatus {
+    private String uri;
 
-    private String interServicePassword;
-
-    private boolean enabled;
-
-    public String getInterServicePassword() {
-        return interServicePassword;
+    public void setUri(String uri) {
+        this.uri = uri;
     }
-
-    public void setInterServicePassword(String interServicePassword) {
-        this.interServicePassword = interServicePassword;
+    public String getUri() {
+        return uri;
     }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-    }
-
 }

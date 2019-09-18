@@ -54,7 +54,10 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
 
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeLoraWanAdapter, config, !routesEnabled, r.reconcileLoraWanAdapterRoute)
+			endpoint := config.Status.Adapters["lorawan"]
+			err := r.processRoute(ctx, routeLoraWanAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileLoraWanAdapterRoute)
+			config.Status.Adapters["lorawan"] = endpoint
+			return err
 		})
 	}
 	rc.ProcessSimple(func() error {
@@ -234,7 +237,7 @@ hono:
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileLoraWanAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileLoraWanAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
@@ -271,6 +274,10 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterRoute(config *iotv1alpha1.Io
 
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = nameLoraWanAdapter
+
+	// Update endpoint
+
+	updateEndpointStatus("https", false, route, endpointStatus)
 
 	// return
 
