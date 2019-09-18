@@ -10,6 +10,8 @@ import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.MoreObjects.ToStringHelper;
 
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -42,4 +44,13 @@ public abstract class AbstractWithAdditionalProperties implements WithAdditional
         this.additionalProperties.put(name, value);
     }
 
+    protected ToStringHelper toStringHelper() {
+        return MoreObjects.toStringHelper(this)
+                .add("additionalProperties", this.additionalProperties);
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper().toString();
+    }
 }
