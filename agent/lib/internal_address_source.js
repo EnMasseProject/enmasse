@@ -146,8 +146,9 @@ function AddressSource(config) {
     events.EventEmitter.call(this);
 }
 
-AddressSource.prototype.start = function() {
+AddressSource.prototype.start = function(ownerreference) {
     var options = myutils.merge({selector: this.selector}, this.config);
+    this.ownerreference = ownerreference;
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
@@ -215,11 +216,19 @@ AddressSource.prototype.updated = function (objects) {
     }
 };
 
+AddressSource.prototype.get_addressspace_configmap_name = function() {
+    return this.config.ADDRESS_SPACE_NAMESPACE + "." + this.config.ADDRESS_SPACE;
+}
+
 AddressSource.prototype.update_status = function (record, ready) {
+    var self = this;
     function update(configmap) {
         var def = JSON.parse(configmap.data['config.json']);
         if (def.status === undefined) {
             def.status = {};
+        }
+        if (configmap.metadata.ownerReferences === undefined && self.ownerreferences !== undefined) {
+            configmap.metadata.ownerReferences = [self.ownerreference];
         }
         if (def.status.isReady !== ready) {
             def.status.isReady = ready;
