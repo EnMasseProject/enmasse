@@ -67,6 +67,7 @@ public enum ClientArgument {
     CLOSE_SLEEP("--close-sleep"),
     TIMEOUT("--timeout"),
     DURATION("--duration"),
+    DEST_TYPE("--dest-type"),
 
     //sender opts
     MSG_ID("--msg-id"),
