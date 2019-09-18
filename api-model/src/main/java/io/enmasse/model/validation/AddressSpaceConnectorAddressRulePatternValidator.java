@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public class AddressSpaceConnectorAddressRulePatternValidator implements ConstraintValidator<AddressSpaceConnectorAddressRulePattern, AddressSpaceSpecConnectorAddressRule> {
 
-    private static final Pattern PATTERN = Pattern.compile("([^/]+(/?[^/]+)*)*");
+    private static final Pattern PATTERN = Pattern.compile("([^/#*]+|\\*|#)(/([^/#*]+|\\*|#))*");
 
     @Override
     public boolean isValid(AddressSpaceSpecConnectorAddressRule rule, ConstraintValidatorContext context) {
