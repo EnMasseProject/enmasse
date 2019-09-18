@@ -18,21 +18,28 @@ import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.user.model.v1.UserAuthenticationType;
+import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBindingBuilder;
+import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -45,6 +52,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -52,9 +60,12 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.vertx.core.json.JsonObject;
 
 public class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
@@ -480,5 +491,75 @@ public class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
         Exception exception = assertThrows(KubernetesClientException.class, () -> commonResourcesManager.replaceAddressSpace(replace));
         assertTrue(exception.getMessage().contains("Unknown address space plan no-exists"));
+    }
+
+
+    @Test
+    @DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
+    public void testCreateAddressSpaceRoleTenantEdit() throws Exception {
+
+        UserCredentials user = Credentials.userCredentials();
+        String namespace = "test-authorization";
+        String rolebindingname = "testgroupbinding";
+        String groupName = "foogroup";
+        try {
+            KubeCMDClient.loginUser(environment.getApiToken());
+
+            KubeCMDClient.createNamespace(namespace);
+
+            KubeCMDClient.createGroupAndAddUser(groupName, user.getUsername());
+
+            kubernetes.getClient().rbac().clusterRoleBindings().create(new ClusterRoleBindingBuilder()
+                    .withNewMetadata()
+                    .withName(rolebindingname)
+                    .endMetadata()
+                    .withNewRoleRef()
+                    .withKind("ClusterRole")
+                    .withApiGroup("rbac.authorization.k8s.io")
+                    .withName("enmasse.io:tenant-edit")
+                    .endRoleRef()
+                    .withSubjects(new SubjectBuilder()
+                            .withKind("Group")
+                            .withApiGroup("rbac.authorization.k8s.io")
+                            .withName(groupName)
+                            .withNamespace(namespace)
+                            .build())
+                    .build());
+
+            Supplier<AddressSpace> supplier = () -> new AddressSpaceBuilder()
+                    .withNewMetadata()
+                    .withName("test-authorization-addressspace")
+                    .withNamespace(namespace)
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(AddressSpaceType.BROKERED.toString())
+                    .withPlan(AddressSpacePlans.BROKERED)
+                    .endSpec()
+                    .build();
+
+            KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
+
+            AddressSpace space1 = supplier.get();
+            JsonObject space1Json = AddressSpaceUtils.addressSpaceToJson(space1);
+            assertTrue(KubeCMDClient.createCR(namespace, space1Json.toString()).getRetCode());
+            resourcesManager.deleteAddressSpace(space1);
+
+            kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).delete();
+
+            AddressSpace space2 = supplier.get();
+            JsonObject space2Json = AddressSpaceUtils.addressSpaceToJson(space2);
+            ExecutionResultData space2Result = KubeCMDClient.createCR(namespace, space2Json.toString());
+            assertFalse(space2Result.getRetCode());
+            assertTrue(space2Result.getStdErr().contains("User \""+user.getUsername()+"\" cannot get addressspaces.enmasse.io in the namespace \""+namespace+"\": no RBAC policy matched"));
+
+        } finally {
+            if (kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).get() != null) {
+                kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).delete();
+            }
+            KubeCMDClient.loginUser(environment.getApiToken());
+            KubeCMDClient.switchProject(environment.namespace());
+            kubernetes.deleteNamespace(namespace);
+        }
+
     }
 }
