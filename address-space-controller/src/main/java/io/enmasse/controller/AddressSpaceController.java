@@ -65,7 +65,7 @@ public class AddressSpaceController {
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
         Kubernetes kubernetes = new KubernetesHelper(controllerClient.getNamespace(), controllerClient, options.getTemplateDir(), isOpenShift);
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient);
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(controllerClient, options.getVersion());
         EventLogger eventLogger = options.isEnableEventLogger() ? new KubeEventLogger(controllerClient, controllerClient.getNamespace(), Clock.systemUTC(), "address-space-controller")
                 : new LogEventLogger();
 

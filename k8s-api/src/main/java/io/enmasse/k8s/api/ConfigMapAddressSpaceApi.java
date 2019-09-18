@@ -48,9 +48,11 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
     protected final Logger log = LoggerFactory.getLogger(getClass().getName());
     private final NamespacedKubernetesClient client;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final String version;
 
-    public ConfigMapAddressSpaceApi(NamespacedKubernetesClient client) {
+    public ConfigMapAddressSpaceApi(NamespacedKubernetesClient client, String version) {
         this.client = client;
+        this.version = version;
     }
 
     public static String getConfigMapName(String namespace, String name) {
@@ -251,7 +253,7 @@ public class ConfigMapAddressSpaceApi implements AddressSpaceApi, ListerWatcher<
                 .withName(getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()))
                 .withUid(addressSpace.getMetadata().getUid())
                 .build();
-        return new ConfigMapAddressApi(client, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID), ownerReference);
+        return new ConfigMapAddressApi(client, addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID), ownerReference, version);
     }
 
     @SuppressWarnings("unused")

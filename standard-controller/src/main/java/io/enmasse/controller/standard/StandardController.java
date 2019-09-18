@@ -89,7 +89,7 @@ public class StandardController {
 
         BrokerClientFactory brokerClientFactory = new MutualTlsBrokerClientFactory(vertx, options);
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(kubeClient);
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(kubeClient, options.getVersion());
         AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(options.getAddressSpaceNamespace(), options.getAddressSpace()).orElseThrow(() ->
                 new IllegalStateException("Unable to lookup address space " + options.getAddressSpace()));
 
@@ -102,13 +102,13 @@ public class StandardController {
                 .withUid(addressSpace.getMetadata().getUid())
                 .build();
 
-        ConfigMapAddressApi addressApi = new ConfigMapAddressApi(kubeClient, options.getInfraUuid(), ownerReference);
+        ConfigMapAddressApi addressApi = new ConfigMapAddressApi(kubeClient, options.getInfraUuid(), ownerReference, options.getVersion());
 
         // Replace resources as part of upgrade if version is different
         for (Address address : addressApi.listAddresses(options.getAddressSpaceNamespace())) {
             if (!options.getVersion().equals(address.getAnnotation(AnnotationKeys.VERSION))) {
                 try {
-                    address.putAnnotation(AnnotationKeys.VERSION, options.getVersion());
+                    // Version will be updated by replaceAddress
                     addressApi.replaceAddress(address);
                 } catch (Exception e) {
                     log.warn("Error replacing {}", address.getMetadata().getName(), e);

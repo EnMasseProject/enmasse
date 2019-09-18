@@ -54,11 +54,13 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     private final WorkQueue<ConfigMap> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
     private ObjectMapper mapper = new ObjectMapper();
     private final OwnerReference ownerReference;
+    private final String version;
 
-    public ConfigMapAddressApi(NamespacedKubernetesClient client, String infraUuid, OwnerReference ownerReference) {
+    public ConfigMapAddressApi(NamespacedKubernetesClient client, String infraUuid, OwnerReference ownerReference, String version) {
         this.client = client;
         this.infraUuid = infraUuid;
         this.ownerReference = ownerReference;
+        this.version = version;
     }
 
     @Override
@@ -193,6 +195,10 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
             builder.editMetadata()
                 .addToOwnerReferences(ownerReference)
                 .endMetadata();
+        }
+
+        if (version != null) {
+            address.putAnnotation(AnnotationKeys.VERSION, version);
         }
 
         if (address.getMetadata().getResourceVersion() != null) {
