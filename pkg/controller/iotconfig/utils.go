@@ -14,6 +14,7 @@ import (
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
+	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -123,4 +124,20 @@ func deviceRegistryImplementation(config *iotv1alpha1.IoTConfig) DeviceRegistryI
 	} else {
 		return DeviceRegistryIllegal
 	}
+}
+
+func updateEndpointStatus(protocol string, forcePort bool, service *routev1.Route, status *iotv1alpha1.EndpointStatus) {
+
+	status.URI = ""
+
+	if service.Spec.Host == "" {
+		return
+	}
+
+	status.URI = protocol + "://" + service.Spec.Host
+
+	if forcePort {
+		status.URI += ":443"
+	}
+
 }

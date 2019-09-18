@@ -55,7 +55,10 @@ func (r *ReconcileIoTConfig) processFileDeviceRegistry(ctx context.Context, conf
 		routesEnabled := config.WantDefaultRoutes(nil)
 
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, r.reconcileFileDeviceRegistryRoute)
+			endpointStatus := config.Status.Services["deviceRegistry"]
+			err := r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, &endpointStatus.Endpoint, r.reconcileFileDeviceRegistryRoute)
+			config.Status.Services["deviceRegistry"] = endpointStatus
+			return err
 		})
 	}
 
@@ -275,7 +278,7 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryPersistentVolumeClaim(co
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
@@ -302,6 +305,10 @@ func (r *ReconcileIoTConfig) reconcileFileDeviceRegistryRoute(config *iotv1alpha
 
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = nameDeviceRegistry
+
+	// Update endpoint
+
+	updateEndpointStatus("https", false, route, endpointStatus)
 
 	// return
 

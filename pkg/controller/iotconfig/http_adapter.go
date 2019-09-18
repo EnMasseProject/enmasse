@@ -54,7 +54,10 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
 
 		rc.ProcessSimple(func() error {
-			return r.processRoute(ctx, routeHttpAdapter, config, !routesEnabled, r.reconcileHttpAdapterRoute)
+			endpoint := config.Status.Adapters["http"]
+			err := r.processRoute(ctx, routeHttpAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileHttpAdapterRoute)
+			config.Status.Adapters["http"] = endpoint
+			return err
 		})
 	}
 	rc.ProcessSimple(func() error {
@@ -234,7 +237,7 @@ hono:
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route) error {
+func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
 
@@ -271,6 +274,10 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTCo
 
 	route.Spec.To.Kind = "Service"
 	route.Spec.To.Name = nameHttpAdapter
+
+	// Update endpoint
+
+	updateEndpointStatus("https", false, route, endpointStatus)
 
 	// return
 

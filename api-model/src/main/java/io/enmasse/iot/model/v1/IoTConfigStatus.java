@@ -29,6 +29,7 @@ public class IoTConfigStatus {
     private String state;
     private String authenticationServicePSK;
     private Map<String, AdapterStatus> adapters;
+    private Map<String, ServiceStatus> services;
 
     public boolean isInitialized() {
         return initialized;
@@ -60,6 +61,14 @@ public class IoTConfigStatus {
 
     public void setAdapters(Map<String, AdapterStatus> adapters) {
         this.adapters = adapters;
+    }
+
+    public Map<String, ServiceStatus> getServices() {
+        return services;
+    }
+
+    public void setServices(Map<String, ServiceStatus> services) {
+        this.services = services;
     }
 
 }
