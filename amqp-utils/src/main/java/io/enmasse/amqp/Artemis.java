@@ -126,7 +126,6 @@ public class Artemis implements AutoCloseable {
         return json.getLong(0);
     }
 
-
     public String getQueueAddress(String queueName) throws TimeoutException {
         log.info("Checking queue address for queue {} on broker {}", queueName, syncRequestClient.getRemoteContainer());
         Message response = doOperation("queue." + queueName, "getAddress");
@@ -171,6 +170,11 @@ public class Artemis implements AutoCloseable {
     public void resumeQueue(String queueName) throws TimeoutException {
         log.info("Resuming queue {}", queueName);
         doOperation("queue." + queueName, "resume");
+    }
+
+    public void purgeQueue(String queueName) throws TimeoutException {
+        log.info("Purging queue {} on broker {}", queueName, syncRequestClient.getRemoteContainer());
+        doOperation("queue." + queueName, "removeAllMessages");
     }
 
     public Set<String> getDivertNames() throws TimeoutException {

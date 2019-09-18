@@ -91,6 +91,7 @@ function pre_configuration() {
 
     cp $CONFIG_TEMPLATES/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
     cp $CONFIG_TEMPLATES/jolokia-access.xml $BROKER_CONF_DIR/jolokia-access.xml
+    cp /opt/broker-plugin/lib/broker-cli.jar $BROKER_CUSTOM/bin/broker-cli.jar
 
     export ARTEMIS_INSTANCE=${instanceDir}
     export ARTEMIS_INSTANCE_URI=file:${instanceDir}/

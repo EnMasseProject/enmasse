@@ -56,5 +56,11 @@
           <destName>sasl-delegation.jar</destName>
           <fileMode>0644</fileMode>
         </file>
+        <file>
+          <source>${project.basedir}/../broker-cli/target/broker-cli-${project.version}.jar</source>
+          <outputDirectory>${plugin.home}/lib</outputDirectory>
+          <destName>broker-cli.jar</destName>
+          <fileMode>0644</fileMode>
+        </file>
     </files>
 </assembly>
