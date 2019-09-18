@@ -2,7 +2,7 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.iot;
+package io.enmasse.systemtest.iot.isolated;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -15,6 +15,11 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.IoTTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.iot.CredentialsRegistryClient;
+import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.IoTProjectTestContext;
+import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
