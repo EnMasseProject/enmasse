@@ -31,6 +31,8 @@ include::../modules/ref-example-address-space-output.adoc[leveloffset=+1]
 
 include::../modules/ref-address-space-example-exporting-endpoints.adoc[leveloffset=+1]
 
+include::../modules/ref-address-space-example-connectors.adoc[leveloffset=+1]
+
 include::../modules/proc-create-address-space-cli.adoc[leveloffset=+1]
 
 include::../modules/proc-create-address-space-console.adoc[leveloffset=+1]

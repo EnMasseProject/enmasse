@@ -1,0 +1,63 @@
+// Module included in the following assemblies:
+//
+// assembly-managing-addresses.adoc
+
+[id='ref-address-example-forwarders-{context}']
+= Address forwarding examples
+
+You can use forwarders to:
+* automatically forward messages from a "local" address to a remote AMQP address outside of {ProductName}, or 
+* forward messages from a remote AMQP address to a "local" address. 
+To create a forwarder you must first configure a connector to the remote AMQP endpoint for the address space. For more information about connectors, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-connectors-messaging[Address space connector examples].
+
+Forwarding is only supported in the `standard` address space type, and only for the `queue` and `subscription` address types. The `subscription` address type only supports forwarding in the `out` direction.
+
+These examples expect that a connector `remote1` has been configured for the address space.
+
+== Forwarding messages from a local queue to a remote endpoint
+
+In this example, messages in `myqueue` are forwarded to the remote endpoint with an  address of `clients/me/1`.
+
+that we can forward messages in  to.
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+  name: myspace.myqueue
+spec:
+  address: myqueue
+  type: queue
+  plan: standard-small-queue
+  forwarders:
+  - name: f1 <1>
+    remoteAddress: remote1/clients/me/1 <2>
+    direction: out <3>
+----
+<1> (Required) Specifies the name of the forwarder, which is used to ensure a unique identity.
+<2> (Required) Specifies the remote address to forward messages to. The address must be prefixed with the connector name and must be identical to the address matching patterns defined on the connector.
+<3> (Required) Specifies the direction of message flow, which is either `out` or `in`. A value of `out` forwards messages to the remote endpoint. A value of `in` forwards messages from the remote endpoint.
+
+== Forwarding messages from a remote endpoint to a local queue
+
+In this example, the remote endpoint has an address `prices/milk` that we can receive messages from and move to `myqueue`.
+
+[source,yaml,options="nowrap"]
+----
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+  name: myspace.myqueue
+spec:
+  address: myqueue
+  type: queue
+  plan: standard-small-queue
+  forwarders:
+  - name: f1 <1>
+    remoteAddress: remote1/prices/milk <2>
+    direction: in <3>
+----
+<1> (Required) Specifies the name of the forwarder, which is used to ensure a unique identity.
+<2> (Required) Specifies the remote address to forward messages to. The address must be prefixed with the connector name and must be identical to the address matching patterns defined on the connector.
+<3> (Required) Specifies the direction of message flow, which is either `out` or `in`. A value of `out` forwards messages to the remote endpoint. A value of `in` forwards messages from the remote endpoint.
