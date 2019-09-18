@@ -146,9 +146,9 @@ function AddressSource(config) {
     events.EventEmitter.call(this);
 }
 
-AddressSource.prototype.start = function(ownerreference) {
+AddressSource.prototype.start = function(ownerReference) {
     var options = myutils.merge({selector: this.selector}, this.config);
-    this.ownerreference = ownerreference;
+    this.ownerReference = ownerReference;
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
@@ -227,10 +227,12 @@ AddressSource.prototype.update_status = function (record, ready) {
         if (def.status === undefined) {
             def.status = {};
         }
-        if (configmap.metadata.ownerReferences === undefined && self.ownerreferences !== undefined) {
-            configmap.metadata.ownerReferences = [self.ownerreference];
+        var updateOwnerRef = false;
+        if (configmap.metadata.ownerReferences === undefined && self.ownerReference !== undefined) {
+            configmap.metadata.ownerReferences = [self.ownerReference];
+            updateOwnerRef = true;
         }
-        if (def.status.isReady !== ready) {
+        if (def.status.isReady !== ready || updateOwnerRef) {
             def.status.isReady = ready;
             def.status.phase = ready ? 'Active' : 'Pending';
             configmap.data['config.json'] = JSON.stringify(def);
