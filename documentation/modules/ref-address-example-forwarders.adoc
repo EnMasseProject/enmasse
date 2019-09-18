@@ -12,7 +12,7 @@ To create a forwarder you must first configure a connector to the remote AMQP en
 
 Forwarding is only supported in the `standard` address space type, and only for the `queue` and `subscription` address types. The `subscription` address type only supports forwarding in the `out` direction.
 
-These examples expect that a connector `remote` has been configured for the address space.
+These examples expect that a connector `remote1` has been configured for the address space.
 
 == Forwarding messages from a local queue to a remote endpoint
 
