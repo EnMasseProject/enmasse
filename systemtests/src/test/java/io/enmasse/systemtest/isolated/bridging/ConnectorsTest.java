@@ -6,11 +6,12 @@ package io.enmasse.systemtest.isolated.bridging;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import io.enmasse.address.model.Address;
@@ -30,6 +31,7 @@ import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 
 class ConnectorsTest extends BridgingBase {
 
@@ -94,7 +96,7 @@ class ConnectorsTest extends BridgingBase {
     }
 
     @Test
-    void testBadConfiguration() throws Exception {
+    void testNonExsistingHost() throws Exception {
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -130,6 +132,108 @@ class ConnectorsTest extends BridgingBase {
         });
     }
 
+    @Test
+    void testInvalidConnectorName() throws Exception {
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName("invalid-connector-name")
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withConnectors(new AddressSpaceSpecConnectorBuilder()
+                        .withName("/ect/dhcp")
+                        .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
+                                .withHost(remoteBrokerEndpoint.getHost())
+                                .withPort(remoteBrokerEndpoint.getPort())
+                                .build())
+                        .withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
+                                .withNewUsername()
+                                    .withValue(remoteBrokerUsername)
+                                    .endUsername()
+                                .withNewPassword()
+                                    .withValue(remoteBrokerPassword)
+                                    .endPassword()
+                                .build())
+                        .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
+                                .withName("queuesrule")
+                                .withPattern("*")
+                                .build())
+                        .build())
+                .endSpec()
+                .build();
+        try {
+            resourcesManager.createAddressSpace(space);
+            Assertions.fail();
+        } catch (KubernetesClientException e) {
+            assertEquals(400, e.getCode());
+            assertTrue(e.getMessage().contains("Invalid address space connector name"));
+        }
+    }
+
+    @Test
+    void testInvalidAddressRulePattern() throws Exception {
+        AddressSpace space = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withNamespace(kubernetes.getInfraNamespace())
+                .withName("invalid-connector-name")
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withConnectors(new AddressSpaceSpecConnectorBuilder()
+                        .withName(REMOTE_NAME)
+                        .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
+                                .withHost(remoteBrokerEndpoint.getHost())
+                                .withPort(remoteBrokerEndpoint.getPort())
+                                .build())
+                        .withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
+                                .withNewUsername()
+                                    .withValue(remoteBrokerUsername)
+                                    .endUsername()
+                                .withNewPassword()
+                                    .withValue(remoteBrokerPassword)
+                                    .endPassword()
+                                .build())
+                        .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
+                                .withName("queuesrule")
+                                .withPattern("queue*")
+                                .build())
+                        .build())
+                .endSpec()
+                .build();
+        try {
+            resourcesManager.createAddressSpace(space);
+            Assertions.fail();
+        } catch (KubernetesClientException e) {
+            assertEquals(400, e.getCode());
+            assertTrue(e.getMessage().contains("Invalid address space connector address rule pattern"));
+        }
+
+    }
+
+    @Test
+    void testRestartBroker() throws Exception {
+        AddressSpace space = createAddressSpace("restart-broker", BASIC_QUEUES_PATTERN);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+        String[] remoteQueues = new String [] {BASIC_QUEUE1};
+        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+
+        scaleDownBroker();
+        AddressSpaceUtils.waitForAddressSpaceConnectorsNotReady(space);
+
+        scaleUpBroker();
+        AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
+
+        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+        sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
+    }
+
     private void doTestSendThroughConnector(String addressRule, String[] remoteQueues) throws Exception, InterruptedException, ExecutionException, TimeoutException {
         AddressSpace space = createAddressSpace("send-to-connector", addressRule);
 
@@ -138,8 +242,22 @@ class ConnectorsTest extends BridgingBase {
 
         int messagesBatch = 50;
 
-        //send through connector
+        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+    }
 
+    private void doTestReceiveThroughConnector(String addressRule, String[] remoteQueues) throws Exception {
+        AddressSpace space = createAddressSpace("receive-from-connector", addressRule);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+
+        sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
+    }
+
+    private void sendToConnectorReceiveInBroker(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
+        //send through connector
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
@@ -149,26 +267,16 @@ class ConnectorsTest extends BridgingBase {
         }
 
         //receive in remote broker
-
         AmqpClient clientToRemote = createClientToRemoteBroker();
 
         for(String remoteQueue : remoteQueues) {
             var receivedFromQueue = clientToRemote.recvMessages(remoteQueue, messagesBatch);
             assertThat("Wrong count of messages received from queue: "+remoteQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
         }
-
     }
 
-    private void doTestReceiveThroughConnector(String addressRule, String[] remoteQueues) throws Exception, InterruptedException, ExecutionException, TimeoutException {
-        AddressSpace space = createAddressSpace("receive-from-connector", addressRule);
-
-        UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
-
-        int messagesBatch = 50;
-
+    private void sendToBrokerReceiveInConnector(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send to remote broker
-
         AmqpClient clientToRemote = createClientToRemoteBroker();
 
         for(String remoteQueue : remoteQueues) {
@@ -176,7 +284,6 @@ class ConnectorsTest extends BridgingBase {
         }
 
         //receive through connector
-
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
@@ -185,7 +292,6 @@ class ConnectorsTest extends BridgingBase {
             var receivedFromQueue = localClient.recvMessages(connectorQueue, messagesBatch);
             assertThat("Wrong count of messages received from connector queue: "+connectorQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
         }
-
     }
 
     private String getRemoteName(String remoteQueue) {

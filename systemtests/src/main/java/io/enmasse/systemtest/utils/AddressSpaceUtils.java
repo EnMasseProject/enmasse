@@ -230,6 +230,17 @@ public class AddressSpaceUtils {
         return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
     }
 
+    public static void waitForAddressSpaceConnectorsNotReady(AddressSpace addressSpace) throws Exception {
+        TestUtils.waitUntilCondition("Connectors report not ready", phase -> {
+            try {
+                AddressSpaceUtils.waitForAddressSpaceConnectorsReady(addressSpace, new TimeoutBudget(20, TimeUnit.SECONDS));
+                return false;
+            } catch (Exception ex) {
+                return ex instanceof IllegalStateException;
+            }
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
     public static AddressSpace waitForAddressSpaceConnectorsReady(AddressSpace addressSpace) throws Exception {
         return waitForAddressSpaceConnectorsReady(addressSpace, new TimeoutBudget(5, TimeUnit.MINUTES));
     }

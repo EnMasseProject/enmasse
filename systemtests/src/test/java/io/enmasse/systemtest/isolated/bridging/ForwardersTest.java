@@ -21,6 +21,7 @@ import io.enmasse.systemtest.bases.bridging.BridgingBase;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
@@ -147,10 +148,17 @@ public class ForwardersTest extends BridgingBase {
         //make broker unavailable
         scaleDownBroker();
 
-        //check address forwarder is not ready
-//        Assertions.assertThrows(IllegalStateException.class, () -> {
-//            AddressUtils.waitForForwardersReady(new TimeoutBudget(30, TimeUnit.SECONDS), forwarder);
-//        });
+        //check connector and address forwarder is not ready
+        AddressSpaceUtils.waitForAddressSpaceConnectorsNotReady(space);
+        TestUtils.waitUntilCondition("Forwarders not ready", phase -> {
+            try {
+                AddressUtils.waitForForwardersReady(new TimeoutBudget(20, TimeUnit.SECONDS), forwarder);
+                return false;
+            } catch (Exception ex) {
+                return ex instanceof IllegalStateException;
+            }
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+        //however address should be still ready
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.SECONDS), forwarder);
 
         //send to forwarder
@@ -165,10 +173,8 @@ public class ForwardersTest extends BridgingBase {
 
         //wait until forwarder is ready again
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.SECONDS), forwarder);
+        AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
         AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
-
-        //wait a bit for the forwarding to happen
-        Thread.sleep(10000);
 
         //check messages where automatically forwarded once broker is back up again
         AmqpClient clientToRemote = createClientToRemoteBroker();

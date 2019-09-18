@@ -35,10 +35,10 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
 
     protected static final String REMOTE_NAME = "remote1";
 
-    private final String remoteBrokerNamespace = "systemtests-external-broker";
-    private final String remoteBrokerUsername = "test-user";
-    private final String remoteBrokerPassword = "test-password";
-    private Endpoint remoteBrokerEndpoint;
+    protected final String remoteBrokerNamespace = "systemtests-external-broker";
+    protected final String remoteBrokerUsername = "test-user";
+    protected final String remoteBrokerPassword = "test-password";
+    protected Endpoint remoteBrokerEndpoint;
 
     protected abstract String[] remoteBrokerQueues();
 
@@ -59,10 +59,12 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     }
 
     protected void scaleDownBroker() throws Exception {
+        log.info("Scaling down broker");
         SystemtestsKubernetesApps.scaleDownAMQBroker(remoteBrokerNamespace);
     }
 
     protected void scaleUpBroker() throws Exception {
+        log.info("Scaling up broker");
         SystemtestsKubernetesApps.scaleUpAMQBroker(remoteBrokerNamespace);
     }
 
