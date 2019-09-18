@@ -17,7 +17,9 @@ public enum ClientType {
     CLI_JAVA_OPENWIRE_JMS_SENDER,
     CLI_JAVA_OPENWIRE_JMS_RECEIVER,
     CLI_JAVA_PAHO_MQTT_SENDER,
-    CLI_JAVA_PAHO_MQTT_RECEIVER;
+    CLI_JAVA_PAHO_MQTT_RECEIVER,
+    CLI_STOMP_SENDER,
+    CLI_STOMP_RECEIVER;
 
     /**
      * Get bind client type to client executable
@@ -53,6 +55,9 @@ public enum ClientType {
                 return "./client_executable/cli-paho-java.jar";
             case CLI_JAVA_PAHO_MQTT_RECEIVER:
                 return "./client_executable/cli-paho-java.jar";
+            case CLI_STOMP_SENDER:
+            case CLI_STOMP_RECEIVER:
+                return "./client_executable/stomp-client.py";
             default:
                 return "";
         }
@@ -76,6 +81,9 @@ public enum ClientType {
             case CLI_JAVA_OPENWIRE_JMS_SENDER:
             case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
                 return "cli_openwire";
+            case CLI_STOMP_SENDER:
+            case CLI_STOMP_RECEIVER:
+                return "cli_stomp";
             default:
                 return "";
         }
