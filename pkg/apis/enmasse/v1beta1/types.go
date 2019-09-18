@@ -6,8 +6,7 @@
 package v1beta1
 
 import (
-	"encoding/json"
-
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -40,30 +39,19 @@ type AddressSpaceSpec struct {
 }
 
 type AuthenticationService struct {
-	Type    string          `json:"type"`
-	Details json.RawMessage `json:"details,omitempty"`
+	Type string `json:"type,omitempty"`
+	Name string `json:"name,omitempty"`
+
+	Overrides *AuthenticationServiceSettings `json:"overrides,omitempty"`
 }
 
-type Detail struct {
-	StringValue  *string
-	FloatValue   *float64
-	BooleanValue *bool
-}
+type AuthenticationServiceSettings struct {
+	Host  string `json:"host,omitempty"`
+	Port  int    `json:"port,omitempty"`
+	Realm string `json:"realm,omitempty"`
 
-func (d *Detail) UnmarshalJSON(b []byte) error {
-	return nil
-}
-
-func (d Detail) MarshalJSON() ([]byte, error) {
-	if d.StringValue != nil {
-		return json.Marshal(d.StringValue)
-	} else if d.FloatValue != nil {
-		return json.Marshal(d.FloatValue)
-	} else if d.BooleanValue != nil {
-		return json.Marshal(d.BooleanValue)
-	} else {
-		return []byte("null"), nil
-	}
+	CaCertSecret     *corev1.SecretReference `json:"caCertSecret,omitempty"`
+	ClientCertSecret *corev1.SecretReference `json:"clientCertSecret,omitempty"`
 }
 
 type EndpointSpec struct {
