@@ -21,6 +21,10 @@
       <groupId>io.enmasse</groupId>
       <artifactId>sasl-delegation</artifactId>
     </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>broker-cli</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

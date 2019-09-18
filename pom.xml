@@ -183,6 +183,11 @@
                 <artifactId>sasl-delegation</artifactId>
                 <version>${project.version}</version>
             </dependency>
+          <dependency>
+            <groupId>io.enmasse</groupId>
+            <artifactId>broker-cli</artifactId>
+            <version>${project.version}</version>
+          </dependency>
             <dependency>
                 <groupId>io.enmasse</groupId>
                 <artifactId>keycloak-user-api</artifactId>

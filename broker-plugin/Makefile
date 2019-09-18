@@ -5,6 +5,7 @@ ARTEMIS_PLUGIN_HOME=$(ARTIFACT_BASE)/opt/broker-plugin
 clean_modules:
 	rm -rf sasl-delegation/target
 	rm -rf amqp-connector/target
+	rm -rf broker-cli/target
 
 clean: clean_modules
 
@@ -13,7 +14,7 @@ build_tar:
 	mkdir -p $(ARTIFACT_BASE)/opt
 
 	tar xvf plugin/target/plugin-$(MAVEN_VERSION)-dist.tar.gz -C $(ARTIFACT_BASE)
-	
+
 	# Prometheus support
 	mkdir -p $(ARTEMIS_PLUGIN_HOME)/jmx_exporter
 	cp -f jmx_exporter/target/lib/jmx_prometheus_javaagent-*.jar $(ARTEMIS_PLUGIN_HOME)/jmx_exporter/
