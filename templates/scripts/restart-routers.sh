@@ -21,14 +21,16 @@ do
         echo "Deleting router pod $rpod"
         oc delete pod $rpod
         sleep 30
-        echo "Waiting for minimum ready router replicas ${MINREADY} to be restored"
         ready=0
         while [[ "$ready" -lt "${MINAVAILABLE}" ]]
         do
             ready=`oc get statefulset ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
             if [[ "$ready" -lt "${MINAVAILABLE}" ]]; then
-                sleep 1
+                echo "Waiting for minimum available router replicas ${MINAVAILABLE} to be restored. Got ${ready} ready replicas."
+                sleep 10
             fi
         done
+        echo "Minimum ready router replicas ${MINAVAILABLE} restored"
     done
 done
+echo "Router restart complete!"
