@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot;
+package io.enmasse.systemtest.iot.shared;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
