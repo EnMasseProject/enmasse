@@ -120,6 +120,7 @@ public class MqttClientFactory {
                 if (mqttConnectOptions == null) {
                     mqttConnectOptions = new MqttConnectOptions();
                     mqttConnectOptions.setAutomaticReconnect(true);
+                    mqttConnectOptions.setHttpsHostnameVerificationEnabled(false);
                 }
                 return MqttClientFactory.this.create(MqttClient::new, DelegatingMqttClient::new, endpoint, addressSpace, mqttConnectOptions, clientId);
             }
@@ -387,6 +388,14 @@ public class MqttClientFactory {
             return mqttClient.publish(topic, message, userContext, callback);
         }
 
+        public void reconnect() throws MqttException {
+            mqttClient.reconnect();
+        }
+
+        public boolean removeMessage(IMqttDeliveryToken token) throws MqttException {
+            return mqttClient.removeMessage(token);
+        }
+
         public IMqttToken subscribe(String topicFilter, int qos) throws MqttException {
             return mqttClient.subscribe(topicFilter, qos);
         }
@@ -502,6 +511,11 @@ public class MqttClientFactory {
         @Override
         public void disconnectForcibly(long quiesceTimeout, long disconnectTimeout) throws MqttException {
             this.mqttClient.disconnectForcibly(quiesceTimeout, disconnectTimeout);
+        }
+
+        @Override
+        public void reconnect() throws MqttException {
+            this.mqttClient.reconnect();
         }
 
         @Override
