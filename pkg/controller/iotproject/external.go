@@ -8,11 +8,35 @@ package iotproject
 import (
 	"context"
 
+	"github.com/enmasseproject/enmasse/pkg/util/recon"
+
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func (r *ReconcileIoTProject) reconcileExternal(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
+
+	if project.Status.Managed != nil {
+
+		project.Status.Phase = "Reconfiguring"
+		project.Status.PhaseReason = "Change of downstream strategy"
+
+		rc := recon.ReconcileContext{}
+
+		rc.Process(func() (result reconcile.Result, e error) {
+			return cleanupManagedResources(ctx, r.client, project)
+		})
+		if rc.Error() == nil {
+			project.Status.Managed = nil
+			rc.ProcessSimple(func() error {
+				return r.client.Status().Update(ctx, project)
+			})
+		}
+
+		// always re-queue when the cleared out managed resources
+
+		return reconcile.Result{Requeue: true}, nil
+	}
 
 	// we simply copy over the external information
 	// so everything is expected to be ready
@@ -27,7 +51,7 @@ func (r *ReconcileIoTProject) reconcileExternal(ctx context.Context, request *re
 		GetProjectCondition(iotv1alpha1.ProjectConditionTypeReady).
 		SetStatusOk()
 
-	project.Status.DownstreamEndpoint = project.Spec.DownstreamStrategy.ExternalDownstreamStrategy.DeepCopy()
+	project.Status.DownstreamEndpoint = project.Spec.DownstreamStrategy.ExternalDownstreamStrategy.ConnectionInformation.DeepCopy()
 	project.Status.IsReady = true
 
 	return reconcile.Result{}, nil

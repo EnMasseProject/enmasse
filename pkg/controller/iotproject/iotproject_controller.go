@@ -8,15 +8,12 @@ package iotproject
 import (
 	"context"
 	"fmt"
-	"time"
 
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
-
-	"github.com/enmasseproject/enmasse/pkg/util"
 
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -145,37 +142,6 @@ type ReconcileIoTProject struct {
 	scheme *runtime.Scheme
 }
 
-func (r *ReconcileIoTProject) updateProjectStatusError(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject, err error) error {
-
-	newProject := project.DeepCopy()
-	newProject.Status.IsReady = false
-
-	readyCondition := newProject.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeReady)
-	var reason = ""
-	var message = ""
-	if err != nil {
-		reason = "ProcessingError"
-		message = err.Error()
-	}
-	readyCondition.SetStatus(corev1.ConditionFalse, reason, message)
-
-	return r.client.Update(ctx, newProject)
-}
-
-func (r *ReconcileIoTProject) updateProjectStatusReady(ctx context.Context, request *reconcile.Request, project *iotv1alpha1.IoTProject, endpointStatus *iotv1alpha1.ExternalDownstreamStrategy) error {
-
-	newProject := project.DeepCopy()
-
-	newProject.Status.IsReady = true
-	newProject.Status.DownstreamEndpoint = endpointStatus.DeepCopy()
-
-	newProject.Status.
-		GetProjectCondition(iotv1alpha1.ProjectConditionTypeReady).
-		SetStatusOk()
-
-	return r.client.Update(ctx, newProject)
-}
-
 func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *iotv1alpha1.IoTProject, currentError error) (reconcile.Result, error) {
 
 	newProject := project.DeepCopy()
@@ -204,6 +170,8 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *
 	}
 	if newProject.Status.IsReady {
 		status = corev1.ConditionTrue
+		newProject.Status.Phase = "Ready"
+		newProject.Status.PhaseReason = ""
 	} else {
 		status = corev1.ConditionFalse
 	}
@@ -217,25 +185,6 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, project *
 
 	return reconcile.Result{}, err
 
-}
-
-func (r *ReconcileIoTProject) applyUpdate(ctx context.Context, status *iotv1alpha1.ExternalDownstreamStrategy, err error, request *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
-
-	if err != nil {
-
-		if util.IsNotReadyYetError(err) {
-			log.Info("Not ready yet, re-scheduling...")
-			// if the resource is not ready yet, then we retry after a delay
-			return reconcile.Result{Requeue: true, RequeueAfter: time.Minute}, nil
-		}
-
-		log.Error(err, "failed to reconcile")
-		_ = r.updateProjectStatusError(ctx, request, project, err)
-		return reconcile.Result{}, err
-	}
-
-	err = r.updateProjectStatusReady(ctx, request, project, status)
-	return reconcile.Result{}, err
 }
 
 // Reconcile by reading the IoT project spec and making required changes

@@ -29,9 +29,14 @@ type IoTProjectSpec struct {
 }
 
 type IoTProjectStatus struct {
-	IsReady            bool                        `json:"isReady"`
-	TenantName         string                      `json:"tenantName"`
-	DownstreamEndpoint *ExternalDownstreamStrategy `json:"downstreamEndpoint,omitempty"`
+	IsReady     bool   `json:"isReady"`
+	Phase       string `json:"phase"`
+	PhaseReason string `json:"phaseReason,omitempty"`
+
+	TenantName         string                 `json:"tenantName"`
+	DownstreamEndpoint *ConnectionInformation `json:"downstreamEndpoint,omitempty"`
+
+	Managed *ManagedStatus `json:"managed,omitempty"`
 
 	Conditions []ProjectCondition `json:"conditions"`
 }
@@ -89,7 +94,7 @@ type AddressConfig struct {
 	Type string `json:"type,omitempty"`
 }
 
-type ExternalDownstreamStrategy struct {
+type ConnectionInformation struct {
 	Host string `json:"host"`
 	Port uint16 `json:"port"`
 
@@ -97,6 +102,15 @@ type ExternalDownstreamStrategy struct {
 
 	TLS         bool   `json:"tls"`
 	Certificate []byte `json:"certificate,omitempty"`
+}
+
+type ExternalDownstreamStrategy struct {
+	ConnectionInformation `json:",inline"`
+}
+
+type ManagedStatus struct {
+	PasswordTime metav1.Time `json:"passwordTime,omitempty"`
+	AddressSpace string      `json:"addressSpace,omitempty"`
 }
 
 type Credentials struct {

@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -313,7 +314,7 @@ public class KeycloakUserApiTest {
      * Assert groups. <br>
      * A convenience method to assert group information. Compares the groups as
      * sorted arrays.
-     * 
+     *
      * @param actual   The actual result.
      * @param expected The expected result.
      */
@@ -350,5 +351,19 @@ public class KeycloakUserApiTest {
         assertFalse(KeycloakUserApi.hasAttribute(realm, "foo", "bar"));
         assertTrue(KeycloakUserApi.hasAttribute(realm, "foo", null));
         assertFalse(KeycloakUserApi.hasAttribute(realm, null, null));
+    }
+
+    @Test
+    public void testAnnotations() {
+        final Map<String,String> annotations = new HashMap<>();
+        annotations.put("foo", "bar");
+        annotations.put("bar", "baz");
+
+        final List<String> encoded = KeycloakUserApi.annotationsToString(annotations);
+        assertNotNull(encoded);
+        assertEquals(2,encoded.size());
+
+        final Map<String, String> actualAnnotations = KeycloakUserApi.annotationsFromString(encoded);
+        assertEquals(annotations, actualAnnotations);
     }
 }

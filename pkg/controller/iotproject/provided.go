@@ -29,7 +29,7 @@ func (r *ReconcileIoTProject) reconcileProvided(ctx context.Context, request *re
 
 	project.Status.DownstreamEndpoint = nil
 	if endpoint != nil {
-		project.Status.DownstreamEndpoint = endpoint.DeepCopy()
+		project.Status.DownstreamEndpoint = endpoint.ConnectionInformation.DeepCopy()
 	}
 
 	return reconcile.Result{}, err

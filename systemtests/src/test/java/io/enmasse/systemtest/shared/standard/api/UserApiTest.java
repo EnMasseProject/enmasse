@@ -15,12 +15,17 @@ import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.enmasse.user.model.v1.UserBuilder;
+import io.enmasse.user.model.v1.UserCrd;
+import io.enmasse.user.model.v1.UserList;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -34,6 +39,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -133,5 +140,51 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
         } finally {
             kubernetes.deleteServiceAccount("test-service-account", environment.namespace());
         }
+    }
+
+    @Test
+    void testSetAnnotations() {
+
+        var client = Kubernetes.getInstance().getClient();
+        var userCrd = client.customResources(UserCrd.messagingUser()   , User.class, UserList.class, DoneableUser.class);
+
+        var name = getSharedAddressSpace().getMetadata().getName()+ ".foo";
+        var user = new UserBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(name)
+                .addToAnnotations("annotation1", "value1")
+                .addToAnnotations("annotation2", "value2")
+                .endMetadata()
+                .build();
+
+        // create
+        userCrd.create(user);
+
+        // read again
+        var actualUser = userCrd.inNamespace(getSharedAddressSpace().getMetadata().getNamespace()).withName(name).get();
+
+        assertNotNull(actualUser);
+        assertThat(actualUser.getAnnotation("annotation1"), is("value1"));
+        assertThat(actualUser.getAnnotation("annotation2"), is("value2"));
+
+        var updateUser = new UserBuilder(actualUser)
+                .editOrNewMetadata()
+                .addToAnnotations("annotation1", "value1a")
+                .removeFromAnnotations("annotation2")
+                .addToAnnotations("annotation3", "value3")
+                .endMetadata()
+                .build();
+
+        userCrd.createOrReplace(updateUser);
+
+        // read again
+        actualUser = userCrd.inNamespace(getSharedAddressSpace().getMetadata().getNamespace()).withName(name).get();
+
+        assertNotNull(actualUser);
+        assertThat(actualUser.getAnnotation("annotation1"), is("value1a"));
+        assertThat(actualUser.getAnnotation("annotation2"), nullValue());
+        assertThat(actualUser.getAnnotation("annotation3"), is("value3"));
+
     }
 }
