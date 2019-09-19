@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: infinispan
-  name: infinispan-server
+  name: infinispan # align name with operator version
 spec:
   ports:
   - port: 11222
@@ -13,5 +13,5 @@ spec:
     targetPort: 9990
     name: management
   selector:
-    name: infinispan-server
+    name: infinispan
     app: infinispan

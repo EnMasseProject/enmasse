@@ -32,7 +32,7 @@ public final class KubeUtil {
         return sanitizeWithPattern(name, usernamePattern);
     }
 
-    private static String sanitizeWithPattern(String value, Pattern pattern) {
+    public static String sanitizeWithPattern(String value, Pattern pattern) {
         if (value == null) {
             return null;
         }

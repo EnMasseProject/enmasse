@@ -6,7 +6,6 @@ package io.enmasse.address.model;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 

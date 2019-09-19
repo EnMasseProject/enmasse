@@ -88,6 +88,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -275,6 +276,7 @@ public abstract class Kubernetes {
 
     public Endpoint getEndpoint(String serviceName, String namespace, String port) {
         Service service = client.services().inNamespace(namespace).withName(serviceName).get();
+        Objects.requireNonNull(service, () -> String.format("Unable to find service '%s' in namespace '%s'", serviceName, namespace));
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
     }
 

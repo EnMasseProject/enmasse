@@ -300,18 +300,20 @@ public class HttpUserService {
     }
 
     private User overrideNameAndNamespace(User existingUser, User replacement) {
-        replacement = new UserBuilder(replacement)
+
+        return new UserBuilder(replacement)
 
                 .editOrNewSpec()
                 .withUsername(existingUser.getSpec().getUsername())
                 .endSpec()
 
                 .editOrNewMetadata()
+                .withName(existingUser.getMetadata().getName())
                 .withNamespace(existingUser.getMetadata().getNamespace())
                 .endMetadata()
 
                 .build();
-        return replacement;
+
     }
 
     @DELETE
