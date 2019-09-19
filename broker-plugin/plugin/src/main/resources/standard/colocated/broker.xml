@@ -103,14 +103,14 @@ under the License.
       </wildcard-addresses>
 
       <connector-services>
-        <connector-service name="amqp-connector">
+        <connector-service name="$override-amqp-connector">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$QUEUE_SCHEDULER_SERVICE_HOST" />
           <param key="port" value="$QUEUE_SCHEDULER_SERVICE_PORT" />
           <param key="containerId" value="$CONTAINER_ID" />
           <param key="clusterId" value="$CLUSTER_ID" />
         </connector-service>
-        <connector-service name="router-connector-in">
+        <connector-service name="$override-router-connector-in">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
@@ -119,7 +119,7 @@ under the License.
           <param key="idleTimeoutMs" value="$CONNECTOR_IN_IDLE_TIMEOUT_MS" />
           <param key="nettyThreads" value="$CONNECTOR_IN_NETTY_THREADS" />
         </connector-service>
-        <connector-service name="router-connector-out">
+        <connector-service name="$override-router-connector-out">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
