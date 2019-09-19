@@ -229,6 +229,7 @@ AddressSource.prototype.update_status = function (record, ready) {
         }
         var updateOwnerRef = false;
         if (configmap.metadata.ownerReferences === undefined && self.ownerReference !== undefined) {
+            def.metadata.annotations = myutils.merge(def.metadata.annotations, {"enmasse.io/version": self.config.VERSION});
             configmap.metadata.ownerReferences = [self.ownerReference];
             updateOwnerRef = true;
         }
