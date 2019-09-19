@@ -130,20 +130,20 @@ For each forwarder on an address, the agent will create a connector from the bro
 * Set up an AMQP broker (i.e. Artemis) on a remote host
 * Configure an address space with connectors and create addresses with forwarders for the 4 different use cases listed initially
 
-List of functionalities/behaviours to test:
-  - [tested] Sending messages to a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
-  - [tested] Receiving messages from a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
-  - [tested] config a connector to refer to a host that does not exist. addressspace should report ready true and the connector's status should report the failure.
-  - invalid connector names (ie: using / in connector name)
-  - invalid patterns in address rule in connector (ie: queue*)
-  - Restart broker to ensure router reattached to broker and you can send/recv messages
-  - use TLS
-  - Using mutual TLS (SASL EXTERNAL) instead of credentials
-  - [tested] Forwarding messages from a local queue in a local address space to a destination on a remote AMQP endpoint
-  - [tested] Forwarding messages to a local queue in a local address space from a destination on a remote AMQP endpoint
-  - forward to FULL remote queue
-  - forward to FULL local queue
-  - try to forward messages when the remote broker is unavailable , and check how the messages are automatically forwarded when the remote broker comes back up
+=== List of functionalities/behaviours to test:
+* [tested] Sending messages to a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
+* [tested] Receiving messages from a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
+* [tested] config a connector to refer to a host that does not exist. addressspace should report ready true and the connector's status should report the failure.
+* [tested] invalid connector names (ie: using / in connector name)
+* [tested] invalid patterns in address rule in connector (ie: queue*)
+* [tested] Restart broker to ensure router reattached to broker and you can send/recv messages
+* use TLS
+* Using mutual TLS (SASL EXTERNAL) instead of credentials
+* [tested] Forwarding messages from a local queue in a local address space to a destination on a remote AMQP endpoint
+* [tested] Forwarding messages to a local queue in a local address space from a destination on a remote AMQP endpoint
+* forward to FULL remote queue
+* forward to FULL local queue
+* [tested] try to forward messages when the remote broker is unavailable , and check how the messages are automatically forwarded when the remote broker comes back up
 
 == Documentation
 

@@ -21,6 +21,7 @@ import io.enmasse.systemtest.bases.bridging.BridgingBase;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
@@ -68,20 +69,7 @@ public class ForwardersTest extends BridgingBase {
 
         int messagesBatch = 50;
 
-        //send to address with forwarder
-
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
-
-        localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
-
-        //receive in remote broker
-
-        AmqpClient clientToRemote = createClientToRemoteBroker();
-
-        var receivedInRemote = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesBatch);
-
-        assertThat("Wrong count of messages received from remote queue: "+REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, messagesBatch);
 
     }
 
@@ -127,6 +115,90 @@ public class ForwardersTest extends BridgingBase {
 
         assertThat("Wrong count of messages received in local address: "+forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
 
+    }
+
+    @Test
+    public void testForwardToUnavailableBroker() throws Exception {
+
+        AddressSpace space = createAddressSpace("forward-to-remote", "*");
+        Address forwarder = new AddressBuilder()
+                .withNewMetadata()
+                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-queue1"))
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("forwarder-queue1")
+                .withType(AddressType.QUEUE.toString())
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .addToForwarders(new AddressSpecForwarderBuilder()
+                        .withName("forwarder1")
+                        .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
+                        .withDirection(AddressSpecForwarderDirection.out)
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(forwarder);
+        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, 5);
+
+        //make broker unavailable
+        scaleDownBroker();
+
+        //check connector and address forwarder is not ready
+        AddressSpaceUtils.waitForAddressSpaceConnectorsNotReady(space);
+        TestUtils.waitUntilCondition("Forwarders not ready", phase -> {
+            try {
+                AddressUtils.waitForForwardersReady(new TimeoutBudget(20, TimeUnit.SECONDS), forwarder);
+                return false;
+            } catch (Exception ex) {
+                return ex instanceof IllegalStateException;
+            }
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+        //however address should be still ready
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.SECONDS), forwarder);
+
+        //send to forwarder
+        int messagesBatch = 50;
+        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        localClient.getConnectOptions().setCredentials(localUser);
+
+        localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
+
+        //wake up the broker
+        scaleUpBroker();
+
+        //wait until forwarder is ready again
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(30, TimeUnit.SECONDS), forwarder);
+        AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
+        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
+
+        //check messages where automatically forwarded once broker is back up again
+        AmqpClient clientToRemote = createClientToRemoteBroker();
+
+        var receivedInRemote = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesBatch);
+
+        assertThat("Wrong count of messages received from remote queue: "+REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+    }
+
+    private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String rometeAddress, int messagesBatch) throws Exception {
+        //send to address with forwarder
+
+        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        localClient.getConnectOptions().setCredentials(localUser);
+
+        localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
+
+        //receive in remote broker
+
+        AmqpClient clientToRemote = createClientToRemoteBroker();
+
+        var receivedInRemote = clientToRemote.recvMessages(rometeAddress, messagesBatch);
+
+        assertThat("Wrong count of messages received from remote queue: "+rometeAddress, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
 }

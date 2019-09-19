@@ -268,6 +268,18 @@ public class SystemtestsKubernetesApps {
         Thread.sleep(5000);
     }
 
+    public static void scaleDownAMQBroker(String namespace) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        kubeCli.setDeploymentReplicas(namespace, AMQ_BROKER, 0);
+        TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 0, new TimeoutBudget(30, TimeUnit.SECONDS));
+    }
+
+    public static void scaleUpAMQBroker(String namespace) throws Exception {
+        Kubernetes kubeCli = Kubernetes.getInstance();
+        kubeCli.setDeploymentReplicas(namespace, AMQ_BROKER, 1);
+        TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 1, new TimeoutBudget(30, TimeUnit.SECONDS));
+    }
+
     public static void applyDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
         loadDirectories(streamManipulator, Applicable::createOrReplace, paths);
     }
