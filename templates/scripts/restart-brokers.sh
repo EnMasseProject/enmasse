@@ -1,20 +1,31 @@
 #/bin/bash
+# Usage: ./restart-brokers.sh <namespace where EnMasse is running> <minimum number of pods that should run at any given time>
 ENMASSE_NAMESPACE=${1:-enmasse-infra}
 MINREADY=${2:-0}
 MINAVAILABLE=$(($MINREADY + 1))
 
+function wait_ready() {
+    local kind=$1
+    local rset=$2
+    local minReady=$3
+
+    ready="0"
+    while [[ "${ready}" -lt "${minReady}" ]]
+    do
+        ready=`oc get ${kind} ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
+        if [[ "${ready}" -lt "${minReady}" ]]; then
+            sleep 5
+        fi
+    done
+    echo "Minimum ready replicas ${minReady} restored"
+}
+
+
+
 for rset in `oc get statefulset -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
 do
     if [[ "$rset" == broker-* ]]; then
-        ready=0
-        while [[ "$ready" -lt "${MINAVAILABLE}" ]]
-        do
-            ready=`oc get statefulset ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
-            if [[ "$ready" -lt "${MINAVAILABLE}" ]]; then
-                sleep 1
-            fi
-        done
-
+        wait_ready statefulset $rset $MINAVAILABLE
         infraUuid=`oc get statefulset ${rset} -o jsonpath='{.metadata.labels.infraUuid}'`
 
         echo "All broker pods in broker set ${rset} are ready. Initiating rolling restart."
@@ -24,15 +35,7 @@ do
                 echo "Deleting broker pod $rpod"
                 oc delete pod $rpod
                 sleep 30
-                ready=0
-                while [[ "$ready" -lt "${MINAVAILABLE}" ]]
-                do
-                    ready=`oc get statefulset ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}` || 0;
-                    if [[ "$ready" -lt "${MINAVAILABLE}" ]]; then
-                        echo "Waiting for minimum available broker replicas ${MINAVAILABLE} to be restored. Got $ready ready replicas."
-                        sleep 10
-                    fi
-                done
+                wait_ready statefulset $rset $MINAVAILABLE
                 echo "Minimum ready broker replicas ${MINAVAILABLE} restored"
             fi
         done
@@ -42,15 +45,7 @@ done
 for rset in `oc get deployment -l role=broker -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
 do
     if [[ "$rset" == broker* ]]; then
-        ready=0
-        while [[ "$ready" -lt "${MINAVAILABLE}" ]]
-        do
-            ready=`oc get deployment ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
-            if [[ "$ready" -lt "${MINAVAILABLE}" ]]; then
-                sleep 1
-            fi
-        done
-
+        wait_ready deployment $rset $MINAVAILABLE
         infraUuid=`oc get deployment ${rset} -o jsonpath='{.metadata.labels.infraUuid}'`
 
         echo "All broker pods in broker set ${rset} are ready. Initiating rolling restart."
@@ -60,16 +55,7 @@ do
                 echo "Deleting broker pod $rpod"
                 oc delete pod $rpod
                 sleep 30
-                ready=0
-                while [[ "$ready" -lt "${MINAVAILABLE}" ]]
-                do
-                    ready=`oc get deployment ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}` || 0;
-                    if [[ "$ready" -lt "${MINAVAILABLE}" ]]; then
-                        echo "Waiting for minimum available broker replicas ${MINAVAILABLE} to be restored. Got $ready ready replicas."
-                        sleep 10
-                    fi
-                done
-                echo "Minimum ready broker replicas ${MINAVAILABLE} restored"
+                wait_ready deployment $rset $MINAVAILABLE
             fi
         done
     fi
