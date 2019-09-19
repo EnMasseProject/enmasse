@@ -126,7 +126,8 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 "myrealm",
                 invalidCert,
                 invalidCert);
-        resourcesManager.createAuthService(externalAuth);
+        // Can't wait for it because it doesn't actually spin up any pod
+        resourcesManager.createAuthService(externalAuth, false);
         log.info(externalAuth.toString());
 
         SecretReference validCert = new SecretReference();
