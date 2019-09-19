@@ -264,11 +264,6 @@ public class KubeCMDClient extends CmdClient {
                 .replaceAll(System.getProperty("line.separator"), "");
     }
 
-    public static ExecutionResultData createOcUser(String username) {
-        List<String> deleteCmd = Arrays.asList(CMD, "create", "user", username);
-        return execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
     public static ExecutionResultData getEvents(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--namespace", namespace,
@@ -348,4 +343,9 @@ public class KubeCMDClient extends CmdClient {
         List<String> ressourcesCmd = getRessourcesCmd("delete", resource, namespace, name, Optional.empty());
         return execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
+
+    public static ExecutionResultData createGroupAndAddUser(String groupName, String username) {
+        return execute(Arrays.asList(CMD, "adm", "groups", "new", groupName, username), DEFAULT_SYNC_TIMEOUT, true);
+    }
+
 }
