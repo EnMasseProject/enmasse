@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -712,18 +711,10 @@ public class KeycloakUserApi implements UserApi, RealmApi {
     }
 
     public static String decodePart(final String part) {
-        try {
-            return URLDecoder.decode(part, StandardCharsets.UTF_8.name());
-        } catch (final UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return URLDecoder.decode(part, StandardCharsets.UTF_8);
     }
 
     public static String encodePart(final String part) {
-        try {
-            return URLEncoder.encode(part, StandardCharsets.UTF_8.name());
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
+        return URLEncoder.encode(part, StandardCharsets.UTF_8);
     }
 }
