@@ -27,11 +27,13 @@ import org.apache.activemq.artemis.core.postoffice.impl.PostOfficeImpl;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
 import org.apache.activemq.artemis.core.server.ConnectorService;
 import org.apache.activemq.artemis.core.server.ConnectorServiceFactory;
+import org.apache.qpid.proton.amqp.Symbol;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 /**
  * Connector service factory for AMQP Connector Services that can be used to establish outgoing AMQP connections.
@@ -45,6 +47,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
    private static final String DIRECTION = "direction";
    private static final String NETTY_THREADS = "nettyThreads";
    private static final String IDLE_TIMEOUT = "idleTimeoutMs";
+   private static final String LINK_CAPABILITIES = "linkCapabilities";
 
    private static final Set<String> requiredProperties = initializeRequiredProperties();
    private static final Set<String> allowedProperties = initializeAllowedProperties();
@@ -56,6 +59,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       properties.add(DIRECTION);
       properties.add(LINK_NAME);
       properties.add(CONTAINER_ID);
+      properties.add(LINK_CAPABILITIES);
       properties.add(TransportConstants.SSL_ENABLED_PROP_NAME);
       properties.add(TransportConstants.SSL_PROVIDER);
       properties.add(TransportConstants.VERIFY_HOST_PROP_NAME);
@@ -105,7 +109,17 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
       Optional<String> sourceAddress = Optional.ofNullable((String)configuration.get(SOURCE_ADDRESS));
       Optional<String> targetAddress = Optional.ofNullable((String)configuration.get(TARGET_ADDRESS));
       Optional<Direction> direction = Optional.ofNullable((String)configuration.get(DIRECTION)).map(Direction::valueOf);
-      Optional<String> linkName = Optional.ofNullable((String)configuration.get(LINK_NAME));
+      String linkName = Optional.ofNullable((String)configuration.get(LINK_NAME)).orElse(null);
+      List<Symbol> capabilities = Optional.ofNullable((String)configuration.get(LINK_CAPABILITIES))
+              .map(str -> {
+                         String[] parts = str.split(",");
+                         return Arrays.stream(parts)
+                                 .map(Symbol::getSymbol)
+                                 .collect(Collectors.toList());
+
+                      })
+              .orElse(null);
+
       String containerId = Optional.ofNullable((String)configuration.get(CONTAINER_ID)).orElse(clusterId);
 
       int nettyThreads = Optional.ofNullable((String)configuration.get(NETTY_THREADS)).map(Integer::parseInt).orElse(4);
@@ -113,7 +127,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
 
       Optional<LinkInfo> linkInfo = sourceAddress.flatMap(s ->
               targetAddress.flatMap(t ->
-                      direction.map(d -> new LinkInfo(linkName.orElse(null), s, t, d))));
+                      direction.map(d -> new LinkInfo(linkName, s, t, d, capabilities))));
 
       if (linkInfo.isPresent()) {
          ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s with link %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME), linkInfo.get());

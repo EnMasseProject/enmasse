@@ -78,4 +78,9 @@ public class MetricsReporterController implements Controller {
                 MetricType.gauge,
                 numConnectors));
     }
+
+    @Override
+    public String toString() {
+        return "MetricsReporterController";
+    }
 }

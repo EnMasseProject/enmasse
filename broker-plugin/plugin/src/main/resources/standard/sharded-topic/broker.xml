@@ -90,6 +90,7 @@ under the License.
             <redelivery-delay>1</redelivery-delay>
             <redelivery-delay-multiplier>1.5</redelivery-delay-multiplier>
             <max-redelivery-delay>10000</max-redelivery-delay>
+            <dead-letter-address>_!GLOBAL_DLQ</dead-letter-address>
             <!-- with -1 only the global-max-size is in use for limiting -->
             <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
@@ -102,6 +103,11 @@ under the License.
          </address>
          <address name="$TOPIC_NAME/$HOSTNAME">
              <multicast />
+         </address>
+         <address name="_!GLOBAL_DLQ">
+           <anycast>
+             <queue name="_!GLOBAL_DLQ" />
+           </anycast>
          </address>
       </addresses>
       <wildcard-addresses>
@@ -119,21 +125,21 @@ under the License.
         </divert>
       </diverts>
       <connector-services>
-        <connector-service name="$override-amqp-connector">
+        <connector-service name="$${dummy}override-amqp-connector">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
           <param key="containerId" value="$CONTAINER_ID-out" /> <!-- currently only needed for subscriptions -->
           <param key="clusterId" value="$CONTAINER_ID" />
         </connector-service>
-        <connector-service name="$override-ragent-connector">
+        <connector-service name="$${dummy}override-ragent-connector">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$QUEUE_SCHEDULER_SERVICE_HOST" />
           <param key="port" value="$QUEUE_SCHEDULER_SERVICE_PORT" />
           <param key="containerId" value="$CONTAINER_ID" />
           <param key="clusterId" value="sharded-topic" />
         </connector-service>
-        <connector-service name="$override-address-connector-in">
+        <connector-service name="$${dummy}override-address-connector-in">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
@@ -142,12 +148,21 @@ under the License.
           <param key="idleTimeoutMs" value="$CONNECTOR_IN_IDLE_TIMEOUT_MS" />
           <param key="nettyThreads" value="$CONNECTOR_IN_NETTY_THREADS" />
         </connector-service>
-        <connector-service name="$override-address-connector-out">
+        <connector-service name="$${dummy}override-address-connector-out">
           <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
           <param key="host" value="$MESSAGING_SERVICE_HOST" />
           <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
           <param key="containerId" value="$TOPIC_NAME-out" />
           <param key="clusterId" value="$TOPIC_NAME" />
+          <param key="idleTimeoutMs" value="$CONNECTOR_OUT_IDLE_TIMEOUT_MS" />
+          <param key="nettyThreads" value="$CONNECTOR_OUT_NETTY_THREADS" />
+        </connector-service>
+        <connector-service name="$${dummy}override-dlq-out">
+          <factory-class>org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory</factory-class>
+          <param key="host" value="$MESSAGING_SERVICE_HOST" />
+          <param key="port" value="$MESSAGING_SERVICE_PORT_AMQPS_BROKER" />
+          <param key="containerId" value="broker-global-dlq-out" />
+          <param key="clusterId" value="$CLUSTER_ID" />
           <param key="idleTimeoutMs" value="$CONNECTOR_OUT_IDLE_TIMEOUT_MS" />
           <param key="nettyThreads" value="$CONNECTOR_OUT_NETTY_THREADS" />
         </connector-service>

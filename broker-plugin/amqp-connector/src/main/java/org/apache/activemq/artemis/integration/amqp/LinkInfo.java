@@ -20,17 +20,27 @@
  */
 package org.apache.activemq.artemis.integration.amqp;
 
+import org.apache.qpid.proton.amqp.Symbol;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public class LinkInfo {
    private final String linkName;
    private final String sourceAddress;
    private final String targetAddress;
    private final Direction direction;
+   private final List<Symbol> capabilities = new ArrayList<>();
 
-   public LinkInfo(String linkName, String sourceAddress, String targetAddress, Direction direction) {
+   public LinkInfo(String linkName, String sourceAddress, String targetAddress, Direction direction, List<Symbol> capabilities) {
       this.linkName = linkName;
       this.sourceAddress = sourceAddress;
       this.targetAddress = targetAddress;
       this.direction = direction;
+      if (capabilities != null) {
+         this.capabilities.addAll(capabilities);
+      }
    }
 
    public String getTargetAddress() {
@@ -49,6 +59,10 @@ public class LinkInfo {
       return direction;
    }
 
+   public List<Symbol> getCapabilities() {
+      return Collections.unmodifiableList(capabilities);
+   }
+
    @Override
    public String toString() {
       return "LinkInfo{" +
@@ -56,6 +70,8 @@ public class LinkInfo {
               ", sourceAddress='" + sourceAddress + '\'' +
               ", targetAddress='" + targetAddress + '\'' +
               ", direction=" + direction +
+              ", capabilities=" + capabilities +
               '}';
    }
+
 }

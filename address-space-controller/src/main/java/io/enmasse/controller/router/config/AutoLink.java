@@ -9,11 +9,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class LinkRoute {
+public class AutoLink {
     private String name;
-    private String prefix;
-    private String pattern;
-    private String delExternalPrefix;
+    private String address;
     private LinkDirection direction;
     private String containerId;
     private String connection;
@@ -24,14 +22,6 @@ public class LinkRoute {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
     }
 
     public LinkDirection getDirection() {
@@ -58,29 +48,19 @@ public class LinkRoute {
         this.connection = connection;
     }
 
-    public String getPattern() {
-        return pattern;
+    public String getAddress() {
+        return address;
     }
 
-    public void setPattern(String pattern) {
-        this.pattern = pattern;
-    }
-
-    public String getDelExternalPrefix() {
-        return delExternalPrefix;
-    }
-
-    public void setDelExternalPrefix(String delExternalPrefix) {
-        this.delExternalPrefix = delExternalPrefix;
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     @Override
     public String toString() {
-        return "LinkRoute{" +
+        return "AutoLink{" +
                 "name='" + name + '\'' +
-                ", prefix='" + prefix + '\'' +
-                ", pattern='" + pattern + '\'' +
-                ", delExternalPrefix='" + delExternalPrefix + '\'' +
+                ", address='" + address + '\'' +
                 ", direction=" + direction +
                 ", containerId='" + containerId + '\'' +
                 ", connection='" + connection + '\'' +
@@ -91,19 +71,16 @@ public class LinkRoute {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        LinkRoute linkRoute = (LinkRoute) o;
-        return Objects.equals(name, linkRoute.name) &&
-                Objects.equals(prefix, linkRoute.prefix) &&
-                Objects.equals(pattern, linkRoute.pattern) &&
-                Objects.equals(delExternalPrefix, linkRoute.delExternalPrefix) &&
-                direction == linkRoute.direction &&
-                Objects.equals(containerId, linkRoute.containerId) &&
-                Objects.equals(connection, linkRoute.connection);
+        AutoLink autoLink = (AutoLink) o;
+        return Objects.equals(name, autoLink.name) &&
+                Objects.equals(address, autoLink.address) &&
+                direction == autoLink.direction &&
+                Objects.equals(containerId, autoLink.containerId) &&
+                Objects.equals(connection, autoLink.connection);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, prefix, pattern, delExternalPrefix, direction, containerId, connection);
+        return Objects.hash(name, address, direction, containerId, connection);
     }
-
 }

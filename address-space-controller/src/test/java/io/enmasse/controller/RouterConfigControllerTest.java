@@ -324,13 +324,13 @@ public class RouterConfigControllerTest {
         LinkRoute lrIn = getLinkRoute("override.connector.remote1.pat1.in", actual.getLinkRoutes());
         assertNotNull(lrIn);
         assertEquals("remote1/foo*", lrIn.getPattern());
-        assertEquals(LinkRoute.Direction.in, lrIn.getDirection());
+        assertEquals(LinkDirection.in, lrIn.getDirection());
         assertEquals("remote1", lrIn.getConnection());
 
         LinkRoute lrOut = getLinkRoute("override.connector.remote1.pat1.out", actual.getLinkRoutes());
         assertNotNull(lrOut);
         assertEquals("remote1/foo*", lrOut.getPattern());
-        assertEquals(LinkRoute.Direction.out, lrOut.getDirection());
+        assertEquals(LinkDirection.out, lrOut.getDirection());
         assertEquals("remote1", lrOut.getConnection());
 
 

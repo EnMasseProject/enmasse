@@ -40,7 +40,7 @@ public class AddressNameValidator implements ConstraintValidator<AddressName, Ad
             return false;
         }
 
-        if ( address.getSpec() != null && address.getSpec().getAddressSpace() != null ) {
+        if (address.getSpec() != null && address.getSpec().getAddressSpace() != null) {
             // we only validate the address space name if it is set, as this is an optional legacy value
             if (!components[0].equals(address.getSpec().getAddressSpace())) {
                 context.disableDefaultConstraintViolation();
@@ -49,6 +49,13 @@ public class AddressNameValidator implements ConstraintValidator<AddressName, Ad
                         .addConstraintViolation();
                 return false;
             }
+        }
+
+        if (address.getSpec() != null && address.getSpec().getAddress() != null && address.getSpec().getAddress().startsWith("__")) {
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("Address string must not start with double underscores '__'")
+                    .addConstraintViolation();
+            return false;
         }
 
         // ensure that each name component is a valid kubernetes name component
