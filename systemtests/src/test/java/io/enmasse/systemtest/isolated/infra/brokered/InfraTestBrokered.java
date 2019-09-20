@@ -19,7 +19,7 @@ import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -102,7 +102,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
 
         resourcesManager.createAddressSpace(exampleAddressSpace);
 
-        CommonResourcesManager.getInstance().setAddresses(new AddressBuilder()
+        IsolatedResourcesManager.getInstance().setAddresses(new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
@@ -173,7 +173,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        commonResourcesManager.replaceAddressSpace(exampleAddressSpace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null),

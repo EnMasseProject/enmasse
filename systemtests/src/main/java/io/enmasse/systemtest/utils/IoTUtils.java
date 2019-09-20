@@ -8,6 +8,8 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -15,6 +17,9 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -22,6 +27,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 
 public class IoTUtils {
 
@@ -173,4 +182,74 @@ public class IoTUtils {
                 .build();
     }
 
+    public static void createIoTConfig(IoTConfig config) throws Exception {
+        Kubernetes kubernetes = Kubernetes.getInstance();
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_CONFIG);
+        var iotConfigApiClient = kubernetes.getIoTConfigClient();
+        if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
+            log.info("iot config {} already exists", config.getMetadata().getName());
+        } else {
+            log.info("iot config {} will be created", config.getMetadata().getName());
+            iotConfigApiClient.create(config);
+        }
+        IoTUtils.waitForIoTConfigReady(kubernetes, config);
+        IoTUtils.syncIoTConfig(kubernetes, config);
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void createIoTProject(IoTProject project) throws Exception {
+        Kubernetes kubernetes = Kubernetes.getInstance();
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_PROJECT);
+        var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
+            log.info("iot project {} already exists", project.getMetadata().getName());
+        } else {
+            log.info("iot project {} will be created", project.getMetadata().getName());
+            iotProjectApiClient.create(project);
+        }
+        IoTUtils.waitForIoTProjectReady(kubernetes, project);
+        IoTUtils.syncIoTProject(kubernetes, project);
+        TimeMeasuringSystem.stopOperation(operationID);
+        AddressSpace addressSpace = kubernetes.getAddressSpaceClient().inNamespace(project.getMetadata().getNamespace())
+                .list().getItems().stream().filter(addressSpace1 -> addressSpace1.getMetadata().getName()
+                        .equals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()))
+                .collect(Collectors.toList()).get(0);
+    }
+
+    public static String getTenantID(IoTProject project) {
+        return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
+    }
+
+    public static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+        JsonObject json = new JsonObject(Map.of("a", "b"));
+        String message = "First successful " + type.name().toLowerCase() + " message";
+        TestUtils.waitUntilCondition(message, (phase) -> {
+            try {
+                switch (type) {
+                    case EVENT: {
+                        var response = adapterClient.sendEvent(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    case TELEMETRY: {
+                        var response = adapterClient.sendTelemetry(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    default:
+                        return true;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+
+        log.info("First {} message accepted", type.name().toLowerCase());
+    }
+
+    private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
+        if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
+            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
+        }
+    }
 }

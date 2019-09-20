@@ -335,7 +335,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build();
 
-            commonResourcesManager.createAddressSpaceList(brokered, standard);
+            ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(brokered, standard);
 
             assertThat("Get all address spaces does not contain 2 address spaces",
                     kubernetes.getAddressSpaceClient().inAnyNamespace().list().getItems().size(), is(2));
@@ -482,7 +482,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
         getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
 
-        commonResourcesManager.replaceAddressSpace(addressspace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(addressspace);
 
         getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
 
@@ -492,7 +492,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .done();
 
-        Exception exception = assertThrows(KubernetesClientException.class, () -> commonResourcesManager.replaceAddressSpace(replace));
+        Exception exception = assertThrows(KubernetesClientException.class, () -> ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(replace));
         assertTrue(exception.getMessage().contains("Unknown address space plan no-exists"));
     }
 

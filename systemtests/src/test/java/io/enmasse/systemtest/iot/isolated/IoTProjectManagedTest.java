@@ -9,9 +9,9 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.bases.iot.IoTTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -96,7 +96,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestIsolatedStandard
 
     private void assertManaged(IoTProject project) throws Exception {
         //address space s
-        AddressSpace addressSpace = commonResourcesManager.getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = ISOLATED_RESOURCES_MANAGER.getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
@@ -138,7 +138,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestIsolatedStandard
 
         //username "adapter"
         //name "project-address-space"+".adapter"
-        User user = CommonResourcesManager.getInstance().getUser(addressSpace, "adapter");
+        User user = IsolatedResourcesManager.getInstance().getUser(addressSpace, "adapter");
         assertNotNull(user);
         assertEquals(1, user.getMetadata().getOwnerReferences().size());
         assertTrue(isOwner(project, user.getMetadata().getOwnerReferences().get(0)));
