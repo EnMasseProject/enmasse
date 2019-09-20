@@ -222,7 +222,7 @@ class ConnectorsTest extends BridgingBase {
 
         int messagesBatch = 50;
         String[] remoteQueues = new String [] {BASIC_QUEUE1};
-        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+        sendToConnectorReceiveInBroker(false, space, localUser, remoteQueues, messagesBatch);
 
         scaleDownBroker();
         AddressSpaceUtils.waitForAddressSpaceConnectorsNotReady(space);
@@ -230,8 +230,22 @@ class ConnectorsTest extends BridgingBase {
         scaleUpBroker();
         AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
 
-        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
-        sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
+        sendToConnectorReceiveInBroker(false, space, localUser, remoteQueues, messagesBatch);
+        sendToBrokerReceiveInConnector(false, space, localUser, remoteQueues, messagesBatch);
+    }
+
+    @Test
+    public void testConnectorTLS() throws Exception {
+        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, true);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+        String[] remoteQueues = new String [] {BASIC_QUEUE1};
+
+        sendToConnectorReceiveInBroker(true, space, localUser, remoteQueues, messagesBatch);
+        sendToBrokerReceiveInConnector(true, space, localUser, remoteQueues, messagesBatch);
     }
 
     private void doTestSendThroughConnector(String addressRule, String[] remoteQueues) throws Exception, InterruptedException, ExecutionException, TimeoutException {
@@ -242,7 +256,7 @@ class ConnectorsTest extends BridgingBase {
 
         int messagesBatch = 50;
 
-        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+        sendToConnectorReceiveInBroker(false, space, localUser, remoteQueues, messagesBatch);
     }
 
     private void doTestReceiveThroughConnector(String addressRule, String[] remoteQueues) throws Exception {
@@ -253,10 +267,10 @@ class ConnectorsTest extends BridgingBase {
 
         int messagesBatch = 50;
 
-        sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
+        sendToBrokerReceiveInConnector(false, space, localUser, remoteQueues, messagesBatch);
     }
 
-    private void sendToConnectorReceiveInBroker(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
+    private void sendToConnectorReceiveInBroker(boolean tls, AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send through connector
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
@@ -267,7 +281,7 @@ class ConnectorsTest extends BridgingBase {
         }
 
         //receive in remote broker
-        AmqpClient clientToRemote = createClientToRemoteBroker();
+        AmqpClient clientToRemote = createClientToRemoteBroker(tls);
 
         for(String remoteQueue : remoteQueues) {
             var receivedFromQueue = clientToRemote.recvMessages(remoteQueue, messagesBatch);
@@ -275,9 +289,9 @@ class ConnectorsTest extends BridgingBase {
         }
     }
 
-    private void sendToBrokerReceiveInConnector(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
+    private void sendToBrokerReceiveInConnector(boolean tls, AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send to remote broker
-        AmqpClient clientToRemote = createClientToRemoteBroker();
+        AmqpClient clientToRemote = createClientToRemoteBroker(tls);
 
         for(String remoteQueue : remoteQueues) {
             clientToRemote.sendMessages(remoteQueue, TestUtils.generateMessages(messagesBatch));

@@ -1,0 +1,126 @@
+<?xml version='1.0'?>
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<configuration xmlns="urn:activemq"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="urn:activemq /schema/artemis-configuration.xsd">
+   <core xmlns="urn:activemq:core" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="urn:activemq:core ">
+
+      <name>activemq-broker</name>
+
+      <persistence-enabled>true</persistence-enabled>
+
+      <!-- this could be ASYNCIO or NIO
+       -->
+      <journal-type>ASYNCIO</journal-type>
+
+      <paging-directory>./data/paging</paging-directory>
+
+      <bindings-directory>./data/bindings</bindings-directory>
+
+      <journal-directory>./data/journal</journal-directory>
+
+      <large-messages-directory>./data/large-messages</large-messages-directory>
+
+      <journal-datasync>true</journal-datasync>
+
+      <journal-min-files>2</journal-min-files>
+
+      <journal-pool-files>-1</journal-pool-files>
+
+      <journal-file-size>10M</journal-file-size>
+
+      <journal-buffer-timeout>2212000</journal-buffer-timeout>
+
+      <!-- how often we are looking for how many bytes are being used on the disk in ms -->
+      <disk-scan-period>5000</disk-scan-period>
+
+      <!-- once the disk hits this limit the system will block, or close the connection in certain protocols
+           that won't support flow control. -->
+      <max-disk-usage>90</max-disk-usage>
+
+      <!-- should the broker detect dead locks and other issues -->
+      <critical-analyzer>true</critical-analyzer>
+
+      <critical-analyzer-timeout>120000</critical-analyzer-timeout>
+
+      <critical-analyzer-check-period>60000</critical-analyzer-check-period>
+
+      <critical-analyzer-policy>HALT</critical-analyzer-policy>
+
+      <global-max-size>10Mb</global-max-size>
+
+      <acceptors>
+         <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP;saslMechanisms=PLAIN</acceptor>
+         <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP;saslMechanisms=PLAIN;sslEnabled=true;keyStorePath=/etc/amq-secret-volume/broker.ks;keyStorePassword=123456;enabledProtocols=TLSv1.2</acceptor>
+            <!-- ;sslEnabled=true;saslMechanisms=PLAIN;keyStorePath=/etc/amq-secret-volume/broker.ks;keyStorePassword=123456</acceptor> -->
+         <!-- SASL Mechanism should be EXTERNAL not anonymous... but Artemis doesn't support EXTERNAL -->
+         <!-- <acceptor name="amqps-normal">tcp://0.0.0.0:55671?protocols=AMQP;saslMechanisms=ANONYMOUS;sslEnabled=true;keyStorePath=/etc/amq-secret-volume/broker.ks;keyStorePassword=123456;trustStorePath=/etc/amq-secret-volume/broker.ts;trustStorePassword=123456;verifyHost=false;needClientAuth=true</acceptor> -->
+      </acceptors>
+
+
+      <wildcard-addresses>
+        <enabled>true</enabled>
+        <delimiter>/</delimiter>
+        <any-words>#</any-words>
+        <single-word>+</single-word>
+      </wildcard-addresses>
+
+      <address-settings>
+         <!--default for catch all-->
+         <address-setting match="#">
+            <max-delivery-attempts>-1</max-delivery-attempts>
+            <redelivery-delay>1</redelivery-delay>
+            <redelivery-delay-multiplier>1.5</redelivery-delay-multiplier>
+            <max-redelivery-delay>10000</max-redelivery-delay>
+            <!-- with -1 only the global-max-size is in use for limiting -->
+            <max-size-bytes>-1</max-size-bytes>
+            <message-counter-history-day-limit>10</message-counter-history-day-limit>
+            <address-full-policy>FAIL</address-full-policy>
+         </address-setting>
+      </address-settings>
+
+      <addresses>
+         <address name="DLQ">
+            <anycast>
+               <queue name="DLQ" />
+            </anycast>
+         </address>
+         <address name="ExpiryQueue">
+            <anycast>
+               <queue name="ExpiryQueue" />
+            </anycast>
+         </address>
+         <address name="queue1">
+            <anycast>
+               <queue name="queue1" />
+            </anycast>
+         </address>
+         <address name="queue2">
+            <anycast>
+               <queue name="queue2" />
+            </anycast>
+         </address>
+
+      </addresses>
+
+
+   </core>
+</configuration>
