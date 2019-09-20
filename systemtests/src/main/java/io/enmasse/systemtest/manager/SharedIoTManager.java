@@ -8,12 +8,15 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.iot.ITestIoTBase;
 import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -22,6 +25,7 @@ import org.slf4j.Logger;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.deviceRegistry;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
@@ -34,6 +38,9 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
     protected MqttClientFactory mqttClientFactory = null;
     private IoTProject sharedIoTProject = null;
     private IoTConfig sharedIoTConfig = null;
+    private Endpoint deviceRegistryEndpoint;
+    private Endpoint httpAdapterEndpoint;
+    private DeviceRegistryClient client;
 
     private static final String DEFAULT_ADDRESS_TEMPLATE = "iot-shared-";
 
@@ -49,10 +56,39 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
         //TODO: DODELEJ PICO
     }
 
-
+    //TODO: PREPSAT!
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
-
+        if (context.getExecutionException().isPresent()) { //test failed
+            if (!TestBase.environment.skipCleanup()) {
+                if (sharedProject != null) {
+                    log.info("Shared IoTProject will be removed");
+                    var iotProjectApiClient = TestBase.kubernetes.getIoTProjectClient(sharedProject.getMetadata().getNamespace());
+                    if (iotProjectApiClient.withName(sharedProject.getMetadata().getName()).get() != null) {
+                        IoTUtils.deleteIoTProjectAndWait(TestBase.kubernetes, sharedProject);
+                    } else {
+                        log.info("IoTProject '{}' doesn't exists!", sharedProject.getMetadata().getName());
+                    }
+                    sharedProject = null;
+                }
+                if (sharedConfig != null) {
+                    log.info("Shared IoTConfig will be removed");
+                    var iotConfigApiClient = TestBase.kubernetes.getIoTConfigClient();
+                    if (iotConfigApiClient.withName(sharedConfig.getMetadata().getName()).get() != null) {
+                        IoTUtils.deleteIoTConfigAndWait(TestBase.kubernetes, sharedConfig);
+                    } else {
+                        log.info("IoTConfig '{}' doesn't exists!", sharedConfig.getMetadata().getName());
+                    }
+                }
+                log.info("Infinispan server will be removed");
+                SystemtestsKubernetesApps.deleteInfinispanServer(TestBase.kubernetes.getInfraNamespace());
+                sharedConfig = null;
+            } else {
+                log.warn("Remove shared iotproject when test failed - SKIPPED!");
+            }
+        }
+        sharedConfig = null;
+        sharedProject = null;
     }
 
     @Override
@@ -105,6 +141,31 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
         //TODO: CO TO KURVA JE
         this.iotAmqpClient = this.iotAmqpClientFactory.createQueueClient();
     }
+
+    public void createDeviceRegistrySharedEnv() throws Exception {
+        if (sharedIoTConfig == null) {
+            sharedIoTConfig = provideIoTConfig();
+            createIoTConfig(sharedIoTConfig);
+        }
+        if (sharedIoTProject == null) {
+            sharedIoTProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT, DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace);
+            createIoTProject(sharedIoTProject);
+        }
+        if (deviceRegistryEndpoint == null) {
+            deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+        }
+        if (httpAdapterEndpoint == null) {
+            httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
+        }
+        if (client == null) {
+            client = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
+        }
+        this.randomDeviceId = UUID.randomUUID().toString();
+
+        this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        createOrUpdateUser(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        this.iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+    }
     
     public AmqpClientFactory getAmqpClientFactory() {
         return amqpClientFactory;
@@ -131,4 +192,14 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
     public IoTConfig getSharedIoTConfig() {
         return sharedIoTConfig;
     }
+
+    public String getTenantID() {
+        return IoTUtils.getTenantID(sharedIoTProject);
+    }
+
+    public DeviceRegistryClient getDevClient() {
+        return client;
+    }
+
+    //TODO: CLOSE FACTORIES IMPLEMENT
 }

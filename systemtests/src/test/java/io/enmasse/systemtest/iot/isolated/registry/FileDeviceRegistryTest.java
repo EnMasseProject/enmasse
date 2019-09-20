@@ -13,33 +13,13 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 
-import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newFileBased;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newFileBased;
 
-public class FileDeviceRegistryTest extends DeviceRegistryTestBase {
+public class FileDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
     protected IoTConfig provideIoTConfig() throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
-        return new IoTConfigBuilder()
-                .withNewMetadata()
-                .withName("default")
-                .endMetadata()
-                .withNewSpec()
-                .withNewServices()
-                .withDeviceRegistry(newFileBased())
-                .endServices()
-                .withNewAdapters()
-                .withNewMqtt()
-                .withNewEndpoint()
-                .withNewKeyCertificateStrategy()
-                .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
-                .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
-                .endKeyCertificateStrategy()
-                .endEndpoint()
-                .endMqtt()
-                .endAdapters()
-                .endSpec()
-                .build();
+
     }
 
     @Test
