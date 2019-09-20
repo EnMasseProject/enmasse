@@ -1,8 +1,6 @@
 // Module included in the following assemblies:
 //
-// master-openshift.adoc
-// master-kubernetes.adoc
-// master.adoc
+// 
 
 [id='ref-brokered-infra-config-fields-{context}']
 = Brokered infrastructure configuration fields
@@ -29,6 +27,8 @@ This table shows the fields available for the brokered infrastructure configurat
 |`broker.podTemplate.spec.tolerations` |Specifies the toleration settings for the broker pod, which allows this pod to run on certain nodes that other pods cannot run on.
 |`broker.podTemplate.spec.containers.initialDelaySeconds` |Specifies probe delay value in seconds for the broker pod.
 |`broker.podTemplate.spec.containers.timeoutSeconds` |Specifies probe timeout value in seconds for the broker pod.
+|`broker.podTemplate.spec.containers.resources` |Specifies 
+|`broker.podTemplate.spec.containers.env` |Specifies 
 |`broker.storageClassName` |Specifies what storage class to use for the persistent volume for the broker.
 |`broker.updatePersistentVolumeClaim` |If the persistent volume supports resizing, setting this value to `true` allows the broker storage to be resized.
 |===

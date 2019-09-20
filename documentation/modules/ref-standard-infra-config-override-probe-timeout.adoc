@@ -3,11 +3,11 @@
 // assembly-infrastructure-configuration.adoc
 
 [id='ref-standard-infra-config-override-probe-timeout-{context}']
-= Overriding the readiness probe timing for standard infrastructure configuration
+= Overriding the probe timing for standard infrastructure configuration
 
-You can override the default value for the readiness probe timing.
+You can override the default values for probe timing on broker and router resources.
 
-The following example shows 
+The following example shows how to override certain default values of the readiness probe timeout for a broker resource and a liveness probe for a router resource.
 
 [source,yaml,options="nowrap",subs="attributes"]
 ----
@@ -23,17 +23,31 @@ spec:
         containers:
           - name: broker <1>
             readinessProbe:
-              failureThreshold: 6
-              initialDelaySeconds: 20 <2>
-
+              failureThreshold: 6 <2>
+              initialDelaySeconds: 20 <3>
+              
+  router:
+    ...
+    podTemplate:
+      spec:
+        containers:
+          - name: router <1>
+            livenessProbe:
+              failureThreshold: 6 <2>
+              initialDelaySeconds: 20 <3>
 ----
 <1> The `name` value must match the target container name. For example, for a broker `podTemplate`, `name` is `broker`, and for a router `podTemplate`, it is `router`.
+<2> Specifies the number of times that {KubePlatform} tries when a Pod starts and the probe fails before either the Pod is marked `Unready` for a readiness probe, or restarting the container for a liveness probe. The default value is 3, and the minimum value is 1.
+<3> Specifies the number of seconds before performing the first probe after the container starts.
 
-<2> Specifies the number of seconds before performing the first probe after the container starts.
+ifeval::["{cmdcli}" == "kubectl"]
+.Related links
+* link:https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes[{KubePlatform} documentation about liveness and readiness probes (application health)]
+endif::[]
 
 ifeval::["{cmdcli}" == "oc"]
 .Related links
-* link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html/developer_guide/dev-guide-application-health [OpenShift 3.11 documentation on readiness probe]
-* link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html-single/nodes/index#nodes-nodes-health [OpenShift 4.1 documentation on readiness probe]
+* link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html/developer_guide/dev-guide-application-health[{KubePlatform} 3.11 documentation about liveness and readiness probes (application health)]
+* link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html-single/nodes/index#nodes-nodes-health[{KubePlatform} 4.1 documentation about liveness and readiness probes (application health)]
 endif::[]
 

@@ -19,7 +19,15 @@ using `BrokeredInfraConfig` and `StandardInfraConfig` resources.
 
 include::../modules/con-brokered-infra-config.adoc[leveloffset=+1]
 
+include::../modules/ref-brokered-infra-config-example.adoc[leveloffset=+2]
+
+include::../modules/ref-brokered-infra-config-override-probe-timeout.adoc[leveloffset=+2]
+
 include::../modules/con-standard-infra-config.adoc[leveloffset=+1]
+
+include::../modules/ref-standard-infra-config-example.adoc[leveloffset=+2]
+
+include::../modules/ref-standard-infra-config-override-probe-timeout.adoc[leveloffset=+2]
 
 :context: {parent-context}
 

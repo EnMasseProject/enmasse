@@ -1,0 +1,81 @@
+// Module included in the following assemblies:
+//
+// assembly-infrastructure-configuration.adoc
+
+[id='ref-brokered-infra-config-example-{context}']
+= Brokered infrastructure configuration example
+
+The following example of a brokered infrastructure configuration file shows the various settings that can be specified.
+
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: brokered-infra-config-example
+spec:
+  version: "{EnMasseVersion}" <1>
+  admin: <2>
+    resources:
+      memory: 256Mi
+    podTemplate:
+      metadata:
+        labels:
+          key: value
+  broker:
+    resources:
+      memory: 2Gi
+      storage: 100Gi
+    addressFullPolicy: PAGE
+    podTemplate: <4>
+      spec:
+        priorityClassName: messaging
+----
+
+<1> Specifies the {ProductName} version used. When upgrading, {ProductName} uses
+this field to determine whether to upgrade the infrastructure to the requested version. If omitted,
+the version is assumed to be the same version as the controllers reading the configuration.
+
+<2> Specifies the settings you can configure for the `admin` components.
+
+<3> Specifies the settings you can configure for the `broker` components. Note that changing
+the `.broker.resources.storage` setting does not configure the existing broker storage size.
+
+<4> For both `admin` and `broker` components you can configure the following `podTemplate` elements:
+* `metadata.labels`
+* `spec.priorityClassName`
+* `spec.tolerations`
+* `spec.affinity`
+* `spec.containers.readinessProbe`
+* `spec.containers.livenessProbe`
+* `spec.containers.resources`
+* `spec.containers.env`
++
+All other `podTemplate` elements are ignored. For more information about these elements, see the {KubePlatform} documentation in the following Related links section.
++
+For more information about how to set a readiness probe timeout, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-override-probe-timeout-messaging[Overriding the readiness probe timing for brokered infrastructure configuration].
+
+For detailed information about all of the available brokered infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-fields-messaging[Brokered infrastructure configuration fields table].
+
+.Related links
+
+ifeval::["{cmdcli}" == "oc"]
+* For more information about the `podTemplate` settings, see the following {KubePlatform} documentation:
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority]
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations]
+** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity]
+** link:https://docs.openshift.com/container-platform/3.11/dev_guide/application_health.html[Application health]
+** link:https://docs.openshift.com/container-platform/3.11/dev_guide/compute_resources.html#dev-compute-resources[Compute resources]
+** link:https://docs.openshift.com/container-platform/3.11/dev_guide/environment_variables.html#list-environment-variables[Environment variables]
+endif::[]
+
+ifeval::["{cmdcli}" == "kubectl"]
+* For more information about the `podTemplate` settings, see the following {KubePlatform} documentation:
+** link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority]
+** link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations]
+** link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity]
+** link:https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes[Liveness and readiness probes (application health)]
+** link:https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/[Compute resources]
+** link:https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/[Environment variables]
+endif::[]
+
