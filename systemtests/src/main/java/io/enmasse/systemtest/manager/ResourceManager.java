@@ -14,7 +14,6 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -409,7 +408,7 @@ public abstract class ResourceManager {
                 .endAuthorization()
                 .endSpec()
                 .build();
-        return CommonResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
+        return IsolatedResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
     }
 
     public void removeUser(AddressSpace addressSpace, User user) {

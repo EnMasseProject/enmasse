@@ -60,9 +60,9 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
         AddressPlan consoleTopicPlan2 = PlanUtils.createAddressPlanObject("console-topic-2", AddressType.TOPIC, addressResourcesTopic2);
         AddressPlan consoleQueuePlan3 = PlanUtils.createAddressPlanObject("console-queue-3", AddressType.QUEUE, addressResourcesQueue3);
 
-        commonResourcesManager.createAddressPlan(consoleQueuePlan1);
-        commonResourcesManager.createAddressPlan(consoleTopicPlan2);
-        commonResourcesManager.createAddressPlan(consoleQueuePlan3);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(consoleQueuePlan1);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(consoleTopicPlan2);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(consoleQueuePlan3);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -72,7 +72,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
         List<AddressPlan> addressPlans = Arrays.asList(consoleQueuePlan1, consoleTopicPlan2, consoleQueuePlan3);
         AddressSpacePlan consolePlan = PlanUtils.createAddressSpacePlanObject("console-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
-        commonResourcesManager.createAddressSpacePlan(consolePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(consolePlan);
 
         //create address space plan with new plan
         AddressSpace consoleAddrSpace = new AddressSpaceBuilder()
@@ -89,11 +89,11 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
                 .endSpec()
                 .build();
 
-        commonResourcesManager.createAddressSpace(consoleAddrSpace);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpace(consoleAddrSpace);
 
         //create new user
         UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
-        commonResourcesManager.createOrUpdateUser(consoleAddrSpace, user);
+        ISOLATED_RESOURCES_MANAGER.createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);

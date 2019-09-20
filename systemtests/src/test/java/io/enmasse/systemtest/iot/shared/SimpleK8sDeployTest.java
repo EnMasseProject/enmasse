@@ -11,7 +11,7 @@ import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
+import io.enmasse.systemtest.bases.iot.IoTTestBaseWithShared;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;

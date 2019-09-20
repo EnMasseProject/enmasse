@@ -12,7 +12,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.IoTTestBase;
+import io.enmasse.systemtest.bases.iot.IoTTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
@@ -158,7 +158,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestIsolatedSt
     }
 
     private void configureAmqpSide(IoTProjectTestContext ctx) throws Exception {
-        AddressSpace addressSpace = commonResourcesManager.getAddressSpace(ctx.getNamespace(), ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = ISOLATED_RESOURCES_MANAGER.getAddressSpace(ctx.getNamespace(), ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         User amqpUser = configureAmqpUser(ctx.getProject(), addressSpace);
         ctx.setAmqpUser(amqpUser);
         AmqpClient amqpClient = configureAmqpClient(addressSpace, amqpUser);

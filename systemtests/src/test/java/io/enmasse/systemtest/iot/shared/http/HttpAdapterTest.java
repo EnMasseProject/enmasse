@@ -8,7 +8,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
+import io.enmasse.systemtest.bases.iot.IoTTestBaseWithShared;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
@@ -16,7 +16,7 @@ import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -76,7 +76,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
 
         AddressSpace addressSpace = resourcesManager.getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
 
-        CommonResourcesManager.getInstance().createOrUpdateUser(addressSpace, businessApplicationUser);
+        IsolatedResourcesManager.getInstance().createOrUpdateUser(addressSpace, businessApplicationUser);
 
         businessApplicationClient = getAmqpClientFactory().createQueueClient(addressSpace);
         businessApplicationClient.getConnectOptions()
@@ -103,7 +103,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
         if (adapterClient != null) {
             adapterClient.close();
         }
-        CommonResourcesManager.getInstance().removeUser(getAddressSpace(), businessApplicationUsername);
+        IsolatedResourcesManager.getInstance().removeUser(getAddressSpace(), businessApplicationUsername);
     }
 
     @AfterEach

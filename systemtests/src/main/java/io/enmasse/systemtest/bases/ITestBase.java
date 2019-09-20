@@ -6,13 +6,16 @@ package io.enmasse.systemtest.bases;
 
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.clients.ClientUtils;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import org.slf4j.Logger;
 
 public interface ITestBase {
     ClientUtils clientUtils = new ClientUtils();
+    Logger LOGGER = CustomLogger.getLogger();
 
     default ClientUtils getClientUtils() {
         return clientUtils;

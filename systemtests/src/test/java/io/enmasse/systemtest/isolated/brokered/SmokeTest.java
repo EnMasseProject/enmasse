@@ -141,7 +141,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        commonResourcesManager.createAddressSpaceList(addressSpaceA, addressSpaceB);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(addressSpaceA, addressSpaceB);
 
         Address queueA = new AddressBuilder()
                 .withNewMetadata()

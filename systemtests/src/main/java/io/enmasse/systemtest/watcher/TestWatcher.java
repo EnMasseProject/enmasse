@@ -9,7 +9,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Container;
@@ -32,7 +32,7 @@ import java.util.List;
 public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler, BeforeTestExecutionCallback, BeforeEachCallback, AfterTestExecutionCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private TestInfo testInfo = TestInfo.getInstance();
-    private CommonResourcesManager commonResourcesManager = CommonResourcesManager.getInstance();
+    private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
     private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
 
     @Override
@@ -47,9 +47,9 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
 
     private void tearDownCommonResources() throws Exception {
         LOGGER.info("Admin resource manager teardown");
-        commonResourcesManager.tearDown(testInfo.getActualTest());
-        commonResourcesManager.unsetReuseAddressSpace();
-        commonResourcesManager.deleteAddressspacesFromList();
+        isolatedResourcesManager.tearDown(testInfo.getActualTest());
+        isolatedResourcesManager.unsetReuseAddressSpace();
+        isolatedResourcesManager.deleteAddressspacesFromList();
     }
 
     private void tearDownSharedResources() throws Exception {
@@ -163,7 +163,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
         if (testInfo.isTestShared() && SharedResourceManager.getInstance().getAmqpClientFactory() == null) {
             sharedResourcesManager.setup();
         } else {
-            commonResourcesManager.setup();
+            isolatedResourcesManager.setup();
         }
     }
 

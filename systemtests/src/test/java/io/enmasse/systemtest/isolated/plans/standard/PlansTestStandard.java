@@ -97,8 +97,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan weakQueuePlan = PlanUtils.createAddressPlanObject("standard-queue-weak", AddressType.QUEUE, addressResourcesQueue);
         AddressPlan weakTopicPlan = PlanUtils.createAddressPlanObject("standard-topic-weak", AddressType.TOPIC, addressResourcesTopic);
 
-        commonResourcesManager.createAddressPlan(weakQueuePlan);
-        commonResourcesManager.createAddressPlan(weakTopicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(weakQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(weakTopicPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -190,9 +190,9 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan anycastPlan = PlanUtils.createAddressPlanObject("anycast-test1", AddressType.ANYCAST,
                 Collections.singletonList(new ResourceRequest("router", 0.3)));
 
-        commonResourcesManager.createAddressPlan(queuePlan);
-        commonResourcesManager.createAddressPlan(topicPlan);
-        commonResourcesManager.createAddressPlan(anycastPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(topicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(anycastPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -202,7 +202,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         List<AddressPlan> addressPlans = Arrays.asList(queuePlan, topicPlan, anycastPlan);
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("quota-limits-pooled-plan",
                 "default-minimal", AddressSpaceType.STANDARD, resources, addressPlans);
-        commonResourcesManager.createAddressSpacePlan(addressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(addressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
@@ -366,8 +366,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                         new ResourceRequest("broker", 1.0),
                         new ResourceRequest("router", 0.01)));
 
-        commonResourcesManager.createAddressPlan(queuePlan);
-        commonResourcesManager.createAddressPlan(topicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(topicPlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -517,9 +517,9 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        commonResourcesManager.createAddressPlan(simpleQueue);
-        commonResourcesManager.createAddressPlan(partitionedQueue);
-        commonResourcesManager.createAddressPlan(manyPartitionedQueue);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(simpleQueue);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(partitionedQueue);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(manyPartitionedQueue);
 
         //define and create address space plan
         AddressSpacePlan partitionedAddressesPlan = new AddressSpacePlanBuilder()
@@ -609,7 +609,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.99), new ResourceRequest("router", 0.0));
         AddressPlan xlQueuePlan = PlanUtils.createAddressPlanObject("pooled-xl-queue", AddressType.QUEUE, addressResourcesQueue);
-        commonResourcesManager.createAddressPlan(xlQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(xlQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -679,9 +679,9 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         List<ResourceRequest> addressResourcesQueueBeta = Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0));
 
         AddressPlan queuePlanAlpha = PlanUtils.createAddressPlanObject("pooled-standard-queue-alpha", AddressType.QUEUE, addressResourcesQueueAlpha);
-        commonResourcesManager.createAddressPlan(queuePlanAlpha);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlanAlpha);
         AddressPlan queuePlanBeta = PlanUtils.createAddressPlanObject("pooled-standard-queue-beta", AddressType.QUEUE, addressResourcesQueueBeta);
-        commonResourcesManager.createAddressPlan(queuePlanBeta);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(queuePlanBeta);
 
 
         //define and create address space plan
@@ -831,11 +831,11 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan pooledQueuePlan = PlanUtils.createAddressPlanObject("after-pooled-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.44), new ResourceRequest("router", 0.0)));
 
-        commonResourcesManager.createAddressPlan(beforeQueuePlan);
-        commonResourcesManager.createAddressPlan(beforeTopicPlan);
-        commonResourcesManager.createAddressPlan(afterQueuePlan);
-        commonResourcesManager.createAddressPlan(afterTopicPlan);
-        commonResourcesManager.createAddressPlan(pooledQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeTopicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterTopicPlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(pooledQueuePlan);
 
         //define and create address space plans
 
@@ -864,9 +864,9 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 Collections.singletonList(pooledQueuePlan));
 
 
-        commonResourcesManager.createAddressSpacePlan(beforeAddressSpacePlan);
-        commonResourcesManager.createAddressSpacePlan(afterAddressSpacePlan);
-        commonResourcesManager.createAddressSpacePlan(pooledAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(beforeAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(afterAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(pooledAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
@@ -912,13 +912,13 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
 
         resourcesManager.setAddresses(queue, topic);
 
-        clientUtils.sendDurableMessages(commonResourcesManager, addressSpace, queue, user, 16);
+        clientUtils.sendDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, user, 16);
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
-        commonResourcesManager.replaceAddressSpace(addressSpace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(addressSpace);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), queue, topic);
 
-        clientUtils.receiveDurableMessages(commonResourcesManager, addressSpace, queue, user, 16);
+        clientUtils.receiveDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, user, 16);
 
         Address afterQueue = new AddressBuilder()
                 .withNewMetadata()
@@ -931,12 +931,12 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .withPlan(afterQueuePlan.getMetadata().getName())
                 .endSpec()
                 .build();
-        commonResourcesManager.appendAddresses(afterQueue);
+        ISOLATED_RESOURCES_MANAGER.appendAddresses(afterQueue);
 
         new ClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic), resourcesManager);
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().done();
-        commonResourcesManager.replaceAddressSpace(addressSpace);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(addressSpace);
         AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), afterQueue, queue, topic);
 
         Address pooledQueue = new AddressBuilder()
@@ -964,8 +964,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan beforeQueuePlan = PlanUtils.createAddressPlanObject("before-large-sharded-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 2.0), new ResourceRequest("router", 0)));
 
-        commonResourcesManager.createAddressPlan(beforeQueuePlan);
-        commonResourcesManager.createAddressPlan(afterQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
@@ -986,8 +986,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 Collections.singletonList(afterQueuePlan));
 
 
-        commonResourcesManager.createAddressSpacePlan(beforeAddressSpacePlan);
-        commonResourcesManager.createAddressSpacePlan(afterAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(beforeAddressSpacePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
@@ -1049,7 +1049,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        commonResourcesManager.replaceAddressSpace(replaced, false);
+        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(replaced, false);
 
         assertEquals(beforeAddressSpacePlan.getMetadata().getName(),
                 replaced.getMetadata().getAnnotations().get("enmasse.io/applied-plan"));
@@ -1066,8 +1066,8 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.8), new ResourceRequest("router", 0.0)));
 
-        commonResourcesManager.createAddressPlan(beforeQueuePlan);
-        commonResourcesManager.createAddressPlan(afterQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeQueuePlan);
+        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterQueuePlan);
 
         AddressSpacePlan addressPlan = PlanUtils.createAddressSpacePlanObject("address-switch-address-plan",
                 "default-minimal", AddressSpaceType.STANDARD,
@@ -1114,7 +1114,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         assertThat("Failed there are no 2 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(2));
 
         for (Address queue : queues) {
-            clientUtils.sendDurableMessages(commonResourcesManager, addressSpace, queue, cred, 400);
+            clientUtils.sendDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, cred, 400);
         }
 
         Address queueAfter = new AddressBuilder()
@@ -1133,7 +1133,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         assertThat("Failed there are no 3 broker pods", TestUtils.listBrokerPods(kubernetes, addressSpace).size(), is(3));
 
         for (Address queue : queues) {
-            clientUtils.receiveDurableMessages(commonResourcesManager, addressSpace, queue, cred, 400);
+            clientUtils.receiveDurableMessages(ISOLATED_RESOURCES_MANAGER, addressSpace, queue, cred, 400);
         }
     }
 
