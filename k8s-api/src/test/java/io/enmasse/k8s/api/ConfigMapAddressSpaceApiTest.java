@@ -38,7 +38,7 @@ class ConfigMapAddressSpaceApiTest extends JULInitializingTest {
     @BeforeEach
     void setUp() {
         kubeServer.before();
-        api = new ConfigMapAddressSpaceApi(kubeServer.getClient());
+        api = new ConfigMapAddressSpaceApi(kubeServer.getClient(), null);
     }
 
     @AfterEach

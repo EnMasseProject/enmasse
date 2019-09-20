@@ -146,8 +146,9 @@ function AddressSource(config) {
     events.EventEmitter.call(this);
 }
 
-AddressSource.prototype.start = function() {
+AddressSource.prototype.start = function(ownerReference) {
     var options = myutils.merge({selector: this.selector}, this.config);
+    this.ownerReference = ownerReference;
     this.watcher = kubernetes.watch('configmaps', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
@@ -215,13 +216,24 @@ AddressSource.prototype.updated = function (objects) {
     }
 };
 
+AddressSource.prototype.get_addressspace_configmap_name = function() {
+    return this.config.ADDRESS_SPACE_NAMESPACE + "." + this.config.ADDRESS_SPACE;
+}
+
 AddressSource.prototype.update_status = function (record, ready) {
+    var self = this;
     function update(configmap) {
         var def = JSON.parse(configmap.data['config.json']);
         if (def.status === undefined) {
             def.status = {};
         }
-        if (def.status.isReady !== ready) {
+        var updateOwnerRef = false;
+        if (configmap.metadata.ownerReferences === undefined && self.ownerReference !== undefined) {
+            def.metadata.annotations = myutils.merge(def.metadata.annotations, {"enmasse.io/version": self.config.VERSION});
+            configmap.metadata.ownerReferences = [self.ownerReference];
+            updateOwnerRef = true;
+        }
+        if (def.status.isReady !== ready || updateOwnerRef) {
             def.status.isReady = ready;
             def.status.phase = ready ? 'Active' : 'Pending';
             configmap.data['config.json'] = JSON.stringify(def);

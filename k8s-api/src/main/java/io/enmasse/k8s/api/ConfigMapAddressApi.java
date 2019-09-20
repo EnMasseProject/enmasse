@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.fabric8.kubernetes.api.model.OwnerReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,10 +53,14 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     private final String infraUuid;
     private final WorkQueue<ConfigMap> cache = new EventCache<>(new HasMetadataFieldExtractor<>());
     private ObjectMapper mapper = new ObjectMapper();
+    private final OwnerReference ownerReference;
+    private final String version;
 
-    public ConfigMapAddressApi(NamespacedKubernetesClient client, String infraUuid) {
+    public ConfigMapAddressApi(NamespacedKubernetesClient client, String infraUuid, OwnerReference ownerReference, String version) {
         this.client = client;
         this.infraUuid = infraUuid;
+        this.ownerReference = ownerReference;
+        this.version = version;
     }
 
     @Override
@@ -173,17 +178,28 @@ public class ConfigMapAddressApi implements AddressApi, ListerWatcher<ConfigMap,
     }
 
     private ConfigMap create(Address address) {
+        String addressSpaceName = Address.extractAddressSpace(address);
         ConfigMapBuilder builder = new ConfigMapBuilder()
                 .editOrNewMetadata()
                 .withName(getConfigMapName(address.getMetadata().getNamespace(), address.getMetadata().getName()))
                 .addToLabels(address.getMetadata().getLabels())
                 .addToLabels(LabelKeys.TYPE, "address-config")
                 .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
-                .addToLabels(LabelKeys.INFRA_TYPE, "any")
+
                 .addToAnnotations(address.getMetadata().getAnnotations())
                 // TODO: Support other ways of doing this
-                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, Address.extractAddressSpace(address))
+                .addToAnnotations(AnnotationKeys.ADDRESS_SPACE, addressSpaceName)
                 .endMetadata();
+
+        if (ownerReference != null) {
+            builder.editMetadata()
+                .addToOwnerReferences(ownerReference)
+                .endMetadata();
+        }
+
+        if (version != null) {
+            address.putAnnotation(AnnotationKeys.VERSION, version);
+        }
 
         if (address.getMetadata().getResourceVersion() != null) {
             builder.editOrNewMetadata()

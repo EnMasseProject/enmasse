@@ -12,7 +12,7 @@ rules:
     resources: [ "pods" ]
     verbs: [ "get", "list", "patch", "update" ]
   - apiGroups: [ "" ]
-    resources: [ "configmaps" ]
+    resources: [ "configmaps", "configmaps/finalizers" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "" ]
     resources: [ "events" ]

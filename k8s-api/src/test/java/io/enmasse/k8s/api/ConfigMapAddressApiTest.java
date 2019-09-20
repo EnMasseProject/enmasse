@@ -34,7 +34,7 @@ class ConfigMapAddressApiTest extends JULInitializingTest {
     void setUp() {
         kubeServer.before();
         NamespacedKubernetesClient client = kubeServer.getClient();
-        api = new ConfigMapAddressApi(client, UUID.randomUUID().toString());
+        api = new ConfigMapAddressApi(client, UUID.randomUUID().toString(), null, null);
     }
 
     @AfterEach

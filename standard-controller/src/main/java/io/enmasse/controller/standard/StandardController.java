@@ -7,16 +7,15 @@ package io.enmasse.controller.standard;
 import java.time.Clock;
 import java.util.Map;
 
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.config.AnnotationKeys;
+import io.enmasse.k8s.api.*;
+import io.fabric8.kubernetes.api.model.OwnerReference;
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.k8s.api.CachingSchemaProvider;
-import io.enmasse.k8s.api.ConfigMapAddressApi;
-import io.enmasse.k8s.api.EventLogger;
-import io.enmasse.k8s.api.KubeEventLogger;
-import io.enmasse.k8s.api.KubeSchemaApi;
-import io.enmasse.k8s.api.LogEventLogger;
-import io.enmasse.k8s.api.SchemaApi;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -90,9 +89,36 @@ public class StandardController {
 
         BrokerClientFactory brokerClientFactory = new MutualTlsBrokerClientFactory(vertx, options);
 
+        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(kubeClient, options.getVersion());
+        AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(options.getAddressSpaceNamespace(), options.getAddressSpace()).orElseThrow(() ->
+                new IllegalStateException("Unable to lookup address space " + options.getAddressSpace()));
+
+        OwnerReference ownerReference = new OwnerReferenceBuilder()
+                .withApiVersion("v1")
+                .withKind("ConfigMap")
+                .withBlockOwnerDeletion(true)
+                .withController(true)
+                .withName(ConfigMapAddressSpaceApi.getConfigMapName(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()))
+                .withUid(addressSpace.getMetadata().getUid())
+                .build();
+
+        ConfigMapAddressApi addressApi = new ConfigMapAddressApi(kubeClient, options.getInfraUuid(), ownerReference, options.getVersion());
+
+        // Replace resources as part of upgrade if version is different
+        for (Address address : addressApi.listAddresses(options.getAddressSpaceNamespace())) {
+            if (!options.getVersion().equals(address.getAnnotation(AnnotationKeys.VERSION))) {
+                try {
+                    // Version will be updated by replaceAddress
+                    addressApi.replaceAddress(address);
+                } catch (Exception e) {
+                    log.warn("Error replacing {}", address.getMetadata().getName(), e);
+                }
+            }
+        }
+
         addressController = new AddressController(
                 options,
-                new ConfigMapAddressApi(kubeClient, options.getInfraUuid()),
+                addressApi,
                 kubernetes,
                 clusterGenerator,
                 eventLogger,
