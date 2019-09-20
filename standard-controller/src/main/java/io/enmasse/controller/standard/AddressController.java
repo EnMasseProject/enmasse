@@ -204,10 +204,15 @@ public class AddressController implements Watcher<Address> {
         checkAndMoveMigratingBrokersToDraining(addressSet, clusterList);
         checkAndRemoveDrainingBrokers(addressSet);
 
-        deprovisionUnused(clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
+        Set<Address> notTerminating = filterByNotPhases(addressSet, EnumSet.of(Terminating));
+        List<BrokerCluster> unusedClusters = determineUnusedClusters(clusterList, notTerminating);
+        deprovisionUnused(unusedClusters);
+
         long deprovisionUnused = System.nanoTime();
 
-        upgradeClusters(desiredConfig, addressResolver, clusterList, filterByNotPhases(addressSet, EnumSet.of(Terminating)));
+        List<BrokerCluster> usedClusters = new ArrayList<>(clusterList);
+        usedClusters.removeAll(unusedClusters);
+        upgradeClusters(desiredConfig, addressResolver, usedClusters, notTerminating);
 
         long upgradeClusters = System.nanoTime();
 
@@ -408,7 +413,9 @@ public class AddressController implements Watcher<Address> {
         );
     }
 
-    private void deprovisionUnused(List<BrokerCluster> clusters, Set<Address> addressSet) {
+    private List<BrokerCluster> determineUnusedClusters(List<BrokerCluster> clusters, Set<Address> addressSet) {
+        List<BrokerCluster> unused = new ArrayList<>();
+
         for (BrokerCluster cluster : clusters) {
             int numFound = 0;
             for (Address address : addressSet) {
@@ -426,15 +433,22 @@ public class AddressController implements Watcher<Address> {
             }
 
             if (numFound == 0) {
-                try {
-                    kubernetes.delete(cluster.getResources());
-                    eventLogger.log(ControllerReason.BrokerDeleted, "Deleted broker " + cluster.getClusterId(), Normal, ControllerKind.Address, cluster.getClusterId());
-                } catch (Exception e) {
-                    log.warn("Error deleting cluster {}", cluster.getClusterId(), e);
-                    eventLogger.log(ControllerReason.BrokerDeleteFailed, "Error deleting broker cluster " + cluster.getClusterId() + ": " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.Address, cluster.getClusterId());
-                }
+                unused.add(cluster);
             }
         }
+        return unused;
+    }
+
+    private void deprovisionUnused(List<BrokerCluster> unused) {
+        unused.forEach(cluster -> {
+            try {
+                kubernetes.delete(cluster.getResources());
+                eventLogger.log(ControllerReason.BrokerDeleted, "Deleted broker " + cluster.getClusterId(), Normal, ControllerKind.Address, cluster.getClusterId());
+            } catch (Exception e) {
+                log.warn("Error deleting cluster {}", cluster.getClusterId(), e);
+                eventLogger.log(ControllerReason.BrokerDeleteFailed, "Error deleting broker cluster " + cluster.getClusterId() + ": " + e.getMessage(), EventLogger.Type.Warning, ControllerKind.Address, cluster.getClusterId());
+            }
+        });
     }
 
     private Set<Address> filterBy(Set<Address> addressSet, Predicate<Address> predicate) {
