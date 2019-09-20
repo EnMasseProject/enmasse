@@ -91,6 +91,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
         mqttOptions.setConnectionTimeout(60);
         // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
         mqttOptions.setMaxInflight(16 * 1024);
+        mqttOptions.setHttpsHostnameVerificationEnabled(false);
         adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
                 .build()
                 .clientId(deviceId)

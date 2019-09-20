@@ -170,6 +170,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(certBundle.getCaCert().getBytes())));
         mqttOptions.setUserName(user.getUsername());
         mqttOptions.setPassword(user.getPassword().toCharArray());
+        mqttOptions.setHttpsHostnameVerificationEnabled(false);
         IMqttClient mqttClient = getMqttClientFactory().build()
                 .addressSpace(addressSpace)
                 .mqttConnectionOptions(mqttOptions).create();

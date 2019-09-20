@@ -57,6 +57,7 @@ public class SessionTest extends TestBase implements ITestSharedWithMqtt {
 
         MqttConnectOptions persistentSession = new MqttConnectOptions();
         persistentSession.setCleanSession(false);
+        persistentSession.setHttpsHostnameVerificationEnabled(false);
 
         // Subscribe on a cleanSession false and disconnect
         IMqttClient subscriber = getMqttClientFactory().build().clientId(SUBSCRIBER_ID)
@@ -84,6 +85,7 @@ public class SessionTest extends TestBase implements ITestSharedWithMqtt {
 
         MqttConnectOptions cleanSession = new MqttConnectOptions();
         cleanSession.setCleanSession(true);
+        cleanSession.setHttpsHostnameVerificationEnabled(false);
 
         AtomicInteger receivedMessageCount = new AtomicInteger();
         subscriber = getMqttClientFactory().build().clientId(SUBSCRIBER_ID)

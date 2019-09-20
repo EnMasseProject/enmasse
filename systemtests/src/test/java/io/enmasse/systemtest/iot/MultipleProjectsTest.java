@@ -215,6 +215,7 @@ public class MultipleProjectsTest extends IoTTestBase implements ITestIsolatedSt
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
         mqttOptions.setConnectionTimeout(60);
+        mqttOptions.setHttpsHostnameVerificationEnabled(false);
         IMqttClient mqttAdapterClient = new MqttClientFactory(null, new UserCredentials(ctx.getDeviceAuthId() + "@" + tenant, ctx.getDevicePassword()))
                 .build()
                 .clientId(ctx.getDeviceId())
