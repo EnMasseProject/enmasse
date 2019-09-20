@@ -65,7 +65,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         if (!environment.skipCleanup()) {
             provisionedServices.forEach((addressSpace) -> {
                 try {
-                    ISOLATED_RESOURCES_MANAGER.deleteAddressSpaceCreatedBySC(addressSpace);
+                    isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -397,7 +397,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build(), true);
 
-        ISOLATED_RESOURCES_MANAGER.deleteAddressSpaceCreatedBySC(addressSpace);
+        isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
 
         WebElement errorLog = selenium.getWebElement(() ->
                 selenium.getDriver().findElement(By.id("peerLostErrorDialogLabel")));

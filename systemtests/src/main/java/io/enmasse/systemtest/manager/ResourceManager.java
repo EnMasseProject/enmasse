@@ -408,7 +408,7 @@ public abstract class ResourceManager {
                 .endAuthorization()
                 .endSpec()
                 .build();
-        return IsolatedResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
+        return createOrUpdateUser(addressSpace, user);
     }
 
     public void removeUser(AddressSpace addressSpace, User user) {

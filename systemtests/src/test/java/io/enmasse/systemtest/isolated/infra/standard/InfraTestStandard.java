@@ -200,7 +200,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(exampleAddressSpace);
+        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory,
@@ -238,9 +238,9 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        ISOLATED_RESOURCES_MANAGER.createInfraConfig(testInfra);
+        isolatedResourcesManager.createInfraConfig(testInfra);
 
-        StandardInfraConfig actualInfra = ISOLATED_RESOURCES_MANAGER.getStandardInfraConfig(testInfra.getMetadata().getName());
+        StandardInfraConfig actualInfra = isolatedResourcesManager.getStandardInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 

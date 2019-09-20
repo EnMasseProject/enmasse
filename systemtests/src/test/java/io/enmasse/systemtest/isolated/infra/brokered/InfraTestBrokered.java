@@ -173,7 +173,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(exampleAddressSpace);
+        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null),

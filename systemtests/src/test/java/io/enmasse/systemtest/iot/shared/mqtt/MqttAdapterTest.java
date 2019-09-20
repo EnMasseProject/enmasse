@@ -8,6 +8,8 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.bases.iot.IoTTestBaseWithShared;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
@@ -53,8 +55,7 @@ import static io.enmasse.systemtest.TestTag.SHARED_IOT;
  * was accepted or not. So we couldn't re-try and could only assume that a message loss of 100% would be acceptable,
  * which doesn't test much. For bigger batch sizes we can test with an acceptable message loss rate of e.g. 10%.
  */
-@Tag(SHARED_IOT)
-public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsolatedStandard {
+public class MqttAdapterTest extends TestBase implements ITestIoTShared {
 
     private static final Logger log = CustomLogger.getLogger();
     private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);

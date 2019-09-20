@@ -213,7 +213,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(addressSpace, addressSpace2);
+        isolatedResourcesManager.createAddressSpaceList(addressSpace, addressSpace2);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()

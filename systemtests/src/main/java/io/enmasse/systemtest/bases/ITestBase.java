@@ -11,12 +11,13 @@ import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.platform.Kubernetes;
 import org.slf4j.Logger;
 
 public interface ITestBase {
     ClientUtils clientUtils = new ClientUtils();
     Logger LOGGER = CustomLogger.getLogger();
-
+    Kubernetes kubernetes = Kubernetes.getInstance();
     default ClientUtils getClientUtils() {
         return clientUtils;
     }

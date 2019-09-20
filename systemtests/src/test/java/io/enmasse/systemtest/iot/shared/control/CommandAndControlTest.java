@@ -7,7 +7,8 @@ package io.enmasse.systemtest.iot.shared.control;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
-import io.enmasse.systemtest.bases.iot.IoTTestBaseWithShared;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
@@ -56,8 +57,7 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
-@Tag(SHARED_IOT)
-class CommandAndControlTest extends IoTTestBaseWithShared {
+class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     private static Logger log = CustomLogger.getLogger();
 

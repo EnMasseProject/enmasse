@@ -15,6 +15,7 @@ public class TestTag {
     public static final String SHARED_BROKERED = "shared-brokered";
     public static final String SHARED_MQTT = "shared-mqtt";
     public static final String SHARED_IOT = "shared-iot";
+    public static final String ISOLATED_IOT = "isolated-iot";
     public static final String MARATHON = "marathon";
     public static final String NON_PR = "nonPR";
     public static final String UPGRADE = "upgrade";
