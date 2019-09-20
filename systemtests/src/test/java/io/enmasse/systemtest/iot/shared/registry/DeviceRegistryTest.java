@@ -2,43 +2,25 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.iot.isolated.registry;
+package io.enmasse.systemtest.iot.shared.registry;
 
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.bases.iot.ITestIoTBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTShared;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.bases.iot.IoTTestBase;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.iot.MessageSendTester.Type;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.eclipse.hono.service.management.device.Device;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
 
 import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 import static io.enmasse.systemtest.TestTag.SMOKE;
@@ -47,15 +29,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
-@Tag(SHARED_IOT)
 @Tag(SMOKE)
-public abstract class DeviceRegistryTest implements ITestIoTShared {
+public abstract class DeviceRegistryTest extends TestBase implements ITestIoTShared  {
 
     protected DeviceRegistryClient client;
+    protected String randomDeviceId;
+    protected Kubernetes kubernetes = Kubernetes.getInstance();
+    protected Endpoint deviceRegistryEndpoint;
+    protected Endpoint httpAdapterEndpoint;
+    private AmqpClient amqpClient;
 
     @BeforeEach
     void setAttributes() {
         client = sharedIoTResourceManager.getDevClient();
+        randomDeviceId = UUID.randomUUID().toString();
+        deviceRegistryEndpoint = sharedIoTResourceManager.getDeviceRegistryEndpoint();
+        httpAdapterEndpoint = sharedIoTResourceManager.getHttpAdapterEndpoint();
+        amqpClient = sharedIoTResourceManager.getAmqpClient();
+        
     }
 
     /**
@@ -111,7 +102,7 @@ public abstract class DeviceRegistryTest implements ITestIoTShared {
             String password = "password1234";
             credentialsClient.addCredentials(sharedIoTResourceManager.getTenantID(), randomDeviceId, authId, password);
 
-            checkCredentials(authId, password, false);
+            IoTUtils.checkCredentials(authId, password, false, httpAdapterEndpoint, amqpClient, getSharedIoTProject());
 
             credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantID(), randomDeviceId);
 
@@ -138,7 +129,7 @@ public abstract class DeviceRegistryTest implements ITestIoTShared {
 
             // first test, cache filled
 
-            checkCredentials(authId, password, false);
+            IoTUtils.checkCredentials(authId, password, false, httpAdapterEndpoint, amqpClient, getSharedIoTProject());
 
             // set new password
 
@@ -147,13 +138,13 @@ public abstract class DeviceRegistryTest implements ITestIoTShared {
 
             // expect failure due to cached info
 
-            checkCredentials(authId, newPassword, true);
-            log.info("Waiting {} seconds for credentials to expire", cacheExpiration);
+        IoTUtils.checkCredentials(authId, newPassword, true, httpAdapterEndpoint, amqpClient, getSharedIoTProject());
+            LOGGER.info("Waiting {} seconds for credentials to expire", cacheExpiration);
             Thread.sleep(cacheExpiration.toMillis());
 
             // cache must be expired, new password can be used
 
-            checkCredentials(authId, newPassword, false);
+            IoTUtils.checkCredentials(authId, newPassword, false, httpAdapterEndpoint, amqpClient, getSharedIoTProject());
 
             credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantID(), randomDeviceId);
 
@@ -176,14 +167,14 @@ public abstract class DeviceRegistryTest implements ITestIoTShared {
 
             // first check, must succeed
 
-            checkCredentials(authId, newPassword, false);
+            IoTUtils.checkCredentials(authId, newPassword, false, httpAdapterEndpoint, amqpClient, getSharedIoTProject());
 
-            log.info("Waiting {} for credentials to expire", expiry);
+            LOGGER.info("Waiting {} for credentials to expire", expiry);
             Thread.sleep(expiry.toMillis());
 
             // second check, after expiration, must fail
 
-            checkCredentials(authId, newPassword, true);
+IoTUtils.checkCredentials(authId, newPassword, true, httpAdapterEndpoint, amqpClient, getSharedIoTProject());
 
             credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantID(), randomDeviceId);
 
@@ -197,11 +188,6 @@ public abstract class DeviceRegistryTest implements ITestIoTShared {
         var response = client.registerDeviceWithResponse("invalid-" + sharedIoTResourceManager.getTenantID(), randomDeviceId);
         assertEquals(HTTP_NOT_FOUND, response.statusCode());
     }
-
-
-    }
-
-
 
 
 }

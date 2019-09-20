@@ -77,7 +77,7 @@ class RestartTest extends MarathonTestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(standard, brokered);
+        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
@@ -125,7 +125,7 @@ class RestartTest extends MarathonTestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        ISOLATED_RESOURCES_MANAGER.createAddressSpaceList(standard);
+        isolatedResourcesManager.createAddressSpaceList(standard);
         resourcesManager.createOrUpdateUser(standard, user);
 
         List<Address> standardAddresses = getAllStandardAddresses(standard);

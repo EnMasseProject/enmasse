@@ -38,8 +38,8 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
         AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
                 Collections.singletonList(new ResourceRequest("broker", 0.7)));
 
-        ISOLATED_RESOURCES_MANAGER.createAddressPlan(beforeQueuePlan);
-        ISOLATED_RESOURCES_MANAGER.createAddressPlan(afterQueuePlan);
+        isolatedResourcesManager.createAddressPlan(beforeQueuePlan);
+        isolatedResourcesManager.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
@@ -53,8 +53,8 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(afterQueuePlan));
 
-        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(beforeAddressSpacePlan);
-        ISOLATED_RESOURCES_MANAGER.createAddressSpacePlan(afterAddressSpacePlan);
+        isolatedResourcesManager.createAddressSpacePlan(beforeAddressSpacePlan);
+        isolatedResourcesManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
@@ -91,7 +91,7 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
         clientUtils.sendDurableMessages(resourcesManager, addressSpace, queue, user, 16);
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
-        ISOLATED_RESOURCES_MANAGER.replaceAddressSpace(addressSpace);
+        isolatedResourcesManager.replaceAddressSpace(addressSpace);
 
         clientUtils.receiveDurableMessages(resourcesManager, addressSpace, queue, user, 16);
 

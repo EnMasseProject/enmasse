@@ -8,6 +8,8 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.bases.iot.IoTTestBaseWithShared;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
@@ -36,8 +38,7 @@ import java.util.UUID;
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 
-@Tag(SHARED_IOT)
-public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsolatedStandard {
+public class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
     @SuppressWarnings("unused")
     private static final Logger log = CustomLogger.getLogger();

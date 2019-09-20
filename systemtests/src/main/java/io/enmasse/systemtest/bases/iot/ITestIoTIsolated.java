@@ -9,34 +9,25 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ITestBase;
+import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 
 public interface ITestIoTIsolated extends ITestIoTBase, ITestBase {
 
-    default AddressSpace getSharedAddressSpace() {
-        return sharedIoTResourceManager.getSharedAddressSpace();
-    }
+    IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
 
     default AmqpClientFactory getAmqpClientFactory() {
-        return sharedIoTResourceManager.getAmqpClientFactory();
+        return isolatedIoTManager.getAmqpClientFactory();
     }
 
     default MqttClientFactory getMqttClientFactory() {
-        return sharedIoTResourceManager.getMqttClientFactory();
-    }
-
-    default IoTProject getSharedIoTProject() {
-        return sharedIoTResourceManager.getSharedIoTProject();
-    }
-
-    default IoTConfig getSharedIoTConfig() {
-        return sharedIoTResourceManager.getSharedIoTConfig();
+        return isolatedIoTManager.getMqttClientFactory();
     }
 
     @Override
     default ResourceManager getResourceManager() {
-        return sharedIoTResourceManager;
+        return isolatedIoTManager;
     }
 
 }

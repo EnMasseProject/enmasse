@@ -22,6 +22,14 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
     protected MqttClientFactory mqttClientFactory;
     protected List<IoTProject> ioTProjects = new ArrayList<>();
     protected List<IoTConfig> ioTConfigs = new ArrayList<>();
+    private static IsolatedIoTManager instance = null;
+
+    public static synchronized IsolatedIoTManager getInstance() {
+        if (instance == null) {
+            instance = new IsolatedIoTManager();
+        }
+        return instance;
+    }
 
     @Override
     void initFactories(AddressSpace addressSpace) {

@@ -94,7 +94,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.setAddresses(dest);
 
         resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
-        ISOLATED_RESOURCES_MANAGER.initFactories(addressSpace, userCredentials);
+        isolatedResourcesManager.initFactories(addressSpace, userCredentials);
 
         AmqpClient client1 = getAmqpClientFactory().createQueueClient();
         AmqpClient client2 = getAmqpClientFactory().createQueueClient();
@@ -154,7 +154,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         waitForRouterReplicas(addressSpace, 3);
 
         resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
-        ISOLATED_RESOURCES_MANAGER.initFactories(addressSpace, userCredentials);
+        isolatedResourcesManager.initFactories(addressSpace, userCredentials);
 
         //simple send/receive
         AmqpClient client1 = getAmqpClientFactory().createQueueClient();

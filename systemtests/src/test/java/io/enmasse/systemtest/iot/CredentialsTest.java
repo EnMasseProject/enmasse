@@ -13,7 +13,7 @@ import static org.junit.Assert.assertNotNull;
 public class CredentialsTest {
 
     @Test
-    public void testCreateSecret() {
+    void testCreateSecret() {
         var creds = JsonObject.mapFrom(CredentialsRegistryClient.createCredentialsObject("auth-id", "foo", null));
 
         var secrets = creds.getJsonArray("secrets");

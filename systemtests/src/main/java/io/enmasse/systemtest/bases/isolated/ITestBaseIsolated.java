@@ -18,19 +18,19 @@ import static io.enmasse.systemtest.TestTag.ISOLATED;
 
 @Tag(ISOLATED)
 public interface ITestBaseIsolated extends ITestBase {
-    IsolatedResourcesManager ISOLATED_RESOURCES_MANAGER = IsolatedResourcesManager.getInstance();
-    List<AddressSpace> currentAddressSpaces = ISOLATED_RESOURCES_MANAGER.getCurrentAddressSpaces();
+    IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
+    List<AddressSpace> currentAddressSpaces = isolatedResourcesManager.getCurrentAddressSpaces();
 
     default AmqpClientFactory getAmqpClientFactory() {
-        return ISOLATED_RESOURCES_MANAGER.getAmqpClientFactory();
+        return isolatedResourcesManager.getAmqpClientFactory();
     }
 
     default MqttClientFactory getMqttClientFactory() {
-        return ISOLATED_RESOURCES_MANAGER.getMqttClientFactory();
+        return isolatedResourcesManager.getMqttClientFactory();
     }
 
     @Override
     default ResourceManager getResourceManager() {
-        return ISOLATED_RESOURCES_MANAGER;
+        return isolatedResourcesManager;
     }
 }

@@ -64,7 +64,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .endSpec()
                 .build();
         JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
-        ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(brokered);
+        isolatedResourcesManager.addToAddressSpaces(brokered);
         createCR(addressSpacePayloadJson.toString());
         resourcesManager.waitForAddressSpaceReady(brokered);
 
@@ -91,9 +91,9 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(standard);
+        isolatedResourcesManager.addToAddressSpaces(standard);
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
-        ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(standard);
+        isolatedResourcesManager.addToAddressSpaces(standard);
         resourcesManager.waitForAddressSpaceReady(standard);
         resourcesManager.waitForAddressSpacePlanApplied(standard);
 
@@ -159,7 +159,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(brokered);
+            isolatedResourcesManager.addToAddressSpaces(brokered);
             JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
@@ -215,8 +215,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(brokered);
-            ISOLATED_RESOURCES_MANAGER.addToAddressSpaces(standard);
+            isolatedResourcesManager.addToAddressSpaces(brokered);
+            isolatedResourcesManager.addToAddressSpaces(standard);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);

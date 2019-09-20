@@ -43,7 +43,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public class IoTUtils {
 
-    private Kubernetes kubernetes = Kubernetes.getInstance();
+    private static Kubernetes kubernetes = Kubernetes.getInstance();
+
     private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
             "iot-auth-service",
             "iot-device-registry",
@@ -263,13 +264,13 @@ public class IoTUtils {
         }
     }
 
-    public void assertCorrectRegistryType(final String type) {
+    public static void assertCorrectRegistryType(final String type) {
         final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
     }
 
-    public void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {
+    public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {
         String tenantID = getTenantID(ioTProject);
         try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantID, password)) {
 
@@ -306,4 +307,5 @@ public class IoTUtils {
             }
 
         }
+    }
 }

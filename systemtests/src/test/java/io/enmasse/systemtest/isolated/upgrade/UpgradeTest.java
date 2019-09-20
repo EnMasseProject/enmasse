@@ -57,7 +57,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     @BeforeAll
     void prepareUpgradeEnv() throws Exception {
-        ISOLATED_RESOURCES_MANAGER.setReuseAddressSpace();
+        isolatedResourcesManager.setReuseAddressSpace();
         productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
         startVersion = getVersionFromTemplateDir(Paths.get(Environment.getInstance().getStartTemplates()));
     }

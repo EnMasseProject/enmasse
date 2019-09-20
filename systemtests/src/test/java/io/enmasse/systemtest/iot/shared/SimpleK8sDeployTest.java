@@ -11,6 +11,8 @@ import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.bases.iot.IoTTestBaseWithShared;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
@@ -20,6 +22,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -36,11 +39,12 @@ import static io.enmasse.systemtest.TestTag.SMOKE;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
 import static java.util.Collections.singletonMap;
-
+//TODO: CELE DOJEBANE!
+@Disabled
 @Tag(SHARED_IOT)
 @Tag(SMOKE)
 @EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
-class SimpleK8sDeployTest extends IoTTestBaseWithShared implements ITestIsolatedStandard {
+class SimpleK8sDeployTest extends TestBase implements ITestIoTShared {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleK8sDeployTest.class);
     private static final String NAMESPACE = Environment.getInstance().namespace();
