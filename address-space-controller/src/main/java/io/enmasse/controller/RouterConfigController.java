@@ -112,7 +112,7 @@ public class RouterConfigController implements Controller {
                         .editOrNewMetadata()
                         .withName(secretName)
                         .withNamespace(namespace)
-                        .addToLabels(LabelKeys.INFRA_TYPE, infraUuid)
+                        .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                         .addToLabels(LabelKeys.INFRA_TYPE, "standard")
                         .endMetadata()
                         .withType("tls")
