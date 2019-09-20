@@ -115,13 +115,14 @@ public class RouterConfigController implements Controller {
                         .addToLabels(LabelKeys.INFRA_TYPE, infraUuid)
                         .addToLabels(LabelKeys.INFRA_TYPE, "standard")
                         .endMetadata()
+                        .withType("tls")
                         .withData(new HashMap<>())
                         .build();
             }
 
             boolean needsUpdate = reconcileConnectorSecret(connectorSecret, connector, addressSpace);
             if (needsUpdate) {
-                client.secrets().createOrReplace(connectorSecret);
+                client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
                 secretToConnector.put(secretName, connector.getName());
             }
         }
@@ -178,6 +179,7 @@ public class RouterConfigController implements Controller {
 
     private boolean reconcileConnectorSecret(Secret connectorSecret, AddressSpaceSpecConnector connector, AddressSpace addressSpace) {
         boolean needsUpdate = false;
+        log.debug("Reconciling connector secret {} for connector {}", connectorSecret, connector);
         if (connector.getTls() != null) {
             if (connector.getTls().getCaCert() != null) {
                 String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getCaCert(), "ca.crt").orElse(null);
