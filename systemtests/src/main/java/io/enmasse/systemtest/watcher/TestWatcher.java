@@ -9,7 +9,9 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
+import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Container;
@@ -34,14 +36,20 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     private TestInfo testInfo = TestInfo.getInstance();
     private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
     private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
+    private SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
+    private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
 
     @Override
     public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
         LOGGER.info("Teardown section: ");
-        if (testInfo.isTestShared() && sharedResourcesManager.getSharedAddressSpace() != null) {
-            tearDownSharedResources();
+        if (testInfo.isTestShared()) {
+          tearDownSharedResources();
         } else {
-            tearDownCommonResources();
+            if (testInfo.isTestIoT()) {
+                isolatedIoTManager.tearDown(testInfo.getActualTest());
+            } else {
+                tearDownCommonResources();
+            }
         }
     }
 
@@ -54,8 +62,13 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
 
     private void tearDownSharedResources() throws Exception {
         if (testInfo.isAddressSpaceDeletable()) {
-            LOGGER.info("Teardown shared!");
-            sharedResourcesManager.tearDown(testInfo.getActualTest());
+            if (testInfo.isTestIoT()) {
+                LOGGER.info("Teardown shared IoT!");
+                sharedIoTManager.tearDown(testInfo.getActualTest());
+            } else {
+                LOGGER.info("Teardown shared!");
+                sharedResourcesManager.tearDown(testInfo.getActualTest());
+            }
         }
         if (sharedResourcesManager.getSharedAddressSpace() != null) {
             LOGGER.info("Deleting addresses");
@@ -152,18 +165,26 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     public void beforeEach(ExtensionContext context) throws Exception {
         LOGGER.warn("Before test exec");
         testInfo.setActualTest(context);
-        if (testInfo.isTestShared()) {
+        if (testInfo.isTestShared() && !testInfo.isTestIoT()) {
             Environment.getInstance().getDefaultCredentials().setUsername("test").setPassword("test");
             Environment.getInstance().setManagementCredentials(new UserCredentials("artemis-admin", "artemis-admin"));
         }
     }
 
     @Override
-    public void beforeTestExecution(ExtensionContext context) {
-        if (testInfo.isTestShared() && SharedResourceManager.getInstance().getAmqpClientFactory() == null) {
-            sharedResourcesManager.setup();
+    public void beforeTestExecution(ExtensionContext context) throws Exception {
+        if (testInfo.isTestShared()) {
+            if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
+                sharedIoTManager.setup();
+            } else if (sharedResourcesManager.getAmqpClientFactory() == null) {
+                sharedResourcesManager.setup();
+            }
         } else {
-            isolatedResourcesManager.setup();
+            if (testInfo.isTestIoT()) {
+                isolatedIoTManager.setup();
+            } else {
+                isolatedResourcesManager.setup();
+            }
         }
     }
 
