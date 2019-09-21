@@ -106,7 +106,6 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
     }
     
     public void createSharedIoTEnv() throws Exception {
-        //TODO: DOPSAT CALL DO WATCHERU
         Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
 
         if (sharedIoTConfig == null) {

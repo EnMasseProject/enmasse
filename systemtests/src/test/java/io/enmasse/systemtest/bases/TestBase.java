@@ -22,6 +22,7 @@ import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
+import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -111,7 +112,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
 
             if (resourcesManager.getSharedAddressSpace() == null) {
-                ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
+                if (TestInfo.getInstance().isTestIoT()) {
+                    ((SharedIoTManager) resourcesManager).createSharedIoTEnv();
+                } else {
+                    ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
+                }
             }
         }
     }

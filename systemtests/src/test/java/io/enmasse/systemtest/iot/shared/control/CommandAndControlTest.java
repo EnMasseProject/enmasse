@@ -26,7 +26,6 @@ import org.apache.qpid.proton.message.Message;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -92,11 +91,11 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         this.deviceId = UUID.randomUUID().toString();
         this.authId = UUID.randomUUID().toString();
         this.password = UUID.randomUUID().toString();
-        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId, tenantId(), this.password);
-
+        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantID(), this.password);
+        
         // set up new random device
-        this.registryClient.registerDevice(tenantId(), this.deviceId);
-        this.credentialsClient.addCredentials(tenantId(), this.deviceId, this.authId, this.password);
+        this.registryClient.registerDevice(sharedIoTResourceManager.getTenantID(), this.deviceId);
+        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantID(), this.deviceId, this.authId, this.password);
 
         // setup payload
         this.commandPayload = UUID.randomUUID().toString();
@@ -114,7 +113,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     @BeforeEach
     protected void setupMessagingClient() throws Exception {
-        this.messagingClient = this.iotAmqpClientFactory.createQueueClient();
+        this.messagingClient = getAmqpClientFactory().createQueueClient();
     }
 
     @AfterEach
@@ -148,7 +147,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();
-        final var replyToAddress = "control/" + tenantId() + "/" + UUID.randomUUID().toString();
+        final var replyToAddress = "control/" + sharedIoTResourceManager.getTenantID() + "/" + UUID.randomUUID().toString();
 
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
 
@@ -217,7 +216,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         // setup telemetry consumer
 
-        var f1 = this.messagingClient.recvMessages(new QueueTerminusFactory().getSource("telemetry/" + tenantId()), msg -> {
+        var f1 = this.messagingClient.recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantID()), msg -> {
 
             log.info("Received message: {}", msg);
 
@@ -246,7 +245,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             // send request command
 
             log.info("Sending out command message");
-            var f2 = this.messagingClient.sendMessage("control/" + tenantId() + "/" + deviceId, commandMessage)
+            var f2 = this.messagingClient.sendMessage("control/" + sharedIoTResourceManager.getTenantID() + "/" + deviceId, commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {

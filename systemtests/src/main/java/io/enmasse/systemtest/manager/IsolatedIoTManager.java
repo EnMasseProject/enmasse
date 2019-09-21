@@ -10,6 +10,7 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -23,6 +24,7 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
     protected List<IoTProject> ioTProjects = new ArrayList<>();
     protected List<IoTConfig> ioTConfigs = new ArrayList<>();
     private static IsolatedIoTManager instance = null;
+    private Kubernetes kubernetes = Kubernetes.getInstance();
 
     public static synchronized IsolatedIoTManager getInstance() {
         if (instance == null) {
@@ -32,20 +34,20 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
     }
 
     @Override
-    void initFactories(AddressSpace addressSpace) {
+    public void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
     @Override
-    void setup() throws Exception {
+    public void setup() throws Exception {
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
             kubernetes.createNamespace(iotProjectNamespace);
         }
     }
 
     @Override
-    void tearDown(ExtensionContext context) throws Exception {
+    public void tearDown(ExtensionContext context) throws Exception {
         try {
             tearDownProjects();
             tearDownConfigs();
@@ -56,8 +58,6 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
     }
 
     private void tearDownProjects() throws Exception {
-        //FIXME maybe collect logs of iot related pods?
-        // delete projects
         LOGGER.info("All IoTProjects will be removed");
         for (IoTProject project : ioTProjects) {
             var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());

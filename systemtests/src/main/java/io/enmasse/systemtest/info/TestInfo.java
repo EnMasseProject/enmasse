@@ -82,13 +82,23 @@ public class TestInfo {
 
     public boolean isTestShared() {
         for (String tag : getTags(tests.get(getCurrentTestIndex()))) {
-            LOGGER.info("Testtag: " + tag);
             if (TestTag.SHARED_TAGS.stream().anyMatch(sharedTag -> tag.equals(sharedTag))) {
                 LOGGER.info("Test is shared");
                 return true;
             }
         }
         LOGGER.info("Test is not shared!");
+        return false;
+    }
+
+    public boolean isTestIoT() {
+        for (String tag : getTags(tests.get(getCurrentTestIndex()))) {
+            if (TestTag.IOT_TAGS.stream().anyMatch(iotTag -> tag.equals(iotTag))) {
+                LOGGER.info("Test is IoT");
+                return true;
+            }
+        }
+        LOGGER.info("Test is not IoT!");
         return false;
     }
 
