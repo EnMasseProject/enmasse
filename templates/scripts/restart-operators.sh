@@ -1,0 +1,86 @@
+#/bin/bash
+# Usage: ./restart-operators.sh <namespace where EnMasse is running> <minimum number of pods that should run at any given time>
+ENMASSE_NAMESPACE=${1:-enmasse-infra}
+MINREADY=${2:-0}
+MINAVAILABLE=$(($MINREADY + 1))
+
+function wait_deployment_ready() {
+    local dep=$1
+    local minReady=$2
+
+    ready=0
+    while [[ "${ready}" -lt "${minReady}" ]]
+    do
+        ready=`oc get deployment ${dep} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
+        if [[ "${ready}" -lt "${minReady}" ]]; then
+            sleep 5
+        fi
+    done
+    echo "Minimum ready replicas ${minReady} restored"
+}
+
+echo "Restarting API servers"
+for dep in `oc get deployment -l component=api-server -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+do
+    wait_deployment_ready $dep $MINAVAILABLE
+    echo "All api-server pods are ready. Initiating rolling restart."
+    for pod in `oc get pods -l component=api-server -o jsonpath='{.items[*].metadata.name}'`
+    do
+        echo "Deleting api-server $pod"
+        oc delete pod $pod
+        sleep 30
+        wait_deployment_ready $dep $MINAVAILABLE
+    done
+done
+echo "API servers restarted"
+
+echo "Restarting Address Space Controller"
+oc delete pod -l name=address-space-controller
+for dep in `oc get deployment -l name=address-space-controller -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+do
+    wait_deployment_ready $dep 1
+done
+echo "Address Space Controller restarted"
+
+
+echo "Restarting Operator"
+oc delete pod -l name=enmasse-operator
+for dep in `oc get deployment -l name=enmasse-operator -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+do
+    wait_deployment_ready $dep 1
+done
+echo "Operator restarted"
+
+echo "Restarting standard operators"
+for dep in `oc get deployment -l name=admin -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+do
+    wait_deployment_ready $dep $MINAVAILABLE
+    infraUuid=`oc get deployment ${dep} -o jsonpath='{.metadata.labels.infraUuid}'`
+
+    echo "All admin pods are ready. Initiating rolling restart."
+    for pod in `oc get pods -l name=admin,infraUuid=$infraUuid -o jsonpath='{.items[*].metadata.name}'`
+    do
+        echo "Deleting admin $pod"
+        oc delete pod $pod
+        sleep 30
+        wait_deployment_ready $dep $MINAVAILABLE
+    done
+done
+echo "Standard operators restarted"
+
+echo "Restarting brokered operators"
+for dep in `oc get deployment -l role=agent -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+do
+    wait_deployment_ready $dep $MINAVAILABLE
+    infraUuid=`oc get deployment ${dep} -o jsonpath='{.metadata.labels.infraUuid}'`
+
+    echo "All agent pods are ready. Initiating rolling restart."
+    for pod in `oc get pods -l role=agent,infraUuid=$infraUuid -o jsonpath='{.items[*].metadata.name}'`
+    do
+        echo "Deleting agent $pod"
+        oc delete pod $pod
+        sleep 30
+        wait_deployment_ready $dep $MINAVAILABLE
+    done
+done
+echo "Brokered operators restarted"

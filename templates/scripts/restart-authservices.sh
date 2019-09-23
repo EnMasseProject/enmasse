@@ -1,0 +1,39 @@
+#!/bin/bash
+ENMASSE_NAMESPACE=${1:-enmasse-infra}
+MINREADY=${2:-0}
+MINAVAILABLE=$(($MINREADY + 1))
+
+function wait_deployment_ready() {
+    local dep=$1
+    local minReady=$2
+
+    ready=0
+    while [[ "${ready}" -lt "${minReady}" ]]
+    do
+        ready=`oc get deployment ${dep} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
+        if [[ "${ready}" -lt "${minReady}" ]]; then
+            sleep 5
+        fi
+    done
+    echo "Minimum ready replicas ${minReady} restored"
+}
+
+echo "Restarting Authentication Services"
+for dep in `oc get authenticationservices -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+do
+    deployment_name=`oc get authenticationservice $dep -o jsonpath='{.spec.standard.deploymentName}'`
+    if [[ "$deployment_name" == "" ]]; then
+        deployment_name=$dep
+    fi
+    wait_deployment_ready $deployment_name $MINAVAILABLE
+
+    echo "All authentication service pods are ready. Initiating rolling restart."
+    for pod in `oc get pods -l component=$dep -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+    do
+        echo "Deleting authentication service $pod"
+        oc delete pod $pod
+        sleep 30
+        wait_deployment_ready $deployment_name $MINAVAILABLE
+    done
+done
+echo "Authentication Services restarted"
