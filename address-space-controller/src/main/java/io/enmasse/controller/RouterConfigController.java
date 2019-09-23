@@ -122,9 +122,10 @@ public class RouterConfigController implements Controller {
 
             boolean needsUpdate = reconcileConnectorSecret(connectorSecret, connector, addressSpace);
             if (needsUpdate) {
+                log.debug("Applying changes to modified secret {}", secretName);
                 client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
-                secretToConnector.put(secretName, connector.getName());
             }
+            secretToConnector.put(secretName, connector.getName());
         }
 
         StatefulSet router = routerSet.getStatefulSet();

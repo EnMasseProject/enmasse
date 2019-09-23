@@ -9,12 +9,15 @@ import io.enmasse.address.model.KubeUtil;
 import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 public class RouterSet {
+    private static final Logger log = LoggerFactory.getLogger(RouterSet.class);
     private final StatefulSet statefulSet;
     private final String namespace;
     private boolean modified;
@@ -36,6 +39,7 @@ public class RouterSet {
 
     public void apply(NamespacedKubernetesClient client) {
         if (modified && statefulSet != null) {
+            log.debug("Applying changes to router: {}", statefulSet);
             Map<String, String> annotations = statefulSet.getSpec().getTemplate().getMetadata().getAnnotations();
             if (annotations == null) {
                 annotations = new HashMap<>();
