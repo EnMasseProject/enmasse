@@ -123,6 +123,9 @@ ansible_install: component_install
 	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
 	$(LN) -srf $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
 
+scripts_install:
+	cp -r scripts $(INSTALLDIR)/
+
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
@@ -158,7 +161,7 @@ $(OLM): replace_images
 		done \
 	done
 
-install: ansible_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
+install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
 	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
 
 package: prepare install
