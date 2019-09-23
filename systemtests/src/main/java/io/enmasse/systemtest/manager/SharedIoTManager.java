@@ -102,6 +102,9 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
 
     @Override
     public void setup() {
+        if (!kubernetes.namespaceExists(iotProjectNamespace)) {
+            kubernetes.createNamespace(iotProjectNamespace);
+        }
         initFactories(getSharedAddressSpace());
     }
     
@@ -143,6 +146,7 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
         this.amqpClient = amqpClientFactory.createQueueClient();
     }
 
+    //TODO: implement device reg
     public void createDeviceRegistrySharedEnv(IoTConfig ioTConfig) throws Exception {
         if (sharedIoTConfig == null) {
             sharedIoTConfig = ioTConfig;

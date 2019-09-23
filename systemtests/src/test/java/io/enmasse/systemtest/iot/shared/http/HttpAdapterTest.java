@@ -35,7 +35,6 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 
 public class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
