@@ -120,11 +120,10 @@ public class RouterConfigController implements Controller {
                         .build();
                 reconcileConnectorSecret(connectorSecret, connector, addressSpace);
                 client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
-                secretToConnector.put(secretName, connector.getName());
             } else if (reconcileConnectorSecret(connectorSecret, connector, addressSpace)) {
                 client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
-                secretToConnector.put(secretName, connector.getName());
             }
+            secretToConnector.put(secretName, connector.getName());
         }
 
         StatefulSet router = routerSet.getStatefulSet();
@@ -132,6 +131,8 @@ public class RouterConfigController implements Controller {
             log.warn("Unable to find expected router statefulset {}", KubeUtil.getRouterSetName(addressSpace));
             return;
         }
+
+        log.debug("Before volumes: {}", router.getSpec().getTemplate().getSpec().getVolumes().stream().map(Volume::getName).collect(Collectors.toSet()));
 
         Set<String> missingSecrets = new HashSet<>(secretToConnector.keySet());
         boolean hasChanged = false;
@@ -171,6 +172,8 @@ public class RouterConfigController implements Controller {
                     .build());
             hasChanged = true;
         }
+
+        log.debug("After volumes: {}", router.getSpec().getTemplate().getSpec().getVolumes().stream().map(Volume::getName).collect(Collectors.toSet()));
 
         if (hasChanged) {
             routerSet.setModified();
