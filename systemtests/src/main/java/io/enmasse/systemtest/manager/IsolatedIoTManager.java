@@ -44,6 +44,7 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
             kubernetes.createNamespace(iotProjectNamespace);
         }
+        initFactories(null);
     }
 
     @Override
