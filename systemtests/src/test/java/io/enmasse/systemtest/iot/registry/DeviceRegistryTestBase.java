@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.iot.registry;
 
 import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -32,7 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -82,7 +82,7 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
         }
     }
 
-    protected abstract IoTConfig provideIoTConfig() throws Exception;
+    protected abstract IoTConfigBuilder provideIoTConfig() throws Exception;
 
     protected void removeIoTConfig() throws Exception {
         log.info("Shared IoTConfig will be removed");
@@ -109,7 +109,21 @@ public abstract class DeviceRegistryTestBase extends IoTTestBase {
     @BeforeEach
     void init() throws Exception {
         if (iotConfig == null) {
-            iotConfig = provideIoTConfig();
+            var iotConfigBuilder = provideIoTConfig();
+            iotConfig = iotConfigBuilder.editSpec()
+                    .withNewAdapters()
+                    .withNewMqtt()
+                    .withEnabled(false)
+                    .endMqtt()
+                    .withNewLoraWan()
+                    .withEnabled(false)
+                    .endLoraWan()
+                    .withNewSigfox()
+                    .withEnabled(false)
+                    .endSigfox()
+                    .endAdapters()
+                    .endSpec()
+                    .build();
             createIoTConfig(iotConfig);
         }
         if (iotProject == null) {

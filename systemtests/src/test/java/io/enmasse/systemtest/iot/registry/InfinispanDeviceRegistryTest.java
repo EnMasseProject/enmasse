@@ -6,21 +6,15 @@ package io.enmasse.systemtest.iot.registry;
 
 import static io.enmasse.systemtest.bases.DefaultDeviceRegistry.newInfinispanBased;
 
-import java.nio.ByteBuffer;
-
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.utils.CertificateUtils;
 
 public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase {
 
     @Override
-    protected IoTConfig provideIoTConfig() throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
+    protected IoTConfigBuilder provideIoTConfig() throws Exception {
         return new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
@@ -29,18 +23,7 @@ public class InfinispanDeviceRegistryTest extends DeviceRegistryTestBase {
                 .withNewServices()
                 .withDeviceRegistry(newInfinispanBased())
                 .endServices()
-                .withNewAdapters()
-                .withNewMqtt()
-                .withNewEndpoint()
-                .withNewKeyCertificateStrategy()
-                .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
-                .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
-                .endKeyCertificateStrategy()
-                .endEndpoint()
-                .endMqtt()
-                .endAdapters()
-                .endSpec()
-                .build();
+                .endSpec();
     }
 
     @Override

@@ -24,10 +24,17 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdapterConfig extends ServiceConfig {
 
+    private Boolean enabled;
     private EndpointConfig endpoint;
     private CommonAdapterContainers containers;
     private JavaContainerOptions java;
 
+    public Boolean getEnabled() {
+        return enabled;
+    }
+    public void setEnabled(Boolean enabled) {
+        this.enabled = enabled;
+    }
     public EndpointConfig getEndpoint() {
         return endpoint;
     }
