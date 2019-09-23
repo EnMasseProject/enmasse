@@ -54,11 +54,6 @@ class ConnectorsTest extends BridgingBase {
     private static final String BASIC_QUEUES_PATTERN = "*";
     private static final String SLASHED_QUEUES_PATTERN = "dummy/*";
 
-    @Override
-    protected String[] remoteBrokerQueues() {
-        return new String[] {SLASHED_QUEUE1, SLASHED_QUEUE2, BASIC_QUEUE1, BASIC_QUEUE2};
-    }
-
     @Test
     void testBrokerDeployment() throws Exception {
         AmqpClient client = createClientToRemoteBroker();

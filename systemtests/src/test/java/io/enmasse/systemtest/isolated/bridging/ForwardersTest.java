@@ -37,11 +37,6 @@ public class ForwardersTest extends BridgingBase {
     private static final String REMOTE_QUEUE1 = "queue1";
     private static final String REMOTE_QUEUE2 = "queue2";
 
-    @Override
-    protected String[] remoteBrokerQueues() {
-        return new String[] {REMOTE_QUEUE1, REMOTE_QUEUE2};
-    }
-
     @Test
     public void testForwardToRemoteQueue() throws Exception {
         AddressSpace space = createAddressSpace("forward-to-remote", "*");

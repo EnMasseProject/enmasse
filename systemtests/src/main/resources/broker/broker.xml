@@ -210,6 +210,16 @@ under the License.
                <queue name="dummy/baz" />
             </anycast>
          </address>
+         <address name="queue1">
+            <anycast>
+               <queue name="queue1" />
+            </anycast>
+         </address>
+         <address name="queue2">
+            <anycast>
+               <queue name="queue2" />
+            </anycast>
+         </address>
       </addresses>
 
 
