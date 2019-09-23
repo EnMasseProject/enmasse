@@ -118,14 +118,13 @@ public class RouterConfigController implements Controller {
                         .withType("tls")
                         .withData(new HashMap<>())
                         .build();
-            }
-
-            boolean needsUpdate = reconcileConnectorSecret(connectorSecret, connector, addressSpace);
-            if (needsUpdate) {
-                log.debug("Applying changes to modified secret {}", secretName);
+                reconcileConnectorSecret(connectorSecret, connector, addressSpace);
                 client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
+                secretToConnector.put(secretName, connector.getName());
+            } else if (reconcileConnectorSecret(connectorSecret, connector, addressSpace)) {
+                client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
+                secretToConnector.put(secretName, connector.getName());
             }
-            secretToConnector.put(secretName, connector.getName());
         }
 
         StatefulSet router = routerSet.getStatefulSet();
