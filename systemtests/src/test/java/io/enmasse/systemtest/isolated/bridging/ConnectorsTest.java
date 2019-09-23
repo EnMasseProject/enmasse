@@ -54,11 +54,6 @@ class ConnectorsTest extends BridgingBase {
     private static final String BASIC_QUEUES_PATTERN = "*";
     private static final String SLASHED_QUEUES_PATTERN = "dummy/*";
 
-    @Override
-    protected String[] remoteBrokerQueues() {
-        return new String[] {SLASHED_QUEUE1, SLASHED_QUEUE2, BASIC_QUEUE1, BASIC_QUEUE2};
-    }
-
     @Test
     void testBrokerDeployment() throws Exception {
         AmqpClient client = createClientToRemoteBroker();
@@ -229,6 +224,20 @@ class ConnectorsTest extends BridgingBase {
 
         scaleUpBroker();
         AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
+
+        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+        sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
+    }
+
+    @Test
+    public void testConnectorTLS() throws Exception {
+        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, true);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+        String[] remoteQueues = new String [] {BASIC_QUEUE1};
 
         sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
         sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
