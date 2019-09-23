@@ -13,23 +13,7 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
-import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
-import io.fabric8.kubernetes.api.model.Quantity;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
@@ -75,7 +59,6 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRES_APP = "postgres-app";
     public static final String INFINISPAN_SERVER = "infinispan-server";
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
-    public static final String AMQ_BROKER = "amq-broker";
 
     public static String getMessagingAppPodName() throws Exception {
         TestUtils.waitUntilCondition("Pod is reachable", waitPhase -> Kubernetes.getInstance().listPods(MESSAGING_PROJECT).stream().filter(pod -> pod.getMetadata().getName().contains(MESSAGING_CLIENTS) &&
@@ -243,53 +226,60 @@ public class SystemtestsKubernetesApps {
                 INFINISPAN_EXAMPLE_BASE.resolve("manual"));
     }
 
-    public static Endpoint getAMQBrokerEndpoint(String namespace) {
-        return Kubernetes.getInstance().getEndpoint("amqp", namespace, "amqp");
-    }
-
-    public static Endpoint getAMQBrokerSSLEndpoint(String namespace) {
-        return Kubernetes.getInstance().getEndpoint("amqps", namespace, "amqps");
-    }
-
-    public static void deployAMQBroker(String namespace, String user, String password, BrokerCertBundle certBundle, String... queues) throws Exception {
+    public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
         if (!kubeCli.namespaceExists(namespace)) {
             kubeCli.createNamespace(namespace);
         }
 
-        kubeCli.createSecret(namespace, getBrokerSecret(certBundle));
+        kubeCli.createSecret(namespace, getBrokerSecret(name, certBundle));
 
-        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(user, password, queues));
-        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource("amqp", AMQ_BROKER, 5672, "amqp"));
-        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource("amqps", AMQ_BROKER, 5671, "amqps"));
+        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password));
+
+        ServicePort tlsPort = new ServicePortBuilder()
+                .withName("amqps")
+                .withNewPort(5671)
+                .withNewTargetPort(5671)
+                .build();
+
+        Service service = getSystemtestsServiceResource(name, name, new ServicePortBuilder()
+                .withName("amqp")
+                .withNewPort(5672)
+                .withNewTargetPort(5672)
+                .build(),
+                tlsPort);
+
+        kubeCli.createServiceFromResource(namespace, service);
+
+        kubeCli.createExternalEndpoint(name, namespace, service, tlsPort);
 
         kubeCli.getClient()
             .apps().deployments()
             .inNamespace(namespace)
-            .withName(AMQ_BROKER)
+            .withName(name)
             .waitUntilReady(5, TimeUnit.MINUTES);
 
         Thread.sleep(5000);
     }
 
-    public static void deleteAMQBroker(String namespace) throws Exception {
+    public static void deleteAMQBroker(String namespace, String name) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.deleteSecret(namespace, AMQ_BROKER);
-        kubeCli.deleteService(namespace, "amqp");
-        kubeCli.deleteService(namespace, "amqps");
-        kubeCli.deleteDeployment(namespace, AMQ_BROKER);
+        kubeCli.deleteSecret(namespace, name);
+        kubeCli.deleteService(namespace, name);
+        kubeCli.deleteDeployment(namespace, name);
+        kubeCli.deleteExternalEndpoint(namespace, name);
         Thread.sleep(5000);
     }
 
-    public static void scaleDownAMQBroker(String namespace) throws Exception {
+    public static void scaleDownDeployment(String namespace, String name) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.setDeploymentReplicas(namespace, AMQ_BROKER, 0);
+        kubeCli.setDeploymentReplicas(namespace, name, 0);
         TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 0, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
-    public static void scaleUpAMQBroker(String namespace) throws Exception {
+    public static void scaleUpDeployment(String namespace, String name) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.setDeploymentReplicas(namespace, AMQ_BROKER, 1);
+        kubeCli.setDeploymentReplicas(namespace, name, 1);
         TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 1, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
@@ -444,19 +434,15 @@ public class SystemtestsKubernetesApps {
                 .build();
     }
 
-    private static Service getSystemtestsServiceResource(String serviceName, String appName, int port, String portName) {
+    private static Service getSystemtestsServiceResource(String serviceName, String appName, ServicePort... ports) {
         return new ServiceBuilder()
                 .withNewMetadata()
                 .withName(serviceName)
                 .addToLabels("run", appName)
                 .endMetadata()
                 .withNewSpec()
+                .addToPorts(ports)
                 .addToSelector("app", appName)
-                .addNewPort()
-                .withName(portName)
-                .withPort(port)
-                .withTargetPort(new IntOrString(port))
-                .endPort()
                 .endSpec()
                 .build();
     }
@@ -619,7 +605,7 @@ public class SystemtestsKubernetesApps {
                 .build();
     }
 
-    private static Secret getBrokerSecret(BrokerCertBundle certBundle) throws Exception {
+    private static Secret getBrokerSecret(String name, BrokerCertBundle certBundle) throws Exception {
         Map<String, String> data = new HashMap<>();
 
         byte[] content = Files.readAllBytes(new File("src/main/resources/broker/broker.xml").toPath());
@@ -631,40 +617,39 @@ public class SystemtestsKubernetesApps {
 
         return new SecretBuilder()
                 .withNewMetadata()
-                .withName(AMQ_BROKER)
+                .withName(name)
                 .endMetadata()
                 .addToData(data)
                 .build();
     }
 
-    private static Deployment getBrokerDeployment(String user, String password, String... queues) {
+    private static Deployment getBrokerDeployment(String name, String user, String password) {
         return new DeploymentBuilder()
                 .withNewMetadata()
-                .withName(AMQ_BROKER)
-                .addToLabels("app", AMQ_BROKER)
-                .addToLabels("template", AMQ_BROKER)
+                .withName(name)
+                .addToLabels("app", name)
                 .endMetadata()
                 .withNewSpec()
                 .withNewSelector()
-                .addToMatchLabels("app", AMQ_BROKER)
+                .addToMatchLabels("app", name)
                 .endSelector()
                 .withReplicas(1)
                 .withNewTemplate()
                 .withNewMetadata()
-                .addToLabels("app", AMQ_BROKER)
+                .addToLabels("app", name)
                 .endMetadata()
                 .withNewSpec()
                 .addToInitContainers(new ContainerBuilder()
                         .withName("artemis-init")
                         .withImage("quay.io/enmasse/artemis-base:2.10.0")
                         .withCommand("/bin/sh")
-                        .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user "+user+" --password "+password+" --role admin --queues "+String.join(",", queues))
+                        .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user "+user+" --password "+password+" --role admin")
                         .withVolumeMounts(new VolumeMountBuilder()
                                 .withName("data")
                                 .withMountPath("/var/run/artemis")
                                 .build(),
                                 new VolumeMountBuilder()
-                                .withName(AMQ_BROKER)
+                                .withName(name)
                                 .withMountPath("/etc/amq-secret-volume")
                                 .build())
                         .build(),
@@ -678,12 +663,12 @@ public class SystemtestsKubernetesApps {
                                 .withMountPath("/var/run/artemis")
                                 .build(),
                                 new VolumeMountBuilder()
-                                .withName(AMQ_BROKER)
+                                .withName(name)
                                 .withMountPath("/etc/amq-secret-volume")
                                 .build())
                         .build())
                 .addNewContainer()
-                    .withName(AMQ_BROKER)
+                    .withName(name)
                     .withImage("quay.io/enmasse/artemis-base:2.10.0")
                     .withImagePullPolicy("IfNotPresent")
                     .withCommand("/bin/sh")
@@ -701,7 +686,7 @@ public class SystemtestsKubernetesApps {
                             .withMountPath("/var/run/artemis")
                             .build(),
                             new VolumeMountBuilder()
-                            .withName(AMQ_BROKER)
+                            .withName(name)
                             .withMountPath("/etc/amq-secret-volume")
                             .build())
                     .addToEnv(new EnvVarBuilder()
@@ -719,9 +704,9 @@ public class SystemtestsKubernetesApps {
                         .endEmptyDir()
                         .build(),
                         new VolumeBuilder()
-                        .withName(AMQ_BROKER)
+                        .withName(name)
                         .withNewSecret()
-                        .withSecretName(AMQ_BROKER)
+                        .withSecretName(name)
                         .endSecret()
                         .build())
                 .endSpec()

@@ -7,19 +7,13 @@ package io.enmasse.systemtest.bases.bridging;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
+import io.enmasse.address.model.*;
+import io.enmasse.systemtest.platform.Kubernetes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorAddressRuleBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorCredentialsBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorEndpointBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorTlsBuilder;
-import io.enmasse.address.model.StringOrSecretSelectorBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
@@ -42,23 +36,26 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
 
     protected static final String REMOTE_NAME = "remote1";
 
+    protected final String remoteBrokerName = "amq-broker";
     protected final String remoteBrokerNamespace = "systemtests-external-broker";
     protected final String remoteBrokerUsername = "test-user";
     protected final String remoteBrokerPassword = "test-password";
+    protected Endpoint clientBrokerEndpoint;
     protected Endpoint remoteBrokerEndpoint;
     protected Endpoint remoteBrokerEndpointSSL;
     protected BrokerCertBundle certBundle;
 
-    protected abstract String[] remoteBrokerQueues();
-
     @BeforeEach
     void deployBroker() throws Exception {
-        certBundle = CertificateUtils.createBrokerCertBundle();
-        SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerUsername, remoteBrokerPassword, certBundle, remoteBrokerQueues());
-        remoteBrokerEndpoint = SystemtestsKubernetesApps.getAMQBrokerEndpoint(remoteBrokerNamespace);
-        remoteBrokerEndpointSSL = SystemtestsKubernetesApps.getAMQBrokerSSLEndpoint(remoteBrokerNamespace);
+        String serviceName = String.format("%s.%s.svc.cluster.local", remoteBrokerName, remoteBrokerNamespace);
+        certBundle = CertificateUtils.createBrokerCertBundle(serviceName);
+        SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerName, remoteBrokerUsername, remoteBrokerPassword, certBundle);
+        remoteBrokerEndpoint = new Endpoint(serviceName, 5672);
+        remoteBrokerEndpointSSL = new Endpoint(serviceName, 5671);
+        clientBrokerEndpoint = Kubernetes.getInstance().getExternalEndpoint(remoteBrokerName, remoteBrokerNamespace);
         log.info("Broker endpoint: {}", remoteBrokerEndpoint);
         log.info("Broker SSL endpoint: {}", remoteBrokerEndpointSSL);
+        log.info("Client broker endpoint: {}", clientBrokerEndpoint);
     }
 
     @AfterEach
@@ -67,17 +64,17 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
             logCollector.collectLogsOfPodsInNamespace(remoteBrokerNamespace);
             logCollector.collectEvents(remoteBrokerNamespace);
         }
-        SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace);
+        SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace, remoteBrokerName);
     }
 
     protected void scaleDownBroker() throws Exception {
         log.info("Scaling down broker");
-        SystemtestsKubernetesApps.scaleDownAMQBroker(remoteBrokerNamespace);
+        SystemtestsKubernetesApps.scaleDownDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
     protected void scaleUpBroker() throws Exception {
         log.info("Scaling up broker");
-        SystemtestsKubernetesApps.scaleUpAMQBroker(remoteBrokerNamespace);
+        SystemtestsKubernetesApps.scaleUpDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
     protected AddressSpace createAddressSpace(String name, String addressRule) throws Exception {
@@ -129,23 +126,15 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     }
 
     protected AmqpClient createClientToRemoteBroker() {
-        return createClientToRemoteBroker(false);
-    }
-
-    protected AmqpClient createClientToRemoteBroker(boolean ssl) {
 
         ProtonClientOptions clientOptions = new ProtonClientOptions();
-        if (ssl) {
-            clientOptions.setSsl(true);
-            clientOptions.setTrustAll(true);
-            clientOptions.setHostnameVerificationAlgorithm("");
-        } else {
-            clientOptions.setSsl(false);
-        }
+        clientOptions.setSsl(true);
+        clientOptions.setTrustAll(true);
+        clientOptions.setHostnameVerificationAlgorithm("");
 
         AmqpConnectOptions connectOptions = new AmqpConnectOptions()
                 .setTerminusFactory(new QueueTerminusFactory())
-                .setEndpoint(ssl ? remoteBrokerEndpointSSL : remoteBrokerEndpoint)
+                .setEndpoint(clientBrokerEndpoint)
                 .setProtonClientOptions(clientOptions)
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setUsername(remoteBrokerUsername)

@@ -24,9 +24,13 @@ public class CertificateUtils {
                 "-out", cert.getAbsolutePath(), "-keyout", key.getAbsolutePath()));
     }
 
-    public static void createCsr(File keyFile, File csrFile) throws Exception {
+    public static void createCsr(File keyFile, File csrFile, String cn) throws Exception {
+        String subject = SUBJECT;
+        if (cn != null) {
+            subject += "/CN=" + cn;
+        }
         new Executor().execute(Arrays.asList("openssl", "req", "-new", "-batch", "-nodes", "-keyout",
-                keyFile.getAbsolutePath(), "-subj", SUBJECT, "-out", csrFile.getAbsolutePath()));
+                keyFile.getAbsolutePath(), "-subj", subject, "-out", csrFile.getAbsolutePath()));
     }
 
     public static File signCsr(File caKey, File caCert, File csrKey, File csrCsr) throws Exception {
@@ -44,7 +48,7 @@ public class CertificateUtils {
         String randomName = UUID.randomUUID().toString();
         File keyFile = File.createTempFile(randomName, "key");
         File csrFile = File.createTempFile(randomName, "csr");
-        createCsr(keyFile, csrFile);
+        createCsr(keyFile, csrFile, null);
         File crtFile = signCsr(caKey, caCert, keyFile, csrFile);
         try {
             return new CertBundle(FileUtils.readFileToString(caCert, StandardCharsets.UTF_8),
@@ -55,57 +59,47 @@ public class CertificateUtils {
         }
     }
 
-    public static BrokerCertBundle createBrokerCertBundle() throws Exception {
+    public static BrokerCertBundle createBrokerCertBundle(String cn) throws Exception {
         File caCert = File.createTempFile("certAuthority", "crt");
         File caKey = File.createTempFile("certAuthority", "key");
         try {
+            // Generate CA used to sign certs
             createSelfSignedCert(caCert, caKey);
+
+            // Create broker certs and put into keystore
             String broker = "broker";
             File brokerKey = File.createTempFile(broker, "key");
             File brokerCsr = File.createTempFile(broker, "csr");
-            createCsr(brokerKey, brokerCsr);
+            createCsr(brokerKey, brokerCsr, cn);
             File brokerCrt = signCsr(caKey, caCert, brokerKey, brokerCsr);
-//            CertBundle brokerBundle = new CertBundle(FileUtils.readFileToString(caCert, StandardCharsets.UTF_8),
-//                        FileUtils.readFileToString(brokerKey, StandardCharsets.UTF_8),
-//                        FileUtils.readFileToString(brokerCrt, StandardCharsets.UTF_8));
-            //
+            File brokerKeystore = File.createTempFile("broker-keystore", "jks");
+
+            File p12Store = File.createTempFile("keystore", "p12");
+            // create p12 keystore
+            new Executor()
+                    .execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456", "-in", brokerCrt.getAbsolutePath(), "-inkey", brokerKey.getAbsolutePath(), "-name", "broker", "-out", p12Store.getAbsolutePath()));
+
+            brokerKeystore.delete();
+            new Executor()
+                    .execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456", "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12"));
+
+            // Generate truststore with client cert
             String client = UUID.randomUUID().toString();
             File clientKey = File.createTempFile(client, "key");
             File clientCsr = File.createTempFile(client, "csr");
-            createCsr(clientKey, clientCsr);
+            createCsr(clientKey, clientCsr, null);
             File clientCrt = signCsr(caKey, caCert, clientKey, clientCsr);
 //            CertBundle clientBundle = new CertBundle(FileUtils.readFileToString(caCert, StandardCharsets.UTF_8),
 //                        FileUtils.readFileToString(clientKey, StandardCharsets.UTF_8),
 //                        FileUtils.readFileToString(clientCrt, StandardCharsets.UTF_8));
-            //
-            File brokerKeystore = new File("/tmp/"+UUID.randomUUID().toString());
-
-            //create broker keystore
-            //keytool -genkey -alias broker-keystore -keyalg RSA -keystore broker-test.ks --storepass 123456 -noprompt -dname "CN=Unknown, OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown"
-            new Executor()
-                .execute(Arrays.asList("keytool", "-genkey", "-alias", "broker-keystore",
-                        "-keyalg", "RSA", "-keystore", brokerKeystore.getAbsolutePath(),
-                        "--storepass", "123456", "-noprompt", "-dname", SUBJECT));//"OU=Unknown,L=Unknown,ST=Unknown,C=Unknown"));
-
-            //import broker cert into keystore
-
-            //keytool -import -trustcacerts -alias root -file ca.crt -keystore broker.ks -noprompt -storepass 123456
-            new Executor()
-                .execute(Arrays.asList("keytool", "-import", "-trustcacerts", "-alias", "root",
-                        "-file", caCert.getAbsolutePath(), "-keystore", brokerKeystore.getAbsolutePath(), "-noprompt", "-storepass", "123456"));
-
-            //keytool -import -trustcacerts -alias broker -file broker.crt -keystore broker.ks -noprompt -storepass 123456
-            new Executor()
-                .execute(Arrays.asList("keytool", "-import", "-trustcacerts", "-alias", "broker", "-file", brokerCrt.getAbsolutePath(), "-keystore", brokerKeystore.getAbsolutePath(), "-noprompt", "-storepass", "123456"));
 
             //import client cert into broker TRUSTSTORE
-            File brokerTrustStore = new File("/tmp/"+UUID.randomUUID().toString());
-
+            File brokerTrustStore = File.createTempFile("broker-truststore", "jks");
 
             //keytool -import -alias client -keystore broker.ts -file client_cert
             new Executor()
                 .execute(Arrays.asList("keytool", "-import", "-alias", "client", "-keystore",
-                        brokerTrustStore.getAbsolutePath(), "-file", clientCrt.getAbsolutePath(), "-noprompt", "-storepass", "123456"));
+                        brokerTrustStore.getAbsolutePath(), "-file", caCert.getAbsolutePath(), "-noprompt", "-storepass", "123456"));
 
             try {
                 //return ca.crt keystore and truststore
