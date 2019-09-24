@@ -38,9 +38,8 @@ import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
 import static java.util.Collections.singletonMap;
 //TODO: CELE DOJEBANE!
-@Disabled
-@Tag(SHARED_IOT)
 @Tag(SMOKE)
+@Disabled
 @EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
 class SimpleK8sDeployTest extends TestBase implements ITestIoTShared {
 
