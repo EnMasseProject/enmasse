@@ -120,14 +120,13 @@ under the License.
                     "anycastPrefix=jms.queue.;multicastPrefix=jms.topic." to the acceptor url.
                     See https://issues.apache.org/jira/browse/ARTEMIS-1644 for more information. -->
 
-         <!-- Acceptor for every supported protocol -->
-         <acceptor name="artemis">tcp://0.0.0.0:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=CORE,AMQP,STOMP,HORNETQ,MQTT,OPENWIRE;useEpoll=true;amqpCredits=1000;amqpLowCredits=300</acceptor>
-
          <!-- AMQP Acceptor.  Listens on default AMQP port for AMQP traffic.-->
          <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP;saslMechanisms=PLAIN</acceptor>
 
          <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP;saslMechanisms=PLAIN;sslEnabled=true;keyStorePath=/etc/amq-secret-volume/broker.ks;keyStorePassword=123456</acceptor>
 
+         <acceptor name="amqps-mutual">tcp://0.0.0.0:55671?protocols=AMQP;saslMechanisms=EXTERNAL;sslEnabled=true;keyStorePath=/etc/amq-secret-volume/broker.ks;keyStorePassword=123456;trustStorePath=/etc/amq-secret-volume/broker.ts;trustStorePassword=123456;verifyHost=false;needClientAuth=true</acceptor>
+         
       </acceptors>
 
 

@@ -77,11 +77,13 @@ public class CertificateUtils {
             File p12Store = File.createTempFile("keystore", "p12");
             // create p12 keystore
             new Executor()
-                    .execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456", "-in", brokerCrt.getAbsolutePath(), "-inkey", brokerKey.getAbsolutePath(), "-name", "broker", "-out", p12Store.getAbsolutePath()));
+                    .execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
+                            "-in", brokerCrt.getAbsolutePath(), "-inkey", brokerKey.getAbsolutePath(), "-name", "broker", "-out", p12Store.getAbsolutePath()));
 
             brokerKeystore.delete();
             new Executor()
-                    .execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456", "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12"));
+                    .execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
+                            "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12"));
 
             // Generate truststore with client cert
             String client = UUID.randomUUID().toString();
@@ -89,23 +91,28 @@ public class CertificateUtils {
             File clientCsr = File.createTempFile(client, "csr");
             createCsr(clientKey, clientCsr, null);
             File clientCrt = signCsr(caKey, caCert, clientKey, clientCsr);
-//            CertBundle clientBundle = new CertBundle(FileUtils.readFileToString(caCert, StandardCharsets.UTF_8),
-//                        FileUtils.readFileToString(clientKey, StandardCharsets.UTF_8),
-//                        FileUtils.readFileToString(clientCrt, StandardCharsets.UTF_8));
 
             //import client cert into broker TRUSTSTORE
             File brokerTrustStore = File.createTempFile("broker-truststore", "jks");
 
-            //keytool -import -alias client -keystore broker.ts -file client_cert
+            File truststoreP12 = File.createTempFile("truststorestore", "p12");
+            // create p12 keystore
             new Executor()
-                .execute(Arrays.asList("keytool", "-import", "-alias", "client", "-keystore",
-                        brokerTrustStore.getAbsolutePath(), "-file", caCert.getAbsolutePath(), "-noprompt", "-storepass", "123456"));
+                    .execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
+                            "-in", clientCrt.getAbsolutePath(), "-inkey", clientKey.getAbsolutePath(), "-name", "client", "-out", truststoreP12.getAbsolutePath()));
+
+            brokerTrustStore.delete();
+            new Executor()
+                    .execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
+                            "-deststorepass", "123456", "-destkeystore", brokerTrustStore.getAbsolutePath(), "-srckeystore", truststoreP12.getAbsolutePath(), "-srcstoretype", "PKCS12"));
 
             try {
                 //return ca.crt keystore and truststore
-                return new BrokerCertBundle(FileUtils.readFileToString(caCert, StandardCharsets.UTF_8),
+                return new BrokerCertBundle(Files.readAllBytes(caCert.toPath()),
                         Files.readAllBytes(brokerKeystore.toPath()),
-                        Files.readAllBytes(brokerTrustStore.toPath()));
+                        Files.readAllBytes(brokerTrustStore.toPath()),
+                        Files.readAllBytes(clientCrt.toPath()),
+                        Files.readAllBytes(clientKey.toPath()));
             } finally {
                 deleteFiles(brokerCrt, brokerCsr, brokerKey, clientCrt, clientCsr, clientKey);
             }
