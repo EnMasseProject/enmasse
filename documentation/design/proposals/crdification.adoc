@@ -1,0 +1,114 @@
+== Overview
+
+The API server has been used to provide AddressSpace, Address and MessagingUser resources with the
+potential of backing these resources by a separate persistence store.
+
+However, the rest of the Kubernetes community is focusing mainly on CRDs, and CRD capabilities are
+improving for every release.
+
+Using CRDs will provide the following benefits:
+
+* The API server can be removed - one less component to maintain and operate
+* API features like watch, field selectors and more are will 'just work' without any implementation effort on our side
+* Resource <-> ConfigMap conversion is no longer needed. Controllers can use the correct resource type
+
+This proposal provides a path for migrating from the current API server based resources to CRDs.
+
+== Design
+
+The API server also functions as a validation mechanism, as well as for attaching resource labels and annotations that are used by controllers. With CRDs, validation is restricted to OpenAPI V3 validation. Additional validation have to be implemented as resource status conditions and optionally as validation webhooks. Labels and annotations have to be added by controllers in the first instance.
+
+=== AddressSpace
+
+The `AddressSpace` resource is used by the enmasse-controller-manager, address-space-controller and
+service-broker components. These will have to change to watch and operate on the CRD resources directly
+rather than using the ConfigMap-based implementation. Libraries already exist for that, so the amount of change is small.
+
+The following validations are performed on an `AddressSpace` and will have to be moved to an OpenAPIv3 spec, or (if not expressable in openapi) as a list of status messages on the address space resource:
+
+* Checking that a valid `plan` and `type` is set. `type` can be an OpenAPIv3 enum. `plan` must be checked by address-space-controller
+* Checking that connector references and endpoints are valid, sufficient with OpenAPIv3.
+* Attaching infraUuid label and annotation. Consider deriving the infraUuid based on namespace + name rather than a random UUID. This will prevent the situation where user can remove the annotation and label on the CR.
+
+=== Address
+
+The `Address` resource is used by the address-space-controller (for quota checks), standard-controller and agent. These components will have to be updated to support using CRDs in the same way as for the `AddressSpace` resource.
+
+The following validations are performed on an `Address` resource:
+
+* Checking that a valid `plan` and `type` is set. `type` can be an OpenAPIv3 enum but must also be checked in per-address-space-type controllers. `plan` must be checked by standard-controller/agent
+* Checking that forwarders point to a valid address space connector. Must be checked by standard-controller.
+* Checking that name is prefixed with a valid address space name. Must be checked by standard-controller/agent.
+
+=== MessagingUser
+
+The messaging-user is only used by the API server today, which uses keycloak to persist users.
+
+With CRDs, a new 'messaginguser-controller' component is needed (added to the enmasse-controller-manager for instance). This
+component will sync messaginguser resources with Keycloak.
+
+Having the `MessagingUser` as a CRDs means that we can no longer 'hide' the password for the `password` authentication type. An option of reading passwords from secrets should be provided when creating messaging users.
+
+Validation on the `MessagingUser` can mostly be done by OpenAPIv3 validation, but name prefix checking for address space name must be done by controller.
+
+== Upgrade process
+
+Upgrading EnMasse to a version that supports CRDs require that resources based on ConfigMaps must be converted to CRD-based resources, before the reconiliation loops start. Otherwise, it could end up with infrastructure being deleted. Converting the `MessagingUser` resource requires listing users in Keycloak and creating the corresponding MessagingUser resources. However, `MessagingUser` resources with `password` specified cannot be converted since Keycloak does not allow reading passwords.
+
+The upgrade process will follow these steps:
+
+1. Service admin must remove the apiservice resources - to prevent new resources to be created through the API server
+1. Service admin will apply new bundle/run new ansible playbook/update operator
+1. Service admin will clean up unused resources and disable configmap conversion
+
+The rest of the upgrade process will be performed automatically once a new version of the enmasse-operator and address-space-controller starts.
+
+The address-space-controller will follow these steps at startup:
+
+1. Read all AddressSpace configmaps and convert them to CRs
+1. Read all Address configmaps and convert them to CRs
+1. Start normal operation (update standard-controller and agent as normal)
+
+The enmasse-operator will follow these steps at startup:
+
+1. List all messaging users in all Keycloak realms and create corresponding Keycloak resources
+1. Start messaginguser-controller component that sync messaging users
+1. Start normal operation (update authentication service as normal)
+
+Conversion of the completion can be checked using the following commands:
+
+```
+kubectl get configmap -l type=address-space | wc -l
+kubectl get addressspaces --all-namespaces=true | wc -l
+```
+
+For addresses:
+
+```
+kubectl get configmap -l type=address-config | wc -l
+kubectl get addresses --all-namespaces=true | wc -l
+```
+
+In addition, the `address-space-controller`, `admin` and `agent` logs should be checked for errors.
+
+For messagingusers, the `enmasse-operator` log should be checked for errors.
+
+Once the conversion is complete, the service admin must run the following commands to disable the conversion logic, remove the api-server, and delete configmaps:
+
+```
+kubectl set env deployment/address-space-controller CONVERT_CONFIGMAPS=false
+kubectl set env deployment/enmasse-operator CONVERT_MESSAGINGUSERS=false
+kubectl delete deployment api-server
+kubectl delete service api-server
+kubectl delete configmap -l type=address-space
+kubectl delete configmap -l type=address-config
+```
+
+== Testing
+
+* Upgrade tests will be important to verify that conversion is working as expected
+* All current tests should pass without change (other than those checking validation that cannot be performed by OpenAPIv3, those need to check resource status instead), as that would potentially mean an API breakage
+
+== Documentation
+
+* Documentation should contain the upgrade procedure needed
