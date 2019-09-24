@@ -242,12 +242,19 @@ public class SystemtestsKubernetesApps {
                 .withTargetPort(new IntOrString(5671))
                 .build();
 
+        ServicePort mutualTlsPort = new ServicePortBuilder()
+                .withName("amqpsmutual")
+                .withPort(55671)
+                .withTargetPort(new IntOrString(55671))
+                .build();
+
         Service service = getSystemtestsServiceResource(name, name, new ServicePortBuilder()
                 .withName("amqp")
                 .withPort(5672)
                 .withTargetPort(new IntOrString(5672))
                 .build(),
-                tlsPort);
+                tlsPort,
+                mutualTlsPort);
 
         kubeCli.createServiceFromResource(namespace, service);
 
@@ -613,7 +620,7 @@ public class SystemtestsKubernetesApps {
 
         data.put("broker.ks", Base64.getEncoder().encodeToString(certBundle.getKeystore()));
         data.put("broker.ts", Base64.getEncoder().encodeToString(certBundle.getTruststore()));
-        data.put("ca.crt", Base64.getEncoder().encodeToString(certBundle.getCaCert().getBytes(StandardCharsets.UTF_8)));
+        data.put("ca.crt", Base64.getEncoder().encodeToString(certBundle.getCaCert()));
 
         return new SecretBuilder()
                 .withNewMetadata()
@@ -680,6 +687,10 @@ public class SystemtestsKubernetesApps {
                             new ContainerPortBuilder()
                             .withContainerPort(5671)
                             .withName("amqps")
+                            .build(),
+                            new ContainerPortBuilder()
+                            .withContainerPort(55671)
+                            .withName("amqpsmutual")
                             .build())
                     .withVolumeMounts(new VolumeMountBuilder()
                             .withName("data")
@@ -692,10 +703,6 @@ public class SystemtestsKubernetesApps {
                     .addToEnv(new EnvVarBuilder()
                             .withName("_JAVA_OPTIONS")
                             .withValue("-Djavax.net.debug=all")
-                            .build(),
-                            new EnvVarBuilder()
-                            .withName("jdk.tls.server.cipherSuites")
-                            .withValue("TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384")
                             .build())
                     .endContainer()
                 .addToVolumes(new VolumeBuilder()
