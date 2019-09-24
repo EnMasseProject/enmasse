@@ -113,12 +113,6 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
     public void createSharedIoTEnv() throws Exception {
         Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
 
-        if (sharedIoTProject == null) {
-            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
-                    DEFAULT_ADD_SPACE_IDENTIFIER, iotProjectNamespace, ADDRESS_SPACE_PLAN);
-            createIoTProject(sharedIoTProject);
-
-        }
         if (sharedIoTConfig == null) {
             CertBundle certBundle = CertificateUtils.createCertBundle();
             sharedIoTConfig = new IoTConfigBuilder()
@@ -143,6 +137,13 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
                     .build();
 
             createIoTConfig(sharedIoTConfig);
+        }
+
+        if (sharedIoTProject == null) {
+            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
+                    DEFAULT_ADD_SPACE_IDENTIFIER, iotProjectNamespace, ADDRESS_SPACE_PLAN);
+            createIoTProject(sharedIoTProject);
+
         }
 
         initFactories(getSharedAddressSpace());

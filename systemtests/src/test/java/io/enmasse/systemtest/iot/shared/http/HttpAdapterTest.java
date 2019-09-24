@@ -154,7 +154,6 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
      * This is the normal telemetry case.
      */
     @Test
-    @Disabled
     public void testTelemetryBatch50() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
@@ -174,7 +173,6 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
      * attached, it should receive those messages.
      */
     @Test
-    @Disabled
     public void testEventBatch5After() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
@@ -194,7 +192,6 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
      * as with telemetry.
      */
     @Test
-    @Disabled
     public void testEventBatch5Before() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
