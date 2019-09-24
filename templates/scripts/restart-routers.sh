@@ -10,7 +10,7 @@ function wait_statefulset_ready() {
     ready=0
     while [[ "${ready}" -lt "${minReady}" ]]
     do
-        ready=`kubectl get statefulset ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
+        ready=$(kubectl get statefulset ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE})
         if [[ "${ready}" -lt "${minReady}" ]]; then
             sleep 5
         fi
@@ -18,14 +18,14 @@ function wait_statefulset_ready() {
     echo "Minimum ready replicas ${minReady} restored"
 }
 
-for rset in `kubectl get statefulset -l name=qdrouterd -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+for rset in $(kubectl get statefulset -l name=qdrouterd -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
     wait_statefulset_ready $rset $MINAVAILABLE
 
-    infraUuid=`kubectl get statefulset ${rset} -o jsonpath='{.metadata.labels.infraUuid}'`
+    infraUuid=$(kubectl get statefulset ${rset} -o jsonpath='{.metadata.labels.infraUuid}')
     
     echo "All pods in router set ${rset} are ready. Initiating rolling restart."
-    for rpod in `kubectl get pods -l capability=router,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}'`
+    for rpod in $(kubectl get pods -l capability=router,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}')
     do
         echo "Deleting router pod $rpod"
         kubectl delete pod $rpod

@@ -12,7 +12,7 @@ function wait_ready() {
     ready="0"
     while [[ "${ready}" -lt "${minReady}" ]]
     do
-        ready=`kubectl get ${kind} ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE}`
+        ready=$(kubectl get ${kind} ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE})
         if [[ "${ready}" -lt "${minReady}" ]]; then
             sleep 5
         fi
@@ -22,14 +22,14 @@ function wait_ready() {
 
 
 
-for rset in `kubectl get statefulset -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+for rset in $(kubectl get statefulset -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
     if [[ "$rset" == broker-* ]]; then
         wait_ready statefulset $rset $MINAVAILABLE
-        infraUuid=`kubectl get statefulset ${rset} -o jsonpath='{.metadata.labels.infraUuid}'`
+        infraUuid=$(kubectl get statefulset ${rset} -o jsonpath='{.metadata.labels.infraUuid}')
 
         echo "All broker pods in broker set ${rset} are ready. Initiating rolling restart."
-        for rpod in `kubectl get pods -l role=broker,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}'`
+        for rpod in $(kubectl get pods -l role=broker,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}')
         do
             if [[ "$rpod" == ${rset}* ]]; then
                 echo "Deleting broker pod $rpod"
@@ -42,14 +42,14 @@ do
     fi
 done
 
-for rset in `kubectl get deployment -l role=broker -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE}`
+for rset in $(kubectl get deployment -l role=broker -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
     if [[ "$rset" == broker* ]]; then
         wait_ready deployment $rset $MINAVAILABLE
-        infraUuid=`kubectl get deployment ${rset} -o jsonpath='{.metadata.labels.infraUuid}'`
+        infraUuid=$(kubectl get deployment ${rset} -o jsonpath='{.metadata.labels.infraUuid}')
 
         echo "All broker pods in broker set ${rset} are ready. Initiating rolling restart."
-        for rpod in `kubectl get pods -l role=broker,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}'`
+        for rpod in $(kubectl get pods -l role=broker,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}')
         do
             if [[ "$rpod" == ${rset}* ]]; then
                 echo "Deleting broker pod $rpod"
