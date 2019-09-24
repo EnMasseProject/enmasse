@@ -778,7 +778,7 @@ func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, cons
 					err = json.Unmarshal([]byte(jas), &space)
 					if err == nil {
 						consoleEndpointName := "console"
-						for _, specEndpoints := range space.Spec.Ednpoints {
+						for _, specEndpoints := range space.Spec.Endpoints {
 							if specEndpoints.Service == "console" && specEndpoints.Name != "" {
 								consoleEndpointName = specEndpoints.Name
 								break
