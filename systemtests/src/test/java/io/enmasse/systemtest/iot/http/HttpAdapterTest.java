@@ -34,6 +34,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 
 @Tag(SHARED_IOT)
@@ -119,6 +120,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * Single telemetry message with attached consumer.
      */
     @Test
+    @Tag(ACCEPTANCE)
     public void testTelemetrySingle() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)

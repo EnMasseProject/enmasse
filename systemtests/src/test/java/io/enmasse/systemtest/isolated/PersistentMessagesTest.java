@@ -21,6 +21,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -32,6 +33,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -42,6 +44,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
     private UserCredentials credentials = new UserCredentials("test", "test");
 
     @Test
+    @Tag(ACCEPTANCE)
     void testBrokeredPersistentMessages() throws Exception {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -75,6 +78,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testStandardPersistentMessages() throws Exception {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
