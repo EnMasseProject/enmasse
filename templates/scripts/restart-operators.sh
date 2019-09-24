@@ -1,4 +1,4 @@
-#/bin/bash
+#!/usr/bin/env bash
 # Usage: ./restart-operators.sh <namespace where EnMasse is running> <minimum number of pods that should run at any given time>
 ENMASSE_NAMESPACE=${1:-enmasse-infra}
 MINREADY=${2:-0}

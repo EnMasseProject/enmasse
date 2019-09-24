@@ -1,4 +1,4 @@
-#/bin/bash
+#!/usr/bin/env bash
 ENMASSE_NAMESPACE=${1:-enmasse-infra}
 MINREADY=${2:-1}
 MINAVAILABLE=$(($MINREADY + 1))
