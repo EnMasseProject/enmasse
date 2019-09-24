@@ -37,7 +37,7 @@ public interface ITestIoTIsolated extends ITestIoTBase, ITestBase {
 
     @Override
     default String getDefaultAddressSpacePlan() {
-        return AddressSpacePlans.STANDARD_UNLIMITED;
+        return AddressSpacePlans.STANDARD_SMALL;
     }
 
     @Override

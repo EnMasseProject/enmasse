@@ -13,6 +13,7 @@ import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
@@ -61,7 +62,7 @@ import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
 @Tag(TestTag.SMOKE)
-public class MultipleProjectsTest extends TestBase implements ITestIsolatedStandard {
+public class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     private static Logger log = CustomLogger.getLogger();
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
@@ -96,7 +97,7 @@ public class MultipleProjectsTest extends TestBase implements ITestIsolatedStand
                 .endAdapters()
                 .endSpec()
                 .build();
-        createIoTConfig(iotConfig);
+        isolatedIoTManager.createIoTConfig(iotConfig);
 
         Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
@@ -110,7 +111,7 @@ public class MultipleProjectsTest extends TestBase implements ITestIsolatedStand
             }
             IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName,
                     projectName, getDefaultAddressSpacePlan());
-            createIoTProject(project);
+            isolatedIoTManager.createIoTProject(project);
             IoTProjectTestContext ctx = new IoTProjectTestContext(projectName, project);
 
             configureDeviceSide(ctx);
@@ -123,6 +124,9 @@ public class MultipleProjectsTest extends TestBase implements ITestIsolatedStand
 
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
+        isolatedIoTManager.getIoTProjects().forEach(project -> LOGGER.warn("PROJECTS {}", project));
+        isolatedIoTManager.getIoTConfigs().forEach(config -> LOGGER.warn("CONFIG {}", config));
+
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectHttpAdapterQdrProxyState();
         }
@@ -133,7 +137,8 @@ public class MultipleProjectsTest extends TestBase implements ITestIsolatedStand
         }
 
         SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-
+        isolatedIoTManager.getIoTProjects().forEach(project -> LOGGER.warn("PROJECTS {}", project));
+        isolatedIoTManager.getIoTConfigs().forEach(config -> LOGGER.warn("CONFIG {}", config));
     }
 
     @Test
@@ -162,7 +167,8 @@ public class MultipleProjectsTest extends TestBase implements ITestIsolatedStand
     }
 
     private void configureAmqpSide(IoTProjectTestContext ctx) throws Exception {
-        AddressSpace addressSpace = isolatedResourcesManager.getAddressSpace(ctx.getNamespace(), ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = isolatedIoTManager.getAddressSpace(ctx.getNamespace(),
+                ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         User amqpUser = configureAmqpUser(ctx.getProject(), addressSpace);
         ctx.setAmqpUser(amqpUser);
         AmqpClient amqpClient = configureAmqpClient(addressSpace, amqpUser);
@@ -199,6 +205,7 @@ public class MultipleProjectsTest extends TestBase implements ITestIsolatedStand
     }
 
     private AmqpClient configureAmqpClient(AddressSpace addressSpace, User user) throws Exception {
+        LOGGER.warn("Amqp factory: " + getAmqpClientFactory());
         AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
         amqpClient.getConnectOptions()
                 .setUsername(user.getSpec().getUsername())

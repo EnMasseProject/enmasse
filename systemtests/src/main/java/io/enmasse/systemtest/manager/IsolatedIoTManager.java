@@ -9,22 +9,32 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsolated {
+import static io.enmasse.systemtest.bases.iot.ITestIoTBase.iotProjectNamespace;
 
+public class IsolatedIoTManager extends ResourceManager {
+
+    private Logger LOGGER = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
     protected MqttClientFactory mqttClientFactory;
-    protected List<IoTProject> ioTProjects = new ArrayList<>();
-    protected List<IoTConfig> ioTConfigs = new ArrayList<>();
+    protected List<IoTProject> ioTProjects;
+    protected List<IoTConfig> ioTConfigs;
     private static IsolatedIoTManager instance = null;
     private Kubernetes kubernetes = Kubernetes.getInstance();
+
+    private IsolatedIoTManager() {
+        ioTProjects = new ArrayList<>();
+        ioTConfigs = new ArrayList<>();
+    }
 
     public static synchronized IsolatedIoTManager getInstance() {
         if (instance == null) {
@@ -39,12 +49,17 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
+    public void initFactories(IoTProject project) {
+        String addSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
+        this.initFactories(kubernetes.getAddressSpaceClient(project.getMetadata()
+                .getNamespace()).withName(addSpaceName).get());
+    }
+
     @Override
     public void setup() throws Exception {
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
             kubernetes.createNamespace(iotProjectNamespace);
         }
-        initFactories(null);
     }
 
     @Override
@@ -60,6 +75,7 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
 
     private void tearDownProjects() throws Exception {
         LOGGER.info("All IoTProjects will be removed");
+        ioTProjects.forEach(project -> LOGGER.warn("PROJECT FOR DELETION {}", project));
         for (IoTProject project : ioTProjects) {
             var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
             if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
@@ -73,7 +89,9 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
 
     private void tearDownConfigs() throws Exception {
         // delete configs
+        LOGGER.warn("MANAGER: {}", this);
         LOGGER.info("All IoTConfigs will be removed");
+        ioTConfigs.forEach(confi -> LOGGER.warn("PROJECT FOR DELETION {}", confi));
         var iotConfigApiClient = kubernetes.getIoTConfigClient();
         for (IoTConfig config : ioTConfigs) {
             if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
@@ -87,21 +105,53 @@ public class IsolatedIoTManager extends ResourceManager implements ITestIoTIsola
 
     @Override
     public AmqpClientFactory getAmqpClientFactory() {
-        return null;
+        return amqpClientFactory;
     }
 
     @Override
     public void setAmqpClientFactory(AmqpClientFactory amqpClientFactory) {
-
+        this.amqpClientFactory = amqpClientFactory;
     }
 
     @Override
     public MqttClientFactory getMqttClientFactory() {
-        return null;
+        return mqttClientFactory;
     }
 
     @Override
     public void setMqttClientFactory(MqttClientFactory mqttClientFactory) {
+        this.mqttClientFactory = mqttClientFactory;
+    }
 
+    public void createIoTProject(IoTProject project) throws Exception {
+        LOGGER.warn("MANAGER: {}", this);
+        ioTProjects.add(project);
+        IoTUtils.createIoTProject(project);
+        initFactories(project);
+        ioTProjects.forEach(project1 -> LOGGER.warn("PROJECTS {}", project1));
+    }
+
+    public void deleteIoTProject(IoTProject project) throws Exception {
+        IoTUtils.deleteIoTProjectAndWait(kubernetes, project);
+        ioTProjects.remove(project);
+    }
+
+    public void createIoTConfig(IoTConfig ioTConfig) throws Exception {
+        ioTConfigs.add(ioTConfig);
+        IoTUtils.createIoTConfig(ioTConfig);
+        ioTConfigs.forEach(ioTConfig1 -> LOGGER.warn("CONFIGS {}", ioTConfig1));
+    }
+
+    public void deleteIoTConfig(IoTConfig ioTConfig) throws Exception {
+        IoTUtils.deleteIoTConfigAndWait(kubernetes, ioTConfig);
+        ioTConfigs.add(ioTConfig);
+    }
+
+    public List<IoTProject> getIoTProjects() {
+        return ioTProjects;
+    }
+
+    public List<IoTConfig> getIoTConfigs() {
+        return ioTConfigs;
     }
 }

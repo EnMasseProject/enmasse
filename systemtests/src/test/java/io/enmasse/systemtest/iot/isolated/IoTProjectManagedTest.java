@@ -57,7 +57,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     @Test
     @Tag(ACCEPTANCE)
     void testCreate() throws Exception {
-        createIoTConfig(new IoTConfigBuilder()
+        isolatedIoTManager.createIoTConfig(new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
                 .endMetadata()
@@ -77,8 +77,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
         IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName,
                 iotProjectNamespace, getDefaultAddressSpacePlan());
 
-        createIoTProject(project);// waiting until ready
-
+        isolatedIoTManager.createIoTProject(project);// waiting until ready
         var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         IoTProject created = iotProjectApiClient.withName(project.getMetadata().getName()).get();
 
@@ -142,7 +141,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         //username "adapter"
         //name "project-address-space"+".adapter"
-        User user = IsolatedResourcesManager.getInstance().getUser(addressSpace, "adapter");
+        User user = isolatedIoTManager.getUser(addressSpace, "adapter");
         assertNotNull(user);
         assertEquals(1, user.getMetadata().getOwnerReferences().size());
         assertTrue(isOwner(project, user.getMetadata().getOwnerReferences().get(0)));
