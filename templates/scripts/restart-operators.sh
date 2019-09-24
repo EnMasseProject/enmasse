@@ -13,11 +13,11 @@ function wait_deployment_ready() {
     do
         ready=$(kubectl get deployment ${dep} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE})
         if [[ "${ready}" -lt "${minReady}" ]]; then
-            echo "${ready}/${minReady} pods ready"
+            echo "Minimum ${ready}/${minReady} pods ready"
             sleep 5
         fi
     done
-    echo "Minimum ready replicas ${minReady} restored"
+    echo "Minimum ready pods ${minReady} restored"
 }
 
 echo "Restarting API servers"

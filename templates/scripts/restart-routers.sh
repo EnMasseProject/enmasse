@@ -12,11 +12,11 @@ function wait_statefulset_ready() {
     do
         ready=$(kubectl get statefulset ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE})
         if [[ "${ready}" -lt "${minReady}" ]]; then
-            echo "${ready}/${minReady} pods ready"
+            echo "Minimum ${ready}/${minReady} pods ready"
             sleep 5
         fi
     done
-    echo "Minimum ready replicas ${minReady} restored"
+    echo "Minimum ready pods ${minReady} restored"
 }
 
 for rset in $(kubectl get statefulset -l name=qdrouterd -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
