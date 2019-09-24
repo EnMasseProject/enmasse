@@ -5,8 +5,8 @@ MINREADY=${2:-0}
 MINAVAILABLE=$(($MINREADY + 1))
 
 function wait_deployment_ready() {
-    local dep=$1
-    local minReady=$2
+    local dep=${1}
+    local minReady=${2}
 
     ready=0
     while [[ "${ready}" -lt "${minReady}" ]]
@@ -22,14 +22,14 @@ function wait_deployment_ready() {
 echo "Restarting API servers"
 for dep in $(kubectl get deployment -l component=api-server -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
-    wait_deployment_ready $dep $MINAVAILABLE
+    wait_deployment_ready ${dep} ${MINAVAILABLE}
     echo "All api-server pods are ready. Initiating rolling restart."
     for pod in $(kubectl get pods -l component=api-server -o jsonpath='{.items[*].metadata.name}')
     do
-        echo "Deleting api-server $pod"
-        kubectl delete pod $pod
+        echo "Deleting api-server ${pod}"
+        kubectl delete pod ${pod}
         sleep 30
-        wait_deployment_ready $dep $MINAVAILABLE
+        wait_deployment_ready ${dep} ${MINAVAILABLE}
     done
 done
 echo "API servers restarted"
@@ -38,7 +38,7 @@ echo "Restarting Address Space Controller"
 kubectl delete pod -l name=address-space-controller
 for dep in $(kubectl get deployment -l name=address-space-controller -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
-    wait_deployment_ready $dep 1
+    wait_deployment_ready ${dep} 1
 done
 echo "Address Space Controller restarted"
 
@@ -47,23 +47,23 @@ echo "Restarting Operator"
 kubectl delete pod -l name=enmasse-operator
 for dep in $(kubectl get deployment -l name=enmasse-operator -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
-    wait_deployment_ready $dep 1
+    wait_deployment_ready ${dep} 1
 done
 echo "Operator restarted"
 
 echo "Restarting standard operators"
 for dep in $(kubectl get deployment -l name=admin -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
-    wait_deployment_ready $dep $MINAVAILABLE
+    wait_deployment_ready ${dep} ${MINAVAILABLE}
     infraUuid=$(kubectl get deployment ${dep} -o jsonpath='{.metadata.labels.infraUuid}')
 
     echo "All admin pods are ready. Initiating rolling restart."
     for pod in $(kubectl get pods -l name=admin,infraUuid=$infraUuid -o jsonpath='{.items[*].metadata.name}')
     do
-        echo "Deleting admin $pod"
-        kubectl delete pod $pod
+        echo "Deleting admin ${pod}"
+        kubectl delete pod ${pod}
         sleep 30
-        wait_deployment_ready $dep $MINAVAILABLE
+        wait_deployment_ready ${dep} ${MINAVAILABLE}
     done
 done
 echo "Standard operators restarted"
@@ -71,16 +71,16 @@ echo "Standard operators restarted"
 echo "Restarting brokered operators"
 for dep in $(kubectl get deployment -l role=agent -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
-    wait_deployment_ready $dep $MINAVAILABLE
+    wait_deployment_ready ${dep} ${MINAVAILABLE}
     infraUuid=$(kubectl get deployment ${dep} -o jsonpath='{.metadata.labels.infraUuid}')
 
     echo "All agent pods are ready. Initiating rolling restart."
-    for pod in $(kubectl get pods -l role=agent,infraUuid=$infraUuid -o jsonpath='{.items[*].metadata.name}')
+    for pod in $(kubectl get pods -l role=agent,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}')
     do
-        echo "Deleting agent $pod"
-        kubectl delete pod $pod
+        echo "Deleting agent ${pod}"
+        kubectl delete pod ${pod}
         sleep 30
-        wait_deployment_ready $dep $MINAVAILABLE
+        wait_deployment_ready ${dep} ${MINAVAILABLE}
     done
 done
 echo "Brokered operators restarted"

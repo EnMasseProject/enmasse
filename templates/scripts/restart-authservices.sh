@@ -4,8 +4,8 @@ MINREADY=${2:-0}
 MINAVAILABLE=$(($MINREADY + 1))
 
 function wait_deployment_ready() {
-    local dep=$1
-    local minReady=$2
+    local dep=${1}
+    local minReady=${2}
 
     ready=0
     while [[ "${ready}" -lt "${minReady}" ]]
@@ -21,19 +21,19 @@ function wait_deployment_ready() {
 echo "Restarting Authentication Services"
 for dep in $(kubectl get authenticationservices -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
-    deployment_name=$(kubectl get authenticationservice $dep -o jsonpath='{.spec.standard.deploymentName}')
-    if [[ "$deployment_name" == "" ]]; then
-        deployment_name=$dep
+    deployment_name=$(kubectl get authenticationservice ${dep} -o jsonpath='{.spec.standard.deploymentName}')
+    if [[ "${deployment_name}" == "" ]]; then
+        deployment_name=${dep}
     fi
-    wait_deployment_ready $deployment_name $MINAVAILABLE
+    wait_deployment_ready ${deployment_name} ${MINAVAILABLE}
 
     echo "All authentication service pods are ready. Initiating rolling restart."
-    for pod in $(kubectl get pods -l component=$dep -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
+    for pod in $(kubectl get pods -l component=${dep} -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
     do
-        echo "Deleting authentication service $pod"
-        kubectl delete pod $pod
+        echo "Deleting authentication service ${pod}"
+        kubectl delete pod ${pod}
         sleep 30
-        wait_deployment_ready $deployment_name $MINAVAILABLE
+        wait_deployment_ready ${deployment_name} ${MINAVAILABLE}
     done
 done
 echo "Authentication Services restarted"
