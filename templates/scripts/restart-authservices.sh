@@ -32,7 +32,7 @@ do
     for pod in $(kubectl get pods -l component=${dep} -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
     do
         echo "Deleting authentication service ${pod}"
-        kubectl delete pod ${pod}
+        kubectl delete pod ${pod} -n ${ENMASSE_NAMESPACE}
         sleep 30
         wait_deployment_ready ${deployment_name} ${MINAVAILABLE}
     done

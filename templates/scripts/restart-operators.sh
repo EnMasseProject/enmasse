@@ -28,7 +28,7 @@ do
     for pod in $(kubectl get pods -l component=api-server -o jsonpath='{.items[*].metadata.name}')
     do
         echo "Deleting api-server ${pod}"
-        kubectl delete pod ${pod}
+        kubectl delete pod ${pod} -n ${ENMASSE_NAMESPACE}
         sleep 30
         wait_deployment_ready ${dep} ${MINAVAILABLE}
     done
@@ -45,7 +45,7 @@ echo "Address Space Controller restarted"
 
 
 echo "Restarting Operator"
-kubectl delete pod -l name=enmasse-operator
+kubectl delete pod -l name=enmasse-operator -n ${ENMASSE_NAMESPACE}
 for dep in $(kubectl get deployment -l name=enmasse-operator -o jsonpath='{.items[*].metadata.name}' -n ${ENMASSE_NAMESPACE})
 do
     wait_deployment_ready ${dep} 1
@@ -62,7 +62,7 @@ do
     for pod in $(kubectl get pods -l name=admin,infraUuid=$infraUuid -o jsonpath='{.items[*].metadata.name}')
     do
         echo "Deleting admin ${pod}"
-        kubectl delete pod ${pod}
+        kubectl delete pod ${pod} -n ${ENMASSE_NAMESPACE}
         sleep 30
         wait_deployment_ready ${dep} ${MINAVAILABLE}
     done
@@ -79,7 +79,7 @@ do
     for pod in $(kubectl get pods -l role=agent,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}')
     do
         echo "Deleting agent ${pod}"
-        kubectl delete pod ${pod}
+        kubectl delete pod ${pod} -n ${ENMASSE_NAMESPACE}
         sleep 30
         wait_deployment_ready ${dep} ${MINAVAILABLE}
     done

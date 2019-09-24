@@ -34,7 +34,7 @@ do
         do
             if [[ "${rpod}" == ${rset}* ]]; then
                 echo "Deleting broker pod ${rpod}"
-                kubectl delete pod ${rpod}
+                kubectl delete pod ${rpod} -n ${ENMASSE_NAMESPACE}
                 sleep 30
                 wait_ready statefulset ${rset} ${MINAVAILABLE}
                 echo "Minimum ready broker replicas ${MINAVAILABLE} restored"
@@ -54,7 +54,7 @@ do
         do
             if [[ "${rpod}" == ${rset}* ]]; then
                 echo "Deleting broker pod ${rpod}"
-                kubectl delete pod ${rpod}
+                kubectl delete pod ${rpod} -n ${ENMASSE_NAMESPACE}
                 sleep 30
                 wait_ready deployment ${rset} $MINAVAILABLE
             fi

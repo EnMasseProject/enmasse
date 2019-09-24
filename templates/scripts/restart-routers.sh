@@ -29,7 +29,7 @@ do
     for rpod in $(kubectl get pods -l capability=router,infraUuid=${infraUuid} -o jsonpath='{.items[*].metadata.name}')
     do
         echo "Deleting router pod ${rpod}"
-        kubectl delete pod ${rpod}
+        kubectl delete pod ${rpod} -n ${ENMASSE_NAMESPACE}
         sleep 30
         wait_statefulset_ready ${rset} ${MINAVAILABLE}
         echo "Minimum ready router replicas ${MINAVAILABLE} restored"
