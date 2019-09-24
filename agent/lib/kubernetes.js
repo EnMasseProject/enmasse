@@ -68,7 +68,7 @@ function get_options(options, path) {
 }
 
 function get_path(base, resource, options) {
-    var namespace = options.namespace || process.env.KUBERNETES_NAMESPACE || read('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
+    var namespace = options.namespace || process.env.ADDRESS_SPACE_NAMESPACE || process.env.KUBERNETES_NAMESPACE || read('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
     var path = base + namespace + '/' + resource;
     if (options.selector) {
         path += '?' + querystring.stringify({'labelSelector':options.selector});
@@ -77,14 +77,14 @@ function get_path(base, resource, options) {
 }
 
 function list_options(resource, options) {
-    var base = resource.startsWith("addresses") ? '/apis/enmasse.io/v1beta1/namespaces/' : '/api/v1/namespaces/';
+    var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/namespaces/' : '/api/v1/namespaces/';
     let path = get_path(base, resource, options);
     return get_options(options, path);
 
 }
 
 function watch_options(resource, options) {
-    var base = resource.startsWith("addresses") ? '/apis/enmasse.io/v1beta1/watch/namespaces/' : '/api/v1/watch/namespaces/';
+    var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/watch/namespaces/' : '/api/v1/watch/namespaces/';
     return get_options(options, get_path(base, resource, options));
 }
 

@@ -258,6 +258,7 @@ spec:
       * An authentication service
       * Infrastructure configuration for the standard and brokered address space
       * Address and address space plans
+      * (Optional) Create RBAC roles to allow users to discover available plans
       * (Optional) Create RBAC roles to allow users to self-manage addresses and
         address spaces.
 
@@ -314,6 +315,41 @@ spec:
           deleteClaim: true
           size: 1Gi
           type: persistent-claim
+    ~~~
+
+    ### Create RBAC roles to allow users to discover available plans
+
+    For users to discover the available plans, cluster-wide roles to read the available
+    schema can be created.  Import the following YAML by saving the content to a file and apply it by running the 
+    `oc apply -f <file>` command. You can also split the content (at the `---` marker)
+    and import the single YAML document using the Web UI: 
+
+    ~~~yaml
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: enmasse.io:schema
+      labels:
+        app: enmasse
+    rules:
+      - apiGroups: [ "enmasse.io" ]
+        resources: [ "addressspaceschemas" ]
+        verbs: [ "get", "list", "watch" ]
+    ---
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: "enmasse.io:schema"
+      labels:
+        app: enmasse
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: enmasse.io:schema
+    subjects:
+    - kind: Group
+      name: system:authenticated
     ~~~
 
     ### Creating infrastructure using the Web UI
@@ -411,7 +447,7 @@ spec:
           resources: [ "deployments" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "" ]
-          resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services" ]
+          resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services", "pods" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "", "route.openshift.io" ]
           resources: [ "routes", "routes/custom-host", "routes/status"]
@@ -483,6 +519,19 @@ spec:
           resources: [ "addressspaceplans", "addressplans", "standardinfraconfigs", "brokeredinfraconfigs", "authenticationservices", "consoleservices"]
           verbs: [ "get", "list", "watch" ]
       clusterPermissions:
+      - serviceAccountName: address-space-controller
+        rules:
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addressspaces", "addresses", "addressspaceschemas", "addressspaces/finalizers", "addresses/finalizers" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+      - serviceAccountName: address-space-admin
+        rules:
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addressspaces" ]
+          verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addresses", "addresses/finalizers", "addressspaces/finalizers" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: standard-authservice
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -493,6 +542,13 @@ spec:
         - apiGroups: [ "oauth.openshift.io" ]
           resources: [ "oauthclients" ]
           verbs: [ "create", "get", "update", "list", "watch" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "addressspaces", "addresses" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "apiregistration.k8s.io" ]
+          resources: [ "apiservices" ]
+          resourceNames: [ "v1alpha1.enmasse.io", "v1beta1.enmasse.io" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: api-server
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -575,6 +631,10 @@ spec:
                   value: "true"
                 - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
                   value: "true"
+                - name: CONTROLLER_ENABLE_ADDRESS_SPACE_CONTROLLER_DEPLOYER
+                  value: "true"
+                - name: ADDRESS_SPACE_CONTROLLER_IMAGE
+                  value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
                 - name: CONTROLLER_MANAGER_IMAGE
                   value: ${CONTROLLER_MANAGER_IMAGE}
                 - name: IOT_AUTH_SERVICE_IMAGE
@@ -599,6 +659,20 @@ spec:
                   value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
                 - name: ROUTER_IMAGE
                   value: ${ROUTER_IMAGE}
+                - name: STANDARD_CONTROLLER_IMAGE
+                  value: ${STANDARD_CONTROLLER_IMAGE}
+                - name: AGENT_IMAGE
+                  value: ${AGENT_IMAGE}
+                - name: BROKER_IMAGE
+                  value: ${BROKER_IMAGE}
+                - name: BROKER_PLUGIN_IMAGE
+                  value: ${BROKER_PLUGIN_IMAGE}
+                - name: TOPIC_FORWARDER_IMAGE
+                  value: ${TOPIC_FORWARDER_IMAGE}
+                - name: MQTT_GATEWAY_IMAGE
+                  value: ${MQTT_GATEWAY_IMAGE}
+                - name: MQTT_LWT_IMAGE
+                  value: ${MQTT_LWT_IMAGE}
                 - name: NONE_AUTHSERVICE_IMAGE
                   value: ${NONE_AUTHSERVICE_IMAGE}
                 - name: KEYCLOAK_IMAGE
@@ -679,255 +753,8 @@ spec:
                   name: apiservice-cert
                   readOnly: true
               serviceAccountName: api-server
-
-      - name: api-server
-        spec:
-          replicas: 1
-          selector:
-            matchLabels:
-              app: enmasse
-              component: api-server
-          template:
-            metadata:
-              labels:
-                app: enmasse
-                component: api-server
-            spec:
-              affinity:
-                nodeAffinity:
-                  preferredDuringSchedulingIgnoredDuringExecution:
-                    - weight: 1
-                      preference:
-                        matchExpressions:
-                          - key: node-role.enmasse.io/operator-infra
-                            operator: In
-                            values:
-                              - "true"
-              containers:
-              - env:
-                - name: JAVA_OPTS
-                  value: -verbose:gc -Xlog:gc*
-                - name: CERT_DIR
-                  value: /api-server-cert
-                - name: ENABLE_RBAC
-                  value: "true"
-                - name: APISERVER_CLIENT_CA_CONFIG_NAME
-                  value: extension-apiserver-authentication
-                - name: APISERVER_CLIENT_CA_CONFIG_NAMESPACE
-                  value: kube-system
-                - name: APISERVER_ROUTE_NAME
-                  value: restapi
-                - name: STANDARD_AUTHSERVICE_CONFIG_NAME
-                  value: keycloak-config
-                - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
-                  value: keycloak-credentials
-                - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
-                  value: standard-authservice-cert
-                image: ${API_SERVER_IMAGE}
-                imagePullPolicy: ${IMAGE_PULL_POLICY}
-                livenessProbe:
-                  httpGet:
-                    path: /healthz
-                    port: http
-                    scheme: HTTP
-                  initialDelaySeconds: 60
-                name: api-server
-                ports:
-                - containerPort: 8080
-                  name: http
-                - containerPort: 8443
-                  name: https
-                readinessProbe:
-                  httpGet:
-                    path: /healthz
-                    port: http
-                    scheme: HTTP
-                resources:
-                  limits:
-                    memory: 512Mi
-                  requests:
-                    memory: 512Mi
-                volumeMounts:
-                - mountPath: /api-server-cert
-                  name: apiservice-cert
-                  readOnly: true
-              serviceAccountName: api-server
-      - name: address-space-controller
-        spec:
-          replicas: 1
-          strategy:
-            type: RollingUpdate
-          selector:
-            matchLabels:
-              app: enmasse
-              name: address-space-controller
-          template:
-            metadata:
-              labels:
-                app: enmasse
-                name: address-space-controller
-            spec:
-              affinity:
-                nodeAffinity:
-                  preferredDuringSchedulingIgnoredDuringExecution:
-                    - weight: 1
-                      preference:
-                        matchExpressions:
-                          - key: node-role.enmasse.io/operator-infra
-                            operator: In
-                            values:
-                              - "true"
-              containers:
-              - env:
-                - name: JAVA_OPTS
-                  value: -verbose:gc
-                - name: ENABLE_EVENT_LOGGER
-                  value: "true"
-                - name: EXPOSE_ENDPOINTS_BY_DEFAULT
-                  valueFrom:
-                    configMapKeyRef:
-                      key: exposeEndpointsByDefault
-                      name: address-space-controller-config
-                      optional: true
-                - name: ENVIRONMENT
-                  valueFrom:
-                    configMapKeyRef:
-                      key: environment
-                      name: address-space-controller-config
-                      optional: true
-                - name: TEMPLATE_DIR
-                  value: /opt/templates
-                - name: RESOURCES_DIR
-                  value: /opt
-                - name: STANDARD_AUTHSERVICE_CONFIG_NAME
-                  value: keycloak-config
-                - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME
-                  value: keycloak-credentials
-                - name: STANDARD_AUTHSERVICE_CERT_SECRET_NAME
-                  value: standard-authservice-cert
-                - name: WILDCARD_ENDPOINT_CERT_SECRET
-                  valueFrom:
-                    configMapKeyRef:
-                      key: wildcardEndpointCertSecret
-                      name: address-space-controller-config
-                      optional: true
-                - name: RESYNC_INTERVAL
-                  valueFrom:
-                    configMapKeyRef:
-                      key: resyncInterval
-                      name: address-space-controller-config
-                      optional: true
-                - name: RECHECK_INTERVAL
-                  valueFrom:
-                    configMapKeyRef:
-                      key: recheckInterval
-                      name: address-space-controller-config
-                      optional: true
-                - name: IMAGE_PULL_POLICY
-                  value: ${IMAGE_PULL_POLICY}
-                - name: ROUTER_IMAGE
-                  value: ${ROUTER_IMAGE}
-                - name: STANDARD_CONTROLLER_IMAGE
-                  value: ${STANDARD_CONTROLLER_IMAGE}
-                - name: AGENT_IMAGE
-                  value: ${AGENT_IMAGE}
-                - name: BROKER_IMAGE
-                  value: ${BROKER_IMAGE}
-                - name: BROKER_PLUGIN_IMAGE
-                  value: ${BROKER_PLUGIN_IMAGE}
-                - name: TOPIC_FORWARDER_IMAGE
-                  value: ${TOPIC_FORWARDER_IMAGE}
-                - name: MQTT_GATEWAY_IMAGE
-                  value: ${MQTT_GATEWAY_IMAGE}
-                - name: MQTT_LWT_IMAGE
-                  value: ${MQTT_LWT_IMAGE}
-                image: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
-                imagePullPolicy: ${IMAGE_PULL_POLICY}
-                livenessProbe:
-                  httpGet:
-                    path: /healthz
-                    port: http
-                    scheme: HTTP
-                name: address-space-controller
-                ports:
-                - containerPort: 8080
-                  name: http
-                readinessProbe:
-                  httpGet:
-                    path: /healthz
-                    port: http
-                    scheme: HTTP
-                resources:
-                  limits:
-                    memory: 512Mi
-                  requests:
-                    memory: 256Mi
-              serviceAccountName: address-space-controller
   apiservicedefinitions:
     owned:
-    - group: enmasse.io
-      version: v1beta1
-      kind: AddressSpace 
-      name: addressspaces
-      displayName: Address Space
-      description: A group of messaging addresses that can be accessed via the same endpoint
-      deploymentName: api-server
-      containerPort: 8443
-      specDescriptors:
-        - description: The address space type.
-          displayName: Type
-          path: type
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The address space plan.
-          displayName: Plan
-          path: plan
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-      statusDescriptors:
-        - description: Address space ready.
-          displayName: Ready
-          path: isReady
-          x-descriptors:
-            - 'urn:alm:descriptor:text'
-    - group: enmasse.io
-      version: v1beta1
-      kind: Address
-      name: addresses
-      displayName: Address
-      description: A messaging address that can be used to send/receive messages to/from
-      deploymentName: api-server
-      containerPort: 8443
-      specDescriptors:
-        - description: The address type.
-          displayName: Type
-          path: type
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-        - description: The address plan.
-          displayName: Plan
-          path: plan
-          x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:text'
-      statusDescriptors:
-        - description: Address ready.
-          displayName: Ready
-          path: isReady
-          x-descriptors:
-            - 'urn:alm:descriptor:text'
-        - description: Address phase
-          displayName: Phase
-          path: phase
-          x-descriptors:
-            - 'urn:alm:descriptor:text'
-    - group: enmasse.io
-      version: v1beta1
-      kind: AddressSpaceSchema
-      name: addressspaceschemas
-      displayName: AddressSpaceSchema
-      description: A resource representing the available schema of plans and authentication services
-      deploymentName: api-server
-      containerPort: 8443
     - group: user.enmasse.io
       version: v1beta1
       kind: MessagingUser
@@ -954,6 +781,63 @@ spec:
             - 'urn:alm:descriptor:com.tectonic.ui:text'
   customresourcedefinitions:
     owned:
+      - group: enmasse.io
+        version: v1beta1
+        kind: AddressSpaceSchema
+        name: addressspaceschemas.enmasse.io
+        displayName: AddressSpaceSchema
+        description: A resource representing the available schema of plans and authentication services
+      - group: enmasse.io
+        version: v1beta1
+        kind: AddressSpace 
+        name: addressspaces.enmasse.io
+        displayName: Address Space
+        description: A group of messaging addresses that can be accessed via the same endpoint
+        specDescriptors:
+          - description: The address space type.
+            displayName: Type
+            path: type
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The address space plan.
+            displayName: Plan
+            path: plan
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        statusDescriptors:
+          - description: Address space ready.
+            displayName: Ready
+            path: isReady
+            x-descriptors:
+              - 'urn:alm:descriptor:text'
+      - group: enmasse.io
+        version: v1beta1
+        kind: Address
+        name: addresses.enmasse.io
+        displayName: Address
+        description: A messaging address that can be used to send/receive messages to/from
+        specDescriptors:
+          - description: The address type.
+            displayName: Type
+            path: type
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+          - description: The address plan.
+            displayName: Plan
+            path: plan
+            x-descriptors:
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        statusDescriptors:
+          - description: Address ready.
+            displayName: Ready
+            path: isReady
+            x-descriptors:
+              - 'urn:alm:descriptor:text'
+          - description: Address phase
+            displayName: Phase
+            path: phase
+            x-descriptors:
+              - 'urn:alm:descriptor:text'
       - group: admin.enmasse.io
         version: v1beta1
         kind: StandardInfraConfig

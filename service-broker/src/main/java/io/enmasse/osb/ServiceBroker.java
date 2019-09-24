@@ -69,7 +69,7 @@ public class ServiceBroker extends AbstractVerticle {
         ensureRouteExists(client.adapt(OpenShiftClient.class), options);
         ensureCredentialsExist(client, options);
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client, options.getVersion());
+        AddressSpaceApi addressSpaceApi = KubeAddressSpaceApi.create(client, null, options.getVersion());
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 
         UserApi userApi = createUserApi(options, schemaProvider);

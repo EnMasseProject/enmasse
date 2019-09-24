@@ -42,7 +42,7 @@ public class AddressSpaceStatus extends AbstractWithAdditionalProperties {
     @JsonProperty("isReady")
     private boolean ready = false;
 
-    private Phase phase;
+    private Phase phase = Phase.Pending;
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid EndpointStatus> endpointStatuses = new ArrayList<>();

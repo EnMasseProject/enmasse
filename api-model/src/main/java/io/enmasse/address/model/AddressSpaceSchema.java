@@ -53,7 +53,7 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
         return this.spec;
     }
 
-    public static AddressSpaceSchema fromAddressSpaceType(final String creationTimestamp, final AddressSpaceType addressSpaceType, final List<AuthenticationService> authenticationServiceList) {
+    public static AddressSpaceSchema fromAddressSpaceType(final AddressSpaceType addressSpaceType, final List<AuthenticationService> authenticationServiceList) {
         if (addressSpaceType == null) {
             return null;
         }
@@ -61,7 +61,6 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
         return new AddressSpaceSchemaBuilder()
                 .withNewMetadata()
                 .withName(addressSpaceType.getName())
-                .withCreationTimestamp(creationTimestamp)
                 .endMetadata()
 
                 .editOrNewSpec()

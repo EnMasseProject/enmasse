@@ -24,6 +24,9 @@ public class SchemaAuthenticationServiceRegistry implements AuthenticationServic
 
     @Override
     public Optional<AuthenticationService> findAuthenticationService(io.enmasse.address.model.AuthenticationService authenticationService) {
+        if (authenticationService == null) {
+            return resolveDefaultAuthenticationService();
+        }
         if (authenticationService.getName() == null) {
             return findAuthenticationServiceByType(authenticationService.getType().toAdminType()).stream().findFirst();
         } else {

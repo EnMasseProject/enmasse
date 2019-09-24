@@ -10,6 +10,8 @@ public enum ControllerReason implements EventLogger.Reason {
     AddressSpaceCreated,
     AddressSpaceChanged,
     AddressSpaceUpgraded,
+    AddressSpaceConverted,
+    AddressSpaceConversionFailed,
     BrokerCreated,
     AddressSpaceSyncFailed,
     CertCreated,

@@ -51,6 +51,10 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
           value: "true"
+        - name: CONTROLLER_ENABLE_ADDRESS_SPACE_CONTROLLER_DEPLOYER
+          value: "true"
+        - name: ADDRESS_SPACE_CONTROLLER_IMAGE
+          value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
         - name: CONTROLLER_MANAGER_IMAGE
           value: ${CONTROLLER_MANAGER_IMAGE}
         - name: IOT_AUTH_SERVICE_IMAGE
@@ -75,6 +79,20 @@ spec:
           value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
         - name: ROUTER_IMAGE
           value: ${ROUTER_IMAGE}
+        - name: STANDARD_CONTROLLER_IMAGE
+          value: ${STANDARD_CONTROLLER_IMAGE}
+        - name: AGENT_IMAGE
+          value: ${AGENT_IMAGE}
+        - name: BROKER_IMAGE
+          value: ${BROKER_IMAGE}
+        - name: BROKER_PLUGIN_IMAGE
+          value: ${BROKER_PLUGIN_IMAGE}
+        - name: TOPIC_FORWARDER_IMAGE
+          value: ${TOPIC_FORWARDER_IMAGE}
+        - name: MQTT_GATEWAY_IMAGE
+          value: ${MQTT_GATEWAY_IMAGE}
+        - name: MQTT_LWT_IMAGE
+          value: ${MQTT_LWT_IMAGE}
         - name: NONE_AUTHSERVICE_IMAGE
           value: ${NONE_AUTHSERVICE_IMAGE}
         - name: KEYCLOAK_IMAGE

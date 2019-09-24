@@ -1,11 +1,12 @@
 CMD=controller-manager
 include ../Makefile.go.mk
 
-build: build/operatorImageMap.yaml build/$(CMD)
+build_deps: build/operatorImageMap.yaml
 
 build/operatorImageMap.yaml:
 	echo "" > "$@"
-	
+
+	echo "address-space-controller: $(ADDRESS_SPACE_CONTROLLER_IMAGE)" >> "$@"
 	echo "controller-manager: $(CONTROLLER_MANAGER_IMAGE)" >> "$@"
 	echo "iot-auth-service: $(IOT_AUTH_SERVICE_IMAGE)" >> "$@"
 	echo "iot-device-registry-file: $(IOT_DEVICE_REGISTRY_FILE_IMAGE)" >> "$@"
@@ -24,5 +25,12 @@ build/operatorImageMap.yaml:
 	echo "console-proxy-openshift: $(CONSOLE_PROXY_OPENSHIFT_IMAGE)" >> "$@"
 	echo "console-proxy-kubernetes: $(CONSOLE_PROXY_KUBERNETES_IMAGE)" >> "$@"
 	echo "console-httpd: $(CONSOLE_HTTPD_IMAGE)" >> "$@"
+	echo "standard-controller: $(STANDARD_CONTROLLER_IMAGE)" >> "$@"
+	echo "agent: $(AGENT_IMAGE)" >> "$@"
+	echo "broker: $(BROKER_IMAGE)" >> "$@"
+	echo "broker-plugin: $(BROKER_PLUGIN_IMAGE)" >> "$@"
+	echo "topic-forwarder: $(TOPIC_FORWARDER_IMAGE)" >> "$@"
+	echo "mqtt-gateway: $(MQTT_GATEWAY_IMAGE)" >> "$@"
+	echo "mqtt-lwt: $(MQTT_LWT_IMAGE)" >> "$@"
 
 .PHONY: build/operatorImageMap.yaml

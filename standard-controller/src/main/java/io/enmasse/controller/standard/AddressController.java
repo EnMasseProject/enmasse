@@ -7,9 +7,12 @@ package io.enmasse.controller.standard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.AddressSpaceSpecConnector;
 import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.AddressSpecForwarder;
+import io.enmasse.address.model.AddressSpecForwarderDirection;
 import io.enmasse.address.model.AddressStatus;
 import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.AddressStatusForwarderBuilder;
@@ -26,6 +29,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.amqp.RouterManagement;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.EventLogger;
 import io.enmasse.k8s.api.ResourceChecker;
 import io.enmasse.k8s.api.SchemaProvider;
@@ -77,6 +81,7 @@ import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 public class AddressController implements Watcher<Address> {
     private static final Logger log = LoggerFactory.getLogger(AddressController.class);
     private final StandardControllerOptions options;
+    private final AddressSpaceApi addressSpaceApi;
     private final AddressApi addressApi;
     private final Kubernetes kubernetes;
     private final BrokerSetGenerator clusterGenerator;
@@ -99,8 +104,9 @@ public class AddressController implements Watcher<Address> {
     private volatile Long totalTime;
     private volatile Map<Phase, Long> countByPhase = new HashMap<>();
 
-    public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
+    public AddressController(StandardControllerOptions options, AddressSpaceApi addressSpaceApi, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
         this.options = options;
+        this.addressSpaceApi = addressSpaceApi;
         this.addressApi = addressApi;
         this.kubernetes = kubernetes;
         this.clusterGenerator = clusterGenerator;
@@ -234,6 +240,9 @@ public class AddressController implements Watcher<Address> {
             return;
         }
 
+        String addressPrefix = String.format("%s.", options.getAddressSpace());
+        addressList = addressList.stream().filter(a -> a.getMetadata().getName().startsWith(addressPrefix)).collect(Collectors.toList());
+
         AddressSpaceResolver addressSpaceResolver = new AddressSpaceResolver(schema);
 
         final Map<String, ProvisionState> previousStatus = addressList.stream()
@@ -245,6 +254,11 @@ public class AddressController implements Watcher<Address> {
         boolean withMqtt = isWithMqtt(infraConfig);
 
         long resolvedPlan = System.nanoTime();
+
+        AddressSpace addressSpace = addressSpaceApi.getAddressSpaceWithName(options.getAddressSpaceNamespace(), options.getAddressSpace()).orElse(null);
+        if (addressSpace == null) {
+            log.warn("Unable to find address space, will not validate address forwarders");
+        }
 
         AddressProvisioner provisioner = new AddressProvisioner(addressSpaceResolver, addressResolver, addressSpacePlan, clusterGenerator, kubernetes, eventLogger, options.getInfraUuid(), brokerIdGenerator);
 
@@ -265,6 +279,10 @@ public class AddressController implements Watcher<Address> {
                             .build());
                 }
                 address.getStatus().setForwarders(forwarderStatuses);
+            }
+
+            if (!validateAddress(address, addressSpace, addressResolver)) {
+                continue;
             }
 
             Address existing = validAddresses.get(address.getSpec().getAddress());
@@ -732,6 +750,53 @@ public class AddressController implements Watcher<Address> {
             numOk += clusterOk.get(clusterId);
         }
         return numOk;
+    }
+
+    private boolean validateAddress(Address address, AddressSpace addressSpace, AddressResolver addressResolver) {
+        if (!addressResolver.validate(address)) {
+            return false;
+        }
+
+        boolean valid = true;
+        if (addressSpace == null) {
+            return valid;
+        }
+
+        if (address.getSpec().getForwarders() != null && !address.getSpec().getForwarders().isEmpty()) {
+            if (addressSpace.getSpec().getConnectors() == null || addressSpace.getSpec().getConnectors().isEmpty()) {
+                valid = false;
+                address.getStatus().appendMessage(String.format("Unable to create forwarders: There are no connectors configured for address space '%s'", addressSpace.getMetadata().getName()));
+            }
+
+            if (!Arrays.asList("queue", "subscription").contains(address.getSpec().getType())) {
+                valid = false;
+                address.getStatus().appendMessage(String.format("Unable to create forwarders for address type '%s': Forwarders can only be created for address types 'queue' and 'subscription'", address.getSpec().getType()));
+            }
+
+            for (AddressSpecForwarder forwarder : address.getSpec().getForwarders()) {
+                boolean found = false;
+                for (AddressSpaceSpecConnector connector : addressSpace.getSpec().getConnectors()) {
+                    if (forwarder.getRemoteAddress().startsWith(connector.getName())) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    valid = false;
+                    address.getStatus().appendMessage(String.format("Unable to create forwarder '%s': remoteAddress '%s' is not prefixed with any connector in address space '%s'", forwarder.getName(), forwarder.getRemoteAddress(), address.getMetadata().getName()));
+                }
+
+                if ("subscription".equals(address.getSpec().getType()) && AddressSpecForwarderDirection.in.equals(forwarder.getDirection())) {
+                    valid = false;
+                    address.getStatus().appendMessage(String.format("Unable to create forwarder '%s': direction 'in' is not allowed on 'subscription' address type", forwarder.getName()));
+                }
+            }
+        }
+        if (!valid) {
+            address.getStatus().setReady(false);
+        }
+
+        return valid;
     }
 
     private boolean isPooled(AddressPlan plan) {

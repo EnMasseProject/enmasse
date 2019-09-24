@@ -294,11 +294,11 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
     public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
-        super.replaceAddressSpace(addressSpace, true, currentAddressSpaces);
+        replaceAddressSpace(addressSpace, true);
     }
 
-    public void replaceAddressSpace(AddressSpace addressSpace, boolean replaceExisting) throws Exception {
-        super.replaceAddressSpace(addressSpace, replaceExisting, currentAddressSpaces);
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied) throws Exception {
+        super.replaceAddressSpace(addressSpace, waitForPlanApplied, currentAddressSpaces);
     }
 
     public void deleteAddressspacesFromList() throws Exception {

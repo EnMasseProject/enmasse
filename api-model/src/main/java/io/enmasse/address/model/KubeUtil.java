@@ -4,15 +4,29 @@
  */
 package io.enmasse.address.model;
 
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
+import com.google.common.hash.Hashing;
 import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.PodSecurityContext;
+import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.Probe;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Various static utilities that don't belong in a specific place
@@ -73,10 +87,15 @@ public final class KubeUtil {
         return sanitizeWithUuid(name, uuid, addressPattern);
     }
 
+    public static String infraUuid(String namespace, String name) {
+        String digest = Hashing.sha256().hashString(namespace + "." + name, StandardCharsets.UTF_8).toString();
+        return digest.substring(0, 7);
+    }
+
     /**
      * Create the address name, aligned with the Go logic of creating names.
-     * <br>
-     * The main difference between Go and the Java method {@link #generateName(String, String)} is, that in Go
+     *
+     * The main difference between Go and the Java method generateName(String, String) is, that in Go
      * you must use a namespace prefix for a type 3 UUID. This method uses the same prefix as the Go code.
      *
      * @param addressSpace The name of the address space.

@@ -28,10 +28,6 @@ public final class AddressSpaceControllerOptions {
 
     private String version;
 
-    private String standardAuthserviceConfigName;
-    private String standardAuthserviceCredentialsSecretName;
-    private String standardAuthserviceCertSecretName;
-
     private Duration managementQueryTimeout;
     private Duration managementConnectTimeout;
 
@@ -82,10 +78,6 @@ public final class AddressSpaceControllerOptions {
             throw new IllegalArgumentException("Resources directory " + resourcesDir.getAbsolutePath() + " not found");
         }
         options.setResourcesDir(resourcesDir);
-
-        options.setStandardAuthserviceConfigName(getEnv(env, "STANDARD_AUTHSERVICE_CONFIG_NAME").orElse(null));
-        options.setStandardAuthserviceCredentialsSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME"));
-        options.setStandardAuthserviceCertSecretName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CERT_SECRET_NAME"));
 
         options.setEnableEventLogger(getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false));
 
@@ -146,10 +138,6 @@ public final class AddressSpaceControllerOptions {
         return exposeEndpointsByDefault;
     }
 
-    public String getStandardAuthserviceConfigName() {
-        return standardAuthserviceConfigName;
-    }
-
     public void setTemplateDir(File templateDir) {
         this.templateDir = templateDir;
     }
@@ -182,26 +170,6 @@ public final class AddressSpaceControllerOptions {
         this.version = version;
     }
 
-    public void setStandardAuthserviceConfigName(String standardAuthserviceConfigName) {
-        this.standardAuthserviceConfigName = standardAuthserviceConfigName;
-    }
-
-    public String getStandardAuthserviceCredentialsSecretName() {
-        return standardAuthserviceCredentialsSecretName;
-    }
-
-    public void setStandardAuthserviceCredentialsSecretName(String standardAuthserviceCredentialsSecretName) {
-        this.standardAuthserviceCredentialsSecretName = standardAuthserviceCredentialsSecretName;
-    }
-
-    public String getStandardAuthserviceCertSecretName() {
-        return standardAuthserviceCertSecretName;
-    }
-
-    public void setStandardAuthserviceCertSecretName(String standardAuthserviceCertSecretName) {
-        this.standardAuthserviceCertSecretName = standardAuthserviceCertSecretName;
-    }
-
     public File getResourcesDir() {
         return resourcesDir;
     }
@@ -222,9 +190,6 @@ public final class AddressSpaceControllerOptions {
                 ", resyncInterval=" + resyncInterval +
                 ", recheckInterval=" + recheckInterval +
                 ", version='" + version + '\'' +
-                ", standardAuthserviceConfigName='" + standardAuthserviceConfigName + '\'' +
-                ", standardAuthserviceCredentialsSecretName='" + standardAuthserviceCredentialsSecretName + '\'' +
-                ", standardAuthserviceCertSecretName='" + standardAuthserviceCertSecretName + '\'' +
                 ", managementQueryTimeout='" + managementQueryTimeout + '\'' +
                 ", managementConnectTimeout='" + managementConnectTimeout + '\'' +
                 ", kubernetesApiConnectTimeout='" + kubernetesApiConnectTimeout + '\'' +

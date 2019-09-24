@@ -9,7 +9,7 @@ rules:
     resources: [ "deployments" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "" ]
-    resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services" ]
+    resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services", "pods" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
   - apiGroups: [ "", "route.openshift.io" ]
     resources: [ "routes", "routes/custom-host", "routes/status"]

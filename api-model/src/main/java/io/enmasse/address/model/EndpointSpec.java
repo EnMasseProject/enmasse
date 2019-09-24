@@ -5,6 +5,7 @@
 package io.enmasse.address.model;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.validation.Valid;
 
@@ -90,5 +91,22 @@ public class EndpointSpec extends AbstractWithAdditionalProperties {
                 .append("exports=").append(exports).append(",")
                 .append("cert=").append(cert).append("}")
                 .toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EndpointSpec that = (EndpointSpec) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(service, that.service) &&
+                Objects.equals(expose, that.expose) &&
+                Objects.equals(cert, that.cert) &&
+                Objects.equals(exports, that.exports);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, service, expose, cert, exports);
     }
 }

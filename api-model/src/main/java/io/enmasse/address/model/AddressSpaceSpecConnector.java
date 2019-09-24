@@ -20,6 +20,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -107,5 +108,22 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
                 ", tls=" + tls +
                 ", addresses=" + addresses +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSpecConnector connector = (AddressSpaceSpecConnector) o;
+        return Objects.equals(name, connector.name) &&
+                Objects.equals(endpointHosts, connector.endpointHosts) &&
+                Objects.equals(credentials, connector.credentials) &&
+                Objects.equals(tls, connector.tls) &&
+                Objects.equals(addresses, connector.addresses);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, endpointHosts, credentials, tls, addresses);
     }
 }

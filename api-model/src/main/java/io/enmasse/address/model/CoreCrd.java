@@ -21,7 +21,7 @@ public class CoreCrd {
     static {
         ADDRESS_CRD = CustomResources.createCustomResource(GROUP, VERSION, Address.KIND);
         ADDRESS_SPACE_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpace.KIND);
-        ADDRESS_SPACE_SCHEMA_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpaceSchema.KIND);
+        ADDRESS_SPACE_SCHEMA_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpaceSchema.KIND, "Cluster");
     }
 
     public static void registerCustomCrds() {
@@ -38,7 +38,7 @@ public class CoreCrd {
         return ADDRESS_CRD;
     }
 
-    public static CustomResourceDefinition addresseSpaces() {
+    public static CustomResourceDefinition addressSpaces() {
         return ADDRESS_SPACE_CRD;
     }
 

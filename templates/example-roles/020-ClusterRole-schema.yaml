@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: enmasse.io:schema
+  labels:
+    app: enmasse
+    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addressspaceschemas" ]
+    verbs: [ "get", "list", "watch" ]

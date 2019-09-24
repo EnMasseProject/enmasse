@@ -6,6 +6,7 @@ package io.enmasse.address.model;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -107,10 +108,29 @@ public class AddressSpaceSpec extends AbstractWithAdditionalProperties {
         sb
                 .append("type=").append(type).append(",")
                 .append("plan=").append(plan).append(",")
+                .append("authenticationService=").append(authenticationService).append(",")
                 .append("endpoints=").append(endpoints).append(",")
                 .append("networkPolicy=").append(networkPolicy).append(",")
                 .append("connectors=").append(connectors);
 
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AddressSpaceSpec that = (AddressSpaceSpec) o;
+        return Objects.equals(type, that.type) &&
+                Objects.equals(endpoints, that.endpoints) &&
+                Objects.equals(networkPolicy, that.networkPolicy) &&
+                Objects.equals(plan, that.plan) &&
+                Objects.equals(authenticationService, that.authenticationService) &&
+                Objects.equals(connectors, that.connectors);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, endpoints, networkPolicy, plan, authenticationService, connectors);
     }
 }

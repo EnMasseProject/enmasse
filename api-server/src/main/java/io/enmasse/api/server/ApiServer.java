@@ -76,7 +76,7 @@ public class ApiServer extends AbstractVerticle {
         CachingSchemaProvider schemaProvider = new CachingSchemaProvider();
         schemaApi.watchSchema(schemaProvider, options.getResyncInterval());
 
-        AddressSpaceApi addressSpaceApi = new ConfigMapAddressSpaceApi(client, options.getVersion());
+        AddressSpaceApi addressSpaceApi = KubeAddressSpaceApi.create(client, null, options.getVersion());
 
         AuthApi authApi = new KubeAuthApi(client, client.getConfiguration().getOauthToken());
 

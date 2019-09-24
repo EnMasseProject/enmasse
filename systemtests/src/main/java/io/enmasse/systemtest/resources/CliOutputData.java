@@ -100,12 +100,8 @@ public class CliOutputData {
             this.plan = parsedData[2];
             this.ready = Boolean.parseBoolean(parsedData[3]);
             this.phase = parsedData[4];
-            this.age = parsedData[5];
-            try {
-                this.status = parsedData[6];
-            } catch (Exception ignored) {
-                this.status = "";
-            }
+            this.status = parsedData[5];
+            this.age = parsedData[6];
         }
 
         public String getPlan() {
@@ -127,7 +123,6 @@ public class CliOutputData {
 
     public static class AddressRow extends CliDataRow {
         private String address;
-        private String addressSpace;
         private String plan;
         private boolean ready;
         private String phase;
@@ -137,25 +132,16 @@ public class CliOutputData {
             String[] parsedData = splitData(data);
             this.name = parsedData[0];
             this.address = parsedData[1];
-            this.addressSpace = parsedData[2];
-            this.type = parsedData[3];
-            this.plan = parsedData[4];
-            this.ready = Boolean.parseBoolean(parsedData[5]);
-            this.phase = parsedData[6];
+            this.type = parsedData[2];
+            this.plan = parsedData[3];
+            this.ready = Boolean.parseBoolean(parsedData[4]);
+            this.phase = parsedData[5];
+            this.status = parsedData[6];
             this.age = parsedData[7];
-            try {
-                this.status = parsedData[8];
-            } catch (Exception ignored) {
-                this.status = "";
-            }
         }
 
         public String getAddress() {
             return address;
-        }
-
-        public String getAddressSpace() {
-            return addressSpace;
         }
 
         public String getPlan() {

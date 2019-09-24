@@ -7,8 +7,10 @@ package io.enmasse.controller.common;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.KubeUtil;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.enmasse.controller.InfraConfigs;
 import io.enmasse.k8s.util.Templates;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -19,6 +21,7 @@ import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -143,5 +146,39 @@ public class KubernetesHelper implements Kubernetes {
     @Override
     public boolean existsAddressSpace(AddressSpace addressSpace) {
         return client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get() != null;
+    }
+
+    @Override
+    public String getAppliedPlan(AddressSpace addressSpace) {
+        if (addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN) != null) {
+            return addressSpace.getAnnotation(AnnotationKeys.APPLIED_PLAN);
+        }
+        Service messaging = client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get();
+        if (messaging == null) {
+            return null;
+        }
+        if (messaging.getMetadata().getAnnotations() == null) {
+            return null;
+        }
+        return messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_PLAN);
+    }
+
+    @Override
+    public InfraConfig getAppliedInfraConfig(AddressSpace addressSpace) throws IOException {
+        InfraConfig config = InfraConfigs.parseCurrentInfraConfig(addressSpace);
+        if (config != null) {
+            return config;
+        }
+
+        Service messaging = client.services().inNamespace(namespace).withName(KubeUtil.getAddressSpaceServiceName("messaging", addressSpace)).get();
+        if (messaging == null) {
+            return null;
+        }
+
+        if (messaging.getMetadata().getAnnotations() == null) {
+            return null;
+        }
+
+        return InfraConfigs.parseCurrentInfraConfig(messaging.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_INFRA_CONFIG));
     }
 }

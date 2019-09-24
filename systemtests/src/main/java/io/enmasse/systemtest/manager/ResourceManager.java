@@ -233,14 +233,22 @@ public abstract class ResourceManager {
     }
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
+        createAddressSpace(addressSpace, true);
+    }
+
+    public void createAddressSpace(AddressSpace addressSpace, boolean waitUntilReady) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             LOGGER.info("Address space '{}' doesn't exist and will be created.", addressSpace);
             kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            if (waitUntilReady) {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            }
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         } else {
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            if (waitUntilReady) {
+                AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+            }
             LOGGER.info("Address space '" + addressSpace + "' already exists.");
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         }
@@ -300,7 +308,7 @@ public abstract class ResourceManager {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    protected void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, List<AddressSpace> addressSpaceList) throws Exception {
+    public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForPlanApplied, List<AddressSpace> addressSpaceList) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
         var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {

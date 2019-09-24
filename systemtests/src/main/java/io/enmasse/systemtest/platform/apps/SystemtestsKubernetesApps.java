@@ -304,7 +304,7 @@ public class SystemtestsKubernetesApps {
             kubeCli.createNamespace(namespace);
         }
 
-        kubeCli.getClient().rbac().roles().inNamespace(namespace).create(new RoleBuilder()
+        kubeCli.getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -316,7 +316,7 @@ public class SystemtestsKubernetesApps {
                         .addToVerbs("get")
                         .build())
                 .build());
-        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).create(new RoleBindingBuilder()
+        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplace(new RoleBindingBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
