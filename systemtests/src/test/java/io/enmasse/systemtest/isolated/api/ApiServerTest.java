@@ -38,6 +38,7 @@ import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -67,7 +69,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.vertx.core.json.JsonObject;
 
-public class ApiServerTest extends TestBase implements ITestIsolatedStandard {
+class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
 
     private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
@@ -446,6 +448,7 @@ public class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testReplaceAddressSpace() throws Exception {
         AddressSpace addressspace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -495,8 +498,9 @@ public class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
 
     @Test
+    @Tag(ACCEPTANCE)
     @DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
-    public void testCreateAddressSpaceRoleTenantEdit() throws Exception {
+    void testCreateAddressSpaceRoleTenantEdit() throws Exception {
 
         UserCredentials user = Credentials.userCredentials();
         String namespace = "test-authorization";

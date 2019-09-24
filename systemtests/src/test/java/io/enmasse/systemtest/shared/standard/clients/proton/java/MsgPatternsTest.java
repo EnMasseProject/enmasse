@@ -11,9 +11,13 @@ import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceive
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.resolvers.ArtemisManagementParameterResolver;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+
+@Tag(ACCEPTANCE)
 @ExtendWith(ArtemisManagementParameterResolver.class)
 class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
 

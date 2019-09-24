@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 import static io.enmasse.systemtest.TestTag.SMOKE;
 import static org.hamcrest.CoreMatchers.is;
@@ -50,6 +51,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Tag(NON_PR)
 @Tag(SMOKE)
+@Tag(ACCEPTANCE)
 class SmokeTest extends TestBase implements ITestIsolatedStandard {
 
     private Address queue;

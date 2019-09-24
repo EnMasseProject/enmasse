@@ -4,12 +4,6 @@
  */
 package io.enmasse.systemtest.isolated.bridging;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import java.util.concurrent.TimeUnit;
-
-import org.junit.jupiter.api.Test;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -24,8 +18,16 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
-public class ForwardersTest extends BridgingBase {
+import java.util.concurrent.TimeUnit;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+class ForwardersTest extends BridgingBase {
 
     //tested usecases
     //Forwarding messages from a local queue in a local address space to a destination on a remote AMQP endpoint
@@ -38,7 +40,8 @@ public class ForwardersTest extends BridgingBase {
     private static final String REMOTE_QUEUE2 = "queue2";
 
     @Test
-    public void testForwardToRemoteQueue() throws Exception {
+    @Tag(ACCEPTANCE)
+    void testForwardToRemoteQueue() throws Exception {
         AddressSpace space = createAddressSpace("forward-to-remote", "*");
         Address forwarder = new AddressBuilder()
                 .withNewMetadata()
@@ -69,7 +72,7 @@ public class ForwardersTest extends BridgingBase {
     }
 
     @Test
-    public void testForwardFromRemoteQueue() throws Exception {
+    void testForwardFromRemoteQueue() throws Exception {
         AddressSpace space = createAddressSpace("forward-from-remote", "*");
         Address forwarder = new AddressBuilder()
                 .withNewMetadata()
@@ -108,12 +111,12 @@ public class ForwardersTest extends BridgingBase {
 
         var receivedInRemote = localClient.recvMessages(forwarder.getSpec().getAddress(), messagesBatch);
 
-        assertThat("Wrong count of messages received in local address: "+forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received in local address: " + forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
 
     }
 
     @Test
-    public void testForwardToUnavailableBroker() throws Exception {
+    void testForwardToUnavailableBroker() throws Exception {
 
         AddressSpace space = createAddressSpace("forward-to-remote", "*");
         Address forwarder = new AddressBuilder()
@@ -176,7 +179,7 @@ public class ForwardersTest extends BridgingBase {
 
         var receivedInRemote = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesBatch);
 
-        assertThat("Wrong count of messages received from remote queue: "+REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received from remote queue: " + REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
     private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String rometeAddress, int messagesBatch) throws Exception {
@@ -193,7 +196,7 @@ public class ForwardersTest extends BridgingBase {
 
         var receivedInRemote = clientToRemote.recvMessages(rometeAddress, messagesBatch);
 
-        assertThat("Wrong count of messages received from remote queue: "+rometeAddress, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received from remote queue: " + rometeAddress, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
 }

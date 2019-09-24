@@ -21,5 +21,6 @@ public class TestTag {
     public static final String NONE_AUTH = "noneAuth";
     public static final String SMOKE = "smoke";
     public static final String OLM = "olm";
+    public static final String ACCEPTANCE = "acceptance";
     public static final List<String> SHARED_TAGS = Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_MQTT);
 }

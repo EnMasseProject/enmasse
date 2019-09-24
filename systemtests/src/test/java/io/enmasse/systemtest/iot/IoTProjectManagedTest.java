@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.user.model.v1.Operation.recv;
 import static io.enmasse.user.model.v1.Operation.send;
 import static java.util.Arrays.asList;
@@ -51,6 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class IoTProjectManagedTest extends IoTTestBase implements ITestIsolatedStandard {
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreate() throws Exception {
         createIoTConfig(new IoTConfigBuilder()
                 .withNewMetadata()

@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -42,12 +43,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateInfra() throws Exception {
         PodTemplateSpec brokerTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "broker"), "mybrokernode", "broker");
         PodTemplateSpec adminTemplateSpec = PlanUtils.createTemplateSpec(Collections.singletonMap("mycomponent", "admin"), "myadminnode", "admin");

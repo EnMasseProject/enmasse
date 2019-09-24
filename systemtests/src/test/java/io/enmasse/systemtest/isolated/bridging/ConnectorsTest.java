@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.isolated.bridging;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
@@ -230,7 +232,8 @@ class ConnectorsTest extends BridgingBase {
     }
 
     @Test
-    public void testConnectorTLS() throws Exception {
+    @Tag(ACCEPTANCE)
+    void testConnectorTLS() throws Exception {
         AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, true);
 
         UserCredentials localUser = new UserCredentials("test", "test");
