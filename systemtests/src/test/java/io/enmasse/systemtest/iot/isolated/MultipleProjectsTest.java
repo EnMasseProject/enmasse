@@ -108,7 +108,8 @@ public class MultipleProjectsTest extends TestBase implements ITestIsolatedStand
             if (!kubernetes.namespaceExists(projectName)) {
                 kubernetes.createNamespace(projectName);
             }
-            IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName, projectName);
+            IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName,
+                    projectName, getDefaultAddressSpacePlan());
             createIoTProject(project);
             IoTProjectTestContext ctx = new IoTProjectTestContext(projectName, project);
 

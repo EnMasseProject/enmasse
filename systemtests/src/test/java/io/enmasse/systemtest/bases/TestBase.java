@@ -102,17 +102,21 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     @BeforeEach
     public void initTest() throws Exception {
+        LOGGER.info("Test init");
         defaultCredentials = environment.getDefaultCredentials();
         managementCredentials = environment.getManagementCredentials();
         resourcesManager = getResourceManager();
         if (TestInfo.getInstance().isTestShared()) {
-            ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
-            ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
-            ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
+
+                ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
+                ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
+                ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
+
 
             if (resourcesManager.getSharedAddressSpace() == null) {
                 if (TestInfo.getInstance().isTestIoT()) {
                     ((SharedIoTManager) resourcesManager).createSharedIoTEnv();
+                    ((SharedIoTManager) resourcesManager).createDeviceRegistrySharedEnv();
                 } else {
                     ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
                 }

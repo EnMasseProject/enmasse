@@ -16,6 +16,7 @@ import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.AfterTestExecutionCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
@@ -31,7 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler, BeforeTestExecutionCallback, BeforeEachCallback, AfterTestExecutionCallback {
+public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler, BeforeTestExecutionCallback, AfterEachCallback, BeforeEachCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private TestInfo testInfo = TestInfo.getInstance();
     private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
@@ -40,7 +41,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
 
     @Override
-    public void afterTestExecution(ExtensionContext extensionContext) throws Exception {
+    public void afterEach(ExtensionContext extensionContext) throws Exception {
         LOGGER.info("Teardown section: ");
         if (testInfo.isTestShared()) {
           tearDownSharedResources();
@@ -169,14 +170,20 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             Environment.getInstance().getDefaultCredentials().setUsername("test").setPassword("test");
             Environment.getInstance().setManagementCredentials(new UserCredentials("artemis-admin", "artemis-admin"));
         }
+
+        if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
+            LOGGER.warn("Goiing for fucking setup add space");
+            sharedIoTManager.setup();
+        }
     }
 
     @Override
     public void beforeTestExecution(ExtensionContext context) throws Exception {
         if (testInfo.isTestShared()) {
-            if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
+            /*if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
+                LOGGER.warn("Goiing for fucking setup add space");
                 sharedIoTManager.setup();
-            } else if (sharedResourcesManager.getAmqpClientFactory() == null) {
+            } else*/ if (sharedResourcesManager.getAmqpClientFactory() == null) {
                 sharedResourcesManager.setup();
             }
         } else {

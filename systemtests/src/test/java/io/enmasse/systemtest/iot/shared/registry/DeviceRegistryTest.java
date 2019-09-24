@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+import static io.enmasse.systemtest.TestTag.IOT_DEVICE_REG;
 import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 import static io.enmasse.systemtest.TestTag.SMOKE;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(SMOKE)
+@Tag(IOT_DEVICE_REG)
 public abstract class DeviceRegistryTest extends TestBase implements ITestIoTShared  {
 
     protected DeviceRegistryClient client;

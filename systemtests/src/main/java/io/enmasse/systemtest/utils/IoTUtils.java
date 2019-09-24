@@ -4,7 +4,9 @@
  */
 package io.enmasse.systemtest.utils;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
@@ -61,7 +63,7 @@ public class IoTUtils {
 
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         var iotConfigClient = kubernetes.getIoTConfigClient();
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigClient.withName(config.getMetadata().getName()).get();
@@ -163,7 +165,7 @@ public class IoTUtils {
         config.setStatus(result.getStatus());
     }
 
-    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName, String namespace) {
+    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName, String namespace, String addressSpacePlan) {
         return new IoTProjectBuilder()
                 .withNewMetadata()
                 .withName(name)
@@ -174,7 +176,7 @@ public class IoTUtils {
                 .withNewManagedStrategy()
                 .withNewAddressSpace()
                 .withName(addressSpaceName)
-                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withPlan(addressSpacePlan)
                 .endAddressSpace()
                 .withNewAddresses()
                 .withNewTelemetry()
@@ -221,10 +223,7 @@ public class IoTUtils {
         IoTUtils.waitForIoTProjectReady(kubernetes, project);
         IoTUtils.syncIoTProject(kubernetes, project);
         TimeMeasuringSystem.stopOperation(operationID);
-        AddressSpace addressSpace = kubernetes.getAddressSpaceClient().inNamespace(project.getMetadata().getNamespace())
-                .list().getItems().stream().filter(addressSpace1 -> addressSpace1.getMetadata().getName()
-                        .equals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()))
-                .collect(Collectors.toList()).get(0);
+
     }
 
     public static String getTenantID(IoTProject project) {

@@ -14,6 +14,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.iot.ITestIoTBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -46,7 +47,6 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
     private AmqpClient amqpClient;
     private String randomDeviceId = null;
 
-    private static final String DEFAULT_ADDRESS_TEMPLATE = "iot-shared-";
 
     public static synchronized SharedIoTManager getInstance() {
         if (instance == null) {
@@ -57,6 +57,7 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
 
     @Override
     public AddressSpace getSharedAddressSpace() {
+        if (sharedIoTProject == null) return null;
         String addSpaceName = sharedIoTProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
         AddressSpace addressSpace = kubernetes.getAddressSpaceClient(sharedIoTProject.getMetadata().getNamespace()).withName(addSpaceName).get();
         return addressSpace;
@@ -87,6 +88,7 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
                 }
                 LOGGER.info("Infinispan server will be removed");
                 SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+                kubernetes.deleteNamespace(iotProjectNamespace);
                 sharedIoTConfig = null;
             } else {
                 LOGGER.warn("Remove shared iotproject when test failed - SKIPPED!");
@@ -103,14 +105,20 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
     @Override
     public void setup() {
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
+            LOGGER.info("Namespace {} doesn't exists and will be created.");
             kubernetes.createNamespace(iotProjectNamespace);
         }
-        initFactories(getSharedAddressSpace());
     }
     
     public void createSharedIoTEnv() throws Exception {
         Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
 
+        if (sharedIoTProject == null) {
+            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
+                    DEFAULT_ADD_SPACE_IDENTIFIER, iotProjectNamespace, ADDRESS_SPACE_PLAN);
+            createIoTProject(sharedIoTProject);
+
+        }
         if (sharedIoTConfig == null) {
             CertBundle certBundle = CertificateUtils.createCertBundle();
             sharedIoTConfig = new IoTConfigBuilder()
@@ -137,25 +145,21 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
             createIoTConfig(sharedIoTConfig);
         }
 
-        if (sharedIoTProject == null) {
-            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
-                    getSharedAddressSpace().getMetadata().getName(), iotProjectNamespace);
-            createIoTProject(sharedIoTProject);
-        }
-
+        initFactories(getSharedAddressSpace());
         this.amqpClient = amqpClientFactory.createQueueClient();
     }
 
     //TODO: implement device reg
-    public void createDeviceRegistrySharedEnv(IoTConfig ioTConfig) throws Exception {
-        if (sharedIoTConfig == null) {
+    public void createDeviceRegistrySharedEnv() throws Exception {
+/*        if (sharedIoTConfig == null) {
             sharedIoTConfig = ioTConfig;
             createIoTConfig(sharedIoTConfig);
         }
         if (sharedIoTProject == null) {
-            sharedIoTProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT, DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace);
+            sharedIoTProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT,
+                    DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace, ADDRESS_SPACE_PLAN);
             createIoTProject(sharedIoTProject);
-        }
+        }*/
         if (deviceRegistryEndpoint == null) {
             deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         }
@@ -168,8 +172,10 @@ public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
         this.randomDeviceId = UUID.randomUUID().toString();
 
         Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
-        createOrUpdateUser(getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), Environment.getInstance().getDefaultCredentials());
-        this.amqpClientFactory = new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), Environment.getInstance().getDefaultCredentials());
+        createOrUpdateUser(getAddressSpace(this.iotProjectNamespace,
+                getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
+        this.amqpClientFactory = new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace,
+                getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
     }
     
     public AmqpClientFactory getAmqpClientFactory() {

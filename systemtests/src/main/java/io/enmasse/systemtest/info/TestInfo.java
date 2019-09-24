@@ -102,6 +102,17 @@ public class TestInfo {
         return false;
     }
 
+    public boolean isTestIoTDeviceReg() {
+        for (String tag : getTags(tests.get(getCurrentTestIndex()))) {
+            if (tag.equals(TestTag.IOT_DEVICE_REG)) {
+                LOGGER.info("Test is device registry kind.");
+                return true;
+            }
+        }
+        LOGGER.info("Test is not IoT!");
+        return false;
+    }
+
     public int getCurrentTestIndex() {
         TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
                 && isSameClass(testIdentifier, actualTest)).findFirst().get();
