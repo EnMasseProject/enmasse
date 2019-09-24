@@ -28,12 +28,13 @@ import org.slf4j.Logger;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import static io.enmasse.systemtest.bases.iot.ITestIoTBase.iotProjectNamespace;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.deviceRegistry;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
 
-public class SharedIoTManager extends ResourceManager implements ITestIoTBase {
+public class SharedIoTManager extends ResourceManager {
 
     private static final Logger LOGGER = CustomLogger.getLogger();
     private static SharedIoTManager instance;
