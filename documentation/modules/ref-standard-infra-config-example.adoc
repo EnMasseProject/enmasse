@@ -7,7 +7,7 @@
 
 The following example of a standard infrastructure configuration file shows the various settings that can be specified.
 
-[source,yaml,options="nowrap",subs="attributes"]
+[source,yaml,options="nowrap",subs="attributes+"]
 ----
 apiVersion: admin.enmasse.io/v1beta1
 kind: StandardInfraConfig
@@ -53,15 +53,13 @@ spec:
 <1> Specifies the {ProductName} version used. When upgrading, {ProductName} uses
 this field to determine whether to upgrade the infrastructure to the requested version. If omitted,
 the version is assumed to be the same version as the controllers reading the configuration.
-
 <2> Specifies the settings you can configure for the `admin` components.
-
 <3> Specifies the settings you can configure for the `broker` components. Changing
 the `.broker.resources.storage` setting does not configure the existing broker storage size.
-
 <4> Specifies the settings you can configure for the `router` components.
+<5> For `admin`, `broker`, and `router` components you can configure the following `podTemplate` elements:
 
-<5> For `admin`, `broker`, and `router` components you can configure the following `podTemplate` elements: * `metadata.labels`
+* `metadata.labels`
 * `spec.priorityClassName`
 * `spec.tolerations`
 * `spec.affinity`

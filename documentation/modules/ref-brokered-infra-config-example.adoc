@@ -7,7 +7,7 @@
 
 The following example of a brokered infrastructure configuration file shows the various settings that can be specified.
 
-[source,yaml,options="nowrap",subs="attributes"]
+[source,yaml,options="nowrap",subs="attributes+"]
 ----
 apiVersion: admin.enmasse.io/v1beta1
 kind: BrokeredInfraConfig
@@ -22,7 +22,7 @@ spec:
       metadata:
         labels:
           key: value
-  broker:
+  broker: <3>
     resources:
       memory: 2Gi
       storage: 100Gi

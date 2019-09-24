@@ -30,7 +30,7 @@ This table shows the fields available for the standard infrastructure configurat
 |`broker.podTemplate.spec.containers.initialDelaySeconds` |Specifies probe delay value in seconds for the broker Pod.
 |`broker.podTemplate.spec.containers.timeoutSeconds` |Specifies probe timeout value in seconds for the broker Pod.
 |`broker.podTemplate.spec.containers.resources` |Specifies broker Pod resource requests and limits for CPU and memory.
-|`broker.podTemplate.spec.containers.env` |Specifies 
+|`broker.podTemplate.spec.containers.env` |Specifies environment variables for the broker Pod.
 |`broker.connectorIdleTimeout` |Specifies the AMQP idle timeout to use for connection to router.
 |`broker.connectorWorkerThreads` |Specifies the number of worker threads of the connection to the router.
 |`broker.storageClassName` |Specifies what storage class to use for the persistent volume for the broker.
@@ -38,7 +38,7 @@ This table shows the fields available for the standard infrastructure configurat
 |`router.resources.memory` |Specifies the amount of memory allocated to the router.
 |`router.linkCapacity` |Specifies the default number of credits issued on AMQP links for the router.
 |`router.handshakeTimeout` |Specifies the amount of time in seconds to wait for the secure handshake to be initiated.
-|`router.minReplicas` |Specifies the minimum number of router pods to run; a minimum of two are required for high availability (HA) configuration.
+|`router.minReplicas` |Specifies the minimum number of router Pods to run; a minimum of two are required for high availability (HA) configuration.
 |`router.podTemplate.metadata.labels` |Specifies the labels added to the router Pod.
 |`router.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the router Pod so you can prioritize router pods over other pods in the {KubePlatform} cluster.
 |`router.podTemplate.spec.affinity` |Specifies the affinity settings for the router Pod so you can specify where on particular nodes a pod runs, or if it cannot run together with other instances.
@@ -46,7 +46,7 @@ This table shows the fields available for the standard infrastructure configurat
 |`router.podTemplate.spec.containers.initialDelaySeconds` |Specifies probe delay value in seconds for the router Pod.
 |`router.podTemplate.spec.containers.timeoutSeconds` |Specifies probe timeout value in seconds for the router Pod.
 |`router.podTemplate.spec.containers.resources` |Specifies router Pod resource requests and limits for CPU and memory.
-|`router.podTemplate.spec.containers.env` |Specifies ??
+|`router.podTemplate.spec.containers.env` |Specifies the environment variables for the router Pod.
 |`router.idleTimeout` |Specifies the AMQP idle timeout to use for all router listeners.
 |`router.workerThreads` |Specifies the number of worker threads to use for the router.
 |`router.policy.maxConnections` |Specifies the maximum number of router connections allowed.

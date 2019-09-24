@@ -9,7 +9,7 @@ You can override the default values for the probe timing on broker resources.
 
 The following example shows how to override certain default values of the readiness probe for broker resources.
 
-[source,yaml,options="nowrap",subs="attributes"]
+[source,yaml,options="nowrap",subs="attributes+"]
 ----
 apiVersion: admin.enmasse.io/v1beta1
 kind: BrokeredInfraConfig
@@ -29,7 +29,7 @@ spec:
 
 ----
 <1> The `name` value must match the target container name. For a broker, the podTemplate name is `broker`.
-<2> Specifies the number of times that {KubePlatform} tries when a Pod starts and the probe fails before either the Pod is marked `Unready` for a readiness probe, or restarting the container for a liveness probe. The default value is 3, and the minimum value is 1.
+<2> Specifies the number of times that {KubePlatform} tries when a Pod starts and the probe fails before either the Pod is marked `Unready` for a readiness probe, or restarting the container for a liveness probe. The default value is `3`, and the minimum value is `1`.
 <3> Specifies the number of seconds before performing the first probe after the container starts.
 
 ifeval::["{cmdcli}" == "kubectl"]
