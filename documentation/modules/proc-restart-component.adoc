@@ -4,16 +4,58 @@
 // assembly-monitoring-kube.adoc
 
 [id='restart-component-{context}']
-= Restarting a component
+= Restarting components to pick up security fixes
+
+Restarting {ProductName} components is required to pick up image updates for CVEs. The scripts are provided in the {ProductName} installation files `script` folder. To restart all components, run all scripts.
+
+== Restarting operators
+
+Operators may be restarted without affecting the messaging system. If a single api-server is used, there will be a transient downtime for new address space, address and messaging user resource requests.
 
 .Procedure
 
-* Delete the component's pod:
+* Run `restart-operators.sh` script:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} delete pod -l name=_component_
+./scripts/restart-operators.sh {ProductNamespace}
 ----
 
-The component will be automatically restarted in a new pod.
+== Restarting authentication services
 
+Authentication service restarts will temporarily affect new messaging connections. Existing connections will continue to work even if the authentication service is restarted.
+
+.Procedure
+
+* Run `restart-authservices.sh` script:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+./scripts/restart-authservices.sh {ProductNamespace}
+----
+
+== Restarting routers
+
+The messaging routers are only deployed for the `standard` address space type. The script assumes that at least 2 replicas of the router is running and perform a rolling restart. Messaging clients connected to the restarting router will be disconnected and have to reconnect to be served by different router.
+
+.Procedure
+
+* Run `restart-routers.sh` script requiring at least one router to be available:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+./scripts/restart-routers.sh {ProductNamespace} 1
+----
+
+== Restarting brokers
+
+For `brokered` address space, restarting brokers will cause temporary downtime to messaging clients while the broker is restarted. For the `standard` address space, messaging clients will not be disconnected to the messaging routers, but will not be able to consume messages stored on the restarting broker.
+
+.Procedure
+
+* Run `restart-brokers.sh` script:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+./scripts/restart-brokers.sh {ProductNamespace}
+----

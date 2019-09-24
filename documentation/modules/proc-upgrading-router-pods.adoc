@@ -5,7 +5,7 @@
 [id='post-upgrade-step-router-pod-{context}']
 = Restarting router pods running a previous version of the image
 
-When upgrading, sometimes a router pod is not automatically restarted by {KubePlatform}. If this issue occurs, it is important to manually restart the affected pod to ensure correct operation of the system.
+When upgrading, sometimes a router pod is not automatically restarted by {KubePlatform}. If this issue occurs, it is important to manually restart the affected pod to ensure correct operation of the system. A scripts for restarting the router is provided in the {ProductName} installation files `script` folder. To restart all components, run all scripts.
 
 .Prerequisites
 
@@ -15,19 +15,9 @@ When upgrading, sometimes a router pod is not automatically restarted by {KubePl
 
 .Procedure
 
-. Find the router pod running a previous version of the image:
+* Run `restart-routers.sh` script:
 +
-[subs="+quotes,attributes",options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-oc get pod -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{range .spec.containers}}{{"\t"}}{{.image}}{{"\n"}}{{end}}{{"\n"}}{{end}}' --selector=capability=router
+./scripts/restart-routers.sh {ProductNamespace}
 ----
-
-. Delete the router pod that is running a previous version of the image:
-+
-[subs="+quotes,attributes",options="nowrap"]
-----
-oc delete pod _<name>_
-----
-
-The pod is automatically restarted.
-
