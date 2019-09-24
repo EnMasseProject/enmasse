@@ -238,14 +238,14 @@ public class SystemtestsKubernetesApps {
 
         ServicePort tlsPort = new ServicePortBuilder()
                 .withName("amqps")
-                .withNewPort(5671)
-                .withNewTargetPort(5671)
+                .withPort(5671)
+                .withTargetPort(new IntOrString(5671))
                 .build();
 
         Service service = getSystemtestsServiceResource(name, name, new ServicePortBuilder()
                 .withName("amqp")
-                .withNewPort(5672)
-                .withNewTargetPort(5672)
+                .withPort(5672)
+                .withTargetPort(new IntOrString(5672))
                 .build(),
                 tlsPort);
 
