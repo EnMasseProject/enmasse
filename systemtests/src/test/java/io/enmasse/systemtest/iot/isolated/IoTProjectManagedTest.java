@@ -74,7 +74,8 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         String addressSpaceName = "managed-address-space";
 
-        IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName, iotProjectNamespace);
+        IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName,
+                iotProjectNamespace, getDefaultAddressSpacePlan());
 
         createIoTProject(project);// waiting until ready
 

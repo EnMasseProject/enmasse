@@ -5,10 +5,13 @@
 package io.enmasse.systemtest.iot.shared.registry;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.systemtest.TestTag.IOT_DEVICE_REG;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
+@Tag(IOT_DEVICE_REG)
 public class FileDeviceRegistryTest extends DeviceRegistryTest {
     @Test
     public void testCorrectTypeDeployed () {
