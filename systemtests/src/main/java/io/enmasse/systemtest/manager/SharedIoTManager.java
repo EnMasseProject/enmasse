@@ -174,9 +174,9 @@ public class SharedIoTManager extends ResourceManager {
         this.randomDeviceId = UUID.randomUUID().toString();
 
         Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
-        createOrUpdateUser(getAddressSpace(this.iotProjectNamespace,
+        createOrUpdateUser(getAddressSpace(iotProjectNamespace,
                 getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
-        this.amqpClientFactory = new AmqpClientFactory(getAddressSpace(this.iotProjectNamespace,
+        this.amqpClientFactory = new AmqpClientFactory(getAddressSpace(iotProjectNamespace,
                 getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
     }
     
