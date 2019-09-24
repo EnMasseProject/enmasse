@@ -14,6 +14,7 @@ function wait_ready() {
     do
         ready=$(kubectl get ${kind} ${rset} -o jsonpath='{.status.readyReplicas}' -n ${ENMASSE_NAMESPACE})
         if [[ "${ready}" -lt "${minReady}" ]]; then
+            echo "${ready}/${minReady} pods ready"
             sleep 5
         fi
     done
