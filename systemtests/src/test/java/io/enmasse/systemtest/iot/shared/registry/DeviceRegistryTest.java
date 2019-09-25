@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(SMOKE)
 @Tag(IOT_DEVICE_REG)
-public abstract class DeviceRegistryTest extends TestBase implements ITestIoTShared  {
+public class DeviceRegistryTest extends TestBase implements ITestIoTShared  {
 
     protected DeviceRegistryClient client;
     protected String randomDeviceId;
