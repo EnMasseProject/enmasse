@@ -4,17 +4,17 @@
 // assembly-monitoring-kube.adoc
 
 [id='restart-component-{context}']
-= Restarting components to pick up security fixes
+= Restarting components to acquire security fixes
 
-Restarting {ProductName} components is required to pick up image updates for CVEs. The scripts are provided in the {ProductName} installation files `script` folder. To restart all components, run all scripts.
+Restarting {ProductName} components is required to get image updates for CVEs. The scripts are provided in the {ProductName} installation files within the `script` folder. To restart all components, run all scripts.
 
-== Restarting operators
+== Restarting Operators
 
-Operators may be restarted without affecting the messaging system. If a single api-server is used, there will be a transient downtime for new address space, address and messaging user resource requests.
+Operators can be restarted without affecting the messaging system. If a single `api-server` is used, a transient downtime will occur for any new address space, address, and messaging user resource requests.
 
 .Procedure
 
-* Run `restart-operators.sh` script:
+* Run the `restart-operators.sh` script:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -27,7 +27,7 @@ Authentication service restarts will temporarily affect new messaging connection
 
 .Procedure
 
-* Run `restart-authservices.sh` script:
+* Run the `restart-authservices.sh` script:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -36,11 +36,11 @@ Authentication service restarts will temporarily affect new messaging connection
 
 == Restarting routers
 
-The messaging routers are only deployed for the `standard` address space type. The script assumes that at least 2 replicas of the router is running and perform a rolling restart. Messaging clients connected to the restarting router will be disconnected and have to reconnect to be served by different router.
+Messaging routers are only deployed in the `standard` address space type. The script assumes that at least two replicas of the router are running and performs a rolling restart. Messaging clients connected to the restarting router are disconnected and must reconnect to be served by a different router.
 
 .Procedure
 
-* Run `restart-routers.sh` script requiring at least one router to be available:
+* Run the `restart-routers.sh` script, which requires at least one router to be available:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -49,11 +49,11 @@ The messaging routers are only deployed for the `standard` address space type. T
 
 == Restarting brokers
 
-For `brokered` address space, restarting brokers will cause temporary downtime to messaging clients while the broker is restarted. For the `standard` address space, messaging clients will not be disconnected to the messaging routers, but will not be able to consume messages stored on the restarting broker.
+For the `brokered` address space type, restarting the broker causes temporary downtime to messaging clients while the broker is restarted. For the `standard` address space type, messaging clients are not disconnected from the messaging routers, but are not able to consume messages stored on the restarting broker.
 
 .Procedure
 
-* Run `restart-brokers.sh` script:
+* Run the `restart-brokers.sh` script:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
