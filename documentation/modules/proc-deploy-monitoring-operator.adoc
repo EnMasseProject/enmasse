@@ -45,9 +45,16 @@ ifeval::["{cmdcli}" == "kubectl"]
 ----
 endif::[]
 
-. Deploy the `monitoring-operator` component:
+. Deploy the `monitoring-operator` resources:
 +
 [options="nowrap",subs="attributes"]
 ----
 {cmdcli} apply -f install/components/monitoring-operator
+----
+
+. Deploy the `monitoring-operator` component:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/monitoring-deployment
 ----

@@ -33,6 +33,7 @@ MODULES=\
 	api-server \
 	api-service \
 	monitoring-operator \
+	monitoring-deployment \
 	grafana-dashboards \
 	service-broker \
 	cluster-service-broker \
