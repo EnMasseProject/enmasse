@@ -212,7 +212,7 @@
         <profile>
             <id>shared-iot</id>
             <properties>
-                <groups>(isolated-iot | shared-iot) &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>(isolated-iot | shared-iot | iot-device-reg) &amp; !marathon &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
