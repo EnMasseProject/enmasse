@@ -12,7 +12,6 @@ import io.enmasse.address.model.CertSpec;
 import io.enmasse.address.model.CertSpecBuilder;
 import io.enmasse.address.model.EndpointSpec;
 import io.enmasse.address.model.EndpointSpecBuilder;
-import io.enmasse.address.model.ExposeSpecBuilder;
 import io.enmasse.address.model.ExposeType;
 import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.Endpoint;
@@ -43,7 +42,6 @@ import io.vertx.ext.web.client.WebClientOptions;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
@@ -57,7 +55,6 @@ import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.Optional;
@@ -66,10 +63,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
+@DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
 class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
     private static Logger log = CustomLogger.getLogger();
-    private static String ENDPOINT_PREFIX = "test-endpoint-";
 
     private AddressSpace addressSpace;
     private UserCredentials user;
@@ -79,154 +76,116 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     @Test
     void testSelfSigned() throws Exception {
 
-        createTestEnv(new CertSpecBuilder()
+        CertSpec spec = new CertSpecBuilder()
                 .withProvider(CertProvider.selfsigned.name())
-                .build());
+                .build();
+
+        createTestEnv(
+                createEndpoint("messaging", spec, null, "amqps"),
+                createEndpoint("mqtt", spec, null, "secure-mqtt"));
 
         String caCert = new String(Base64.getDecoder().decode(resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
 
-        AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
-        amqpClient.getConnectOptions().setCredentials(user).setCert(caCert);
-
-        MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(caCert.getBytes())));
-        mqttOptions.setUserName(user.getUsername());
-        mqttOptions.setPassword(user.getPassword().toCharArray());
-        IMqttClient mqttClient = getMqttClientFactory().build()
-                .addressSpace(addressSpace)
-                .mqttConnectionOptions(mqttOptions).create();
-
-        testCertProvider(amqpClient, mqttClient);
+        testCertProvider(caCert, caCert);
     }
 
     @Test
-    @Disabled("Disabled due to #2427")
-    void testConsoleSelfSignedTrustEndpointCert() throws Exception {
-        createTestEnv(new CertSpecBuilder()
+    void testConsoleSelfSigned() throws Exception {
+        CertSpec spec = new CertSpecBuilder()
                 .withProvider(CertProvider.selfsigned.name())
-                .build(), false);
+                .build();
 
-        String caCert = new String(Base64.getDecoder().decode(resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
-
-        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
-                .setSsl(true)
-                .setTrustAll(false)
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(caCert)))
-                .setVerifyHost(false));
-
-        testConsole(webClient);
-    }
-
-    @Test
-    @Disabled("Disabled due to #2427")
-    void testConsoleSelfSignedTrustCaCert() throws Exception {
-        createTestEnv(new CertSpecBuilder()
-                .withProvider(CertProvider.selfsigned.name())
-                .build(), false);
+        createTestEnv(
+                createEndpoint("console", spec, null, "https"));
 
         String endpointCert = new String(Base64.getDecoder().decode(
                 resourcesManager.getAddressSpace(addressSpace.getMetadata().getName())
-                        .getSpec()
-                        .getEndpoints()
+                        .getStatus()
+                        .getEndpointStatuses()
                         .stream()
-                        .filter(e -> e.getService().equals("console"))
+                        .filter(e -> e.getName().equals("console"))
                         .findFirst()
                         .get()
-                        .getCert()
-                        .getTlsCert()));
+                        .getCert()));
 
-        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
-                .setSsl(true)
-                .setTrustAll(false)
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(endpointCert)))
-                .setVerifyHost(false));
 
-        testConsole(webClient);
+        testConsole(endpointCert);
+
+        String caCert = new String(Base64.getDecoder().decode(
+                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName())
+                        .getStatus().getCaCert()));
+
+        testConsole(caCert);
     }
 
     @Test
     void testCertBundle() throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
+        String domain = environment.kubernetesDomain();
+        String messagingHost = String.format("messaging.%s", domain);
+        String mqttHost = String.format("mqtt.%s", domain);
+        CertBundle messagingCert = CertificateUtils.createCertBundle(messagingHost);
+        CertBundle mqttCert = CertificateUtils.createCertBundle(mqttHost);
 
-        createTestEnv(new CertSpecBuilder()
-                .withProvider(CertProvider.certBundle.name())
-                .withTlsKey(certBundle.getKeyB64())
-                .withTlsCert(certBundle.getCertB64())
-                .build());
-
-        AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
-        amqpClient.getConnectOptions()
-                .setCredentials(user)
-                .getProtonClientOptions()
-                .setSsl(true)
-                .setHostnameVerificationAlgorithm("")
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(certBundle.getCaCert())))
-                .setTrustAll(false);
-
-        MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(certBundle.getCaCert().getBytes())));
-        mqttOptions.setUserName(user.getUsername());
-        mqttOptions.setPassword(user.getPassword().toCharArray());
-        IMqttClient mqttClient = getMqttClientFactory().build()
-                .addressSpace(addressSpace)
-                .mqttConnectionOptions(mqttOptions).create();
-
-        testCertProvider(amqpClient, mqttClient);
-
-    }
-
-    @Test
-    @Disabled("Disabled due to #2427")
-    void testConsoleCertBundleTrustEndpointCert() throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
-
-        createTestEnv(new CertSpecBuilder()
-                .withProvider(CertProvider.certBundle.name())
-                .withTlsKey(certBundle.getKeyB64())
-                .withTlsCert(certBundle.getCertB64())
-                .build(), false);
-
-        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
-                .setSsl(true)
-                .setTrustAll(false)
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(certBundle.getCert())))
-                .setVerifyHost(false));
-
-        testConsole(webClient);
-    }
-
-    @Test
-    @Disabled("Disabled due to #2427")
-    void testConsoleCertBundleTrustCaCert() throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
-
-        createTestEnv(new CertSpecBuilder()
-                .withProvider(CertProvider.certBundle.name())
-                .withTlsKey(certBundle.getKeyB64())
-                .withTlsCert(certBundle.getCertB64())
-                .build(), false);
-
-        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
-                .setSsl(true)
-                .setTrustAll(false)
-                .setPemTrustOptions(new PemTrustOptions()
-                        .addCertValue(Buffer.buffer(certBundle.getCaCert())))
-                .setVerifyHost(false));
-
-        testConsole(webClient);
-    }
-
-    @Test
-    @DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
-    void testOpenshiftCertProvider() throws Exception {
-        createTestEnv(new CertSpecBuilder()
-                        .withProvider(CertProvider.openshift.name())
+        createTestEnv(
+                createEndpoint("messaging", new CertSpecBuilder()
+                        .withProvider(CertProvider.certBundle.name())
+                        .withTlsKey(messagingCert.getKeyB64())
+                        .withTlsCert(messagingCert.getCertB64())
                         .build(),
-                false);
+                        messagingHost,
+                        "amqps"),
+                createEndpoint("mqtt", new CertSpecBuilder()
+                        .withProvider(CertProvider.certBundle.name())
+                        .withTlsKey(mqttCert.getKeyB64())
+                        .withTlsCert(mqttCert.getCertB64())
+                        .build(),
+                        mqttHost,
+                        "secure-mqtt"));
+
+
+        testCertProvider(messagingCert.getCaCert(), mqttCert.getCaCert());
+    }
+
+    @Test
+    void testConsoleCertBundle() throws Exception {
+        String domain = environment.kubernetesDomain();
+        String consoleHost = String.format("space-console.%s", domain);
+        CertBundle certBundle = CertificateUtils.createCertBundle(consoleHost);
+
+        createTestEnv(false,
+                createEndpoint("console", new CertSpecBuilder()
+                        .withProvider(CertProvider.certBundle.name())
+                        .withTlsKey(certBundle.getKeyB64())
+                        .withTlsCert(certBundle.getCertB64())
+                        .build(), consoleHost, "https"));
+
+        testConsole(certBundle.getCaCert());
+    }
+
+    @Test
+    void testOpenshiftCertProvider() throws Exception {
+        createTestEnv(false,
+                new EndpointSpecBuilder()
+                        .withName("messaging")
+                        .withService("messaging")
+                        .editOrNewCert()
+                        .withProvider(CertProvider.openshift.name())
+                        .endCert()
+                        .build(),
+                new EndpointSpecBuilder()
+                        .withName("mqtt")
+                        .withService("mqtt")
+                        .editOrNewCert()
+                        .withProvider(CertProvider.openshift.name())
+                        .endCert()
+                        .build(),
+                new EndpointSpecBuilder()
+                        .withName("console")
+                        .withService("console")
+                        .editOrNewCert()
+                        .withProvider(CertProvider.openshift.name())
+                        .endCert()
+                        .build());
         String appNamespace = "certificate-validator-ns";
         boolean testSucceeded = false;
         try {
@@ -287,11 +246,11 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         }
     }
 
-    private void createTestEnv(CertSpec endpointCert) throws Exception {
-        createTestEnv(endpointCert, true);
+    private void createTestEnv(EndpointSpec ... endpoints) throws Exception {
+        createTestEnv(true, endpoints);
     }
 
-    private void createTestEnv(CertSpec endpointCert, boolean createAddresses) throws Exception {
+    private void createTestEnv(boolean createAddresses, EndpointSpec ... endpoints) throws Exception {
         addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-cert-provider-space")
@@ -303,11 +262,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
-                .withEndpoints(Arrays.asList(
-                        createEndpointSpec("messaging", "amqps", endpointCert),
-                        createEndpointSpec("console", "https", endpointCert),
-                        createEndpointSpec("mqtt", "secure-mqtt", endpointCert)
-                ))
+                .withEndpoints(endpoints)
                 .endSpec()
                 .build();
 
@@ -343,28 +298,33 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         }
     }
 
-    private EndpointSpec createEndpointSpec(String service, String servicePort, CertSpec endpointCert) {
-        return new EndpointSpecBuilder()
-                .withName(ENDPOINT_PREFIX + service)
-                .withService(service)
-                .withExpose(
-                        new ExposeSpecBuilder()
-                                .withRouteServicePort(servicePort)
-                                .withType(ExposeType.route)
-                                .withRouteTlsTermination(TlsTermination.passthrough)
-                                .build())
-                .withCert(endpointCert)
-                .build();
-    }
+    private void testCertProvider(String messagingCert, String mqttCert) throws Exception {
+        AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
+        amqpClient.getConnectOptions().setCredentials(user).setCert(messagingCert);
 
-    private void testCertProvider(AmqpClient amqpClient, IMqttClient mqttClient) throws Exception {
+        MqttConnectOptions mqttOptions = new MqttConnectOptions();
+        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(mqttCert.getBytes())));
+        mqttOptions.setUserName(user.getUsername());
+        mqttOptions.setPassword(user.getPassword().toCharArray());
+        IMqttClient mqttClient = getMqttClientFactory().build()
+                .addressSpace(addressSpace)
+                .mqttConnectionOptions(mqttOptions).create();
+
         QueueTest.runQueueTest(amqpClient, queue, 5);
         mqttClient.connect();
         simpleMQTTSendReceive(topic, mqttClient, 3);
         mqttClient.disconnect();
     }
 
-    private void testConsole(WebClient webClient) throws Exception {
+    private void testConsole(String endpointCert) throws Exception {
+        WebClient webClient = WebClient.create(VertxFactory.create(), new WebClientOptions()
+                .setSsl(true)
+                .setFollowRedirects(false)
+                .setTrustAll(false)
+                .setPemTrustOptions(new PemTrustOptions()
+                        .addCertValue(Buffer.buffer(endpointCert)))
+                .setVerifyHost(true));
+
         Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
         webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true).send(ar -> {
@@ -396,6 +356,22 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         context.init(null, tmf.getTrustManagers(), new SecureRandom());
 
         return context.getSocketFactory();
+    }
+
+    private static EndpointSpec createEndpoint(String name, CertSpec certSpec, String host, String servicePort) {
+        EndpointSpecBuilder builder = new EndpointSpecBuilder()
+                .withName(name)
+                .withService(name)
+                .withCert(certSpec)
+                .withNewExpose()
+                .withType(ExposeType.route)
+                .withRouteTlsTermination(TlsTermination.passthrough)
+                .withRouteServicePort(servicePort)
+                .endExpose();
+        if (host != null) {
+            builder.editExpose().withRouteHost(host).endExpose();
+        }
+        return builder.build();
     }
 
 

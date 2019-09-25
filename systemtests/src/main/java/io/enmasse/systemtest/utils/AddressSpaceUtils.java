@@ -197,7 +197,7 @@ public class AddressSpaceUtils {
                 EndpointStatus status = getEndpointByServiceName(addrSpaceEndpoint.getService(), addressSpace.getStatus().getEndpointStatuses());
                 log.info("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
                         addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), status.getExternalHost(),
-                        status.getExternalPorts().values().stream().findAny().get());
+                        status.getExternalPorts().values().stream().findAny());
                 if (status.getExternalHost() == null) {
                     return null;
                 } else {
