@@ -44,6 +44,8 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
@@ -68,6 +70,7 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
@@ -503,9 +506,12 @@ public abstract class Kubernetes {
         client.namespaces().create(ns);
     }
 
-    public void deleteNamespace(String namespace) {
+    public void deleteNamespace(String namespace) throws Exception {
         log.info("Following namespace will be removed - {}", namespace);
         client.namespaces().withName(namespace).delete();
+
+        TestUtils.waitUntilCondition("Namespace will be deleted", phase ->
+                !namespaceExists(namespace), new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     public boolean namespaceExists(String namespace) {

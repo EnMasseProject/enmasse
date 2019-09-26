@@ -57,7 +57,9 @@ public class IsolatedIoTManager extends ResourceManager {
 
     @Override
     public void setup() throws Exception {
+        LOGGER.warn("NAMESPACE PICO");
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
+            LOGGER.warn("NAMESPACE NEEXISTUJE BUDE VYTVORENY");
             kubernetes.createNamespace(iotProjectNamespace);
         }
     }
@@ -67,6 +69,7 @@ public class IsolatedIoTManager extends ResourceManager {
         try {
             tearDownProjects();
             tearDownConfigs();
+            kubernetes.deleteNamespace(iotProjectNamespace);
         } catch (Exception e) {
             LOGGER.error("Error tearing down iot test: {}", e.getMessage());
             throw e;
