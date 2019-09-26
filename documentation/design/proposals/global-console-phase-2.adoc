@@ -86,7 +86,7 @@ To signal a query across all namespaces, a * is used in the path name element.
 
 ==== exposing metrics
 
-The console-server will expose a endpoint which will proxy the to Prometheus PromQL api/v1/query API https://prometheus.io/docs/prometheus/latest/querying/api/.
+The console-server will expose a endpoint which will proxy the to Prometheus PromQL `api/v1/query` API https://prometheus.io/docs/prometheus/latest/querying/api/.
 
 To use the endpoint, an existing authenticated session will be required.
 
@@ -98,11 +98,11 @@ The console server employ a LRU caching mechanism, caching the most recent n que
 In order to simplify the UI implementation, a Javascript library will be written to encapsulate the metric requests required
 for each page within the UI.  This will expose a number of metric functions.  There will be two forms of metric function, one associated with each list view and one associated with the details view.
 
-* getAddressSpaceMetrics(namespace, addressSpaceNames) -> Promise (returning map metric names [enmasse_addresses, enmasse_connections etc] to values)
-* getAddressMetrics(namespace, addressSpaceName, addressNames) -> Promise (returning set metric names/values)
-* getAddressDetailMetrics(namespace, addressSpaceName, addressName) -> Promise (returning set metric names/values)
-* getConnectionMetrics(namespace, addressSpaceName, connectionIds) -> Promise (returning set metric names/values)
-* getConnectionDetailMetrics(namespace, addressSpaceName, addressName) -> (returning set metric names/values)
+* `getAddressSpaceMetrics(namespace, addressSpaceNames)` -> Promise (returning map metric names [enmasse_addresses, enmasse_connections etc] to values)
+* `getAddressMetrics(namespace, addressSpaceName, addressNames)` -> Promise (returning set metric names/values)
+* `getAddressDetailMetrics(namespace, addressSpaceName, addressName)` -> Promise (returning set metric names/values)
+* `getConnectionMetrics(namespace, addressSpaceName, connectionNames)` -> Promise (returning set metric names/values)
+* `getConnectionDetailMetrics(namespace, addressSpaceName, addressName)` -> (returning set metric names/values)
 
 In the first development iteration the UI will periodically poll for the metrics API for results.  In a later iteration, a watch feature be supported at server API level which will return the changes to the statistics in the result set.
 
