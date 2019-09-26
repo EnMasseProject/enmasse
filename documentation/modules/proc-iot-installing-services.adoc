@@ -3,7 +3,7 @@
 // assembly-iot-guide.adoc
 // assembly-IoT.adoc
 
-[id='installing-services-{context}']
+[id='iot-installing-services-{context}']
 = Installing IoT services
 
 To get started using the IoT feature on {ProductName}, you must first install the IoT services.
@@ -53,7 +53,7 @@ CLUSTER=x.x.x.x.nip.io install/components/iot/examples/k8s-tls/create
 ====
 
 ifeval::["{cmdcli}" == "oc"]
-. Install {DataGridProductName} server
+. Install the {DataGridProductName} server:
 +
 [options="nowrap",subs="attributes"]
 ----

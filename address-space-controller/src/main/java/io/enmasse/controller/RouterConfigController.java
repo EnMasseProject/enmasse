@@ -42,8 +42,10 @@ public class RouterConfigController implements Controller {
 
         if (infraConfig instanceof StandardInfraConfig) {
             resetConnectorStatuses(addressSpace);
-            reconcileRouterSetSecrets(addressSpace);
-            reconcileRouterConfig(addressSpace, (StandardInfraConfig) infraConfig);
+            RouterSet routerSet = RouterSet.create(namespace, addressSpace, client);
+            reconcileRouterSetSecrets(addressSpace, routerSet);
+            reconcileRouterConfig(addressSpace, routerSet, (StandardInfraConfig) infraConfig);
+            routerSet.apply(client);
         }
         return addressSpace;
     }
@@ -73,7 +75,7 @@ public class RouterConfigController implements Controller {
         addressSpace.getStatus().setConnectors(connectorStatuses);
     }
 
-    private void reconcileRouterConfig(AddressSpace addressSpace, StandardInfraConfig infraConfig) throws IOException {
+    private void reconcileRouterConfig(AddressSpace addressSpace, RouterSet routerSet, StandardInfraConfig infraConfig) throws IOException {
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         ConfigMap config = client.configMaps().inNamespace(namespace).withName(routerConfigName(infraUuid)).get();
         RouterConfig current = null;
@@ -93,23 +95,12 @@ public class RouterConfigController implements Controller {
                 config.setData(data);
                 client.configMaps().inNamespace(namespace).withName(config.getMetadata().getName()).replace(config);
 
-                // Rolling restart of router
-                StatefulSet router = client.apps().statefulSets().inNamespace(namespace).withName(KubeUtil.getRouterSetName(addressSpace)).get();
-                if (router != null) {
-                    Map<String, String> annotations = router.getSpec().getTemplate().getMetadata().getAnnotations();
-                    if (annotations == null) {
-                        annotations = new HashMap<>();
-                    }
-                    long generation = Optional.ofNullable(annotations.get(AnnotationKeys.GENERATION)).map(Long::parseLong).orElse(0L);
-                    annotations.put(AnnotationKeys.GENERATION, String.valueOf(generation + 1));
-                    router.getSpec().getTemplate().getMetadata().setAnnotations(annotations);
-                    client.apps().statefulSets().inNamespace(namespace).withName(router.getMetadata().getName()).cascading(false).patch(router);
-                }
+                routerSet.setModified();
             }
         }
     }
 
-    private void reconcileRouterSetSecrets(AddressSpace addressSpace) {
+    private void reconcileRouterSetSecrets(AddressSpace addressSpace, RouterSet routerSet) {
 
         String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
         Map<String, String> secretToConnector = new HashMap<>();
@@ -121,25 +112,27 @@ public class RouterConfigController implements Controller {
                         .editOrNewMetadata()
                         .withName(secretName)
                         .withNamespace(namespace)
-                        .addToLabels(LabelKeys.INFRA_TYPE, infraUuid)
+                        .addToLabels(LabelKeys.INFRA_UUID, infraUuid)
                         .addToLabels(LabelKeys.INFRA_TYPE, "standard")
                         .endMetadata()
+                        .withType("tls")
                         .withData(new HashMap<>())
                         .build();
+                reconcileConnectorSecret(connectorSecret, connector, addressSpace);
+                client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
+            } else if (reconcileConnectorSecret(connectorSecret, connector, addressSpace)) {
+                client.secrets().inNamespace(namespace).withName(secretName).createOrReplace(connectorSecret);
             }
-
-            boolean needsUpdate = reconcileConnectorSecret(connectorSecret, connector, addressSpace);
-            if (needsUpdate) {
-                client.secrets().createOrReplace(connectorSecret);
-                secretToConnector.put(secretName, connector.getName());
-            }
+            secretToConnector.put(secretName, connector.getName());
         }
 
-        StatefulSet router = client.apps().statefulSets().inNamespace(namespace).withName(KubeUtil.getRouterSetName(addressSpace)).get();
-        if (router == null) {
+        StatefulSet router = routerSet.getStatefulSet();
+        if (routerSet.getStatefulSet() == null) {
             log.warn("Unable to find expected router statefulset {}", KubeUtil.getRouterSetName(addressSpace));
             return;
         }
+
+        log.debug("Before volumes: {}", router.getSpec().getTemplate().getSpec().getVolumes().stream().map(Volume::getName).collect(Collectors.toSet()));
 
         Set<String> missingSecrets = new HashSet<>(secretToConnector.keySet());
         boolean hasChanged = false;
@@ -180,13 +173,16 @@ public class RouterConfigController implements Controller {
             hasChanged = true;
         }
 
+        log.debug("After volumes: {}", router.getSpec().getTemplate().getSpec().getVolumes().stream().map(Volume::getName).collect(Collectors.toSet()));
+
         if (hasChanged) {
-            client.apps().statefulSets().inNamespace(namespace).withName(router.getMetadata().getName()).cascading(false).patch(router);
+            routerSet.setModified();
         }
     }
 
     private boolean reconcileConnectorSecret(Secret connectorSecret, AddressSpaceSpecConnector connector, AddressSpace addressSpace) {
         boolean needsUpdate = false;
+        log.debug("Reconciling connector secret {} for connector {}", connectorSecret, connector);
         if (connector.getTls() != null) {
             if (connector.getTls().getCaCert() != null) {
                 String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getCaCert(), "ca.crt").orElse(null);

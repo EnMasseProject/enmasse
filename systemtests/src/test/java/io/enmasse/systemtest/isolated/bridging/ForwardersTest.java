@@ -4,12 +4,6 @@
  */
 package io.enmasse.systemtest.isolated.bridging;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import java.util.concurrent.TimeUnit;
-
-import org.junit.jupiter.api.Test;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -24,101 +18,32 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
-public class ForwardersTest extends BridgingBase {
+import java.util.concurrent.TimeUnit;
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
-    //tested usecases
-    //Forwarding messages from a local queue in a local address space to a destination on a remote AMQP endpoint
-    //Forwarding messages to a local queue in a local address space from a destination on a remote AMQP endpoint
-
-    //forward to FULL remote queue
-    //forward from FULL remote queue
+class ForwardersTest extends BridgingBase {
 
     private static final String REMOTE_QUEUE1 = "queue1";
-    private static final String REMOTE_QUEUE2 = "queue2";
 
-    @Override
-    protected String[] remoteBrokerQueues() {
-        return new String[] {REMOTE_QUEUE1, REMOTE_QUEUE2};
+    @Test
+    @Tag(ACCEPTANCE)
+    void testForwardToRemoteQueue() throws Exception {
+        doTestForwarderOut(false, false);
     }
 
     @Test
-    public void testForwardToRemoteQueue() throws Exception {
-        AddressSpace space = createAddressSpace("forward-to-remote", "*");
-        Address forwarder = new AddressBuilder()
-                .withNewMetadata()
-                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-queue1"))
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withAddress("forwarder-queue1")
-                .withType(AddressType.QUEUE.toString())
-                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
-                .addToForwarders(new AddressSpecForwarderBuilder()
-                        .withName("forwarder1")
-                        .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
-                        .withDirection(AddressSpecForwarderDirection.out)
-                        .build())
-                .endSpec()
-                .build();
-        resourcesManager.setAddresses(forwarder);
-        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
-
-        UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
-
-        int messagesBatch = 50;
-
-        doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, messagesBatch);
+    void testForwardFromRemoteQueue() throws Exception {
+        doTestForwarderIn(false, false);
 
     }
 
     @Test
-    public void testForwardFromRemoteQueue() throws Exception {
-        AddressSpace space = createAddressSpace("forward-from-remote", "*");
-        Address forwarder = new AddressBuilder()
-                .withNewMetadata()
-                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-queue1"))
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withAddress("forwarder-queue1")
-                .withType(AddressType.QUEUE.toString())
-                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
-                .addToForwarders(new AddressSpecForwarderBuilder()
-                        .withName("forwarder1")
-                        .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
-                        .withDirection(AddressSpecForwarderDirection.in)
-                        .build())
-                .endSpec()
-                .build();
-        resourcesManager.setAddresses(forwarder);
-        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
-
-        UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
-
-        int messagesBatch = 50;
-
-        //send to remote broker
-
-        AmqpClient clientToRemote = createClientToRemoteBroker();
-
-        clientToRemote.sendMessages(REMOTE_QUEUE1, TestUtils.generateMessages(messagesBatch));
-
-        //receive in address with forwarder
-
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
-
-        var receivedInRemote = localClient.recvMessages(forwarder.getSpec().getAddress(), messagesBatch);
-
-        assertThat("Wrong count of messages received in local address: "+forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
-
-    }
-
-    @Test
-    public void testForwardToUnavailableBroker() throws Exception {
+    void testForwardToUnavailableBroker() throws Exception {
 
         AddressSpace space = createAddressSpace("forward-to-remote", "*");
         Address forwarder = new AddressBuilder()
@@ -181,10 +106,88 @@ public class ForwardersTest extends BridgingBase {
 
         var receivedInRemote = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesBatch);
 
-        assertThat("Wrong count of messages received from remote queue: "+REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received from remote queue: " + REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
 
-    private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String rometeAddress, int messagesBatch) throws Exception {
+    @Test
+    public void testForwarderTLSOut() throws Exception {
+        doTestForwarderOut(true, false);
+    }
+
+    @Test
+    public void testForwarderMutualTLSOut() throws Exception {
+        doTestForwarderOut(true, true);
+    }
+
+    @Test
+    public void testForwarderTLSIn() throws Exception {
+        doTestForwarderIn(true, false);
+    }
+
+    @Test
+    public void testForwarderMutualTLSIn() throws Exception {
+        doTestForwarderIn(true, true);
+    }
+
+    private void doTestForwarderOut(boolean tls, boolean mutualTls) throws Exception {
+        AddressSpace space = createAddressSpace("forward-to-remote", "*", tls, mutualTls);
+        Address forwarder = new AddressBuilder()
+                .withNewMetadata()
+                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-queue1"))
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("forwarder-queue1")
+                .withType(AddressType.QUEUE.toString())
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .addToForwarders(new AddressSpecForwarderBuilder()
+                        .withName("forwarder1")
+                        .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
+                        .withDirection(AddressSpecForwarderDirection.out)
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(forwarder);
+        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+
+        doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, messagesBatch);
+    }
+
+    private void doTestForwarderIn(boolean tls, boolean mutualTls) throws Exception {
+        AddressSpace space = createAddressSpace("forward-from-remote", "*", tls, mutualTls);
+        Address forwarder = new AddressBuilder()
+                .withNewMetadata()
+                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-queue1"))
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("forwarder-queue1")
+                .withType(AddressType.QUEUE.toString())
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .addToForwarders(new AddressSpecForwarderBuilder()
+                        .withName("forwarder1")
+                        .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
+                        .withDirection(AddressSpecForwarderDirection.in)
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(forwarder);
+        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+
+        doTestReceiveInForwarder(space, forwarder, localUser, REMOTE_QUEUE1, messagesBatch);
+    }
+
+    private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
         //send to address with forwarder
 
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
@@ -196,9 +199,27 @@ public class ForwardersTest extends BridgingBase {
 
         AmqpClient clientToRemote = createClientToRemoteBroker();
 
-        var receivedInRemote = clientToRemote.recvMessages(rometeAddress, messagesBatch);
+        var receivedInRemote = clientToRemote.recvMessages(remoteAddress, messagesBatch);
 
-        assertThat("Wrong count of messages received from remote queue: "+rometeAddress, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertThat("Wrong count of messages received from remote queue: " + remoteAddress, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
     }
+
+    private void doTestReceiveInForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
+        //send to remote broker
+
+        AmqpClient clientToRemote = createClientToRemoteBroker();
+
+        clientToRemote.sendMessages(remoteAddress, TestUtils.generateMessages(messagesBatch));
+
+        //receive in address with forwarder
+
+        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        localClient.getConnectOptions().setCredentials(localUser);
+
+        var receivedInRemote = localClient.recvMessages(forwarder.getSpec().getAddress(), messagesBatch);
+
+        assertThat("Wrong count of messages received in local address: " + forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+    }
+
 
 }

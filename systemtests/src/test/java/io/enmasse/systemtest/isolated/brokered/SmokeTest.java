@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 import static io.enmasse.systemtest.TestTag.SMOKE;
 import static org.hamcrest.CoreMatchers.is;
@@ -35,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 @Tag(NON_PR)
 @Tag(SMOKE)
+@Tag(ACCEPTANCE)
 class SmokeTest extends TestBase implements ITestIsolatedBrokered {
 
     @Test
@@ -110,6 +112,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteAddressSpace() throws Exception {
         AddressSpace addressSpaceA = new AddressSpaceBuilder()
                 .withNewMetadata()

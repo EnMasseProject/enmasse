@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 
 /**
@@ -168,6 +169,7 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * Sending with QoS 1 is ok.
      */
     @Test
+    @Tag(ACCEPTANCE)
     public void testTelemetrySingleQos1() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)

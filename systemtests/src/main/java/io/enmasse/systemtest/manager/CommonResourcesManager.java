@@ -134,6 +134,8 @@ public class CommonResourcesManager extends ResourceManager {
             closeClientFactories(amqpClientFactory, mqttClientFactory);
             amqpClientFactory = null;
             mqttClientFactory = null;
+        } else {
+            LOGGER.warn("No custom resources are deleted, SKIP_CLEANUP is set");
         }
 
     }
@@ -288,11 +290,15 @@ public class CommonResourcesManager extends ResourceManager {
     }
 
     public void deleteAddressspacesFromList() throws Exception {
-        LOGGER.info("All addressspaces will be removed");
-        for (AddressSpace addressSpace : currentAddressSpaces) {
-            deleteAddressSpace(addressSpace);
+        if (!Environment.getInstance().skipCleanup()) {
+            LOGGER.info("All addressspaces will be removed");
+            for (AddressSpace addressSpace : currentAddressSpaces) {
+                deleteAddressSpace(addressSpace);
+            }
+            currentAddressSpaces.clear();
+        } else {
+            LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
         }
-        currentAddressSpaces.clear();
     }
 
     public void addToAddressSpaces(AddressSpace addressSpace) {

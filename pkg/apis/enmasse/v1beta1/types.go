@@ -35,7 +35,8 @@ type AddressSpaceSpec struct {
 
 	AuthenticationService *AuthenticationService `json:"authenticationService,omitempty"`
 
-	Ednpoints []EndpointSpec `json:"endpoints,omitempty"`
+	Endpoints  []EndpointSpec  `json:"endpoints,omitempty"`
+	Connectors []ConnectorSpec `json:"connectors,omitempty"`
 }
 
 type AuthenticationService struct {
@@ -71,11 +72,51 @@ type ExposeSpec struct {
 	RouteTlsTermination string `json:"routeTlsTermination"`
 }
 
-type AddressSpaceStatus struct {
-	IsReady bool `json:"isReady"`
+type ConnectorSpec struct {
+	Name          string                   `json:"name"`
+	EndpointHosts []ConnectorEndpointHost  `json:"endpointHosts"`
+	Tls           ConnectorTlsSpec         `json:"tls,omitempty"`
+	Credentials   ConnectorCredentialsSpec `json:"credentials,omitempty"`
+	Addresses     ConnectorAddressRule     `json:"addresses"`
+}
 
-	CACertificate  []byte           `json:"caCert,omitempty"`
-	EndpointStatus []EndpointStatus `json:"endpointStatuses,omitempty"`
+type ConnectorEndpointHost struct {
+	Host string `json:"host"`
+	Port int    `json:"port,omitempty"`
+}
+
+type ConnectorTlsSpec struct {
+	CaCert     StringOrSecretSelector `json:"caCert,omitempty"`
+	ClientCert StringOrSecretSelector `json:"clientCert,omitempty"`
+	ClientKey  StringOrSecretSelector `json:"clientKey,omitempty"`
+}
+
+type ConnectorCredentialsSpec struct {
+	Username StringOrSecretSelector `json:"username"`
+	Password StringOrSecretSelector `json:"password"`
+}
+
+type StringOrSecretSelector struct {
+	Value           string            `json:"value,omitempty"`
+	ValueFromSecret SecretKeySelector `json:"valueFromSecret,omitempty"`
+}
+
+type SecretKeySelector struct {
+	Name string `json:"name"`
+	Key  string `json:"key,omitempty"`
+}
+
+type ConnectorAddressRule struct {
+	Name    string `json:"name"`
+	Pattern string `json:"pattern"`
+}
+
+type AddressSpaceStatus struct {
+	IsReady        bool              `json:"isReady"`
+	Messages       []string          `json:"messages,omitempty"`
+	CACertificate  []byte            `json:"caCert,omitempty"`
+	EndpointStatus []EndpointStatus  `json:"endpointStatuses,omitempty"`
+	Connectors     []ConnectorStatus `json:"connectors,omitempty"`
 }
 
 type EndpointStatus struct {
@@ -92,6 +133,12 @@ type EndpointStatus struct {
 type Port struct {
 	Name string `json:"name"`
 	Port uint16 `json:"port"`
+}
+
+type ConnectorStatus struct {
+	Name     string   `json:"name"`
+	IsReady  bool     `json:"isReady"`
+	Messages []string `json:"messages,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -117,12 +164,35 @@ type Address struct {
 	Status AddressStatus `json:"status,omitempty"`
 }
 
+type AddressSpec struct {
+	Address      string          `json:"address"`
+	AddressSpace string          `json:"addressSpace,omitempty"`
+	Type         string          `json:"type"`
+	Plan         string          `json:"plan"`
+	Topic        string          `json:"topic,omitempty"`
+	Forwarders   []ForwarderSpec `json:"forwarders,omitempty"`
+}
+
+type ForwarderSpec struct {
+	Name          string             `json:"name"`
+	RemoteAddress string             `json:"remoteAddress"`
+	Direction     ForwarderDirection `json:"direction"`
+}
+
+type ForwarderDirection string
+
+const (
+	In  ForwarderDirection = "in"
+	Out ForwarderDirection = "out"
+)
+
 type AddressStatus struct {
 	IsReady        bool              `json:"isReady"`
 	Phase          string            `json:"phase,omitempty"`
 	Messages       []string          `json:"messages,omitempty"`
 	BrokerStatuses []BrokerStatus    `json:"brokerStatus,omitempty"`
 	PlanStatus     AddressPlanStatus `json:"planStatus,omitempty"`
+	Forwarders     []ForwarderStatus `json:"forwarders,omitempty"`
 }
 
 type BrokerStatus struct {
@@ -137,12 +207,10 @@ type AddressPlanStatus struct {
 	Resources  map[string]float64 `json:"resources,omitempty"`
 }
 
-type AddressSpec struct {
-	Address      string `json:"address"`
-	AddressSpace string `json:"addressSpace,omitempty"`
-	Type         string `json:"type"`
-	Plan         string `json:"plan"`
-	Topic        string `json:"topic,omitempty"`
+type ForwarderStatus struct {
+	Name     string   `json:"name"`
+	IsReady  bool     `json:"isReady"`
+	Messages []string `json:"messages,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

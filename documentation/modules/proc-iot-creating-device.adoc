@@ -20,7 +20,13 @@ endif::[]
 .Prerequisites
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#installing-services-{context}[The IoT services are installed].
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-creating-project-{context}[An IoT project is created].
-* Export the device registry host:
+
+[id='iot-proc-creating-device-register-new-device-{context}']
+== Registering a new device
+
+.Procedure
+
+. Export the device registry host:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -28,28 +34,23 @@ export REGISTRY_HOST={registry}
 ----
 
 ifeval::["{cmdcli}" == "oc"]
-* Export current user session token
+. Export the current user session token:
 +
 [options="nowrap",subs="attributes"]
 ----
 export TOKEN=$(oc whoami --show-token)
 ----
-This token is used to authenticate against device registry management API.
+This token is used to authenticate against the device registry management API.
 endif::[]
 
-[id='iot-proc-creating-device-register-new-device-{context}']
-== Registering a new device
 
-.Procedure
-
-. Register a device with a defined ID (in this example we're using `4711`):
+. Register a device with a defined ID (this example uses `4711`):
 +
 [options="nowrap",subs="attributes"]
 ----
 curl --insecure -X POST -i {headers} https://$REGISTRY_HOST/v1/devices/myapp.iot/4711
 ----
-. If you need to provide additional registration information, you can provide
-  it as follows:
+. (Optional) If you need to provide additional registration information, do so as follows:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -59,11 +60,11 @@ curl --insecure -X POST -i {headers} --data-binary '{
 ----
 
 [id='iot-creating-device-set-password-{context}']
-== Setting username and password credentials for a device
+== Setting user name and password credentials for a device
 
 .Procedure
 
-. Add credentials for a device:
+. Add the credentials for a device:
 +
 [options="nowrap",subs="attributes"]
 ----
@@ -75,3 +76,4 @@ curl --insecure -X PUT -i {headers} --data-binary '[{
 	}]
 }]' https://$REGISTRY_HOST/v1/credentials/myapp.iot/4711
 ----
+

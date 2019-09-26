@@ -181,7 +181,7 @@ func extractEndpointInformation(
 }
 
 func findEndpointSpec(addressSpace *enmassev1beta1.AddressSpace, endpointStatus *enmassev1beta1.EndpointStatus) *enmassev1beta1.EndpointSpec {
-	for _, end := range addressSpace.Spec.Ednpoints {
+	for _, end := range addressSpace.Spec.Endpoints {
 		if end.Name != endpointStatus.Name {
 			continue
 		}

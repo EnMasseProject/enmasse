@@ -7,6 +7,9 @@ package io.enmasse.systemtest.platform;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.executor.Executor;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -84,5 +87,32 @@ public class Minikube extends Kubernetes {
         Endpoint endpoint = new Endpoint(getIp(namespace, externalName), Integer.parseInt(getPort(namespace, externalName)));
         log.info("Minikube external endpoint - " + endpoint.toString());
         return endpoint;
+    }
+
+    @Override
+    public void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort) {
+        if (!name.endsWith("-external")) {
+            name += "-external";
+        }
+        ServiceBuilder builder = new ServiceBuilder()
+                .editOrNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+                .editOrNewSpec()
+                .withType("LoadBalancer")
+                .addToPorts(targetPort)
+                .withSelector(service.getSpec().getSelector())
+                .endSpec();
+
+        client.services().inNamespace(namespace).withName(name).createOrReplace(builder.build());
+    }
+
+    @Override
+    public void deleteExternalEndpoint(String namespace, String name) {
+        if (!name.endsWith("-external")) {
+            name += "-external";
+        }
+        client.services().inNamespace(name).withName(name).delete();
     }
 }

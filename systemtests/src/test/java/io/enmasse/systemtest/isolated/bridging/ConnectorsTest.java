@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.isolated.bridging;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -13,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
@@ -35,29 +37,12 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 
 class ConnectorsTest extends BridgingBase {
 
-    //tested usecases
-    //Sending messages to a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
-    //Receiving messages from a remote AMQP endpoint via a local address space - by creating a connector and using prefixing
-    //If I config a connector to refer to a host that does not exist, I'd expect the addressspace overall to report ready true, whereas the connector's status should report the failure.
-
-    //usecases to test
-    //Invalid connector names
-    //Invalid patterns
-    //Restart broker to ensure router reattached to broker and you can send/recv messages
-    //Using TLS
-    //Using mutual TLS (SASL EXTERNAL) instead of credentials
-
     private static final String BASIC_QUEUE1 = "basic1";
     private static final String BASIC_QUEUE2 = "basic2";
     private static final String SLASHED_QUEUE1 = "dummy/foo";
     private static final String SLASHED_QUEUE2 = "dummy/baz";
     private static final String BASIC_QUEUES_PATTERN = "*";
     private static final String SLASHED_QUEUES_PATTERN = "dummy/*";
-
-    @Override
-    protected String[] remoteBrokerQueues() {
-        return new String[] {SLASHED_QUEUE1, SLASHED_QUEUE2, BASIC_QUEUE1, BASIC_QUEUE2};
-    }
 
     @Test
     void testBrokerDeployment() throws Exception {
@@ -229,6 +214,35 @@ class ConnectorsTest extends BridgingBase {
 
         scaleUpBroker();
         AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
+
+        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+        sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
+    }
+
+    @Test
+    @Tag(ACCEPTANCE)
+    public void testConnectorTLS() throws Exception {
+        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, true, false);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+        String[] remoteQueues = new String [] {BASIC_QUEUE1};
+
+        sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
+        sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
+    }
+
+    @Test
+    public void testConnectorMutualTLS() throws Exception {
+        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, true, true);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 50;
+        String[] remoteQueues = new String [] {BASIC_QUEUE1};
 
         sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
         sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);

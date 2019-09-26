@@ -4,28 +4,28 @@
  */
 package io.enmasse.systemtest.bases.bridging;
 
+import java.util.Base64;
+
+import io.enmasse.address.model.*;
+import io.enmasse.systemtest.platform.Kubernetes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorAddressRuleBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorCredentialsBuilder;
-import io.enmasse.address.model.AddressSpaceSpecConnectorEndpointBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.CertificateUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 
@@ -35,18 +35,28 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
 
     protected static final String REMOTE_NAME = "remote1";
 
+    protected final String remoteBrokerName = "amq-broker";
     protected final String remoteBrokerNamespace = "systemtests-external-broker";
     protected final String remoteBrokerUsername = "test-user";
     protected final String remoteBrokerPassword = "test-password";
+    protected Endpoint clientBrokerEndpoint;
     protected Endpoint remoteBrokerEndpoint;
-
-    protected abstract String[] remoteBrokerQueues();
+    protected Endpoint remoteBrokerEndpointSSL;
+    protected Endpoint remoteBrokerEndpointMutualTLS;
+    protected BrokerCertBundle certBundle;
 
     @BeforeEach
     void deployBroker() throws Exception {
-        SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerUsername, remoteBrokerPassword, remoteBrokerQueues());
-        remoteBrokerEndpoint = SystemtestsKubernetesApps.getAMQBrokerEndpoint(remoteBrokerNamespace);
+        String serviceName = String.format("%s.%s.svc.cluster.local", remoteBrokerName, remoteBrokerNamespace);
+        certBundle = CertificateUtils.createBrokerCertBundle(serviceName);
+        SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerName, remoteBrokerUsername, remoteBrokerPassword, certBundle);
+        remoteBrokerEndpoint = new Endpoint(serviceName, 5672);
+        remoteBrokerEndpointSSL = new Endpoint(serviceName, 5671);
+        remoteBrokerEndpointMutualTLS = new Endpoint(serviceName, 55671);
+        clientBrokerEndpoint = Kubernetes.getInstance().getExternalEndpoint(remoteBrokerName, remoteBrokerNamespace);
         log.info("Broker endpoint: {}", remoteBrokerEndpoint);
+        log.info("Broker SSL endpoint: {}", remoteBrokerEndpointSSL);
+        log.info("Client broker endpoint: {}", clientBrokerEndpoint);
     }
 
     @AfterEach
@@ -55,20 +65,61 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
             logCollector.collectLogsOfPodsInNamespace(remoteBrokerNamespace);
             logCollector.collectEvents(remoteBrokerNamespace);
         }
-        SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace);
+        SystemtestsKubernetesApps.deleteAMQBroker(remoteBrokerNamespace, remoteBrokerName);
     }
 
     protected void scaleDownBroker() throws Exception {
         log.info("Scaling down broker");
-        SystemtestsKubernetesApps.scaleDownAMQBroker(remoteBrokerNamespace);
+        SystemtestsKubernetesApps.scaleDownDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
     protected void scaleUpBroker() throws Exception {
         log.info("Scaling up broker");
-        SystemtestsKubernetesApps.scaleUpAMQBroker(remoteBrokerNamespace);
+        SystemtestsKubernetesApps.scaleUpDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
     protected AddressSpace createAddressSpace(String name, String addressRule) throws Exception {
+        return createAddressSpace(name, addressRule, false, false);
+    }
+
+    protected AddressSpace createAddressSpace(String name, String addressRule, boolean tls, boolean mutualTls) throws Exception {
+        var endpoint = tls ? mutualTls ? remoteBrokerEndpointMutualTLS : remoteBrokerEndpointSSL : remoteBrokerEndpoint;
+        var connectorBuilder = new AddressSpaceSpecConnectorBuilder()
+                .withName(REMOTE_NAME)
+                .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
+                        .withHost(endpoint.getHost())
+                        .withPort(endpoint.getPort())
+                        .build())
+                .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
+                        .withName("queuesrule")
+                        .withPattern(addressRule)
+                        .build());
+        if (tls) {
+            var tlsBuilder = new AddressSpaceSpecConnectorTlsBuilder()
+                    .withCaCert(new StringOrSecretSelectorBuilder()
+                            .withValue(Base64.getEncoder().encodeToString(certBundle.getCaCert()))
+                            .build());
+            if (mutualTls) {
+                tlsBuilder.withClientCert(new StringOrSecretSelectorBuilder()
+                        .withValue(Base64.getEncoder().encodeToString(certBundle.getClientCert()))
+                        .build())
+                    .withClientKey(new StringOrSecretSelectorBuilder()
+                            .withValue(Base64.getEncoder().encodeToString(certBundle.getClientKey()))
+                            .build());
+            }
+            connectorBuilder.withTls(tlsBuilder.build());
+        }
+        if (!mutualTls) {
+            connectorBuilder.withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
+                    .withNewUsername()
+                        .withValue(remoteBrokerUsername)
+                        .endUsername()
+                    .withNewPassword()
+                        .withValue(remoteBrokerPassword)
+                        .endPassword()
+                    .build());
+        }
+
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -77,25 +128,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
                 .withPlan(AddressSpacePlans.STANDARD_SMALL)
-                .withConnectors(new AddressSpaceSpecConnectorBuilder()
-                        .withName(REMOTE_NAME)
-                        .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
-                                .withHost(remoteBrokerEndpoint.getHost())
-                                .withPort(remoteBrokerEndpoint.getPort())
-                                .build())
-                        .withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
-                                .withNewUsername()
-                                    .withValue(remoteBrokerUsername)
-                                    .endUsername()
-                                .withNewPassword()
-                                    .withValue(remoteBrokerPassword)
-                                    .endPassword()
-                                .build())
-                        .addToAddresses(new AddressSpaceSpecConnectorAddressRuleBuilder()
-                                .withName("queuesrule")
-                                .withPattern(addressRule)
-                                .build())
-                        .build())
+                .withConnectors(connectorBuilder.build())
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpace(space);
@@ -106,11 +139,13 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     protected AmqpClient createClientToRemoteBroker() {
 
         ProtonClientOptions clientOptions = new ProtonClientOptions();
-        clientOptions.setSsl(false);
+        clientOptions.setSsl(true);
+        clientOptions.setTrustAll(true);
+        clientOptions.setHostnameVerificationAlgorithm("");
 
         AmqpConnectOptions connectOptions = new AmqpConnectOptions()
                 .setTerminusFactory(new QueueTerminusFactory())
-                .setEndpoint(remoteBrokerEndpoint)
+                .setEndpoint(clientBrokerEndpoint)
                 .setProtonClientOptions(clientOptions)
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setUsername(remoteBrokerUsername)

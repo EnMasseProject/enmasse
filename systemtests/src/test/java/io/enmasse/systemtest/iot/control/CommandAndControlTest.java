@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 import static io.enmasse.systemtest.apiclients.Predicates.is;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
@@ -143,6 +144,7 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();

@@ -10,7 +10,10 @@ import io.enmasse.systemtest.bases.web.GlobalConsoleTest;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 @SeleniumFirefox
 class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolatedStandard {
@@ -21,6 +24,7 @@ class FirefoxGlobalConsoleTest extends GlobalConsoleTest implements ITestIsolate
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteAddressSpace() throws Exception {
         doTestCreateAddressSpace(new AddressSpaceBuilder()
                 .withNewMetadata()

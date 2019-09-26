@@ -27,12 +27,15 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.SecretReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
@@ -52,6 +55,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCustomAuthServiceStandard() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
         resourcesManager.createAuthService(standardAuth);
@@ -175,6 +179,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testAuthenticateAgainstMultipleAuthServices() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-eph", false);
         resourcesManager.createAuthService(standardAuth);

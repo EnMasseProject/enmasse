@@ -4,14 +4,18 @@
  */
 package io.enmasse.systemtest.platform;
 
+import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.utils.HttpClientUtils;
 import io.fabric8.openshift.api.model.Route;
+import io.fabric8.openshift.api.model.RouteBuilder;
 import io.fabric8.openshift.client.DefaultOpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
@@ -108,6 +112,37 @@ public class OpenShift extends Kubernetes {
             }
             return getEndpoint(endpointName, namespace, port);
         }
+    }
+
+    @Override
+    public void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort) {
+        Route route = new RouteBuilder()
+                .editOrNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+                .editOrNewSpec()
+                .editOrNewPort()
+                .withNewTargetPort(targetPort.getPort())
+                .endPort()
+                .withNewTls()
+                .withTermination("passthrough")
+                .endTls()
+                .withNewTo()
+                .withName(service.getMetadata().getName())
+                .withKind("Service")
+                .endTo()
+                .endSpec()
+                .build();
+
+        OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
+        openShift.routes().inNamespace(namespace).withName(name).createOrReplace(route);
+    }
+
+    @Override
+    public void deleteExternalEndpoint(String namespace, String name) {
+        OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
+        openShift.routes().inNamespace(namespace).withName(name).delete();
     }
 
 }
