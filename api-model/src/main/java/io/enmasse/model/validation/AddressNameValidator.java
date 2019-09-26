@@ -51,9 +51,9 @@ public class AddressNameValidator implements ConstraintValidator<AddressName, Ad
             }
         }
 
-        if (address.getSpec() != null && address.getSpec().getAddress() != null && address.getSpec().getAddress().startsWith("__")) {
+        if (address.getSpec() != null && address.getSpec().getAddress() != null && address.getSpec().getAddress().startsWith("_!")) {
             context.disableDefaultConstraintViolation();
-            context.buildConstraintViolationWithTemplate("Address string must not start with double underscores '__'")
+            context.buildConstraintViolationWithTemplate("Address string must not start with '_!'")
                     .addConstraintViolation();
             return false;
         }

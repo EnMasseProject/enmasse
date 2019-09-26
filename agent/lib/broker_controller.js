@@ -327,7 +327,8 @@ function translate(addresses_in, excluded_names, excluded_types) {
     for (var name in addresses_in) {
         if (excluded_names && excluded_names(name)) continue;
         var a = addresses_in[name];
-        if (excluded_types && excluded_types(a.type)) continue; if (is_temp_queue(a)) {
+        if (excluded_types && excluded_types(a.type)) continue;
+        if (is_temp_queue(a)) {
             log.debug('ignoring temp queue %s', a.name);
             continue;
         }
