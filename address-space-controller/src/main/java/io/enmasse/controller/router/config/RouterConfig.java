@@ -23,17 +23,19 @@ public class RouterConfig {
     private final List<Listener> listeners;
     private final List<Policy> policies;
     private final List<Connector> connectors;
+    private final List<AutoLink> autoLinks;
     private final List<LinkRoute> linkRoutes;
     private final List<Address> addresses;
     private final List<VhostPolicy> vhosts;
 
-    public RouterConfig(Router router, List<SslProfile> sslProfiles, List<AuthServicePlugin> authServicePlugins, List<Listener> listeners, List<Policy> policies, List<Connector> connectors, List<LinkRoute> linkRoutes, List<Address> addresses, List<VhostPolicy> vhosts) {
+    public RouterConfig(Router router, List<SslProfile> sslProfiles, List<AuthServicePlugin> authServicePlugins, List<Listener> listeners, List<Policy> policies, List<Connector> connectors, List<AutoLink> autoLinks, List<LinkRoute> linkRoutes, List<Address> addresses, List<VhostPolicy> vhosts) {
         this.router = router;
         this.sslProfiles = sslProfiles;
         this.authServicePlugins = authServicePlugins;
         this.listeners = listeners;
         this.policies = policies;
         this.connectors = connectors;
+        this.autoLinks = autoLinks;
         this.linkRoutes = linkRoutes;
         this.addresses = addresses;
         this.vhosts = vhosts;
@@ -48,6 +50,7 @@ public class RouterConfig {
                 ", listeners=" + listeners +
                 ", policies=" + policies +
                 ", connectors=" + connectors +
+                ", autoLinks=" + autoLinks +
                 ", linkRoutes=" + linkRoutes +
                 ", addresses=" + addresses +
                 ", vhosts=" + vhosts +
@@ -65,6 +68,7 @@ public class RouterConfig {
                 Objects.equals(listeners, that.listeners) &&
                 Objects.equals(policies, that.policies) &&
                 Objects.equals(connectors, that.connectors) &&
+                Objects.equals(autoLinks, that.autoLinks) &&
                 Objects.equals(linkRoutes, that.linkRoutes) &&
                 Objects.equals(addresses, that.addresses) &&
                 Objects.equals(vhosts, that.vhosts);
@@ -72,7 +76,7 @@ public class RouterConfig {
 
     @Override
     public int hashCode() {
-        return Objects.hash(router, sslProfiles, authServicePlugins, listeners, policies, connectors, linkRoutes, addresses, vhosts);
+        return Objects.hash(router, sslProfiles, authServicePlugins, listeners, policies, connectors, autoLinks, linkRoutes, addresses, vhosts);
     }
 
     public Map<String, String> toMap() throws JsonProcessingException {
@@ -87,6 +91,7 @@ public class RouterConfig {
         data.addAll(entriesToList("authServicePlugin", authServicePlugins));
         data.addAll(entriesToList("listener", listeners));
         data.addAll(entriesToList("policy", policies));
+        data.addAll(entriesToList("autoLink", autoLinks));
         data.addAll(entriesToList("linkRoute", linkRoutes));
         data.addAll(entriesToList("address", addresses));
         data.addAll(entriesToList("connector", connectors));
@@ -111,6 +116,7 @@ public class RouterConfig {
         List<AuthServicePlugin> authServicePlugins = new ArrayList<>();
         List<Listener> listeners = new ArrayList<>();
         List<Policy> policies = new ArrayList<>();
+        List<AutoLink> autoLinks = new ArrayList<>();
         List<LinkRoute> linkRoutes = new ArrayList<>();
         List<Address> addresses = new ArrayList<>();
         List<Connector> connectors = new ArrayList<>();
@@ -137,6 +143,9 @@ public class RouterConfig {
                 case "policy":
                     policies.add(mapper.treeToValue(value, Policy.class));
                     break;
+                case "autoLink":
+                    autoLinks.add(mapper.treeToValue(value, AutoLink.class));
+                    break;
                 case "linkRoute":
                     linkRoutes.add(mapper.treeToValue(value, LinkRoute.class));
                     break;
@@ -151,7 +160,7 @@ public class RouterConfig {
                     break;
             }
         }
-        return new RouterConfig(router, sslProfiles, authServicePlugins, listeners, policies, connectors, linkRoutes, addresses, vhostPolicies);
+        return new RouterConfig(router, sslProfiles, authServicePlugins, listeners, policies, connectors, autoLinks, linkRoutes, addresses, vhostPolicies);
     }
         public Router getRouter() {
         return router;
@@ -175,6 +184,10 @@ public class RouterConfig {
 
     public List<Connector> getConnectors() {
         return connectors;
+    }
+
+    public List<AutoLink> getAutoLinks() {
+        return autoLinks;
     }
 
     public List<LinkRoute> getLinkRoutes() {

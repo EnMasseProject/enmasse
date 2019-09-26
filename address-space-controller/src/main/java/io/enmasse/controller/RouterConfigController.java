@@ -451,19 +451,35 @@ public class RouterConfigController implements Controller {
         tempAddress.setDistribution(Distribution.balanced);
         addresses.add(tempAddress);
 
+        Address dlqAddress = new Address();
+        dlqAddress.setName("override.global.dlq");
+        dlqAddress.setPattern("!!GLOBAL_DLQ");
+        dlqAddress.setDistribution(Distribution.balanced);
+        dlqAddress.setWaypoint(true);
+        addresses.add(dlqAddress);
+
+        // Autolinks
+        List<AutoLink> autoLinks = new ArrayList<>();
+        AutoLink dlqAutoLink = new AutoLink();
+        dlqAutoLink.setName("override.global.dlq.in");
+        dlqAutoLink.setAddress("!!GLOBAL_DLQ");
+        dlqAutoLink.setDirection(LinkDirection.in);
+        dlqAutoLink.setContainerId("broker-global-dlq-out");
+        autoLinks.add(dlqAutoLink);
+
         // LinkRoutes
         List<LinkRoute> linkRoutes = new ArrayList<>();
         LinkRoute mqttLwtInLinkRoute = new LinkRoute();
         mqttLwtInLinkRoute.setName("override.lwt_in");
         mqttLwtInLinkRoute.setPrefix("$${dummy}lwt");
-        mqttLwtInLinkRoute.setDirection(LinkRoute.Direction.in);
+        mqttLwtInLinkRoute.setDirection(LinkDirection.in);
         mqttLwtInLinkRoute.setContainerId("lwt-service");
         linkRoutes.add(mqttLwtInLinkRoute);
 
         LinkRoute mqttLwtOutLinkRoute = new LinkRoute();
         mqttLwtOutLinkRoute.setName("override.lwt_out");
         mqttLwtOutLinkRoute.setPrefix("$${dummy}lwt");
-        mqttLwtOutLinkRoute.setDirection(LinkRoute.Direction.out);
+        mqttLwtOutLinkRoute.setDirection(LinkDirection.out);
         mqttLwtOutLinkRoute.setContainerId("lwt-service");
         linkRoutes.add(mqttLwtOutLinkRoute);
 
@@ -566,7 +582,7 @@ public class RouterConfigController implements Controller {
                 linkRouteIn.setName("override.connector." + connector.getName() + "." + rule.getName() + ".in");
                 linkRouteIn.setPattern(prefix + rule.getPattern());
                 linkRouteIn.setDelExternalPrefix(prefix);
-                linkRouteIn.setDirection(LinkRoute.Direction.in);
+                linkRouteIn.setDirection(LinkDirection.in);
                 linkRouteIn.setConnection(connector.getName());
                 linkRoutes.add(linkRouteIn);
 
@@ -574,7 +590,7 @@ public class RouterConfigController implements Controller {
                 linkRouteOut.setName("override.connector." + connector.getName() + "." + rule.getName() + ".out");
                 linkRouteOut.setPattern(connector.getName() + "/" + rule.getPattern());
                 linkRouteOut.setDelExternalPrefix(prefix);
-                linkRouteOut.setDirection(LinkRoute.Direction.out);
+                linkRouteOut.setDirection(LinkDirection.out);
                 linkRouteOut.setConnection(connector.getName());
                 linkRoutes.add(linkRouteOut);
             }
@@ -589,6 +605,7 @@ public class RouterConfigController implements Controller {
                 Arrays.asList(localBypass, livenessProbe, httpsPublic, amqpPublic, amqpsPublic, amqpsInternal, amqpsRouteContainer, interRouter),
                 policies,
                 connectors,
+                autoLinks,
                 linkRoutes,
                 addresses,
                 vhostPolicies);

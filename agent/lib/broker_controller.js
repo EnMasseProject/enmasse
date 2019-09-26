@@ -292,7 +292,7 @@ function exclude_subscriptions(type) {
 }
 
 function excluded_addresses(address) {
-    return address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications' || address === 'activemq.management';
+    return address === '!!GLOBAL_DLQ' || address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications' || address === 'activemq.management';
 }
 
 function is_temp_queue(a) {
@@ -548,15 +548,7 @@ BrokerController.prototype.create_connectors = function (connectors) {
 };
 
 function connectors_of_interest(name) {
-    return name !== 'amqp-connector' &&
-	name !== 'router-connector-in' &&
-	name !== 'router-connector-out' &&
-	name !== 'amqp-connector-in' &&
-	name !== 'amqp-connector-out' &&
-	name !== 'address-connector-in' &&
-	name !== 'address-connector-out' &&
-	name !== 'ragent-connector' &&
-	!name.startsWith("$override");
+    return !name.startsWith("$override");
 }
 
 function connector_compare(a, b) {

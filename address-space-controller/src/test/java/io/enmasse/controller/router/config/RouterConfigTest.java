@@ -22,6 +22,7 @@ public class RouterConfigTest {
                 Collections.singletonList(new Listener()),
                 Collections.singletonList(new Policy()),
                 Collections.singletonList(new Connector()),
+                Collections.singletonList(new AutoLink()),
                 Collections.singletonList(new LinkRoute()),
                 Collections.singletonList(new Address()),
                 Collections.singletonList(new VhostPolicy()));
@@ -35,6 +36,7 @@ public class RouterConfigTest {
         assertEquals(deser.getAddresses(), config.getAddresses());
         assertEquals(deser.getAuthServicePlugins(), config.getAuthServicePlugins());
         assertEquals(deser.getConnectors(), config.getConnectors());
+        assertEquals(deser.getAutoLinks(), config.getAutoLinks());
         assertEquals(deser.getLinkRoutes(), config.getLinkRoutes());
         assertEquals(deser.getListeners(), config.getListeners());
         assertEquals(deser.getPolicies(), config.getPolicies());

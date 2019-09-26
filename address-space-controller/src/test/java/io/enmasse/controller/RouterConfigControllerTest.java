@@ -116,7 +116,8 @@ public class RouterConfigControllerTest {
         assertEquals(3, actual.getSslProfiles().size());
         assertEquals(8, actual.getListeners().size());
         assertEquals(2, actual.getLinkRoutes().size());
-        assertEquals(3, actual.getAddresses().size());
+        assertEquals(1, actual.getAutoLinks().size());
+        assertEquals(4, actual.getAddresses().size());
         assertEquals(1, actual.getConnectors().size());
         assertEquals(1, actual.getPolicies().size());
         assertEquals(2, actual.getVhosts().size());
@@ -324,13 +325,13 @@ public class RouterConfigControllerTest {
         LinkRoute lrIn = getLinkRoute("override.connector.remote1.pat1.in", actual.getLinkRoutes());
         assertNotNull(lrIn);
         assertEquals("remote1/foo*", lrIn.getPattern());
-        assertEquals(LinkRoute.Direction.in, lrIn.getDirection());
+        assertEquals(LinkDirection.in, lrIn.getDirection());
         assertEquals("remote1", lrIn.getConnection());
 
         LinkRoute lrOut = getLinkRoute("override.connector.remote1.pat1.out", actual.getLinkRoutes());
         assertNotNull(lrOut);
         assertEquals("remote1/foo*", lrOut.getPattern());
-        assertEquals(LinkRoute.Direction.out, lrOut.getDirection());
+        assertEquals(LinkDirection.out, lrOut.getDirection());
         assertEquals("remote1", lrOut.getConnection());
 
 

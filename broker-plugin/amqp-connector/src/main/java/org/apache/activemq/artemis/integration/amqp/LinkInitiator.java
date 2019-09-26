@@ -24,6 +24,7 @@ import io.netty.buffer.ByteBuf;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.EventHandler;
 import org.apache.activemq.artemis.protocol.amqp.proton.handler.ProtonHandler;
 import org.apache.activemq.artemis.spi.core.remoting.ReadyListener;
+import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Received;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -215,11 +216,18 @@ public class LinkInitiator implements EventHandler {
       }
       Target target = new Target();
       target.setAddress(linkInfo.getTargetAddress());
+      if (!linkInfo.getCapabilities().isEmpty()) {
+         target.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+      }
       receiver.setTarget(target);
 
       Source source = new Source();
       source.setAddress(linkInfo.getSourceAddress());
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
+      if (!linkInfo.getCapabilities().isEmpty()) {
+         source.setCapabilities(linkInfo.getCapabilities().toArray(new Symbol[0]));
+         source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+      }
       receiver.setSource(source);
       receiver.open();
    }
@@ -233,11 +241,17 @@ public class LinkInitiator implements EventHandler {
       }
       Target target = new Target();
       target.setAddress(linkInfo.getTargetAddress());
+      if (!linkInfo.getCapabilities().isEmpty()) {
+         target.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+      }
       sender.setTarget(target);
 
       Source source = new Source();
       source.setAddress(linkInfo.getSourceAddress());
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
+      if (!linkInfo.getCapabilities().isEmpty()) {
+         source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+      }
       sender.setSource(source);
 
       sender.open();
