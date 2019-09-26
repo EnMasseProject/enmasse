@@ -172,7 +172,7 @@ SubscriptionControl.prototype.close = function (subscription_id) {
             if (result.found) {
                 return delete_diverts(result.pod.broker, subscription_id).then(
                     function () {
-                        return result.pod.broker.destroyConnectorService(subscription_id).then(
+                        return result.pod.broker.destroyConnectorService('$override.' + subscription_id).then(
                             function () {
                                 //delete queue last as that is how we
                                 //find the right broker to cleanup
