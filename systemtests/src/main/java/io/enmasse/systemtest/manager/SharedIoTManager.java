@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.iotProjectNamespace;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.deviceRegistry;
@@ -66,35 +67,29 @@ public class SharedIoTManager extends ResourceManager {
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
-        if (context.getExecutionException().isPresent()) { //test failed
-            if (!environment.skipCleanup()) {
-                if (sharedIoTProject != null) {
-                    LOGGER.info("Shared IoTProject will be removed");
-                    var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
-                    if (iotProjectApiClient.withName(sharedIoTProject.getMetadata().getName()).get() != null) {
-                        IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedIoTProject);
-                    } else {
-                        LOGGER.info("IoTProject '{}' doesn't exists!", sharedIoTProject.getMetadata().getName());
-                    }
-                    sharedIoTProject = null;
-                }
-                if (sharedIoTConfig != null) {
-                    LOGGER.info("Shared IoTConfig will be removed");
-                    var iotConfigApiClient = kubernetes.getIoTConfigClient();
-                    if (iotConfigApiClient.withName(sharedIoTConfig.getMetadata().getName()).get() != null) {
-                        IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedIoTConfig);
-                    } else {
-                        LOGGER.info("IoTConfig '{}' doesn't exists!", sharedIoTConfig.getMetadata().getName());
-                    }
-                }
-                LOGGER.info("Infinispan server will be removed");
-                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-                kubernetes.deleteNamespace(iotProjectNamespace);
-                sharedIoTConfig = null;
+        if (sharedIoTProject != null) {
+            LOGGER.info("Shared IoTProject will be removed");
+            var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
+            if (iotProjectApiClient.withName(sharedIoTProject.getMetadata().getName()).get() != null) {
+                IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedIoTProject);
+                sharedIoTProject = null;
             } else {
-                LOGGER.warn("Remove shared iotproject when test failed - SKIPPED!");
+                LOGGER.info("IoTProject '{}' doesn't exists!", sharedIoTProject.getMetadata().getName());
             }
         }
+        if (sharedIoTConfig != null) {
+            LOGGER.info("Shared IoTConfig will be removed");
+            var iotConfigApiClient = kubernetes.getIoTConfigClient();
+            if (iotConfigApiClient.withName(sharedIoTConfig.getMetadata().getName()).get() != null) {
+                IoTUtils.deleteIoTConfigAndWait(kubernetes, sharedIoTConfig);
+                sharedIoTConfig = null;
+            } else {
+                LOGGER.info("IoTConfig '{}' doesn't exists!", sharedIoTConfig.getMetadata().getName());
+            }
+        }
+        LOGGER.info("Infinispan server will be removed");
+        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+        kubernetes.deleteNamespace(iotProjectNamespace);
     }
 
     @Override
@@ -105,7 +100,9 @@ public class SharedIoTManager extends ResourceManager {
 
     @Override
     public void setup() {
+        LOGGER.warn("NAMESPACE PICO");
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
+            LOGGER.warn("NAMESPACE NEEXISTUJE BUDE VYTVORENY");
             LOGGER.info("Namespace {} doesn't exists and will be created.");
             kubernetes.createNamespace(iotProjectNamespace);
         }
@@ -153,15 +150,6 @@ public class SharedIoTManager extends ResourceManager {
 
     //TODO: implement device reg
     public void createDeviceRegistrySharedEnv() throws Exception {
-/*        if (sharedIoTConfig == null) {
-            sharedIoTConfig = ioTConfig;
-            createIoTConfig(sharedIoTConfig);
-        }
-        if (sharedIoTProject == null) {
-            sharedIoTProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT,
-                    DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace, ADDRESS_SPACE_PLAN);
-            createIoTProject(sharedIoTProject);
-        }*/
         if (deviceRegistryEndpoint == null) {
             deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         }
@@ -176,8 +164,8 @@ public class SharedIoTManager extends ResourceManager {
         Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
         createOrUpdateUser(getAddressSpace(iotProjectNamespace,
                 getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
-        this.amqpClientFactory = new AmqpClientFactory(getAddressSpace(iotProjectNamespace,
-                getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
+        this.amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(),
+                Environment.getInstance().getDefaultCredentials());
     }
     
     public AmqpClientFactory getAmqpClientFactory() {
@@ -225,8 +213,6 @@ public class SharedIoTManager extends ResourceManager {
     public AmqpClient getAmqpClient() {
         return amqpClient;
     }
-
-    //TODO: CLOSE FACTORIES IMPLEMENT
 
     public void closeFactories() throws Exception {
         if (amqpClientFactory != null) {

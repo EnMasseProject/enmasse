@@ -76,7 +76,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName,
                 iotProjectNamespace, getDefaultAddressSpacePlan());
-
+        LOGGER.warn("NAMESPACE EXISTS? {}, {}", project.getMetadata().getNamespace(), kubernetes.namespaceExists(project.getMetadata().getNamespace()));
         isolatedIoTManager.createIoTProject(project);// waiting until ready
         var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         IoTProject created = iotProjectApiClient.withName(project.getMetadata().getName()).get();
@@ -184,9 +184,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     private static Set<String> expandAddresses(final String addressSuffix, final String... baseAddresses) {
 
         return Arrays
-
                 .stream(baseAddresses)
-
                 .flatMap(address -> {
                     return Stream.of(
                             address + addressSuffix,
