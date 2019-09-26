@@ -96,20 +96,19 @@ and the labels applied to each metric.  The UI will make extensive use of PromQL
 The console server employ a LRU caching mechanism, caching the most recent n queries run for a short period.   As the console UI will be submitting the same query set regardless of user, cached results will be returned for some users.
 
 In order to simplify the UI implementation, a Javascript library will be written to encapsulate the metric requests required
-for each page within the UI.  This will expose a number of metric functions.  There will be two forms of metric function, one associated with each list view and one associated with the details view. 
+for each page within the UI.  This will expose a number of metric functions.  There will be two forms of metric function, one associated with each list view and one associated with the details view.
 
-* getAddressSpaceMetrics(namespace, addressSpaceNames) -> Promise (returning set of enmasse_addresses, enmasse_connections metric to value)
-* getAddressMetrics(namespace, addressSpaceName, addressNames) -> Promise (returning set of enmasse_messages_in_total, enmasse_messages_in_total metric to value)
-* getAddressDetailMetrics(namespace, addressSpaceName, addressName) -> Promise (returning set of link specific enmasse_messages_in_total, enmasse_messages_out_total metric to values)
-* getConnectionMetrics(namespace, addressSpaceName, connectionIds) -> Promise (returning set of enmasse_messages_in_total, enmasse_messages_in_total metric to value)
-* getConnectionDetailMetrics(namespace, addressSpaceName, addressName)
+* getAddressSpaceMetrics(namespace, addressSpaceNames) -> Promise (returning map metric names [enmasse_addresses, enmasse_connections etc] to values)
+* getAddressMetrics(namespace, addressSpaceName, addressNames) -> Promise (returning set metric names/values)
+* getAddressDetailMetrics(namespace, addressSpaceName, addressName) -> Promise (returning set metric names/values)
+* getConnectionMetrics(namespace, addressSpaceName, connectionIds) -> Promise (returning set metric names/values)
+* getConnectionDetailMetrics(namespace, addressSpaceName, addressName) -> (returning set metric names/values)
 
 In the first development iteration the UI will periodically poll for the metrics API for results.  In a later iteration, a watch feature be supported at server API level which will return the changes to the statistics in the result set.
 
 ==== exposing connections
 
-As EnMasse connections are not presented as a Kubernetes object, we need to make alternative arrangements to allow the Console
-user to view and manage them.
+As EnMasse connections are not represented by a Kubernetes object, we need to make alternative arrangements to allow the Console user to view and manage them.   
 
 The console-server API will present connections to the console as if they were a kubernetes resource.  The console-server will present the following endpoint:
 
@@ -119,9 +118,31 @@ apis/enmasse.io/v1beta1/namespaces/<namespace>/connections
 
 which will initially support GET and in a later development iteration, DELETE, to allow connections to be closed.
 
-The caller must pass the selector addressspace=<addressspace> in order to signal the addressspace for which connections must be returned. The console-server will call out to the agent associated with target addressspace in order to obtain the results-set.  API requests without the addressspace selector will be rejected.
+The caller must pass the selector addressspace=<addressspace> in order to signal the addressspace for which connections must be returned. The console-server will call out to the agent associated with target addressspace in order to obtain the results-set.  API requests without the addressspace selector will be rejected.  The response to the GET request will be a list:
 
-In order to locate the agent endpoint, it will populate a cache. It will do this by watching for agent services.  When an agent service appears, it will resolve its addressspace using the `infraUuid`.
+```
+kind: ConnectionList
+apiVersion: v1
+items: 
+ - 
+   metadata: 
+   name: "172.17.0.1:59802"
+   namespace: myspace
+   uid: "7b29c758-dfbc-11e9-8b7f-c6b311640c25"
+   creationTimestamp: "2019-09-25T17:47:02Z"
+  spec: 
+   connectionPrinicipal: myuser
+   remoteContainerId: "a209037e-5368-5a41-b1b9-b7c6027e24d9"
+   localContainerId: "a209037e-5368-5a41-b1b9-b7c6027e24d9"
+   connectionProperties: 
+    product: QpidJMS
+    version: "0.38.0-SNAPSHOT"
+    platform: "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
+```    
+
+The console server employ a LRU caching mechanism, caching the n most recent queries run for a short period.   As the console UI will be submitting the same query regardless of user, cached results will be returned for some users.
+
+In order to locate the agent endpoint, the console-server will populate a lookup map. It will do this by watching for agent services.  When an agent service appears, it will resolve its addressspace using the `infraUuid`.
 
 === agent
 
