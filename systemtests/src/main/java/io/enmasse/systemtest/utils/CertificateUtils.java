@@ -41,14 +41,14 @@ public class CertificateUtils {
         return crtFile;
     }
 
-    public static CertBundle createCertBundle() throws Exception {
+    public static CertBundle createCertBundle(String cn) throws Exception {
         File caCert = File.createTempFile("certAuthority", "crt");
         File caKey = File.createTempFile("certAuthority", "key");
         createSelfSignedCert(caCert, caKey);
         String randomName = UUID.randomUUID().toString();
         File keyFile = File.createTempFile(randomName, "key");
         File csrFile = File.createTempFile(randomName, "csr");
-        createCsr(keyFile, csrFile, null);
+        createCsr(keyFile, csrFile, cn);
         File crtFile = signCsr(caKey, caCert, keyFile, csrFile);
         try {
             return new CertBundle(FileUtils.readFileToString(caCert, StandardCharsets.UTF_8),
@@ -57,6 +57,10 @@ public class CertificateUtils {
         } finally {
             deleteFiles(caCert, caKey, keyFile, csrFile, crtFile);
         }
+    }
+
+    public static CertBundle createCertBundle() throws Exception {
+        return createCertBundle(null);
     }
 
     public static BrokerCertBundle createBrokerCertBundle(String cn) throws Exception {
