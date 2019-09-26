@@ -86,22 +86,25 @@ To signal a query across all namespaces, a * is used in the path name element.
 
 ==== exposing metrics
 
-The console-server will accept configuration that defines the statistics avaiable for each configured resource type.  This will take the form a list of named PromQL queries that are associated with each resource type (e.g. address).  These PromQL queries will ultimately produce the values that we wish to display on the console.  The idea is to avoid the need for the console UI to compute values itself.  
+The console-server will expose a endpoint which will proxy the to Prometheus PromQL api/v1/query API https://prometheus.io/docs/prometheus/latest/querying/api/.
 
-```
-address:
-  prometheus_queries:
-   - name: console_message_stored
-     value: enmasse_messages_stored{addressspace="<addressspace>",addressname!=''}
-   - name: console_message_in_rate
-     value: rate(enmasse_messages_in_total{addressspace="<addressspace>",addressname!=''}[5m])
-```
+To use the endpoint, an existing authenticated session will be required.
 
-The metrics API will accept a resource type as an argument.  This must refer to a configured resource type.  The response will be the Prometheus results.  The UI will parse the results and use the values to populate the display.
+The console will send PromQL queries in order to populate the console UI.  The UI will possess knowledge of the metric names
+and the labels applied to each metric.  The UI will make extensive use of PromQL queries querying multiple metrics at once in order to return a consistent set of metrics for a particular data set.  This will reduce the number of queries that the UI must make to render any particular page.
 
-The metrics request API will accept a filter.  This filter will limit the resource instances considered for processing.  This allows the console to limit the metrics query to those items that need to be displayed on screen, thus reducing the data that needs to be transfered between client/server and keeps the UI responsive.
+The console server employ a LRU caching mechanism, caching the most recent n queries run for a short period.   As the console UI will be submitting the same query set regardless of user, cached results will be returned for some users.
 
-In the first development iteration the UI will poll for query results.  In a later iteration, a watch feature will be introduced that allows the console to avoid the poll.  This will require the introduction of a metric cache.
+In order to simplify the UI implementation, a Javascript library will be written to encapsulate the metric requests required
+for each page within the UI.  This will expose a number of metric functions.  There will be two forms of metric function, one associated with each list view and one associated with the details view. 
+
+* getAddressSpaceMetrics(namespace, addressSpaceNames) -> Promise (returning set of enmasse_addresses, enmasse_connections metric to value)
+* getAddressMetrics(namespace, addressSpaceName, addressNames) -> Promise (returning set of enmasse_messages_in_total, enmasse_messages_in_total metric to value)
+* getAddressDetailMetrics(namespace, addressSpaceName, addressName) -> Promise (returning set of link specific enmasse_messages_in_total, enmasse_messages_out_total metric to values)
+* getConnectionMetrics(namespace, addressSpaceName, connectionIds) -> Promise (returning set of enmasse_messages_in_total, enmasse_messages_in_total metric to value)
+* getConnectionDetailMetrics(namespace, addressSpaceName, addressName)
+
+In the first development iteration the UI will periodically poll for the metrics API for results.  In a later iteration, a watch feature be supported at server API level which will return the changes to the statistics in the result set.
 
 ==== exposing connections
 
@@ -109,7 +112,6 @@ As EnMasse connections are not presented as a Kubernetes object, we need to make
 user to view and manage them.
 
 The console-server API will present connections to the console as if they were a kubernetes resource.  The console-server will present the following endpoint:
-
 
 ```
 apis/enmasse.io/v1beta1/namespaces/<namespace>/connections
