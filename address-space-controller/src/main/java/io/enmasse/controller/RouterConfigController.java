@@ -453,7 +453,7 @@ public class RouterConfigController implements Controller {
 
         Address dlqAddress = new Address();
         dlqAddress.setName("override.global.dlq");
-        dlqAddress.setPattern("_!GLOBAL_DLQ");
+        dlqAddress.setPattern("!!GLOBAL_DLQ");
         dlqAddress.setDistribution(Distribution.balanced);
         dlqAddress.setWaypoint(true);
         addresses.add(dlqAddress);
@@ -462,7 +462,7 @@ public class RouterConfigController implements Controller {
         List<AutoLink> autoLinks = new ArrayList<>();
         AutoLink dlqAutoLink = new AutoLink();
         dlqAutoLink.setName("override.global.dlq.in");
-        dlqAutoLink.setAddress("_!GLOBAL_DLQ");
+        dlqAutoLink.setAddress("!!GLOBAL_DLQ");
         dlqAutoLink.setDirection(LinkDirection.in);
         dlqAutoLink.setContainerId("broker-global-dlq-out");
         autoLinks.add(dlqAutoLink);

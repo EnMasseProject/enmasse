@@ -292,7 +292,7 @@ function exclude_subscriptions(type) {
 }
 
 function excluded_addresses(address) {
-    return address === '_!GLOBAL_DLQ' || address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications' || address === 'activemq.management';
+    return address === '!!GLOBAL_DLQ' || address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications' || address === 'activemq.management';
 }
 
 function is_temp_queue(a) {

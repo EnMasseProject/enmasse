@@ -87,7 +87,7 @@ under the License.
             <redelivery-delay>1</redelivery-delay>
             <redelivery-delay-multiplier>1.5</redelivery-delay-multiplier>
             <max-redelivery-delay>10000</max-redelivery-delay>
-            <dead-letter-address>_!GLOBAL_DLQ</dead-letter-address>
+            <dead-letter-address>!!GLOBAL_DLQ</dead-letter-address>
             <!-- with -1 only the global-max-size is in use for limiting -->
             <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
@@ -104,9 +104,9 @@ under the License.
       </wildcard-addresses>
 
       <addresses>
-        <address name="_!GLOBAL_DLQ">
+        <address name="!!GLOBAL_DLQ">
           <anycast>
-            <queue name="_!GLOBAL_DLQ" />
+            <queue name="!!GLOBAL_DLQ" />
           </anycast>
         </address>
       </addresses>
