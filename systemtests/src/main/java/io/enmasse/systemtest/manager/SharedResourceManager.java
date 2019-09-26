@@ -60,7 +60,7 @@ public class SharedResourceManager extends ResourceManager {
                 LOGGER.info(String.format("test failed: %s.%s",
                         context.getTestClass().get().getName(),
                         context.getTestMethod().get().getName()));
-                    LOGGER.info("shared address space '{}' will be removed", sharedAddressSpace);
+                LOGGER.info("shared address space '{}' will be removed", sharedAddressSpace);
                 try {
                     super.deleteAddressSpace(sharedAddressSpace);
                 } catch (Exception ex) {
@@ -68,11 +68,17 @@ public class SharedResourceManager extends ResourceManager {
                 } finally {
                     spaceCountMap.compute(sharedAddressSpace.getSpec().getType().toLowerCase(), (k, count) -> count == null ? null : count + 1);
                 }
+            } else {
+                LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
             }
         } else { //succeed
             try {
-                LOGGER.info("Shared address space will be deleted!");
-                super.deleteAddressSpace(sharedAddressSpace);
+                if (!environment.skipCleanup()) {
+                    LOGGER.info("Shared address space will be deleted!");
+                    super.deleteAddressSpace(sharedAddressSpace);
+                } else {
+                    LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
+                }
             } catch (Exception e) {
                 LOGGER.warn("Failed to delete addresses from shared address space (ignored)", e);
             }
