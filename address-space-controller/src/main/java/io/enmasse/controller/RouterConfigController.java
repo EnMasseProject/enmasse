@@ -453,7 +453,7 @@ public class RouterConfigController implements Controller {
 
         Address dlqAddress = new Address();
         dlqAddress.setName("override.global.dlq");
-        dlqAddress.setPattern("GLOBAL_DLQ");
+        dlqAddress.setPattern("_!GLOBAL_DLQ");
         dlqAddress.setDistribution(Distribution.balanced);
         dlqAddress.setWaypoint(true);
         addresses.add(dlqAddress);
