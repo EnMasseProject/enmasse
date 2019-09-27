@@ -16,21 +16,25 @@ This table shows the fields available for the standard infrastructure configurat
 |`version` |Specifies the {ProductName} version used. When upgrading, {ProductName} uses this field to determine whether to upgrade the infrastructure to the requested version.
 |`admin.resources.memory` |Specifies the amount of memory allocated to the admin Pod.
 |`admin.podTemplate.metadata.labels` |Specifies the labels added to the admin Pod.
-|`admin.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the admin Pod so you can prioritize admin pods over other Pods in the {KubePlatform} cluster.
 |`admin.podTemplate.spec.affinity` |Specifies the affinity settings for the admin Pod so you can specify where on particular nodes a Pod runs, or if it cannot run together with other instances.
+|`admin.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the admin Pod so you can prioritize admin pods over other Pods in the {KubePlatform} cluster.
 |`admin.podTemplate.spec.tolerations` |Specifies the toleration settings for the admin Pod, which allow this Pod to run on certain nodes on which other Pods cannot run.
 |`broker.addressFullPolicy` |Specifies action taken when a queue is full: `BLOCK`, `FAIL`, `PAGE`, `DROP`. The default value is `PAGE`. For more information see the link:{LinkaddressFullPolicyDocs}[{BrokerName} documentation^].
 |`broker.globalMaxSize` |Specifies the maximum amount of memory used for queues in the broker.
 |`broker.resources.memory` |Specifies the amount of memory allocated to the broker.
 |`broker.resources.storage` |Specifies the amount of storage requested for the broker.
 |`broker.podTemplate.metadata.labels` |Specifies the labels added to the broker Pod.
-|`broker.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the broker Pod so you can prioritize broker Pods over other Pods in the {KubePlatform} cluster.
 |`broker.podTemplate.spec.affinity` |Specifies the affinity settings for the broker Pod so you can specify where on particular nodes a Pod runs, or if it cannot run together with other instances.
+|`broker.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the broker Pod so you can prioritize broker Pods over other Pods in the {KubePlatform} cluster.
 |`broker.podTemplate.spec.tolerations` |Specifies the toleration settings for the broker Pod, which allow this Pod to run on certain nodes on which other Pods cannot run.
-|`broker.podTemplate.spec.containers.initialDelaySeconds` |Specifies probe delay value in seconds for the broker Pod.
-|`broker.podTemplate.spec.containers.timeoutSeconds` |Specifies probe timeout value in seconds for the broker Pod.
-|`broker.podTemplate.spec.containers.resources` |Specifies broker Pod resource requests and limits for CPU and memory.
 |`broker.podTemplate.spec.containers.env` |Specifies environment variables for the broker Pod.
+|`broker.podTemplate.spec.containers.livenessProbe.failureThreshold` |Specifies the number of times that {KubePlatform} tries when a broker Pod starts and the probe fails before restarting the container.
+|`broker.podTemplate.spec.containers.livenessProbe.initialDelaySeconds` |Specifies probe delay value in seconds for the broker Pod.
+|`broker.podTemplate.spec.containers.livenessProbe.timeoutSeconds` |Specifies probe timeout value in seconds for the broker Pod.
+|`broker.podTemplate.spec.containers.readinessProbe.failureThreshold` |Specifies the number of times that {KubePlatform} tries when a broker Pod starts and the probe fails before the Pod is marked `Unready`.
+|`broker.podTemplate.spec.containers.readinessProbe.initialDelaySeconds` |Specifies probe delay value in seconds for the broker Pod.
+|`broker.podTemplate.spec.containers.readinessProbe.timeoutSeconds` |Specifies probe timeout value in seconds for the broker Pod.
+|`broker.podTemplate.spec.containers.resources` |Specifies broker Pod resource requests and limits for CPU and memory.
 |`broker.connectorIdleTimeout` |Specifies the AMQP idle timeout to use for connection to router.
 |`broker.connectorWorkerThreads` |Specifies the number of worker threads of the connection to the router.
 |`broker.storageClassName` |Specifies what storage class to use for the persistent volume for the broker.
@@ -40,13 +44,17 @@ This table shows the fields available for the standard infrastructure configurat
 |`router.handshakeTimeout` |Specifies the amount of time in seconds to wait for the secure handshake to be initiated.
 |`router.minReplicas` |Specifies the minimum number of router Pods to run; a minimum of two are required for high availability (HA) configuration.
 |`router.podTemplate.metadata.labels` |Specifies the labels added to the router Pod.
-|`router.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the router Pod so you can prioritize router pods over other pods in the {KubePlatform} cluster.
 |`router.podTemplate.spec.affinity` |Specifies the affinity settings for the router Pod so you can specify where on particular nodes a pod runs, or if it cannot run together with other instances.
+|`router.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the router Pod so you can prioritize router pods over other pods in the {KubePlatform} cluster.
 |`router.podTemplate.spec.tolerations` |Specifies the toleration settings for the router Pod, which allow this Pod to run on certain nodes on which other Pods cannot run.
-|`router.podTemplate.spec.containers.initialDelaySeconds` |Specifies probe delay value in seconds for the router Pod.
-|`router.podTemplate.spec.containers.timeoutSeconds` |Specifies probe timeout value in seconds for the router Pod.
-|`router.podTemplate.spec.containers.resources` |Specifies router Pod resource requests and limits for CPU and memory.
 |`router.podTemplate.spec.containers.env` |Specifies the environment variables for the router Pod.
+|`router.podTemplate.spec.containers.livenessProbe.failureThreshold` |Specifies the number of times that {KubePlatform} tries when a router Pod starts and the probe fails before restarting the container.
+|`router.podTemplate.spec.containers.livenessProbe.initialDelaySeconds` |Specifies probe delay value in seconds for the router Pod.
+|`router.podTemplate.spec.containers.livenessProbe.timeoutSeconds` |Specifies probe timeout value in seconds for the router Pod.
+|`router.podTemplate.spec.containers.readinessProbe.failureThreshold` |Specifies the number of times that {KubePlatform} tries when a router Pod starts and the probe fails before the Pod is marked `Unready`.
+|`router.podTemplate.spec.containers.readinessProbe.initialDelaySeconds` |Specifies probe delay value in seconds for the router Pod.
+|`router.podTemplate.spec.containers.readinessProbe.timeoutSeconds` |Specifies probe timeout value in seconds for the router Pod.
+|`router.podTemplate.spec.containers.resources` |Specifies router Pod resource requests and limits for CPU and memory.
 |`router.idleTimeout` |Specifies the AMQP idle timeout to use for all router listeners.
 |`router.workerThreads` |Specifies the number of worker threads to use for the router.
 |`router.policy.maxConnections` |Specifies the maximum number of router connections allowed.

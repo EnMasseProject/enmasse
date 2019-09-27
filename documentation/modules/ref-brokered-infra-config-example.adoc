@@ -61,12 +61,12 @@ For detailed information about all of the available brokered infrastructure conf
 
 ifeval::["{cmdcli}" == "oc"]
 * For more information about the `podTemplate` settings, see the following {KubePlatform} documentation:
-** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority]
-** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations]
-** link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity]
-** link:https://docs.openshift.com/container-platform/3.11/dev_guide/application_health.html[Application health]
-** link:https://docs.openshift.com/container-platform/3.11/dev_guide/compute_resources.html#dev-compute-resources[Compute resources]
-** link:https://docs.openshift.com/container-platform/3.11/dev_guide/environment_variables.html#list-environment-variables[Environment variables]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-priority-preemption[Pod priority]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#taints-and-tolerations[Taints and tolerations]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-sched-pod-affinity[Affinity and anti-affinity]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/developer_guide/dev-guide-application-health[Application health]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/developer_guide/dev-guide-compute-resources#dev-compute-resources[Compute resources]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/developer_guide/index#list-environment-variables[Environment variables]
 endif::[]
 
 ifeval::["{cmdcli}" == "kubectl"]

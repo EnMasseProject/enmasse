@@ -9,5 +9,5 @@
 spaces. Address space plans reference the standard infrastructure configuration using the
 `spec.infraConfigRef` field. For more information about address space plans, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans].
 
-Only specific fields are pulled in from {KubePlatform}. For detailed information about the available standard infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-fields-messaging[Standard infrastructure configuration fields table].
+For detailed information about the available standard infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-fields-messaging[Standard infrastructure configuration fields table].
 

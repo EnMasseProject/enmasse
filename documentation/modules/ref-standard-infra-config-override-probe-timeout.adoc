@@ -5,7 +5,7 @@
 [id='ref-standard-infra-config-override-probe-timeout-{context}']
 = Overriding the probe timing for standard infrastructure configuration
 
-You can override the default values for probe timing on broker and router resources.
+You can override the default values for probe timing on broker and router resources. You might want to change the default values if, for example, it takes longer than expected for the broker storage to become available, or a server is slow.
 
 The following example shows how to override certain default values of the readiness probe timeout for a broker resource and a liveness probe for a router resource.
 
