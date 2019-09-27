@@ -406,9 +406,6 @@ items:
             requests:
               memory: 512Mi
           volumeMounts:
-          - mountPath: /etc/console-certs
-            name: console-secret
-            readOnly: true
           - mountPath: /opt/agent/authservice-ca
             name: authservice-ca
             readOnly: true
@@ -420,9 +417,6 @@ items:
             readOnly: true
         serviceAccountName: address-space-admin
         volumes:
-        - name: console-secret
-          secret:
-            secretName: secret1
         - name: authservice-ca
           secret:
             secretName: authservice-ca.81932f70-20a9-11e9-b293-c85b762e5a2c
