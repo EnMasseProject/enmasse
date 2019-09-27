@@ -33,7 +33,7 @@ function list_addresses(broker) {
 function get_stats_for_address(stats, address) {
     var s = stats[address];
     if (s === undefined) {
-        s = {depth:0, shards:[]};
+        s = {depth:0, dlq_depth: 0, shards:[]};
         stats[address] = s;
     }
     return s;
@@ -75,7 +75,9 @@ BrokerStats.prototype._retrieve = function() {
         for (var i = 0; i < results.length; i++) {
             for (var name in results[i]) {
                 var s = get_stats_for_address(stats, name);
+                var dlq = results[i]["!!GLOBAL_DLQ"];
                 var shard = merge(results[i][name], {name:brokers[i].connection.container_id});
+                if (dlq !== undefined && dlq.messages) s.dlq_depth += dlq.messages;
                 if (shard.messages) s.depth += shard.messages;
                 s.shards.push(shard);
             }

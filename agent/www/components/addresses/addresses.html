@@ -71,6 +71,9 @@
         <div class="list-view-pf-additional-info-item"  ng-if="item.type === 'queue' || item.type === 'topic' || item.type === 'subscription'">
           <span class="fa fa-envelope-o"></span><strong>{{item.depth}}</strong> Stored
         </div>
+        <div class="list-view-pf-additional-info-item"  ng-if="item.type === 'queue'">
+          <span class="fa fa-envelope-o"></span><strong>{{item.dlq_depth}}</strong> Global DLQ
+        </div>
         <div class="list-view-pf-additional-info-item"  ng-if="item.type === 'queue' || item.type === 'topic'">
           <span class="fa fa-database"></span><strong>{{item.shards.length}}</strong> Shards
         </div>
