@@ -39,13 +39,7 @@ function start(env) {
             var console_server = new ConsoleServer(address_source, env, openshift);
             bind_event(address_source, 'addresses_defined', console_server.addresses);
 
-            var server_promise = null;
-            if (env.CONSOLE_OAUTH_DISCOVERY_URL) {
-                server_promise = console_server.listen(env);
-            } else {
-                log.info("No OAuth configuration, not running console server");
-                server_promise = Promise.resolve();
-            }
+            var server_promise = console_server.listen(env);
 
             server_promise.then(() => {
                 if (env.ADDRESS_SPACE_TYPE === 'brokered') {
