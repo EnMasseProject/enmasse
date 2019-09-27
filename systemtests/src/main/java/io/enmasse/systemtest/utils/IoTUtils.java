@@ -7,6 +7,8 @@ package io.enmasse.systemtest.utils;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.iot.model.v1.AdapterConfig;
+import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
@@ -17,7 +19,6 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
-import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -26,16 +27,18 @@ import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
-import org.apache.qpid.proton.amqp.transport.End;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import static io.enmasse.systemtest.apiclients.Predicates.any;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
@@ -47,14 +50,14 @@ public class IoTUtils {
 
     private static Kubernetes kubernetes = Kubernetes.getInstance();
 
-    private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
+    private static final String IOT_SIGFOX_ADAPTER = "iot-sigfox-adapter";
+    private static final String IOT_MQTT_ADAPTER = "iot-mqtt-adapter";
+    private static final String IOT_LORAWAN_ADAPTER = "iot-lorawan-adapter";
+    private static final String IOT_HTTP_ADAPTER = "iot-http-adapter";
+    private static final String[] COMPONENTS = new String[]{
             "iot-auth-service",
             "iot-device-registry",
-            "iot-http-adapter",
-            "iot-lorawan-adapter",
-            "iot-mqtt-adapter",
             "iot-operator",
-            "iot-sigfox-adapter",
             "iot-tenant-service",
     };
 
@@ -78,8 +81,10 @@ public class IoTUtils {
             throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
-        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes), budget);
-        TestUtils.waitForNReplicas(EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+        String[] expectedDeployments = getExpectedDeploymentsNames(config);
+
+        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes, expectedDeployments), budget);
+        TestUtils.waitForNReplicas(expectedDeployments.length, IOT_LABELS, budget);
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
@@ -91,15 +96,37 @@ public class IoTUtils {
     }
 
     private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception {
-        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(2, TimeUnit.MINUTES), 5000);
+        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
     }
 
-    private static boolean allDeploymentsPresent(Kubernetes kubernetes) {
+    private static boolean allDeploymentsPresent(Kubernetes kubernetes, String[] expectedDeployments) {
         final String[] deployments = kubernetes.listDeployments(IOT_LABELS).stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .toArray(String[]::new);
         Arrays.sort(deployments);
-        return Arrays.equals(deployments, EXPECTED_DEPLOYMENTS);
+        Arrays.sort(expectedDeployments);
+
+        return Arrays.equals(deployments, expectedDeployments);
+    }
+
+    private static String[] getExpectedDeploymentsNames(IoTConfig config) {
+        List<String> expectedDeployments = new ArrayList<>();
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getHttp, IOT_HTTP_ADAPTER);
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
+        expectedDeployments.addAll(Arrays.asList(COMPONENTS));
+        return expectedDeployments.toArray(String[]::new);
+    }
+
+    private static void addIfEnabled(List<String> adapters, IoTConfig config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
+        Optional<AdapterConfig> adapter = Optional.ofNullable(config.getSpec().getAdapters()).map(adapterGetter);
+        if (adapter.isEmpty() || adapter.get().getEnabled() == null || adapter.get().getEnabled()) {
+            adapters.add(name);
+            log.info("{} is enabled", name);
+        } else {
+            log.info("{} is disabled", name);
+        }
     }
 
     public static void waitForIoTProjectReady(Kubernetes kubernetes, IoTProject project) throws Exception {
