@@ -22,12 +22,16 @@ var kubernetes = require('./kubernetes.js');
 var log = require('./log.js').logger();
 var myutils = require('./utils.js');
 
-function extract_spec(def) {
+function extract_spec(def, env) {
     if (def.spec === undefined) {
         console.error('no spec found on %j', def);
     }
     var o = myutils.merge(def.spec, {status:def.status});
+
     o.name = def.metadata ? def.metadata.name : def.address;
+    o.addressSpace = def.metadata && def.metadata.annotations && def.metadata.annotations['addressSpace'] ? def.metadata.annotations['addressSpace'] : process.env.ADDRESS_SPACE;
+    o.addressSpaceNamespace = def.metadata ? def.metadata.namespace : process.env.ADDRESS_SPACE_NAMESPACE;
+
     if (def.metadata && def.metadata.annotations && def.metadata.annotations['enmasse.io/broker-id']) {
         var broker_id = def.metadata.annotations['enmasse.io/broker-id'];
         var cluster_id = def.metadata.annotations['cluster_id'];
