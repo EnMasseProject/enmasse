@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.watcher;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
@@ -70,12 +71,10 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
                 LOGGER.info("Teardown shared!");
                 sharedResourcesManager.tearDown(testInfo.getActualTest());
             }
-        }
-        if (sharedResourcesManager.getSharedAddressSpace() != null) {
+        } else if (sharedResourcesManager.getSharedAddressSpace() != null) {
             LOGGER.info("Deleting addresses");
             sharedResourcesManager.deleteAddresses(sharedResourcesManager.getSharedAddressSpace());
         }
-
     }
 
     @Override
@@ -175,15 +174,15 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             LOGGER.warn("Goiing for fucking setup add space");
             sharedIoTManager.setup();
         }
+        if (testInfo.getActualTest().getTags().contains(TestTag.INFINISPAN_REG)) {
+            Environment.getInstance().setDefaultDeviceRegistry(TestTag.INFINISPAN_REG);
+        }
     }
 
     @Override
     public void beforeTestExecution(ExtensionContext context) throws Exception {
         if (testInfo.isTestShared()) {
-            /*if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
-                LOGGER.warn("Goiing for fucking setup add space");
-                sharedIoTManager.setup();
-            } else*/ if (sharedResourcesManager.getAmqpClientFactory() == null) {
+            if (sharedResourcesManager.getAmqpClientFactory() == null) {
                 sharedResourcesManager.setup();
             }
         } else {

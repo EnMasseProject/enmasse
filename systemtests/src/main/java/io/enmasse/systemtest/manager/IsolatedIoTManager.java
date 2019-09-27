@@ -153,7 +153,9 @@ public class IsolatedIoTManager extends ResourceManager {
     public List<IoTProject> getIoTProjects() {
         return ioTProjects;
     }
-
+    public String getTenantID() {
+        return IoTUtils.getTenantID(ioTProjects.get(0));
+    }
     public List<IoTConfig> getIoTConfigs() {
         return ioTConfigs;
     }

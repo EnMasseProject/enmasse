@@ -10,8 +10,10 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSchemaList;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.broker.BrokerManagement;
@@ -111,7 +113,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
                 ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
                 ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
-
 
             if (resourcesManager.getSharedAddressSpace() == null) {
                 if (TestInfo.getInstance().isTestIoT()) {
@@ -951,5 +952,18 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
         IoTUtils.waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
+    }
+
+    /**
+     * Test if the enabled flag is set to "enabled".
+     * <br>
+     * The flag is considered "enabled", in case the value is "true" or missing.
+     *
+     * @param enabled The object to test.
+     */
+    protected static void assertDefaultEnabled(final Boolean enabled) {
+        if ( enabled != null && !Boolean.TRUE.equals(enabled)) {
+            fail("Default value must be 'null' or 'true'");
+        }
     }
 }

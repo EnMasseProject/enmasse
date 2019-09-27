@@ -113,6 +113,15 @@ public class TestInfo {
         return false;
     }
 
+    public boolean hasSameDeviceRegTag() {
+
+        List<String> nextTestTags = getTags(tests.get(getCurrentTestIndex() + 1));
+        List<String> currentTestTags = getTags(tests.get(getCurrentTestIndex()));
+
+        return nextTestTags.contains(TestTag.INFINISPAN_REG) && currentTestTags.contains(TestTag.INFINISPAN_REG) ||
+                nextTestTags.contains(TestTag.FILE_REG) && currentTestTags.contains(TestTag.FILE_REG);
+    }
+
     public int getCurrentTestIndex() {
         TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
                 && isSameClass(testIdentifier, actualTest)).findFirst().get();

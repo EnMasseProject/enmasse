@@ -26,4 +26,6 @@ public class TestTag {
     public static final String ACCEPTANCE = "acceptance";
     public static final List<String> SHARED_TAGS = Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_MQTT, SHARED_IOT);
     public static final List<String> IOT_TAGS = Arrays.asList(SHARED_IOT, ISOLATED_IOT);
+    public static final String INFINISPAN_REG = "infinispan";
+    public static final String FILE_REG = "file";
 }

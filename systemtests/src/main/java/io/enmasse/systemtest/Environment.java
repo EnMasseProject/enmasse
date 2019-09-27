@@ -51,7 +51,7 @@ public class Environment {
     private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
-    private final String defaultDeviceRegistry = System.getenv().getOrDefault(DEFAULT_DEVICE_REGISTRY, "file");
+    private String defaultDeviceRegistry = "infinispan";
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
@@ -195,5 +195,8 @@ public class Environment {
     }
     public String getDefaultDeviceRegistry() {
         return defaultDeviceRegistry;
+    }
+    public void setDefaultDeviceRegistry(String defaultDeviceRegistry) {
+        this.defaultDeviceRegistry = defaultDeviceRegistry;
     }
 }
