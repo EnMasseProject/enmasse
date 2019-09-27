@@ -10,54 +10,17 @@
   <groupId>io.enmasse</groupId>
   <artifactId>agent</artifactId>
   <properties>
-    <www-node-install-directory>${project.build.directory}/noderoot/www</www-node-install-directory>
     <agent-node-install-directory>${project.build.directory}/noderoot/agent</agent-node-install-directory>
     <licensereporter-node-install-directory>${project.build.directory}/noderoot/licensereporter</licensereporter-node-install-directory>
     <license-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
     <license-report-stylesheet>${project.basedir}/../scripts/licenses.xsl</license-report-stylesheet>
   </properties>
   <build>
-    <resources>
-      <resource>
-        <directory>www</directory>
-        <targetPath>${project.basedir}/target/www</targetPath>
-        <excludes>
-          <exclude>index.html</exclude>
-        </excludes>
-        <filtering>false</filtering>
-      </resource>
-      <resource>
-        <directory>www</directory>
-        <targetPath>${project.basedir}/target/www</targetPath>
-        <includes>
-          <include>index.html</include>
-        </includes>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
-          <execution>
-            <id>copy-favicon</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.basedir}/www</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${project.basedir}/../documentation/_images</directory>
-                  <includes>
-                    <include>favicon.ico</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
           <execution>
             <id>copy-packagejson-agent</id>
             <phase>generate-resources</phase>
@@ -77,45 +40,6 @@
               </resources>
             </configuration>
           </execution>
-          <execution>
-            <id>copy-packagejson-www</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${www-node-install-directory}</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${project.basedir}/www</directory>
-                  <includes>
-                    <include>package.json</include>
-                    <include>npm-shrinkwrap.json</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-			  <groupId>org.asciidoctor</groupId>
-			  <artifactId>asciidoctor-maven-plugin</artifactId>
-			  <configuration>
-          <sourceDirectory>${project.basedir}/../documentation/messaging_app_developer</sourceDirectory>
-          <sourceDocumentName>master.adoc</sourceDocumentName>
-          <outputFile>${project.basedir}/www/help.html</outputFile>
-          <doctype>book</doctype>
-          <backend>html</backend>
-			  </configuration>
-    		<executions>
-          <execution>
-            <id>help-page</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>process-asciidoc</goal>
-            </goals>
-          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -134,17 +58,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>install node and npm - www</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <configuration>
-              <nodeVersion>${node.version}</nodeVersion>
-              <npmVersion>${npm.version}</npmVersion>
-              <installDirectory>${www-node-install-directory}</installDirectory>
-            </configuration>
-          </execution>
-          <execution>
             <id>npm install - agent</id>
             <goals>
               <goal>npm</goal>
@@ -153,17 +66,6 @@
             <configuration>
               <workingDirectory>${agent-node-install-directory}</workingDirectory>
               <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2 --quiet</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm install - www</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>process-resources</phase>
-            <configuration>
-              <workingDirectory>${www-node-install-directory}</workingDirectory>
-              <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2</arguments>
             </configuration>
           </execution>
           <execution>
@@ -189,30 +91,6 @@
             </configuration>
           </execution>
         </executions>
-      </plugin>
-		  <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <executable>${project.basedir}/../doc-utils/parse.py</executable>
-          <workingDirectory>${project.basedir}</workingDirectory>
-          <arguments>
-            <argument>-i</argument>
-            <argument>${project.basedir}/../doc-utils/expected.json</argument>
-            <argument>-o</argument>
-            <argument>${project.basedir}/www/tooltips.json</argument>
-            <argument>-v</argument>
-            <argument>${project.basedir}/../documentation</argument>
-          </arguments>
-        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -324,7 +202,6 @@
                     <argument>${project.build.outputDirectory}/licenses</argument>
                     <argument>agent</argument>
                     <argument>${agent-node-install-directory}</argument>
-                    <argument>${www-node-install-directory}</argument>
                   </arguments>
                   <environmentVariables>
                     <LICENSE_REPORTER_OPTS>${license-reporter-opts}</LICENSE_REPORTER_OPTS>

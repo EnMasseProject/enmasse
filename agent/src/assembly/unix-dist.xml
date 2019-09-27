@@ -51,22 +51,6 @@
            <fileMode>0644</fileMode>
         </fileSet>
         <fileSet>
-           <directory>${project.basedir}/target/www</directory>
-           <outputDirectory>www</outputDirectory>
-           <includes>
-              <include>**</include>
-           </includes>
-           <fileMode>0644</fileMode>
-        </fileSet>
-        <fileSet>
-           <directory>${project.basedir}/target/noderoot/www</directory>
-           <outputDirectory>www</outputDirectory>
-           <includes>
-              <include>node_modules/**</include>
-           </includes>
-           <fileMode>0644</fileMode>
-        </fileSet>
-        <fileSet>
            <directory>${project.basedir}</directory>
            <includes>
               <include>package.json</include>
