@@ -1,4 +1,75 @@
 {
+    "schemes": [
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the EnMasse API specification.",
+        "title": "EnMasse REST API",
+        "version": "1.0.0"
+    },
+    "externalDocs": {
+        "description": "Find out more about EnMasse",
+        "url": "http://enmasse.io"
+    },
+    "tags": [
+        {
+            "description": "Operate on AddressSpaces",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            },
+            "name": "addressspaces"
+        },
+        {
+            "description": "Operating on Addresses.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            },
+            "name": "addresses"
+        },
+        {
+            "description": "Operating on MessagingUsers.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            },
+            "name": "messagingusers"
+        },
+        {
+            "description": "Operating on AddressSpacePlans.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            },
+            "name": "addressspaceplans"
+        },
+        {
+            "description": "Operating on AddressPlans.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            },
+            "name": "addressplans"
+        },
+        {
+            "description": "Operating on BrokeredInfraConfigs.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            },
+            "name": "brokeredinfraconfigs"
+        },
+        {
+            "description": "Operating on StandardInfraConfigs.",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "https://enmasse.io"
+            },
+            "name": "standardinfraconfigs"
+        }
+    ],
     "definitions": {
         "JsonPatchRequest": {
             "properties": {
@@ -1566,15 +1637,6 @@
             "type": "string"
         }
     },
-    "externalDocs": {
-        "description": "Find out more about EnMasse",
-        "url": "http://enmasse.io"
-    },
-    "info": {
-        "description": "This is the EnMasse API specification.",
-        "title": "EnMasse REST API",
-        "version": "1.0.0"
-    },
     "paths": {
         "/apis/admin.enmasse.io/v1beta2/namespaces/{namespace}/addressspaceplans": {
             "get": {
@@ -2806,67 +2868,5 @@
                 ]
             }
         }
-    },
-    "schemes": [
-        "https"
-    ],
-    "swagger": "2.0",
-    "tags": [
-        {
-            "description": "Operate on AddressSpaces",
-            "externalDocs": {
-                "description": "Find out more",
-                "url": "https://enmasse.io"
-            },
-            "name": "addressspaces"
-        },
-        {
-            "description": "Operating on Addresses.",
-            "externalDocs": {
-                "description": "Find out more",
-                "url": "https://enmasse.io"
-            },
-            "name": "addresses"
-        },
-        {
-            "description": "Operating on MessagingUsers.",
-            "externalDocs": {
-                "description": "Find out more",
-                "url": "https://enmasse.io"
-            },
-            "name": "messagingusers"
-        },
-        {
-            "description": "Operating on AddressSpacePlans.",
-            "externalDocs": {
-                "description": "Find out more",
-                "url": "https://enmasse.io"
-            },
-            "name": "addressspaceplans"
-        },
-        {
-            "description": "Operating on AddressPlans.",
-            "externalDocs": {
-                "description": "Find out more",
-                "url": "https://enmasse.io"
-            },
-            "name": "addressplans"
-        },
-        {
-            "description": "Operating on BrokeredInfraConfigs.",
-            "externalDocs": {
-                "description": "Find out more",
-                "url": "https://enmasse.io"
-            },
-            "name": "brokeredinfraconfigs"
-        },
-        {
-            "description": "Operating on StandardInfraConfigs.",
-            "externalDocs": {
-                "description": "Find out more",
-                "url": "https://enmasse.io"
-            },
-            "name": "standardinfraconfigs"
-        }
-    ]
+    }
 }
