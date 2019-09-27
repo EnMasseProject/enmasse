@@ -258,7 +258,6 @@ public class LinkInitiator implements EventHandler {
       Source source = new Source();
       source.setAddress(linkInfo.getSourceAddress());
       source.setDurable(TerminusDurability.UNSETTLED_STATE);
-      source.setDefaultOutcome(new Released());
       source.setOutcomes(Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL);
       if (!linkInfo.getCapabilities().isEmpty()) {
          source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
