@@ -1975,7 +1975,7 @@ __required__||enum (AddressSpaceList)
 |**authenticationService** +
 __optional__||<<_io_enmasse_v1beta1_addressspacespec_authenticationservice,authenticationService>>
 |**connectors** +
-__optional__|List of connectors to create.|<<_io_enmasse_v1beta1_addressspacespec_connectors,connectors>>
+__optional__|List of connectors to create.|< <<_io_enmasse_v1beta1_addressspacespecconnector,io.enmasse.v1beta1.AddressSpaceSpecConnector>> > array
 |**endpoints** +
 __optional__||< <<_io_enmasse_v1beta1_addressspacespec_endpoints,endpoints>> > array
 |**networkPolicy** +
@@ -2012,16 +2012,6 @@ __optional__|string
 __optional__|integer
 |**realm** +
 __optional__|string
-|===
-
-[[_io_enmasse_v1beta1_addressspacespec_connectors]]
-**connectors**
-
-[options="header", cols=".^3a,.^4a"]
-|===
-|Name|Schema
-|**items** +
-__optional__|<<_io_enmasse_v1beta1_addressspacespecconnector,io.enmasse.v1beta1.AddressSpaceSpecConnector>>
 |===
 
 [[_io_enmasse_v1beta1_addressspacespec_endpoints]]
@@ -2278,8 +2268,8 @@ __optional__|Name of Secret containing client certificate.|string
 [options="header", cols=".^3a,.^11a,.^4a"]
 |===
 |Name|Description|Schema
-|**connectorStatuses** +
-__optional__|List of connectors with status.|< object > array
+|**connectors** +
+__optional__|List of connectors with status.|< <<_io_enmasse_v1beta1_addressspacestatusconnector,io.enmasse.v1beta1.AddressSpaceStatusConnector>> > array
 |**endpointStatuses** +
 __optional__||< <<_io_enmasse_v1beta1_addressspacestatus_endpointstatuses,endpointStatuses>> > array
 |**isReady** +
@@ -2364,7 +2354,7 @@ __Type__ : enum (standard, brokered)
 |**address** +
 __required__||string
 |**forwarders** +
-__optional__|List of forwarders to enable for this address.|< object > array
+__optional__|List of forwarders to enable for this address.|< <<_io_enmasse_v1beta1_addressspecforwarder,io.enmasse.v1beta1.AddressSpecForwarder>> > array
 |**plan** +
 __required__||string
 |**type** +
@@ -2393,8 +2383,8 @@ __required__|Remote address to send/receive messages to.|string
 [options="header", cols=".^3a,.^11a,.^4a"]
 |===
 |Name|Description|Schema
-|**forwarderStatuses** +
-__optional__|List of forwarders with status.|< object > array
+|**forwarders** +
+__optional__|List of forwarders with status.|< <<_io_enmasse_v1beta1_addressstatusforwarder,io.enmasse.v1beta1.AddressStatusForwarder>> > array
 |**isReady** +
 __optional__||boolean
 |**messages** +
