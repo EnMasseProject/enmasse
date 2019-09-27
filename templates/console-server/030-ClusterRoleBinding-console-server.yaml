@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: "enmasse.io:console-server-${NAMESPACE}"
+  labels:
+    app: enmasse
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: enmasse.io:console-server
+subjects:
+- kind: ServiceAccount
+  name: console-server
+  namespace: ${NAMESPACE}

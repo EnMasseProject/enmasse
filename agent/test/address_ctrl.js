@@ -18,7 +18,7 @@
 var assert = require('assert');
 var http = require('http');
 
-var address_ctrl = require('../lib/address_ctrl').create({"KUBERNETES_TOKEN": "mytoken"});
+var address_ctrl_lib = require('../lib/address_ctrl');
 
 
 function MockAddressSource () {
@@ -159,10 +159,15 @@ MockAddressSource.prototype.delete_address = function (request, response) {
 
 describe('address controller interaction', function() {
     var address_source;
+    var address_ctrl;
 
     beforeEach(function(done) {
         address_source = new MockAddressSource();
-        address_source.listen(8080, done);
+        address_source.listen(0, function () {
+            address_ctrl = address_ctrl_lib.create({"KUBERNETES_TOKEN": "mytoken", "ADDRESS_CONTROLLER_SERVICE_HOST": "localhost", "ADDRESS_CONTROLLER_SERVICE_PORT_HTTPS": address_source.port});
+            done();
+        });
+
     });
 
     afterEach(function(done) {

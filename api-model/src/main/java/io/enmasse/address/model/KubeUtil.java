@@ -131,6 +131,10 @@ public final class KubeUtil {
         return getAddressSpaceServiceName(serviceName, addressSpace) + "." + namespace + ".svc";
     }
 
+    public static String getAddressSpaceExternalServiceName(String serviceName, AddressSpace addressSpace) {
+        return serviceName + "-" + addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID) + "-external";
+    }
+
     public static String getExternalCertSecretName(String serviceName, AddressSpace addressSpace) {
         return "external-certs-" + getAddressSpaceServiceName(serviceName, addressSpace);
     }

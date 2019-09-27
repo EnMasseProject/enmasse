@@ -39,7 +39,6 @@ public class TemplateTest {
         parameters.put("ADDRESS_SPACE_PLAN", "plan1");
         parameters.put("ADDRESS_SPACE", "myspace1");
         parameters.put("ADDRESS_SPACE_NAMESPACE", "ns");
-        parameters.put("CONSOLE_SECRET", "secret1");
         parameters.put("MESSAGING_SECRET", "secret2");
         parameters.put("AUTHENTICATION_SERVICE_HOST", "host1");
         parameters.put("AUTHENTICATION_SERVICE_PORT", "123");

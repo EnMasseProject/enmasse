@@ -70,7 +70,7 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "console-init", "CONSOLE_INIT_IMAGE")
 	setIfEnvPresent(data, "console-proxy-openshift", "CONSOLE_PROXY_OPENSHIFT_IMAGE")
 	setIfEnvPresent(data, "console-proxy-kubernetes", "CONSOLE_PROXY_KUBERNETES_IMAGE")
-	setIfEnvPresent(data, "console-httpd", "CONSOLE_HTTPD_IMAGE")
+	setIfEnvPresent(data, "console-server", "CONSOLE_SERVER_IMAGE")
 	setIfEnvPresent(data, "address-space-controller", "ADDRESS_SPACE_CONTROLLER_IMAGE")
 	setIfEnvPresent(data, "standard-controller", "STANDARD_CONTROLLER_IMAGE")
 	setIfEnvPresent(data, "agent", "AGENT_IMAGE")

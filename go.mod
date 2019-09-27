@@ -5,6 +5,7 @@ go 1.12
 // Replacements as per https://github.com/operator-framework/operator-sdk/blob/master/doc/migration/version-upgrade-guide.md#modules-3
 // Pinned to kubernetes-1.16.2
 replace (
+	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
 	github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309
 	github.com/openshift/api => github.com/openshift/api v0.0.0-20200117162508-e7ccdda6ba67
 	k8s.io/api => k8s.io/api v0.0.0-20191016110408-35e52d86657a
@@ -28,21 +29,28 @@ replace (
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.0.0-20191016115753-cf0698c3a16b
 	k8s.io/metrics => k8s.io/metrics v0.0.0-20191016113814-3b1a734dba6e
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20191016112829-06bb3c9d77c9
+	pack.ag/amqp => github.com/vcabbage/amqp v0.12.6-0.20191205183900-5a75e78e59d3
 )
 
 require (
-	github.com/Azure/go-autorest/autorest v0.9.4 // indirect
-	github.com/Azure/go-autorest/autorest/adal v0.8.1 // indirect
+	github.com/99designs/gqlgen v0.10.1
 	github.com/Nerzal/gocloak/v3 v3.7.0
+	github.com/alexedwards/scs/v2 v2.2.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
+	github.com/google/go-cmp v0.3.2-0.20191216211814-5a6f75716e12 // indirect
 	github.com/google/uuid v1.1.1
+	github.com/hashicorp/consul/api v1.3.0 // indirect
+	github.com/hashicorp/go-memdb v1.0.4
 	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	// release-4.2
 	github.com/openshift/client-go v0.0.0-20190923180330-3b6373338c9b
 	github.com/operator-framework/operator-sdk v0.15.1
+	github.com/prometheus/prometheus v2.15.2+incompatible
+	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
+	github.com/vektah/gqlparser v1.2.0
 	go.uber.org/multierr v1.1.0
 	go.uber.org/zap v1.10.0
 	gopkg.in/yaml.v2 v2.2.4
@@ -52,5 +60,6 @@ require (
 	k8s.io/code-generator v0.17.1
 	k8s.io/klog v1.0.0
 	k8s.io/kube-aggregator v0.0.0
+	pack.ag/amqp v0.12.6
 	sigs.k8s.io/controller-runtime v0.4.0
 )
