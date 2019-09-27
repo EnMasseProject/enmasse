@@ -5,6 +5,8 @@
 # License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
 #
 
+#TODO wire in console code generation
+
 set -o errexit
 set -o nounset
 set -o pipefail

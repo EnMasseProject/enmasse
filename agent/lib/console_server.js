@@ -23,18 +23,16 @@ var path = require('path');
 var url = require('url');
 var util = require('util');
 var rhea = require('rhea');
-var WebSocketServer = require('ws').Server;
 var AddressList = require('./address_list.js');
 var BufferedSender = require('./buffered_sender.js');
 var Registry = require('./registry.js');
 var tls_options = require('./tls_options.js');
 var myutils = require('./utils.js');
-var auth_utils = require('./auth_utils.js');
 var Metrics = require('./metrics.js');
 var queue = require('../lib/queue.js');
+var kubernetes = require('./kubernetes.js');
 
 function ConsoleServer (address_ctrl, env, openshift) {
-    this.console_link = env.CONSOLE_LINK;
     this.address_ctrl = address_ctrl;
     this.addresses = new AddressList();
     this.metrics = new Metrics(env.ADDRESS_SPACE_NAMESPACE, env.ADDRESS_SPACE);
@@ -59,11 +57,12 @@ function ConsoleServer (address_ctrl, env, openshift) {
     });
     this.connections.on('deleted', function (conn) {
         log.debug('connection %s has been deleted, notifying clients...', conn.host);
-        self.publish({subject:'connection_deleted',body:conn.id});
+        self.publish({subject:'connection_deleted',body:conn});
     });
     this.amqp_container = rhea.create_container({autoaccept:false});
 
     this.amqp_container.on('sender_open', function (context) {
+        context.sender.set_source({address: "admin_data_source"});
         self.subscribe(context.connection.remote.open.container_id, context.sender);
     });
     function unsubscribe (context) {
@@ -72,6 +71,9 @@ function ConsoleServer (address_ctrl, env, openshift) {
         }
     }
     this.amqp_container.on('sender_close', unsubscribe);
+    this.amqp_container.on('connection_open', function (context) {
+        log.info('connection_open %j', context);
+    });
     this.amqp_container.on('connection_close', unsubscribe);
     this.amqp_container.on('disconnected', unsubscribe);
     this.amqp_container.on('message', function (context) {
@@ -124,55 +126,10 @@ function ConsoleServer (address_ctrl, env, openshift) {
     });
 }
 
-function get_cookies(request) {
-    let cookies = {};
-    let header = request.headers.cookie;
-    if (header) {
-        let items = header.split(';');
-        for (let i = 0; i < items.length; i++) {
-            let parts = items[i].split('=');
-            cookies[parts.shift().trim()] = decodeURI(parts.join('='));
-        }
-    }
-    return cookies;
-}
-
-ConsoleServer.prototype.ws_bind = function (server, env) {
-    var self = this;
-    this.ws_server = new WebSocketServer({'server': server, path: '/websocket', verifyClient:function (info, callback) {
-        auth_utils.ws_auth_handler(self.authz, env)(info.req, callback);
-    }});
-    this.ws_server.on('connection', function (ws, request) {
-
-        if (self.authz.access_console(request)) {
-            var idleTimeout = 30000;
-            if (env.CONSOLE_AMQP_IDLE_TIMEOUT) {
-                function isNan(parsed) {
-                    return parsed !== parsed;
-                }
-                idleTimeout = parseInt(env.CONSOLE_AMQP_IDLE_TIMEOUT, 10);
-                if (isNan(idleTimeout) || idleTimeout <= 0) {
-                    idleTimeout = null;
-                }
-            }
-            var options = {idle_time_out: idleTimeout};
-            Object.assign(options, self.authz.get_authz_props(request));
-            log.info('Accepting incoming websocket connection (idle timeout : %s)', idleTimeout === null ? "off" : idleTimeout);
-            self.amqp_container.websocket_accept(ws, options);
-        } else {
-            ws.close(4403, 'You do not have permission to use this console');
-        }
-    });
-};
 
 ConsoleServer.prototype.close = function (callback) {
     var self = this;
     return new Promise(function (resolve, reject) {
-        if (self.ws_server) {
-            self.ws_server.close(resolve);
-        } else {
-            resolve();
-        }
     }).then(function () {
         new Promise(function (resolve, reject) {
             if (self.server) {
@@ -182,131 +139,106 @@ ConsoleServer.prototype.close = function (callback) {
             }
         });
     }).then(callback);
-}
-
-var content_types = {
-    '.html': 'text/html',
-    '.js': 'text/javascript',
-    '.css': 'text/css',
-    '.json': 'application/json',
-    '.png': 'image/png',
-    '.jpg': 'image/jpg',
-    '.gif': 'image/gif',
-    '.woff': 'application/font-woff',
-    '.ttf': 'application/font-ttf',
-    '.eot': 'application/vnd.ms-fontobject',
-    '.otf': 'application/font-otf',
-    '.svg': 'image/svg+xml'
 };
 
-function get_content_type(file) {
-    return content_types[path.extname(file).toLowerCase()];
-}
+// function authz(token) {
+//
+//     var options = {"token": token};
+//     var authn = new Promise();
+//
+//     const namespace = env.ADDRESS_SPACE_NAMESPACE;
+//     kubernetes.self_subject_access_review(options, namespace,
+//         "list", "enmasse.io", "addresses").then(({allowed: allowed_list, reason: reason_list}) => {
+//         if (allowed_list) {
+//             kubernetes.self_subject_access_review(options, namespace,
+//                 "create", "enmasse.io", "addresses").then(({allowed: allowed_create, reason: reason_create}) => {
+//                 if (allowed_create) {
+//                     authn.resolve({admin: allowed_create, console: true});
+//                 } else {
+//                     kubernetes.self_subject_access_review(options, namespace,
+//                         "delete", "enmasse.io", "addresses").then(({allowed: allowed_delete, reason: reason_delete}) => {
+//                         authn.resolve({admin: allowed_create, console: true});
+//                         if (!allowed_delete) {
+//                             log.info("User has neither create nor delete address permission, not granting admin permission. [%j, %j]",
+//                                 reason_create, reason_delete);
+//                         }
+//                     }).catch(authn.reject);
+//                 }
+//             }).catch(authn.reject);
+//         } else {
+//             log.warn("User does not have list address permission, granting no access. [%j]",
+//                 reason_list);
+//             authn.resolve({admin: allowed_create, console: true});
+//         }
+//     }).catch(authn.reject);
+//     return authn;
+// }
 
-function static_handler(request, response, transform) {
-    var file = path.join(__dirname, '../www/', url.parse(request.url).pathname);
-    if (file.charAt(file.length - 1) === '/') {
-        file += 'index.html';
-    }
-    fs.readFile(file, function (error, data) {
-        if (error) {
-            response.statusCode = error.code === 'ENOENT' ? 404 : 500;
-            response.end(http.STATUS_CODES[response.statusCode]);
-            log.warn('GET %s => %i %j', request.url, response.statusCode, error);
-        } else {
-            var content = transform ? transform(data) : data;
-            var content_type = get_content_type(file);
-            if (content_type) {
-                response.setHeader('content-type', content_type);
-            }
-            if (transform) {
-                response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-                response.setHeader("Pragma", "no-cache");
-                response.setHeader("Expires", "0");
-            }
-            log.debug('GET %s => %s', request.url, file);
-            response.end(content);
-        }
-    });
-}
-
-function file_load_handler(request, response, file) {
-    fs.readFile(file, function (error, data) {
-        if (error) {
-            response.statusCode = error.code === 'ENOENT' ? 404 : 500;
-            response.end(http.STATUS_CODES[response.statusCode]);
-            log.warn('GET %s => %i %j', request.url, response.statusCode, error);
-        } else {
-            var content_type = get_content_type(file);
-            response.setHeader('content-type', 'text/plain');
-            log.debug('GET %s => %s', request.url, file);
-            response.end(data);
-        }
-    });
-}
-
-function get_create_server(env) {
-    if (env.ALLOW_HTTP) {
-        return http.createServer;
-    } else {
-        return function (callback) {
-            var opts = tls_options.get_console_server_options({}, env);
-            return https.createServer(opts, callback);
-        }
-    }
-}
-
-function replacer(original, replacement, replacer) {
-    return function (data) {
-        if (replacer) {
-            data = replacer(data);
-        }
-        return data.toString().replace(new RegExp(original, 'g'), replacement);
-    }
-}
 
 ConsoleServer.prototype.listen = function (env, callback) {
     var self = this;
     this.authz = require('./authz.js').policy(env);
-    let handler = function (request, response) {
-        if (request.method === 'GET') {
-            try {
-                var u = url.parse(request.url);
-                if (u.pathname && (u.pathname.endsWith('.html') || u.pathname.endsWith("/"))) {
-                    var transform;
-                    if (u.pathname === '/help.html' && env.MESSAGING_ROUTE_HOSTNAME !== undefined) {
-                        transform = replacer('<em>messaging\-route\-hostname</em>', env.MESSAGING_ROUTE_HOSTNAME);
-                    } else {
-                        var global_console_disabled = !env.CONSOLE_LINK;
-                        transform = replacer('\\${GLOBAL_CONSOLE_DISABLED}', global_console_disabled,
-                            replacer('\\${GLOBAL_CONSOLE_LINK}', env.CONSOLE_LINK));
-                    }
-                    static_handler(request, response,  transform);
-                } else if (u.pathname === '/messaging-cert.pem' && env.MESSAGING_CERT !== undefined) {
-                    file_load_handler(request, response, env.MESSAGING_CERT);
-                } else {
-                    static_handler(request, response);
-                }
-            } catch (error) {
-                response.statusCode = 500;
-                response.end(error.message);
-            }
-        } else {
-            response.statusCode = 405;
-            response.end(util.format('%s not allowed on %s', request.method, request.url));
-        }
-    };
 
     return new Promise((resolve, reject) => {
-        auth_utils.init_auth_handler(this.openshift, env).then((auth_context) => {
-            let handlers = auth_utils.auth_handler(this.authz, env, handler, auth_context, this.openshift);
-            this.server = get_create_server(env)(handlers);
-            var port = env.port === undefined ? 8080 : env.port;
-            this.server.listen(port, callback);
-            log.info("Console listening on port %d", port);
-            this.ws_bind(this.server, env);
-            resolve(this.server);
-        }).catch((e) => reject);
+        var port = env.port === undefined ? 56710 : env.port;
+        var opts = tls_options.get_console_server_options({port: port}, env);
+
+        // TODO - Vcabbage AMQP SASL does not support XOAUTH and is not pluggable.
+        // TODO - Instead We use PLAIN taking the token from the password
+        self.amqp_container.sasl_server_mechanisms['PLAIN'] = function () {
+            return {
+                outcome: undefined,
+                start: function (response, hostname) {
+                    function extract(buffer) {
+                        var results = [];
+                        var start = 0;
+                        var i = 0;
+                        while (i < buffer.length) {
+                            if (buffer[i] === 0x00) {
+                                if (i > start) results.push(buffer.toString('utf8', start, i));
+                                else results.push(null);
+                                start = ++i;
+                            } else {
+                                ++i;
+                            }
+                        }
+                        if (i > start) results.push(buffer.toString('utf8', start, i));
+                        else results.push(null);
+                        return results;
+                    }
+
+                    var fields = extract(response);
+                    if (fields.length !== 3) {
+                        this.connection.sasl_failed('Unexpected response in PLAIN, got ' + fields.length + ' fields, expected 3');
+                    }
+
+                    var self = this;
+                    function authenticate(unused, token) {
+                        return kubernetes.whoami({"token": token}).then((user) => {
+                            log.info("Authenticated as user : %s ", user.username);
+                            self.username = user.username;
+                            return true;
+                        }).catch((e) => {
+                            log.error("Failed to authenticate using token", e);
+                            return false;
+                        })
+                    }
+
+                    return Promise.resolve(authenticate(fields[1], fields[2], hostname))
+                        .then(function (result) {
+                            if (result) {
+                                self.outcome = true;
+                            } else {
+                                self.outcome = false;
+                            }
+                        });
+                },
+            };
+        };
+
+        self.server = self.amqp_container.listen(opts);
+        log.info("AMQP server listening on port %d", port);
+        resolve(self.server);
     });
 };
 
@@ -353,6 +285,7 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     }, this.authz.address_filter(sender.connection));
     this.connections.for_each(function (conn) {
         buffered_sender.send({subject:'connection', body:conn});
+        log.info("KWDEBUG Sending : %j ", conn);
     }, this.authz.connection_filter(sender.connection));
     //TODO: poll for changes in address_types
     var self = this;

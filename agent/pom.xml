@@ -10,7 +10,6 @@
   <groupId>io.enmasse</groupId>
   <artifactId>agent</artifactId>
   <properties>
-    <www-node-install-directory>${project.build.directory}/noderoot/www</www-node-install-directory>
     <agent-node-install-directory>${project.build.directory}/noderoot/agent</agent-node-install-directory>
     <licensereporter-node-install-directory>${project.build.directory}/noderoot/licensereporter</licensereporter-node-install-directory>
     <license-reporter-opts>--silent</license-reporter-opts>  <!-- verbose option - details -->
@@ -77,25 +76,6 @@
               </resources>
             </configuration>
           </execution>
-          <execution>
-            <id>copy-packagejson-www</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${www-node-install-directory}</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${project.basedir}/www</directory>
-                  <includes>
-                    <include>package.json</include>
-                    <include>npm-shrinkwrap.json</include>
-                  </includes>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -134,17 +114,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>install node and npm - www</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <configuration>
-              <nodeVersion>${node.version}</nodeVersion>
-              <npmVersion>${npm.version}</npmVersion>
-              <installDirectory>${www-node-install-directory}</installDirectory>
-            </configuration>
-          </execution>
-          <execution>
             <id>npm install - agent</id>
             <goals>
               <goal>npm</goal>
@@ -153,17 +122,6 @@
             <configuration>
               <workingDirectory>${agent-node-install-directory}</workingDirectory>
               <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2 --quiet</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm install - www</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>process-resources</phase>
-            <configuration>
-              <workingDirectory>${www-node-install-directory}</workingDirectory>
-              <arguments>install --production --fetch-retry-mintimeout 60000 --fetch-retries 10 --maxsockets 2</arguments>
             </configuration>
           </execution>
           <execution>
@@ -324,7 +282,6 @@
                     <argument>${project.build.outputDirectory}/licenses</argument>
                     <argument>agent</argument>
                     <argument>${agent-node-install-directory}</argument>
-                    <argument>${www-node-install-directory}</argument>
                   </arguments>
                   <environmentVariables>
                     <LICENSE_REPORTER_OPTS>${license-reporter-opts}</LICENSE_REPORTER_OPTS>

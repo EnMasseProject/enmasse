@@ -23,6 +23,8 @@ var artemis = require('./artemis.js');
 var myevents = require('./events.js');
 var myutils = require('./utils.js');
 var plimit = require('p-limit');
+var crypto = require('crypto');
+var uuidv5 = require('uuid/v5');
 
 function BrokerController(event_sink) {
     events.EventEmitter.call(this);
@@ -153,15 +155,40 @@ function transform_address_stats(address) {
 }
 
 function transform_connection_stats(raw) {
+    log.warn("KWDEBUG raw connecton %j", raw);
+
+    var addressSpace = process.env.ADDRESS_SPACE;
+    var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
+    var uuid = generateStableConnectionUuid(addressSpaceNamespace, addressSpace, raw);
+
     return {
         id: raw.connectionID,
+        uuid: uuid,
         host: raw.clientAddress,
         container: 'not available',
+        creationTimestamp: raw.creationTime ? Math.floor(raw.creationTime / 1000) : 0,
         user: raw.sessions.length ? raw.sessions[0].principal : '',
         senders: [],
         receivers: []
     };
 }
+
+function generateStableConnectionUuid(addressSpaceNamespace, addressSpace, c) {
+    var hash = crypto.createHash('sha256');
+    if (addressSpaceNamespace) {
+        hash.update(addressSpaceNamespace)
+    }
+    if (addressSpace) {
+        hash.update(addressSpace)
+    }
+    if (c.connectionID) {
+        hash.update(c.connectionID)
+    }
+    var ba = [];
+    ba.push(...hash.digest().slice(0, 16));
+    return uuidv5(c.clientAddress, ba);
+}
+
 
 function transform_producer_stats(raw) {
     return {

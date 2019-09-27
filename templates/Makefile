@@ -22,6 +22,7 @@ MODULES=\
 	enmasse-operator \
 	crds \
 	address-space-controller \
+	console-server \
 	example-roles \
 	example-plans \
 	example-authservices \
@@ -91,6 +92,7 @@ replace_images: prepare
 					  -e 's,\$${IOT_PROXY_CONFIGURATOR_IMAGE},$(IOT_PROXY_CONFIGURATOR_IMAGE),g' \
 					  -e 's,\$${CONTROLLER_MANAGER_IMAGE},$(CONTROLLER_MANAGER_IMAGE),g' \
 					  -e 's,\$${OLM_MANIFEST_IMAGE},$(OLM_MANIFEST_IMAGE),g' \
+					  -e 's,\$${CONSOLE_SERVER_IMAGE},$(CONSOLE_SERVER_IMAGE),g' \
 					  -e 's,\$${CONSOLE_INIT_IMAGE},$(CONSOLE_INIT_IMAGE),g' \
 					  -e 's,\$${CONSOLE_PROXY_OPENSHIFT_IMAGE},$(CONSOLE_PROXY_OPENSHIFT_IMAGE),g' \
 					  -e 's,\$${OAUTH_PROXY_IMAGE},$(OAUTH_PROXY_IMAGE),g' \
@@ -115,7 +117,7 @@ scripts_install:
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
-	for i in crds address-space-controller api-server api-service enmasse-operator; do \
+	for i in crds address-space-controller api-server api-service enmasse-operator console-server; do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 

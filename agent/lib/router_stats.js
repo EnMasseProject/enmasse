@@ -20,6 +20,8 @@ var rhea = require('rhea');
 var path = require('path');
 var fs = require('fs');
 var Router = require('./qdr.js').Router;
+var crypto = require('crypto');
+var uuidv5 = require('uuid/v5');
 
 
 
@@ -30,6 +32,7 @@ function RouterStats(connection) {
     var conn = connection || require('./admin_service.js').connect(rhea, options, 'MESSAGING');
     this.router = new Router(conn);
     this.router.name = 'stats';
+
     var self = this;
     this.router.get_all_routers().then(function (routers) {
         self.routers = routers;
@@ -238,6 +241,22 @@ function is_application_connection (c) {
     return is_role_normal(c) && !is_internal(c);
 }
 
+function generateStableConnectionUuid(addressSpaceNamespace, addressSpace, c) {
+    var hash = crypto.createHash('sha256');
+    if (addressSpaceNamespace) {
+        hash.update(addressSpaceNamespace)
+    }
+    if (addressSpace) {
+        hash.update(addressSpace)
+    }
+    if (c.container) {
+        hash.update(c.container)
+    }
+    var ba = [];
+    ba.push(...hash.digest().slice(0, 16));
+    return uuidv5(c.host, ba);
+}
+
 function get_normal_connections (results) {
     var connections = {};
     results.forEach(function (stats, i) {
@@ -246,8 +265,14 @@ function get_normal_connections (results) {
             if (connections[qualified_id]) {
                 log.warn('overwriting connection details for %s', qualified_id);
             }
+            var addressSpace = process.env.ADDRESS_SPACE;
+            var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
+            var uuid = generateStableConnectionUuid(addressSpaceNamespace, addressSpace, c);
             connections[qualified_id] = {
                 id: c.identity,
+                addressSpace: addressSpace,
+                addressSpaceNamespace: addressSpaceNamespace,
+                uuid: uuid,
                 host: c.host,
                 container: c.container,
                 properties: c.properties,
@@ -261,7 +286,9 @@ function get_normal_connections (results) {
                     egress: init_outcomes({})
                 },
                 senders: [],
-                receivers: []
+                receivers: [],
+                // DISPATCH-1439 - remove conditional once we have 1.10.0
+                creationTimestamp:  Math.floor(Date.now() / 1000) - (c.uptimeSeconds ? c.uptimeSeconds : 0),
             };
         });
     });
@@ -275,6 +302,7 @@ RouterStats.prototype.close = function () {
 RouterStats.prototype.retrieve = function (addresses, connection_registry) {
     return this._retrieve().then(function (results) {
         if (results) {
+            log.warn("KWDEBUG connections:  %j", results.connections)
             connection_registry.set(results.connections);
             for (var a in results.addresses) {
                 var i = a.indexOf('::');
