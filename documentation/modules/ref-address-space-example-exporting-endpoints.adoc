@@ -33,10 +33,8 @@ shown in link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-e
 inject endpoint information or provide a proxy service in the same namespace as the application. For more information see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-exports-messaging[example exports format].
 <2> (Required) The name of the resource to create and update.
 
-When exporting endpoint information, the {ProductName} `address-space-controller` service account
-running in the {ProductName} namespace must be granted privileges to create, update, and delete the
-configmap specified in the exports list. You can do this by creating an RBAC role and role-binding
-such as this one:
+When exporting endpoint information, the `system:serviceaccounts:_{ProductNamespace}_` group must be granted privileges to create, update, and delete the
+configmap specified in the exports list. You can do this by creating an RBAC role and role-binding such as this one:
 
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
@@ -62,8 +60,7 @@ roleRef:
   kind: Role
   name: rbac
 subjects:
-- kind: ServiceAccount
-  name: address-space-controller
-  namespace: _{ProductNamespace}_
+- kind: Group
+  name: system:serviceaccounts:_{ProductNamespace}_
 ----
 
