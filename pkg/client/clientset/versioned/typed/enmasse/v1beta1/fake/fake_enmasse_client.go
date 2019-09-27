@@ -25,6 +25,14 @@ func (c *FakeEnmasseV1beta1) AddressSpaces(namespace string) v1beta1.AddressSpac
 	return &FakeAddressSpaces{c, namespace}
 }
 
+func (c *FakeEnmasseV1beta1) AddressSpaceSchemas() v1beta1.AddressSpaceSchemaInterface {
+	return &FakeAddressSpaceSchemas{c}
+}
+
+func (c *FakeEnmasseV1beta1) AuthenticationServices(namespace string) v1beta1.AuthenticationServiceInterface {
+	return &FakeAuthenticationServices{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeEnmasseV1beta1) RESTClient() rest.Interface {

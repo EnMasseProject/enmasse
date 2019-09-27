@@ -107,34 +107,6 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 		if err != nil {
 			return err
 		}
-
-		// Watch for changes in the address spaces so we can update the oauth redirects
-		mapFn := handler.ToRequestsFunc(
-			func(a handler.MapObject) []reconcile.Request {
-				reqs := make([]reconcile.Request, 0)
-				if t, ok := a.Meta.GetLabels()["type"]; ok && t == "address-space" {
-					list := &v1beta1.ConsoleServiceList{}
-					err = r.client.List(context.TODO(), list)
-					if err == nil {
-						for _, item := range list.Items {
-							request := reconcile.Request{
-								NamespacedName: types.NamespacedName{
-									Name:      item.ObjectMeta.Name,
-									Namespace: item.ObjectMeta.Namespace,
-								},
-							}
-							reqs = append(reqs, request)
-						}
-					}
-				}
-				return reqs
-			})
-		err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestsFromMapFunc{
-			ToRequests: mapFn,
-		})
-		if err != nil {
-			return err
-		}
 	}
 
 	// Currently we need a single instance of console called "console", ensure that it exists.
@@ -720,40 +692,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			return err
 		}
 
-		if err := install.ApplyDeploymentContainerWithError(deployment, "console-httpd", func(container *corev1.Container) error {
-			if err := install.ApplyContainerImage(container, "console-httpd", nil); err != nil {
-				return err
-			}
-			install.ApplyVolumeMountSimple(container, "httpd", "/run/httpd", false)
-
-			container.Ports = []corev1.ContainerPort{{
-				ContainerPort: 8080,
-				Name:          "http",
-			}}
-
-			probeHandler := corev1.Handler{
-				Exec: &corev1.ExecAction{
-					Command: []string{"bash",
-						"-c",
-						"curl --fail --show-error --silent " +
-							"--header \"X-Forwarded-Access-Token: $(< /var/run/secrets/kubernetes.io/serviceaccount/token)\" " +
-							"http://127.0.0.1:8080/apis/user.openshift.io/v1/users/~"},
-				},
-			}
-			container.LivenessProbe = &corev1.Probe{
-				InitialDelaySeconds: 120,
-				Handler:             probeHandler,
-			}
-
-			container.ReadinessProbe = &corev1.Probe{
-				InitialDelaySeconds: 60,
-				Handler:             probeHandler,
-			}
-
-			return nil
-		}); err != nil {
-			return err
-		}
+		// Remove the old container console-httpd (if present)
+		install.DropContainer(deployment, "console-httpd")
 	} else {
 		if err := install.ApplyDeploymentContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
 			if err := install.ApplyContainerImage(container, "console-proxy-kubernetes", nil); err != nil {
@@ -775,6 +715,30 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			return err
 		}
 	}
+
+	if err := install.ApplyDeploymentContainerWithError(deployment, "console-server", func(container *corev1.Container) error {
+		if err := install.ApplyContainerImage(container, "console-server", nil); err != nil {
+			return err
+		}
+		container.Command = []string{"/console-server"}
+
+		install.ApplyEnv(container, "PORT", func(envvar *corev1.EnvVar) {
+			envvar.Value = "9090"
+		})
+
+		// TODO use https
+		// TODO add health probe
+		container.Ports = []corev1.ContainerPort{{
+			ContainerPort: 9090,
+			Name:          "http",
+		}}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	deployment.Spec.Template.Spec.ServiceAccountName = "console-server"
 
 	return nil
 }

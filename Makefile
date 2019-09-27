@@ -4,6 +4,7 @@ include $(TOPDIR)/Makefile.env.mk
 GO_DIRS = \
 	controller-manager \
 	iot/iot-proxy-configurator \
+	console/console-server
 
 DOCKER_DIRS = \
 	agent \
@@ -17,7 +18,6 @@ DOCKER_DIRS = \
 	mqtt-lwt \
 	service-broker \
 	console/console-init \
-	console/console-httpd \
 	olm-manifest \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
