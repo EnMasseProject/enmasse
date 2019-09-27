@@ -166,6 +166,7 @@ public class SharedIoTManager extends ResourceManager {
                 getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
         this.amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(),
                 Environment.getInstance().getDefaultCredentials());
+        this.amqpClient = amqpClientFactory.createQueueClient();
     }
     
     public AmqpClientFactory getAmqpClientFactory() {
