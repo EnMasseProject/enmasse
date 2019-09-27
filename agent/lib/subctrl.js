@@ -117,15 +117,15 @@ SubscriptionControl.prototype.subscribe = function (subscription_id, topics) {
     return ensure_queue(subscription_id, pods).then(
         function (pod) {
             log.info('after ensure looking at pod ' + JSON.stringify(pod.name) + " with broker undefined " + (pod.broker === undefined));
-	    var connector = {
-		name: "$override." + subscription_id,
-		clusterId: subscription_id,
-		linkName: subscription_id,
-		sourceAddress: subscription_id,
-		targetAddress: subscription_id,
-		containerId: subscription_id,
-		direction: 'out'
-	    };
+            var connector = {
+                name: "$override." + subscription_id,
+                clusterId: subscription_id,
+                linkName: subscription_id,
+                sourceAddress: subscription_id,
+                targetAddress: subscription_id,
+                containerId: subscription_id,
+                direction: 'out'
+            };
             return pod.broker.ensureConnectorService(connector).then(
                 function () {
                     return Promise.all(Object.keys(topics).map(
@@ -172,7 +172,7 @@ SubscriptionControl.prototype.close = function (subscription_id) {
             if (result.found) {
                 return delete_diverts(result.pod.broker, subscription_id).then(
                     function () {
-                        return result.pod.broker.destroyConnectorService(subscription_id).then(
+                        return result.pod.broker.destroyConnectorService('$override.' + subscription_id).then(
                             function () {
                                 //delete queue last as that is how we
                                 //find the right broker to cleanup
