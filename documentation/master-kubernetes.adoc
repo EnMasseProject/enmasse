@@ -8,7 +8,6 @@ include::common/attributes.adoc[]
 :imagesdir: ../kubernetes/images
 :cmdcli: kubectl
 :KubePlatform: Kubernetes
-:OperatorNamespace: operators
 :OperatorMarketplaceNamespace: marketplace
 
 = Documentation for {ProductName} on Kubernetes
