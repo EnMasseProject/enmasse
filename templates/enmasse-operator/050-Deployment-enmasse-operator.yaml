@@ -113,6 +113,8 @@ spec:
           value: "true"
         - name: CONSOLE_INIT_IMAGE
           value: "${CONSOLE_INIT_IMAGE}"
+        - name: CONSOLE_SERVER_IMAGE
+          value: "${CONSOLE_SERVER_IMAGE}"
         - name: CONSOLE_PROXY_OPENSHIFT_IMAGE
           value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
         - name: CONSOLE_PROXY_KUBERNETES_IMAGE

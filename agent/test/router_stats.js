@@ -19,9 +19,14 @@ var assert = require('assert');
 var events = require('events');
 var util = require('util');
 var rhea = require('rhea');
+var uuidv1 = require('uuid/v1');
 var RouterStats = require('../lib/router_stats.js');
 var AddressList = require('../lib/address_list.js');
 var Registry = require('../lib/registry.js');
+
+function random_number(max) {
+    return Math.floor(Math.random() * Math.floor(max));
+}
 
 function NameGenerator (base, separator) {
     this.base = base;
@@ -57,6 +62,8 @@ StatsBuilder.prototype.connection = function (details) {
     var attributes = details || {};
     if (attributes.role === undefined) attributes.role = 'normal';
     if (attributes.identity === undefined) attributes.identity = name;
+    if (attributes.host === undefined) attributes.host = "example:" + random_number(16384) + 49152;
+    if (attributes.container === undefined) attributes.container = uuidv1();
     this.router.create_object('org.apache.qpid.dispatch.connection', name, attributes);
     return new DummyConn(name, this);
 };

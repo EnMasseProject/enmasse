@@ -23,6 +23,8 @@ var artemis = require('./artemis.js');
 var myevents = require('./events.js');
 var myutils = require('./utils.js');
 var plimit = require('p-limit');
+var crypto = require('crypto');
+var uuidv5 = require('uuid/v5');
 
 function BrokerController(event_sink) {
     events.EventEmitter.call(this);
@@ -149,22 +151,49 @@ function transform_topic_stats(topic) {
 }
 
 function transform_address_stats(address) {
-    return address.type == 'queue' ? transform_queue_stats(address) : transform_topic_stats(address);
+    return address.type === 'queue' ? transform_queue_stats(address) : transform_topic_stats(address);
 }
 
 function transform_connection_stats(raw) {
+    var addressSpace = process.env.ADDRESS_SPACE;
+    var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
+    var addressSpaceType = process.env.ADDRESS_SPACE_TYPE;
+
+    var uuid = generateStableUuid(addressSpaceNamespace, addressSpace, raw.connectionID, raw.clientAddress);
+
     return {
         id: raw.connectionID,
+        addressSpace: addressSpace,
+        addressSpaceNamespace: addressSpaceNamespace,
+        addressSpaceType: addressSpaceType,
+        uuid: uuid,
         host: raw.clientAddress,
         container: 'not available',
+        creationTimestamp: raw.creationTime ? Math.floor(raw.creationTime / 1000) : 0,
         user: raw.sessions.length ? raw.sessions[0].principal : '',
         senders: [],
         receivers: []
     };
 }
 
+function generateStableUuid() {
+    var hash = crypto.createHash('sha256');
+    for (var i = 0, j = arguments.length; i < j; i++){
+        var argument = arguments[i];
+        if (argument) {
+            hash.update(argument);
+        }
+    }
+    var ba = [];
+    ba.push(...hash.digest().slice(0, 16));
+    const ns = "3751f842-240e-48b9-89b5-5b47f04e931b";
+    return uuidv5(ns, ba);
+}
+
+
 function transform_producer_stats(raw) {
     return {
+        uuid: generateStableUuid(raw.connectionID, raw.sessionID, raw.destination),
         name: undefined,
         connection_id: raw.connectionID,
         address: raw.destination,
@@ -176,6 +205,7 @@ function transform_producer_stats(raw) {
 
 function transform_consumer_stats(raw) {
     return {
+        uuid: generateStableUuid(raw.connectionID, raw.consumerID),
         name: raw.consumerID,
         connection_id: raw.connectionID,
         address: raw.queueName,//mapped to address in later step
