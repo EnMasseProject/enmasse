@@ -49,7 +49,7 @@ spec:
   csPublisher: EnMasse
   packages: enmasse
   source: enmasse-operators
-  targetNamespace: {OperatorNamespace}
+  targetNamespace: {OperatorMarketplaceNamespace}
 EOF
 ----
 
@@ -62,11 +62,11 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: {OperatorName}
-  namespace: {OperatorNamespace}
+  namespace: _{ProductNamespace}_
 spec:
   channel: alpha
   name: {OperatorName}
   source: {OperatorSourceConfigName}
-  sourceNamespace: {OperatorNamespace}
+  sourceNamespace: {OperatorMarketplaceNamespace}
 EOF
 ----
