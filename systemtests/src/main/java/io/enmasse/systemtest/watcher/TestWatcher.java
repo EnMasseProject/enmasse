@@ -173,9 +173,6 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
         if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
             sharedIoTManager.setup();
         }
-        if (testInfo.getActualTest().getTags().contains(TestTag.INFINISPAN_REG)) {
-            Environment.getInstance().setDefaultDeviceRegistry(TestTag.INFINISPAN_REG);
-        }
     }
 
     @Override
