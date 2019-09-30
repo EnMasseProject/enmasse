@@ -153,7 +153,6 @@ public class SharedIoTManager extends ResourceManager {
 
     private void createNewIoTConfig() throws Exception {
         CertBundle certBundle = CertificateUtils.createCertBundle();
-        LOGGER.warn("CREATING NEW IOT CONFIG WITH {} DEVICE REG", deviceRegistry());
         sharedIoTConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
