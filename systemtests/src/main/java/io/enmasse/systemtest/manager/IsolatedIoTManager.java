@@ -7,6 +7,7 @@ package io.enmasse.systemtest.manager;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -65,9 +66,11 @@ public class IsolatedIoTManager extends ResourceManager {
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         try {
-            tearDownProjects();
-            tearDownConfigs();
-            kubernetes.deleteNamespace(iotProjectNamespace);
+            if (Environment.USE_MINUKUBE_ENV.equals("false")) {
+                tearDownProjects();
+                tearDownConfigs();
+                kubernetes.deleteNamespace(iotProjectNamespace);
+            }
         } catch (Exception e) {
             LOGGER.error("Error tearing down iot test: {}", e.getMessage());
             throw e;
