@@ -40,9 +40,10 @@ endif::[]
 +
 [options="nowrap",subs="attributes"]
 ----
-{cmdcli} get addressspace -w
-{cmdcli} get iotproject -w
+{cmdcli} get addressspace iot
+{cmdcli} get iotproject iot
 ----
+NOTE: Make sure that the `Phase` field shows `Ready` status for both resources.
 
 . Create a messaging consumer user:
 +
