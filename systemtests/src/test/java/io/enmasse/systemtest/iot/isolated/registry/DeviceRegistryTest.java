@@ -203,7 +203,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
             credentialsClient.addCredentials(isolatedIoTManager.getTenantID(), randomDeviceId, authId, newPassword, notAfter);
 
             // first check, must succeed
-
+            Thread.sleep(20_000);
             IoTUtils.checkCredentials(authId, newPassword, false, httpAdapterEndpoint, amqpClient, iotProject);
 
             LOGGER.info("Waiting {} for credentials to expire", expiry);

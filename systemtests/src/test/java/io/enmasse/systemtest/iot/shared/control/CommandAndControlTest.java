@@ -78,7 +78,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     private int ttd;
 
     @BeforeEach
-    protected void initClient() {
+    void initClient() {
         this.deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         this.registryClient = new DeviceRegistryClient(kubernetes, this.deviceRegistryEndpoint);
@@ -86,7 +86,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     }
 
     @BeforeEach
-    protected void initDevice() throws Exception {
+    void initDevice() throws Exception {
 
         // setup device information
         this.deviceId = UUID.randomUUID().toString();
@@ -105,7 +105,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     }
 
     @AfterEach
-    protected void closeHttpClient() {
+    void closeHttpClient() {
         if (this.httpClient != null) {
             this.httpClient.close();
             this.httpClient = null;
@@ -113,12 +113,12 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     }
 
     @BeforeEach
-    protected void setupMessagingClient() throws Exception {
+    void setupMessagingClient() throws Exception {
         this.messagingClient = getAmqpClientFactory().createQueueClient();
     }
 
     @AfterEach
-    protected void disposeMessagingClient() throws Exception {
+    void disposeMessagingClient() throws Exception {
         if (this.messagingClient != null) {
             this.messagingClient.close();
             this.messagingClient = null;
