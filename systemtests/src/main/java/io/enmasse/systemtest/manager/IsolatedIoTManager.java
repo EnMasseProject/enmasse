@@ -57,9 +57,7 @@ public class IsolatedIoTManager extends ResourceManager {
 
     @Override
     public void setup() throws Exception {
-        LOGGER.warn("NAMESPACE PICO");
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
-            LOGGER.warn("NAMESPACE NEEXISTUJE BUDE VYTVORENY");
             kubernetes.createNamespace(iotProjectNamespace);
         }
     }
@@ -78,7 +76,6 @@ public class IsolatedIoTManager extends ResourceManager {
 
     private void tearDownProjects() throws Exception {
         LOGGER.info("All IoTProjects will be removed");
-        ioTProjects.forEach(project -> LOGGER.warn("PROJECT FOR DELETION {}", project));
         for (IoTProject project : ioTProjects) {
             var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
             if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
@@ -92,9 +89,7 @@ public class IsolatedIoTManager extends ResourceManager {
 
     private void tearDownConfigs() throws Exception {
         // delete configs
-        LOGGER.warn("MANAGER: {}", this);
         LOGGER.info("All IoTConfigs will be removed");
-        ioTConfigs.forEach(confi -> LOGGER.warn("PROJECT FOR DELETION {}", confi));
         var iotConfigApiClient = kubernetes.getIoTConfigClient();
         for (IoTConfig config : ioTConfigs) {
             if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {

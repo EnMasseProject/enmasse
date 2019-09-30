@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.shared;
+package io.enmasse.systemtest.iot.isolated;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
@@ -12,6 +12,7 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -32,16 +33,14 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 import static io.enmasse.systemtest.TestTag.SMOKE;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
 import static java.util.Collections.singletonMap;
-//TODO: CELE DOJEBANE!
+
 @Tag(SMOKE)
-@Disabled
 @EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
-class SimpleK8sDeployTest extends TestBase implements ITestIoTShared {
+class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleK8sDeployTest.class);
     private static final String NAMESPACE = Environment.getInstance().namespace();
