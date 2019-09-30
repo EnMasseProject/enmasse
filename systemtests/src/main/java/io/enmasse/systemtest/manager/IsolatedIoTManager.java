@@ -127,11 +127,9 @@ public class IsolatedIoTManager extends ResourceManager {
     }
 
     public void createIoTProject(IoTProject project) throws Exception {
-        LOGGER.warn("MANAGER: {}", this);
         ioTProjects.add(project);
         IoTUtils.createIoTProject(project);
         initFactories(project);
-        ioTProjects.forEach(project1 -> LOGGER.warn("PROJECTS {}", project1));
     }
 
     public void deleteIoTProject(IoTProject project) throws Exception {
@@ -142,7 +140,6 @@ public class IsolatedIoTManager extends ResourceManager {
     public void createIoTConfig(IoTConfig ioTConfig) throws Exception {
         ioTConfigs.add(ioTConfig);
         IoTUtils.createIoTConfig(ioTConfig);
-        ioTConfigs.forEach(ioTConfig1 -> LOGGER.warn("CONFIGS {}", ioTConfig1));
     }
 
     public void deleteIoTConfig(IoTConfig ioTConfig) throws Exception {

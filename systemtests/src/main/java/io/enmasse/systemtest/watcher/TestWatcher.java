@@ -171,7 +171,6 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
         }
 
         if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
-            LOGGER.warn("Goiing for fucking setup add space");
             sharedIoTManager.setup();
         }
         if (testInfo.getActualTest().getTags().contains(TestTag.INFINISPAN_REG)) {

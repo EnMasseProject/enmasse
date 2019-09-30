@@ -102,9 +102,7 @@ public class SharedIoTManager extends ResourceManager {
 
     @Override
     public void setup() {
-        LOGGER.warn("NAMESPACE PICO");
         if (!kubernetes.namespaceExists(iotProjectNamespace)) {
-            LOGGER.warn("NAMESPACE NEEXISTUJE BUDE VYTVORENY");
             LOGGER.info("Namespace {} doesn't exists and will be created.");
             kubernetes.createNamespace(iotProjectNamespace);
         }
