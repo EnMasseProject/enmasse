@@ -91,7 +91,8 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
         // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
         mqttOptions.setMaxInflight(16 * 1024);
         mqttOptions.setHttpsHostnameVerificationEnabled(false);
-        adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
+        adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@"
+                + sharedIoTResourceManager.getTenantID(), devicePassword))
                 .build()
                 .clientId(deviceId)
                 .endpoint(mqttAdapterEndpoint)
