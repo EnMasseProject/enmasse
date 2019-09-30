@@ -50,11 +50,11 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
 
     private String randomDeviceId;
-    private IoTConfig iotConfig;
-    private IoTProject iotProject;
-    private Endpoint deviceRegistryEndpoint;
-    private Endpoint httpAdapterEndpoint;
-    private DeviceRegistryClient client;
+    private IoTConfig iotConfig = null;
+    private IoTProject iotProject = null;
+    private Endpoint deviceRegistryEndpoint = null;
+    private Endpoint httpAdapterEndpoint = null;
+    private DeviceRegistryClient client = null;
 
     private UserCredentials credentials;
 
@@ -65,44 +65,39 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     protected abstract IoTConfigBuilder provideIoTConfig() throws Exception;
 
     @BeforeEach
-    void setAttributes() throws Exception {
-        if (iotConfig == null) {
-            var iotConfigBuilder = provideIoTConfig();
-            iotConfig = iotConfigBuilder.editSpec()
-                    .withNewAdapters()
-                    .withNewMqtt()
-                    .withEnabled(false)
-                    .endMqtt()
-                    .withNewLoraWan()
-                    .withEnabled(false)
-                    .endLoraWan()
-                    .withNewSigfox()
-                    .withEnabled(false)
-                    .endSigfox()
-                    .endAdapters()
-                    .endSpec()
-                    .build();
-            createIoTConfig(iotConfig);
-            isolatedIoTManager.getIoTConfigs().add(iotConfig);
-        }
-        if (iotProject == null) {
-            iotProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT,
-                    DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace, getDefaultAddressSpacePlan());
-            isolatedIoTManager.createIoTProject(iotProject);
-        }
-        if (deviceRegistryEndpoint == null) {
-            deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        }
-        if (httpAdapterEndpoint == null) {
-            httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        }
-        if (client == null) {
-            client = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
-        }
+    public void setAttributes() throws Exception {
+        var iotConfigBuilder = provideIoTConfig();
+        iotConfig = iotConfigBuilder.editSpec()
+                .withNewAdapters()
+                .withNewMqtt()
+                .withEnabled(false)
+                .endMqtt()
+                .withNewLoraWan()
+                .withEnabled(false)
+                .endLoraWan()
+                .withNewSigfox()
+                .withEnabled(false)
+                .endSigfox()
+                .endAdapters()
+                .endSpec()
+                .build();
+        createIoTConfig(iotConfig);
+        isolatedIoTManager.getIoTConfigs().add(iotConfig);
+
+        iotProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT,
+                DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace, getDefaultAddressSpacePlan());
+        isolatedIoTManager.createIoTProject(iotProject);
+
+        deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+
+        httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
+
+        client = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
+
         this.randomDeviceId = UUID.randomUUID().toString();
 
         this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        resourcesManager.createOrUpdateUser(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        isolatedIoTManager.createOrUpdateUser(isolatedIoTManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
         this.iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
         this.amqpClient = iotAmqpClientFactory.createQueueClient();
         
@@ -155,8 +150,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         }
     }
 
-    @Disabled("Caches expire a bit unpredictably")
-    
+
     protected void doTestCacheExpiryForCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
