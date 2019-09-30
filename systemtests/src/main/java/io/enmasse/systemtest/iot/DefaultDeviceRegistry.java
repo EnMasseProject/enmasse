@@ -53,10 +53,8 @@ public final class DefaultDeviceRegistry {
      * @return A new instance of a device registry configuration.
      * @throws Exception in case anything goes wrong.
      */
-    public static DeviceRegistryServiceConfig deviceRegistry() throws Exception {
-        var r = Environment.getInstance().getDefaultDeviceRegistry();
-
-        switch (r) {
+    public static DeviceRegistryServiceConfig deviceRegistry(String deviceReg) throws Exception {
+        switch (deviceReg) {
             case "file":
                 return newFileBased();
             case "infinispan":
