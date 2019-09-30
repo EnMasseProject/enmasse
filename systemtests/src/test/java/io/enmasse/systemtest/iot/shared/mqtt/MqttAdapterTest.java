@@ -53,7 +53,7 @@ import static io.enmasse.systemtest.TestTag.SHARED_IOT;
  * was accepted or not. So we couldn't re-try and could only assume that a message loss of 100% would be acceptable,
  * which doesn't test much. For bigger batch sizes we can test with an acceptable message loss rate of e.g. 10%.
  */
-public class MqttAdapterTest extends TestBase implements ITestIoTShared {
+class MqttAdapterTest extends TestBase implements ITestIoTShared {
 
     private static final Logger log = CustomLogger.getLogger();
     private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
@@ -154,7 +154,7 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
     }
 
     @AfterEach
-    public void closeClient() throws Exception {
+    void closeClient() throws Exception {
         // close in a dedicated method to ensure it gets called in any case
         if (businessApplicationClient != null) {
             businessApplicationClient.close();
@@ -169,7 +169,7 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
      */
     @Test
     @Tag(ACCEPTANCE)
-    public void testTelemetrySingleQos1() throws Exception {
+    void testTelemetrySingleQos1() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
@@ -186,7 +186,7 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
      * This is the normal use case.
      */
     @Test
-    public void testEventSingle() throws Exception {
+    void testEventSingle() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
@@ -203,7 +203,7 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
      * Batched version of the normal use case. We do accept message loss of 10% here.
      */
     @Test
-    public void testTelemetryBatch50Qos0() throws Exception {
+    void testTelemetryBatch50Qos0() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
@@ -221,7 +221,7 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
      * Compared to QoS 0, we do not accept message loss here.
      */
     @Test
-    public void testTelemetryBatch50Qos1() throws Exception {
+    void testTelemetryBatch50Qos1() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
@@ -239,7 +239,7 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
      * to take care of that. Still we expect to receive the messages later.
      */
     @Test
-    public void testEventBatch5After() throws Exception {
+    void testEventBatch5After() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofMillis(100))
@@ -257,7 +257,7 @@ public class MqttAdapterTest extends TestBase implements ITestIoTShared {
      * This is the normal use case.
      */
     @Test
-    public void testEventBatch5Before() throws Exception {
+    void testEventBatch5Before() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))

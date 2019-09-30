@@ -62,7 +62,7 @@ import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
 @Tag(TestTag.SMOKE)
-public class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
+class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     private static Logger log = CustomLogger.getLogger();
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;

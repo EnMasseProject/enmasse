@@ -36,7 +36,7 @@ import java.util.UUID;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
-public class HttpAdapterTest extends TestBase implements ITestIoTShared {
+class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
     @SuppressWarnings("unused")
     private static final Logger log = CustomLogger.getLogger();
@@ -106,7 +106,7 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
     }
 
     @AfterEach
-    public void closeClient() throws Exception {
+    void closeClient() throws Exception {
         // close in a dedicated method to ensure it gets called in any case
         if (businessApplicationClient != null) {
             businessApplicationClient.close();
@@ -119,7 +119,7 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
      */
     @Test
     @Tag(ACCEPTANCE)
-    public void testTelemetrySingle() throws Exception {
+    void testTelemetrySingle() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
@@ -154,7 +154,7 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
      * This is the normal telemetry case.
      */
     @Test
-    public void testTelemetryBatch50() throws Exception {
+    void testTelemetryBatch50() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
@@ -173,7 +173,7 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
      * attached, it should receive those messages.
      */
     @Test
-    public void testEventBatch5After() throws Exception {
+    void testEventBatch5After() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofMillis(100))
@@ -192,7 +192,7 @@ public class HttpAdapterTest extends TestBase implements ITestIoTShared {
      * as with telemetry.
      */
     @Test
-    public void testEventBatch5Before() throws Exception {
+    void testEventBatch5Before() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ZERO)
