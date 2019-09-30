@@ -77,7 +77,7 @@ type ConnectorSpec struct {
 	EndpointHosts []ConnectorEndpointHost  `json:"endpointHosts"`
 	Tls           ConnectorTlsSpec         `json:"tls,omitempty"`
 	Credentials   ConnectorCredentialsSpec `json:"credentials,omitempty"`
-	Addresses     ConnectorAddressRule     `json:"addresses"`
+	Addresses     []ConnectorAddressRule   `json:"addresses"`
 }
 
 type ConnectorEndpointHost struct {

@@ -428,7 +428,11 @@ func (in *ConnectorSpec) DeepCopyInto(out *ConnectorSpec) {
 	}
 	out.Tls = in.Tls
 	out.Credentials = in.Credentials
-	out.Addresses = in.Addresses
+	if in.Addresses != nil {
+		in, out := &in.Addresses, &out.Addresses
+		*out = make([]ConnectorAddressRule, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
