@@ -109,6 +109,7 @@ under the License.
             <global-max-size>100Mb</global-max-size>
 
       -->
+      <global-max-size>10Mb</global-max-size>
 
       <acceptors>
 
@@ -163,13 +164,11 @@ under the License.
          </address-setting>
          <!--default for catch all-->
          <address-setting match="#">
-            <dead-letter-address>DLQ</dead-letter-address>
-            <expiry-address>ExpiryQueue</expiry-address>
             <redelivery-delay>0</redelivery-delay>
             <!-- with -1 only the global-max-size is in use for limiting -->
-            <max-size-bytes>-1</max-size-bytes>
+            <max-size-bytes>15240</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>
-            <address-full-policy>PAGE</address-full-policy>
+            <address-full-policy>FAIL</address-full-policy>
             <auto-create-queues>true</auto-create-queues>
             <auto-create-addresses>true</auto-create-addresses>
             <auto-create-jms-queues>true</auto-create-jms-queues>

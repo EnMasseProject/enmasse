@@ -9,6 +9,7 @@ import java.util.Base64;
 import io.enmasse.address.model.*;
 import io.enmasse.systemtest.platform.Kubernetes;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.CertificateUtils;
+import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 
@@ -78,12 +80,8 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         SystemtestsKubernetesApps.scaleUpDeployment(remoteBrokerNamespace, remoteBrokerName);
     }
 
-    protected AddressSpace createAddressSpace(String name, String addressRule) throws Exception {
-        return createAddressSpace(name, addressRule, false, false);
-    }
-
-    protected AddressSpace createAddressSpace(String name, String addressRule, boolean tls, boolean mutualTls) throws Exception {
-        var endpoint = tls ? mutualTls ? remoteBrokerEndpointMutualTLS : remoteBrokerEndpointSSL : remoteBrokerEndpoint;
+    protected AddressSpace createAddressSpace(String name, String addressRule, AddressSpaceSpecConnectorTls tlsSettings, AddressSpaceSpecConnectorCredentials credentials) throws Exception {
+        var endpoint = tlsSettings != null ? tlsSettings.getClientCert() != null ? remoteBrokerEndpointMutualTLS : remoteBrokerEndpointSSL : remoteBrokerEndpoint;
         var connectorBuilder = new AddressSpaceSpecConnectorBuilder()
                 .withName(REMOTE_NAME)
                 .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
@@ -94,35 +92,22 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
                         .withName("queuesrule")
                         .withPattern(addressRule)
                         .build());
-        if (tls) {
-            var tlsBuilder = new AddressSpaceSpecConnectorTlsBuilder()
-                    .withCaCert(new StringOrSecretSelectorBuilder()
-                            .withValue(Base64.getEncoder().encodeToString(certBundle.getCaCert()))
-                            .build());
-            if (mutualTls) {
-                tlsBuilder.withClientCert(new StringOrSecretSelectorBuilder()
-                        .withValue(Base64.getEncoder().encodeToString(certBundle.getClientCert()))
-                        .build())
-                    .withClientKey(new StringOrSecretSelectorBuilder()
-                            .withValue(Base64.getEncoder().encodeToString(certBundle.getClientKey()))
-                            .build());
-            }
-            connectorBuilder.withTls(tlsBuilder.build());
+
+        if (tlsSettings != null) {
+            connectorBuilder.withTls(tlsSettings);
         }
-        if (!mutualTls) {
-            connectorBuilder.withCredentials(new AddressSpaceSpecConnectorCredentialsBuilder()
-                    .withNewUsername()
-                        .withValue(remoteBrokerUsername)
-                        .endUsername()
-                    .withNewPassword()
-                        .withValue(remoteBrokerPassword)
-                        .endPassword()
-                    .build());
+
+        //only set credentials when mutual tls isn't configured
+        if ( tlsSettings == null || (tlsSettings != null && tlsSettings.getClientCert() == null) ) {
+            if (credentials == null) {
+                Assertions.fail("Connector wrongly configured, missing connector credentials");
+            }
+            connectorBuilder.withCredentials(credentials);
         }
 
         AddressSpace space = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withNamespace(kubernetes.getInfraNamespace())
+                .withNamespace(remoteBrokerNamespace)
                 .withName(name)
                 .endMetadata()
                 .withNewSpec()
@@ -152,6 +137,67 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
                 .setPassword(remoteBrokerPassword);
 
         return getAmqpClientFactory().createClient(connectOptions);
+    }
+
+    protected AddressSpaceSpecConnectorCredentials defaultCredentials() {
+        return new AddressSpaceSpecConnectorCredentialsBuilder()
+                .withNewUsername()
+                    .withValue(remoteBrokerUsername)
+                    .endUsername()
+                .withNewPassword()
+                    .withValue(remoteBrokerPassword)
+                    .endPassword()
+                .build();
+    }
+
+    protected AddressSpaceSpecConnectorCredentials credentialsInSecret() {
+        return new AddressSpaceSpecConnectorCredentialsBuilder()
+                .withNewUsername()
+                    .withValueFromSecret(new SecretKeySelectorBuilder()
+                            .withName(remoteBrokerName)
+                            .withKey("user")
+                            .build())
+                    .endUsername()
+                .withNewPassword()
+                    .withValueFromSecret(new SecretKeySelectorBuilder()
+                            .withName(remoteBrokerName)
+                            .withKey("password")
+                            .build())
+                    .endPassword()
+                .build();
+    }
+
+    protected AddressSpaceSpecConnectorTls defaultTls() {
+        return new AddressSpaceSpecConnectorTlsBuilder()
+                .withCaCert(new StringOrSecretSelectorBuilder()
+                        .withValue(Base64.getEncoder().encodeToString(certBundle.getCaCert()))
+                        .build())
+                .build();
+    }
+
+    protected AddressSpaceSpecConnectorTls tlsInSecret() {
+        return new AddressSpaceSpecConnectorTlsBuilder()
+                .withCaCert(new StringOrSecretSelectorBuilder()
+                        .withValueFromSecret(new SecretKeySelectorBuilder()
+                                .withName(remoteBrokerName)
+                                .withKey("ca.crt")
+                                .build())
+                        .build())
+                .build();
+    }
+
+    protected AddressSpaceSpecConnectorTls defaultMutualTls() {
+        return new AddressSpaceSpecConnectorTlsBuilder()
+                .withCaCert(new StringOrSecretSelectorBuilder()
+                        .withValue(Base64.getEncoder().encodeToString(certBundle.getCaCert()))
+                        .build())
+                .withClientCert(new StringOrSecretSelectorBuilder()
+                    .withValue(Base64.getEncoder().encodeToString(certBundle.getClientCert()))
+                    .build())
+                .withClientKey(new StringOrSecretSelectorBuilder()
+                        .withValue(Base64.getEncoder().encodeToString(certBundle.getClientKey()))
+                        .build())
+                .build();
     }
 
 }
