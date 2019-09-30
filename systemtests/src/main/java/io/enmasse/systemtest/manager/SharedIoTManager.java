@@ -126,7 +126,6 @@ public class SharedIoTManager extends ResourceManager {
         this.amqpClient = amqpClientFactory.createQueueClient();
     }
 
-    //TODO: implement device reg
     public void createDeviceRegistrySharedEnv() throws Exception {
         if (sharedIoTConfig == null) {
             createNewIoTConfig();

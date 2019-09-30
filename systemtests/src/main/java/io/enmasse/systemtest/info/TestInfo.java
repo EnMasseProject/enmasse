@@ -109,7 +109,6 @@ public class TestInfo {
                 return true;
             }
         }
-        LOGGER.info("Test is not IoT!");
         return false;
     }
 

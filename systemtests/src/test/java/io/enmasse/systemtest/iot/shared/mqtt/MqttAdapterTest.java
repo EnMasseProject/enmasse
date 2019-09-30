@@ -127,8 +127,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
                 .done();
 
         AddressSpace addressSpace = resourcesManager.getAddressSpace(iotProjectNamespace, getSharedIoTProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
-
-        IsolatedResourcesManager.getInstance().createOrUpdateUser(addressSpace, businessApplicationUser);
+        resourcesManager.createOrUpdateUser(addressSpace, businessApplicationUser);
 
         businessApplicationClient = getAmqpClientFactory().createQueueClient(addressSpace);
         businessApplicationClient.getConnectOptions()
@@ -150,7 +149,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
             adapterClient.close();
         }
 
-        IsolatedResourcesManager.getInstance().removeUser(getSharedAddressSpace(), businessApplicationUsername);
+        resourcesManager.removeUser(getSharedAddressSpace(), businessApplicationUsername);
     }
 
     @AfterEach
