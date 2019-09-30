@@ -59,7 +59,7 @@ public abstract class HonoApiClient extends ApiClient {
                             responsePromise.completeExceptionally(ar.cause());
                         }
                     });
-        return responsePromise.get(150000, TimeUnit.SECONDS);
+        return responsePromise.get(150000, TimeUnit.MILLISECONDS);
     }
 
     private void logResult(final HttpResponse<Buffer> result) {
