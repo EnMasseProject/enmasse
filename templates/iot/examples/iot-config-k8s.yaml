@@ -10,6 +10,17 @@ spec:
         iot-auth-service: iot-auth-service-tls
         iot-device-registry: iot-device-registry-tls
         iot-tenant-service: iot-tenant-service-tls
+  services:
+    deviceRegistry:
+      infinispan:
+        server:
+          external:
+            host: infinispan-server
+            port: 11222
+            username: app
+            password: test12
+            saslServerName: hotrod
+            saslRealm: ApplicationRealm
   adapters:
     http:
       endpoint:
@@ -19,3 +30,11 @@ spec:
       endpoint:
         secretNameStrategy:
           secretName: iot-mqtt-adapter-tls
+    sigfox:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-sigfox-adapter-tls
+    lorawan:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-lorawan-adapter-tls

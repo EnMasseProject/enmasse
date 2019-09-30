@@ -2,4 +2,4 @@
 
 die() { echo "$*" 1>&2 ; exit 1; }
 
-IOT_SERVICES="iot-auth-service iot-tenant-service iot-device-registry iot-http-adapter iot-mqtt-adapter"
+IOT_SERVICES="iot-auth-service iot-tenant-service iot-device-registry iot-http-adapter iot-mqtt-adapter iot-sigfox-adapter iot-lorawan-adapter"

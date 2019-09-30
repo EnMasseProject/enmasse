@@ -8,13 +8,12 @@
 
 After installing the IoT services and creating an IoT project, you can create an IoT device for the device you want to monitor.
 
+:headers: -H 'Content-Type: application/json' -H "Authorization: Bearer ${TOKEN}"
 ifeval::["{cmdcli}" == "oc"]
 :registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
-:headers: -H 'Content-Type: application/json' -H "Authorization: Bearer ${TOKEN}"
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 :registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
-:headers: -H 'Content-Type: application/json'
 endif::[]
 
 .Prerequisites
@@ -33,15 +32,19 @@ endif::[]
 export REGISTRY_HOST={registry}
 ----
 
-ifeval::["{cmdcli}" == "oc"]
-. Export the current user session token:
+. Export the device registry access token:
 +
 [options="nowrap",subs="attributes"]
 ----
+ifeval::["{cmdcli}" == "oc"]
 export TOKEN=$(oc whoami --show-token)
+endif::[]
+ifeval::["{cmdcli}" == "kubectl"]
+export TOKEN=$(kubectl -n enmasse-infra describe secret $(kubectl -n enmasse-infra get secret | grep default-token | awk '{print $1}') | grep token: | awk '{print $2}')
+endif::[]
 ----
 This token is used to authenticate against the device registry management API.
-endif::[]
+
 
 
 . Register a device with a defined ID (this example uses `4711`):
