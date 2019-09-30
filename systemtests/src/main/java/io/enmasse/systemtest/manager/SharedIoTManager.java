@@ -14,6 +14,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -126,7 +127,7 @@ public class SharedIoTManager extends ResourceManager {
         this.amqpClient = amqpClientFactory.createQueueClient();
     }
 
-    public void createDeviceRegistrySharedEnv() throws Exception {
+/*    public void createDeviceRegistrySharedEnv() throws Exception {
         if (sharedIoTConfig == null) {
             createNewIoTConfig();
         }
@@ -148,7 +149,7 @@ public class SharedIoTManager extends ResourceManager {
         this.amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(),
                 Environment.getInstance().getDefaultCredentials());
         this.amqpClient = amqpClientFactory.createQueueClient();
-    }
+    }*/
 
     private void createNewIoTConfig() throws Exception {
         CertBundle certBundle = CertificateUtils.createCertBundle();
@@ -158,7 +159,7 @@ public class SharedIoTManager extends ResourceManager {
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
-                .withDeviceRegistry(deviceRegistry())
+                .withDeviceRegistry(deviceRegistry("file"))
                 .endServices()
                 .withNewAdapters()
                 .withNewMqtt()

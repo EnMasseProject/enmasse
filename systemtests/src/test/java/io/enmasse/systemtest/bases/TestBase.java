@@ -117,9 +117,6 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             if (resourcesManager.getSharedAddressSpace() == null) {
                 if (TestInfo.getInstance().isTestIoT()) {
                     ((SharedIoTManager) resourcesManager).createSharedIoTEnv();
-                    if (TestInfo.getInstance().isTestIoTDeviceReg()) {
-                        ((SharedIoTManager) resourcesManager).createDeviceRegistrySharedEnv();
-                    }
                 } else {
                     ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
                 }
