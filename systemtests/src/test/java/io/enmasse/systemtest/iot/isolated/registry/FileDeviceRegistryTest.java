@@ -35,6 +35,37 @@ class FileDeviceRegistryTest extends DeviceRegistryTest {
     @Test
     void testCorrectTypeDeployed () {
         assertCorrectRegistryType("file");
+    }
 
+    @Test
+    void testRegisterDevice() throws Exception {
+        super.doTestRegisterDevice();
+    }
+
+    @Test
+    void testDisableDevice() throws Exception {
+        super.doTestDisableDevice();
+    }
+
+    @Test
+    void testDeviceCredentials() throws Exception {
+        super.doTestDeviceCredentials();
+    }
+
+    @Test
+    @Disabled("Caches expire a bit unpredictably")
+    void testCacheExpiryForCredentials() throws Exception {
+        super.doTestCacheExpiryForCredentials();
+    }
+
+    @Test
+    void testSetExpiryForCredentials() throws Exception {
+        super.doTestSetExpiryForCredentials();
+    }
+
+    @Test
+    @Disabled
+    void testCreateForNonExistingTenantFails() throws Exception {
+        super.doTestCreateForNonExistingTenantFails();
     }
 }

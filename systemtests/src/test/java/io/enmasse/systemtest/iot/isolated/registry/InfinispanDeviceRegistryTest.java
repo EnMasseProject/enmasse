@@ -8,6 +8,7 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -37,4 +38,34 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
         assertCorrectRegistryType("infinispan");
     }
 
+    @Test
+    void testRegisterDevice() throws Exception {
+        super.doTestRegisterDevice();
+    }
+
+    @Test
+    void testDisableDevice() throws Exception {
+        super.doTestDisableDevice();
+    }
+
+    @Test
+    void testDeviceCredentials() throws Exception {
+        super.doTestDeviceCredentials();
+    }
+
+    @Test
+    @Disabled("Caches expire a bit unpredictably")
+    void testCacheExpiryForCredentials() throws Exception {
+        super.doTestCacheExpiryForCredentials();
+    }
+
+    @Test
+    void testSetExpiryForCredentials() throws Exception {
+        super.doTestSetExpiryForCredentials();
+    }
+
+    @Test
+    void testCreateForNonExistingTenantFails() throws Exception {
+        super.doTestCreateForNonExistingTenantFails();
+    }
 }
