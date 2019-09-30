@@ -192,10 +192,4 @@ public class Environment {
     public boolean isSkipSaveState() {
         return skipSaveState;
     }
-    public String getDefaultDeviceRegistry() {
-        return defaultDeviceRegistry;
-    }
-    public void setDefaultDeviceRegistry(String defaultDeviceRegistry) {
-        this.defaultDeviceRegistry = defaultDeviceRegistry;
-    }
 }

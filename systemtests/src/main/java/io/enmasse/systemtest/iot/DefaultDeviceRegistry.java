@@ -60,7 +60,7 @@ public final class DefaultDeviceRegistry {
             case "infinispan":
                 return newInfinispanBased();
             default:
-                throw new IllegalArgumentException(String.format("Device registry type '%s' unknown", r));
+                throw new IllegalArgumentException(String.format("Device registry type '%s' unknown", deviceReg));
         }
 
     }
