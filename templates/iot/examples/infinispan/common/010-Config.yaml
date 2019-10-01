@@ -271,7 +271,9 @@ data:
               <subsystem xmlns="urn:infinispan:server:core:9.4" default-cache-container="clustered">
                   <cache-container name="clustered" default-cache="default" statistics="true">
                       <transport lock-timeout="60000"/>
-                      <global-state/>
+                      <global-state
+                            enable="true"
+                            persistent-location="global-data"/>
                       <distributed-cache-configuration name="transactional">
                           <transaction mode="NON_XA" locking="PESSIMISTIC"/>
                       </distributed-cache-configuration>
@@ -322,10 +324,12 @@ data:
                         
                         <replicated-cache name="LuceneIndexesMetadata">
                             <indexing index="NONE" />
+                            <rocksdb-store shared="false" fetch-state="true" passivation="false" preload="true" />
                         </replicated-cache>
                         
                         <distributed-cache name="LuceneIndexesData">
                             <indexing index="NONE" />
+                            <rocksdb-store shared="false" fetch-state="true" passivation="false" preload="true" />
                         </distributed-cache>
 
                        <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="devices">
@@ -335,6 +339,7 @@ data:
                                    org.infinispan.query.indexmanager.InfinispanIndexManager
                                </property>
                            </indexing>
+                          <rocksdb-store shared="false" fetch-state="true" passivation="false" preload="true" />
                        </distributed-cache>
 
                        <distributed-cache owners="3" mode="SYNC" remote-timeout="15000" name="adapterCredentials">
