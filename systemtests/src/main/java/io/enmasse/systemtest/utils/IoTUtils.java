@@ -103,7 +103,9 @@ public class IoTUtils {
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName() != null
         ) {
             var addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-            AddressSpaceUtils.waitForAddressSpaceReady(Kubernetes.getInstance().getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get(), budget);
+            var addressSpace = Kubernetes.getInstance().getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
+            Objects.requireNonNull(addressSpace, () -> String.format("Unable to find addressSpace: %s", addressSpaceName));
+            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace, budget);
         }
     }
 

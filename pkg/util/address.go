@@ -7,6 +7,7 @@ package util
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/google/uuid"
 
@@ -14,10 +15,10 @@ import (
 )
 
 var (
-	addressNameExpression  *regexp.Regexp = regexp.MustCompile("^[a-zA-Z]+$")
-	replaceExpression      *regexp.Regexp = regexp.MustCompile("[^a-zA-Z]")
-	replaceStartExpression *regexp.Regexp = regexp.MustCompile("^[^a-zA-Z]+")
-	operatorUuidNamespace  uuid.UUID      = uuid.MustParse("1516b246-23aa-11e9-b615-c85b762e5a2c")
+	addressNameExpression *regexp.Regexp = regexp.MustCompile("^[a-z0-9\\-]+$")
+	replaceExpression     *regexp.Regexp = regexp.MustCompile("[^a-z0-9\\-]")
+	replaceEndExpression  *regexp.Regexp = regexp.MustCompile("[^a-z0-9]+$")
+	operatorUuidNamespace uuid.UUID      = uuid.MustParse("1516b246-23aa-11e9-b615-c85b762e5a2c")
 )
 
 // Get an address name from an IoTProject
@@ -32,25 +33,28 @@ func EncodeAsMetaName(name string, maxLength int) string {
 		return name
 	}
 
-	newPrefix := replaceExpression.ReplaceAllString(name, "")
-	if len(newPrefix) > 0 {
-		newPrefix = newPrefix + "-"
-	}
+	name = strings.ToLower(name)
 
-	name = newPrefix + uuid.NewMD5(operatorUuidNamespace, []byte(name)).String()
+	prefix := replaceExpression.ReplaceAllString(name, "")
+
+	id := uuid.NewMD5(operatorUuidNamespace, []byte(name)).String()
 
 	if maxLength > 0 {
-		rname := []rune(name)
-		l := len(rname)
+		rprefix := []rune(prefix)
+		idlen := 1 + len(id)
+		l := len(rprefix) + idlen
 		if l > maxLength {
-			s := l - maxLength
-			rname = rname[s:l]
-			name = string(rname)
-			name = replaceStartExpression.ReplaceAllString(name, "")
+			rprefix = rprefix[:maxLength-idlen]
+			prefix = string(rprefix)
+			prefix = replaceEndExpression.ReplaceAllString(prefix, "")
 		}
 	}
 
-	return name
+	if len(prefix) > 0 {
+		prefix = prefix + "-"
+	}
+
+	return prefix + id
 }
 
 // Encode an address name so that it can be put inside the .metadata.name field of an Address object

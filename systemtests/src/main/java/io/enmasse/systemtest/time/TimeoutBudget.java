@@ -41,6 +41,14 @@ public class TimeoutBudget {
         }
     }
 
+    /**
+     * Get the remaining time of the budget.
+     * @return The remaining time.
+     */
+    public Duration remaining() {
+        return Duration.ofMillis(timeLeft());
+    }
+
     public boolean timeoutExpired() {
         return timeLeft() < 0;
     }

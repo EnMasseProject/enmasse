@@ -29,6 +29,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,6 +57,10 @@ public class AddressSpaceUtils {
                 .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()), namespace);
         return Kubernetes.getInstance().getAddressSpaceClient(namespace).list().getItems().stream()
                 .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()).contains(addressSpaceName);
+    }
+
+    public static BooleanSupplier adddressSpaceExists(final String namespace, final String name) {
+        return () -> existAddressSpace(namespace, name);
     }
 
     public static boolean isAddressSpaceReady(AddressSpace addressSpace) {

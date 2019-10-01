@@ -291,4 +291,13 @@ public class KubeUtilTest {
     public void testSanitizeUuidName(final String name, final String uuid, final String output) {
         assertEquals(output, KubeUtil.sanitizeWithUuid(name, uuid));
     }
+
+    /**
+     * Test for encoding with Go logic.
+     */
+    @Test
+    public void testSanitizeForGo () {
+        assertEquals("as1.telemetryiot-project-ns-4cf002ae-37a5-38d6-9749-b7f85b29a385", KubeUtil.sanitizeForGo("as1", "telemetry/iot-project-ns.iot1"));
+    }
+
 }
