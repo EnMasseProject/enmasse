@@ -9,6 +9,7 @@ package versioned
 
 import (
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1"
+	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/user/v1beta1"
@@ -20,8 +21,9 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	AdminV1beta1() adminv1beta1.AdminV1beta1Interface
+	AdminV1beta2() adminv1beta2.AdminV1beta2Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Admin() adminv1beta1.AdminV1beta1Interface
+	Admin() adminv1beta2.AdminV1beta2Interface
 	EnmasseV1beta1() enmassev1beta1.EnmasseV1beta1Interface
 	// Deprecated: please explicitly pick a version if possible.
 	Enmasse() enmassev1beta1.EnmasseV1beta1Interface
@@ -38,6 +40,7 @@ type Interface interface {
 type Clientset struct {
 	*discovery.DiscoveryClient
 	adminV1beta1   *adminv1beta1.AdminV1beta1Client
+	adminV1beta2   *adminv1beta2.AdminV1beta2Client
 	enmasseV1beta1 *enmassev1beta1.EnmasseV1beta1Client
 	iotV1alpha1    *iotv1alpha1.IotV1alpha1Client
 	userV1beta1    *userv1beta1.UserV1beta1Client
@@ -48,10 +51,15 @@ func (c *Clientset) AdminV1beta1() adminv1beta1.AdminV1beta1Interface {
 	return c.adminV1beta1
 }
 
+// AdminV1beta2 retrieves the AdminV1beta2Client
+func (c *Clientset) AdminV1beta2() adminv1beta2.AdminV1beta2Interface {
+	return c.adminV1beta2
+}
+
 // Deprecated: Admin retrieves the default version of AdminClient.
 // Please explicitly pick a version.
-func (c *Clientset) Admin() adminv1beta1.AdminV1beta1Interface {
-	return c.adminV1beta1
+func (c *Clientset) Admin() adminv1beta2.AdminV1beta2Interface {
+	return c.adminV1beta2
 }
 
 // EnmasseV1beta1 retrieves the EnmasseV1beta1Client
@@ -107,6 +115,10 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
+	cs.adminV1beta2, err = adminv1beta2.NewForConfig(&configShallowCopy)
+	if err != nil {
+		return nil, err
+	}
 	cs.enmasseV1beta1, err = enmassev1beta1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
@@ -132,6 +144,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
 	cs.adminV1beta1 = adminv1beta1.NewForConfigOrDie(c)
+	cs.adminV1beta2 = adminv1beta2.NewForConfigOrDie(c)
 	cs.enmasseV1beta1 = enmassev1beta1.NewForConfigOrDie(c)
 	cs.iotV1alpha1 = iotv1alpha1.NewForConfigOrDie(c)
 	cs.userV1beta1 = userv1beta1.NewForConfigOrDie(c)
@@ -144,6 +157,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
 	cs.adminV1beta1 = adminv1beta1.New(c)
+	cs.adminV1beta2 = adminv1beta2.New(c)
 	cs.enmasseV1beta1 = enmassev1beta1.New(c)
 	cs.iotV1alpha1 = iotv1alpha1.New(c)
 	cs.userV1beta1 = userv1beta1.New(c)

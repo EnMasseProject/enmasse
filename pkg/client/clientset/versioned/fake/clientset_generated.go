@@ -11,6 +11,8 @@ import (
 	clientset "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1"
 	fakeadminv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta1/fake"
+	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
+	fakeadminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2/fake"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	fakeenmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1/fake"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1alpha1"
@@ -71,9 +73,14 @@ func (c *Clientset) AdminV1beta1() adminv1beta1.AdminV1beta1Interface {
 	return &fakeadminv1beta1.FakeAdminV1beta1{Fake: &c.Fake}
 }
 
-// Admin retrieves the AdminV1beta1Client
-func (c *Clientset) Admin() adminv1beta1.AdminV1beta1Interface {
-	return &fakeadminv1beta1.FakeAdminV1beta1{Fake: &c.Fake}
+// AdminV1beta2 retrieves the AdminV1beta2Client
+func (c *Clientset) AdminV1beta2() adminv1beta2.AdminV1beta2Interface {
+	return &fakeadminv1beta2.FakeAdminV1beta2{Fake: &c.Fake}
+}
+
+// Admin retrieves the AdminV1beta2Client
+func (c *Clientset) Admin() adminv1beta2.AdminV1beta2Interface {
+	return &fakeadminv1beta2.FakeAdminV1beta2{Fake: &c.Fake}
 }
 
 // EnmasseV1beta1 retrieves the EnmasseV1beta1Client

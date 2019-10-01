@@ -11,6 +11,7 @@ import (
 	"fmt"
 
 	v1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	v1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
@@ -49,6 +50,12 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta1().AuthenticationServices().Informer()}, nil
 	case v1beta1.SchemeGroupVersion.WithResource("consoleservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta1().ConsoleServices().Informer()}, nil
+
+		// Group=admin.enmasse.io, Version=v1beta2
+	case v1beta2.SchemeGroupVersion.WithResource("addressplans"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta2().AddressPlans().Informer()}, nil
+	case v1beta2.SchemeGroupVersion.WithResource("addressspaceplans"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta2().AddressSpacePlans().Informer()}, nil
 
 		// Group=enmasse.io, Version=v1beta1
 	case enmassev1beta1.SchemeGroupVersion.WithResource("addresses"):
