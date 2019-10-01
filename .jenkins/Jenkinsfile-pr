@@ -164,7 +164,8 @@ pipeline {
             steps {
                 dir('enmasse') {
                     script {
-                        enmasse.installEnmasse(env.TAG, true, env.TEST_PROFILE == 'shared-iot' || env.TEST_PROFILE == 'smoke-iot' || env.TEST_PROFILE == 'acceptance')
+                        def deployIoT = enmasse.deployIot(env.TEST_PROFILE)
+                        enmasse.installEnmasse(env.TAG, true, deployIoT)
                     }
                 }
             }
