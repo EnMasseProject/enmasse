@@ -52,18 +52,9 @@ public class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     void installMonitoring() throws Exception {
         KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
         KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
-        Thread.sleep(5000);
-        try {
-            TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(2, TimeUnit.MINUTES));
-        } catch (IllegalStateException e) {
-            //workaround for https://github.com/EnMasseProject/enmasse/issues/2918
-            KubeCMDClient.deleteFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
-            KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
-            TestUtils.waitForNamespaceDeleted(kubernetes, environment.getMonitoringNamespace());
-            KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
-            KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
-            TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(2, TimeUnit.MINUTES));
-        }
+        waitForMonitoringResources();
+        KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-deployment"));
+        TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
 
         Kubernetes.getInstance().getClient().namespaces()
                 .withName(kubernetes.getInfraNamespace())
@@ -75,11 +66,22 @@ public class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
         KubeCMDClient.applyFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
 
-
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
         this.prometheusApiClient = new PrometheusApiClient(kubernetes, prometheusEndpoint);
 
         waitUntilPrometheusReady();
+
+    }
+
+    private void waitForMonitoringResources() throws Exception {
+        log.info("Waiting for monitoring resources to be installed");
+        TestUtils.waitUntilCondition("Monitoring resources installed", phase -> {
+            String permissions = KubeCMDClient.checkPermission("create", "prometheus", environment.getMonitoringNamespace(), "application-monitoring-operator").getStdOut();
+            if (permissions.trim().equals("yes")) {
+                return true;
+            }
+            return false;
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
 
     }
 
@@ -121,9 +123,22 @@ public class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
         KubeCMDClient.deleteFromFile(kubernetes.getInfraNamespace(), Paths.get(templatesDir.toString(), "install", "bundles", "monitoring"));
         KubeCMDClient.switchProject(environment.getMonitoringNamespace());
-        KubeCMDClient.deleteFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
+        deleteMonitoringInfra();
         KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
         KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
+    }
+
+    private void deleteMonitoringInfra() {
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd","podmonitors.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd"," servicemonitors.monitoring.coreos.com");
     }
 
     @Test

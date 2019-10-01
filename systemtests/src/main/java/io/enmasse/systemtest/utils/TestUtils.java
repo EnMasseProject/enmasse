@@ -564,6 +564,7 @@ public class TestUtils {
 
         while (!budget.timeoutExpired()) {
             if (condition.test(WaitPhase.LOOP)) {
+                log.info("Successfully wait for: {} , it took {} ms", forWhat, budget.timeLeft());
                 return;
             }
             log.debug("next iteration, remaining time: {}", budget.timeLeft());
@@ -571,6 +572,7 @@ public class TestUtils {
         }
 
         if (condition.test(WaitPhase.LAST_TRY)) {
+            log.info("Successfully wait for: {} , it passed on last try", forWhat);
             return;
         }
 
