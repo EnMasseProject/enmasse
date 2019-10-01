@@ -91,9 +91,20 @@ spec:
         volumeMounts:
         - mountPath: /opt/jboss/infinispan-server/standalone/configuration/custom
           name: infinispan-configuration
+        - mountPath: /opt/jboss/infinispan-server/standalone/data
+          name: infinispan-data
       terminationGracePeriodSeconds: 120
       volumes:
       - name: infinispan-configuration
         configMap:
           defaultMode: 420
           name: infinispan-configuration
+  volumeClaimTemplates:
+  - metadata:
+      name: infinispan-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 32Gi
