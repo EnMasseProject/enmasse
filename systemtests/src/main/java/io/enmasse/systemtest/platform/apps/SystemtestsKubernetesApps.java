@@ -21,6 +21,10 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressBackend;
 import io.fabric8.kubernetes.api.model.extensions.IngressBuilder;
 import io.fabric8.kubernetes.api.model.extensions.IngressRuleBuilder;
+import io.fabric8.kubernetes.api.model.rbac.PolicyRuleBuilder;
+import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
+import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
+import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.Applicable;
 import io.fabric8.kubernetes.client.dsl.Deletable;
@@ -232,7 +236,32 @@ public class SystemtestsKubernetesApps {
             kubeCli.createNamespace(namespace);
         }
 
-        kubeCli.createSecret(namespace, getBrokerSecret(name, certBundle));
+        kubeCli.getClient().rbac().roles().inNamespace(namespace).create(new RoleBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+                .withRules(new PolicyRuleBuilder()
+                        .addToApiGroups("")
+                        .addToResources("secrets")
+                        .addToResourceNames(name)
+                        .addToVerbs("get")
+                        .build())
+                .build());
+        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).create(new RoleBindingBuilder()
+                .withNewMetadata()
+                .withName(name)
+                .withNamespace(namespace)
+                .endMetadata()
+                .withNewRoleRef("rbac.authorization.k8s.io", "Role", name)
+                .withSubjects(new SubjectBuilder()
+                        .withKind("ServiceAccount")
+                        .withName("address-space-controller")
+                        .withNamespace(kubeCli.getInfraNamespace())
+                        .build())
+                .build());
+
+        kubeCli.createSecret(namespace, getBrokerSecret(name, certBundle, user, password));
 
         kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password));
 
@@ -271,6 +300,8 @@ public class SystemtestsKubernetesApps {
 
     public static void deleteAMQBroker(String namespace, String name) throws Exception {
         Kubernetes kubeCli = Kubernetes.getInstance();
+        kubeCli.getClient().rbac().roles().inNamespace(namespace).withName(name).delete();
+        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).delete();
         kubeCli.deleteSecret(namespace, name);
         kubeCli.deleteService(namespace, name);
         kubeCli.deleteDeployment(namespace, name);
@@ -612,7 +643,7 @@ public class SystemtestsKubernetesApps {
                 .build();
     }
 
-    private static Secret getBrokerSecret(String name, BrokerCertBundle certBundle) throws Exception {
+    private static Secret getBrokerSecret(String name, BrokerCertBundle certBundle, String user, String password) throws Exception {
         Map<String, String> data = new HashMap<>();
 
         byte[] content = Files.readAllBytes(new File("src/main/resources/broker/broker.xml").toPath());
@@ -627,6 +658,8 @@ public class SystemtestsKubernetesApps {
                 .withName(name)
                 .endMetadata()
                 .addToData(data)
+                .addToStringData("user", user)
+                .addToStringData("password", password)
                 .build();
     }
 
@@ -699,10 +732,6 @@ public class SystemtestsKubernetesApps {
                             new VolumeMountBuilder()
                             .withName(name)
                             .withMountPath("/etc/amq-secret-volume")
-                            .build())
-                    .addToEnv(new EnvVarBuilder()
-                            .withName("_JAVA_OPTIONS")
-                            .withValue("-Djavax.net.debug=all")
                             .build())
                     .endContainer()
                 .addToVolumes(new VolumeBuilder()

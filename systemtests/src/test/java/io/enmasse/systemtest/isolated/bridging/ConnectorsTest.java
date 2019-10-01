@@ -16,8 +16,6 @@ import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AddressSpaceSpecConnectorAddressRuleBuilder;
@@ -29,7 +27,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.bridging.BridgingBase;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -43,22 +40,6 @@ class ConnectorsTest extends BridgingBase {
     private static final String SLASHED_QUEUE2 = "dummy/baz";
     private static final String BASIC_QUEUES_PATTERN = "*";
     private static final String SLASHED_QUEUES_PATTERN = "dummy/*";
-
-    @Test
-    void testBrokerDeployment() throws Exception {
-        AmqpClient client = createClientToRemoteBroker();
-
-        Address testQueue = new AddressBuilder()
-                .withNewMetadata()
-                .withName("testtt")
-                .endMetadata()
-                .withNewSpec()
-                .withAddress(SLASHED_QUEUE1)
-                .endSpec()
-                .build();
-        QueueTest.runQueueTest(client, testQueue);
-        client.close();
-    }
 
     @Test
     void testSendThroughConnector1() throws Exception {
@@ -200,12 +181,12 @@ class ConnectorsTest extends BridgingBase {
 
     @Test
     void testRestartBroker() throws Exception {
-        AddressSpace space = createAddressSpace("restart-broker", BASIC_QUEUES_PATTERN);
+        AddressSpace space = createAddressSpace("restart-broker", BASIC_QUEUES_PATTERN, null, defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
 
-        int messagesBatch = 50;
+        int messagesBatch = 20;
         String[] remoteQueues = new String [] {BASIC_QUEUE1};
         sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
 
@@ -222,12 +203,12 @@ class ConnectorsTest extends BridgingBase {
     @Test
     @Tag(ACCEPTANCE)
     public void testConnectorTLS() throws Exception {
-        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, true, false);
+        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, defaultTls(), defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
 
-        int messagesBatch = 50;
+        int messagesBatch = 20;
         String[] remoteQueues = new String [] {BASIC_QUEUE1};
 
         sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
@@ -236,12 +217,12 @@ class ConnectorsTest extends BridgingBase {
 
     @Test
     public void testConnectorMutualTLS() throws Exception {
-        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, true, true);
+        AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, defaultMutualTls(), null);
 
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
 
-        int messagesBatch = 50;
+        int messagesBatch = 20;
         String[] remoteQueues = new String [] {BASIC_QUEUE1};
 
         sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
@@ -249,23 +230,23 @@ class ConnectorsTest extends BridgingBase {
     }
 
     private void doTestSendThroughConnector(String addressRule, String[] remoteQueues) throws Exception, InterruptedException, ExecutionException, TimeoutException {
-        AddressSpace space = createAddressSpace("send-to-connector", addressRule);
+        AddressSpace space = createAddressSpace("send-to-connector", addressRule, null, defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
 
-        int messagesBatch = 50;
+        int messagesBatch = 20;
 
         sendToConnectorReceiveInBroker(space, localUser, remoteQueues, messagesBatch);
     }
 
     private void doTestReceiveThroughConnector(String addressRule, String[] remoteQueues) throws Exception {
-        AddressSpace space = createAddressSpace("receive-from-connector", addressRule);
+        AddressSpace space = createAddressSpace("receive-from-connector", addressRule, null, defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(space, localUser);
 
-        int messagesBatch = 50;
+        int messagesBatch = 20;
 
         sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
     }

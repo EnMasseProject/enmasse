@@ -137,13 +137,14 @@ For each forwarder on an address, the agent will create a connector from the bro
 * [tested] invalid connector names (ie: using / in connector name)
 * [tested] invalid patterns in address rule in connector (ie: queue*)
 * [tested] Restart broker to ensure router reattached to broker and you can send/recv messages
-* use TLS
-* Using mutual TLS (SASL EXTERNAL) instead of credentials
+* [tested] use TLS
+* [tested] Using mutual TLS (SASL EXTERNAL) instead of credentials
 * [tested] Forwarding messages from a local queue in a local address space to a destination on a remote AMQP endpoint
 * [tested] Forwarding messages to a local queue in a local address space from a destination on a remote AMQP endpoint
-* forward to FULL remote queue
+* [tested] forward to FULL remote queue
 * forward to FULL local queue
 * [tested] try to forward messages when the remote broker is unavailable , and check how the messages are automatically forwarded when the remote broker comes back up
+* [tested] use secrets in connector configuration
 
 == Documentation
 
