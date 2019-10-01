@@ -45,7 +45,7 @@ spec:
 <1> (Required) Specifies the name of the connector. All remote addresses are prefixed with the connector name and a forward slash, `/`.
 <2> (Required) Specifies a list of endpoints for this connector. This list must contain at least one entry, and any additional entries are used for failover. If not otherwise specified, the `port` field value is set to the registered IANA port for AMQP (or AMQPS if TLS is enabled).
 <3> (Optional) Enable TLS. The connector trusts global root CAs by default. To use a custom CA, specify a value for the `caCert` field.
-<4> (Optional) Specifies the username and password credentials to use for this connector. The values can be specified inline or by referencing a secret along with an optional key specifying the location within the secret. The secret must be readable by the {ProductName} `address-space-controller` service account.
+<4> (Optional) Specifies the username and password credentials to use for this connector. The values can be specified inline or by referencing a secret along with an optional key specifying the location within the secret. The secret must be readable by the `system:serviceaccounts:_{ProductNamespace}_` group.
 <5> (Required) Specifies a list of patterns matching addresses to be exposed on the remote endpoint. The pattern consists of one or more tokens separated by a forward slash, `/`. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.
 
 == Connector using mutual TLS
@@ -85,6 +85,6 @@ spec:
 ----
 <1> (Required) Specifies the name of the connector. All remote addresses are prefixed with the connector name and a forward slash, `/`.
 <2> (Required) Specifies a list of endpoints for this connector. This list must contain at least one entry, and any additional entries are used for failover. If not otherwise specified, the `port` field value is set to the registered IANA port for AMQP (or AMQPS if TLS is enabled).
-<3> (Optional) Specifies the CA certificate to trust for the remote connection. The referenced secret must be readable by the {ProductName} `address-space-controller` service account.
-<4> (Optional) Specifies the client certificate to use for mutual TLS authentication. The referenced secret must be readable by the {ProductName} `address-space-controller` service account.
-<5> (Optional) Specifies the client private key to use for mutual TLS authentication. The referenced secret must be readable by the {ProductName} `address-space-controller` service account.
+<3> (Optional) Specifies the CA certificate to trust for the remote connection. The referenced secret must be readable by the `system:serviceaccounts:_{ProductNamespace}_` group.
+<4> (Optional) Specifies the client certificate to use for mutual TLS authentication. The referenced secret must be readable by the `system:serviceaccounts:_{ProductNamespace}_` group.
+<5> (Optional) Specifies the client private key to use for mutual TLS authentication. The referenced secret must be readable by the `system:serviceaccounts:_{ProductNamespace}_` group.

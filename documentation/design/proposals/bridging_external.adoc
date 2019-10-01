@@ -36,12 +36,12 @@ spec:
       caCert:
 	value: "" # PEM encoded value or
 	valueFromSecret: # Certificate stored in secret
-          name: remote1-secret # Secret containing CA to be trusted for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
+          name: remote1-secret # Secret containing CA to be trusted for this connector. NB! Secret must be readable by the system:serviceaccounts:enmasse-infra group.
 	   key:  ca.crt # If using something different than default
       clientCert:
 	value: "" # PEM encoded value or
 	valueFromSecret: # Certificate stored in secret
-	   name: client-remot1-secret # Secret containing client cert to be used for this connector. NB! Secret must be readable by the system:serviceaccount:enmasse-infra:address-space-controller service account.
+	   name: client-remot1-secret # Secret containing client cert to be used for this connector. NB!  Secret must be readable by the system:serviceaccounts:enmasse-infra group.
     credentials:
       username:
         value: foo # Allow specifying credentials in plain text or
