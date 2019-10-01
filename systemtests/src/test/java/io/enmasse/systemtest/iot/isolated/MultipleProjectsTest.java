@@ -124,8 +124,6 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
 
     @AfterEach
     void cleanEnv(ExtensionContext context) throws Exception {
-        isolatedIoTManager.getIoTProjects().forEach(project -> LOGGER.warn("PROJECTS {}", project));
-        isolatedIoTManager.getIoTConfigs().forEach(config -> LOGGER.warn("CONFIG {}", config));
 
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectHttpAdapterQdrProxyState();
@@ -137,8 +135,6 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         }
 
         SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-        isolatedIoTManager.getIoTProjects().forEach(project -> LOGGER.warn("PROJECTS {}", project));
-        isolatedIoTManager.getIoTConfigs().forEach(config -> LOGGER.warn("CONFIG {}", config));
     }
 
     @Test

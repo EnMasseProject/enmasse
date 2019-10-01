@@ -13,6 +13,7 @@ import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -69,6 +70,8 @@ public class IsolatedIoTManager extends ResourceManager {
             if (Environment.USE_MINUKUBE_ENV.equals("false")) {
                 tearDownProjects();
                 tearDownConfigs();
+                LOGGER.info("Infinispan server will be removed");
+                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
                 kubernetes.deleteNamespace(iotProjectNamespace);
             }
         } catch (Exception e) {

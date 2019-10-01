@@ -224,10 +224,19 @@ public class SystemtestsKubernetesApps {
     public static void deleteInfinispanServer(final String namespace) throws Exception {
 
         // delete "common" and "manual" folders
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
 
         deleteDirectories(namespaceReplacer(namespace),
                 INFINISPAN_EXAMPLE_BASE.resolve("common"),
                 INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+/*        client
+                .apps().statefulSets()
+                .inNamespace(namespace)
+                .withName(INFINISPAN_SERVER)
+                .waitUntilCondition(l -> {
+                    if (kubeCli.listPods(namespace).stream().f)
+                },5, TimeUnit.MINUTES);*/
     }
 
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
