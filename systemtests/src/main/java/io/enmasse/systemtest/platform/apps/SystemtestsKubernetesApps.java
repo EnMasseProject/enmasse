@@ -257,7 +257,7 @@ public class SystemtestsKubernetesApps {
                 .withSubjects(new SubjectBuilder()
                         .withKind("ServiceAccount")
                         .withName("address-space-controller")
-                        .withNamespace("enmasse-infra")
+                        .withNamespace(kubeCli.getInfraNamespace())
                         .build())
                 .build());
 
