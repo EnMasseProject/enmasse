@@ -15,6 +15,6 @@ GENERATOR_BASE=${SCRIPTPATH}/../vendor/k8s.io/code-generator
 "$GENERATOR_BASE/generate-groups.sh" "all" \
     github.com/enmasseproject/enmasse/pkg/client \
     github.com/enmasseproject/enmasse/pkg/apis \
-    "admin:v1beta1 enmasse:v1beta1 user:v1beta1 iot:v1alpha1" \
+    "admin:v1beta1 admin:v1beta2 enmasse:v1beta1 user:v1beta1 iot:v1alpha1" \
     --go-header-file "${SCRIPTPATH}/header.txt" \
     "$@"
