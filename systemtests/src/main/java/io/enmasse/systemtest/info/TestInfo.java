@@ -52,8 +52,7 @@ public class TestInfo {
     public boolean isAddressSpaceDeletable() {
         int currentTestIndex = getCurrentTestIndex();
         if (!(currentTestIndex == tests.size() - 1)) {
-            return !isSameClass(tests.get(currentTestIndex + 1), actualTest)
-                    && !isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
+            return !isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
         }
         return true;
     }
@@ -76,10 +75,10 @@ public class TestInfo {
 
         return (nextTestTags.contains(TestTag.SHARED_BROKERED) && currentTestTags.contains(TestTag.SHARED_BROKERED))
                 || ((nextTestTags.contains(TestTag.SHARED_STANDARD) && !nextTestTags.contains(TestTag.SHARED_MQTT))
-                    && (currentTestTags.contains(TestTag.SHARED_STANDARD) && !currentTestTags.contains(TestTag.SHARED_MQTT)))
-                || (nextTestTags.contains(TestTag.SHARED_MQTT) && currentTestTags.contains(TestTag.SHARED_MQTT));
+                && (currentTestTags.contains(TestTag.SHARED_STANDARD) && !currentTestTags.contains(TestTag.SHARED_MQTT)))
+                || (nextTestTags.contains(TestTag.SHARED_MQTT) && currentTestTags.contains(TestTag.SHARED_MQTT))
+                || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
     }
-
     public boolean isTestShared() {
         for (String tag : getTags(tests.get(getCurrentTestIndex()))) {
             if (TestTag.SHARED_TAGS.stream().anyMatch(sharedTag -> tag.equals(sharedTag))) {
