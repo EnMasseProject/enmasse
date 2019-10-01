@@ -86,7 +86,22 @@ function listener_compare(a, b) {
 }
 
 function same_listener_definition(a, b) {
-    return a.host === b.host && a.port === b.port && a.authenticatePeer === b.authenticatePeer && a.metrics === b.metrics && a.healthz === b.healthz && a.http === b.http && a.websockets === b.websockets && a.httpRootDir === b.httpRootDir;
+    // NOTE: Special comparsion needed for legacy probe as schema for listener changed between
+    // router versions
+    if (a.port === '56711' && b.port === '56711') {
+        return a.host === b.host &&
+            a.port === b.port &&
+            a.authenticatePeer === b.authenticatePeer;
+    } else {
+        return a.host === b.host &&
+            a.port === b.port &&
+            a.authenticatePeer === b.authenticatePeer && 
+            a.metrics === b.metrics &&
+            a.healthz === b.healthz &&
+            a.http === b.http &&
+            a.websockets === b.websockets &&
+            a.httpRootDir === b.httpRootDir;
+    }
 }
 
 function listener_describe (a) {
@@ -390,6 +405,9 @@ function desired_address_config(high_level_address_definitions) {
         }
     }
     config.add_listener({host:'0.0.0.0', port: '8080', authenticatePeer: false, metrics: true, healthz: true, http: true, websockets: false, httpRootDir: 'invalid'})
+    // NOTE: The following listener exists in order to be able to proceed with upgrade from 0.26.x
+    // to master as the statefulset controller will not start rollout if probe is failing
+    config.add_listener({host:'0.0.0.0', port: '56711', authenticatePeer: true});
     sort_config(config);
     log.debug('mapped %j => %j', high_level_address_definitions, config);
     return config;
