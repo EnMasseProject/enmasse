@@ -262,8 +262,9 @@ https://www.robustperception.io/configuring-prometheus-storage-retention
 
 
 
+Pagination “Relay Cursor Connections Specification.” (borrows terms from Graph Theory)
 
-
+https://blog.apollographql.com/explaining-graphql-connections-c48b7c3d6976
 
 
 
