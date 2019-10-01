@@ -51,7 +51,7 @@ the `.broker.resources.storage` setting does not configure the existing broker s
 * `spec.containers.resources`
 * `spec.containers.env`
 +
-All other `podTemplate` elements are ignored. For more information about these elements, see the {KubePlatform} documentation in the following Related links section.
+All other `podTemplate` elements are ignored. For more information about these elements, see the {KubePlatform} documentation in the following _Related links_ section.
 +
 For more information about how to set a readiness probe timeout, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-override-probe-timeout-messaging[Overriding the readiness probe timing for brokered infrastructure configuration].
 

@@ -28,7 +28,7 @@ spec:
 
 
 ----
-<1> The `name` value must match the target container name. For a broker, the podTemplate name is `broker`.
+<1> The `name` value must match the target container name. For a broker, the `podTemplate` name is `broker`.
 <2> Specifies the number of times that {KubePlatform} tries when a Pod starts and the probe fails before either the Pod is marked `Unready` for a readiness probe, or restarting the container for a liveness probe. The default value is `3`, and the minimum value is `1`.
 <3> Specifies the number of seconds before performing the first probe after the container starts.
 
