@@ -44,4 +44,8 @@ public class TimeoutBudget {
     public boolean timeoutExpired() {
         return timeLeft() < 0;
     }
+
+    public long timeSpent() {
+        return System.currentTimeMillis() - startTime;
+    }
 }
