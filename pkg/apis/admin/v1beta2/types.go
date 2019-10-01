@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -34,7 +34,7 @@ type AddressPlanSpec struct {
 	LongDescription  string             `json:"longDescription,omitempty"`
 	ShortDescription string             `json:"shortDescription,omitempty"`
 	DisplayOrder     int                `json:"displayOrder,omitempty"`
-	Resources        map[string]float32 `json:"resources,omitempty"`
+	Resources        map[string]float64 `json:"resources,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -67,7 +67,7 @@ type AddressSpacePlanSpec struct {
 	ShortDescription string             `json:"shortDescription,omitempty"`
 	InfraConfigRef   string             `json:"infraConfigRef,omitempty"`
 	DisplayOrder     int                `json:"displayOrder,omitempty"`
-	ResourceLimits   map[string]float32 `json:"resourceLimits,omitempty"`
+	ResourceLimits   map[string]float64 `json:"resourceLimits,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

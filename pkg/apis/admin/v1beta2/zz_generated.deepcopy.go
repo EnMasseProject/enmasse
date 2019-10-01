@@ -78,7 +78,7 @@ func (in *AddressPlanSpec) DeepCopyInto(out *AddressPlanSpec) {
 	*out = *in
 	if in.Resources != nil {
 		in, out := &in.Resources, &out.Resources
-		*out = make(map[string]float32, len(*in))
+		*out = make(map[string]float64, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
@@ -166,7 +166,7 @@ func (in *AddressSpacePlanSpec) DeepCopyInto(out *AddressSpacePlanSpec) {
 	}
 	if in.ResourceLimits != nil {
 		in, out := &in.ResourceLimits, &out.ResourceLimits
-		*out = make(map[string]float32, len(*in))
+		*out = make(map[string]float64, len(*in))
 		for key, val := range *in {
 			(*out)[key] = val
 		}
