@@ -8,14 +8,11 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.certs.CertBundle;
-import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
-import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -73,9 +70,7 @@ public class SharedIoTManager extends ResourceManager {
             }
         }
         tearDownSharedIoTConfig();
-        LOGGER.info("Infinispan server will be removed");
         SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-        kubernetes.deleteNamespace(iotProjectNamespace);
     }
 
     public void tearDownSharedIoTConfig() throws Exception {
@@ -104,7 +99,7 @@ public class SharedIoTManager extends ResourceManager {
             kubernetes.createNamespace(iotProjectNamespace);
         }
     }
-    
+
     public void createSharedIoTEnv() throws Exception {
         Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
 
@@ -171,7 +166,8 @@ public class SharedIoTManager extends ResourceManager {
                 .build();
         createIoTConfig(sharedIoTConfig);
     }
-    
+
+    @Override
     public AmqpClientFactory getAmqpClientFactory() {
         return amqpClientFactory;
     }
@@ -181,6 +177,7 @@ public class SharedIoTManager extends ResourceManager {
         this.amqpClientFactory = amqpClientFactory;
     }
 
+    @Override
     public MqttClientFactory getMqttClientFactory() {
         return mqttClientFactory;
     }
