@@ -227,16 +227,20 @@ public class SystemtestsKubernetesApps {
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
 
-        deleteDirectories(namespaceReplacer(namespace),
-                INFINISPAN_EXAMPLE_BASE.resolve("common"),
-                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
-/*        client
-                .apps().statefulSets()
+        if ( client.apps()
+                .statefulSets()
                 .inNamespace(namespace)
                 .withName(INFINISPAN_SERVER)
-                .waitUntilCondition(l -> {
-                    if (kubeCli.listPods(namespace).stream().f)
-                },5, TimeUnit.MINUTES);*/
+                .get() != null ) {
+
+            log.info("Infinispan server will be removed");
+
+            deleteDirectories(namespaceReplacer(namespace),
+                    INFINISPAN_EXAMPLE_BASE.resolve("common"),
+                    INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+
+        }
+
     }
 
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {

@@ -13,37 +13,22 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.bases.iot.ITestIoTShared;
-import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
-import static io.enmasse.systemtest.TestTag.IOT_DEVICE_REG;
 import static io.enmasse.systemtest.TestTag.SMOKE;
-import static io.enmasse.systemtest.certs.CertProvider.certBundle;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.deviceRegistry;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
-import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(SMOKE)
-@Tag(IOT_DEVICE_REG)
 abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
     private static final String DEVICE_REGISTRY_TEST_ADDRESSSPACE = "device-registry-test-addrspace";
@@ -69,8 +54,12 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     @BeforeEach
     public void setAttributes() throws Exception {
         var iotConfigBuilder = provideIoTConfig();
-        iotConfig = iotConfigBuilder.editSpec()
-                /*.withNewAdapters()
+        iotConfig = iotConfigBuilder
+                .withNewMetadata()
+                .withName("default")
+                .endMetadata()
+                .editSpec()
+                .withNewAdapters()
                 .withNewMqtt()
                 .withEnabled(false)
                 .endMqtt()
@@ -80,7 +69,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
                 .withNewSigfox()
                 .withEnabled(false)
                 .endSigfox()
-                .endAdapters()*/
+                .endAdapters()
                 .endSpec()
                 .build();
 
@@ -102,7 +91,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         isolatedIoTManager.createOrUpdateUser(isolatedIoTManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
         this.iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
         this.amqpClient = iotAmqpClientFactory.createQueueClient();
-        
+
     }
 
     protected void doTestRegisterDevice() throws Exception {
@@ -132,7 +121,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         client.getDeviceRegistration(isolatedIoTManager.getTenantID(), randomDeviceId, HTTP_NOT_FOUND);
     }
 
-    
+
     protected void doTestDeviceCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
@@ -192,7 +181,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         }
     }
 
-    
+
     protected void doTestSetExpiryForCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
             client.registerDevice(isolatedIoTManager.getTenantID(), randomDeviceId);
@@ -222,7 +211,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         }
     }
 
-    
+
     protected void doTestCreateForNonExistingTenantFails() throws Exception {
         var response = client.registerDeviceWithResponse("invalid-" + isolatedIoTManager.getTenantID(), randomDeviceId);
         assertEquals(HTTP_NOT_FOUND, response.statusCode());

@@ -7,12 +7,9 @@ package io.enmasse.systemtest.manager;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -31,7 +28,6 @@ public class IsolatedIoTManager extends ResourceManager {
     protected List<IoTProject> ioTProjects;
     protected List<IoTConfig> ioTConfigs;
     private static IsolatedIoTManager instance = null;
-    private Kubernetes kubernetes = Kubernetes.getInstance();
 
     private IsolatedIoTManager() {
         ioTProjects = new ArrayList<>();
@@ -67,13 +63,9 @@ public class IsolatedIoTManager extends ResourceManager {
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         try {
-            if (Environment.USE_MINUKUBE_ENV.equals("false")) {
-                tearDownProjects();
-                tearDownConfigs();
-                LOGGER.info("Infinispan server will be removed");
-                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-                kubernetes.deleteNamespace(iotProjectNamespace);
-            }
+            tearDownProjects();
+            tearDownConfigs();
+            SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
         } catch (Exception e) {
             LOGGER.error("Error tearing down iot test: {}", e.getMessage());
             throw e;
