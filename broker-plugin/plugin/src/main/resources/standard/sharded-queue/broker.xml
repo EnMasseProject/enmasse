@@ -18,6 +18,12 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<!--
+NOTE: This file is needed to support upgrading from 0.26.X where sharded 
+queues were deployed using this broker.xml rather than as a colocated 
+broker which is the case after 0.26.x.
+-->
+
 <configuration xmlns="urn:activemq"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                xsi:schemaLocation="urn:activemq /schema/artemis-configuration.xsd">
