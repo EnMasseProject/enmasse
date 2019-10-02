@@ -191,28 +191,24 @@ public class AddressUtils {
 
     public static void waitForDestinationsReady(TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
-        Thread.sleep(2000);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void waitForDestinationPlanApplied(TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_PLAN_CHANGE);
-        Thread.sleep(2000);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::isPlanSynced, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void waitForBrokersDrained(TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_BROKER_DRAINED);
-        Thread.sleep(2000);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::areBrokersDrained, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
     public static void waitForForwardersReady(TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_FORWARDERS);
-        Thread.sleep(2000);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::areForwardersReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
