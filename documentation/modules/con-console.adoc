@@ -5,7 +5,7 @@
 [id='con-console-{context}']
 = {ConsoleName} user permissions
 
-{ConsoleName} uses the OpenShift RBAC permissions model. For more information about the OpenShift RBAC permissions model, see the link:https://docs.openshift.com/container-platform/3.11/admin_guide/manage_rbac.html[OpenShift documentation^].
+{ConsoleName} uses the OpenShift RBAC permissions model. For more information about the OpenShift RBAC permissions model, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-manage-rbac[OpenShift 3.11 documentation^].
 
 To use {ConsoleName}, the OpenShift user requires a role that grants access to `addressspace` and `address` resources. For example, for edit access, `edit` permissions need be to given to the associated role object, and for view-only access, `list` permissions need to be granted. 
 
@@ -14,6 +14,6 @@ For more information about the {ProductName} example roles, see link:{BookUrlBas
 endif::SingleBookLink[]
 
 ifndef::SingleBookLink[]
-For more information about the {ProductName} example roles, see link:{BookUrlBase}{BaseProductVersion}/html-single/installing_and_managing_amq_online_on_openshift_container_platform/#ref-example-roles-messaging[{ProductName} example roles].
+For more information about the {ProductName} example roles, see link:{BookUrlBase}{BaseProductVersion}/html-single/installing_and_managing_amq_online_on_openshift/#ref-example-roles-messaging[{ProductName} example roles].
 endif::SingleBookLink[]
 

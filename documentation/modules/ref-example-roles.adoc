@@ -14,7 +14,7 @@ For more information about messaging tenant resources, see the link:{BookUrlBase
 endif::SingleBookLink[]
 
 ifndef::SingleBookLink[]
-For more information about messaging tenant resources, see the link:{BookUrlBase}{BaseProductVersion}/html-single/using_amq_online_on_openshift_container_platform/#ref-resources-table-messaging-tenant-messaging[{ProductName} messaging tenant resources table].
+For more information about messaging tenant resources, see the link:{BookUrlBase}{BaseProductVersion}/html-single/using_amq_online_on_openshift/#ref-resources-table-messaging-tenant-messaging[{ProductName} messaging tenant resources table].
 endif::SingleBookLink[]
 
 .{ProductName} example roles table
