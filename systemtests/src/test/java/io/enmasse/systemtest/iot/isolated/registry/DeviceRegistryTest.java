@@ -81,8 +81,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
                 .endAdapters()
                 .endSpec()
                 .build();
-        createIoTConfig(iotConfig);
-        isolatedIoTManager.getIoTConfigs().add(iotConfig);
+        isolatedIoTManager.createIoTConfig(iotConfig);
 
         iotProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT,
                 DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace, getDefaultAddressSpacePlan());

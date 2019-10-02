@@ -157,4 +157,5 @@ public class IsolatedIoTManager extends ResourceManager {
     public List<IoTConfig> getIoTConfigs() {
         return ioTConfigs;
     }
+
 }

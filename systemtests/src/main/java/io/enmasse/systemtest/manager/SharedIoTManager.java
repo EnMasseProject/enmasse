@@ -41,11 +41,7 @@ public class SharedIoTManager extends ResourceManager {
     protected MqttClientFactory mqttClientFactory = null;
     private IoTProject sharedIoTProject = null;
     private IoTConfig sharedIoTConfig = null;
-    private Endpoint deviceRegistryEndpoint;
-    private Endpoint httpAdapterEndpoint;
-    private DeviceRegistryClient client;
     private AmqpClient amqpClient;
-    private String randomDeviceId = null;
 
 
     public static synchronized SharedIoTManager getInstance() {
@@ -204,18 +200,6 @@ public class SharedIoTManager extends ResourceManager {
 
     public String getTenantID() {
         return IoTUtils.getTenantID(sharedIoTProject);
-    }
-
-    public DeviceRegistryClient getDevClient() {
-        return client;
-    }
-
-    public Endpoint getDeviceRegistryEndpoint() {
-        return deviceRegistryEndpoint;
-    }
-
-    public Endpoint getHttpAdapterEndpoint() {
-        return httpAdapterEndpoint;
     }
 
     public AmqpClient getAmqpClient() {
