@@ -371,7 +371,7 @@ spec:
     For more information on the IoT layer, see: [Getting Started with Internet of Things (IoT) on ${SHORT_PRODUCT_NAME}](${EVAL_IOT_DOC_URL})
 
   version: ${MAVEN_VERSION}
-  keywords: ['${ADDITIONAL_KEYWORDS}messaging', 'amqp', 'iot', 'mqtt']
+  keywords: ${OLM_KEYWORDS}
   icon:
     - base64data: ${LOGO_BASE64}
       mediatype: image/svg+xml
