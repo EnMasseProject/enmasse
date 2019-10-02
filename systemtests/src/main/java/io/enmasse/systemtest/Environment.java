@@ -33,6 +33,7 @@ public class Environment {
     public static final String IS_OCP4_REGEXP = "4.*";
     private static final String DEFAULT_DEVICE_REGISTRY = "DEFAULT_DEVICE_REGISTRY";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
+    private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
     private final String namespace = System.getenv(K8S_NAMESPACE_ENV);
@@ -53,6 +54,7 @@ public class Environment {
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
     private final String defaultDeviceRegistry = System.getenv().getOrDefault(DEFAULT_DEVICE_REGISTRY, "file");
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
+    private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
 
@@ -190,9 +192,15 @@ public class Environment {
     public void setDefaultCredentials(UserCredentials defaultCredentials) {
         this.defaultCredentials = defaultCredentials;
     }
+
     public boolean isSkipSaveState() {
-        return skipSaveState;
+        return this.skipSaveState;
     }
+
+    public boolean isSkipDeployInfinispan() {
+        return this.skipDeployInfinispan;
+    }
+
     public String getDefaultDeviceRegistry() {
         return defaultDeviceRegistry;
     }

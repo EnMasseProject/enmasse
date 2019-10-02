@@ -5,6 +5,7 @@
 package io.enmasse.user.keycloak;
 
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.k8s.util.TimeUtil;
@@ -39,6 +40,9 @@ import static java.util.Optional.empty;
 
 
 public class KeycloakUserApi implements UserApi, RealmApi {
+
+    private static final String ATTR_ANNOTATIONS = "annotations";
+    private static final String ATTR_OWNER_REFERENCES = "ownerReferences";
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakUserApi.class);
 
@@ -160,14 +164,35 @@ public class KeycloakUserApi implements UserApi, RealmApi {
         attributes.put("authenticationType", Collections.singletonList(user.getSpec().getAuthentication().getType().name()));
 
         final List<String> ownerReferences = ownerReferencesToString(user.getMetadata().getOwnerReferences());
-        attributes.put("ownerReferences", ownerReferences);
+        attributes.put(ATTR_OWNER_REFERENCES, ownerReferences);
 
         Instant now = clock.instant();
         attributes.put("creationTimestamp", Collections.singletonList(TimeUtil.formatRfc3339(now)));
+        attributes.put(ATTR_ANNOTATIONS, annotationsToString(user.getMetadata().getAnnotations()));
 
         userRep.setAttributes(attributes);
 
         return userRep;
+    }
+
+    static List<String> annotationsToString(final Map<String, String> annotations) {
+
+        if (annotations == null) {
+            return null;
+        }
+
+        final ObjectMapper mapper = new ObjectMapper();
+
+        return annotations.entrySet().stream()
+                .map(entry -> {
+                    try {
+                        return mapper.writeValueAsString(entry);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+
     }
 
     private static List<String> ownerReferencesToString(final List<OwnerReference> references) {
@@ -178,7 +203,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
 
         final ObjectMapper mapper = new ObjectMapper();
 
-        final List<String> ownerReferences = references
+        return references
                 .stream()
                 .map(ownerReference -> {
                     try {
@@ -189,12 +214,31 @@ public class KeycloakUserApi implements UserApi, RealmApi {
                 })
                 .collect(Collectors.toList());
 
-        return ownerReferences;
+    }
+
+    static Map<String, String> annotationsFromString(final List<String> annotationValues) {
+
+        if (annotationValues == null || annotationValues.isEmpty()) {
+            return null;
+        }
+
+        final ObjectMapper mapper = new ObjectMapper();
+
+        return annotationValues
+                .stream().<Map.Entry<String, String>>map(ref -> {
+                    try {
+                        return mapper.readValue(ref, new TypeReference<Map.Entry<String, String>>() {});
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.<Map.Entry<String, String>, String, String>toMap(Map.Entry::getKey, Map.Entry::getValue));
+
     }
 
     private static List<OwnerReference> ownerReferencesFromString(final List<String> attributeValues) {
 
-        if (attributeValues == null) {
+        if (attributeValues == null || attributeValues.isEmpty() ) {
             return null;
         }
 
@@ -390,8 +434,45 @@ public class KeycloakUserApi implements UserApi, RealmApi {
                 }
             }
             applyAuthorizationRules(realm, user, realm.users().get(userRep.getId()));
+            applyAttributes(realm, user, userRep);
             return true;
         });
+    }
+
+    private void applyAttributes(RealmResource realm, User user, UserRepresentation userRep) {
+        boolean changed = false;
+        if (updateAttribute(userRep, ATTR_ANNOTATIONS, annotationsToString(user.getMetadata().getAnnotations()))) {
+            changed = true;
+        }
+        if (updateAttribute(userRep, ATTR_OWNER_REFERENCES, ownerReferencesToString(user.getMetadata().getOwnerReferences()))) {
+            changed = true;
+        }
+        if (changed) {
+            realm.users().get(userRep.getId()).update(userRep);
+        }
+    }
+
+    private static boolean updateAttribute(final UserRepresentation userRep, final String key, List<String> value) {
+
+        final String[] currentValue = Optional.ofNullable(userRep.getAttributes().get(key))
+                .map(v -> v.toArray(String[]::new))
+                .orElseGet(()-> new String[] {});
+
+        final String[] newValue = Optional.ofNullable(value)
+                .map(v-> v.toArray(String[]::new))
+                .orElseGet(()-> new String[] {});
+
+        if (Arrays.equals(currentValue, newValue)) {
+            return false;
+        }
+
+        if (value.isEmpty()) {
+            userRep.getAttributes().remove(key);
+        } else {
+            userRep.getAttributes().put(key, value);
+        }
+
+        return true;
     }
 
     private Optional<String> getGroupId(List<GroupRepresentation> groupRepresentations, String groupName) {
@@ -622,7 +703,8 @@ public class KeycloakUserApi implements UserApi, RealmApi {
                         .withNamespace(namespace)
                         .withSelfLink("/apis/user.enmasse.io/v1beta1/namespaces/" + namespace + "/messagingusers/" + name)
                         .withCreationTimestamp(userRep.getAttributes().get("creationTimestamp").get(0))
-                        .withOwnerReferences(ownerReferencesFromString(userRep.getAttributes().get("ownerReferences")))
+                        .withOwnerReferences(ownerReferencesFromString(userRep.getAttributes().get(ATTR_OWNER_REFERENCES)))
+                        .withAnnotations(annotationsFromString(userRep.getAttributes().get(ATTR_ANNOTATIONS)))
                         .build())
                 .withSpec(new UserSpecBuilder()
                         .withUsername(userRep.getUsername())

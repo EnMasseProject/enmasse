@@ -205,17 +205,31 @@ func (c *Configurator) syncHandler(key string) error {
 
 			log.Info("Item got deleted. Deleting configuration.")
 
-			err = c.deleteProject(&metav1.ObjectMeta{
+			// if something went wrong deleting, then returning
+			// and error will re-queue the item
+
+			return c.deleteProject(&metav1.ObjectMeta{
 				Namespace: namespace,
 				Name:      name,
 			})
 
-			// if something went wrong deleting, then returning
-			// and error will re-queue the item
-			return err
 		}
 
 		return err
+	}
+
+	// check if we are scheduled for deletion ...
+	if project.DeletionTimestamp != nil {
+
+		// ... yes we are, go ahead and delete
+
+		log.Info("Item scheduled for deletion. Deleting configuration.")
+
+		return c.deleteProject(&metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+		})
+
 	}
 
 	if !project.Status.IsReady || project.Status.DownstreamEndpoint == nil {

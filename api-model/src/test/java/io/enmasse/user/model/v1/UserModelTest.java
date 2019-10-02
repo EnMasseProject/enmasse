@@ -24,6 +24,7 @@ public class UserModelTest {
                 .withMetadata(new ObjectMetaBuilder()
                         .withName("myspace.user1")
                         .withNamespace("ns1")
+                        .addToAnnotations("foo", "bar")
                         .build())
                 .withSpec(new UserSpecBuilder()
                         .withUsername("user1")
@@ -60,8 +61,12 @@ public class UserModelTest {
         UserList list = new UserList();
         list.getItems().add(user);
 
+        // serialize & deserialize
+
         serialized = mapper.writeValueAsBytes(list);
         UserList deserializedList = mapper.readValue(serialized, UserList.class);
+
+        // assert deserialized
 
         assertEquals(1, deserializedList.getItems().size());
 
@@ -69,6 +74,7 @@ public class UserModelTest {
 
         assertEquals(user.getMetadata().getName(), deserialized.getMetadata().getName());
         assertEquals(user.getMetadata().getNamespace(), deserialized.getMetadata().getNamespace());
+        assertEquals("bar", deserialized.getMetadata().getAnnotations().get("foo"));
         assertEquals(user.getSpec().getUsername(), deserialized.getSpec().getUsername());
         assertEquals(user.getSpec().getAuthentication().getType(), deserialized.getSpec().getAuthentication().getType());
         assertEquals(user.getSpec().getAuthentication().getPassword(), deserialized.getSpec().getAuthentication().getPassword());

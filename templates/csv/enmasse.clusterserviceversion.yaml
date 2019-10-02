@@ -1253,3 +1253,14 @@ spec:
             path: conditions
             x-descriptors:
               - 'urn:alm:descriptor:io.kubernetes.conditions'
+
+          - description: The phase of the project.
+            displayName: Phase
+            path: phase
+            x-descriptors:
+              - 'urn:alm:descriptor:io.kubernetes.phase'
+          - description: Description of the project phase.
+            displayName: Reason
+            path: phaseReason
+            x-descriptors:
+              - 'urn:alm:descriptor:io.kubernetes.phase:reason'

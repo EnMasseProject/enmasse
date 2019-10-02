@@ -32,9 +32,9 @@ spec:
     type: boolean
     description: If TLS is enabled
     JSONPath: .status.downstreamEndpoint.tls
-  - name: Ready
-    type: boolean
-    description: If the IoT project is ready
-    JSONPath: .status.isReady
+  - name: Phase
+    type: string
+    description: Phase of the IoT project
+    JSONPath: .status.phase
   subresources:
     status: {}

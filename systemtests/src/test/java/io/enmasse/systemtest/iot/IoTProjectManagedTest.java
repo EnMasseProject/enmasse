@@ -138,7 +138,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestIsolatedStandard
 
         //username "adapter"
         //name "project-address-space"+".adapter"
-        User user = CommonResourcesManager.getInstance().getUser(addressSpace, "adapter");
+        User user = CommonResourcesManager.getInstance().getUser(addressSpace, "adapter-" + project.getMetadata().getUid());
         assertNotNull(user);
         assertEquals(1, user.getMetadata().getOwnerReferences().size());
         assertTrue(isOwner(project, user.getMetadata().getOwnerReferences().get(0)));
@@ -150,7 +150,7 @@ class IoTProjectManagedTest extends IoTTestBase implements ITestIsolatedStandard
         assertThat(authorizations, containsInAnyOrder(
                 asList(
                         assertAdapterAuthorization( of(send), expandAddresses(addressSuffix, IOT_ADDRESS_TELEMETRY, IOT_ADDRESS_EVENT, IOT_ADDRESS_COMMAND_RESPONSE)),
-                        assertAdapterAuthorization(of(recv), expandAddresses(addressSuffix, IOT_ADDRESS_COMMAND)),
+                        assertAdapterAuthorization( of(recv), expandAddresses(addressSuffix, IOT_ADDRESS_COMMAND)),
                         assertAdapterAuthorization( of(recv, send), expandAddresses(addressSuffix, IOT_ADDRESS_CONTROL)))));
     }
 

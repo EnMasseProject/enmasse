@@ -223,8 +223,7 @@ func BulkRemoveOwner(ctx context.Context, c client.Client, owner runtime.Object,
 
 		// process ownership
 
-		result, err := ProcessOwnedByObject(owner, i, controller, true)
-
+		result, err := RemoveAsOwner(owner, i, controller)
 		if err != nil {
 			return nil, err
 		}
@@ -246,4 +245,8 @@ func BulkRemoveOwner(ctx context.Context, c client.Client, owner runtime.Object,
 
 	})
 
+}
+
+func RemoveAsOwner(owner runtime.Object, object interface{}, controller bool) (OwnerResult, error) {
+	return ProcessOwnedByObject(owner, object, controller, true)
 }

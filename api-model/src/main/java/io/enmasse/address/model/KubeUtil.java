@@ -4,6 +4,7 @@
  */
 package io.enmasse.address.model;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,6 +18,9 @@ import io.fabric8.kubernetes.api.model.apps.StatefulSet;
  * Various static utilities that don't belong in a specific place
  */
 public final class KubeUtil {
+
+    private static final byte [] GO_NAMESPACE = new byte []{(byte)0x15,(byte)0x16,(byte)0xb2,(byte)0x46,(byte)0x23,(byte)0xaa,(byte)0x11,(byte)0xe9,(byte)0xb6,(byte)0x15,(byte)0xc8,(byte)0x5b,(byte)0x76,(byte)0x2e,(byte)0x5a,(byte)0x2c};
+
     private static final int MAX_KUBE_NAME = 63 - 3; // max length of identifier - space for pod identifier
     private static final Pattern addressPattern = Pattern.compile("[^a-z0-9\\-]");
     private static final Pattern usernamePattern = Pattern.compile("[^a-z0-9\\-.@_]");
@@ -32,7 +36,7 @@ public final class KubeUtil {
         return sanitizeWithPattern(name, usernamePattern);
     }
 
-    private static String sanitizeWithPattern(String value, Pattern pattern) {
+    public static String sanitizeWithPattern(String value, Pattern pattern) {
         if (value == null) {
             return null;
         }
@@ -56,13 +60,40 @@ public final class KubeUtil {
         return clean;
     }
 
-    public static String sanitizeWithUuid(String name, String uuid) {
-        name = sanitizeName(name);
+    public static String sanitizeWithUuid(String name, String uuid, Pattern pattern) {
+        name = sanitizeWithPattern(name, pattern);
         if (name.length() + uuid.length() + 1 > MAX_KUBE_NAME) {
             name = name.substring(0, MAX_KUBE_NAME - uuid.length() - 1);
         }
         name += "-" + uuid;
         return name;
+    }
+
+    public static String sanitizeWithUuid(String name, String uuid) {
+        return sanitizeWithUuid(name, uuid, addressPattern);
+    }
+
+    /**
+     * Create the address name, aligned with the Go logic of creating names.
+     * <br>
+     * The main difference between Go and the Java method {@link #generateName(String, String)} is, that in Go
+     * you must use a namespace prefix for a type 3 UUID. This method uses the same prefix as the Go code.
+     *
+     * @param addressSpace The name of the address space.
+     * @param address The name of the address.
+     * @return The encoded name, compatible with the logic in Go.
+     */
+    public static String sanitizeForGo(final String addressSpace, final String address) {
+
+        byte [] addressBytes = address.getBytes(StandardCharsets.UTF_8);
+        byte [] data = new byte[addressBytes.length + GO_NAMESPACE.length];
+
+        System.arraycopy(GO_NAMESPACE, 0, data, 0, GO_NAMESPACE.length);
+        System.arraycopy(addressBytes, 0, data, GO_NAMESPACE.length, addressBytes.length);
+
+        String uuid = UUID.nameUUIDFromBytes(data).toString();
+
+        return KubeUtil.sanitizeName(addressSpace) + "." + KubeUtil.sanitizeWithUuid(address, uuid, addressPattern);
     }
 
     public static String getAddressSpaceCaSecretName(AddressSpace addressSpace) {

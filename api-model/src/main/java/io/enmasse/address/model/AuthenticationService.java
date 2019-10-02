@@ -5,6 +5,8 @@
 package io.enmasse.address.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.base.MoreObjects.ToStringHelper;
+
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
@@ -77,5 +79,13 @@ public class AuthenticationService extends AbstractWithAdditionalProperties {
     @Override
     public int hashCode() {
         return Objects.hash(name, type, overrides);
+    }
+
+    @Override
+    protected ToStringHelper toStringHelper() {
+        return super.toStringHelper()
+                .add("name", this.name)
+                .add("type", this.type)
+                .add("overrides", this.overrides);
     }
 }

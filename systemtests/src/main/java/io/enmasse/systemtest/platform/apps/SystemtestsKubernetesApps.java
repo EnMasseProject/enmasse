@@ -61,7 +61,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
-    public static final String INFINISPAN_SERVER = "infinispan-server";
+    public static final String INFINISPAN_SERVER = "infinispan";
     private static final Path INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
 
     public static String getMessagingAppPodName() throws Exception {
@@ -196,7 +196,11 @@ public class SystemtestsKubernetesApps {
         return in -> ReplaceValueStream.replaceValues(in, values);
     }
 
-    public static Endpoint deployInfinispanServer(String namespace) throws Exception {
+    public static Endpoint deployInfinispanServer(final String namespace) throws Exception {
+
+        if (Environment.getInstance().isSkipDeployInfinispan()) {
+            return getInfinispanEndpoint(namespace);
+        }
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -217,17 +221,25 @@ public class SystemtestsKubernetesApps {
 
         // return hotrod enpoint
 
-        return kubeCli.getEndpoint(INFINISPAN_SERVER, namespace, "hotrod");
+        return getInfinispanEndpoint(namespace);
     }
 
+    private static Endpoint getInfinispanEndpoint(final String namespace) {
+        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "hotrod");
+    }
 
     public static void deleteInfinispanServer(final String namespace) throws Exception {
+
+        if (Environment.getInstance().isSkipDeployInfinispan()) {
+            return;
+        }
 
         // delete "common" and "manual" folders
 
         deleteDirectories(namespaceReplacer(namespace),
                 INFINISPAN_EXAMPLE_BASE.resolve("common"),
                 INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+
     }
 
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {

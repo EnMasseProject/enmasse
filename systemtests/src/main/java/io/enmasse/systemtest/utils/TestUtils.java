@@ -32,12 +32,15 @@ import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -50,12 +53,19 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class TestUtils {
+
+    public interface TimeoutHandler<X extends Throwable> {
+        void timeout() throws X;
+    }
+
     private static final Random R = new Random();
     private static Logger log = CustomLogger.getLogger();
 
@@ -368,34 +378,29 @@ public class TestUtils {
      * Check if endpoint is accessible
      */
     public static boolean resolvable(Endpoint endpoint) {
-        for (int i = 0; i < 10; i++) {
+        return waitUntilCondition(() -> {
             try {
                 InetAddress[] addresses = Inet4Address.getAllByName(endpoint.getHost());
                 return addresses.length > 0;
             } catch (UnknownHostException ignore) {
             }
-            try {
-                Thread.sleep(1_000);
-            } catch (InterruptedException e) {
-            }
-        }
-        return false;
+            return false;
+        }, Duration.ofSeconds(10), Duration.ofSeconds(1));
     }
 
     /**
      * Wait until Namespace will be removed
      *
      * @param kubernetes client for manipulation with kubernetes cluster
-     * @param namespace  project/namespace to remove
+     * @param namespace project/namespace to remove
      */
     public static void waitForNamespaceDeleted(Kubernetes kubernetes, String namespace) throws Exception {
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
-        while (budget.timeLeft() >= 0 && kubernetes.listNamespaces().contains(namespace)) {
-            Thread.sleep(1000);
-        }
-        if (kubernetes.listNamespaces().contains(namespace)) {
-            throw new TimeoutException("Timed out waiting for namespace " + namespace + " to disappear");
-        }
+        waitUntilCondition(
+                () -> !kubernetes.listNamespaces().contains(namespace),
+                Duration.ofMinutes(10), Duration.ofSeconds(1),
+                () -> {
+                    throw new TimeoutException("Timed out waiting for namespace " + namespace + " to disappear");
+                });
     }
 
     /**
@@ -557,26 +562,131 @@ public class TestUtils {
     }
 
     public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) throws Exception {
+
         Objects.requireNonNull(condition);
         Objects.requireNonNull(budget);
 
         log.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
 
-        while (!budget.timeoutExpired()) {
-            if (condition.test(WaitPhase.LOOP)) {
-                log.info("Successfully wait for: {} , it took {} ms", forWhat, budget.timeSpent());
-                return;
+        waitUntilCondition(
+
+                () -> condition.test(WaitPhase.LOOP),
+                budget.remaining(), Duration.ofSeconds(5),
+
+                () -> {
+                    // try once more
+                    if (condition.test(WaitPhase.LAST_TRY)) {
+                        log.info("Successfully wait for: {} , it passed on last try", forWhat);
+                        return;
+                    }
+
+                    throw new IllegalStateException("Failed to wait for: " + forWhat);
+                });
+
+        log.info("Successfully wait for: {}, it took {} ms", forWhat, budget.timeSpent());
+
+    }
+
+    /**
+     * Wait for a condition, fail otherwise.
+     *
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param budget The remaining time budget for this step.
+     * @param delay The delay between checks.
+     * @param timeoutMessageSupplier The supplier of a timeout message.
+     * @throws AssertionFailedError In case the timeout expired
+     */
+    public static void waitUntilConditionOrFail(final BooleanSupplier condition, final Duration timeout, final Duration delay, final Supplier<String> timeoutMessageSupplier) {
+
+        Objects.requireNonNull(timeoutMessageSupplier);
+
+        waitUntilConditionOrThrow(condition, timeout, delay, () -> new AssertionFailedError(timeoutMessageSupplier.get()));
+
+    }
+
+    /**
+     * Wait for a condition, throw exception otherwise.
+     *
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param budget The remaining time budget for this step.
+     * @param delay The delay between checks.
+     * @param exceptionSupplier The supplier of the exception to throw.
+     * @throws AssertionFailedError In case the timeout expired
+     */
+    public static <X extends Throwable> void waitUntilConditionOrThrow(final BooleanSupplier condition, final Duration timeout, final Duration delay, final Supplier<X> exceptionSupplier) throws X {
+
+        Objects.requireNonNull(exceptionSupplier);
+
+        waitUntilCondition(condition, timeout, delay, () -> {
+            throw exceptionSupplier.get();
+        });
+
+    }
+
+
+    /**
+     * Wait for a condition, call handler otherwise.
+     *
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param budget The remaining time budget for this step.
+     * @param delay The delay between checks.
+     * @param timeoutHandler The handler to call in case of the timeout.
+     * @param <X> The type of exception thrown by the timeout handler.
+     * @throws AssertionFailedError In case the timeout expired
+     */
+    public static <X extends Throwable> void waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay, final TimeoutHandler<X> timeoutHandler) throws X {
+
+        Objects.requireNonNull(timeoutHandler);
+
+        if (!waitUntilCondition(condition, timeout, delay)) {
+            timeoutHandler.timeout();
+        }
+
+    }
+
+    /**
+     * Wait for condition, return result.
+     * <p>
+     * This will check will put a priority on checking the condition, and only wait, when there is remaining time budget left.
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param budget The remaining time budget for this step.
+     * @param delay The delay between checks.
+     * @return {@code true} if the condition was met, {@code false otherwise}.
+     */
+    public static boolean waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay) {
+
+        Objects.requireNonNull(condition);
+        Objects.requireNonNull(timeout);
+        Objects.requireNonNull(delay);
+
+        final Instant deadline = Instant.now().plus(timeout);
+
+        while ( true) {
+
+            // test first
+
+            if (condition.getAsBoolean()) {
+                return true;
             }
-            log.debug("next iteration, remaining time: {}", budget.timeLeft());
-            Thread.sleep(5000);
+
+            // if the timeout has expired ... stop
+
+            final Duration remaining = Duration.between(deadline, Instant.now());
+            if ( !remaining.isNegative() ) {
+                return false;
+            }
+
+            // otherwise sleep
+
+            log.debug("next iteration, remaining time: {}", remaining);
+            try {
+                Thread.sleep(delay.toMillis());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
         }
 
-        if (condition.test(WaitPhase.LAST_TRY)) {
-            log.info("Successfully wait for: {} , it passed on last try", forWhat);
-            return;
-        }
-
-        throw new IllegalStateException("Failed to wait for: " + forWhat);
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String namespace, final String name, final String currentResourceVersion) throws Exception {

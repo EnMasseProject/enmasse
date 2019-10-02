@@ -40,6 +40,13 @@ public abstract class IoTTestBase extends TestBase implements ITestBaseIsolated 
     protected static final String IOT_ADDRESS_CONTROL = "control";
     protected static final String IOT_ADDRESS_COMMAND = "command";
     protected static final String IOT_ADDRESS_COMMAND_RESPONSE = "command_response";
+    protected static final String[] IOT_ADDRESSES = new String[] {
+                    IOT_ADDRESS_TELEMETRY,
+                    IOT_ADDRESS_EVENT,
+                    IOT_ADDRESS_CONTROL,
+                    IOT_ADDRESS_COMMAND,
+                    IOT_ADDRESS_COMMAND_RESPONSE,
+    };
 
     private static Logger log = CustomLogger.getLogger();
     protected String iotProjectNamespace = "iot-project-ns";

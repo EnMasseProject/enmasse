@@ -5,6 +5,8 @@
 package io.enmasse.address.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.base.MoreObjects.ToStringHelper;
+
 import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.fabric8.kubernetes.api.model.SecretReference;
@@ -89,13 +91,13 @@ public class AuthenticationServiceSettings extends AbstractWithAdditionalPropert
     }
 
     @Override
-    public String toString() {
-        return "AuthenticationServiceOverrides{" +
-                "host='" + host + '\'' +
-                ", port=" + port +
-                ", realm='" + realm + '\'' +
-                ", caCertSecret='" + caCertSecret + '\'' +
-                ", clientCertSecret='" + realm + '\'' +
-                '}';
+    protected ToStringHelper toStringHelper() {
+        return super.toStringHelper()
+                .add("host", this.host)
+                .add("port", this.port)
+                .add("realm", this.realm)
+                .add("caCertSecert", this.caCertSecret)
+                .add("clientCertSecret", this.clientCertSecret);
     }
+
 }
