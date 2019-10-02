@@ -33,7 +33,9 @@ import java.util.UUID;
 
 import static io.enmasse.systemtest.TestTag.IOT_DEVICE_REG;
 import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.certs.CertProvider.certBundle;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.deviceRegistry;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -68,7 +70,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     public void setAttributes() throws Exception {
         var iotConfigBuilder = provideIoTConfig();
         iotConfig = iotConfigBuilder.editSpec()
-                .withNewAdapters()
+                /*.withNewAdapters()
                 .withNewMqtt()
                 .withEnabled(false)
                 .endMqtt()
@@ -78,9 +80,10 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
                 .withNewSigfox()
                 .withEnabled(false)
                 .endSigfox()
-                .endAdapters()
+                .endAdapters()*/
                 .endSpec()
                 .build();
+
         isolatedIoTManager.createIoTConfig(iotConfig);
 
         iotProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT,

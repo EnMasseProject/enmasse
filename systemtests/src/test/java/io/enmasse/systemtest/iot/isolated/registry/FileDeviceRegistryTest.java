@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import static io.enmasse.systemtest.TestTag.FILE_REG;
 import static io.enmasse.systemtest.TestTag.IOT_DEVICE_REG;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newFileBased;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
 class FileDeviceRegistryTest extends DeviceRegistryTest {
@@ -29,6 +30,10 @@ class FileDeviceRegistryTest extends DeviceRegistryTest {
                 .withNewServices()
                 .withDeviceRegistry(newFileBased())
                 .endServices()
+                .withNewAdapters()
+                .withNewMqtt()
+                .endMqtt()
+                .endAdapters()
                 .endSpec();
     }
 

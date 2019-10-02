@@ -30,6 +30,10 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
                 .withNewServices()
                 .withDeviceRegistry(newInfinispanBased())
                 .endServices()
+                .withNewAdapters()
+                .withNewMqtt()
+                .endMqtt()
+                .endAdapters()
                 .endSpec();
     }
 
