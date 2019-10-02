@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.iot.project;
 
-import static io.enmasse.systemtest.utils.AddressSpaceUtils.adddressSpaceExists;
+import static io.enmasse.systemtest.utils.AddressSpaceUtils.addressSpaceExists;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -86,7 +86,7 @@ public class ManagedTest extends AbstractIoTProjectTestBase  {
         // otherwise io.enmasse.systemtest.utils.IoTUtils.waitForIoTProjectReady(Kubernetes, IoTProject) will fail
 
         waitUntilConditionOrFail(
-                adddressSpaceExists(project.getMetadata().getNamespace(), project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()),
+                addressSpaceExists(project.getMetadata().getNamespace(), project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName()),
                 ofMinutes(5), ofSeconds(10),
                 () -> String.format("Expected address space to be created"));
 

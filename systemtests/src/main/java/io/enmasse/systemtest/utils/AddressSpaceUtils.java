@@ -59,7 +59,7 @@ public class AddressSpaceUtils {
                 .map(addressSpace -> addressSpace.getMetadata().getName()).collect(Collectors.toList()).contains(addressSpaceName);
     }
 
-    public static BooleanSupplier adddressSpaceExists(final String namespace, final String name) {
+    public static BooleanSupplier addressSpaceExists(final String namespace, final String name) {
         return () -> existAddressSpace(namespace, name);
     }
 
