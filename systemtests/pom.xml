@@ -247,7 +247,7 @@
         <profile>
             <id>smoke</id>
             <properties>
-                <groups>smoke &amp; !shared-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>smoke &amp; !shared-iot &amp; !isolated-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

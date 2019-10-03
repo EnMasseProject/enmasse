@@ -111,36 +111,10 @@ public class SharedIoTManager extends ResourceManager {
             sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
                     DEFAULT_ADD_SPACE_IDENTIFIER, iotProjectNamespace, ADDRESS_SPACE_PLAN);
             createIoTProject(sharedIoTProject);
-
         }
-
         initFactories(getSharedAddressSpace());
         this.amqpClient = amqpClientFactory.createQueueClient();
     }
-
-/*    public void createDeviceRegistrySharedEnv() throws Exception {
-        if (sharedIoTConfig == null) {
-            createNewIoTConfig();
-        }
-
-        if (deviceRegistryEndpoint == null) {
-            deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
-        }
-        if (httpAdapterEndpoint == null) {
-            httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        }
-        if (client == null) {
-            client = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
-        }
-        this.randomDeviceId = UUID.randomUUID().toString();
-
-        Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
-        createOrUpdateUser(getAddressSpace(iotProjectNamespace,
-                getSharedAddressSpace().getMetadata().getName()), Environment.getInstance().getDefaultCredentials());
-        this.amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(),
-                Environment.getInstance().getDefaultCredentials());
-        this.amqpClient = amqpClientFactory.createQueueClient();
-    }*/
 
     private void createNewIoTConfig() throws Exception {
         CertBundle certBundle = CertificateUtils.createCertBundle();
