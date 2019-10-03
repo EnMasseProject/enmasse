@@ -237,7 +237,7 @@ objects:
           - name: CERT_DIR
             value: /etc/enmasse-certs
           - name: TEMPLATE_DIR
-            value: /templates
+            value: /opt/templates
           - name: STANDARD_INFRA_CONFIG_NAME
             value: ${STANDARD_INFRA_CONFIG_NAME}
           - name: ADDRESS_SPACE

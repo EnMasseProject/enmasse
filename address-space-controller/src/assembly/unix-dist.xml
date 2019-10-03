@@ -28,7 +28,7 @@
     <fileSets>
         <fileSet>
           <directory>${project.basedir}/target/classes</directory>
-          <outputDirectory>/</outputDirectory>
+          <outputDirectory>/opt</outputDirectory>
           <includes>
             <include>brokeredinfraconfigs/*</include>
             <include>standardinfraconfigs/*</include>
@@ -42,9 +42,9 @@
     <files>
         <file>
           <source>${project.basedir}/target/address-space-controller-${project.version}.jar</source>
-          <outputDirectory>/</outputDirectory>
+          <outputDirectory>/opt</outputDirectory>
           <destName>address-space-controller.jar</destName>
-           <fileMode>0644</fileMode>
+          <fileMode>0644</fileMode>
         </file>
     </files>
 </assembly>

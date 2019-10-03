@@ -14,8 +14,6 @@ INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
 PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 HASHMARK = $(shell echo "\#")
-TEMPLATE_DIR=/templates
-RESOURCES_DIR=/
 
 IOT_MODULES=\
 	iot/api \
@@ -111,8 +109,6 @@ replace_images: prepare
 					  -e 's,\$${REPOSITORY},$(REPOSITORY),g' \
 					  -e 's,\$${SHORT_PRODUCT_NAME},$(SHORT_PRODUCT_NAME),g' \
 					  -e 's,\$${VERSIONED_NAME},$(VERSIONED_NAME),g' \
-					  -e 's,\$${TEMPLATE_DIR},$(TEMPLATE_DIR),g' \
-					  -e 's,\$${RESOURCES_DIR},$(RESOURCES_DIR),g' \
 					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
 					> $$i.tmp; \
 		mv $$i.tmp $$i; \
