@@ -7,7 +7,6 @@ include olm.enmasse.env
 # makefiles.
 include ../Makefile.common
 
-PACKAGE_DOCS_DIR=$(TOPDIR)/documentation/html
 PACKAGE_ANSIBLE_DIR=$(TOPDIR)/ansible
 BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
@@ -161,7 +160,7 @@ $(OLM): replace_images
 	done
 
 install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)
-	cp -r $(PACKAGE_DOCS_DIR) $(INSTALLDIR)/docs
+	@echo "Preparing installation bundle"
 
 package: prepare install
 	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
