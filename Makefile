@@ -44,7 +44,7 @@ all: build_java build_go templates
 templates: docu_html
 	$(MAKE) -C templates
 
-deploy: build_java build_go
+deploy: build_go
 	$(IMAGE_ENV) mvn -Prelease deploy $(MAVEN_ARGS)
 
 build_java: build_go
@@ -54,6 +54,9 @@ build_go: $(GO_DIRS) test_go
 
 imageenv:
 	@echo $(IMAGE_ENV) > imageenv.txt
+
+imagelist:
+	@echo $(IMAGE_LIST) > imagelist.txt
 
 $(GO_DIRS): $(GOPRJ)
 	$(MAKE) FULL_BUILD=$(FULL_BUILD) -C $@ $(MAKECMDGOALS)

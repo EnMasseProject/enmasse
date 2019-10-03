@@ -77,7 +77,6 @@ replace_images: prepare
 					  -e 's,\$${APPLICATION_MONITORING_OPERATOR_IMAGE},$(APPLICATION_MONITORING_OPERATOR_IMAGE),g' \
 					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
-					  -e 's,\$${QDROUTERD_BASE_IMAGE},$(QDROUTERD_BASE_IMAGE),g' \
 					  -e 's,\$${IOT_GC_IMAGE},$(IOT_GC_IMAGE),g' \
 					  -e 's,\$${IOT_TENANT_SERVICE_IMAGE},$(IOT_TENANT_SERVICE_IMAGE),g' \
 					  -e 's,\$${IOT_AUTH_SERVICE_IMAGE},$(IOT_AUTH_SERVICE_IMAGE),g' \
@@ -108,6 +107,8 @@ replace_images: prepare
 					  -e 's,\$${PLATFORM},$(PLATFORM),g' \
 					  -e 's,\$${REPOSITORY},$(REPOSITORY),g' \
 					  -e 's,\$${SHORT_PRODUCT_NAME},$(SHORT_PRODUCT_NAME),g' \
+					  -e 's,\$${PACKAGE_NAME},$(PACKAGE_NAME),g' \
+					  -e 's,\$${PACKAGE_CHANNEL},$(PACKAGE_CHANNEL),g' \
 					  -e 's,\$${VERSIONED_NAME},$(VERSIONED_NAME),g' \
 					  -e 's,\$${CONSOLE_HTTPD_IMAGE},$(CONSOLE_HTTPD_IMAGE),g' \
 					> $$i.tmp; \

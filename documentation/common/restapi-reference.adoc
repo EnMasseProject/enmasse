@@ -30,7 +30,7 @@ __Schemes__ : HTTPS
 === External Docs
 [%hardbreaks]
 __Description__ : Find out more about EnMasse
-__URL__ : http://enmasse.io
+__URL__ : https://enmasse.io/documentation/
 
 
 

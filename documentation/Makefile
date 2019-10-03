@@ -6,7 +6,7 @@ ASCIIDOCTOR_FLAGS       ?= -v -a EnMasseVersion=$(VERSION) -t -dbook $(ASCIIDOCT
 
 .PHONY: swagger
 swagger: build/swagger2markup.jar
-	java -jar build/swagger2markup.jar convert -i $(TOPDIR)/api-server/src/main/resources/swagger.json -f common/restapi-reference
+	java -jar build/swagger2markup.jar convert -i $(TOPDIR)/api-server/target/classes/swagger.json -f common/restapi-reference
 
 build/swagger2markup.jar:
 	mkdir -p build
