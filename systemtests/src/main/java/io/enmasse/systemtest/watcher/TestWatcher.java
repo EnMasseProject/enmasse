@@ -165,12 +165,11 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
     public void beforeEach(ExtensionContext context) throws Exception {
         LOGGER.warn("Before test exec");
         testInfo.setActualTest(context);
-        if (testInfo.isTestShared() && !testInfo.isTestIoT()) {
+        if (testInfo.isTestShared()) {
             Environment.getInstance().getDefaultCredentials().setUsername("test").setPassword("test");
             Environment.getInstance().setManagementCredentials(new UserCredentials("artemis-admin", "artemis-admin"));
         }
-
-        if (testInfo.isTestIoT() && SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
+        if (SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
             sharedIoTManager.setup();
         }
     }

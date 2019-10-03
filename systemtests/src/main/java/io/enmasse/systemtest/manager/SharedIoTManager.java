@@ -88,6 +88,7 @@ public class SharedIoTManager extends ResourceManager {
 
     @Override
     void initFactories(AddressSpace addressSpace) {
+
         amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), defaultCredentials);
         mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), defaultCredentials);
     }
@@ -113,6 +114,7 @@ public class SharedIoTManager extends ResourceManager {
             createIoTProject(sharedIoTProject);
         }
         initFactories(getSharedAddressSpace());
+        createOrUpdateUser(getSharedAddressSpace(), defaultCredentials);
         this.amqpClient = amqpClientFactory.createQueueClient();
     }
 

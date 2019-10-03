@@ -73,7 +73,6 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     private String password;
 
     private HttpAdapterClient httpClient;
-    private AmqpClient messagingClient;
     private String commandPayload;
     private int ttd;
 
@@ -112,19 +111,6 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         }
     }
 
-    @BeforeEach
-    void setupMessagingClient() throws Exception {
-        this.messagingClient = getAmqpClientFactory().createQueueClient();
-    }
-
-    @AfterEach
-    void disposeMessagingClient() throws Exception {
-        if (this.messagingClient != null) {
-            this.messagingClient.close();
-            this.messagingClient = null;
-        }
-    }
-
     @Test
     void testOneShotCommand() throws Exception {
 
@@ -153,7 +139,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
 
         // set up command response consumer (before responding to telemetry)
-        var f3 = this.messagingClient.recvMessages(replyToAddress, 1);
+        var f3 = sharedIoTResourceManager.getAmqpClient().recvMessages(replyToAddress, 1);
 
         var f1 = setupMessagingReceiver(sentFuture, commandMessage -> {
             commandMessage.setCorrelationId(reqId);
@@ -217,7 +203,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         // setup telemetry consumer
 
-        var f1 = this.messagingClient.recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantID()), msg -> {
+        var f1 = sharedIoTResourceManager.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantID()), msg -> {
 
             log.info("Received message: {}", msg);
 
@@ -246,7 +232,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             // send request command
 
             log.info("Sending out command message");
-            var f2 = this.messagingClient.sendMessage("control/" + sharedIoTResourceManager.getTenantID() + "/" + deviceId, commandMessage)
+            var f2 = sharedIoTResourceManager.getAmqpClient().sendMessage("control/" + sharedIoTResourceManager.getTenantID() + "/" + deviceId, commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {
