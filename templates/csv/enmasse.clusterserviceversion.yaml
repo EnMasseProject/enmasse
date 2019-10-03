@@ -790,9 +790,9 @@ spec:
                       name: address-space-controller-config
                       optional: true
                 - name: TEMPLATE_DIR
-                  value: ${TEMPLATE_DIR}
+                  value: /opt/templates
                 - name: RESOURCES_DIR
-                  value: ${RESOURCES_DIR}
+                  value: /opt
                 - name: STANDARD_AUTHSERVICE_CONFIG_NAME
                   value: keycloak-config
                 - name: STANDARD_AUTHSERVICE_CREDENTIALS_SECRET_NAME

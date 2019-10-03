@@ -11,4 +11,4 @@ ADD target/address-space-controller-${MAVEN_VERSION}-dist.tar.gz /
 
 ENV LOG_LEVEL info
 
-CMD ["/opt/run-java/launch_java.sh", "/address-space-controller.jar"]
+CMD ["/opt/run-java/launch_java.sh", "/opt/address-space-controller.jar"]

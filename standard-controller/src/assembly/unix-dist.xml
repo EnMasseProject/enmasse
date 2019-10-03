@@ -28,7 +28,7 @@
     <fileSets>
         <fileSet>
           <directory>${project.basedir}/target/classes</directory>
-          <outputDirectory>/</outputDirectory>
+          <outputDirectory>/opt</outputDirectory>
           <includes>
             <include>templates/*</include>
           </includes>
@@ -37,7 +37,7 @@
     <files>
         <file>
           <source>${project.basedir}/target/standard-controller-${project.version}.jar</source>
-          <outputDirectory>/</outputDirectory>
+          <outputDirectory>/opt</outputDirectory>
           <destName>standard-controller.jar</destName>
            <fileMode>0644</fileMode>
         </file>
