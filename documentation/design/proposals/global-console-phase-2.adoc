@@ -11,138 +11,77 @@ known as the Global Console (which allows create/read/update/delete of address s
 which allows the addresses within an address space to be managed and the connections to the address space to be seen.
 In addition the Address Space Console exposed address and connection level statistics.
 
-For this phase, the reposibilities of for address management, address statistics, connection view and connection statistics
+For this phase, the reposibilities of for address management, address metrics, connection view and connection metrics
 will be transfered to Global Console.  This will allow the Address Space Console to be retired and the agent relieved of
 responsibilities for serving the Address Space Console application.
 
-
-== Design Goals
-
-- A design goal is that the console is pluggable, so that it is possible to use the console to manage CR belongs to components other than EnMasse.
-- The statistics displayed by the console should be available to the user for re-use in their own applications via a standard mechanism to allow for further analysis in tools such as Grafana.
-- The console needs access to instantaneous statistic values (e.g. queue depths), rates (e.g. publishing rates msg/s), and time-series to support the drawing of simple graphs.
+The deployment of the Console will be controlled by the consoleservice CR.  This work will make it possible for EnMasse
+to be used without the Console, if desired.
 
 == High Level
 
-There will be a new *console-server* component which will replace the existing oauth-proxy/HTTPD sidecar.  It will provide
-a proxy to the Kubernetes API (allowing the UI to view/mutate the resources)  and it will provide a Metrics API capable of providing metrics for any (configured) resource type.  The metrics will be sourced from a Prometheus instance which will belong to the Console.
+There will be a new *console-graphql* component.  This will be deployed to the console pod and will be fronted by ouath-proxy.
+The console-httpd sidecar will be retired.
 
-For connection metadata, as Connections are not exposed as a Kubernetes resource, the console-server will have an additional
-responsibility to expose a read-only REST API for connections.  This will be capable for listing connections that exist for a partiular address space.
+The *console-graphql* component will present GraphQL API allowing the view/maintainence of address spaces, addresss,
+and connections by the UI.  The model presented object model presented by the EnMasse GraphQL schema will be a composite
+one that provides access to the resource and its metrics through a single query interface.  Mutations will permit the
+create/patch/delete of address spaces and addresses, the closure of connections and purge of addresses.
 
-The agent component will be responsible for exposing additional Prometheus metrics for address-spaces, addresses, and connections.  It loses its responsibilities to serve the Address Space Console and the existing AMQP management interface will be removed.  It acquires a responsibilty for connection metadata over a REST API.  
+The console-graphql internally will build a *cache* of address-spaces, addresses and connections, links and metrics. 
 
-A Prometheus instance will be deployed with the console-server (side-car) whose responsibility is to scrape statistics
-from the agent of each addressspaces.  These will be discovered using kubernetes_sd_configs type configuration.  The
-Prometheus instance will be configured with relatively short rentention policies - sufficient for the console's use-cases.
+* address-spaces and addresses will be read from the Kubernetes API (utilising watches of the resources).
+* connection and link information will be gathered from the agents of addressspaces themselves.
+* metrics will also be scraped *directly* from the agents. 
+
+For read operations, console-graphql will use a service acccount with *list* permission for address spaces and addresses
+in order to build a global view.  It will be a responsibility of component to filter the user's view so that he can see 
+only those objects to which he has permission.  It will use SelfSubjectAccessReview in order to do this.  The
+SelfSubjectAccessReview responses will be cached for a short time, to save load on the server.
+
+For write operations, console-graphql will propagate the user's bearer token made available by oauth-proxy.
+
+Authentication will remain unchanged i.e. oauth-proxy retains the responsibility.
 
 
 == Components
 
-=== console-server
+=== console-graphql
 
-The console-server will replace oauth-proxy and the HTTP sidecar.  
+Console-graphql will replace the HTTP sidecar.  
 
 It will have the following responsibilities:
 
-* authentication
-* create/read/update/delete/list of kubernetes resources (i.e. proxy the kubernetes API) avoiding the need for CORS.
-* provide an all namespace list for any resource type.
-* serve static content of the console.
-* provide a mechanism to retrieve metrics for each resource from Prometheus
-* provide read-only connection API listing connections 
+* present a GraphQL interface
+** for queries - exposing address-spaces, addresses, connection together will link and metric information.
+** for mutations - allow creation/patch/delete of address-space/address, connection close, address purge.
+* populate cache with
+** address-space and address (from Kubernetes API)
+** connections and links (from the addressspaces' agents)
+** metrics (from the addressspaces' agents)
 
-Later, it will be extended to provide:
+==== GraphQL queries
 
-* server side sorting/paging/filtering
-* support watching for resources and statistics
-* caching 
-* connection DELETE API for management close of an existing connection.
+Root queries.
 
-==== authentication
+==== GraphQL mutations
 
-The console-server will offer OAuth2 (the default for OpenShift deployments), OpenID Connect (for Kubernetes when configured with to use OpenID Connect). 
+==== Cache
 
-authentication will establish a HTTP session which will keep the user's access token. 
+The console-graphql will maintain a cache of addressspapce/address/connection, link and metric infiormation.
 
-A later phase might offer a simpler authentication mechanism to help Kubernetes users who have not configured OpenID Connect (authenticate with an existing token).
+====  Addressspaces/Address
 
-==== create/read/update/delete/list of resources
+Console-graphql will use a watch of on the addressspace and address to populate the model.
 
-The console-server will proxy the kubernetes API for create/read/update/delete/list operations, passing user's access token.
-This will work like oauth-proxy today except it won't require the Apache HTTPD side-car to mod-write the headers (i.e. avoids https://github.com/openshift/oauth-proxy/pull/111).
-
-==== cluster wide list for any resource type
-
-The console UI is required to present all resources available to the user across all namespaces to which the user has access.  This burdens the console with the need to chain many API requests, one for each namespace, and handle the possiblity of 403s for namespaces to which the user has no access.
-
-To simplify the UI, the console-server will offer an cluster wide list of resources. This will provide every instance of the required type from all namespaces.  If a user has no access to a particular namespace, then that namespace will be omited from the result set, rather than an error occuring.
-
-To signal a query across all namespaces, a * is used in the path name element.
-
-<endpont>/api/v1/namespaces/*/address
-
-[TBH - I'd prefer the UI design to be changed so that the user selects a namespace, as they already do in the OpenShift Console]
-
-==== exposing metrics
-
-The console-server will expose a endpoint which will proxy the to Prometheus PromQL `api/v1/query` API https://prometheus.io/docs/prometheus/latest/querying/api/.
-
-To use the endpoint, an existing authenticated session will be required.
-
-The console will send PromQL queries in order to populate the console UI.  The UI will possess knowledge of the metric names
-and the labels applied to each metric.  The UI will make extensive use of PromQL queries querying multiple metrics at once in order to return a consistent set of metrics for a particular data set.  This will reduce the number of queries that the UI must make to render any particular page.
-
-The console server employ a LRU caching mechanism, caching the most recent n queries run for a short period.   As the console UI will be submitting the same query set regardless of user, cached results will be returned for some users.
-
-In order to simplify the UI implementation, a Javascript library will be written to encapsulate the metric requests required
-for each page within the UI.  This will expose a number of metric functions.  There will be two forms of metric function, one associated with each list view and one associated with the details view.
-
-* `getAddressSpaceMetrics(namespace, addressSpaceNames)` -> Promise (returning map metric names [enmasse_addresses, enmasse_connections etc] to values)
-* `getAddressMetrics(namespace, addressSpaceName, addressNames)` -> Promise (returning set metric names/values)
-* `getAddressDetailMetrics(namespace, addressSpaceName, addressName)` -> Promise (returning set metric names/values)
-* `getConnectionMetrics(namespace, addressSpaceName, connectionNames)` -> Promise (returning set metric names/values)
-* `getConnectionDetailMetrics(namespace, addressSpaceName, addressName)` -> (returning set metric names/values)
-
-In the first development iteration the UI will periodically poll for the metrics API for results.  In a later iteration, a watch feature be supported at server API level which will return the changes to the statistics in the result set.
-
-==== exposing connections
-
-As EnMasse connections are not represented by a Kubernetes object, we need to make alternative arrangements to allow the Console user to view and manage them.   
-
-The console-server API will present connections to the console as if they were a kubernetes resource.  The console-server will present the following endpoint:
-
-```
-apis/enmasse.io/v1beta1/namespaces/<namespace>/connections
-```
-
-which will initially support GET and in a later development iteration, DELETE, to allow connections to be closed.
-
-The caller must pass the selector addressspace=<addressspace> in order to signal the addressspace for which connections must be returned. The console-server will call out to the agent associated with target addressspace in order to obtain the results-set.  API requests without the addressspace selector will be rejected.  The response to the GET request will be a list:
-
-```
-kind: ConnectionList
-apiVersion: v1
-items: 
- - 
-   metadata: 
-   name: "172.17.0.1:59802"
-   namespace: myspace
-   uid: "7b29c758-dfbc-11e9-8b7f-c6b311640c25"
-   creationTimestamp: "2019-09-25T17:47:02Z"
-  spec: 
-   connectionPrinicipal: myuser
-   remoteContainerId: "a209037e-5368-5a41-b1b9-b7c6027e24d9"
-   localContainerId: "a209037e-5368-5a41-b1b9-b7c6027e24d9"
-   connectionProperties: 
-    product: QpidJMS
-    version: "0.38.0-SNAPSHOT"
-    platform: "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
-```    
-
-The console server employ a LRU caching mechanism, caching the n most recent queries run for a short period.   As the console UI will be submitting the same query regardless of user, cached results will be returned for some users.
+==== Connections and Link information.
 
 In order to locate the agent endpoint, the console-server will populate a lookup map. It will do this by watching for agent services.  When an agent service appears, it will resolve its addressspace using the `infraUuid`.
+
+It will connect to the agent, and periodically poll for connections and link information.  This information will be
+added to the cache.
+
+==== Metrics
 
 === agent
 
