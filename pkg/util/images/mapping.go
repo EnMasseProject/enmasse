@@ -62,7 +62,7 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "iot-sigfox-adapter", "IOT_SIGFOX_ADAPTER_IMAGE")
 	setIfEnvPresent(data, "iot-tenant-service", "IOT_TENANT_SERVICE_IMAGE")
 	setIfEnvPresent(data, "iot-proxy-configurator", "IOT_PROXY_CONFIGURATOR_IMAGE")
-	setIfEnvPresent(data, "qdrouterd-base", "QDROUTERD_BASE_IMAGE")
+	setIfEnvPresent(data, "qdrouterd-base", "ROUTER_IMAGE")
 	setIfEnvPresent(data, "none-authservice", "NONE_AUTHSERVICE_IMAGE")
 	setIfEnvPresent(data, "keycloak", "KEYCLOAK_IMAGE")
 	setIfEnvPresent(data, "keycloak-plugin", "KEYCLOAK_PLUGIN_IMAGE")

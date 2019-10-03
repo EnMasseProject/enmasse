@@ -591,8 +591,8 @@ spec:
                   value: ${IOT_TENANT_SERVICE_IMAGE}
                 - name: IOT_PROXY_CONFIGURATOR_IMAGE
                   value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
-                - name: QDROUTERD_BASE_IMAGE
-                  value: ${QDROUTERD_BASE_IMAGE}
+                - name: ROUTER_IMAGE
+                  value: ${ROUTER_IMAGE}
                 - name: NONE_AUTHSERVICE_IMAGE
                   value: ${NONE_AUTHSERVICE_IMAGE}
                 - name: KEYCLOAK_IMAGE
