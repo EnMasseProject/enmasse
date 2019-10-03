@@ -235,6 +235,16 @@ public class SystemtestsKubernetesApps {
         }
 
         // delete "common" and "manual" folders
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
+
+        if ( client.apps()
+                .statefulSets()
+                .inNamespace(namespace)
+                .withName(INFINISPAN_SERVER)
+                .get() != null ) {
+
+            log.info("Infinispan server will be removed");
 
         deleteDirectories(namespaceReplacer(namespace),
                 INFINISPAN_EXAMPLE_BASE.resolve("common"),

@@ -165,7 +165,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        commonResourcesManager.createAddressSpaceList(standard, brokered);
+        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
@@ -242,7 +242,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        commonResourcesManager.createAddressSpaceList(standard, brokered);
+        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
@@ -391,7 +391,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        commonResourcesManager.createAddressSpaceList(standard, brokered);
+        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 

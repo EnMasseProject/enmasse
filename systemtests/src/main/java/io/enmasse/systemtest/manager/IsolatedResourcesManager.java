@@ -31,9 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class CommonResourcesManager extends ResourceManager {
+public class IsolatedResourcesManager extends ResourceManager {
 
-    private static CommonResourcesManager managerInstance = null;
+    private static IsolatedResourcesManager managerInstance = null;
     private static Logger LOGGER;
     protected List<AddressSpace> currentAddressSpaces;
     protected AmqpClientFactory amqpClientFactory;
@@ -45,7 +45,7 @@ public class CommonResourcesManager extends ResourceManager {
     private ArrayList<BrokeredInfraConfig> brokeredInfraConfigs;
     private ArrayList<AuthenticationService> authServices;
 
-    private CommonResourcesManager() {
+    private IsolatedResourcesManager() {
         LOGGER = CustomLogger.getLogger();
         addressPlans = new ArrayList<>();
         addressSpacePlans = new ArrayList<>();
@@ -63,9 +63,9 @@ public class CommonResourcesManager extends ResourceManager {
         return currentAddressSpaces;
     }
 
-    public static synchronized CommonResourcesManager getInstance() {
+    public static synchronized IsolatedResourcesManager getInstance() {
         if (managerInstance == null) {
-            managerInstance = new CommonResourcesManager();
+            managerInstance = new IsolatedResourcesManager();
         }
         return managerInstance;
     }

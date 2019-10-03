@@ -8,7 +8,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -40,7 +40,7 @@ public class ExecutionListener implements TestExecutionListener {
                     log.info("address space '{}' will be removed", addrSpace);
                     try {
                         AddressSpaceUtils.deleteAddressSpaceAndWait(addrSpace, logCollector);
-                        CommonResourcesManager.getInstance().tearDown(TestInfo.getInstance().getActualTest());
+                        IsolatedResourcesManager.getInstance().tearDown(TestInfo.getInstance().getActualTest());
                     } catch (Exception e) {
                         log.warn("Cleanup failed or no clean is needed");
                     }

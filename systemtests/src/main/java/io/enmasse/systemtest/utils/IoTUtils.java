@@ -4,35 +4,60 @@
  */
 package io.enmasse.systemtest.utils;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.iot.model.v1.AdapterConfig;
+import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
-import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+
+import static io.enmasse.systemtest.apiclients.Predicates.any;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class IoTUtils {
 
-    private static final String[] EXPECTED_DEPLOYMENTS = new String[]{
+    private static Kubernetes kubernetes = Kubernetes.getInstance();
+
+    private static final String IOT_SIGFOX_ADAPTER = "iot-sigfox-adapter";
+    private static final String IOT_MQTT_ADAPTER = "iot-mqtt-adapter";
+    private static final String IOT_LORAWAN_ADAPTER = "iot-lorawan-adapter";
+    private static final String IOT_HTTP_ADAPTER = "iot-http-adapter";
+    private static final String[] COMPONENTS = new String[]{
             "iot-auth-service",
             "iot-device-registry",
-            "iot-http-adapter",
-            "iot-lorawan-adapter",
-            "iot-mqtt-adapter",
             "iot-operator",
-            "iot-sigfox-adapter",
             "iot-tenant-service",
     };
 
@@ -41,7 +66,7 @@ public class IoTUtils {
 
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
-        TimeoutBudget budget = new TimeoutBudget(5, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
         var iotConfigClient = kubernetes.getIoTConfigClient();
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigClient.withName(config.getMetadata().getName()).get();
@@ -56,8 +81,10 @@ public class IoTUtils {
             throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
-        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes), budget);
-        TestUtils.waitForNReplicas(EXPECTED_DEPLOYMENTS.length, IOT_LABELS, budget);
+        String[] expectedDeployments = getExpectedDeploymentsNames(config);
+
+        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes, expectedDeployments), budget);
+        TestUtils.waitForNReplicas(expectedDeployments.length, IOT_LABELS, budget);
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
@@ -69,15 +96,37 @@ public class IoTUtils {
     }
 
     private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception {
-        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(2, TimeUnit.MINUTES), 5000);
+        TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
     }
 
-    private static boolean allDeploymentsPresent(Kubernetes kubernetes) {
+    private static boolean allDeploymentsPresent(Kubernetes kubernetes, String[] expectedDeployments) {
         final String[] deployments = kubernetes.listDeployments(IOT_LABELS).stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .toArray(String[]::new);
         Arrays.sort(deployments);
-        return Arrays.equals(deployments, EXPECTED_DEPLOYMENTS);
+        Arrays.sort(expectedDeployments);
+
+        return Arrays.equals(deployments, expectedDeployments);
+    }
+
+    private static String[] getExpectedDeploymentsNames(IoTConfig config) {
+        List<String> expectedDeployments = new ArrayList<>();
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getHttp, IOT_HTTP_ADAPTER);
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
+        addIfEnabled(expectedDeployments, config, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
+        expectedDeployments.addAll(Arrays.asList(COMPONENTS));
+        return expectedDeployments.toArray(String[]::new);
+    }
+
+    private static void addIfEnabled(List<String> adapters, IoTConfig config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
+        Optional<AdapterConfig> adapter = Optional.ofNullable(config.getSpec().getAdapters()).map(adapterGetter);
+        if (adapter.isEmpty() || adapter.get().getEnabled() == null || adapter.get().getEnabled()) {
+            adapters.add(name);
+            log.info("{} is enabled", name);
+        } else {
+            log.info("{} is disabled", name);
+        }
     }
 
     public static void waitForIoTProjectReady(Kubernetes kubernetes, IoTProject project) throws Exception {
@@ -145,7 +194,7 @@ public class IoTUtils {
         config.setStatus(result.getStatus());
     }
 
-    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName, String namespace) {
+    public static IoTProject getBasicIoTProjectObject(String name, String addressSpaceName, String namespace, String addressSpacePlan) {
         return new IoTProjectBuilder()
                 .withNewMetadata()
                 .withName(name)
@@ -156,7 +205,7 @@ public class IoTUtils {
                 .withNewManagedStrategy()
                 .withNewAddressSpace()
                 .withName(addressSpaceName)
-                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withPlan(addressSpacePlan)
                 .endAddressSpace()
                 .withNewAddresses()
                 .withNewTelemetry()
@@ -175,4 +224,116 @@ public class IoTUtils {
                 .build();
     }
 
+    public static void createIoTConfig(IoTConfig config) throws Exception {
+        Kubernetes kubernetes = Kubernetes.getInstance();
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_CONFIG);
+        var iotConfigApiClient = kubernetes.getIoTConfigClient();
+        if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
+            log.info("iot config {} already exists", config.getMetadata().getName());
+        } else {
+            log.info("iot config {} will be created", config.getMetadata().getName());
+            iotConfigApiClient.create(config);
+        }
+        IoTUtils.waitForIoTConfigReady(kubernetes, config);
+        IoTUtils.syncIoTConfig(kubernetes, config);
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
+    public static void createIoTProject(IoTProject project) throws Exception {
+        Kubernetes kubernetes = Kubernetes.getInstance();
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_PROJECT);
+        var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
+        if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
+            log.info("iot project {} already exists", project.getMetadata().getName());
+        } else {
+            log.info("iot project {} will be created", project.getMetadata().getName());
+            iotProjectApiClient.create(project);
+        }
+        IoTUtils.waitForIoTProjectReady(kubernetes, project);
+        IoTUtils.syncIoTProject(kubernetes, project);
+        TimeMeasuringSystem.stopOperation(operationID);
+
+    }
+
+    public static String getTenantID(IoTProject project) {
+        return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
+    }
+
+    public static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+        JsonObject json = new JsonObject(Map.of("a", "b"));
+        String message = "First successful " + type.name().toLowerCase() + " message";
+        TestUtils.waitUntilCondition(message, (phase) -> {
+            try {
+                switch (type) {
+                    case EVENT: {
+                        var response = adapterClient.sendEvent(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    case TELEMETRY: {
+                        var response = adapterClient.sendTelemetry(json, any());
+                        logResponseIfLastTryFailed(phase, response, message);
+                        return response.statusCode() == HTTP_ACCEPTED;
+                    }
+                    default:
+                        return true;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
+
+        log.info("First {} message accepted", type.name().toLowerCase());
+    }
+
+    private static void logResponseIfLastTryFailed(WaitPhase phase, HttpResponse<?> response, String warnMessage) {
+        if (phase == WaitPhase.LAST_TRY && response.statusCode() != HTTP_ACCEPTED) {
+            log.error("expected-code: {}, response-code: {}, body: {}, op: {}", HTTP_ACCEPTED, response.statusCode(), response.body(), warnMessage);
+        }
+    }
+
+    public static void assertCorrectRegistryType(final String type) {
+        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
+        assertNotNull(deployment);
+        assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
+    }
+
+    public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {
+        String tenantID = getTenantID(ioTProject);
+        try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantID, password)) {
+
+            try {
+                new MessageSendTester()
+                        .type(MessageSendTester.Type.TELEMETRY)
+                        .amount(1)
+                        .consumerFactory(MessageSendTester.ConsumerFactory.of(iotAmqpClient, tenantID))
+                        .sender(httpAdapterClient::send)
+                        .execute();
+                if (authFail) {
+                    fail("Expected to fail telemetry test");
+                }
+            } catch (TimeoutException e) {
+                if (!authFail) {
+                    throw e;
+                }
+            }
+
+            try {
+                new MessageSendTester()
+                        .type(MessageSendTester.Type.EVENT)
+                        .amount(1)
+                        .consumerFactory(MessageSendTester.ConsumerFactory.of(iotAmqpClient, tenantID))
+                        .sender(httpAdapterClient::send)
+                        .execute();
+                if (authFail) {
+                    fail("Expected to fail telemetry test");
+                }
+            } catch (TimeoutException e) {
+                if (!authFail) {
+                    throw e;
+                }
+            }
+
+        }
+    }
 }

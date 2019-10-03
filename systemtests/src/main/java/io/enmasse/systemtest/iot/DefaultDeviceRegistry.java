@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.bases;
+package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
@@ -53,16 +53,14 @@ public final class DefaultDeviceRegistry {
      * @return A new instance of a device registry configuration.
      * @throws Exception in case anything goes wrong.
      */
-    public static DeviceRegistryServiceConfig deviceRegistry() throws Exception {
-        var r = Environment.getInstance().getDefaultDeviceRegistry();
-
-        switch (r) {
+    public static DeviceRegistryServiceConfig deviceRegistry(String deviceReg) throws Exception {
+        switch (deviceReg) {
             case "file":
                 return newFileBased();
             case "infinispan":
                 return newInfinispanBased();
             default:
-                throw new IllegalArgumentException(String.format("Device registry type '%s' unknown", r));
+                throw new IllegalArgumentException(String.format("Device registry type '%s' unknown", deviceReg));
         }
 
     }
