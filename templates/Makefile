@@ -168,6 +168,9 @@ install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(M
 package: prepare install
 	tar -czf build/$(INSTALLNAME).tgz -C build $(INSTALLNAME)
 
+deploy:
+	mvn deploy:deploy-file -Dfile=build/$(INSTALLNAME).tgz
+
 coverage:
 
 .PHONY: prepare package clean $(ENMASSE_BUNDLE) $(MONITORING_BUNDLE) $(IOT_BUNDLE) $(OLM)

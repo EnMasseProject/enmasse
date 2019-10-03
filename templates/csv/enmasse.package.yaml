@@ -1,4 +1,4 @@
 packageName: enmasse
 channels:
 - name: alpha
-  currentCSV: enmasse.${MAVEN_VERSION}
+  currentCSV: ${VERSIONED_NAME}

@@ -11,7 +11,7 @@ export BROKER_IP=`hostname -f`
 
 mkdir -p $BROKER_CUSTOM/jmx_exporter
 mkdir -p $BROKER_CONF_DIR
-cp -r ${BROKER_PLUGIN_DIR}/jmx_exporter/jmx_prometheus_javaagent-*.jar $BROKER_CUSTOM/jmx_exporter/jmx-exporter.jar
+cp -r ${BROKER_PLUGIN_DIR}/jmx_exporter/*.jar $BROKER_CUSTOM/jmx_exporter/jmx-exporter.jar
 cp -r ${BROKER_PLUGIN_DIR}/lib $BROKER_CUSTOM
 cp -r ${BROKER_PLUGIN_DIR}/bin $BROKER_CUSTOM
 
@@ -52,6 +52,7 @@ function pre_configuration() {
     echo "export AMQ_TRANSPORTS=amqp" >> $BROKER_CUSTOM/bin/env.sh
     echo "export AMQ_NAME=$AMQ_NAME" >> $BROKER_CUSTOM/bin/env.sh
     echo "export AMQ_ROLE=admin" >> $BROKER_CUSTOM/bin/env.sh
+    echo "export ARTEMIS_HOME=$ARTEMIS_HOME" >> $BROKER_CUSTOM/bin/env.sh
     echo "export CONTAINER_ID=$HOSTNAME" >> $BROKER_CUSTOM/bin/env.sh
     echo "export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
     echo "export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks" >> $BROKER_CUSTOM/bin/env.sh
