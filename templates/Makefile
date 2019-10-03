@@ -109,6 +109,8 @@ replace_images: prepare
 					  -e 's,\$${PLATFORM},$(PLATFORM),g' \
 					  -e 's,\$${REPOSITORY},$(REPOSITORY),g' \
 					  -e 's,\$${SHORT_PRODUCT_NAME},$(SHORT_PRODUCT_NAME),g' \
+					  -e 's,\$${PACKAGE_NAME},$(PACKAGE_NAME),g' \
+					  -e 's,\$${PACKAGE_CHANNEL},$(PACKAGE_CHANNEL),g' \
 					  -e 's,\$${VERSIONED_NAME},$(VERSIONED_NAME),g' \
 					  -e 's,\$${TEMPLATE_DIR},$(TEMPLATE_DIR),g' \
 					  -e 's,\$${RESOURCES_DIR},$(RESOURCES_DIR),g' \

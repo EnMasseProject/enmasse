@@ -1,4 +1,4 @@
-packageName: enmasse
+packageName: ${PACKAGE_NAME}
 channels:
-- name: alpha
+- name: ${PACKAGE_CHANNEL}
   currentCSV: ${VERSIONED_NAME}
