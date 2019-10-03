@@ -6,53 +6,8 @@
 = Brokered infrastructure configuration
 
 `BrokeredInfraConfig` resources are used to configure infrastructure deployed by `brokered` address
-spaces. The brokered infrastructure configuration is referenced by address space plans in their
-`spec.infraConfigRef` field. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans]. 
+spaces. Address space plans reference the brokered infrastructure configuration using the
+`spec.infraConfigRef` field. For more information about address space plans, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging[Address space plans]. 
 
 For detailed information about the available brokered infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-brokered-infra-config-fields-messaging[Brokered infrastructure configuration fields table].
-
-[source,yaml,options="nowrap",subs="attributes"]
-----
-apiVersion: admin.enmasse.io/v1beta1
-kind: BrokeredInfraConfig
-metadata:
-  name: brokered-infra-config-example
-spec:
-  version: "{EnMasseVersion}"
-  admin:
-    resources:
-      memory: 256Mi
-    podTemplate:
-      metadata:
-        labels:
-          key: value
-  broker:
-    resources:
-      memory: 2Gi
-      storage: 100Gi
-    addressFullPolicy: PAGE
-    podTemplate:
-      spec:
-        priorityClassName: messaging
-----
-
-The `version` field specifies the {ProductName} version used. When upgrading, {ProductName} uses
-this field to determine whether to upgrade the infrastructure to the requested version. If omitted,
-the version will be assumed to be the same as the controllers reading the config.
-
-The `admin` object specifies the settings you can configure for the `admin` components.
-
-The `broker` object specifies the settings you can configure for the `broker` components. Changing
-the `.broker.resources.storage` setting does not configure the existing broker storage size.
-
-For both `admin` and `broker` you can configure `podTemplate` settings like `metadata.labels`,
-`spec.priorityClassName`, `spec.tolerations` and `spec.affinity`.
-
-
-ifeval::["{cmdcli}" == "oc"]
-For more information see link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/priority_preemption.html[Pod priority], link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/taints_tolerations.html[Taints and tolerations], and link:https://docs.openshift.com/container-platform/3.11/admin_guide/scheduling/pod_affinity.html[Affinity and anti-affinity].
-endif::[]
-ifeval::["{cmdcli}" == "kubectl"]
-For more information see link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority], link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations], and link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity].
-endif::[]
 

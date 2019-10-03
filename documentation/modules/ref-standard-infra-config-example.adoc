@@ -1,0 +1,98 @@
+// Module included in the following assemblies:
+//
+// assembly-infrastructure-configuration.adoc
+
+[id='ref-standard-infra-config-example-{context}']
+= Standard infrastructure configuration example
+
+The following example of a standard infrastructure configuration file shows the various settings that can be specified.
+
+[source,yaml,options="nowrap",subs="attributes+"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig
+metadata:
+  name: myconfig
+spec:
+  version: "{EnMasseVersion}" <1>
+  admin: <2>
+    resources:
+      memory: 256Mi
+  broker: <3>
+    resources:
+      memory: 2Gi
+      storage: 100Gi
+    addressFullPolicy: PAGE
+  router: <4>
+    resources:
+      memory: 256Mi
+    linkCapacity: 1000
+    minReplicas: 1
+    policy:
+      maxConnections: 1000
+      maxConnectionsPerHost: 1
+      maxConnectionsPerUser: 10
+      maxSessionsPerConnection: 10
+      maxSendersPerConnection: 5
+      maxReceiversPerConnection: 5
+    podTemplate: <5>
+      spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+              matchExpressions:
+              - key: e2e-az-EastWest
+                operator: In
+                values:
+                - e2e-az-East
+                - e2e-az-West
+----
+
+<1> Specifies the {ProductName} version used. When upgrading, {ProductName} uses
+this field to determine whether to upgrade the infrastructure to the requested version. If omitted,
+the version is assumed to be the same version as the controllers reading the configuration.
+<2> Specifies the settings you can configure for the `admin` components.
+<3> Specifies the settings you can configure for the `broker` components. Changing
+the `.broker.resources.storage` setting does not configure the existing broker storage size.
+<4> Specifies the settings you can configure for the `router` components.
+<5> For `admin`, `broker`, and `router` components you can configure the following `podTemplate` elements:
+
+* `metadata.labels`
+* `spec.priorityClassName`
+* `spec.tolerations`
+* `spec.affinity`
+* `spec.containers.resources`
+* `spec.containers.readinessProbe`
+* `spec.containers.livenessProbe`
+* `spec.containers.env`
++
+All other `podTemplate` elements are ignored. For more information about these elements, see the {KubePlatform} documentation in the following _Related links_ section.
++
+For more information about how to set a readiness probe timeout, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-override-probe-timeout-messaging[Overriding the readiness probe timing for standard infrastructure configuration].
+
+For detailed information about all of the available standard infrastructure configuration fields, see the link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-standard-infra-config-fields-messaging[Standard infrastructure configuration fields table].
+
+.Related links
+
+ifeval::["{cmdcli}" == "oc"]
+* For more information about the `podTemplate` settings, see the following {KubePlatform} documentation:
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-priority-preemption[Pod priority]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#taints-and-tolerations[Taints and tolerations]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-sched-pod-affinity[Affinity and anti-affinity]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/developer_guide/dev-guide-application-health[Application health]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/developer_guide/dev-guide-compute-resources#dev-compute-resources[Compute resources]
+** link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/developer_guide/index#list-environment-variables[Environment variables]
+endif::[]
+
+ifeval::["{cmdcli}" == "kubectl"]
+* For more information about the `podTemplate` settings, see the following {KubePlatform} documentation:
+** link:https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/[Pod priority]
+** link:https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/[Taints and tolerations]
+** link:https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity[Affinity and anti-affinity]
+** link:https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes[Liveness and readiness probes (application health)]
+** link:https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/[Compute resources]
+** link:https://kubernetes.io/docs/tasks/inject-data-application/define-environment-variable-container/[Environment variables]
+endif::[]
+
