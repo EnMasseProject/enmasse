@@ -66,7 +66,7 @@ public class IoTUtils {
 
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         var iotConfigClient = kubernetes.getIoTConfigClient();
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigClient.withName(config.getMetadata().getName()).get();
@@ -142,7 +142,7 @@ public class IoTUtils {
             }
         }
         if (!isReady) {
-            String jsonStatus = project != null && project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
+            String jsonStatus = project.getStatus() != null ? project.getStatus().toString() : "Project doesn't have status";
             throw new IllegalStateException("IoTProject " + project.getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
