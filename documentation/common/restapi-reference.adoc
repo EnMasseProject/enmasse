@@ -8,7 +8,7 @@ This is the EnMasse API specification.
 
 === Version information
 [%hardbreaks]
-__Version__ : 1.0.0
+__Version__ : 0.30-SNAPSHOT
 
 
 === URI scheme

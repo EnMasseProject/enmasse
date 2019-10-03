@@ -41,7 +41,7 @@ endif
 
 all: build_java build_go templates
 
-templates: docu_html
+templates:
 	$(MAKE) -C templates
 
 deploy: build_go
@@ -129,4 +129,4 @@ docu_clean:
 	make -C documentation clean
 
 .PHONY: test_go_vet test_go_plain build_go imageenv
-.PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_check docu_clean
+.PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_check docu_clean templates
