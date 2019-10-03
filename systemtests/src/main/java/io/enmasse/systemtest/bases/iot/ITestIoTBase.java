@@ -12,7 +12,12 @@ public interface ITestIoTBase {
      String IOT_ADDRESS_CONTROL = "control";
      String IOT_ADDRESS_COMMAND = "command";
      String IOT_ADDRESS_COMMAND_RESPONSE = "command_response";
-     String DEVICE_REGISTRY_TEST_ADDRESSSPACE = "device-registry-test-addrspace";
-     String DEVICE_REGISTRY_TEST_PROJECT = "device-registry-test-project";
+     String[] IOT_ADDRESSES = new String[] {
+             IOT_ADDRESS_TELEMETRY,
+             IOT_ADDRESS_EVENT,
+             IOT_ADDRESS_CONTROL,
+             IOT_ADDRESS_COMMAND,
+             IOT_ADDRESS_COMMAND_RESPONSE,
+     };
      String iotProjectNamespace = "iot-project-ns";
 }
