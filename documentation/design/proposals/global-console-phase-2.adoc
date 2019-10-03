@@ -62,7 +62,26 @@ It will have the following responsibilities:
 
 ==== GraphQL queries
 
-Root queries.
+The GraphQL interface will provide paginated result sets where necessary.  It will following the offset
+pagination pattern https://graphql.org/learn/pagination/ rather than the cursor one.  The cursor one doesn't meet
+the requirements of the UI.
+
+There will be the following root queries:
+
+```
+addressSpacePlans()                                                  # all defined addressSpacePlans
+addressPlans()                                                       # all defined addressPlans
+addressSpaces(first: Int, offset: Int, filter: String, sort: String) # all visible addressspaces across all viewable namesspaces, paginated
+addressSpaces(namespace: String!, name: String!)                     # the specified addressspace
+```
+
+Paginated queries accept optional `first` and `offset` arguments.  first allows the user to request the first n items,
+and defaults to infinity.  `offset` allows the user to specify a starting index and defaults to zero.  The paginated
+results return a `*QueryResult` object.  This gives access to a `Total` (number of results) and a list of result objects
+themselves.
+
+
+
 
 ==== GraphQL mutations
 
