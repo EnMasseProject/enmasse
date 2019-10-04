@@ -353,4 +353,16 @@ public class KubeCMDClient extends CmdClient {
         return execute(Arrays.asList(CMD, "adm", "groups", "new", groupName, username), DEFAULT_SYNC_TIMEOUT, true);
     }
 
+    public static ExecutionResultData getConfigmaps(String namespace) {
+        List<String> command = Arrays.asList(CMD, "get", "configmaps",
+                "--namespace", namespace,
+                "--o", "yaml");
+        return execute(command, ONE_MINUTE_TIMEOUT, false);
+    }
+
+    public static ExecutionResultData getIoTConfig(String namespace) {
+        List<String> command = Arrays.asList(CMD, "get", "iotconfig", "--namespace", namespace, "--o", "yaml");
+        return execute(command, ONE_MINUTE_TIMEOUT, false);
+    }
+
 }
