@@ -43,6 +43,8 @@ For write operations, console-graphql will propagate the user's bearer token mad
 
 Authentication will remain unchanged i.e. oauth-proxy retains the responsibility.
 
+Note: A previous interation of this design proposed a EnMasse-owned prometheus instance.
+
 == Components
 
 === console-graphql
@@ -68,9 +70,10 @@ the requirements of the UI.
 There will be the following root queries:
 
 ```
+namespaces()                                                         # all user-visible namespaces
+whoami()                                                             # logged on user's name
 addressSpacePlans()                                                  # all defined addressSpacePlans
 addressPlans()                                                       # all defined addressPlans
-namespaces()                                                         # all user-visible namespaces
 addressSpaces(first: Int, offset: Int, filter: String, sort: String) # all user-visible addressspaces across all viewable namesspaces, paginated
 addressSpace(namespace: String!, name: String!)                     # the specified addressspace
 ```
@@ -122,6 +125,8 @@ Where the console UI requires a *rate* metric it will be console-graphql respons
 metrics exposed by the agents.   It should do this calculation as Prometheus would, guarding the possibility that counter
 metrics may reset to zero.
 
+Some guage metrics required by the UI may be synthesized from the cache.  Examples of this are `enmasse_addresses` (the number of addresses currently defined in an addressspace)
+
 === agent
 
 The Address Space Console and the server side support for the AMQP management interface is removed.
@@ -133,68 +138,47 @@ Agent acquires a responsibility for:
 * address purge operation (DELETE)
 * connection close operation (DELETE)
 
-This endpoint will require authentication (bearer token).  For the authorisation check, it will perform a self subject review for a GET on the addresspace (connection/address/link information and connection close), and on the address for purge.   (At a later point this will need finer RBAC controls.  Perhaps subresources help us `address/purge`?? https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-resources).
+This endpoint will require authentication (bearer token).  For the authorisation check, it will perform a self subject review for a GET on the addresspace (connection/address/link information and connection close), and on the address for purge. At a later point this will need finer RBAC controls.  (Aside: perhaps subresources help us `address/purge`?? https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-resources).
 
 The Agent will be changed to expose the additional metrics listed in the next section.  The existing metrics produced by 
 agent will be maintained.   The additional metrics will be produced if optional scrape arguments specifying a white/blacklist patterns of the metrics to be produced.  If the scrape arguments are omitted today's current behaviour will be maintain.  This avoids changes to the existing Prometheus based monitoring arrangements).
 
 === global console
 
-The code that currently aggregates the addresssspace list from all namespaces can be replaced with use of the *all namespace list* feature.   The console will continue to manage the addressspace using the proxied kubernetes api. 
+The global console will consume the GraphQL API rather than Kubernetes API is does today. This will require the
+refactoring of the current addressspace view.  The patten establised by the addressspace view will then be repeated for
+addresses and connections views.
 
-For addresses and connections, the pattern already established by addressspaces can be followed.  The fact that connections are not a kubernetes object will be hidden from the console.
+The global console will need to periodically poll in order to refresh the display.  To do this, it simple repeats the
+same query used to form current view.
 
-It will the responsibility of the console to poll the statistics api to gather than metrics for the resource(s) that are being viewed.  There will be some common code produces that will simplify the marrying of the kubernetes result set to the statistics results.
-
-The console must  torrerate to a metric it expects being absent from the result set.
-
-
-=== console-owned prometheus instance
-
-A Prometheus instance will be deployed with the console-server (side-car) whose responsibility is to scrape addressspace, address and connnection metrics from the each agent.  Agent instance will be discovered using `kubernetes_sd_configs` type configuration.
-
-The prometheus documentation warns:
-
-> CAUTION: Remember that every unique combination of key-value label pairs represents a new time series, which can dramatically increase the amount of data stored. Do not use labels to store dimensions with high cardinality (many different label values), such as user IDs, email addresses, or other unbounded sets of values.
-
-This could present a problem for some of the connection and address metrics for use-cases involving large numbers of connections or queues.  Some common messaging anti-patterns (connection per message) may explode the number of connections gathered.    
-
-To counter this, the Prometheus instance will be configured with short rentention policy and a small retention size.  In addition the prometheus configuration will be exposed so it can altered without a code change just in case the metrics scraping proved problematic for a use-case.
+The console must torrerate to a metric it expects being absent from the result set.
 
 == Metrics
 
 === AddressSpaces
 
-* enmasse_addresses(labels:<addressspace>)  (instantaneous value, number of addresses currently defined) 
-* enmasse_connections(labels:<addressspace>) (instantaneous value, number of connections currently made) 
-* enmasse_messages_in_total(labels:<addressspace>)  (monotonically increasing cumulative metric)
-* enmasse_messages_in_total(labels:<addressspace>) (monotonically increasing cumulative metric)
+* enmasse_connections(labels:<namespace>,<addressspace>) (guage, number of connections currently made)
+* enmasse_messages_in_total(labels:<namespace>,<addressspace>)  (monotonically increasing cumulative metric)
+* enmasse_messages_in_total(labels:<namespace>,<addressspace>) (monotonically increasing cumulative metric)
 
 === Addresses
 
-* enmasse_messages_in_total(labels:<addressspace>,<address>)  (monotonically increasing cumulative metric)
-* enmasse_messages_out_total(labels:<addressspace>,<address>)  (monotonically increasing cumulative metric)
-* enmasse_messages_stored(labels:<addressspace>,<address>) (instantaneous value)
-* enmasse_senders(labels:<addressspace>,<address>) (instantaneous value)
-* enmasse_receivers(labels:<addressspace>,<address>) (instantaneous value)
-* enmasse_shards(labels:<addressspace>,<address>) (instantaneous value)  Do we really want this?
-
+* enmasse_messages_in_total(labels:<namespace>,<addressspace>,<address>)  (monotonically increasing cumulative metric)
+* enmasse_messages_out_total(labels:<namespace>,<addressspace>,<address>)  (monotonically increasing cumulative metric)
+* enmasse_messages_stored(labels:<namespace>,<addressspace>,<address>) (guage)
+* enmasse_shards(labels:<namespace>,<addressspace>,<address>) (instantaneous value)  Do we really want this?
 
 === AddressDetails
 
-(captures each sender/receiver attached to the address, capturing container id, role and the link name)
-* enmasse_messages_in_total(labels:<addressspace>,<address>,<containerid>,<linkid>)  (monotonically increasing cumulative metric)
-* enmasse_messages_out_total(labels:<addressspace>,<address>,<containerid>,<linkid>)  (monotonically increasing cumulative metric)
-* enmasse_backlog(labels:<addressspace>,<address>,<containerid>,<linkid>)  (instantaneous value)
+* enmasse_messages_in_total(labels:<namespace>,<addressspace>,<address>,<containerid>,<linkid>)  (monotonically increasing cumulative metric)
+* enmasse_messages_out_total(labels:<namespace>,<addressspace>,<address>,<containerid>,<linkid>)  (monotonically increasing cumulative metric)
+* enmasse_backlog(labels:<namespace>,<addressspace>,<address>,<containerid>,<linkid>)  (instantaneous value)
 
 === Connection
 
-(captures each connection to the service: hostname:port, container id, protocol, secure)
-
-* enmasse_messages_in_total(labels:<remote hostport>,<remote containerid>)  (monotonically increasing cumulative metric)
-* enmasse_messages_out_total(labels:<remote hostport>,<remote containerid>)  (monotonically increasing cumulative metric)
-* enmasse_senders(labels:<remote hostport>,<remote containerid>) (instantaneous value)
-* enmasse_receivers(labels:<remote hostport>,<remote containerid>) (instantaneous value)
+* enmasse_messages_in_total(labels:<namespace>,<addressspace>,<remote hostport>,<remote containerid>)  (monotonically increasing cumulative metric)
+* enmasse_messages_out_total(labels:<namespace>,<addressspace>,<remote hostport>,<remote containerid>)  (monotonically increasing cumulative metric)
 
 === ConnectionDetails
 
@@ -202,19 +186,7 @@ To counter this, the Prometheus instance will be configured with short rententio
 
 foreach l in Deliveries, Rejected,Released, Modified,Presettled,Undelivered
 
-* enmasse_link_stat(labels:<remote hostport>,<remote containerid>,<linkid>,<address>,l) (instantaneous value)
-
-
-== Alternatives
-
-=== Avoiding the need for a console-owned Prometheus
-
-The design above requires a prometheus instance which would be co-locate with the console-server.
-
-It is possible to avoid the need for this instance as follows.
-
-The console-server would scrape the metrics from the discovered agent instances directly and build an internal cache of the metrics. The statistics API would operate against this cache.  In this approach we would not have the richness of the PromQL to compute statistics (rates etc), so would need an alternative mechanism for these metrics.   For the first development interation we opt for a simple configuration driven mechanism.  Unfortunately the PromQL library is not released separately and it does not appear to lend itself to re-use.
-
+* enmasse_link_stat(labels:<namespace>,<addressspace>,<remote hostport>,<remote containerid>,<linkid>,<address>,l) (instantaneous value)
 
 = Notes
 
@@ -223,30 +195,21 @@ https://promcon.io/2017-munich/slides/best-practices-and-beastly-pitfalls.pdf
 
 "Unbounded label values will blow up Prometheus"
 https://prometheus.io/docs/practices/naming/
-
-
-CAUTION: Remember that every unique combination of key-value label pairs represents a new time series, which can dramatically increase the amount of data stored. Do not use labels to store dimensions with high cardinality (many different label values), such as user IDs, email addresses, or other unbounded sets of values.
-
-
 https://stackoverflow.com/questions/46373442/how-dangerous-are-high-cardinality-labels-in-prometheus
 https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels
-
-
-
 https://github.com/prometheus/prometheus/issues/3200
 
-Storage retention
-
 https://www.robustperception.io/configuring-prometheus-storage-retention
-
-
-
-
-
 
 Pagination “Relay Cursor Connections Specification.” (borrows terms from Graph Theory)
 
 https://blog.apollographql.com/explaining-graphql-connections-c48b7c3d6976
+
+
+
+
+
+
 
 
 
