@@ -35,15 +35,15 @@ The console-graphql internally will build a *cache* of address-spaces, addresses
 * metrics will also be scraped *directly* from the agents. 
 
 For read operations, console-graphql will use a service acccount with *list* permission for address spaces and addresses
-in order to build a global view.  It will be a responsibility of component to filter the user's view so that he can see 
-only those objects to which he has permission.  It will use SelfSubjectAccessReview in order to do this.  The
-SelfSubjectAccessReview responses will be cached for a short time, to save load on the server.
+in order to build a global view.  It will be a responsibility of this component to filter the user's view so that he can see 
+only those objects to which he has permission.  It will use a `SelfSubjectAccessReview` in order to do this.  The
+SelfSubjectAccessReview responses will be cached for a short time, to avoid load on the server.
 
 For write operations, console-graphql will propagate the user's bearer token made available by oauth-proxy.
 
 Authentication will remain unchanged i.e. oauth-proxy retains the responsibility.
 
-Note: A previous interation of this design proposed a EnMasse-owned prometheus instance.  This is removed from this version of the design in order to reduce the scope.  If we were to introduce a EnMasse-owned prometheus later, this would simple mean that console-graphql pull metrics from it, rather directly from the Agents.
+Note: A previous interation of this design proposed a EnMasse-owned prometheus instance.  This is removed from this version of the design in order to reduce the scope.  If we were to introduce an EnMasse-owned Prometheus later, this would simple mean that console-graphql pull metrics from it, rather directly from the Agents.
 
 
 === High Level Diagram
@@ -54,23 +54,25 @@ image:images/global-console-phase-2.png[]
 
 === console-graphql
 
-Console-graphql will replace the HTTP sidecar.  
-
 It will have the following responsibilities:
 
 * present a GraphQL interface
 ** for queries - exposing address-spaces, addresses, connection together will link and metric information.
 ** for mutations - allow creation/patch/delete of address-space/address, connection close, address purge.
-* populate cache with
+* populate cached model with
 ** address-space and address (from Kubernetes API)
 ** connections and links (from the addressspaces' agents)
 ** metrics (from the addressspaces' agents)
 
+Console-graphql will replace the HTTP sidecar.  
+
 ==== GraphQL queries
 
-The GraphQL interface will provide paginated result sets where necessary.  It will following the offset
-pagination pattern https://graphql.org/learn/pagination/ rather than the cursor one.  The cursor one doesn't meet
-the requirements of the UI.
+GraphQL Queries will allow the caller to access the cached model.
+
+The GraphQL interface will provide paginated result sets where necessary.  It will follow the _offset
+pagination_ pattern https://graphql.org/learn/pagination/ rather than the cursor one.  The cursor one doesn't meet
+the requirements of the UI (random access to any page).
 
 There will be the following root queries:
 
@@ -83,10 +85,9 @@ addressSpaces(first: Int, offset: Int, filter: String, sort: String) # all user-
 addressSpace(namespace: String!, name: String!)                     # the specified addressspace
 ```
 
-Paginated queries accept optional `first` and `offset` arguments.  first allows the user to request the first n items,
+Paginated queries accept optional `first` and `offset` arguments.  `first` allows the user to request the first `n` items,
 and defaults to infinity.  `offset` allows the user to specify a starting index and defaults to zero.  The paginated
-results return a `*QueryResult` object.  This gives access to a `Total` (number of results) and a list of result objects
-themselves.
+results return a `*QueryResult` object.  This gives access to a `Total` (number of results available) and a list of result objects themselves.
 
 Paginated queries also accept optional `filter` and sort `options`.  `sort` will be expressed as a list of JSON Path/direction pairs, specifying the sort order across multiple fields.  Numerics will be sorted as such.
 
@@ -96,14 +97,16 @@ Paginated queries also accept optional `filter` and sort `options`.  `sort` will
 
 * `.spec.plan == "standard-small-queue"`
 
-There will be non-root queries permitting traversal from addressspace into connections and address, paginated, both their links which will paginate again.
+There will be non-root queries permitting traversal from addressspace into connections and address. These results set
+will use the same pagination mechanism.  From those objects you will be able to traverse into links.  Again, the links
+will be paginated too.
 
-The queries will observe the cache, but will need to exclude from the results items that the user has no permission to see.
+The queries will observe the cache, but will need to exclude from the results items that the user has no permission to see.  To do this, `SelfSubjectAccessReview` will be used, passing the bearer token of the logged on user.  The access review will be cached for a configurable period.
 
 ==== GraphQL mutations
 
-There will be mutations permitting the create/delete/patch of addressspaces and addresses.  There will be mutation
-allowing a address to be purged and a connection closed.
+There will be mutations permitting the create/delete/patch of addressspaces and addresses.  There will be mutations
+allowing an address to be purged and a connection closed.
 
 Mutations will interact directly the API backends (Kubernetes for addressspaces and addresses and the Agent API for purge
 and connection closed).  It will perform this interaction using the user's bearer token.
