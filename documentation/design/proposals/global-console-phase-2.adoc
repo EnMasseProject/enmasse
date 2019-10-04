@@ -20,7 +20,7 @@ to be used without the Console, if desired.
 
 == High Level
 
-There will be a new *console-graphql* component.  This will be deployed to the console pod and will be fronted by ouath-proxy.
+There will be a new *console-graphql* component.  This will be deployed to the console pod and will be fronted by oauth-proxy.
 The console-httpd sidecar will be retired.
 
 The *console-graphql* component will present GraphQL API allowing the view/maintainence of address spaces, addresss,
@@ -42,7 +42,6 @@ SelfSubjectAccessReview responses will be cached for a short time, to save load 
 For write operations, console-graphql will propagate the user's bearer token made available by oauth-proxy.
 
 Authentication will remain unchanged i.e. oauth-proxy retains the responsibility.
-
 
 == Components
 
@@ -71,8 +70,9 @@ There will be the following root queries:
 ```
 addressSpacePlans()                                                  # all defined addressSpacePlans
 addressPlans()                                                       # all defined addressPlans
-addressSpaces(first: Int, offset: Int, filter: String, sort: String) # all visible addressspaces across all viewable namesspaces, paginated
-addressSpaces(namespace: String!, name: String!)                     # the specified addressspace
+namespaces()                                                         # all user-visible namespaces
+addressSpaces(first: Int, offset: Int, filter: String, sort: String) # all user-visible addressspaces across all viewable namesspaces, paginated
+addressSpace(namespace: String!, name: String!)                     # the specified addressspace
 ```
 
 Paginated queries accept optional `first` and `offset` arguments.  first allows the user to request the first n items,
@@ -80,8 +80,15 @@ and defaults to infinity.  `offset` allows the user to specify a starting index 
 results return a `*QueryResult` object.  This gives access to a `Total` (number of results) and a list of result objects
 themselves.
 
+Paginated queries also accept optional `filter` and sort `options`.  `sort` will be expressed as a list of JSON Path/direction pairs, specifying the sort order across multiple fields.  Numerics will be sorted as such.
 
+* `[".spec.plan", 'up', ".spec.plan", 'down']`
 
+`filter` will be expressed as a boolean expression with its operands supporting a JSON Path.  The capabilities of the implementation will be sufficient to meet the UI's requirements.
+
+* `.spec.plan == "standard-small-queue"`
+
+There will be non-root queries permitting traversal from addressspace into connections and address, both their links.
 
 ==== GraphQL mutations
 
