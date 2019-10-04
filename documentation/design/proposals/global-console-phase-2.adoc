@@ -43,7 +43,10 @@ For write operations, console-graphql will propagate the user's bearer token mad
 
 Authentication will remain unchanged i.e. oauth-proxy retains the responsibility.
 
-Note: A previous interation of this design proposed a EnMasse-owned prometheus instance.
+Note: A previous interation of this design proposed a EnMasse-owned prometheus instance.  This is removed from this version of the design in order to reduce the scope.  If we were to introduce a EnMasse-owned prometheus later, this would simple mean that console-graphql pull metrics from it, rather directly from the Agents.
+
+
+=== High Level Diagram
 
 image:images/global-console-phase-2.png[]
 
