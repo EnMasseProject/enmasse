@@ -96,7 +96,7 @@ Paginated queries also accept optional `filter` and sort `options`.  `sort` will
 
 * `.spec.plan == "standard-small-queue"`
 
-There will be non-root queries permitting traversal from addressspace into connections and address, both their links.
+There will be non-root queries permitting traversal from addressspace into connections and address, paginated, both their links which will paginate again.
 
 The queries will observe the cache, but will need to exclude from the results items that the user has no permission to see.
 
