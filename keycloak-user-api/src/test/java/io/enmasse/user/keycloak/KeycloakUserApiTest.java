@@ -356,14 +356,38 @@ public class KeycloakUserApiTest {
     @Test
     public void testAnnotations() {
         final Map<String,String> annotations = new HashMap<>();
-        annotations.put("foo", "bar");
-        annotations.put("bar", "baz");
+        annotations.put("enmasse.io/foo", "bar");
+        annotations.put("iot.enmasse.io/bar", "baz");
 
         final List<String> encoded = KeycloakUserApi.annotationsToString(annotations);
         assertNotNull(encoded);
-        assertEquals(2,encoded.size());
 
         final Map<String, String> actualAnnotations = KeycloakUserApi.annotationsFromString(encoded);
         assertEquals(annotations, actualAnnotations);
+    }
+
+    @Test
+    public void testDiscardAnnotation() {
+        final Map<String,String> discardedAnnotations = new HashMap<>();
+        discardedAnnotations.put("enmasse.io/too-long", chars(256,'a'));
+        discardedAnnotations.put("foo", "wrong-pattern");
+
+        final Map<String,String> acceptedAnnotations = new HashMap<>();
+        acceptedAnnotations.put("enmasse.io/just-right", chars(255,'a'));
+
+        Map<String,String> annotations = new HashMap<>(discardedAnnotations);
+        annotations.putAll(acceptedAnnotations);
+
+        final List<String> encoded = KeycloakUserApi.annotationsToString(annotations);
+        assertNotNull(encoded);
+
+        final Map<String, String> actualAnnotations = KeycloakUserApi.annotationsFromString(encoded);
+        assertEquals(acceptedAnnotations, actualAnnotations);
+    }
+
+    private static String chars(int amount, char c) {
+        final char result[] = new char[amount];
+        Arrays.fill(result, c);
+        return String.valueOf(result);
     }
 }

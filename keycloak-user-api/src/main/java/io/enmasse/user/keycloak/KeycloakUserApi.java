@@ -34,17 +34,41 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static java.util.Optional.empty;
-
 
 public class KeycloakUserApi implements UserApi, RealmApi {
 
     private static final String ATTR_ANNOTATIONS = "annotations";
     private static final String ATTR_OWNER_REFERENCES = "ownerReferences";
 
+    private static final String BASE = "io.enmasse.user.keycloak";
+    private static final int MAX_ANNOTATION_VALUE_LENGTH = Integer.getInteger( BASE + ".maxUserAnnotationValueLength", 255);
+
     private static final Logger log = LoggerFactory.getLogger(KeycloakUserApi.class);
+
+    private static final String DEFAULT_ANNOTATION_BLACKLIST = "";
+    private static final String DEFAULT_ANNOTATION_WHITELIST = "(.*\\.|)enmasse\\.io/.*";
+
+    private static final List<Pattern> ANNOTATION_BLACKLIST;
+    private static final List<Pattern> ANNOTATION_WHITELIST;
+
+    static {
+        ANNOTATION_BLACKLIST = Arrays.stream(System.getProperty(BASE + ".annotationBlacklist", DEFAULT_ANNOTATION_BLACKLIST)
+                .split(","))
+                .filter(Predicate.not(String::isBlank))
+                .map(Pattern::compile)
+                .collect(Collectors.toUnmodifiableList());
+        ANNOTATION_WHITELIST = Arrays.stream(System.getProperty(BASE + ".annotationWhitelist", DEFAULT_ANNOTATION_WHITELIST)
+                .split(","))
+                .filter(Predicate.not(String::isBlank))
+                .map(Pattern::compile)
+                .collect(Collectors.toUnmodifiableList());
+        log.info("Annotation blacklist: {}", ANNOTATION_BLACKLIST);
+        log.info("Annotation whitelist: {}", ANNOTATION_WHITELIST);
+    }
 
     private final Clock clock;
     private final KeycloakFactory keycloakFactory;
@@ -184,6 +208,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
         final ObjectMapper mapper = new ObjectMapper();
 
         return annotations.entrySet().stream()
+                .filter(KeycloakUserApi::filterUserAnnotation)
                 .map(entry -> {
                     try {
                         return mapper.writeValueAsString(entry);
@@ -798,5 +823,36 @@ public class KeycloakUserApi implements UserApi, RealmApi {
 
     public static String encodePart(final String part) {
         return URLEncoder.encode(part, StandardCharsets.UTF_8);
+    }
+
+    private static boolean filterUserAnnotation(final Map.Entry<String, String> entry) {
+
+        // first check for the value length ...
+
+        if (entry.getValue() != null && entry.getValue().length() > MAX_ANNOTATION_VALUE_LENGTH) {
+            // ... value is too long, and will cause a problem
+            log.error("Found annotation value that exceeds limit - limit: {}, actualLengt: {}, key: {}, value: {}", MAX_ANNOTATION_VALUE_LENGTH, entry.getValue().length(), entry.getKey(), entry.getValue());
+            return false;
+        }
+
+        // next check the two lists ...
+
+        final String key = entry.getKey();
+
+        for (final Pattern pattern : ANNOTATION_BLACKLIST) {
+            if (pattern.matcher(key).matches()) {
+                return false;
+            }
+        }
+
+        for (final Pattern pattern : ANNOTATION_WHITELIST) {
+            if (pattern.matcher(key).matches()) {
+                return true;
+            }
+        }
+
+        // ... nothing left, reject!
+
+        return false;
     }
 }
