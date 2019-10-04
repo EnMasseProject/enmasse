@@ -60,7 +60,8 @@ public class SharedIoTManager extends ResourceManager {
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
-        closeFactories();
+        closeAmqpFactory();
+        closeMqttFactory();
         if (sharedIoTProject != null) {
             LOGGER.info("Shared IoTProject will be removed");
             var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
@@ -173,7 +174,7 @@ public class SharedIoTManager extends ResourceManager {
         return sharedIoTConfig;
     }
 
-    public String getTenantID() {
+    public String getTenantId() {
         return IoTUtils.getTenantId(sharedIoTProject);
     }
 
@@ -181,11 +182,13 @@ public class SharedIoTManager extends ResourceManager {
         return amqpClient;
     }
 
-    public void closeFactories() throws Exception {
+    public void closeAmqpFactory() throws Exception {
         if (amqpClientFactory != null) {
             amqpClientFactory.close();
             amqpClientFactory = null;
         }
+    }
+    public void closeMqttFactory() {
         if (mqttClientFactory != null) {
             mqttClientFactory.close();
             mqttClientFactory = null;

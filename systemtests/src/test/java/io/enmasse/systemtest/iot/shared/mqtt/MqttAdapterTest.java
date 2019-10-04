@@ -80,8 +80,8 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         if (credentialsClient == null) {
             credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
         }
-        registryClient.registerDevice(sharedIoTResourceManager.getTenantID(), deviceId);
-        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantID(), deviceId, deviceAuthId, devicePassword);
+        registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
+        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
 
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
@@ -90,7 +90,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         mqttOptions.setMaxInflight(16 * 1024);
         mqttOptions.setHttpsHostnameVerificationEnabled(false);
         adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@"
-                + sharedIoTResourceManager.getTenantID(), devicePassword))
+                + sharedIoTResourceManager.getTenantId(), devicePassword))
                 .build()
                 .clientId(deviceId)
                 .endpoint(mqttAdapterEndpoint)
@@ -115,10 +115,10 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
-                                .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantID(),
-                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantID() + "/*",
-                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantID(),
-                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantID() + "/*")
+                                .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId(),
+                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId() + "/*",
+                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId(),
+                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId() + "/*")
                                 .withOperations(Operation.recv)
                                 .build()))
                 .endSpec()
@@ -139,9 +139,9 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectMqttAdapterQdrProxyState();
         }
-        credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantID(), deviceId);
-        registryClient.deleteDeviceRegistration(sharedIoTResourceManager.getTenantID(), deviceId);
-        registryClient.getDeviceRegistration(sharedIoTResourceManager.getTenantID(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantId(), deviceId);
+        registryClient.deleteDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId);
+        registryClient.getDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         if (adapterClient.isConnected()) {
             adapterClient.disconnect();
             adapterClient.close();
@@ -170,7 +170,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantID()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(1)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -187,7 +187,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantID()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(1)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -204,7 +204,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantID()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos0)
                 .amount(50)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -222,7 +222,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantID()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(50)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -241,7 +241,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofMillis(100))
                 .additionalSendTimeout(Duration.ofSeconds(2))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantID()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(5)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -258,7 +258,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantID()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(5)
                 .consume(MessageSendTester.Consume.BEFORE)

@@ -89,10 +89,10 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         final Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
-        this.client = kubernetes.getIoTProjectClient(this.IOT_PROJECT_NAMESPACE);
-        this.addressClient = kubernetes.getAddressClient(this.IOT_PROJECT_NAMESPACE);
-        this.addressSpaceClient = kubernetes.getAddressSpaceClient(this.IOT_PROJECT_NAMESPACE);
-        this.userClient = kubernetes.getUserClient(this.IOT_PROJECT_NAMESPACE);
+        this.client = kubernetes.getIoTProjectClient(IOT_PROJECT_NAMESPACE);
+        this.addressClient = kubernetes.getAddressClient(IOT_PROJECT_NAMESPACE);
+        this.addressSpaceClient = kubernetes.getAddressSpaceClient(IOT_PROJECT_NAMESPACE);
+        this.userClient = kubernetes.getUserClient(IOT_PROJECT_NAMESPACE);
     }
 
     @AfterEach
@@ -156,7 +156,7 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         assertObject(assertor, "Address space", this.addressSpaceClient, addressSpaceName);
         assertObject(assertor, "Adapter user", this.userClient, addressSpaceName + ".adapter-" + project.getMetadata().getUid());
         for ( final String address : IOT_ADDRESSES) {
-            var addressName = address + "/" + this.IOT_PROJECT_NAMESPACE + "." + project.getMetadata().getName();
+            var addressName = address + "/" + IOT_PROJECT_NAMESPACE + "." + project.getMetadata().getName();
             var metaName = KubeUtil.sanitizeForGo(addressSpaceName, addressName);
             assertObject(assertor, "Address: " + addressName + " / " + metaName, this.addressClient, metaName);
         }
