@@ -13,6 +13,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -129,7 +130,7 @@ public class SharedIoTManager extends ResourceManager {
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()
-                .withDeviceRegistry(deviceRegistry("file"))
+                .withDeviceRegistry(DefaultDeviceRegistry.newInfinispanBased())
                 .endServices()
                 .withNewAdapters()
                 .withNewMqtt()
