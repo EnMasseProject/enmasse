@@ -107,7 +107,7 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
     public void testChangeAddressSpace() throws Exception {
 
         var project = IoTUtils.getBasicIoTProjectObject("iot1", "as1",
-                this.IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
+                IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
         isolatedIoTManager.createIoTProject(project);
 
         assertManagedResources(Assertions::assertNotNull, project, "as1");
