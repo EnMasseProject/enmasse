@@ -31,6 +31,7 @@ var tls_options = require('./tls_options.js');
 var myutils = require('./utils.js');
 var auth_utils = require('./auth_utils.js');
 var Metrics = require('./metrics.js');
+var queue = require('../lib/queue.js');
 
 function ConsoleServer (address_ctrl, env, openshift) {
     this.console_link = env.CONSOLE_LINK;
@@ -48,6 +49,10 @@ function ConsoleServer (address_ctrl, env, openshift) {
     this.addresses.on('deleted', function (address) {
         log.debug('address %s has been deleted, notifying clients...', address.address);
         self.publish({subject:'address_deleted',body:address.address});
+    });
+    this.addresses.on('purged', function (address) {
+        log.info('address %s has been purged, notifying clients...', address.address);
+        self.publish({subject:'address_purged',body:address.address});
     });
     this.connections.on('updated', function (conn) {
         self.publish({subject:'connection',body:conn});
@@ -106,6 +111,9 @@ function ConsoleServer (address_ctrl, env, openshift) {
         } else if (context.message.subject === 'delete_address') {
             log.info('deleting address definition ' + context.message.body.address);
             self.address_ctrl.delete_address(context.message.body, access_token).then(accept).catch(handleServerResponse);
+        } else if (context.message.subject === 'purge_address') {
+            log.info('purging queue definition ' + context.message.body.address);
+            queue(context.message.body).purge().then(accept).catch(handleServerResponse);
         } else {
             reject('ignoring message: ' + context.message);
         }
@@ -320,6 +328,8 @@ function indexer(message) {
     if (message.subject === 'address' && message.body) {
         return message.body.address;
     } else if (message.subject === 'address_deleted') {
+        return message.body;
+    } else if (message.subject === 'address_purged') {
         return message.body;
     } else if (message.subject === 'connection' && message.body) {
         return message.body.id;

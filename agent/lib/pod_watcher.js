@@ -81,3 +81,7 @@ module.exports.watch = function (selector, env) {
 
     return new PodWatcher(options);
 };
+
+module.exports.get_pod_definition = function (object) {
+  return extract_pod_definition(object);
+};

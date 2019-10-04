@@ -343,26 +343,34 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
                 address_service.delete_selected();
             }
           };
-          var suspend_address = function (action) {
-              window.alert('Suspending not yet implemented!');
-          };
-          var purge_address = function (action) {
-              window.alert('Purging not yet implemented!');
-          };
+        $scope.selected_queues=[];
+        $scope.cancel_purge = function (action) {
+            $("#purge-confirmation-modal").modal('toggle');
+        };
+        $scope.purge_address = function (action) {
+            if ($scope.admin_disabled) {
+                window.alert('Purge disabled!');
+            } else {
+                $scope.selected_queues = address_service.get_selected_address_names();
+                $("#purge-confirmation-modal").modal('toggle');
+            }
+        };
+        $scope.do_purge = function (action) {
+            $("#purge-confirmation-modal").modal('toggle');
+            if ($scope.admin_disabled) {
+                window.alert('Purge disabled!');
+            } else {
+                address_service.purge_selected();
+            }
+        };
 
         $scope.actionsConfig = {
           moreActions: [
               {
-                  name: 'Suspend',
-                  title: 'Suspend address',
-                  isDisabled: true,
-                  actionFn: suspend_address
-              },
-              {
                   name: 'Purge',
                   title: 'Purge stored messages',
                   isDisabled: true,
-                  actionFn: purge_address
+                  actionFn: $scope.purge_address
               }
           ],
             actionsInclude: true
@@ -375,19 +383,20 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
           actionsConfig: $scope.actionsConfig
         };
 
-        var handleSelectionChange = function () {
-            var itemsSelected = $scope.addresses.find(function (item) {
+
+        $scope.handleSelectionChange = function (item) {
+            var itemsSelected = $scope.items.find(function (item) {
                 return item.selected;
             });
-            console.log(itemsSelected + ' addresses selected');
-            $scope.actionsConfig.primaryActions[0].isDisabled = !itemsSelected;
-            $scope.actionsConfig.moreActions[0].isDisabled = !itemsSelected;
-            $scope.actionsConfig.moreActions[1].isDisabled = !itemsSelected;
+            var onlyQueuesSelected = $scope.items.every(function (item) {
+                return !item.selected || ['queue', 'subscription'].includes(item.type);
+            });
+            $scope.actionsConfig.moreActions[0].isDisabled = !(onlyQueuesSelected && itemsSelected);
         };
-
         $scope.listConfig = {
+
             selectionMatchProp: 'address',
-            onSelectionChange: handleSelectionChange,
+            onCheckBoxChange: $scope.handleSelectionChange,
             useExpandingRows: true,
             checkDisabled: false
         };
