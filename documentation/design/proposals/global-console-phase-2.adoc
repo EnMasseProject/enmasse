@@ -90,36 +90,53 @@ Paginated queries also accept optional `filter` and sort `options`.  `sort` will
 
 There will be non-root queries permitting traversal from addressspace into connections and address, both their links.
 
+The queries will observe the cache, but will need to exclude from the results items that the user has no permission to see.
+
 ==== GraphQL mutations
+
+There will be mutations permitting the create/delete/patch of addressspaces and addresses.  There will be mutation
+allowing a address to be purged and a connection closed.
+
+Mutations will interact directly the API backends (Kubernetes for addressspaces and addresses and the Agent API for purge
+and connection closed).  It will perform this interaction using the user's bearer token.
 
 ==== Cache
 
-The console-graphql will maintain a cache of addressspapce/address/connection, link and metric infiormation.
+The console-graphql will maintain a cache of namespace/addressspapce/address/connection, link and metric information.
 
-====  Addressspaces/Address
+It will use Kubernetes watches to build cache of namespaces/addressspapce/address.   Depending on relative timing of work for 0.31, this may need to watch the underlying configmaps.
 
-Console-graphql will use a watch of on the addressspace and address to populate the model.
+It will poll the agents REST API for connection/link and address/link information.  If timescale allow, this API will be watchable too.  
 
-==== Connections and Link information.
+For metrics, it will poll the Prometheus endpoints of the agents.
+
+In all of these API interations, the bearer of the service account will be passed to the peer.
 
 In order to locate the agent endpoint, the console-server will populate a lookup map. It will do this by watching for agent services.  When an agent service appears, it will resolve its addressspace using the `infraUuid`.
 
-It will connect to the agent, and periodically poll for connections and link information.  This information will be
-added to the cache.
-
 ==== Metrics
+
+The *gauge* metrics (e.g. queue depth) need no further processing.
+
+Where the console UI requires a *rate* metric it will be console-graphql responsbility to calulate this rate from counter
+metrics exposed by the agents.   It should do this calculation as Prometheus would, guarding the possibility that counter
+metrics may reset to zero.
 
 === agent
 
 The Address Space Console and the server side support for the AMQP management interface is removed.
 
-Agent acquires a responsibility for exposing connections to the addressspace over HTTP.  This endpoint will require authentication (bearer token).  For the authorisation check, it will perform a self subject review for a GET on the addresspace.  If the user has permission to view the addresses, they also have permission to view its connections.
+Agent acquires a responsibility for:
+
+* exposing connection/link information (GET)
+* exposing address/link information (GET)
+* address purge operation (DELETE)
+* connection close operation (DELETE)
+
+This endpoint will require authentication (bearer token).  For the authorisation check, it will perform a self subject review for a GET on the addresspace (connection/address/link information and connection close), and on the address for purge.   (At a later point this will need finer RBAC controls.  Perhaps subresources help us `address/purge`?? https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-resources).
 
 The Agent will be changed to expose the additional metrics listed in the next section.  The existing metrics produced by 
-agent will be maintained.   The Prometheus documentation [https://prometheus.io/docs/practices/naming/#labels](warns) against metrics whose labels may exhibit high cardinality.  The connection and address metrics depending on the messaging use-case
-present this problem.  For this reason the metrics endpoint will disable these statistics by default.  This will avoid changes to the configuration for the existing EnMasse Monitoring .  For the inbuilt Prometheus, the connection and address metrics would be enabled.
-
-A later development interation will add support for DELETE connection to allow a connection to be closed.  This will require the the user has update permission to the address space.
+agent will be maintained.   The additional metrics will be produced if optional scrape arguments specifying a white/blacklist patterns of the metrics to be produced.  If the scrape arguments are omitted today's current behaviour will be maintain.  This avoids changes to the existing Prometheus based monitoring arrangements).
 
 === global console
 
