@@ -258,3 +258,11 @@ module.exports.coalesce = function (f, delay, max_delay) {
         }
     }
 };
+
+module.exports.get = function (object, fields, default_value) {
+    var o = object;
+    for (var i = 0; o && i < fields.length; i++) {
+        o = o[fields[i]];
+    }
+    return o || default_value;
+};

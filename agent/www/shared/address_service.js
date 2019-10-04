@@ -302,6 +302,47 @@ AddressService.prototype.delete_selected_addr = function (addr, key) {
     };
 };
 
+
+AddressService.prototype.get_selected_address_names = function () {
+    var names = [];
+    for (var key in this.address_index) {
+        var a = this.address_index[key];
+        console.log('selected item ', a);
+        if (a.selected) {
+            names.push(a.address);
+        }
+    }
+    console.log('names', names);
+    return names;
+};
+
+AddressService.prototype.purge_selected = function () {
+    for (var key in this.address_index) {
+        var a = this.address_index[key];
+        if (a.selected) {
+            this.purge_selected_addr(a, key);
+        }
+    }
+};
+
+AddressService.prototype.purge_selected_addr = function (addr, key) {
+    var delivery = this.sender.send({subject: 'purge_address', body: addr});
+    this.outstanding_settles[delivery] = (success) => {
+        if (success) {
+            console.log("Purge successful for address ", addr);
+            for (var key in this.address_index) {
+                this.address_index[key].selected = false;
+            }
+            if (this.callback) this.callback('address_purged');
+        } else {
+            console.log("Failed to purge address %s", addr);
+            for (var key in this.address_index) {
+                this.address_index[key].selected = false;
+            }
+        }
+    };
+};
+
 AddressService.prototype.is_unique_valid_name = function (name) {
     return this.address_index[name] === undefined && name.match(/^[^#*\/\s\.:]+$/);
 };
@@ -321,6 +362,10 @@ AddressService.prototype.on_message = function (context) {
         if (this.address_index[context.message.body]) {
             delete this.address_index[context.message.body];
             if (this.callback) this.callback('address_deleted');
+        }
+    } else if (context.message.subject === 'address_purged') {
+        if (this.address_index[context.message.body]) {
+            if (this.callback) this.callback('address_purged');
         }
     } else if (context.message.subject === 'address_types') {
         this.address_types = context.message.body;

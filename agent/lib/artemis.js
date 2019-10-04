@@ -167,7 +167,6 @@ Artemis.prototype._create_request_message = function(resource, operation, parame
 
 Artemis.prototype._request = function (resource, operation, parameters) {
     var request = this._create_request_message(resource, operation, parameters);
-
     if (this._send_pending_requests()) {
         this._send_request(request);
     } else {
@@ -200,6 +199,10 @@ Artemis.prototype.createQueue = function (name) {
 
 Artemis.prototype.destroyQueue = function (name) {
     return this._request('broker', 'destroyQueue', [name, true, true]);
+}
+
+Artemis.prototype.purgeQueue = function (name) {
+    return this._request('queue.'+name, 'removeMessages', [null]);
 }
 
 Artemis.prototype.getQueueNames = function () {

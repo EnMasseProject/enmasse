@@ -1,4 +1,34 @@
 <div id="addresses" ng-controller="ViewCtrl" class="row example-container">
+
+
+  <div class="modal fade" id="purge-confirmation-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-show="false">
+    <div class="modal-dialog">
+      <div class="modal-content message-dialog-pf">
+        <div class="modal-header">
+          <h4 class="modal-title" id="purgeConfirmationDialog">Purge queue</h4>
+        </div>
+        <div class="modal-body">
+          <div>
+            <p class="lead pficon pficon-warning-triangle-o">
+              You are about to delete all messages in the following queues:
+           </p>
+            <ul id="selectedQueuesId">
+              <li ng-repeat="queue in selected_queues">
+                {{queue}}
+              </li>
+            </ul>
+           <p>
+             This operation cannot be undone so please be careful.
+           </p>
+         </div>
+       </div>
+       <div class="modal-footer" ng-hide=${GLOBAL_CONSOLE_DISABLED}>
+          <button type="button" class="btn btn-default" ng-click="cancel_purge()">Cancel</button>
+         <button type="button" class="btn btn-primary" ng-click="do_purge()">Purge</button>
+        </div>
+     </div>
+    </div>
+  </div>
   <div class="row card-pf col-md-12" style="height: 15px;"></div>
   <div class="row col-md-12">
 

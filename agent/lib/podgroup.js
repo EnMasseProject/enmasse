@@ -20,17 +20,10 @@ var path = require('path');
 var fs = require('fs');
 var artemis = require('./artemis.js');
 var tls_options = require('./tls_options.js');
-
-function get(object, fields, default_value) {
-    var o = object;
-    for (var i = 0; o && i < fields.length; i++) {
-        o = o[fields[i]];
-    }
-    return o || default_value;
-};
+var utils = require('./utils');
 
 function get_broker_port(pod) {
-    return get(pod.ports, ['broker', 'amqp'], 5673);
+    return utils.get(pod.ports, ['broker', 'amqp'], 5673);
 };
 
 function BrokerPod(pod) {
@@ -121,7 +114,7 @@ PodGroup.prototype.close = function () {
 };
 
 PodGroup.prototype.get_port_from_pod_definition = function (pod, container, port_name) {
-    return get(pod.ports, [container, port_name || 'amqp']);
+    return utils.get(pod.ports, [container, port_name || 'amqp']);
 };
 
 module.exports = function (constructor) {
