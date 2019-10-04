@@ -5,7 +5,9 @@
 package io.enmasse.systemtest;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TestTag {
     public static final String ISOLATED = "isolated";
@@ -23,6 +25,6 @@ public class TestTag {
     public static final String SMOKE = "smoke";
     public static final String OLM = "olm";
     public static final String ACCEPTANCE = "acceptance";
-    public static final List<String> SHARED_TAGS = Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_MQTT, SHARED_IOT);
-    public static final List<String> IOT_TAGS = Arrays.asList(SHARED_IOT, ISOLATED_IOT);
+    public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_MQTT, SHARED_IOT));
+    public static final Set<String> IOT_TAGS = new HashSet<>(Arrays.asList(SHARED_IOT, ISOLATED_IOT));
 }
