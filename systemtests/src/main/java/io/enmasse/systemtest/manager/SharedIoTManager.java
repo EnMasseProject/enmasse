@@ -41,7 +41,7 @@ public class SharedIoTManager extends ResourceManager {
     private AmqpClient amqpClient;
 
 
-    public static synchronized SharedIoTManager getInstance() {
+    private static synchronized SharedIoTManager getInstance() {
         if (instance == null) {
             instance = new SharedIoTManager();
         }
@@ -172,7 +172,7 @@ public class SharedIoTManager extends ResourceManager {
     }
 
     public String getTenantID() {
-        return IoTUtils.getTenantID(sharedIoTProject);
+        return IoTUtils.getTenantId(sharedIoTProject);
     }
 
     public AmqpClient getAmqpClient() {

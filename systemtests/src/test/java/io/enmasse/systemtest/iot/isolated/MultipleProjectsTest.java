@@ -14,7 +14,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
@@ -55,11 +54,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_EVENT;
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_TELEMETRY;
-import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
-import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
 @Tag(TestTag.SMOKE)
 class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
@@ -144,7 +138,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
             new MessageSendTester()
                     .type(MessageSendTester.Type.TELEMETRY)
                     .delay(Duration.ofSeconds(1))
-                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantID(ctx.getProject())))
+                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantId(ctx.getProject())))
                     .sender(ctx.getHttpAdapterClient()::send)
                     .amount(50)
                     .consume(MessageSendTester.Consume.BEFORE)
@@ -153,7 +147,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ofMillis(100))
-                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantID(ctx.getProject())))
+                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantId(ctx.getProject())))
                     .sender(ctx.getHttpAdapterClient()::send)
                     .amount(5)
                     .consume(MessageSendTester.Consume.AFTER)
@@ -172,7 +166,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     }
 
     private User configureAmqpUser(IoTProject project, AddressSpace addressSpace) {
-        String tenant = IoTUtils.getTenantID(project);
+        String tenant = IoTUtils.getTenantId(project);
 
         User amqpUser = new UserBuilder()
 
@@ -216,7 +210,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     }
 
     private void configureDeviceSide(IoTProjectTestContext ctx) throws Exception {
-        String tenant = IoTUtils.getTenantID(ctx.getProject());
+        String tenant = IoTUtils.getTenantId(ctx.getProject());
         ctx.setDeviceId(UUID.randomUUID().toString());
         ctx.setDeviceAuthId(UUID.randomUUID().toString());
         ctx.setDevicePassword(UUID.randomUUID().toString());
@@ -250,7 +244,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     }
 
     private void cleanDeviceSide(IoTProjectTestContext ctx) throws Exception {
-        String tenant = IoTUtils.getTenantID(ctx.getProject());
+        String tenant = IoTUtils.getTenantId(ctx.getProject());
         String deviceId = ctx.getDeviceId();
         credentialsClient.deleteAllCredentials(tenant, deviceId);
         registryClient.deleteDeviceRegistration(tenant, deviceId);

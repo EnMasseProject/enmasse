@@ -12,6 +12,7 @@ public interface ITestIoTBase {
      String IOT_ADDRESS_CONTROL = "control";
      String IOT_ADDRESS_COMMAND = "command";
      String IOT_ADDRESS_COMMAND_RESPONSE = "command_response";
+
      String[] IOT_ADDRESSES = new String[] {
              IOT_ADDRESS_TELEMETRY,
              IOT_ADDRESS_EVENT,
@@ -19,5 +20,6 @@ public interface ITestIoTBase {
              IOT_ADDRESS_COMMAND,
              IOT_ADDRESS_COMMAND_RESPONSE,
      };
+
      String IOT_PROJECT_NAMESPACE = "iot-project-ns";
 }

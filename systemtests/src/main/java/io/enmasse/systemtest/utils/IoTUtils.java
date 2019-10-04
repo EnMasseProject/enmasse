@@ -4,9 +4,7 @@
  */
 package io.enmasse.systemtest.utils;
 
-import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -31,8 +29,8 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -110,7 +108,7 @@ public class IoTUtils {
     }
 
     private static String[] getExpectedDeploymentsNames(IoTConfig config) {
-        List<String> expectedDeployments = new ArrayList<>();
+        Collection<String> expectedDeployments = new ArrayList<>();
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getHttp, IOT_HTTP_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
@@ -119,9 +117,9 @@ public class IoTUtils {
         return expectedDeployments.toArray(String[]::new);
     }
 
-    private static void addIfEnabled(List<String> adapters, IoTConfig config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
-        Optional<AdapterConfig> adapter = Optional.ofNullable(config.getSpec().getAdapters()).map(adapterGetter);
-        if (adapter.isEmpty() || adapter.get().getEnabled() == null || adapter.get().getEnabled()) {
+    private static void addIfEnabled(Collection<String> adapters, IoTConfig config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
+        Optional<Boolean> enabled = Optional.ofNullable(config.getSpec().getAdapters()).map(adapterGetter).map(AdapterConfig::getEnabled);
+        if (enabled.orElse(true)) {
             adapters.add(name);
             log.info("{} is enabled", name);
         } else {
@@ -255,7 +253,7 @@ public class IoTUtils {
 
     }
 
-    public static String getTenantID(IoTProject project) {
+    public static String getTenantId(IoTProject project) {
         return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
@@ -299,7 +297,7 @@ public class IoTUtils {
     }
 
     public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {
-        String tenantID = getTenantID(ioTProject);
+        String tenantID = getTenantId(ioTProject);
         try (var httpAdapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, authId, tenantID, password)) {
 
             try {
