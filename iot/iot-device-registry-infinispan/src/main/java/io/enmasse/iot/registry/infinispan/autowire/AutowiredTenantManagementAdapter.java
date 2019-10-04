@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @ConditionalOnBean(TenantManagementService.class)
-public final class AutowiredTenantManagementAdapter extends EventBusTenantManagementAdapter<Void> {
+public final class AutowiredTenantManagementAdapter extends EventBusTenantManagementAdapter {
 
     private TenantManagementService service;
 
