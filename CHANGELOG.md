@@ -1,5 +1,6 @@
 ## 0.30.0
 * Fix go tool vet on newer versions of go
+* #3247: Fix path to probe endpoint used when running on Kubernetes
 
 
 ## 0.29.0

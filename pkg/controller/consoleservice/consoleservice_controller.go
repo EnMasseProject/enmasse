@@ -620,7 +620,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 				return err
 			}
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-openshift.cfg"}
-			applyOauthProxyContainer(container, consoleservice)
+			applyOauthProxyContainer(container, consoleservice, "/oauth/healthz")
 
 			return nil
 		}); err != nil {
@@ -669,7 +669,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			container.Args = []string{"-config=/apps/cfg/oauth-proxy-kubernetes.cfg"}
 
-			applyOauthProxyContainer(container, consoleservice)
+			applyOauthProxyContainer(container, consoleservice, "/ping")
 
 			if consoleservice.Spec.Scope != nil {
 				install.ApplyEnv(container, "SSL_CERT_DIR", func(envvar *corev1.EnvVar) {
@@ -686,7 +686,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	return nil
 }
 
-func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1beta1.ConsoleService) {
+func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1beta1.ConsoleService, path string) {
 	install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
 	install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
 	if consoleservice.Spec.OauthClientSecret != nil {
@@ -703,7 +703,7 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Port:   intstr.FromString("https"),
-				Path:   "/oauth/healthz",
+				Path:   path,
 				Scheme: "HTTPS",
 			},
 		},
@@ -713,7 +713,7 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 		Handler: corev1.Handler{
 			HTTPGet: &corev1.HTTPGetAction{
 				Port:   intstr.FromString("https"),
-				Path:   "/oauth/healthz",
+				Path:   path,
 				Scheme: "HTTPS",
 			},
 		},
