@@ -40,8 +40,10 @@ public class SharedIoTManager extends ResourceManager {
     private IoTConfig sharedIoTConfig = null;
     private AmqpClient amqpClient;
 
+    private SharedIoTManager() {
+    }
 
-    private static synchronized SharedIoTManager getInstance() {
+    public static synchronized SharedIoTManager getInstance() {
         if (instance == null) {
             instance = new SharedIoTManager();
         }
