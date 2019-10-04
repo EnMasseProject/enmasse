@@ -45,6 +45,8 @@ Authentication will remain unchanged i.e. oauth-proxy retains the responsibility
 
 Note: A previous interation of this design proposed a EnMasse-owned prometheus instance.
 
+image:images/global-console-phase-2.png[]
+
 == Components
 
 === console-graphql
