@@ -52,12 +52,11 @@ public class IoTUtils {
     private static final String IOT_MQTT_ADAPTER = "iot-mqtt-adapter";
     private static final String IOT_LORAWAN_ADAPTER = "iot-lorawan-adapter";
     private static final String IOT_HTTP_ADAPTER = "iot-http-adapter";
-    private static final String[] COMPONENTS = new String[]{
-            "iot-auth-service",
-            "iot-device-registry",
-            "iot-operator",
-            "iot-tenant-service",
-    };
+    private static final String IOT_AUTH_SERVICE = "iot-auth-service";
+    private static final String IOT_DEVICE_REGISTRY = "iot-device-registry";
+    private static final String IOT_OPERATOR = "iot-operator";
+    private static final String IOT_TENANT_SERVICE = "iot-tenant-service";
+
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
     private static Logger log = CustomLogger.getLogger();
@@ -113,7 +112,7 @@ public class IoTUtils {
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
         addIfEnabled(expectedDeployments, config, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
-        expectedDeployments.addAll(Arrays.asList(COMPONENTS));
+        expectedDeployments.addAll(Arrays.asList(IOT_AUTH_SERVICE, IOT_DEVICE_REGISTRY, IOT_OPERATOR, IOT_TENANT_SERVICE));
         return expectedDeployments.toArray(String[]::new);
     }
 
