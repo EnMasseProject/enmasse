@@ -26,7 +26,6 @@ import io.enmasse.systemtest.utils.CertificateUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -42,7 +41,6 @@ import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.model.v1.IoTProjectList;
-import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.user.model.v1.DoneableUser;
@@ -91,10 +89,10 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         final Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
-        this.client = kubernetes.getIoTProjectClient(this.iotProjectNamespace);
-        this.addressClient = kubernetes.getAddressClient(this.iotProjectNamespace);
-        this.addressSpaceClient = kubernetes.getAddressSpaceClient(this.iotProjectNamespace);
-        this.userClient = kubernetes.getUserClient(this.iotProjectNamespace);
+        this.client = kubernetes.getIoTProjectClient(this.IOT_PROJECT_NAMESPACE);
+        this.addressClient = kubernetes.getAddressClient(this.IOT_PROJECT_NAMESPACE);
+        this.addressSpaceClient = kubernetes.getAddressSpaceClient(this.IOT_PROJECT_NAMESPACE);
+        this.userClient = kubernetes.getUserClient(this.IOT_PROJECT_NAMESPACE);
     }
 
     @AfterEach
@@ -109,7 +107,7 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
     public void testChangeAddressSpace() throws Exception {
 
         var project = IoTUtils.getBasicIoTProjectObject("iot1", "as1",
-                this.iotProjectNamespace, getDefaultAddressSpacePlan());
+                this.IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
         isolatedIoTManager.createIoTProject(project);
 
         assertManagedResources(Assertions::assertNotNull, project, "as1");
@@ -158,7 +156,7 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
         assertObject(assertor, "Address space", this.addressSpaceClient, addressSpaceName);
         assertObject(assertor, "Adapter user", this.userClient, addressSpaceName + ".adapter-" + project.getMetadata().getUid());
         for ( final String address : IOT_ADDRESSES) {
-            var addressName = address + "/" + this.iotProjectNamespace + "." + project.getMetadata().getName();
+            var addressName = address + "/" + this.IOT_PROJECT_NAMESPACE + "." + project.getMetadata().getName();
             var metaName = KubeUtil.sanitizeForGo(addressSpaceName, addressName);
             assertObject(assertor, "Address: " + addressName + " / " + metaName, this.addressClient, metaName);
         }

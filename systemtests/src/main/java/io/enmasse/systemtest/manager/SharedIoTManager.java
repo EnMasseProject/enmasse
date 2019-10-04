@@ -24,7 +24,7 @@ import org.slf4j.Logger;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.iotProjectNamespace;
+import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.deviceRegistry;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
@@ -95,9 +95,9 @@ public class SharedIoTManager extends ResourceManager {
 
     @Override
     public void setup() {
-        if (!kubernetes.namespaceExists(iotProjectNamespace)) {
-            LOGGER.info("Namespace {} doesn't exists and will be created.");
-            kubernetes.createNamespace(iotProjectNamespace);
+        if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
+            LOGGER.info("Namespace {} doesn't exists and will be created.", IOT_PROJECT_NAMESPACE);
+            kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
         }
     }
 
@@ -110,7 +110,7 @@ public class SharedIoTManager extends ResourceManager {
 
         if (sharedIoTProject == null) {
             sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
-                    DEFAULT_ADD_SPACE_IDENTIFIER, iotProjectNamespace, ADDRESS_SPACE_PLAN);
+                    DEFAULT_ADD_SPACE_IDENTIFIER, IOT_PROJECT_NAMESPACE, ADDRESS_SPACE_PLAN);
             createIoTProject(sharedIoTProject);
         }
         initFactories(getSharedAddressSpace());

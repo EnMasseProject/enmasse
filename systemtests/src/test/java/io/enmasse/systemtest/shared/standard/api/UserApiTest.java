@@ -146,7 +146,7 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
     void testSetAnnotations() {
 
         var client = Kubernetes.getInstance().getClient();
-        var userCrd = client.customResources(UserCrd.messagingUser()   , User.class, UserList.class, DoneableUser.class);
+        var userCrd = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class);
 
         var name = getSharedAddressSpace().getMetadata().getName()+ ".foo";
         var user = new UserBuilder()

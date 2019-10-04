@@ -76,7 +76,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         isolatedIoTManager.createIoTConfig(iotConfig);
 
         iotProject = IoTUtils.getBasicIoTProjectObject(DEVICE_REGISTRY_TEST_PROJECT,
-                DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.iotProjectNamespace, getDefaultAddressSpacePlan());
+                DEVICE_REGISTRY_TEST_ADDRESSSPACE, this.IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
         isolatedIoTManager.createIoTProject(iotProject);
 
         deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
@@ -88,8 +88,8 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         this.randomDeviceId = UUID.randomUUID().toString();
 
         this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        isolatedIoTManager.createOrUpdateUser(isolatedIoTManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
-        this.iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(this.iotProjectNamespace, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        isolatedIoTManager.createOrUpdateUser(isolatedIoTManager.getAddressSpace(this.IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        this.iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(this.IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
         this.amqpClient = iotAmqpClientFactory.createQueueClient();
 
     }

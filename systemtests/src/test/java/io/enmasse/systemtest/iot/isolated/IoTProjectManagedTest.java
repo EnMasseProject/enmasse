@@ -11,7 +11,6 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -35,8 +34,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
-import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 import static io.enmasse.user.model.v1.Operation.recv;
 import static io.enmasse.user.model.v1.Operation.send;
 import static java.util.Arrays.asList;
@@ -75,14 +72,14 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
         String addressSpaceName = "managed-address-space";
 
         IoTProject project = IoTUtils.getBasicIoTProjectObject("iot-project-managed", addressSpaceName,
-                iotProjectNamespace, getDefaultAddressSpacePlan());
+                IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
         LOGGER.warn("NAMESPACE EXISTS? {}, {}", project.getMetadata().getNamespace(), kubernetes.namespaceExists(project.getMetadata().getNamespace()));
         isolatedIoTManager.createIoTProject(project);// waiting until ready
         var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         IoTProject created = iotProjectApiClient.withName(project.getMetadata().getName()).get();
 
         assertNotNull(created);
-        assertEquals(iotProjectNamespace, created.getMetadata().getNamespace());
+        assertEquals(IOT_PROJECT_NAMESPACE, created.getMetadata().getNamespace());
         assertEquals(project.getMetadata().getName(), created.getMetadata().getName());
         assertEquals(
                 project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(),
@@ -99,7 +96,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
     private void assertManaged(IoTProject project) throws Exception {
         //address space s
-        AddressSpace addressSpace = isolatedIoTManager.getAddressSpace(iotProjectNamespace, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = isolatedIoTManager.getAddressSpace(IOT_PROJECT_NAMESPACE, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());

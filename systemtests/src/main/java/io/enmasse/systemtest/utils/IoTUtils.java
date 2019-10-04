@@ -131,7 +131,7 @@ public class IoTUtils {
 
     public static void waitForIoTProjectReady(Kubernetes kubernetes, IoTProject project) throws Exception {
         boolean isReady = false;
-        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         var iotProjectClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
         while (budget.timeLeft() >= 0 && !isReady) {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();

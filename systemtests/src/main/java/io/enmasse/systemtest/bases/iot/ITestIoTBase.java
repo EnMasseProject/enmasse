@@ -19,5 +19,5 @@ public interface ITestIoTBase {
              IOT_ADDRESS_COMMAND,
              IOT_ADDRESS_COMMAND_RESPONSE,
      };
-     String iotProjectNamespace = "iot-project-ns";
+     String IOT_PROJECT_NAMESPACE = "iot-project-ns";
 }

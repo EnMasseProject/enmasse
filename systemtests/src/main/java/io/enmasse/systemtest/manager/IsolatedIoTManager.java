@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.iotProjectNamespace;
+import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
 
 public class IsolatedIoTManager extends ResourceManager {
 
@@ -55,8 +55,8 @@ public class IsolatedIoTManager extends ResourceManager {
 
     @Override
     public void setup() throws Exception {
-        if (!kubernetes.namespaceExists(iotProjectNamespace)) {
-            kubernetes.createNamespace(iotProjectNamespace);
+        if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
+            kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
         }
     }
 
