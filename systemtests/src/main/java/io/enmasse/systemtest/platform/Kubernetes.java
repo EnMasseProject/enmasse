@@ -33,6 +33,7 @@ import io.enmasse.admin.model.v1.DoneableConsoleService;
 import io.enmasse.admin.model.v1.DoneableStandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigList;
+import io.enmasse.client.EnmasseKubernetesClient;
 import io.enmasse.iot.model.v1.DoneableIoTConfig;
 import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfig;

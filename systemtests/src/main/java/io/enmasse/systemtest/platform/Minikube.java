@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.platform;
 
+import io.enmasse.client.DefaultEnmasseKubernetesClient;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.executor.Exec;
@@ -39,7 +40,7 @@ public class Minikube extends Kubernetes {
                     .writeTimeout(environment.getKubernetesApiWriteTimeout())
                     .readTimeout(environment.getKubernetesApiReadTimeout())
                     .build();
-            return new DefaultKubernetesClient(httpClient, config);
+            return new DefaultEnmasseKubernetesClient(httpClient, config);
         });
     }
 

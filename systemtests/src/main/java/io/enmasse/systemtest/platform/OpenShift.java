@@ -4,6 +4,8 @@
  */
 package io.enmasse.systemtest.platform;
 
+import io.enmasse.address.model.TlsTermination;
+import io.enmasse.client.DefaultEnmasseOpenShiftClient;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -46,7 +48,7 @@ public class OpenShift extends Kubernetes {
                     .writeTimeout(environment.getKubernetesApiWriteTimeout())
                     .readTimeout(environment.getKubernetesApiReadTimeout())
                     .build();
-            return new DefaultOpenShiftClient(httpClient, new OpenShiftConfig(config));
+            return new DefaultEnmasseOpenShiftClient(httpClient, new OpenShiftConfig(config));
         });
     }
 

@@ -133,6 +133,7 @@
         <module>controller-manager</module>
         <module>console</module>
         <module>olm-manifest</module>
+        <module>client</module>
         <module>templates</module>
     </modules>
 

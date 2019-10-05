@@ -1,0 +1,3 @@
+io.enmasse.client.EnmasseKubernetesExtensionAdapter
+io.enmasse.client.EnmasseOpenShiftExtensionAdapter
+io.enmasse.client.EnmasseKubernetesAPIGroupExtensionAdapter

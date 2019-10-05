@@ -144,6 +144,12 @@
             <groupId>org.eclipse.hono</groupId>
             <artifactId>hono-service-base</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.enmasse</groupId>
+            <artifactId>client</artifactId>
+            <version>0.30-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

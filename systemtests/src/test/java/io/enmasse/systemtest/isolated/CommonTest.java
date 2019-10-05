@@ -9,6 +9,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.CoreCrd;
+import io.enmasse.client.DefaultEnmasseOpenShiftClient;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -19,7 +20,9 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -48,6 +51,26 @@ import static org.junit.jupiter.api.Assertions.fail;
 @Tag(ISOLATED)
 class CommonTest extends TestBase implements ITestBaseIsolated {
     private static Logger log = CustomLogger.getLogger();
+
+    @Test
+    void pokus() throws Exception {
+        AddressSpace brokered = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("space-brokered")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        ((DefaultEnmasseOpenShiftClient) Kubernetes.getInstance().getClient()).enmasse().addressSpace().inNamespace(Kubernetes.getInstance().getInfraNamespace()).createOrReplace(brokered);
+        AddressSpaceUtils.waitForAddressSpaceReady(brokered);
+    }
 
     @Test
     void testAccessLogs() throws Exception {
