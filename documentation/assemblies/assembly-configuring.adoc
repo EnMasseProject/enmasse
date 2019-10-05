@@ -25,3 +25,10 @@ include::../assemblies/assembly-auth-services.adoc[leveloffset=+1]
 
 include::../modules/ref-example-roles.adoc[leveloffset=+1]
 
+ifeval::["{cmdcli}" == "kubectl"]
+include::../modules/proc-configure-openid-connect-for-kubernetes.adoc[leveloffset=+1]
+endif::[]
+
+
+
+
