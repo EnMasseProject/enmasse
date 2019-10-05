@@ -174,7 +174,7 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | shared-mqtt | isolated | marathon | shared-iot) &amp; !upgrade</groups>
+                <groups>(shared-standard | shared-brokered | shared-mqtt | isolated | marathon | shared-iot | isolated-iot) &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
@@ -210,6 +210,13 @@
             </properties>
         </profile>
         <profile>
+            <id>iot</id>
+            <properties>
+                <groups>(isolated-iot | shared-iot) &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
             <id>shared-iot</id>
             <properties>
                 <groups>shared-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
@@ -217,9 +224,16 @@
             </properties>
         </profile>
         <profile>
+            <id>isolated-iot</id>
+            <properties>
+                <groups>isolated-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <skip.tests>false</skip.tests>
+            </properties>
+        </profile>
+        <profile>
             <id>smoke-iot</id>
             <properties>
-                <groups>shared-iot &amp; smoke &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>(shared-iot | isolated-iot) &amp; smoke &amp; !marathon &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -233,7 +247,7 @@
         <profile>
             <id>smoke</id>
             <properties>
-                <groups>smoke &amp; !shared-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>smoke &amp; !shared-iot &amp; !isolated-iot &amp; !marathon &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -263,7 +277,7 @@
         <profile>
             <id>iot-release</id>
             <properties>
-                <groups>shared-iot &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !olm &amp; !upgrade</groups>
+                <groups>(shared-iot | isolated-iot) &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>

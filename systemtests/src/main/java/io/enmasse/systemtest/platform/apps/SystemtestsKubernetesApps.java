@@ -235,11 +235,22 @@ public class SystemtestsKubernetesApps {
         }
 
         // delete "common" and "manual" folders
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
 
-        deleteDirectories(namespaceReplacer(namespace),
-                INFINISPAN_EXAMPLE_BASE.resolve("common"),
-                INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+        if (client.apps()
+                .statefulSets()
+                .inNamespace(namespace)
+                .withName(INFINISPAN_SERVER)
+                .get() != null) {
 
+            log.info("Infinispan server will be removed");
+
+            deleteDirectories(namespaceReplacer(namespace),
+                    INFINISPAN_EXAMPLE_BASE.resolve("common"),
+                    INFINISPAN_EXAMPLE_BASE.resolve("manual"));
+
+        }
     }
 
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {

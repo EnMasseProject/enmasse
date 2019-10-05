@@ -2,12 +2,12 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.iot.control;
+package io.enmasse.systemtest.iot.shared.control;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
-import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
@@ -43,7 +43,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 import static io.enmasse.systemtest.apiclients.Predicates.is;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
@@ -56,8 +55,7 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
-@Tag(SHARED_IOT)
-class CommandAndControlTest extends IoTTestBaseWithShared {
+class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -73,12 +71,11 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     private String password;
 
     private HttpAdapterClient httpClient;
-    private AmqpClient messagingClient;
     private String commandPayload;
     private int ttd;
 
     @BeforeEach
-    protected void initClient() {
+    void initClient() {
         this.deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         this.registryClient = new DeviceRegistryClient(kubernetes, this.deviceRegistryEndpoint);
@@ -86,17 +83,17 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     }
 
     @BeforeEach
-    protected void initDevice() throws Exception {
+    void initDevice() throws Exception {
 
         // setup device information
         this.deviceId = UUID.randomUUID().toString();
         this.authId = UUID.randomUUID().toString();
         this.password = UUID.randomUUID().toString();
-        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId, tenantId(), this.password);
-
+        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantId(), this.password);
+        
         // set up new random device
-        this.registryClient.registerDevice(tenantId(), this.deviceId);
-        this.credentialsClient.addCredentials(tenantId(), this.deviceId, this.authId, this.password);
+        this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), this.deviceId);
+        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), this.deviceId, this.authId, this.password);
 
         // setup payload
         this.commandPayload = UUID.randomUUID().toString();
@@ -105,23 +102,10 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     }
 
     @AfterEach
-    protected void closeHttpClient() {
+    void closeHttpClient() {
         if (this.httpClient != null) {
             this.httpClient.close();
             this.httpClient = null;
-        }
-    }
-
-    @BeforeEach
-    protected void setupMessagingClient() throws Exception {
-        this.messagingClient = this.iotAmqpClientFactory.createQueueClient();
-    }
-
-    @AfterEach
-    protected void disposeMessagingClient() throws Exception {
-        if (this.messagingClient != null) {
-            this.messagingClient.close();
-            this.messagingClient = null;
         }
     }
 
@@ -148,12 +132,12 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();
-        final var replyToAddress = "control/" + tenantId() + "/" + UUID.randomUUID().toString();
+        final var replyToAddress = "control/" + sharedIoTResourceManager.getTenantId() + "/" + UUID.randomUUID().toString();
 
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
 
         // set up command response consumer (before responding to telemetry)
-        var f3 = this.messagingClient.recvMessages(replyToAddress, 1);
+        var f3 = sharedIoTResourceManager.getAmqpClient().recvMessages(replyToAddress, 1);
 
         var f1 = setupMessagingReceiver(sentFuture, commandMessage -> {
             commandMessage.setCorrelationId(reqId);
@@ -217,7 +201,7 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
 
         // setup telemetry consumer
 
-        var f1 = this.messagingClient.recvMessages(new QueueTerminusFactory().getSource("telemetry/" + tenantId()), msg -> {
+        var f1 = sharedIoTResourceManager.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantId()), msg -> {
 
             log.info("Received message: {}", msg);
 
@@ -246,7 +230,7 @@ class CommandAndControlTest extends IoTTestBaseWithShared {
             // send request command
 
             log.info("Sending out command message");
-            var f2 = this.messagingClient.sendMessage("control/" + tenantId() + "/" + deviceId, commandMessage)
+            var f2 = sharedIoTResourceManager.getAmqpClient().sendMessage("control/" + sharedIoTResourceManager.getTenantId() + "/" + deviceId, commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {

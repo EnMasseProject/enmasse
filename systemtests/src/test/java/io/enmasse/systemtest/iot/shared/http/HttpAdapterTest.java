@@ -2,22 +2,20 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.iot.http;
+package io.enmasse.systemtest.iot.shared.http;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -35,10 +33,8 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 
-@Tag(SHARED_IOT)
-public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsolatedStandard {
+class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
     @SuppressWarnings("unused")
     private static final Logger log = CustomLogger.getLogger();
@@ -58,26 +54,26 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
         deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
-        registryClient.registerDevice(tenantId(), deviceId);
-        credentialsClient.addCredentials(tenantId(), deviceId, deviceAuthId, devicePassword);
+        registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
+        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
 
         User businessApplicationUser = UserUtils.createUserResource(new UserCredentials(businessApplicationUsername, businessApplicationPassword))
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
                                 .withAddresses(
-                                        IOT_ADDRESS_TELEMETRY + "/" + tenantId(),
-                                        IOT_ADDRESS_TELEMETRY + "/" + tenantId() + "/*",
-                                        IOT_ADDRESS_EVENT + "/" + tenantId(),
-                                        IOT_ADDRESS_EVENT + "/" + tenantId() + "/*")
+                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId(),
+                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId() + "/*",
+                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId(),
+                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId() + "/*")
                                 .withOperations(Operation.recv)
                                 .build()))
                 .endSpec()
                 .done();
 
-        AddressSpace addressSpace = resourcesManager.getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        AddressSpace addressSpace = resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, getSharedIoTProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
 
-        CommonResourcesManager.getInstance().createOrUpdateUser(addressSpace, businessApplicationUser);
+        resourcesManager.createOrUpdateUser(addressSpace, businessApplicationUser);
 
         businessApplicationClient = getAmqpClientFactory().createQueueClient(addressSpace);
         businessApplicationClient.getConnectOptions()
@@ -85,7 +81,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
                 .setPassword(businessApplicationPassword);
 
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        adapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId, tenantId(), devicePassword);
+        adapterClient = new HttpAdapterClient(kubernetes, httpAdapterEndpoint, deviceAuthId, sharedIoTResourceManager.getTenantId(), devicePassword);
 
     }
 
@@ -95,20 +91,20 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
             logCollector.collectHttpAdapterQdrProxyState();
         }
         if (credentialsClient != null) {
-            credentialsClient.deleteAllCredentials(tenantId(), deviceId);
+            credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantId(), deviceId);
         }
         if (registryClient != null) {
-            registryClient.deleteDeviceRegistration(tenantId(), deviceId);
-            registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
+            registryClient.deleteDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId);
+            registryClient.getDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         }
         if (adapterClient != null) {
             adapterClient.close();
         }
-        CommonResourcesManager.getInstance().removeUser(getAddressSpace(), businessApplicationUsername);
+        resourcesManager.removeUser(getSharedAddressSpace(), businessApplicationUsername);
     }
 
     @AfterEach
-    public void closeClient() throws Exception {
+    void closeClient() throws Exception {
         // close in a dedicated method to ensure it gets called in any case
         if (businessApplicationClient != null) {
             businessApplicationClient.close();
@@ -121,11 +117,11 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      */
     @Test
     @Tag(ACCEPTANCE)
-    public void testTelemetrySingle() throws Exception {
+    void testTelemetrySingle() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(1)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -143,7 +139,7 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(1)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -156,11 +152,11 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * This is the normal telemetry case.
      */
     @Test
-    public void testTelemetryBatch50() throws Exception {
+    void testTelemetryBatch50() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(50)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -175,12 +171,12 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * attached, it should receive those messages.
      */
     @Test
-    public void testEventBatch5After() throws Exception {
+    void testEventBatch5After() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofMillis(100))
                 .additionalSendTimeout(Duration.ofSeconds(10))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(5)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -194,12 +190,12 @@ public class HttpAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * as with telemetry.
      */
     @Test
-    public void testEventBatch5Before() throws Exception {
+    void testEventBatch5Before() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ZERO)
                 .additionalSendTimeout(Duration.ofSeconds(10))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(adapterClient::send)
                 .amount(5)
                 .consume(MessageSendTester.Consume.BEFORE)

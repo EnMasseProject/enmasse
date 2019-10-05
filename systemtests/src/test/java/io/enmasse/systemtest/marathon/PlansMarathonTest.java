@@ -42,7 +42,7 @@ class PlansMarathonTest extends MarathonTestBase implements ITestIsolatedStandar
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
         AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        commonResourcesManager.createAddressPlan(xxsQueuePlan);
+        isolatedResourcesManager.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -69,7 +69,7 @@ class PlansMarathonTest extends MarathonTestBase implements ITestIsolatedStandar
                 .endSpec()
                 .build();
 
-        commonResourcesManager.createAddressSpace(manyAddressesSpace);
+        isolatedResourcesManager.createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
         resourcesManager.createOrUpdateUser(manyAddressesSpace, cred);
@@ -102,7 +102,7 @@ class PlansMarathonTest extends MarathonTestBase implements ITestIsolatedStandar
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        commonResourcesManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
+        isolatedResourcesManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (int i = toDeleteCount; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }

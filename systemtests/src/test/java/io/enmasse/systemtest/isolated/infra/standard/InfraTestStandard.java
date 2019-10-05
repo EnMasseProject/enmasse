@@ -22,7 +22,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -126,7 +126,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
         resourcesManager.createAddressSpace(exampleAddressSpace);
 
-        CommonResourcesManager.getInstance().setAddresses(new AddressBuilder()
+        IsolatedResourcesManager.getInstance().setAddresses(new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
@@ -200,7 +200,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        commonResourcesManager.replaceAddressSpace(exampleAddressSpace);
+        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory,
@@ -238,9 +238,9 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        commonResourcesManager.createInfraConfig(testInfra);
+        isolatedResourcesManager.createInfraConfig(testInfra);
 
-        StandardInfraConfig actualInfra = commonResourcesManager.getStandardInfraConfig(testInfra.getMetadata().getName());
+        StandardInfraConfig actualInfra = isolatedResourcesManager.getStandardInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 

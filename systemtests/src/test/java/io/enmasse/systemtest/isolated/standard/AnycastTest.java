@@ -9,7 +9,6 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -95,7 +94,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.setAddresses(dest);
 
         resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
-        commonResourcesManager.initFactories(addressSpace, userCredentials);
+        isolatedResourcesManager.initFactories(addressSpace, userCredentials);
 
         AmqpClient client1 = getAmqpClientFactory().createQueueClient();
         AmqpClient client2 = getAmqpClientFactory().createQueueClient();
@@ -155,7 +154,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         waitForRouterReplicas(addressSpace, 3);
 
         resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
-        commonResourcesManager.initFactories(addressSpace, userCredentials);
+        isolatedResourcesManager.initFactories(addressSpace, userCredentials);
 
         //simple send/receive
         AmqpClient client1 = getAmqpClientFactory().createQueueClient();

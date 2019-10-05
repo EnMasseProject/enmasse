@@ -10,17 +10,21 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSchemaList;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.broker.BrokerManagement;
 import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
+import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
+import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -38,6 +42,7 @@ import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
@@ -90,27 +95,31 @@ import static org.junit.jupiter.api.Assertions.fail;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
-    protected static final Kubernetes kubernetes = Kubernetes.getInstance();
     protected static final Environment environment = Environment.getInstance();
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
-    private static Logger log = CustomLogger.getLogger();
     protected ResourceManager resourcesManager;
     protected UserCredentials defaultCredentials = null;
     protected UserCredentials managementCredentials = null;
 
     @BeforeEach
     public void initTest() throws Exception {
+        LOGGER.info("Test init");
         defaultCredentials = environment.getDefaultCredentials();
         managementCredentials = environment.getManagementCredentials();
         resourcesManager = getResourceManager();
         if (TestInfo.getInstance().isTestShared()) {
-            ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
-            ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
-            ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
+
+                ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
+                ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
+                ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
 
             if (resourcesManager.getSharedAddressSpace() == null) {
-                ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
+                if (TestInfo.getInstance().isTestIoT()) {
+                    ((SharedIoTManager) resourcesManager).createSharedIoTEnv();
+                } else {
+                    ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
+                }
             }
         }
     }
@@ -120,7 +129,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
 
     protected boolean userExist(AddressSpace addressSpace, String username) {
-        return CommonResourcesManager.getInstance().getUser(addressSpace, username) != null;
+        return IsolatedResourcesManager.getInstance().getUser(addressSpace, username) != null;
     }
 
     /**
@@ -174,7 +183,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected String getConsoleRoute(AddressSpace addressSpace) {
         Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
         String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
-        log.info(consoleRoute);
+        LOGGER.info(consoleRoute);
         return consoleRoute;
     }
 
@@ -262,7 +271,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             int actualSubscribers = 0;
             do {
                 actualSubscribers = getSubscriberCount(brokerManagement, queueClient, replyQueue, topic);
-                log.info("Have " + actualSubscribers + " subscribers. Expecting " + expectedCount);
+                LOGGER.info("Have " + actualSubscribers + " subscribers. Expecting " + expectedCount);
                 if (actualSubscribers != expectedCount) {
                     Thread.sleep(1000);
                 } else {
@@ -302,7 +311,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected void waitForPodsToTerminate(List<String> uids) throws Exception {
-        log.info("Waiting for following pods to be deleted {}", uids);
+        LOGGER.info("Waiting for following pods to be deleted {}", uids);
         assertWaitForValue(true, () -> (kubernetes.listPods(kubernetes.getInfraNamespace()).stream()
                 .noneMatch(pod -> uids.contains(pod.getMetadata().getUid()))), new TimeoutBudget(2, TimeUnit.MINUTES));
     }
@@ -514,7 +523,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected void stopClients(List<AbstractClient> clients) {
         if (clients != null) {
-            log.info("Stopping clients...");
+            LOGGER.info("Stopping clients...");
             clients.forEach(AbstractClient::stop);
         }
     }
@@ -571,7 +580,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 .done());
 
         for (User user : users) {
-            CommonResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
+            IsolatedResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
         }
         return users;
     }
@@ -646,7 +655,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         //d1, d2
         List<String> response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
         assertThat("Rest api does not return all addresses", response, is(destinationsNames));
-        log.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
+        LOGGER.info("addresses {} successfully created", Arrays.toString(destinationsNames.toArray()));
 
         //get specific address d2
         Address res = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).withName(d2.getMetadata().getName()).get();
@@ -657,21 +666,21 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         //d2
         response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
         assertThat("Rest api does not return right addresses", response, is(destinationsNames.subList(1, 2)));
-        log.info("address {} successfully deleted", d1.getSpec().getAddress());
+        LOGGER.info("address {} successfully deleted", d1.getSpec().getAddress());
 
         resourcesManager.deleteAddresses(d2);
 
         //empty
         List<Address> listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", d2.getSpec().getAddress());
+        LOGGER.info("addresses {} successfully deleted", d2.getSpec().getAddress());
 
-        CommonResourcesManager.getInstance().setAddresses(d1, d2);
+        IsolatedResourcesManager.getInstance().setAddresses(d1, d2);
         resourcesManager.deleteAddresses(d1, d2);
 
         listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
-        log.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
+        LOGGER.info("addresses {} successfully deleted", Arrays.toString(destinationsNames.toArray()));
     }
 
     protected void sendReceiveLargeMessage(JmsProvider jmsProvider, int sizeInMB, Address dest, int count) throws Exception {
@@ -690,11 +699,11 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         List<javax.jms.Message> recvd;
 
         jmsProvider.sendMessages(sender, messages, mode, javax.jms.Message.DEFAULT_PRIORITY, javax.jms.Message.DEFAULT_TIME_TO_LIVE);
-        log.info("{}MB {} message sent", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
+        LOGGER.info("{}MB {} message sent", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
 
         recvd = jmsProvider.receiveMessages(receiver, count, 2000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
-        log.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
+        LOGGER.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
     }
 
     protected List<Address> getAllStandardAddresses(AddressSpace addressspace) {
@@ -835,7 +844,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected <T extends Comparable<T>> void assertSorted(String message, Iterable<T> list, boolean reverse) {
-        log.info("Assert sort reverse: " + reverse);
+        LOGGER.info("Assert sort reverse: " + reverse);
         if (!reverse) {
             assertTrue(Ordering.natural().isOrdered(list), message);
         } else {
@@ -844,7 +853,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected <T> void assertSorted(String message, Iterable<T> list, boolean reverse, Comparator<T> comparator) {
-        log.info("Assert sort reverse: " + reverse);
+        LOGGER.info("Assert sort reverse: " + reverse);
         if (!reverse) {
             assertTrue(Ordering.from(comparator).isOrdered(list), message);
         } else {
@@ -854,7 +863,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected <T> void assertWaitForValue(T expected, Callable<T> fn, TimeoutBudget budget) throws Exception {
         T got = null;
-        log.info("waiting for expected value '{}' ...", expected);
+        LOGGER.info("waiting for expected value '{}' ...", expected);
         while (budget.timeLeft() >= 0) {
             got = fn.call();
             if (Objects.equals(expected, got)) {
@@ -889,7 +898,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         String sufix = new AddressSpaceUtils().isBrokered(resourcesManager.getSharedAddressSpace()) ? "#" : "*";
         users.forEach((user) -> {
             try {
-                CommonResourcesManager.getInstance().createOrUpdateUser(resourcesManager.getSharedAddressSpace(),
+                IsolatedResourcesManager.getInstance().createOrUpdateUser(resourcesManager.getSharedAddressSpace(),
                         UserUtils.createUserResource(user)
                                 .editSpec()
                                 .withAuthorization(Collections.singletonList(
@@ -931,6 +940,27 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 }
             }
             client.close();
+        }
+    }
+
+    //================================================================================================
+    //====================================== IoT test methods  =======================================
+    //================================================================================================
+
+    protected void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
+        IoTUtils.waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
+    }
+
+    /**
+     * Test if the enabled flag is set to "enabled".
+     * <br>
+     * The flag is considered "enabled", in case the value is "true" or missing.
+     *
+     * @param enabled The object to test.
+     */
+    protected static void assertDefaultEnabled(final Boolean enabled) {
+        if ( enabled != null && !Boolean.TRUE.equals(enabled)) {
+            fail("Default value must be 'null' or 'true'");
         }
     }
 }

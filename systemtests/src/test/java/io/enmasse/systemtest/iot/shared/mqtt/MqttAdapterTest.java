@@ -2,21 +2,19 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.iot.mqtt;
+package io.enmasse.systemtest.iot.shared.mqtt;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.IoTTestBaseWithShared;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.bases.shared.ITestSharedWithMqtt;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTShared;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.CommonResourcesManager;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
@@ -45,7 +43,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SHARED_IOT;
 
 /**
  * Testing MQTT message transmission.
@@ -54,8 +51,7 @@ import static io.enmasse.systemtest.TestTag.SHARED_IOT;
  * was accepted or not. So we couldn't re-try and could only assume that a message loss of 100% would be acceptable,
  * which doesn't test much. For bigger batch sizes we can test with an acceptable message loss rate of e.g. 10%.
  */
-@Tag(SHARED_IOT)
-public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsolatedStandard {
+class MqttAdapterTest extends TestBase implements ITestIoTShared {
 
     private static final Logger log = CustomLogger.getLogger();
     private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
@@ -84,8 +80,8 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
         if (credentialsClient == null) {
             credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
         }
-        registryClient.registerDevice(tenantId(), deviceId);
-        credentialsClient.addCredentials(tenantId(), deviceId, deviceAuthId, devicePassword);
+        registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
+        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
 
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
         mqttOptions.setAutomaticReconnect(true);
@@ -93,7 +89,8 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
         // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
         mqttOptions.setMaxInflight(16 * 1024);
         mqttOptions.setHttpsHostnameVerificationEnabled(false);
-        adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@" + tenantId(), devicePassword))
+        adapterClient = new MqttClientFactory(null, new UserCredentials(deviceAuthId + "@"
+                + sharedIoTResourceManager.getTenantId(), devicePassword))
                 .build()
                 .clientId(deviceId)
                 .endpoint(mqttAdapterEndpoint)
@@ -118,18 +115,17 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
                 .editSpec()
                 .withAuthorization(
                         Collections.singletonList(new UserAuthorizationBuilder()
-                                .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + tenantId(),
-                                        IOT_ADDRESS_TELEMETRY + "/" + tenantId() + "/*",
-                                        IOT_ADDRESS_EVENT + "/" + tenantId(),
-                                        IOT_ADDRESS_EVENT + "/" + tenantId() + "/*")
+                                .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId(),
+                                        IOT_ADDRESS_TELEMETRY + "/" + sharedIoTResourceManager.getTenantId() + "/*",
+                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId(),
+                                        IOT_ADDRESS_EVENT + "/" + sharedIoTResourceManager.getTenantId() + "/*")
                                 .withOperations(Operation.recv)
                                 .build()))
                 .endSpec()
                 .done();
 
-        AddressSpace addressSpace = resourcesManager.getAddressSpace(iotProjectNamespace, sharedProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
-
-        CommonResourcesManager.getInstance().createOrUpdateUser(addressSpace, businessApplicationUser);
+        AddressSpace addressSpace = resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, getSharedIoTProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+        resourcesManager.createOrUpdateUser(addressSpace, businessApplicationUser);
 
         businessApplicationClient = getAmqpClientFactory().createQueueClient(addressSpace);
         businessApplicationClient.getConnectOptions()
@@ -143,19 +139,19 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
         if (context.getExecutionException().isPresent()) { //test failed
             logCollector.collectMqttAdapterQdrProxyState();
         }
-        credentialsClient.deleteAllCredentials(tenantId(), deviceId);
-        registryClient.deleteDeviceRegistration(tenantId(), deviceId);
-        registryClient.getDeviceRegistration(tenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
+        credentialsClient.deleteAllCredentials(sharedIoTResourceManager.getTenantId(), deviceId);
+        registryClient.deleteDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId);
+        registryClient.getDeviceRegistration(sharedIoTResourceManager.getTenantId(), deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         if (adapterClient.isConnected()) {
             adapterClient.disconnect();
             adapterClient.close();
         }
 
-        CommonResourcesManager.getInstance().removeUser(getAddressSpace(), businessApplicationUsername);
+        resourcesManager.removeUser(getSharedAddressSpace(), businessApplicationUsername);
     }
 
     @AfterEach
-    public void closeClient() throws Exception {
+    void closeClient() throws Exception {
         // close in a dedicated method to ensure it gets called in any case
         if (businessApplicationClient != null) {
             businessApplicationClient.close();
@@ -170,11 +166,11 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      */
     @Test
     @Tag(ACCEPTANCE)
-    public void testTelemetrySingleQos1() throws Exception {
+    void testTelemetrySingleQos1() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(1)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -187,11 +183,11 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * This is the normal use case.
      */
     @Test
-    public void testEventSingle() throws Exception {
+    void testEventSingle() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(1)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -204,11 +200,11 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * Batched version of the normal use case. We do accept message loss of 10% here.
      */
     @Test
-    public void testTelemetryBatch50Qos0() throws Exception {
+    void testTelemetryBatch50Qos0() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos0)
                 .amount(50)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -222,11 +218,11 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * Compared to QoS 0, we do not accept message loss here.
      */
     @Test
-    public void testTelemetryBatch50Qos1() throws Exception {
+    void testTelemetryBatch50Qos1() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.TELEMETRY)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(50)
                 .consume(MessageSendTester.Consume.BEFORE)
@@ -240,12 +236,12 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * to take care of that. Still we expect to receive the messages later.
      */
     @Test
-    public void testEventBatch5After() throws Exception {
+    void testEventBatch5After() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofMillis(100))
                 .additionalSendTimeout(Duration.ofSeconds(2))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(5)
                 .consume(MessageSendTester.Consume.AFTER)
@@ -258,11 +254,11 @@ public class MqttAdapterTest extends IoTTestBaseWithShared implements ITestIsola
      * This is the normal use case.
      */
     @Test
-    public void testEventBatch5Before() throws Exception {
+    void testEventBatch5Before() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))
-                .consumerFactory(ConsumerFactory.of(businessApplicationClient, tenantId()))
+                .consumerFactory(ConsumerFactory.of(businessApplicationClient, sharedIoTResourceManager.getTenantId()))
                 .sender(this::sendQos1)
                 .amount(5)
                 .consume(MessageSendTester.Consume.BEFORE)
