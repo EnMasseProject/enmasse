@@ -252,9 +252,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         String images = Files.readString(imageEnvDir);
         log.info("Expected images: {}", images);
 
-        kubernetes.listPods().stream().filter(pod -> pod.getMetadata().getName().matches("^qdrouterd-.*-0"))
-                .forEach(pod -> kubernetes.deletePod(kubernetes.getInfraNamespace(), pod.getMetadata().getName()));
-
         TestUtils.waitUntilCondition("Images are updated", (phase) -> {
             AtomicBoolean ready = new AtomicBoolean(true);
             log.info("=======================================================");
