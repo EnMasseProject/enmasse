@@ -24,7 +24,6 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -460,17 +459,16 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     }
 
     @Test
-    @Disabled("due to issue #1330")
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressQueue = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue-large"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("jmsQueue")
-                .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                .withAddress("jmsQueueLarge")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
         resourcesManager.setAddresses(addressQueue);
@@ -479,12 +477,14 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 "jmsCliId", addressQueue);
         connection.start();
 
-        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1);
-        sendReceiveLargeMessage(jmsProvider, 50, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessage(jmsProvider, 10, addressQueue, 1, DeliveryMode.PERSISTENT);
-        sendReceiveLargeMessage(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1);
+        sendReceiveLargeMessageQueue(jmsProvider, 1, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.5, addressQueue, 1, DeliveryMode.PERSISTENT);
+        sendReceiveLargeMessageQueue(jmsProvider, 0.25, addressQueue, 1, DeliveryMode.PERSISTENT);
+        connection.stop();
+        connection.close();
     }
 }
 

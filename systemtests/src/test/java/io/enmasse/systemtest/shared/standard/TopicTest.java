@@ -12,8 +12,11 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.JmsProvider;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.DescribedType;
 import org.apache.qpid.proton.amqp.Symbol;
@@ -23,8 +26,10 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 
+import javax.jms.Connection;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +45,7 @@ import static io.enmasse.systemtest.TestTag.NON_PR;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@ExtendWith(JmsProviderParameterResolver.class)
 public class TopicTest extends TestBase implements ITestSharedStandard {
     private static Logger log = CustomLogger.getLogger();
 
@@ -561,6 +567,34 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
     }
+
+    @Test
+    void testLargeMessages(JmsProvider jmsProvider) throws Exception {
+        Address addressTopic = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-large"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("topic")
+                .withAddress("jmsTopicLarge")
+                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(addressTopic);
+
+        Connection connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+                "jmsCliId", addressTopic);
+        connection.start();
+
+        sendReceiveLargeMessageTopic(jmsProvider, 1, addressTopic, 1);
+        sendReceiveLargeMessageTopic(jmsProvider, 0.5, addressTopic, 1);
+        sendReceiveLargeMessageTopic(jmsProvider, 0.25, addressTopic, 1);
+
+        connection.stop();
+        connection.close();
+    }
+
 
     class AmqpJmsSelectorFilter implements DescribedType {
 
