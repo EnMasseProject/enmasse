@@ -11,7 +11,7 @@ In addition, each address space have some distinct features that should be taken
 
 == Sizing brokers
 
-When sizing a broker, the following must be taken into consideration:
+Brokers are configured in the `BrokeredInfraConfig` and `StandardInfraConfig` resources. When sizing a broker, the following must be taken into consideration:
 
 * The average message size
 * The number of messages stored
@@ -84,13 +84,22 @@ spec:
 
 == Routers
 
+Routers are configured in the `StandardInfraConfig` resource. The router configuration must take the following into account:
+
+* The number of addresses
+* The number of connections and links
+
+The router does not persist any state and therefore does not require persistent storage.
+
+TODO:
+* Link capacity
+* Test address vs links limits
+
 === Example
 
 == Operators
 
-=== Address space controller
-
-=== Admin
+* Number of addresses
 
 The admin operator watches and stores all address definitions in the address space, and its memory must be accomodated to handle the number of addresses defined in the system.
 
