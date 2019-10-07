@@ -21,6 +21,7 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
+import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.enmasse.user.model.v1.UserCrd;
@@ -146,45 +147,54 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
     void testSetAnnotations() {
 
         var client = Kubernetes.getInstance().getClient();
-        var userCrd = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class);
+        var userCrd = client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class).inNamespace(getSharedAddressSpace().getMetadata().getNamespace());
 
         var name = getSharedAddressSpace().getMetadata().getName()+ ".foo";
         var user = new UserBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
                 .withName(name)
-                .addToAnnotations("annotation1", "value1")
-                .addToAnnotations("annotation2", "value2")
+                .addToAnnotations("enmasse.io/annotation1", "value1")
+                .addToAnnotations("enmasse.io/annotation2", "value2")
                 .endMetadata()
+
+                .withNewSpec()
+                .withUsername("foo")
+                .withNewAuthentication()
+                .withType(UserAuthenticationType.password)
+                .withPassword("foo")
+                .endAuthentication()
+                .endSpec()
+
                 .build();
 
         // create
         userCrd.create(user);
 
         // read again
-        var actualUser = userCrd.inNamespace(getSharedAddressSpace().getMetadata().getNamespace()).withName(name).get();
+        var actualUser = userCrd.withName(name).get();
 
         assertNotNull(actualUser);
-        assertThat(actualUser.getAnnotation("annotation1"), is("value1"));
-        assertThat(actualUser.getAnnotation("annotation2"), is("value2"));
+        assertThat(actualUser.getAnnotation("enmasse.io/annotation1"), is("value1"));
+        assertThat(actualUser.getAnnotation("enmasse.io/annotation2"), is("value2"));
 
         var updateUser = new UserBuilder(actualUser)
                 .editOrNewMetadata()
-                .addToAnnotations("annotation1", "value1a")
-                .removeFromAnnotations("annotation2")
-                .addToAnnotations("annotation3", "value3")
+                .addToAnnotations("enmasse.io/annotation1", "value1a")
+                .removeFromAnnotations("enmasse.io/annotation2")
+                .addToAnnotations("enmasse.io/annotation3", "value3")
                 .endMetadata()
                 .build();
 
         userCrd.createOrReplace(updateUser);
 
         // read again
-        actualUser = userCrd.inNamespace(getSharedAddressSpace().getMetadata().getNamespace()).withName(name).get();
+        actualUser = userCrd.withName(name).get();
 
         assertNotNull(actualUser);
-        assertThat(actualUser.getAnnotation("annotation1"), is("value1a"));
-        assertThat(actualUser.getAnnotation("annotation2"), nullValue());
-        assertThat(actualUser.getAnnotation("annotation3"), is("value3"));
+        assertThat(actualUser.getAnnotation("enmasse.io/annotation1"), is("value1a"));
+        assertThat(actualUser.getAnnotation("enmasse.io/annotation2"), nullValue());
+        assertThat(actualUser.getAnnotation("enmasse.io/annotation3"), is("value3"));
 
     }
 }

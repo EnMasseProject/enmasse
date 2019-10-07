@@ -45,7 +45,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
     private static final String ATTR_OWNER_REFERENCES = "ownerReferences";
 
     private static final String BASE = "io.enmasse.user.keycloak";
-    private static final int MAX_ANNOTATION_VALUE_LENGTH = Integer.getInteger( BASE + ".maxUserAnnotationValueLength", 255);
+    private static final int MAX_ANNOTATION_VALUE_LENGTH = Integer.getInteger(BASE + ".maxUserAnnotationValueLength", 255);
 
     private static final Logger log = LoggerFactory.getLogger(KeycloakUserApi.class);
 
@@ -263,7 +263,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
 
     private static List<OwnerReference> ownerReferencesFromString(final List<String> attributeValues) {
 
-        if (attributeValues == null || attributeValues.isEmpty() ) {
+        if (attributeValues == null || attributeValues.isEmpty()) {
             return null;
         }
 
@@ -292,8 +292,13 @@ public class KeycloakUserApi implements UserApi, RealmApi {
 
     @Override
     public void createUser(AuthenticationService authenticationService, String realmName, User user) throws Exception {
-        log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realmName);
+        Objects.requireNonNull(authenticationService);
+        Objects.requireNonNull(realmName);
+        Objects.requireNonNull(user);
+
         user.validate();
+
+        log.info("Creating user {} in realm {}", user.getSpec().getUsername(), realmName);
         validateForCreation(user);
 
         withRealm(authenticationService, realmName, realm -> {
@@ -341,6 +346,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
 
     /**
      * Check if the user is valid for creating a new instance.
+     *
      * @param user The user to check.
      */
     private void validateForCreation(final User user) {
@@ -481,11 +487,11 @@ public class KeycloakUserApi implements UserApi, RealmApi {
 
         final String[] currentValue = Optional.ofNullable(userRep.getAttributes().get(key))
                 .map(v -> v.toArray(String[]::new))
-                .orElseGet(()-> new String[] {});
+                .orElseGet(() -> new String[] {});
 
         final String[] newValue = Optional.ofNullable(value)
-                .map(v-> v.toArray(String[]::new))
-                .orElseGet(()-> new String[] {});
+                .map(v -> v.toArray(String[]::new))
+                .orElseGet(() -> new String[] {});
 
         if (Arrays.equals(currentValue, newValue)) {
             return false;
@@ -580,7 +586,8 @@ public class KeycloakUserApi implements UserApi, RealmApi {
         return withKeycloak(authenticationService, kc -> getRealmResource(kc, realmName) != null);
     }
 
-    private UserList queryUsers(AuthenticationService authenticationService, final Predicate<RealmRepresentation> realmPredicate, final Predicate<UserRepresentation> userPredicate) throws Exception {
+    private UserList queryUsers(AuthenticationService authenticationService, final Predicate<RealmRepresentation> realmPredicate, final Predicate<UserRepresentation> userPredicate)
+            throws Exception {
         return withKeycloak(authenticationService, keycloak -> {
 
             List<RealmRepresentation> realmReps = keycloak.realms().findAll();
@@ -591,12 +598,12 @@ public class KeycloakUserApi implements UserApi, RealmApi {
                     String realm = realmRep.getRealm();
 
                     keycloak.realm(realm).users().list()
-                                    .stream()
-                                    .filter(userPredicate)
-                                    .forEachOrdered(userRep -> {
-                                        List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
-                                        userList.getItems().add(buildUser(userRep, groupReps));
-                                    });
+                            .stream()
+                            .filter(userPredicate)
+                            .forEachOrdered(userRep -> {
+                                List<GroupRepresentation> groupReps = keycloak.realm(realm).users().get(userRep.getId()).groups();
+                                userList.getItems().add(buildUser(userRep, groupReps));
+                            });
                 }
             }
 
@@ -610,8 +617,8 @@ public class KeycloakUserApi implements UserApi, RealmApi {
     @Override
     public UserList listAllUsers(AuthenticationService authenticationService) throws Exception {
         return queryUsers(authenticationService,
-                        realm -> getAttribute(realm, "namespace").isPresent(),
-                        user -> true);
+                realm -> getAttribute(realm, "namespace").isPresent(),
+                user -> true);
     }
 
     /**
@@ -620,8 +627,8 @@ public class KeycloakUserApi implements UserApi, RealmApi {
     @Override
     public UserList listUsers(AuthenticationService authenticationService, final String namespace) throws Exception {
         return queryUsers(authenticationService,
-                        realm -> hasAttribute(realm, "namespace", namespace),
-                        user -> true);
+                realm -> hasAttribute(realm, "namespace", namespace),
+                user -> true);
     }
 
     static Optional<String> getAttribute(final RealmRepresentation realm, final String attributeName) {
@@ -741,7 +748,7 @@ public class KeycloakUserApi implements UserApi, RealmApi {
                 .build();
     }
 
-    private static boolean matchesLabels (final UserRepresentation userRep, final Map<String,String> labels) {
+    private static boolean matchesLabels(final UserRepresentation userRep, final Map<String, String> labels) {
         for (final Map.Entry<String, String> label : labels.entrySet()) {
             if (userRep.getAttributes().get(label.getKey()) == null || !label.getValue().equals(userRep.getAttributes().get(label.getKey()).get(0))) {
                 return false;
@@ -753,15 +760,15 @@ public class KeycloakUserApi implements UserApi, RealmApi {
     @Override
     public UserList listUsersWithLabels(AuthenticationService authenticationService, String namespace, Map<String, String> labels) throws Exception {
         return queryUsers(authenticationService,
-                        realm -> hasAttribute(realm, "namespace", namespace),
-                        user -> matchesLabels(user, labels));
+                realm -> hasAttribute(realm, "namespace", namespace),
+                user -> matchesLabels(user, labels));
     }
 
     @Override
     public UserList listAllUsersWithLabels(AuthenticationService authenticationService, final Map<String, String> labels) throws Exception {
         return queryUsers(authenticationService,
-                        realm -> getAttribute(realm, "namespace").isPresent(),
-                        user -> matchesLabels(user, labels));
+                realm -> getAttribute(realm, "namespace").isPresent(),
+                user -> matchesLabels(user, labels));
     }
 
     @Override
@@ -831,7 +838,8 @@ public class KeycloakUserApi implements UserApi, RealmApi {
 
         if (entry.getValue() != null && entry.getValue().length() > MAX_ANNOTATION_VALUE_LENGTH) {
             // ... value is too long, and will cause a problem
-            log.error("Found annotation value that exceeds limit - limit: {}, actualLengt: {}, key: {}, value: {}", MAX_ANNOTATION_VALUE_LENGTH, entry.getValue().length(), entry.getKey(), entry.getValue());
+            log.error("Found annotation value that exceeds limit - limit: {}, actualLengt: {}, key: {}, value: {}", MAX_ANNOTATION_VALUE_LENGTH, entry.getValue().length(),
+                    entry.getKey(), entry.getValue());
             return false;
         }
 
