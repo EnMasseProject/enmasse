@@ -1,0 +1,100 @@
+[id='sizing-guide-{context}']
+= Sizing guide
+
+The sizing guide provides guidelines on how to size {ProductName} installations and what tradeoffs you can expect when adjusting the configuration. Sizing {ProductName} involves configuration of:
+
+* Operator(s)
+* Routers (standard address space only)
+* Brokers
+
+In addition, each address space have some distinct features that should be taken into account such as address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging.
+
+== Sizing brokers
+
+When sizing a broker, the following must be taken into consideration:
+
+* The average message size
+* The number of messages stored
+* The number of queues and/or topics
+* The address full policy
+
+NOTE: In {ProductName} it is only possible to restrict the total number of memory allocated for a broker, and not restrict memory used by individual addresses.
+
+Enabling address full policy `PAGE` will allow you to store more messages than can fit in memory, at the expense of a potential performance hit from reading data from disk. Therefore, paging is mainly of interest when you have large messages or expect a long backlog of messages in your system.
+
+=== Example
+
+Given 10 queues with a maximum of 1000 messages stored per queue, an average message size of 128kB, the amount of storage space required to store messages is:
+
+```
+10 * 1000 * (128 * 1024) = 1.25 GB
+```
+
+In addition, the broker has a fixed storage footprint of about 50MB.
+
+The amount of memory required for the broker depends on which address full policy is being used. If the PAGE policy is used, the memory requirements can be reduced by having messages stored on disk rather than in the journal (which always needs to fit in memory). If the FAIL, BLOCK or DROP policies are being used, all messages must be held in memory.
+
+There is also  constant memory cost associated with running the broker as well as the JVM. The memory available to store message are automatically derived from the memory set in the broker configuration and is set to be half the JVM memory, which in turn is set to half of the system memory.
+
+NOTE: In the `standard` address space types, multiple broker instances may get created. The sizing of these also depend on the address plan configuration and how many addresses you expect each broker to be able to handle before another broker is spawned.
+
+==== Example without paging
+
+For non-PAGE policies, an additional 5% bookkeeping overhead per address should be taken into account (`1.05 * 1.25 = 1.35 GB`):
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: cfg1
+spec:
+  broker:
+    addressFullPolicy: FAIL
+    globalMaxSize: 1.35Gb
+    resources:
+      memory: 4Gi
+      storage: 2Gi
+----
+
+==== Example with paging
+
+When paging is enabled, the original formula can be modified to only account for a reference to the message as well as holding 10 in-flight messages in memory:
+
+``` 
+(10 * 1000 * 128) + (10 * 128 * 1024) = 2.5MB
+```
+
+The amount of memory configured for the broker can now be reduced:
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: BrokeredInfraConfig
+metadata:
+  name: cfg1
+spec:
+  broker:
+    addressFullPolicy: PAGE
+    globalMaxSize: 5Mb
+    resources:
+      memory: 512Mi
+      storage: 2Gi
+----
+
+== Routers
+
+=== Example
+
+== Operators
+
+=== Address space controller
+
+=== Admin
+
+The admin operator watches and stores all address definitions in the address space, and its memory must be accomodated to handle the number of addresses defined in the system.
+
+=== Example
+
+
+== Plans
