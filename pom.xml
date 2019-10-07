@@ -461,6 +461,11 @@
                 <version>${jackson-databind.version}</version>
             </dependency>
             <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson-databind.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>com.fasterxml.jackson.module</groupId>
                 <artifactId>jackson-module-jsonSchema</artifactId>
                 <version>${jackson-module-jsonSchema.version}</version>
