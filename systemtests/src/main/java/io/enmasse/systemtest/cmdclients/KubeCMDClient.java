@@ -356,12 +356,12 @@ public class KubeCMDClient extends CmdClient {
     public static ExecutionResultData getConfigmaps(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "configmaps",
                 "--namespace", namespace,
-                "--o", "yaml");
+                "--output", "yaml");
         return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
     public static ExecutionResultData getIoTConfig(String namespace) {
-        List<String> command = Arrays.asList(CMD, "get", "iotconfig", "--namespace", namespace, "--o", "yaml");
+        List<String> command = Arrays.asList(CMD, "get", "iotconfig", "--namespace", namespace, "--output", "yaml");
         return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
