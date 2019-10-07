@@ -60,10 +60,10 @@ public class InfinispanTenantCleaner {
         vertx.executeBlocking(future -> {
             future.complete(execute());
         }, result -> {
-            if ((boolean)result.result()){
+            if (result.succeeded()){
                 startPromise.complete();
             } else {
-                startPromise.fail(new Exception());
+                startPromise.fail(result.cause());
             }
         });
 
