@@ -29,16 +29,14 @@ import org.slf4j.Logger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static io.enmasse.systemtest.TestTag.NON_PR;
@@ -438,13 +436,6 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
     // help methods
     /////////////////////////////////////////////////////////////////////
 
-    private void sendMessage(AmqpClient client, String address, AtomicInteger counter) throws Exception {
-        counter.incrementAndGet();
-        Future<Integer> sent = client.sendMessages(address, Collections.singletonList(UUID.randomUUID().toString()));
-        log.info("Message sent");
-        assertEquals(1, sent.get(15, TimeUnit.SECONDS));
-    }
-
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Address> brAddresses, List<Address> stAddresses) throws Exception {
         log.info("Check if system works");
@@ -456,59 +447,50 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura"));
     }
 
-    private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace brokered, Address addr) throws Exception {
+    private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace space, Address addr) throws Exception {
         log.info("Starting messaging");
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
-        AmqpClient client = getAmqpClientFactory().createAddressClient(brokered, addressType);
+        AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
-        AtomicInteger counter = new AtomicInteger(0);
-        CompletableFuture<Object> future = doConcurrentMessaging(client, addr.getSpec().getAddress(), counter);
+
+        var restart = new CompletableFuture<Object>();
+
+        var recvFut = client.recvMessages(addr.getSpec().getAddress(), msg -> {
+            log.info("Message received");
+            if (restart.isDone()) {
+                return true;
+            }
+            return false;
+        });
+
+
+        var sendFut = client.sendMessages(addr.getSpec().getAddress(),
+                Stream.generate(() -> UUID.randomUUID().toString()).limit(1000).collect(Collectors.toList()),
+                msg -> {
+                    if (restart.isDone()) {
+                        return true;
+                    }
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        log.error("Error waiting between sends", e);
+                        restart.completeExceptionally(e);
+                        return true;
+                    }
+                    return false;
+                });
+
         log.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        if (future.isCompletedExceptionally()) {
-            future.get();
+        if (restart.isCompletedExceptionally()) {
+            restart.get();
         }
-        future.complete(new Object());
-        assertTrue(counter.get() > 1, "receive messages did not work");
-    }
+        restart.complete(new Object());
 
-    private CompletableFuture<Object> doConcurrentMessaging(AmqpClient client, String address, AtomicInteger counter) {
-
-        CompletableFuture<Object> resultPromise = new CompletableFuture<>();
-
-        CompletableFuture.runAsync(() -> {
-            client.recvMessages(address, msg -> {
-                log.info("Message received");
-                if (resultPromise.isDone()) {
-                    return true;
-                }
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    log.error("Error waiting between sends", e);
-                    resultPromise.completeExceptionally(e);
-                    return true;
-                }
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        sendMessage(client, address, counter);
-                    } catch (Exception e) {
-                        log.error("Error sending message", e);
-                        resultPromise.completeExceptionally(e);
-                    }
-                }, runnable -> new Thread(runnable).start());
-                return false;
-            });
-            try {
-                sendMessage(client, address, counter);
-            } catch (Exception e) {
-                log.error("Error sending message", e);
-                resultPromise.completeExceptionally(e);
-            }
-        }, runnable -> new Thread(runnable).start());
-
-        return resultPromise;
+        int received = recvFut.get(10, TimeUnit.SECONDS).size();
+        int sent = sendFut.get(10, TimeUnit.SECONDS);
+        assertEquals(sent, received, "Missmatch between messages sent and received");
     }
 
     private class Label {
