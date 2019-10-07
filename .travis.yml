@@ -30,6 +30,7 @@ jobs:
     before_install:
     - ./.travis/find-qdrouterd-base-versions.sh
     - pip install --user requests[security] ansible
+    - echo "MAVEN_OPTS='-Xmx2g -XX:MaxPermSize=512m'" > ~/.mavenrc
     - gem install asciidoctor
     - gimme 1.12.9
     - source ~/.gimme/envs/go1.12.9.env
