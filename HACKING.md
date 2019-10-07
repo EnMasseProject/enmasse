@@ -108,11 +108,12 @@ oc apply -f templates/build/enmasse-latest/install/components/example-authservic
 
 ### Adding / Updating go dependencies
 
-This project currently uses "glide" to vendor go sources. Change dependencies in the file `glide.yaml` and then run:
+This project currently uses go modules to vendor go sources. Change dependencies in the file `go.mod` and then run:
 
-    glide up -v
+    go mod vendor
+    go mod tidy
     git add --all vendor
-    git add glide.lock
+    git add go.sum
     git commit
 
 ## Reference
