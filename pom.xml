@@ -79,7 +79,7 @@
         <npm.version>6.9.0</npm.version>
         <snakeyaml.version>1.18</snakeyaml.version>
 
-        <asciidoctor-maven-plugin.version>1.5.6</asciidoctor-maven-plugin.version>
+        <asciidoctor-maven-plugin.version>1.5.8</asciidoctor-maven-plugin.version>
         <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
         <mycila-license-maven-plugin.version>2.11</mycila-license-maven-plugin.version>
         <codehaus-license-maven-plugin.version>1.17</codehaus-license-maven-plugin.version>
