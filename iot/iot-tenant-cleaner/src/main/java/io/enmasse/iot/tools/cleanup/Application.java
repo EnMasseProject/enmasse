@@ -6,6 +6,7 @@
 package io.enmasse.iot.tools.cleanup;
 
 import io.vertx.core.Future;
+import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,12 +16,14 @@ public class Application {
 
     public static void main(String args[]) {
 
-        if (args.length < 1){
-            log.error("The path to the config file must be given as the 1st argument.");
-            System.exit(1);
+        Path configFile = null;
+
+        if (args.length == 1){
+            configFile = Path.of(args[0]);
+            log.debug("config file specified : "+configFile);
         }
 
-        InfinispanTenantCleaner app = new InfinispanTenantCleaner(args[0]);
+        InfinispanTenantCleaner app = new InfinispanTenantCleaner(configFile);
 
         Future<Void> startPromise = app.configure().compose(config -> {
                     Future<Void> runFuture = Future.future();

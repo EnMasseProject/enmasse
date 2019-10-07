@@ -21,6 +21,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonObject;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import org.infinispan.client.hotrod.RemoteCache;
@@ -47,12 +48,12 @@ public class InfinispanTenantCleaner {
     private final Logger log = LoggerFactory.getLogger(InfinispanTenantCleaner.class);
     private final Vertx vertx;
 
-    private final String pathToConfig;
+    private final Path config;
 
-    public InfinispanTenantCleaner(String pathToConfig) {
-        VertxOptions vxOptions = new VertxOptions().setBlockedThreadCheckInterval(200000);
+    public InfinispanTenantCleaner(Path pathToConfig) {
+        VertxOptions vxOptions = new VertxOptions();
         vertx = Vertx.vertx(vxOptions);
-        this.pathToConfig = pathToConfig;
+        this.config = pathToConfig;
     }
 
     public Future<Void> run(Future<Void> startPromise) {
@@ -66,7 +67,7 @@ public class InfinispanTenantCleaner {
             deviceconProvider.start();
             devicesConnectionCache = deviceconProvider.getDeviceStateCache();
         } catch (Exception e) {
-            log.error("Unable to access Infinispan caches.", e.getCause());
+            log.error("Unable to access Infinispan caches.", e);
             startPromise.fail(e);
             return startPromise;
         }
@@ -82,9 +83,7 @@ public class InfinispanTenantCleaner {
 
         List<Object[]> matches;
         do {
-            matches = query
-                    //.startOffset(loopNumber.getAndIncrement()*maxQueryResults)
-                    .build().list();
+            matches = query.build().list();
 
             matches.forEach(queryResult -> {
                     DeviceKey key = DeviceKey
@@ -119,7 +118,8 @@ public class InfinispanTenantCleaner {
                 .addStore(new ConfigStoreOptions()
                         .setType("file")
                         .setFormat("yaml")
-                        .setConfig(new JsonObject().put("path", pathToConfig)))
+                        .setConfig(new JsonObject().put("path", config.toString()))
+                        .setOptional(true))
                 .addStore(new ConfigStoreOptions()
                         .setType("env")));
 

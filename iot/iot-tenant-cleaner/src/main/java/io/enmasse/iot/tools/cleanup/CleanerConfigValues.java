@@ -115,8 +115,11 @@ public class CleanerConfigValues {
         if (getSaslRealm() == null) {
             missingValues.add("saslRealm");
         }
+        if (getDeletionChuckSize() <= 0) {
+            missingValues.add("deletionChunkSize cannot be 0 or negative.");
+        }
 
-        if (missingValues.size() != 0){
+        if (!missingValues.isEmpty()){
             final String message = "Missing configuration value(s): ";
             return message + String.join(", ", missingValues);
         } else {
