@@ -5,7 +5,6 @@
 package io.enmasse.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
@@ -36,7 +35,6 @@ import static io.enmasse.k8s.api.EventLogger.Type.Normal;
 public class CreateController implements Controller {
     private static final Logger log = LoggerFactory.getLogger(CreateController.class.getName());
 
-    private static final ObjectMapper mapper = new ObjectMapper();
     private final Kubernetes kubernetes;
     private final SchemaProvider schemaProvider;
     private final InfraResourceFactory infraResourceFactory;

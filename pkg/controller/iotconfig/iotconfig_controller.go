@@ -216,6 +216,11 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	return r.updateFinalStatus(ctx, config, rc)
 }
 
+func syncConfigCondition(status *iotv1alpha1.IoTConfigStatus) {
+	ready := status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
+	ready.SetStatusOkOrElse(status.Initialized, "NotReady", "infrastructure is not ready yet")
+}
+
 func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alpha1.IoTConfig, err error) error {
 
 	// we are initialized when there is no error
@@ -223,10 +228,12 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, config *iotv1alph
 	config.Status.Initialized = err == nil
 
 	if config.Status.Initialized {
-		config.Status.State = iotv1alpha1.ConfigStateRunning
+		config.Status.Phase = iotv1alpha1.ConfigStateReady
 	} else {
-		config.Status.State = iotv1alpha1.ConfigStateFailed
+		config.Status.Phase = iotv1alpha1.ConfigStateFailed
 	}
+
+	syncConfigCondition(&config.Status)
 
 	return r.client.Status().Update(ctx, config)
 }
@@ -247,9 +254,11 @@ func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, config *iotv
 func (r *ReconcileIoTConfig) failWrongConfigName(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	config.Status.Initialized = false
-	config.Status.State = iotv1alpha1.ConfigStateWrongName
+	config.Status.Phase = iotv1alpha1.ConfigStateWrongName
 
-	if err := r.client.Update(ctx, config); err != nil {
+	syncConfigCondition(&config.Status)
+
+	if err := r.client.Status().Update(ctx, config); err != nil {
 		return reconcile.Result{}, err
 	}
 

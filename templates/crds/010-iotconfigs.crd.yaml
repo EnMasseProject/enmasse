@@ -14,5 +14,10 @@ spec:
     singular: iotconfig
     shortNames:
     - icfg
+  additionalPrinterColumns:
+  - name: Phase
+    type: string
+    description: Phase of the IoT config
+    JSONPath: .status.phase
   subresources:
     status: {}

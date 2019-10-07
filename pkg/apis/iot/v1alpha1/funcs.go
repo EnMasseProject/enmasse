@@ -120,6 +120,26 @@ func (p *IoTProjectStatus) GetProjectCondition(t ProjectConditionType) *ProjectC
 	return &p.Conditions[len(p.Conditions)-1]
 }
 
+func (config *IoTConfigStatus) GetConfigCondition(t ConfigConditionType) *ConfigCondition {
+	for i, c := range config.Conditions {
+		if c.Type == t {
+			return &config.Conditions[i]
+		}
+	}
+
+	nc := ConfigCondition{
+		Type: t,
+		CommonCondition: CommonCondition{
+			Status:             corev1.ConditionUnknown,
+			LastTransitionTime: metav1.Now(),
+		},
+	}
+
+	config.Conditions = append(config.Conditions, nc)
+
+	return &config.Conditions[len(config.Conditions)-1]
+}
+
 func (c *CommonCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
 
 	if c.Status != status {

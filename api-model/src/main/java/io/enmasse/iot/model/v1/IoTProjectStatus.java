@@ -4,6 +4,8 @@
  */
 package io.enmasse.iot.model.v1;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,6 +33,7 @@ public class IoTProjectStatus {
     private boolean ready = false;
     private String tenantName;
     private ExternalDownstreamStrategy downstreamEndpoint;
+    private List<ProjectCondition> conditions;
 
     public boolean isReady() {
         return ready;
@@ -54,6 +57,14 @@ public class IoTProjectStatus {
 
     public void setDownstreamEndpoint(ExternalDownstreamStrategy downstreamEndpoint) {
         this.downstreamEndpoint = downstreamEndpoint;
+    }
+
+    public List<ProjectCondition> getConditions() {
+        return conditions;
+    }
+
+    public void setConditions(List<ProjectCondition> conditions) {
+        this.conditions = conditions;
     }
 
 }

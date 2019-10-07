@@ -74,7 +74,7 @@ public class IoTUtils {
             }
         }
         if (!isReady) {
-            String jsonStatus = config != null && config.getStatus() != null ? config.getStatus().getState() : "";
+            String jsonStatus = config != null && config.getStatus() != null ? config.getStatus().getPhase() : "";
             throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
