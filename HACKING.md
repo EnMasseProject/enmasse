@@ -98,17 +98,13 @@ oc apply -f templates/build/enmasse-latest/install/components/example-authservic
 
 ### Running full systemtest suite
 
-#### Install systemtests dependencies
-
-    ansible-playbook systemtests/ansible/playbooks/systemtests-dependencies.yml --tags clients --skip-tags dependencies
-
 #### Running the systemtests
 
     make systemtests
 
 #### Run single system test
 
-    make SYSTEMTEST_ARGS="io.enmasse.systemtest.standard.QueueTest#testCreateDeleteQueue" systemtests
+    make SYSTEMTEST_ARGS="shared.standard.QueueTest#testCreateDeleteQueue" systemtests
 
 ### Adding / Updating go dependencies
 

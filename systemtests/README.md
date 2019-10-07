@@ -25,5 +25,23 @@ the [documentation](http://enmasse.io/documentation/master/openshift/#quickstart
 
 Where $PROFILE can be:
 * systemtests
-* systemtests-marathon
-* systemtests-upgrade
+* marathon
+* iot
+* shared
+* isolated
+* shared-iot
+* isolated-iot
+* smoke
+* smoke-iot
+* upgrade
+
+## Running upgrade test
+
+    mkdir templates/build -pv
+    export START_VERSION=0.28.2
+    wget https://github.com/EnMasseProject/enmasse/releases/download/${START_VERSION}/enmasse-${START_VERSION}.tgz -O templates/build/enmasse-${START_VERSION}.tgz
+    tar zxvf templates/build/enmasse-${version}.tgz -C templates/build
+    make templates
+    export START_TEMPLATES=${pwd}/templates/build/enmasse-${START_VERSION}
+    export UPGRADE_TEMPLATES=${pwd}/templates/build/enmasse-latest
+    make SYSTEMTEST_PROFILE=upgrade
