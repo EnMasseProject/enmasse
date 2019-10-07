@@ -57,6 +57,20 @@ public class InfinispanTenantCleaner {
     }
 
     public Future<Void> run(Future<Void> startPromise) {
+        vertx.executeBlocking(future -> {
+            future.complete(execute());
+        }, result -> {
+            if ((boolean)result.result()){
+                startPromise.complete();
+            } else {
+                startPromise.fail(new Exception());
+            }
+        });
+
+        return startPromise;
+    }
+
+    private boolean execute(){
 
         try {
             mgmtProvider = new DeviceManagementCacheProvider(infinispanProperties);
@@ -68,8 +82,7 @@ public class InfinispanTenantCleaner {
             devicesConnectionCache = deviceconProvider.getDeviceStateCache();
         } catch (Exception e) {
             log.error("Unable to access Infinispan caches.", e);
-            startPromise.fail(e);
-            return startPromise;
+            return false;
         }
 
         // Query and delete entries in devicesCache
@@ -96,8 +109,7 @@ public class InfinispanTenantCleaner {
         } while (matches.size() == maxQueryResults);
 
         stop();
-        startPromise.complete();
-        return startPromise;
+        return true;
     }
 
     public void stop() {
