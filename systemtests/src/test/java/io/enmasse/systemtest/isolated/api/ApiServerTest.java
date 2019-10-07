@@ -554,7 +554,6 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             JsonObject space2Json = AddressSpaceUtils.addressSpaceToJson(space2);
             ExecutionResultData space2Result = KubeCMDClient.createCR(namespace, space2Json.toString());
             assertFalse(space2Result.getRetCode());
-            assertTrue(space2Result.getStdErr().contains("User \""+user.getUsername()+"\" cannot get addressspaces.enmasse.io in the namespace \""+namespace+"\": no RBAC policy matched"));
 
         } finally {
             if (kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).get() != null) {
