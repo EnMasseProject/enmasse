@@ -10,6 +10,8 @@ The sizing guide provides guidelines on how to size {ProductName} installations 
 
 Each address space type have some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging.
 
+NOTE: Sizing {ProductName} components also requires that your {KubePlatform} cluster has sufficient capacity to handle the requested resources. If the {KubePlatform} nodes are configured with 4GB of memory, you cannot configure brokers and routers with memory sizes larger than. Also, as each address space creates a dedicated piece of infrastructure, you need to ensure that cluster capacity can meet demand as the number of address spaces increases. Finally, the use of affinity and tolerations may also restrict the nodes available for the messaging infrastructure to use.
+
 == Sizing brokers
 
 Brokers are configured in the `BrokeredInfraConfig` and `StandardInfraConfig` resources. When sizing a broker, the following must be taken into consideration:
@@ -85,13 +87,40 @@ spec:
   ...
 ----
 
-=== Partitioning
+=== Broker scaling (standard address space only)
 
-TOOD: How partitioning affects resource usage
+Brokers are deployed on-demand, i.e. when addresses of type queue or topic are created. The number of brokers is restricted by the resource limits specified in the `AddressSpacePlan`. The following example sets a limit of 4 brokers in total per address space:
 
-=== Plans
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: cfg1
+spec:
+  resourceLimits:
+    broker: 4.0
+  ...
+----
 
-TODO: How address plans affect resource usage
+In terms of capacity, the memory requirements for the broker should be multiplied by the limit.
+
+The number of broker instances are scaled dynamically between 1 and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes how big fraction of a broker is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired broker replicas. 
+
+Example:
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: plan1
+spec:
+  ...
+  resources:
+    broker: 0.01
+----
+
+If you create 110 addresses with `plan1` as the plan, the number of broker replicas will be `ceil(110 * 0.01) = 2 replicas`. 
+
+The total number of brokers will capped by the address space plan resource limits.
 
 == Routers
 
@@ -114,27 +143,24 @@ The router link capacity affects how many in-flight messages the router will han
 Sizing should accomodate 500 anycast and 1000 queued addresses, with 10000 connected clients (1 link each), with a link capacity of 100 (max number of in-flight messages per link), and an average message size of 512 bytes.
 
 Based on measurements, an estimated 20kB overhead per anycast address is realistic:
-+
 [options="nowrap",subs="+quotes,attributes"]
 ----
 500 * 20kB = 10MB
 ----
 
 Memory usage of queues and topics is slightly higher than for anycast addresses, with a 40kB overhead per address. In addition, each link may have up to `linkCapacity` messages in flight:
-+
 [options="nowrap",subs="+quotes,attributes"]
 ----
 (1000 * 40kB) + (2000 * 100 * 512) = 135MB
 ----
 
 Memory usage of client connections/links:
-+
 [options="nowrap",subs="+quotes,attributes"]
 ----
 10000 * 100 * 512 = 488MB
 ----
 
-Thus, the total amount of router memory required for this configuration (including a constant base memory of 50MB) is `10 + 135 + 488 + 50 = 683MB`. 
+The total amount of router memory required for this configuration (including a constant base memory of 50MB) is `10 + 135 + 488 + 50 = 683MB`. 
 
 In order to ensure max connections and links is not exceeded, a router policy can be applied as well. The router config looks at follows:
 
@@ -159,11 +185,52 @@ spec:
 
 === High Availability
 
-TODO: How HA affects resource usage
+Configuring routes for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage.
 
-=== Plans
+=== Router scaling
 
-TODO: How plans affect resource usage
+Routers are scaled dynamically on demand within the interval of `minReplicas` defined in the `StandardInfraConfig` resource and `resourceLimits.router` defined in the `AddressSpacePlan`. To restrict the number of routers to max four, but requiring a minimum amount of 2 routers for HA purposes, the following configuration is needed:
+
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  router:
+    minReplicas: 2
+  ...
+---
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: plan1
+spec:
+  infraConfigRef: cfg1
+  resourceLimits:
+    router: 4
+  ...
+----
+
+In terms of capacity, the memory requirements for the router should be multiplied by the resource limit. The router will scale up to the resource limits defined in the `AddressSpacePlan` for the address space.
+
+The number of router replicas are scaled dynamically between the min and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes how big fraction of a router is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired router replicas. 
+
+Example:
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: plan1
+spec:
+  ...
+  resources:
+    router: 0.01
+----
+
+If you create 110 addresses with `plan1` as the plan, the number of router replicas will be `ceil(110 * 0.01) = 2 replicas`. 
+
+If the amount of replicas go above the address space plan limit, the addresses exceeding the max will remain in the `Pending` state and an error message describing the issue will be set in the `Address` status section.
 
 == Operators
 
@@ -175,10 +242,9 @@ NOTE: the operator processes are running either on a JVM or a Node.JS VM. The me
 
 === Example
 
-Each address adds about 20kB overhead to the operator process. Thus, with 1500 addresses, an additional `1500 * 2kB = 30MB` is needed for the operator process.
+Each address adds about 20kB overhead to the operator process. With 1500 addresses, an additional `1500 * 2kB = 30MB` is needed for the operator process.
 
 In addition, there is a base memory requirement of 256MB for these processes, making the total operator memory `256 + 30 = 286 MB`. This can be configured in both the `StandardInfraConfig` and `BrokeredInfraConfig` resources:
-+
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
 apiVersion: admin.enmasse.io/v1beta1
@@ -192,8 +258,52 @@ spec:
   ...
 ----
 
+
 == Plans
 
-Plans offered to messaging tenants are described in the `AddressSpacePlan` and `AddressPlan` resources. This section explains the relationship between the router and broker configuration and the plan configuration. For more information about plans, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging.
+Plans enable dynamic scaling in the `standard` address space, as shown in the broker and router sizing sections. At the cluster level, the combination of plans and infrastructure configs will determine the max number of pods that can be deployed on the cluster. At present, {ProductName} does not support limiting the number of address spaces that gets created, so some policy on who is allowed to create them should be applied. This can be handled through standard {KubePlatform} policies.
 
-TODO: How address space plans can set limits on resource usage
+From a capacity planning perspective, it is useful to understand what the maximum number of pods and memory can be consumed for a given address space.
+
+.Procedure
+
+. Save the following script as `check-memory.sh`
++
+NOTE: Memory is assumed to be defined using the 'Mi' unit, while storage is assumed to be defined using the 'Gi' unit. All of `admin`, `router` and `broker` must have limits set in order for the script to work as expected.
++
+[source,shell,options="nowrap",subs="+quotes,attributes"]
+----
+#!/usr/bin/env bash
+PLAN=$1
+
+total_pods=0
+total_memory_mb=0
+total_storage_gb=0
+
+routers=$(oc get addressspaceplan $PLAN -o jsonpath='{.spec.resourceLimits.router}')
+brokers=$(oc get addressspaceplan $PLAN -o jsonpath='{.spec.resourceLimits.broker}')
+infra=$(oc get addressspaceplan $PLAN -o jsonpath='{.spec.infraConfigRef}')
+
+operator_memory=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.admin.resources.memory}')
+broker_memory=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.broker.resources.memory}')
+broker_storage=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.broker.resources.storage}')
+router_memory=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.router.resources.memory}')
+
+total_pods=$((routers + brokers + 1))
+total_memory_mb=$(( (routers * ${router_memory%Mi}) + (brokers * ${broker_memory%Mi}) + ${operator_memory%Mi}))
+total_storage_gb=$(( brokers * ${broker_storage%Gi}))
+
+echo "Pods: ${total_pods}. Memory: ${total_memory_mb} MB. Storage: ${total_storage_gb} GB"
+----
+
+. Run it as follows:
++
+----
+bash calculate-memory.sh _standard-small_
+----
+
+. If all components have limits defined in the assumed units, it will output the total resource limits for address spaces using this plan:
++
+----
+Pods: 3. Memory: 1280 MB. Storage: 2 GB
+----
