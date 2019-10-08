@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	PossibleCharacters = []rune("abcdefghijklmnopqrstuvwxyz" + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + ";:_,.-#+*=?()/&%$!")
+	PossibleCharacters = []rune("abcdefghijklmnopqrstuvwxyz" + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + ";:,.-_=")
 	MaxLen             = big.NewInt(int64(len(PossibleCharacters)))
 )
 
