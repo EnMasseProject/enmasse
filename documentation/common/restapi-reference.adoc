@@ -1640,6 +1640,8 @@ __optional__|integer
 __optional__|integer
 |**linkCapacity** +
 __optional__|integer
+|**maxReplicas** +
+__optional__|integer
 |**minReplicas** +
 __optional__|integer
 |**podTemplate** +

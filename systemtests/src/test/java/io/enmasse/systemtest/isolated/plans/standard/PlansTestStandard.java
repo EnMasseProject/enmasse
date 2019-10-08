@@ -80,7 +80,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                         .withStorage("2Gi")
                         .endResources()
                         .build())
-                .withRouter(PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1))
+                .withRouter(PlanUtils.createStandardRouterResourceObject("1Gi", 300, 1, 6))
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
                         .withNewResources()
                         .withMemory("1Gi")

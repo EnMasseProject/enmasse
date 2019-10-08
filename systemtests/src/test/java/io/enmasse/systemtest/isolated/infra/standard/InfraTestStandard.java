@@ -170,7 +170,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .withStorage(brokerStorage)
                         .endResources()
                         .build())
-                .withRouter(PlanUtils.createStandardRouterResourceObject(routerMemory, 200, routerReplicas))
+                .withRouter(PlanUtils.createStandardRouterResourceObject(routerMemory, 200, routerReplicas, 6))
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
                         .withNewResources()
                         .withMemory(adminMemory)
@@ -230,7 +230,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .withStorage("1Gi")
                         .endResources()
                         .build())
-                .withRouter(PlanUtils.createStandardRouterResourceObject("256Mi", 200, 2))
+                .withRouter(PlanUtils.createStandardRouterResourceObject("256Mi", 200, 2, 6))
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
                         .withNewResources()
                         .withMemory("512Mi")
@@ -260,6 +260,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         assertEquals(expectedRouter.getResources().getMemory(), actualRouter.getResources().getMemory());
         assertEquals(expectedRouter.getLinkCapacity(), actualRouter.getLinkCapacity());
         assertEquals(expectedRouter.getMinReplicas(), actualRouter.getMinReplicas());
+        assertEquals(expectedRouter.getMaxReplicas(), actualRouter.getMaxReplicas());
         assertEquals(expectedRouter.getPolicy(), actualRouter.getPolicy());
     }
 

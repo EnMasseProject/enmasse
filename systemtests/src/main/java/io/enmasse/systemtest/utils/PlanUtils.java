@@ -66,9 +66,10 @@ public class PlanUtils {
     // Resources standard
     //////////////////////////////////////////////////////////////////////////////
 
-    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, int linkCapacity, int minReplicas) {
+    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, int linkCapacity, int minReplicas, int maxReplicas) {
         return new StandardInfraConfigSpecRouterBuilder()
                 .withMinReplicas(minReplicas)
+                .withMaxReplicas(maxReplicas)
                 .withLinkCapacity(linkCapacity)
                 .withNewPolicy()
                 .withMaxConnections(1000)

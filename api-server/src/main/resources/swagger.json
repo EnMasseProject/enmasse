@@ -482,6 +482,9 @@
                 "minReplicas": {
                     "type": "integer"
                 },
+                "maxReplicas": {
+                    "type": "integer"
+                },
                 "podTemplate": {
                     "$ref": "#/definitions/io.enmasse.admin.v1beta1.InfraConfigPodSpec"
                 },

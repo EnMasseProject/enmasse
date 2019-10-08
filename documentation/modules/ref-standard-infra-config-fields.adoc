@@ -43,6 +43,7 @@ This table shows the fields available for the standard infrastructure configurat
 |`router.linkCapacity` |Specifies the default number of credits issued on AMQP links for the router.
 |`router.handshakeTimeout` |Specifies the amount of time in seconds to wait for the secure handshake to be initiated.
 |`router.minReplicas` |Specifies the minimum number of router Pods to run; a minimum of two are required for high availability (HA) configuration.
+|`router.maxReplicas` |Specifies the maximum number of router Pods to run.
 |`router.podTemplate.metadata.labels` |Specifies the labels added to the router Pod.
 |`router.podTemplate.spec.affinity` |Specifies the affinity settings for the router Pod so you can specify where on particular nodes a pod runs, or if it cannot run together with other instances.
 |`router.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the router Pod so you can prioritize router pods over other pods in the {KubePlatform} cluster.
