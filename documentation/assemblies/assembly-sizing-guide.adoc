@@ -3,11 +3,12 @@
 
 The sizing guide provides guidelines on how to size {ProductName} installations and what tradeoffs you can expect when adjusting the configuration. Sizing {ProductName} involves configuration of:
 
-* Operator(s)
+* Brokers 
 * Routers (standard address space only)
-* Brokers
+* Operator(s)
+* Plans
 
-In addition, each address space have some distinct features that should be taken into account such as address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging.
+Each address space type have some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging.
 
 == Sizing brokers
 
@@ -55,6 +56,7 @@ spec:
     resources:
       memory: 4Gi
       storage: 2Gi
+  ...
 ----
 
 ==== Example with paging
@@ -80,30 +82,99 @@ spec:
     resources:
       memory: 512Mi
       storage: 2Gi
+  ...
 ----
 
 == Routers
 
-Routers are configured in the `StandardInfraConfig` resource. The router configuration must take the following into account:
+Routers are configured in the `StandardInfraConfig` resource. The router sizing must take the following into account:
 
 * The number of addresses
 * The number of connections and links
+* Link capacity
 
 The router does not persist any state and therefore does not require persistent storage.
 
-TODO:
-* Link capacity
-* Test address vs links limits
+Address configuration itself does not require significant amount of router memory. However, queues and subscriptions require an additional 2 links between the router and broker per address.
+
+The total number of links is then the number of queues/subscriptions + the number of client links. Each link requires metadata and buffers in the router to deal with routing messages for that link.
+
+The router link capacity affects how many in-flight messages the router will handle per link. Setting this to a high value could improve performance, but at the cost of potentially more memory being used to hold in-flight messages. If you have low-volume client traffic, using the default link capacity should be sufficient.
 
 === Example
+
+Sizing should accomodate 500 anycast and 1000 queued addresses, with 10000 connected clients (1 link each), with a link capacity of 100 (max number of in-flight messages per link), and an average message size of 512 bytes.
+
+Based on measurements, an estimated 20kB overhead per anycast address is realistic:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+500 * 20kB = 10MB
+----
+
+Memory usage of queues and topics is slightly higher than for anycast addresses, with a 40kB overhead per address. In addition, each link may have up to `linkCapacity` messages in flight:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+(1000 * 40kB) + (2000 * 100 * 512) = 135MB
+----
+
+Memory usage of client connections/links:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+10000 * 100 * 512 = 488MB
+----
+
+Thus, the total amount of router memory required for this configuration (including a constant base memory of 50MB) is `10 + 135 + 488 + 50 = 683MB`. 
+
+In order to ensure max connections and links is not exceeded, a router policy can be applied as well. The router config looks at follows:
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  router:
+    resources:
+      memory: 700Mi
+    linkCapacity: 100
+    policy:
+      maxConnections: 10000
+      maxSessionsPerConnection: 1
+      maxSendersPerConnection: 1
+      maxReciversPerConnection: 1
+  ...
+----
 
 == Operators
 
-* Number of addresses
+Operators are tasked with reading all address configuration and applying this to the routers and brokers. The operators should be sized proportionally to the number of addresses.
 
-The admin operator watches and stores all address definitions in the address space, and its memory must be accomodated to handle the number of addresses defined in the system.
+In the `standard` address space, the operator pod contains two processes, `agent` and `standard-controller`. These cannot be sized individually, but memory usage of both are proportional to the number of addresses. In the `brokered` space, there is only a single `agent` process.
+
+NOTE: the operator processes are running either on a JVM or a Node.JS VM. The memory for these should be sized twice the amount of memory required for the address configuration itself.
 
 === Example
 
+Each address adds about 20kB overhead to the operator process. Thus, with 1500 addresses, an additional `1500 * 2kB = 30MB` is needed for the operator process.
+
+In addition, there is a base memory requirement of 256MB for these processes, making the total operator memory `256 + 30 = 286 MB`. This can be configured in both the `StandardInfraConfig` and `BrokeredInfraConfig` resources:
++
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  admin:
+    resources:
+      memory: 300Mi 
+  ...
+----
 
 == Plans
+
