@@ -51,29 +51,31 @@ Having the `MessagingUser` as a CRDs means that we can no longer 'hide' the pass
 
 Validation on the `MessagingUser` can mostly be done by OpenAPIv3 validation, but name prefix checking for address space name must be done by controller.
 
-== Upgrade process
+== Upgrade process for address spaces and addresses
 
-Upgrading EnMasse to a version that supports CRDs require that resources based on ConfigMaps must be converted to CRD-based resources, before the reconiliation loops start. Otherwise, it could end up with infrastructure being deleted. Converting the `MessagingUser` resource requires listing users in Keycloak and creating the corresponding MessagingUser resources. However, `MessagingUser` resources with `password` specified cannot be converted since Keycloak does not allow reading passwords.
+Upgrading EnMasse to a version that supports CRDs require that resources based on ConfigMaps must be converted to CRD-based resources, before the reconiliation loops start. Otherwise, it could end up with infrastructure being deleted.
+
 
 The upgrade process will follow these steps:
 
-1. Service admin must remove the apiservice resources - to prevent new resources to be created through the API server
 1. Service admin will apply new bundle/run new ansible playbook/update operator
-1. Service admin will clean up unused resources and disable configmap conversion
 
-The rest of the upgrade process will be performed automatically once a new version of the enmasse-operator and address-space-controller starts.
-
-The address-space-controller will follow these steps at startup:
-
-1. Read all AddressSpace configmaps and convert them to CRs
-1. Read all Address configmaps and convert them to CRs
-1. Start normal operation (update standard-controller and agent as normal)
+The rest of the upgrade process will be performed automatically once a new version of the enmasse-operator starts.
 
 The enmasse-operator will follow these steps at startup:
 
-1. List all messaging users in all Keycloak realms and create corresponding Keycloak resources
-1. Start messaginguser-controller component that sync messaging users
-1. Start normal operation (update authentication service as normal)
+1. Detect that upgrade is needed (check address-space-controller deployment annotation?)
+1. Scale down the address-space-controller and admin deployments to 0 and wait for pods to be deleted
+1. Remove api-service for enmasse.io api group
+1. Deploy new version of address space controller and scale up to 1
+
+
+The upgraded address-space-controller will follow these steps at startup:
+
+1. Read all AddressSpace configmaps and convert them to CRs
+1. Read all Address configmaps and convert them to CRs
+1. Delete all configmaps for AddressSpace and Address
+1. Upgrade standard-controller and agent 
 
 Conversion of the completion can be checked using the following commands:
 
@@ -89,20 +91,29 @@ kubectl get configmap -l type=address-config | wc -l
 kubectl get addresses --all-namespaces=true | wc -l
 ```
 
-In addition, the `address-space-controller`, `admin` and `agent` logs should be checked for errors.
+In addition, the `enmasse-opereator`, `address-space-controller`, `admin` and `agent` logs should be checked for errors.
 
-For messagingusers, the `enmasse-operator` log should be checked for errors.
+== Upgrade process for messaging users
 
-Once the conversion is complete, the service admin must run the following commands to disable the conversion logic, remove the api-server, and delete configmaps:
+The upgrade process will follow these steps:
 
-```
-kubectl set env deployment/address-space-controller CONVERT_CONFIGMAPS=false
-kubectl set env deployment/enmasse-operator CONVERT_MESSAGINGUSERS=false
-kubectl delete deployment api-server
-kubectl delete service api-server
-kubectl delete configmap -l type=address-space
-kubectl delete configmap -l type=address-config
-```
+1. Service admin will apply new bundle/run new ansible playbook/update operator
+
+The rest of the upgrade process will be performed automatically once a new version of the enmasse-operator starts.
+
+The enmasse-operator will follow these steps at startup:
+
+1. Check if upgrade is needed
+1. Remove api-service for user.enmasse.io api group
+1. List all messaging users in all Keycloak realms and create corresponding MessagingUser resources
+1. Start messaginguser-controller component that sync messaging users back to Keycloak
+1. Start normal operation (update authentication service as normal)
+
+
+== Tasks
+
+It is recommended that the move to CRDs are done in 2 phases, one for each api group. This means the first phase will convert AddressSpace and Address to CRDs, and the second phase will convert MessagingUser to a CRD.
+
 
 == Testing
 
