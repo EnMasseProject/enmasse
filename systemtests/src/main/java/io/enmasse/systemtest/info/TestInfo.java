@@ -16,12 +16,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/*
+Class for store and query information about test plan and tests
+ */
 public class TestInfo {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private static TestInfo testInfo = null;
     private List<TestIdentifier> testClasses;
     private List<TestIdentifier> tests;
     private ExtensionContext actualTest;
+    private ExtensionContext actualTestClass;
 
     public static synchronized TestInfo getInstance() {
         if (testInfo == null) {
@@ -31,7 +35,7 @@ public class TestInfo {
     }
 
     public void setTestPlan(TestPlan testPlan) {
-        LOGGER.warn("Setting testplan");
+        LOGGER.info("Setting testplan");
         testClasses = Arrays.asList(testPlan.getChildren(testPlan.getRoots()
                 .toArray(new TestIdentifier[0])[0]).toArray(new TestIdentifier[0]));
         tests = new ArrayList<>();
@@ -101,10 +105,55 @@ public class TestInfo {
         return false;
     }
 
+    public boolean isClassIoT() {
+        for (String tag : new ArrayList<>(actualTestClass.getTags())) {
+            if (TestTag.IOT_TAGS.contains(tag)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isEndOfIotTests() {
+        if (getCurrentTestIndex() + 1 < tests.size()) {
+            for (String tag : getTags(tests.get(getCurrentTestIndex() + 1))) {
+                if (TestTag.IOT_TAGS.contains(tag)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public boolean isUpgradeTest() {
+        for (String tag : new ArrayList<>(actualTestClass.getTags())) {
+            if (tag.equals(TestTag.UPGRADE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isNextTestUpgrade() {
+        if (getCurrentClassIndex() + 1 < testClasses.size()) {
+            for (String tag : new ArrayList<>(getTags(testClasses.get(getCurrentClassIndex() + 1)))) {
+                if (tag.equals(TestTag.UPGRADE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public int getCurrentTestIndex() {
         TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
                 && isSameClass(testIdentifier, actualTest)).findFirst().get();
         return tests.indexOf(test);
+    }
+
+    public int getCurrentClassIndex() {
+        TestIdentifier test = testClasses.stream().filter(testClass -> isSameClass(testClass, actualTest)).findFirst().get();
+        return testClasses.indexOf(test);
     }
 
     public List<TestIdentifier> getTests() {
@@ -117,5 +166,9 @@ public class TestInfo {
 
     public void setActualTest(ExtensionContext test) {
         actualTest = test;
+    }
+
+    public void setActualTestClass(ExtensionContext testClass) {
+        actualTestClass = testClass;
     }
 }

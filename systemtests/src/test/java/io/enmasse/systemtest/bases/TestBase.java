@@ -10,10 +10,8 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceSchemaList;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.broker.BrokerManagement;
@@ -21,6 +19,7 @@ import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageType;
+import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
@@ -35,7 +34,6 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.mqtt.MqttUtils;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -46,7 +44,6 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
-import io.enmasse.systemtest.watcher.TestWatcher;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
@@ -91,7 +88,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Base class for all tests
  */
-@ExtendWith(TestWatcher.class)
+@ExtendWith(JunitCallbackListener.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class TestBase implements ITestBase, ITestSeparator {
     protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
@@ -110,9 +107,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         resourcesManager = getResourceManager();
         if (TestInfo.getInstance().isTestShared()) {
 
-                ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
-                ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
-                ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
+            ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
+            ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
+            ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
 
             if (resourcesManager.getSharedAddressSpace() == null) {
                 if (TestInfo.getInstance().isTestIoT()) {
@@ -959,7 +956,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      * @param enabled The object to test.
      */
     protected static void assertDefaultEnabled(final Boolean enabled) {
-        if ( enabled != null && !Boolean.TRUE.equals(enabled)) {
+        if (enabled != null && !Boolean.TRUE.equals(enabled)) {
             fail("Default value must be 'null' or 'true'");
         }
     }

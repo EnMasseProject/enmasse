@@ -365,4 +365,11 @@ public class KubeCMDClient extends CmdClient {
         return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
+    public static ExecutionResultData runOnCluster(String... args) {
+        List<String> command = new LinkedList<>();
+        command.add(CMD);
+        command.addAll(Arrays.asList(args));
+        return execute(command, ONE_MINUTE_TIMEOUT, true);
+    }
+
 }

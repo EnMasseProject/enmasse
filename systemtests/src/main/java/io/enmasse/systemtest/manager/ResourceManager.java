@@ -49,7 +49,7 @@ public abstract class ResourceManager {
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     private static Logger LOGGER = CustomLogger.getLogger();
-    protected UserCredentials defaultCredentials =  Environment.getInstance().getDefaultCredentials();
+    protected UserCredentials defaultCredentials = Environment.getInstance().getDefaultCredentials();
     public static String DEFAULT_ADD_SPACE_IDENTIFIER;
     public static String ADDRESS_SPACE_TYPE;
     public static String ADDRESS_SPACE_PLAN;

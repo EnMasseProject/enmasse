@@ -128,25 +128,19 @@ public class TestUtils {
      */
     public static void waitForNReplicas(int expectedReplicas, boolean readyRequired,
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-
         int actualReplicas;
-
         do {
-
             final List<Pod> pods;
-
             if (annotationSelector.isEmpty()) {
                 pods = Kubernetes.getInstance().listPods(labelSelector);
             } else {
                 pods = Kubernetes.getInstance().listPods(labelSelector, annotationSelector);
             }
-
             if (!readyRequired) {
                 actualReplicas = pods.size();
             } else {
                 actualReplicas = numReady(pods);
             }
-
             log.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}", actualReplicas, pods.size(), expectedReplicas, readyRequired);
 
             if (budget.timeoutExpired()) {
@@ -155,15 +149,10 @@ public class TestUtils {
                         pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.joining(",")));
                 throw new RuntimeException(message);
             }
-
             // try again next cycle
-
             Thread.sleep(checkInterval);
-
         } while (actualReplicas != expectedReplicas);
-
         // finished successfully
-
     }
 
     public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
@@ -392,7 +381,7 @@ public class TestUtils {
      * Wait until Namespace will be removed
      *
      * @param kubernetes client for manipulation with kubernetes cluster
-     * @param namespace project/namespace to remove
+     * @param namespace  project/namespace to remove
      */
     public static void waitForNamespaceDeleted(Kubernetes kubernetes, String namespace) throws Exception {
         waitUntilCondition(
@@ -590,9 +579,8 @@ public class TestUtils {
     /**
      * Wait for a condition, fail otherwise.
      *
-     * @param condition The condition to check, returning {@code true} means success.
-     * @param budget The remaining time budget for this step.
-     * @param delay The delay between checks.
+     * @param condition              The condition to check, returning {@code true} means success.
+     * @param delay                  The delay between checks.
      * @param timeoutMessageSupplier The supplier of a timeout message.
      * @throws AssertionFailedError In case the timeout expired
      */
@@ -607,9 +595,8 @@ public class TestUtils {
     /**
      * Wait for a condition, throw exception otherwise.
      *
-     * @param condition The condition to check, returning {@code true} means success.
-     * @param budget The remaining time budget for this step.
-     * @param delay The delay between checks.
+     * @param condition         The condition to check, returning {@code true} means success.
+     * @param delay             The delay between checks.
      * @param exceptionSupplier The supplier of the exception to throw.
      * @throws AssertionFailedError In case the timeout expired
      */
@@ -627,11 +614,10 @@ public class TestUtils {
     /**
      * Wait for a condition, call handler otherwise.
      *
-     * @param condition The condition to check, returning {@code true} means success.
-     * @param budget The remaining time budget for this step.
-     * @param delay The delay between checks.
+     * @param condition      The condition to check, returning {@code true} means success.
+     * @param delay          The delay between checks.
      * @param timeoutHandler The handler to call in case of the timeout.
-     * @param <X> The type of exception thrown by the timeout handler.
+     * @param <X>            The type of exception thrown by the timeout handler.
      * @throws AssertionFailedError In case the timeout expired
      */
     public static <X extends Throwable> void waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay, final TimeoutHandler<X> timeoutHandler) throws X {
@@ -648,9 +634,9 @@ public class TestUtils {
      * Wait for condition, return result.
      * <p>
      * This will check will put a priority on checking the condition, and only wait, when there is remaining time budget left.
+     *
      * @param condition The condition to check, returning {@code true} means success.
-     * @param budget The remaining time budget for this step.
-     * @param delay The delay between checks.
+     * @param delay     The delay between checks.
      * @return {@code true} if the condition was met, {@code false otherwise}.
      */
     public static boolean waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay) {
@@ -661,7 +647,7 @@ public class TestUtils {
 
         final Instant deadline = Instant.now().plus(timeout);
 
-        while ( true) {
+        while (true) {
 
             // test first
 
@@ -672,7 +658,7 @@ public class TestUtils {
             // if the timeout has expired ... stop
 
             final Duration remaining = Duration.between(deadline, Instant.now());
-            if ( !remaining.isNegative() ) {
+            if (!remaining.isNegative()) {
                 return false;
             }
 
@@ -739,19 +725,28 @@ public class TestUtils {
     public static void waitUntilDeployed(String namespace) throws Exception {
         TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
             List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
-            for (Pod pod : pods) {
-                List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
-                for (ContainerStatus s : initContainers) {
-                    if (!s.getReady())
-                        return false;
+            if (pods.size() > 0) {
+                log.info("-------------------------------------------------------------");
+                for (Pod pod : pods) {
+                    List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
+                    for (ContainerStatus s : initContainers) {
+                        if (!s.getReady()) {
+                            log.info("Pod {} is in ready state, init container is not in ready state", pod.getMetadata().getName());
+                            return false;
+                        }
+                    }
+                    List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
+                    for (ContainerStatus s : containers) {
+                        if (!s.getReady()) {
+                            log.info("Pod {} is in ready state, container {} is not in ready state", pod.getMetadata().getName(), s.getName());
+                            return false;
+                        }
+                    }
+                    log.info("Pod {} is in ready state", pod.getMetadata().getName());
                 }
-                List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
-                for (ContainerStatus s : containers) {
-                    if (!s.getReady())
-                        return false;
-                }
+                return true;
             }
-            return true;
+            return false;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
@@ -782,6 +777,17 @@ public class TestUtils {
         addPlanClient.list().getItems().forEach(cr -> addPlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
         authServiceClient.list().getItems().forEach(cr -> authServiceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
         consoleClient.list().getItems().forEach(cr -> consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
+    }
+
+    public static void waitForPodReady(String name, String namespace) throws Exception {
+        TestUtils.waitUntilCondition(String.format("Pod is ready %s", name), waitPhase -> {
+            try {
+                Pod pod = Kubernetes.getInstance().listPods(namespace).stream().filter(p -> p.getMetadata().getName().contains(name)).findFirst().get();
+                return TestUtils.isPodReady(pod, true);
+            } catch (Exception ex) {
+                return false;
+            }
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     @FunctionalInterface

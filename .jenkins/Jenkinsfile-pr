@@ -111,6 +111,27 @@ pipeline {
                 }
             }
         }
+        stage('login to cluster') {
+            steps {
+                dir('enmasse') {
+                    script {
+                        kubernetes.login(env.KUBERNETES_API_URL, env.OPENSHIFT_USER, env.OPENSHIFT_PASSWD)
+                    }
+                }
+            }
+        }
+        stage('add rights for pulling images') {
+            when {
+                environment name: 'TEST_ONLY', value: 'false'
+            }
+            steps {
+                dir('enmasse') {
+                    script {
+                        enmasse.addSystemPullerRights(env.KUBERNETES_NAMESPACE, 'enmasseci')
+                    }
+                }
+            }
+        }
 
         //----------------------------------------------------------------------------------------------------
         // upgrade PR build
@@ -123,16 +144,6 @@ pipeline {
                 dir('enmasse') {
                     script {
                         enmasse.downloadEnmasse(env.UPGRADE_FROM)
-                    }
-                }
-            }
-        }
-        stage('[upgrade] login') {
-            steps {
-                dir('enmasse') {
-                    script {
-                        kubernetes.login(env.KUBERNETES_API_URL, env.OPENSHIFT_USER, env.OPENSHIFT_PASSWD)
-                        enmasse.addSystemPullerRights(env.KUBERNETES_NAMESPACE, 'enmasseci')
                     }
                 }
             }
@@ -157,19 +168,6 @@ pipeline {
         //----------------------------------------------------------------------------------------------------
         // standard PR build
         //----------------------------------------------------------------------------------------------------
-        stage('[PR] install enmasse') {
-            when {
-                expression { env.TEST_PROFILE != 'upgrade' }
-            }
-            steps {
-                dir('enmasse') {
-                    script {
-                        def deployIoT = enmasse.deployIot(env.TEST_PROFILE)
-                        enmasse.installEnmasse(env.TAG, true, deployIoT)
-                    }
-                }
-            }
-        }
         stage('[PR] system tests') {
             when {
                 expression { env.TEST_PROFILE != 'upgrade' }
@@ -177,6 +175,7 @@ pipeline {
             steps {
                 dir('enmasse') {
                     script {
+                        sh "make templates || true"
                         enmasse.runSystemtests(env.TEST_PROFILE, env.TEST_CASE)
                     }
                 }

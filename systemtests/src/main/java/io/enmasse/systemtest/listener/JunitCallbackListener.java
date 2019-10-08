@@ -2,7 +2,7 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.watcher;
+package io.enmasse.systemtest.listener;
 
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
@@ -13,10 +13,13 @@ import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
+import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.Pod;
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -31,19 +34,73 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler, BeforeTestExecutionCallback, AfterEachCallback, BeforeEachCallback {
+public class JunitCallbackListener implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
+        BeforeTestExecutionCallback, AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private TestInfo testInfo = TestInfo.getInstance();
     private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
     private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
     private SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
     private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
+    private OperatorManager operatorManager = OperatorManager.getInstance();
+
+    @Override
+    public void beforeAll(ExtensionContext context) throws Exception {
+        testInfo.setActualTestClass(context);
+        if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
+            operatorManager.installEnmasseBundle();
+        }
+        if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed() && !testInfo.isUpgradeTest()) {
+            operatorManager.installIoTOperator();
+        }
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) throws Exception {
+        if (!Environment.getInstance().skipCleanup()) {
+            if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
+                operatorManager.removeIoTOperator();
+            }
+            if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade()) {
+                operatorManager.deleteEnmasseBundle();
+            }
+        } else {
+            LOGGER.info("Skip cleanup is set, enmasse and iot operators won't be deleted");
+        }
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+        testInfo.setActualTest(context);
+        if (testInfo.isTestShared()) {
+            Environment.getInstance().getDefaultCredentials().setUsername("test").setPassword("test");
+            Environment.getInstance().setManagementCredentials(new UserCredentials("artemis-admin", "artemis-admin"));
+        }
+        if (SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
+            sharedIoTManager.setup();
+        }
+    }
+
+    @Override
+    public void beforeTestExecution(ExtensionContext context) throws Exception {
+        if (testInfo.isTestShared()) {
+            if (sharedResourcesManager.getAmqpClientFactory() == null) {
+                sharedResourcesManager.setup();
+            }
+        } else {
+            if (testInfo.isTestIoT()) {
+                isolatedIoTManager.setup();
+            } else {
+                isolatedResourcesManager.setup();
+            }
+        }
+    }
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
         LOGGER.info("Teardown section: ");
         if (testInfo.isTestShared()) {
-          tearDownSharedResources();
+            tearDownSharedResources();
         } else {
             if (testInfo.isTestIoT()) {
                 isolatedIoTManager.tearDown(testInfo.getActualTest());
@@ -142,7 +199,7 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getEvents(kube.getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(kube.getInfraNamespace()).getStdOut());
-            if(testInfo.isTestIoT()) {
+            if (testInfo.isTestIoT()) {
                 Files.writeString(path.resolve("iotconfig.yaml"), KubeCMDClient.getIoTConfig(kube.getInfraNamespace()).getStdOut());
             }
             LOGGER.info("Pod logs and describe successfully stored into {}", path);
@@ -163,35 +220,9 @@ public class TestWatcher implements TestExecutionExceptionHandler, LifecycleMeth
         return path;
     }
 
-    @Override
-    public void beforeEach(ExtensionContext context) throws Exception {
-        LOGGER.warn("Before test exec");
-        testInfo.setActualTest(context);
-        if (testInfo.isTestShared()) {
-            Environment.getInstance().getDefaultCredentials().setUsername("test").setPassword("test");
-            Environment.getInstance().setManagementCredentials(new UserCredentials("artemis-admin", "artemis-admin"));
-        }
-        if (SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
-            sharedIoTManager.setup();
-        }
-    }
-
-    @Override
-    public void beforeTestExecution(ExtensionContext context) throws Exception {
-        if (testInfo.isTestShared()) {
-            if (sharedResourcesManager.getAmqpClientFactory() == null) {
-                sharedResourcesManager.setup();
-            }
-        } else {
-            if (testInfo.isTestIoT()) {
-                isolatedIoTManager.setup();
-            } else {
-                isolatedResourcesManager.setup();
-            }
-        }
-    }
-
     private boolean isSkipSaveState() {
         return Environment.getInstance().isSkipSaveState();
     }
 }
+
+
