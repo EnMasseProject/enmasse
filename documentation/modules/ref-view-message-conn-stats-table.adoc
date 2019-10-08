@@ -21,6 +21,7 @@
 |Number of receivers attached |*Receivers*
 |Queue and topic address types only: Number of stored messages on the broker or brokers |*Stored*
 |Standard address space only: Message deliveries per second |For the desired address, expand the twisty on the left to show the *Senders* table; see the *Delivery Rate* column.
+|Standard address space and queue address type only: Number of dead letter queues (DLQs) |*Stored DLQ*
 |===
 
 
