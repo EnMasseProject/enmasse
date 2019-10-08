@@ -85,6 +85,14 @@ spec:
   ...
 ----
 
+=== Partitioning
+
+TOOD: How partitioning affects resource usage
+
+=== Plans
+
+TODO: How address plans affect resource usage
+
 == Routers
 
 Routers are configured in the `StandardInfraConfig` resource. The router sizing must take the following into account:
@@ -149,6 +157,14 @@ spec:
   ...
 ----
 
+=== High Availability
+
+TODO: How HA affects resource usage
+
+=== Plans
+
+TODO: How plans affect resource usage
+
 == Operators
 
 Operators are tasked with reading all address configuration and applying this to the routers and brokers. The operators should be sized proportionally to the number of addresses.
@@ -178,3 +194,6 @@ spec:
 
 == Plans
 
+Plans offered to messaging tenants are described in the `AddressSpacePlan` and `AddressPlan` resources. This section explains the relationship between the router and broker configuration and the plan configuration. For more information about plans, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-plans-messaging.
+
+TODO: How address space plans can set limits on resource usage
