@@ -15,7 +15,7 @@ spec:
       infinispan:
         server:
           external:
-            host: infinispan-server
+            host: infinispan
             port: 11222
             username: app
             password: test12
