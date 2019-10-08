@@ -414,16 +414,21 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             for (Address addr : brokeredAddresses) {
                 log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
                 for (Label label : labels) {
+                    getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
                     doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
+                    getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
                 }
             }
 
             for (Address addr : standardAddresses) {
                 log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
                 for (Label label : labels) {
+                    getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
                     doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
+                    getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
                 }
             }
+
         } finally {
             // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
             // the test otherwise test clean-up will fail.
