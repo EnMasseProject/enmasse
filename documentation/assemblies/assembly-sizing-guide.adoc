@@ -8,7 +8,7 @@ The sizing guide provides guidelines on how to size {ProductName} installations 
 * Operator(s)
 * Plans
 
-Each address space type have some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging.
+Each address space type have some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address spaces].
 
 NOTE: Sizing {ProductName} components also requires that your {KubePlatform} cluster has sufficient capacity to handle the requested resources. If the {KubePlatform} nodes are configured with 4GB of memory, you cannot configure brokers and routers with memory sizes larger than. Also, as each address space creates a dedicated piece of infrastructure, you need to ensure that cluster capacity can meet demand as the number of address spaces increases. Finally, the use of affinity and tolerations may also restrict the nodes available for the messaging infrastructure to use.
 
@@ -106,7 +106,7 @@ In terms of capacity, the memory requirements for the broker should be multiplie
 
 The number of broker instances are scaled dynamically between 1 and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes how big fraction of a broker is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired broker replicas. 
 
-Example:
+Example `AddressPlan`:
 ----
 apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
@@ -216,7 +216,7 @@ In terms of capacity, the memory requirements for the router should be multiplie
 
 The number of router replicas are scaled dynamically between the min and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes how big fraction of a router is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired router replicas. 
 
-Example:
+Example `AddressPlan`:
 ----
 apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
