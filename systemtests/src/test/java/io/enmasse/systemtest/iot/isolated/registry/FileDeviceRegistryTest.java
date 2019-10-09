@@ -5,11 +5,9 @@
 package io.enmasse.systemtest.iot.isolated.registry;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newFileBased;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
 class FileDeviceRegistryTest extends DeviceRegistryTest {
@@ -49,19 +47,8 @@ class FileDeviceRegistryTest extends DeviceRegistryTest {
     }
 
     @Test
-    @Disabled("Caches expire a bit unpredictably")
-    void testCacheExpiryForCredentials() throws Exception {
-        super.doTestCacheExpiryForCredentials();
-    }
-
-    @Test
     void testSetExpiryForCredentials() throws Exception {
         super.doTestSetExpiryForCredentials();
     }
 
-    @Test
-    @Disabled
-    void testCreateForNonExistingTenantFails() throws Exception {
-        super.doTestCreateForNonExistingTenantFails();
-    }
 }
