@@ -16,7 +16,7 @@ Before you begin you need to know the following details from your OpenID Connect
 - OIDC Discovery URL
 ** OIDC scopes
 ** client ID
-- client secret
+** client secret
 
 The Kubernetes api-server must be configured to use the
 https://kubernetes.io/docs/reference/access-authn-authz/authentication/#configuring-the-api-server[OpenID Connect plugin].
