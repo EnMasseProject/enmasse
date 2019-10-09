@@ -58,7 +58,11 @@ public class InfinispanTenantCleaner {
 
     public Future<Void> run(Future<Void> startPromise) {
         vertx.executeBlocking(future -> {
-            future.complete(execute());
+            try {
+                future.complete(execute());
+            }catch (Exception e){
+                future.fail(e);
+            }
         }, result -> {
             if (result.succeeded()){
                 startPromise.complete();
