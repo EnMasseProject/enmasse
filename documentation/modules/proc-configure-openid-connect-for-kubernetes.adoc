@@ -9,25 +9,22 @@ To use the {ProductName} Console on Kubernetes, you must configure Kubernetes to
 https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens[OpenID Connect (OIDC)]
 as an Authentication Strategy.  Then you must create a `consoleservice` resource refering to your OIDC Provider.
 
+
 .Prerequestises
-
-Before you begin you need to know the following details from your OpenID Connect provider:
-
-- OIDC Discovery URL
+* Before you begin you need to know the following details from your OpenID Connect provider:
+** OIDC Discovery URL
 ** OIDC scopes
 ** client ID
 ** client secret
++
+NOTE: If using a public OIDC provider (such as Google, Azure, GitHub, etc) the
+https://pusher.github.io/oauth2_proxy/auth-configuration[OAuthProxy configuration guide] offers specific guidance.
 
 * The Kubernetes api-server must be configured to use the
 https://kubernetes.io/docs/reference/access-authn-authz/authentication/#configuring-the-api-server[OpenID Connect plugin].
 +
 If you are using minikube, see  https://minikube.sigs.k8s.io/docs/tutorials/openid_connect_auth/[these instructions].
 will guide you.
-
-The correct setting for OIDC scopes varies depending on the OIDC provider.  Refer to your OIDC Provider's instructions.
-If using a public provider (such as Google, Azure, GitHub, etc) the
-https://pusher.github.io/oauth2_proxy/auth-configuration[OAuthProxy configuration guide] offers specific
-guidance for these providers.
 
 .Procedure
 
