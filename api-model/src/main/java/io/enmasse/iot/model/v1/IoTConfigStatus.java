@@ -4,6 +4,7 @@
  */
 package io.enmasse.iot.model.v1;
 
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -26,10 +27,12 @@ import io.sundr.builder.annotations.Inline;
 public class IoTConfigStatus {
 
     private boolean initialized = false;
-    private String state;
+    private String phase;
+    private String phaseReason;
     private String authenticationServicePSK;
     private Map<String, AdapterStatus> adapters;
     private Map<String, ServiceStatus> services;
+    private List<ConfigCondition> conditions;
 
     public boolean isInitialized() {
         return initialized;
@@ -39,12 +42,20 @@ public class IoTConfigStatus {
         this.initialized = initialized;
     }
 
-    public String getState() {
-        return state;
+    public String getPhase() {
+        return phase;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setPhase(String phase) {
+        this.phase = phase;
+    }
+
+    public String getPhaseReason() {
+        return phaseReason;
+    }
+
+    public void setPhaseReason(String phaseReason) {
+        this.phaseReason = phaseReason;
     }
 
     public String getAuthenticationServicePSK() {
@@ -69,6 +80,14 @@ public class IoTConfigStatus {
 
     public void setServices(Map<String, ServiceStatus> services) {
         this.services = services;
+    }
+
+    public List<ConfigCondition> getConditions() {
+        return conditions;
+    }
+
+    public void setConditions(List<ConfigCondition> conditions) {
+        this.conditions = conditions;
     }
 
 }

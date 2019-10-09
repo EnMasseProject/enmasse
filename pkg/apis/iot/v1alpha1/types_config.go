@@ -199,11 +199,25 @@ type MqttAdapterConfig struct {
 
 type IoTConfigStatus struct {
 	Initialized bool   `json:"initialized"`
-	State       string `json:"state"`
+	Phase       string `json:"phase"`
+	PhaseReason string `json:"phaseReason,omitempty"`
 
 	AuthenticationServicePSK *string                  `json:"authenticationServicePSK"`
 	Adapters                 map[string]AdapterStatus `json:"adapters,omitempty"`
 	Services                 map[string]ServiceStatus `json:"services,omitempty"`
+
+	Conditions []ConfigCondition `json:"conditions"`
+}
+
+type ConfigConditionType string
+
+const (
+	ConfigConditionTypeReady ConfigConditionType = "Ready"
+)
+
+type ConfigCondition struct {
+	Type            ConfigConditionType `json:"type"`
+	CommonCondition `json:",inline"`
 }
 
 type CommonStatus struct {
@@ -227,7 +241,7 @@ type EndpointStatus struct {
 
 const (
 	ConfigStateWrongName = "WrongName"
-	ConfigStateRunning   = "Running"
+	ConfigStateReady     = "Ready"
 	ConfigStateFailed    = "Failed"
 )
 

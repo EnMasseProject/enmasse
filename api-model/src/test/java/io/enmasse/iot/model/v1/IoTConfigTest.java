@@ -89,7 +89,7 @@ public class IoTConfigTest {
 
         assertThat(value.getStatus(), notNullValue());
         assertThat(value.getStatus().isInitialized(), is(true));
-        assertThat(value.getStatus().getState(), is("ok"));
+        assertThat(value.getStatus().getPhase(), is("Ready"));
         assertThat(value.getStatus().getAuthenticationServicePSK(), is("psk"));
 
 
