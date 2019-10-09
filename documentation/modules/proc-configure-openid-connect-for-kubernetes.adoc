@@ -1,0 +1,64 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring.adoc
+
+[id='config-openid-connect-for-kubernetes']
+= Configuring {ProductName} Console to use OpenID Connect
+
+To use the {ProductName} Console on Kubernetes, you must configure Kubernetes to use
+https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens[OpenID Connect (OIDC)]
+as an Authentication Strategy.  Then you must create a `consoleservice` resource refering to your OIDC Provider.
+
+
+.Prerequestises
+* Before you begin you need to know the following details from your OpenID Connect provider:
+** OIDC Discovery URL
+** OIDC scopes
+** Client ID
+** Client secret
++
+NOTE: If using a public OIDC provider (such as Google, Azure, GitHub, etc) the
+https://pusher.github.io/oauth2_proxy/auth-configuration[OAuthProxy configuration guide] offers specific guidance.
+
+* The Kubernetes api-server must be configured to use the
+https://kubernetes.io/docs/reference/access-authn-authz/authentication/#configuring-the-api-server[OpenID Connect plugin].
++
+If you are using minikube, see  https://minikube.sigs.k8s.io/docs/tutorials/openid_connect_auth/[these instructions].
+will guide you.
+
+.Procedure
+
+. Select the namespace where {ProductName} is installed:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} config set-context $(kubectl config current-context) --namespace=_{ProductNamespace}_
+----
+
+. Create a secret definition with the client-id/client-secret pair of your OIDC provider:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create secret generic my-google-oidc-secret --from-literal=client-id=myclientid --from-literal=client-secret=mysecret
+----
+
+. Create a console services definition:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+cat <<EOF | {cmdcli} apply -f -
+apiVersion: admin.enmasse.io/v1beta1
+kind: ConsoleService
+metadata:
+    name: console
+spec:
+    discoveryMetadataURL: https://accounts.google.com/.well-known/openid-configuration
+    oauthClientSecret:
+        name: my-google-oidc-secret
+    scope: openid email
+EOF
+----
++
+NOTE: Replace the discovery URL and scopes with the appropriate values from your OIDC provider.  Ensure that
+oauthClientSecret references the secret created in the previous step.
+
