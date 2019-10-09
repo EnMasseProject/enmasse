@@ -20,7 +20,8 @@ Before you begin you need to know the following details from your OpenID Connect
 
 The Kubernetes api-server must be configured to use the
 https://kubernetes.io/docs/reference/access-authn-authz/authentication/#configuring-the-api-server[OpenID Connect plugin].
-If you are using minikube https://minikube.sigs.k8s.io/docs/tutorials/openid_connect_auth/[these instructions]
++
+If you are using minikube, see  https://minikube.sigs.k8s.io/docs/tutorials/openid_connect_auth/[these instructions].
 will guide you.
 
 The correct setting for OIDC scopes varies depending on the OIDC provider.  Refer to your OIDC Provider's instructions.
