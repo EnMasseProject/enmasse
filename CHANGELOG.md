@@ -1,6 +1,10 @@
 ## 0.30.0
 * Fix go tool vet on newer versions of go
 * #3247: Fix path to probe endpoint used when running on Kubernetes
+* Add support for LoRaWAN and Sigfox
+* Deploy IoT operator automatically when the IoTConfig is created
+* Drop IoT garbage collector deployment in favor of using finalizers to clean up
+* Implement device registry authentication based on Kubernetes user
 * Upgrade to Apache ActiveMQ Artemis 2.10.0
 * Upgrade to Apache Qpid Dispatch Router 1.9.0
 * Add support for connecting address spaces to external AMQP endpoints (standard address space)
