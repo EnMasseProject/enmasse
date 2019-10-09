@@ -1,7 +1,11 @@
 ## 0.30.0
 * Fix go tool vet on newer versions of go
 * #3247: Fix path to probe endpoint used when running on Kubernetes
-
+* Upgrade to Apache ActiveMQ Artemis 2.10.0
+* Upgrade to Apache Qpid Dispatch Router 1.9.0
+* Add support for connecting address spaces to external AMQP endpoints (standard address space)
+* Add support for forwarding messages between external endpoints and local queues (standard address space)
+* Add scripts for performing controlled rolling restart
 
 ## 0.29.0
 * Upgrade to Apache ActiveMQ Artemis 2.9.0
