@@ -3,7 +3,7 @@
 // assembly-configuring.adoc
 
 [id='config-openid-connect-for-kubernetes']
-= Configuring EnMasse Console to use OpenID Connect
+= Configuring {ProductName} Console to use OpenID Connect
 
 In order to use the EnMasse Console on Kubernetes, you must configure Kubernetes to use
 https://kubernetes.io/docs/reference/access-authn-authz/authentication/#openid-connect-tokens[OpenID Connect (OIDC)]
