@@ -50,6 +50,12 @@ Note: A previous interation of this design proposed a EnMasse-owned prometheus i
 
 image:images/global-console-phase-2.png[]
 
+=== Entity Relationship Diagram
+
+Major entities exposed at GraphQL abstraction
+
+image:images/GraphQLModel.png[]
+
 == Components
 
 === console-graphql
