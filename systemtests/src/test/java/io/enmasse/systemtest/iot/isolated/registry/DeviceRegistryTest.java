@@ -19,11 +19,14 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
 import static io.enmasse.systemtest.TestTag.SMOKE;
+import static java.net.HttpURLConnection.HTTP_CONFLICT;
+import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,11 +40,11 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
 
     private String randomDeviceId;
-    private IoTConfig iotConfig = null;
-    private IoTProject iotProject = null;
-    private Endpoint deviceRegistryEndpoint = null;
-    private Endpoint httpAdapterEndpoint = null;
-    private DeviceRegistryClient client = null;
+    private IoTConfig iotConfig;
+    private IoTProject iotProject;
+    private Endpoint deviceRegistryEndpoint;
+    private Endpoint httpAdapterEndpoint;
+    private DeviceRegistryClient client;
 
     private UserCredentials credentials;
 
@@ -217,5 +220,19 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         assertEquals(HTTP_NOT_FOUND, response.statusCode());
     }
 
+    protected void doCreateDuplicateDeviceFails() throws Exception {
+        var tenantId = isolatedIoTManager.getTenantId();
+        var deviceId = UUID.randomUUID().toString();
+
+        // create device
+
+        var response = client.registerDeviceWithResponse(tenantId, deviceId);
+        assertEquals(HTTP_CREATED, response.statusCode());
+
+        // create device a second time
+
+        var response2 = client.registerDeviceWithResponse(tenantId, deviceId);
+        assertEquals(HTTP_CONFLICT, response2.statusCode());
+    }
 
 }

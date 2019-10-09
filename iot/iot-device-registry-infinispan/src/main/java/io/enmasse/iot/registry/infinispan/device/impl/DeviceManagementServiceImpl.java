@@ -22,6 +22,7 @@ import org.eclipse.hono.service.management.Id;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.Result;
 import org.eclipse.hono.service.management.device.Device;
+import org.infinispan.client.hotrod.Flag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,7 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
         value.setRegistrationInformation(Json.encode(device));
 
         return this.managementCache
+                .withFlags(Flag.FORCE_RETURN_VALUE)
                 .putIfAbsentAsync(key, value)
                 .thenApply(result -> {
                     if (result == null) {

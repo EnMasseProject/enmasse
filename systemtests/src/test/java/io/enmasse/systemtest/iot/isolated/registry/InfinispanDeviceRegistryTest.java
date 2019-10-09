@@ -62,4 +62,9 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
     void testCreateForNonExistingTenantFails() throws Exception {
         super.doTestCreateForNonExistingTenantFails();
     }
+
+    @Test
+    void testCreateDuplicateDeviceFails() throws Exception {
+        super.doCreateDuplicateDeviceFails();
+    }
 }
