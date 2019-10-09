@@ -15,7 +15,7 @@ Before you begin you need to know the following details from your OpenID Connect
 
 - OIDC Discovery URL
 ** OIDC scopes
-- client id
+** client ID
 - client secret
 
 The Kubernetes api-server must be configured to use the
