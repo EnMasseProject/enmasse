@@ -14,7 +14,7 @@ as an Authentication Strategy.  Then you must create a `consoleservice` resource
 Before you begin you need to know the following details from your OpenID Connect provider:
 
 - OIDC Discovery URL
-- OIDC scopes
+** OIDC scopes
 - client id
 - client secret
 
