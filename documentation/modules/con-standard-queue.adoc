@@ -9,5 +9,5 @@
 The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. A queue can be sharded across multiple storage units. Message ordering might be lost for queues in the standard address space.
 // !standard.address.queue.longDescription:stop
 
-Regarding dead-letter queue (DLQ) storing, you can determine if any stored DLQs exist by logging in to the console and link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-view-message-conn-stats-table-messaging[viewing the Addresses page]. To resolve this situation, you must connect with a client and consume from a DLQ address.
+Regarding dead-letter queues (DLQs), you can determine if any messages are stored in a DLQ by logging in to the {ConsoleName} and link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-view-message-conn-stats-table-messaging[viewing the Addresses page]. To resolve this situation, you must connect to a client and consume from a DLQ address.
 
