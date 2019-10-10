@@ -193,7 +193,7 @@ public class KubeCMDClient extends CmdClient {
     }
 
     public static ExecutionResultData checkPermission(String operation, String kind, String namespace, String serviceaccount) {
-        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n", namespace, "--as", "system:serviceaccount:enmasse-monitoring:"+serviceaccount));
+        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n", namespace, "--as", "system:serviceaccount:enmasse-monitoring:" + serviceaccount));
         return execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
@@ -371,5 +371,4 @@ public class KubeCMDClient extends CmdClient {
         command.addAll(Arrays.asList(args));
         return execute(command, ONE_MINUTE_TIMEOUT, true);
     }
-
 }

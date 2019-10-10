@@ -69,7 +69,10 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.Version;
+import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
@@ -131,6 +134,15 @@ public abstract class Kubernetes {
             }
         }
         return instance;
+    }
+
+    public double getKubernetesVersion() {
+        VersionInfo versionInfo = new DefaultKubernetesClient().getVersion();
+        return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+    }
+
+    public int getOcpVersion() {
+        return getKubernetesVersion() >= 1.13 ? 4 : 3;
     }
 
     public String getInfraNamespace() {

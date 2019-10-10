@@ -37,6 +37,9 @@ public class OperatorManager {
         installOperators();
         installExamplePlans();
         installExampleRoles();
+        if (kube.getOcpVersion() < 4) {
+            installServiceCatalog();
+        }
         installExampleAuthServices();
         waithUntilOperatorReady();
         LOGGER.info("***********************************************************");
@@ -48,6 +51,9 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
         removeExampleAuthServices();
         removeExampleRoles();
+        if (kube.getOcpVersion() < 4) {
+            removeServiceCatalog();
+        }
         removeExamplePlans();
         removeOperators();
         LOGGER.info("***********************************************************");
@@ -77,6 +83,12 @@ public class OperatorManager {
         TestUtils.waitForPodReady("none-authservice", kube.getInfraNamespace());
     }
 
+    public void installServiceCatalog() {
+        LOGGER.info("Installing enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
+    }
+
     public void installIoTOperator() throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse IoT operator install");
@@ -99,7 +111,7 @@ public class OperatorManager {
     }
 
     public void removeExampleRoles() {
-        LOGGER.info("Remove enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
+        LOGGER.info("Delete enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
     }
 
@@ -107,6 +119,12 @@ public class OperatorManager {
         LOGGER.info("Delete enmasse example auth services from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "standard-authservice.yaml"));
         KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "none-authservice.yaml"));
+    }
+
+    public void removeServiceCatalog() {
+        LOGGER.info("Delete enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
     public void removeIoTOperator() {
