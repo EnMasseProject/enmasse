@@ -1,7 +1,7 @@
 [id='sizing-guide-{context}']
 = Sizing guide
 
-The sizing guide provides guidelines on how to size {ProductName} installations and what tradeoffs you can expect when adjusting the configuration. Sizing {ProductName} involves configuration of:
+The sizing guide provides guidelines on how to size {ProductName} installations and what tradeoffs you can make when adjusting the configuration. Sizing {ProductName} involves configuration of:
 
 * Brokers 
 * Routers (standard address space only)
@@ -10,7 +10,7 @@ The sizing guide provides guidelines on how to size {ProductName} installations 
 
 Each address space type have some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address spaces].
 
-NOTE: Sizing {ProductName} components also requires that your {KubePlatform} cluster has sufficient capacity to handle the requested resources. If the {KubePlatform} nodes are configured with 4GB of memory, you cannot configure brokers and routers with memory sizes larger than. Also, as each address space creates a dedicated piece of infrastructure, you need to ensure that cluster capacity can meet demand as the number of address spaces increases. Finally, the use of affinity and tolerations may also restrict the nodes available for the messaging infrastructure to use.
+NOTE: Sizing {ProductName} components also requires that your {KubePlatform} cluster has sufficient capacity to handle the requested resources. If the {KubePlatform} nodes are configured with 4GB of memory, you cannot configure brokers and routers with memory sizes larger. Also, as each address space creates a dedicated piece of infrastructure, you need to ensure that cluster capacity can meet demand as the number of address spaces increases. Finally, the use of affinity and tolerations may also restrict the nodes available for the messaging infrastructure to use.
 
 == Sizing brokers
 
@@ -21,7 +21,7 @@ Brokers are configured in the `BrokeredInfraConfig` and `StandardInfraConfig` re
 * The number of queues and/or topics
 * The address full policy
 
-NOTE: In {ProductName} it is only possible to restrict the total number of memory allocated for a broker, and not restrict memory used by individual addresses.
+NOTE: In {ProductName} it is only possible to restrict the total amount of memory allocated for a broker, and not restrict memory used by individual addresses.
 
 Enabling address full policy `PAGE` will allow you to store more messages than can fit in memory, at the expense of a potential performance hit from reading data from disk. Therefore, paging is mainly of interest when you have large messages or expect a long backlog of messages in your system.
 
@@ -104,7 +104,7 @@ spec:
 
 In terms of capacity, the memory requirements for the broker should be multiplied by the limit.
 
-The number of broker instances are scaled dynamically between 1 and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes how big fraction of a broker is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired broker replicas. 
+The number of broker instances are scaled dynamically between 1 and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes the fraction of a broker is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired broker replicas. 
 
 Example `AddressPlan`:
 ----
@@ -185,7 +185,7 @@ spec:
 
 === High Availability
 
-Configuring routes for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage.
+Configuring routers for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage.
 
 === Router scaling
 
@@ -214,7 +214,7 @@ spec:
 
 In terms of capacity, the memory requirements for the router should be multiplied by the resource limit. The router will scale up to the resource limits defined in the `AddressSpacePlan` for the address space.
 
-The number of router replicas are scaled dynamically between the min and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes how big fraction of a router is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired router replicas. 
+The number of router replicas are scaled dynamically between the min and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes the fraction of a router is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired router replicas. 
 
 Example `AddressPlan`:
 ----
@@ -236,7 +236,7 @@ If the amount of replicas go above the address space plan limit, the addresses e
 
 Operators are tasked with reading all address configuration and applying this to the routers and brokers. The operators should be sized proportionally to the number of addresses.
 
-In the `standard` address space, the operator pod contains two processes, `agent` and `standard-controller`. These cannot be sized individually, but memory usage of both are proportional to the number of addresses. In the `brokered` space, there is only a single `agent` process.
+In the `standard` address space, the admin pod contains two processes, `agent` and `standard-controller`. These cannot be sized individually, but memory usage of both are proportional to the number of addresses. In the `brokered` space, there is only a single `agent` process.
 
 NOTE: the operator processes are running either on a JVM or a Node.JS VM. The memory for these should be sized twice the amount of memory required for the address configuration itself.
 
