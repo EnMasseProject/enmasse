@@ -1,6 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-upgrading.adoc
+//
 
 [id='post-upgrade-step-router-pod-{context}']
 = Restarting router pods running a previous version of the image
