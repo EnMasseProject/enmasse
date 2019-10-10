@@ -36,6 +36,7 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
         installOperators();
         installExamplePlans();
+        installExampleRoles();
         installExampleAuthServices();
         waithUntilOperatorReady();
         LOGGER.info("***********************************************************");
@@ -46,6 +47,7 @@ public class OperatorManager {
         LOGGER.info("                  Enmasse operator delete");
         LOGGER.info("***********************************************************");
         removeExampleAuthServices();
+        removeExampleRoles();
         removeExamplePlans();
         removeOperators();
         LOGGER.info("***********************************************************");
@@ -60,6 +62,11 @@ public class OperatorManager {
     public void installExamplePlans() {
         LOGGER.info("Installing enmasse example role from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
+    }
+
+    public void installExampleRoles() {
+        LOGGER.info("Installing enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
     }
 
     public void installExampleAuthServices() throws Exception {
@@ -89,6 +96,11 @@ public class OperatorManager {
     public void removeExamplePlans() {
         LOGGER.info("Delete enmasse example role from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
+    }
+
+    public void removeExampleRoles() {
+        LOGGER.info("Remove enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.deleteFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
     }
 
     public void removeExampleAuthServices() {
