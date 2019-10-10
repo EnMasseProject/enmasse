@@ -88,3 +88,12 @@ endif::[]
 {cmdcli} apply -f install/components/example-authservices/standard-authservice.yaml
 ----
 
+ifeval::["{cmdcli}" == "oc"]
+. (Optional) Install the Service Catalog integration:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} apply -f install/components/service-broker
+{cmdcli} apply -f install/components/cluster-service-broker
+----
+endif::[]
