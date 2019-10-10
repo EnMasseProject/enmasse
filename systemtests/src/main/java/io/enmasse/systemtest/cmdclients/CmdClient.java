@@ -33,8 +33,12 @@ public abstract class CmdClient {
             synchronized (lock) {
                 if (logToOutput) {
                     log.info("Return code: {}", ret);
-                    log.info("stdout: \n{}", executor.getStdOut());
-                    log.info("stderr: \n{}", executor.getStdErr());
+                    if (!executor.getStdOut().equals("")) {
+                        log.info("stdout: \n{}", executor.getStdOut());
+                    }
+                    if (!executor.getStdErr().equals("")) {
+                        log.info("stderr: \n{}", executor.getStdErr());
+                    }
                 }
             }
             return new ExecutionResultData(ret, executor.getStdOut(), executor.getStdErr());
