@@ -70,6 +70,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         IoTConfig iotConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
+                .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()

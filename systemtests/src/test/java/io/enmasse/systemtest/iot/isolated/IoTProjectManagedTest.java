@@ -57,6 +57,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
         isolatedIoTManager.createIoTConfig(new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
+                .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withEnableDefaultRoutes(false)
