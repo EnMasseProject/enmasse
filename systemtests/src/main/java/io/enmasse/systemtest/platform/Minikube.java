@@ -51,11 +51,13 @@ public class Minikube extends Kubernetes {
     }
 
     private String getIp(String namespace, String serviceName) {
-        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName);
+        String [] output = runCommand("minikube", "service", "-n", namespace, "--format", "{{.IP}}", serviceName).split("\n");
+        return output[output.length - 1];
     }
 
     private String getPort(String namespace, String serviceName) {
-        return runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName);
+        String [] output = runCommand("minikube", "service", "-n", namespace, "--format", "{{.Port}}", serviceName).split("\n");
+        return output[output.length - 1];
     }
 
     @Override
