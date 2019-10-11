@@ -35,45 +35,6 @@ openssl req -new -x509 -batch -nodes -days 11000 -subj "/O=io.enmasse/CN=api-ser
 kubectl create secret tls api-server-cert --cert=api-server-cert/tls.crt --key=api-server-cert/tls.key
 
 sed -i "s/enmasse-infra/${KUBERNETES_NAMESPACE}/" ${ENMASSE_DIR}/install/*/*/*.yaml
-kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/bundles/enmasse
-kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/example-plans
-kubectl ${KUBE_OPERATION} -f ${ENMASSE_DIR}/install/components/example-roles
-cat <<EOF | kubectl create -f -
-apiVersion: admin.enmasse.io/v1beta1
-kind: AuthenticationService
-metadata:
-  name: standard-authservice
-spec:
-  type: standard
-  standard:
-    resources:
-      requests:
-        memory: 1Gi
-      limits:
-        memory: 1Gi
-    storage:
-      claimName: standard-authservice
-      deleteClaim: true
-      size: 128Mi
-      type: persistent-claim
-
-EOF
-
-cat <<EOF | kubectl create -f -
-apiVersion: admin.enmasse.io/v1beta1
-kind: AuthenticationService
-metadata:
-  name: none-authservice
-spec:
-  type: none
-  none:
-    resources:
-      requests:
-        memory: 128Mi
-      limits:
-        memory: 128Mi
-EOF
-
 
 if [[ "${DEPLOY_IOT}" == "true" ]]; then
     echo "Deploying IoT components"
@@ -102,8 +63,6 @@ if [[ -z "${DISABLE_LOG_SYNC}" ]]; then
     LOGS_PID=$!
     echo "process for syncing docker logs is running with PID: ${LOGS_PID}"
 fi
-
-wait_until_enmasse_up 'kubernetes' ${KUBERNETES_NAMESPACE}
 
 echo "Running test profile: ${TEST_PROFILE}"
 #execute test
