@@ -1,1 +1,1 @@
-io.enmasse.systemtest.listeners.ExecutionListener
+io.enmasse.systemtest.listener.JunitExecutionListener

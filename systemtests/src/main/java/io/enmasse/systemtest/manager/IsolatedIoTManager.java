@@ -62,13 +62,17 @@ public class IsolatedIoTManager extends ResourceManager {
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
-        try {
-            tearDownProjects();
-            tearDownConfigs();
-            SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-        } catch (Exception e) {
-            LOGGER.error("Error tearing down iot test: {}", e.getMessage());
-            throw e;
+        if (!environment.skipCleanup()) {
+            try {
+                tearDownProjects();
+                tearDownConfigs();
+                SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+            } catch (Exception e) {
+                LOGGER.error("Error tearing down iot test: {}", e.getMessage());
+                throw e;
+            }
+        } else {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
         }
     }
 
@@ -143,9 +147,11 @@ public class IsolatedIoTManager extends ResourceManager {
     public List<IoTProject> getIoTProjects() {
         return ioTProjects;
     }
+
     public String getTenantId() {
         return IoTUtils.getTenantId(ioTProjects.get(0));
     }
+
     public List<IoTConfig> getIoTConfigs() {
         return ioTConfigs;
     }

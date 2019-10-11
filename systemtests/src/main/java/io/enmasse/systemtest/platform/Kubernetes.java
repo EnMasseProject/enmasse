@@ -69,8 +69,10 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.Version;
+import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
@@ -132,6 +134,15 @@ public abstract class Kubernetes {
             }
         }
         return instance;
+    }
+
+    public double getKubernetesVersion() {
+        VersionInfo versionInfo = new DefaultKubernetesClient().getVersion();
+        return Double.parseDouble(versionInfo.getMajor() + "." + versionInfo.getMinor().replace("+", ""));
+    }
+
+    public int getOcpVersion() {
+        return getKubernetesVersion() >= 1.13 ? 4 : 3;
     }
 
     public String getInfraNamespace() {
@@ -396,7 +407,7 @@ public abstract class Kubernetes {
     }
 
     public List<Pod> listPods(String namespace, Map<String, String> labelSelector) {
-       return client.pods().inNamespace(namespace).withLabels(labelSelector).list().getItems();
+        return client.pods().inNamespace(namespace).withLabels(labelSelector).list().getItems();
     }
 
     public List<Pod> listPods(Map<String, String> labelSelector, Map<String, String> annotationSelector) {
@@ -504,16 +515,24 @@ public abstract class Kubernetes {
 
     public void createNamespace(String namespace) {
         log.info("Following namespace will be created = {}", namespace);
-        Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
-        client.namespaces().create(ns);
+        if (!namespaceExists(namespace)) {
+            Namespace ns = new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
+            client.namespaces().create(ns);
+        } else {
+            log.info("Namespace {} already exists", namespace);
+        }
     }
 
     public void deleteNamespace(String namespace) throws Exception {
         log.info("Following namespace will be removed - {}", namespace);
-        client.namespaces().withName(namespace).delete();
+        if (namespaceExists(namespace)) {
+            client.namespaces().withName(namespace).delete();
 
-        TestUtils.waitUntilCondition("Namespace will be deleted", phase ->
-                !namespaceExists(namespace), new TimeoutBudget(5, TimeUnit.MINUTES));
+            TestUtils.waitUntilCondition("Namespace will be deleted", phase ->
+                    !namespaceExists(namespace), new TimeoutBudget(5, TimeUnit.MINUTES));
+        } else {
+            log.info("Namespace {} already removed", namespace);
+        }
     }
 
     public boolean namespaceExists(String namespace) {
@@ -923,5 +942,6 @@ public abstract class Kubernetes {
     }
 
     public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
+
     public abstract void deleteExternalEndpoint(String namespace, String name);
 }

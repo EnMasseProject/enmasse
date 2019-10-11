@@ -24,6 +24,7 @@ public class Environment {
     public static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
     public static final String UPGRADE_TEPLATES_ENV = "UPGRADE_TEMPLATES";
     public static final String START_TEMPLATES_ENV = "START_TEMPLATES";
+    public static final String TEMPLATES_PATH = "TEMPLATES";
     public static final String SKIP_CLEANUP_ENV = "SKIP_CLEANUP";
     public static final String DOWNSTREAM_ENV = "DOWNSTREAM";
     public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
@@ -56,6 +57,8 @@ public class Environment {
     private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
+    protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
+            Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
 
     /**
      * Skip removing address-spaces
@@ -87,6 +90,7 @@ public class Environment {
         log.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
         log.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
         log.info(debugFormat, APP_NAME_ENV, appName);
+        log.info(debugFormat, TEMPLATES_PATH, templatesPath);
         if (!useMinikube) {
             log.info(debugFormat, OCP_VERSION_ENV, ocpVersion);
         }
@@ -198,5 +202,9 @@ public class Environment {
 
     public boolean isSkipDeployInfinispan() {
         return this.skipDeployInfinispan;
+    }
+
+    public String getTemplatesPath() {
+        return templatesPath;
     }
 }

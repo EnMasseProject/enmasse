@@ -193,7 +193,7 @@ public class KubeCMDClient extends CmdClient {
     }
 
     public static ExecutionResultData checkPermission(String operation, String kind, String namespace, String serviceaccount) {
-        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n", namespace, "--as", "system:serviceaccount:enmasse-monitoring:"+serviceaccount));
+        List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n", namespace, "--as", "system:serviceaccount:enmasse-monitoring:" + serviceaccount));
         return execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
@@ -303,25 +303,25 @@ public class KubeCMDClient extends CmdClient {
     public static ExecutionResultData createFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return execute(Arrays.asList(CMD, "-n", namespace, "create", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
+        return execute(Arrays.asList(CMD, "-n", namespace, "create", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
     }
 
     public static ExecutionResultData applyFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return execute(Arrays.asList(CMD, "-n", namespace, "apply", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
+        return execute(Arrays.asList(CMD, "-n", namespace, "apply", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
     }
 
     public static ExecutionResultData deleteFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return execute(Arrays.asList(CMD, "-n", namespace, "delete", "-f", path.toString()), DEFAULT_SYNC_TIMEOUT, true);
+        return execute(Arrays.asList(CMD, "-n", namespace, "delete", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
     }
 
     public static String getMessagingEndpoint(String namespace, String addressspace) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(addressspace);
-        return execute(Arrays.asList(CMD, "-n", namespace, "get", "addressspace", addressspace, "-o", "jsonpath={.status.endpointStatuses[?(@.name==\"messaging\")].externalHost}"), DEFAULT_SYNC_TIMEOUT, true, false).getStdOut();
+        return execute(Arrays.asList(CMD, "-n", namespace, "get", "addressspace", addressspace, "-o", "jsonpath={.status.endpointStatuses[?(@.name==\"messaging\")].externalHost}"), ONE_MINUTE_TIMEOUT, true, false).getStdOut();
     }
 
     public static ExecutionResultData deleteNamespace(String name) {
@@ -335,7 +335,7 @@ public class KubeCMDClient extends CmdClient {
             wr.write(definition);
             wr.flush();
             log.info("User '{}' created", defInFile.getAbsolutePath());
-            return execute(Arrays.asList(CMD, "apply", "-f", defInFile.getAbsolutePath()), DEFAULT_SYNC_TIMEOUT, true);
+            return execute(Arrays.asList(CMD, "apply", "-f", defInFile.getAbsolutePath()), ONE_MINUTE_TIMEOUT, true);
         } catch (IOException e) {
             e.printStackTrace();
             throw e;
@@ -346,11 +346,11 @@ public class KubeCMDClient extends CmdClient {
 
     public static ExecutionResultData deleteResource(String namespace, String resource, String name) {
         List<String> ressourcesCmd = getRessourcesCmd("delete", resource, namespace, name, Optional.empty());
-        return execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
+        return execute(ressourcesCmd, ONE_MINUTE_TIMEOUT, true);
     }
 
     public static ExecutionResultData createGroupAndAddUser(String groupName, String username) {
-        return execute(Arrays.asList(CMD, "adm", "groups", "new", groupName, username), DEFAULT_SYNC_TIMEOUT, true);
+        return execute(Arrays.asList(CMD, "adm", "groups", "new", groupName, username), ONE_MINUTE_TIMEOUT, true);
     }
 
     public static ExecutionResultData getConfigmaps(String namespace) {
@@ -365,4 +365,10 @@ public class KubeCMDClient extends CmdClient {
         return execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
+    public static ExecutionResultData runOnCluster(String... args) {
+        List<String> command = new LinkedList<>();
+        command.add(CMD);
+        command.addAll(Arrays.asList(args));
+        return execute(command, ONE_MINUTE_TIMEOUT, true);
+    }
 }

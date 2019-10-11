@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.deviceRegistry;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTConfig;
 import static io.enmasse.systemtest.utils.IoTUtils.createIoTProject;
 
@@ -63,18 +62,22 @@ public class SharedIoTManager extends ResourceManager {
     public void tearDown(ExtensionContext context) throws Exception {
         closeAmqpFactory();
         closeMqttFactory();
-        if (sharedIoTProject != null) {
-            LOGGER.info("Shared IoTProject will be removed");
-            var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
-            if (iotProjectApiClient.withName(sharedIoTProject.getMetadata().getName()).get() != null) {
-                IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedIoTProject);
-                sharedIoTProject = null;
-            } else {
-                LOGGER.info("IoTProject '{}' doesn't exists!", sharedIoTProject.getMetadata().getName());
+        if (!environment.skipCleanup()) {
+            if (sharedIoTProject != null) {
+                LOGGER.info("Shared IoTProject will be removed");
+                var iotProjectApiClient = kubernetes.getIoTProjectClient(sharedIoTProject.getMetadata().getNamespace());
+                if (iotProjectApiClient.withName(sharedIoTProject.getMetadata().getName()).get() != null) {
+                    IoTUtils.deleteIoTProjectAndWait(kubernetes, sharedIoTProject);
+                    sharedIoTProject = null;
+                } else {
+                    LOGGER.info("IoTProject '{}' doesn't exists!", sharedIoTProject.getMetadata().getName());
+                }
             }
+            tearDownSharedIoTConfig();
+            SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
+        } else {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
         }
-        tearDownSharedIoTConfig();
-        SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
     }
 
     public void tearDownSharedIoTConfig() throws Exception {
@@ -189,6 +192,7 @@ public class SharedIoTManager extends ResourceManager {
             amqpClientFactory = null;
         }
     }
+
     public void closeMqttFactory() {
         if (mqttClientFactory != null) {
             mqttClientFactory.close();
