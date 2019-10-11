@@ -49,7 +49,7 @@ jobs:
     - ls "$GOPATH/src/github.com/enmasseproject/enmasse/vendor/golang.org/x/tools/go/packages"
     - "./hack/verify-codegen.sh"
     script:
-    - "./.travis/setup-kubernetes.sh 'systemtests' ${OPENSHIFT} ${MINIKUBE} ${KUBECTL}"
+    - "./.travis/setup-kubernetes.sh
     - "./.travis/build.sh"
     after_failure:
     - "./.travis/upload-artifacts.sh false"
@@ -72,10 +72,6 @@ env:
   - PULL_REQUEST=${TRAVIS_PULL_REQUEST}
   - TAG=${TRAVIS_TAG}
   - DOCKER_ORG=enmasse
-  - OPENSHIFT=https://github.com/openshift/origin/releases/download/v3.9.0/openshift-origin-client-tools-v3.9.0-191fece-linux-64bit.tar.gz
-  - MINIKUBE=https://storage.googleapis.com/minikube/releases/v0.28.2/minikube-linux-amd64
-  - KUBECTL=https://storage.googleapis.com/kubernetes-release/release/v1.9.4/bin/linux/amd64/kubectl
-  - GO2XUNIT=
   - secure: UWNZ/UcF/mhS/QF6uen/LbeOM+Ohe1XNpfgwsf4H5RTiVg1R6UnLqoeYplRph2Ui11w27F6hkaNghpSzhPCMZX6H4OMtJ6EjXC16PblZYVYEM0Ee2eXT1HsQ4+48koH/VGCyqtI8Pg7DO/5gLjkAUImFymLpUh9lig00PcJ/ObNKvf/V5WU8LHwpxpPHpN+CJ9ZMGlgQ2BgrPCkD3Ht+0MqJgWCEN/3q6RRVp9fqS4NHePnhZB4ydd4eG1KAXMtoOiX2yCx+vRHw3/vaSau8fTsSBE/z2Z1LtzjIYYatPFqX6J13bW/aSwir3kZU3C2jN3UPcNRSl96A4wSAXX1IrVJ8DEnyf4fs1HVXx8XgzQjVwOnvylPlDbpxeAsRMAN6TQwa6fs9bXxfviQCoe9vFYcHHewc9uVF0GYx+K1/9kACsy2mLNwF38oLoMmhB/2IQIjYLzv2IElMy79vRd/bHb73VF0ZDcaTJW5SJiiam0HrdpmHZuRoExlmQYi8H9AQErLEB4wQRB3Xw0xaj+Ef5WWcZWFNCSJVC+xQyLcgrx6EGisJDM9e3a809EdCMya1GCITRw1lXlF5QbsTjyl8Q12ZIEFUcT4C90G9EUh56hz13OdBQTguChCUi+Nv819txdo+Pb0hFkxEM/d2dJFB3rcuWK6yeJ2vWKvH4I7odM4=
   - secure: d/t64DY8OY0yF6pjYtNmR6OEAHQ7QzR1qCR4LvIPuG/42pp/wVRltEBjUdAq9KMMBqvWPDj7QqNUhjZdAcnzWydSDyaa0mAs3l/nwsMtksQhbbBs3Kk5mBTRf9d238hSuGp+TBSZF8pCPhfM9tPTuZuJODVDiOhz2DPph4uF4wmh1q8yn4aaUsXZ71cJQcYgUZZHr1sNLhU0C/d9MizTDav0U9yqBaeYlwMBS/Dy3NIbZxp3bXu/agC2229aIL+Av8GS/7cT8tkTmtUyUyBEBXxFVxGNNPfnHF6dNRJSe0LV7j6xTEL1DivA2GKDdghiUo0ghnM9DVkmXr+ExNrlD+kMv+nxgySnVOVG1x1mgCGnuFDLQQ5pf5HTcgp82UO5z1eyon4vAvhLsCECovWYLZYB/dcYmg/kKPhv8hnIL+mssE9OgSrlNQYSAjRMnYicjoItXtt28eiibL3yp3gG+s8awN5Es9KQrLRTvC5dy6xXJRnQnhYfcwyRXAGsaRN/k1pNKDa1Yx4EwxAOpB+VNJUsTHX2yhBDmt6ZGDtOpAAf6YhLFd/0Uitq3icannOyrZzTeZR/Gv9DnS9A3+BFB68cPgHUH2vfO2fE2cNqCRt6pt9KWxTTKrCvTnVyQn25NVqxNyRum3eps321N57JmPTglZGj0I1DvC9m8iNWwNU=
   - secure: TY6XV1K2zRxpCy64V9tOSt9gTXvhJEX6ZTtxFG8wid5n/V+ubwF5J79mgvEO4NIS98Jr/rOHFqUO2gwlFg0NvpAMoDjdF5rXqznAlPtYSW7xNsBRN0Ry6epHKZZ6xa8EIfdeqgciYD1tjUZXjq0ZOh3hV1GZ15rOr/AYlzrMRwKP7uMluaTZjIgCMLbNFXlzPNVChtfY8mR+cP4SrZXPlhbxmGjI6MksKtHjdz6EN+5avz9TdjxPlOC29ePddyF/QuhArDHop0hAavcDiAYe9BCaMthkiXKeDGIOVFZNetbv0WsdtVSiDu4cDElT7vNLwypwN6QAAFuNZlHDbYfNFd8F6uoj1IDFNMxquP0vOn0Jdd1/HFT2uW94CIRFv+r2oAsNCBd6A1Kfdk8uGuKqBHja5InNtGN5Iw9r5pNDtcUgUZKOZ7O4R50OwC7XVi11xgCzihiyMRX2ogdIKgGkbVwh63fiKsvKUv/2IDRpcw0klVPCz+sRIkaRfxCxVAcYQf93McXfbN/eWjH1qgM7WHpLazk2hi1mmHw7mWvS3MAZ9zNXDNurQw1qXHmecfcxkKG/vu1NQNbGZUoViiG+LKOv7XtWpjxHrvrw2ejt8wYWC51Zv/Jxo4qAZEckZLj9XBCgvONaefBru7LX9VHENGMPP0fxEzI+lJZLQUmUC0g=

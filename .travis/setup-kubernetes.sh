@@ -1,33 +1,64 @@
 #!/usr/bin/env bash
 #script for deploy and setup kubernetes
-#parameters:
-# {1} path to folder with installation scripts, roles,... (usually templates/install)
-# {2} url to OpenShift origin client
-# {3} url to minikube
-# {4} url to kubectl
+function install_kubectl {
+    if [ "${TEST_KUBECTL_VERSION:-latest}" = "latest" ]; then
+        TEST_KUBECTL_VERSION=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
+    fi
+    curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/${TEST_KUBECTL_VERSION}/bin/linux/amd64/kubectl && chmod +x kubectl
+    sudo cp kubectl /usr/bin
+}
 
-SYSTEMTESTS_DIR=${1}
-OPENSHIFT_CLIENT_URL=${2:-"https://github.com/openshift/origin/releases/download/v3.7.0/openshift-origin-client-tools-v3.7.0-7ed6862-linux-64bit.tar.gz"}
-MINIKUBE_RELEASE_URL=${3:-"https://storage.googleapis.com/minikube/releases/v0.28.2/minikube-linux-amd64"}
-KUBECTL_RELEASE_URL=${4:-"https://storage.googleapis.com/kubernetes-release/release/v1.9.4/bin/linux/amd64/kubectl"}
-ansible-playbook ${SYSTEMTESTS_DIR}/ansible/playbooks/environment.yml \
-    --extra-vars "{\"openshift_client_url\": \"${OPENSHIFT_CLIENT_URL}\", \"minikube_url\": \"${MINIKUBE_RELEASE_URL}\", \"kubectl_url\": \"${KUBECTL_RELEASE_URL}\"}" \
-    -t openshift,kubectl,minikube
+function wait_for_minikube {
+    i="0"
+
+    while [ $i -lt 60 ]
+    do
+        # The role needs to be added because Minikube is not fully prepared for RBAC.
+        # Without adding the cluster-admin rights to the default service account in kube-system
+        # some components would be crashing (such as KubeDNS). This should have no impact on
+        # RBAC for Strimzi during the system tests.
+        kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=kube-system:default
+        if [ $? -ne 0 ]
+        then
+            sleep 1
+        else
+            return 0
+        fi
+        i=$[$i+1]
+    done
+
+    return 1
+}
+
+install_kubectl
+if [ "${TEST_MINIKUBE_VERSION:-latest}" = "latest" ]; then
+    TEST_MINIKUBE_URL=https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+else
+    TEST_MINIKUBE_URL=https://github.com/kubernetes/minikube/releases/download/${TEST_MINIKUBE_VERSION}/minikube-linux-amd64
+fi
+curl -Lo minikube ${TEST_MINIKUBE_URL} && chmod +x minikube
+sudo cp minikube /usr/bin
 
 export MINIKUBE_WANTUPDATENOTIFICATION=false
 export MINIKUBE_WANTREPORTERRORPROMPT=false
 export MINIKUBE_HOME=$HOME
 export CHANGE_MINIKUBE_NONE_USER=true
+
 mkdir $HOME/.kube || true
 touch $HOME/.kube/config
-
-sudo sh -c 'sed -e 's/journald/json-file/g' -i /etc/docker/daemon.json'
-sudo service docker restart && sleep 20
 
 docker run -d -p 5000:5000 registry
 
 export KUBECONFIG=$HOME/.kube/config
-sudo -E minikube start --vm-driver=none --bootstrapper=localkube --kubernetes-version v1.9.4 --insecure-registry localhost:5000
-minikube config set WantUpdateNotification false
-minikube update-context
+sudo -E minikube start --vm-driver=none --kubernetes-version=v1.15.0 \
+  --insecure-registry=localhost:5000 --extra-config=apiserver.authorization-mode=RBAC
+sudo chown -R travis: /home/travis/.minikube/
 sudo -E minikube addons enable default-storageclass
+
+wait_for_minikube
+
+if [ $? -ne 0 ]
+then
+    echo "Minikube failed to start or RBAC could not be properly set up"
+    exit 1
+fi
