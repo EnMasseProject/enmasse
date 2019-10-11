@@ -130,6 +130,7 @@ public class SharedIoTManager extends ResourceManager {
         sharedIoTConfig = new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
+                .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
                 .withNewServices()

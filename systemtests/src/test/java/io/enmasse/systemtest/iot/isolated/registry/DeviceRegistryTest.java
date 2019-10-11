@@ -60,6 +60,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         iotConfig = iotConfigBuilder
                 .withNewMetadata()
                 .withName("default")
+                .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .editSpec()
                 .withNewAdapters()
