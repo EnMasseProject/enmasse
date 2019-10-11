@@ -49,7 +49,7 @@ jobs:
     - ls "$GOPATH/src/github.com/enmasseproject/enmasse/vendor/golang.org/x/tools/go/packages"
     - "./hack/verify-codegen.sh"
     script:
-    - "./.travis/setup-kubernetes.sh
+    - "./.travis/setup-kubernetes.sh"
     - "./.travis/build.sh"
     after_failure:
     - "./.travis/upload-artifacts.sh false"
