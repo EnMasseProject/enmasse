@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "${PULL_REQUEST}" == "true" ]; then
+if [[ "${PULL_REQUEST}" == "true" ]]; then
 	export IMAGE_PULL_POLICY=IfNotPresent
 fi
 
