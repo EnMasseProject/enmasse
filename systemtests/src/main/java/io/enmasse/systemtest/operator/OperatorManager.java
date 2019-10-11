@@ -95,7 +95,6 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.applyFromFile(Environment.getInstance().namespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
-        TestUtils.waitForPodReady("iot-operator", kube.getInfraNamespace());
         LOGGER.info("***********************************************************");
 
     }
@@ -153,7 +152,6 @@ public class OperatorManager {
     }
 
     public boolean isIoTOperatorDeployed() {
-        return kube.namespaceExists(kube.getInfraNamespace())
-                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("iot-operator")).count() == 1;
+        return kube.getCRD("iotprojects.iot.enmasse.io") != null;
     }
 }
