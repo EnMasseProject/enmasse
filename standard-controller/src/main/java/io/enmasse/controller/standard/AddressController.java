@@ -33,12 +33,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static io.enmasse.address.model.Phase.*;
-import static io.enmasse.controller.standard.ControllerKind.AddressSpace;
 import static io.enmasse.controller.standard.ControllerKind.Broker;
 import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
-import static io.enmasse.controller.standard.ControllerReason.RouterCheckFailed;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
-import static io.enmasse.k8s.api.EventLogger.Type.Warning;
 
 /**
  * Controller for a single standard address space
@@ -56,8 +53,8 @@ public class AddressController implements Watcher<Address> {
     private final Metrics metrics;
     private final BrokerIdGenerator brokerIdGenerator;
     private final BrokerClientFactory brokerClientFactory;
-    private final RouterManagement routerManagement;
-    private int routerCheckFailures;
+    private final RouterStatusCache statusCollector;
+    private final ResourceChecker<Address> reconciler;
 
     public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
         this.options = options;
@@ -70,20 +67,26 @@ public class AddressController implements Watcher<Address> {
         this.metrics = metrics;
         this.brokerIdGenerator = brokerIdGenerator;
         this.brokerClientFactory = brokerClientFactory;
-        this.routerManagement = RouterManagement.withCertsInDir(vertx, "standard-controller", options.getManagementConnectTimeout(), options.getManagementQueryTimeout(), options.getCertDir());
-        this.routerCheckFailures = 0;
+        RouterManagement routerManagement = RouterManagement.withCertsInDir(vertx, "standard-controller", options.getManagementConnectTimeout(), options.getManagementQueryTimeout(), options.getCertDir());
+        this.statusCollector = new RouterStatusCache(routerManagement, kubernetes, eventLogger, options.getAddressSpace(), options.getStatusCheckInterval());
+        reconciler = new ResourceChecker<>(this, options.getRecheckInterval());
+
     }
 
     public void start() throws Exception {
-        ResourceChecker<Address> checker = new ResourceChecker<>(this, options.getRecheckInterval());
-        checker.start();
-        watch = addressApi.watchAddresses(checker, options.getResyncInterval());
+        // Run initial status check so that existing addresses are ready
+        statusCollector.checkRouterStatus();
+        statusCollector.start();
+        reconciler.start();
+        watch = addressApi.watchAddresses(reconciler, options.getResyncInterval());
     }
 
     public void stop() throws Exception {
         if (watch != null) {
             watch.close();
         }
+        statusCollector.stop();
+        reconciler.stop();
     }
 
     @Override
@@ -168,6 +171,11 @@ public class AddressController implements Watcher<Address> {
 
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 
+        // If we have address in configuring or pending, wake up the checker thread
+        if (countByPhase.get(Configuring) > 0 || countByPhase.get(Pending) > 0) {
+            statusCollector.wakeup();
+        }
+
         log.info("Needed: {}", neededMap);
 
         long checkedQuota = System.nanoTime();
@@ -244,7 +252,7 @@ public class AddressController implements Watcher<Address> {
         garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList, subserveTopics, withMqtt);
         long gcTerminating = System.nanoTime();
 
-        log.info("total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
+        log.info("Time spent: Total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
 
         float ready = 0;
         for (Address address : addressList) {
@@ -285,7 +293,7 @@ public class AddressController implements Watcher<Address> {
         long totalTime = gcTerminating - start;
         metrics.reportMetric(new Metric("standard_controller_loop_duration_seconds", "Time spent in controller loop", MetricType.gauge, new MetricValue((double) totalTime / 1_000_000_000.0, now, metricLabels)));
 
-        metrics.reportMetric(new Metric("standard_controller_router_check_failures_total", "Number of RouterCheckFailures", MetricType.counter, new MetricValue(routerCheckFailures, now, metricLabels)));
+        metrics.reportMetric(new Metric("standard_controller_router_check_failures_total", "Number of RouterCheckFailures", MetricType.counter, new MetricValue(statusCollector.getRouterCheckFailures(), now, metricLabels)));
 
     }
 
@@ -541,23 +549,9 @@ public class AddressController implements Watcher<Address> {
 
     private List<RouterStatus> checkRouterStatuses(boolean checkRouterLinks) throws Exception {
 
-        RouterStatusCollector routerStatusCollector = new RouterStatusCollector(routerManagement, checkRouterLinks);
-        List<RouterStatus> routerStatusList = new ArrayList<>();
-        for (Pod router : kubernetes.listRouters()) {
-            if (Readiness.isPodReady(router)) {
-                try {
-                    RouterStatus routerStatus = routerStatusCollector.collect(router);
-                    if (routerStatus != null) {
-                        routerStatusList.add(routerStatus);
-                    }
-                } catch (Exception e) {
-                    log.info("Error requesting router status from {}. Ignoring", router.getMetadata().getName(), e);
-                    eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, options.getAddressSpace());
-                    routerCheckFailures++;
-                }
-            }
-        }
-        return routerStatusList;
+        statusCollector.setCheckRouterLinks(checkRouterLinks);
+
+        return statusCollector.getLatestResults();
     }
 
     private Map<Address, Integer> checkAddressStatuses(Set<Address> addresses, AddressResolver addressResolver, List<RouterStatus> routerStatusList, Set<String> subserveTopics, boolean withMqtt) throws Exception {

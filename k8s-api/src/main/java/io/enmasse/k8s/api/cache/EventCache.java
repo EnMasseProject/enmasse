@@ -78,7 +78,7 @@ public class EventCache<T> implements WorkQueue<T> {
             }
         }
         String key = firstEvent.obj != null ? fieldExtractor.getKey(firstEvent.obj) : null;
-        log.info("Processing event {} with key {}", firstEvent.eventType, key);
+        log.debug("Processing event {} with key {}", firstEvent.eventType, key);
         processor.process(firstEvent.obj);
     }
 
