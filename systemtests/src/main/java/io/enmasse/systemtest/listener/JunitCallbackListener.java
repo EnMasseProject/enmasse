@@ -118,7 +118,10 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void tearDownSharedResources() throws Exception {
-        if (testInfo.isAddressSpaceDeletable()) {
+        if (testInfo.getActualTest().getExecutionException().isPresent()) {
+            LOGGER.info("Teardown shared due to exception in test!");
+            sharedResourcesManager.tearDown(testInfo.getActualTest());
+        } else if (testInfo.isAddressSpaceDeletable()) {
             if (testInfo.isTestIoT()) {
                 LOGGER.info("Teardown shared IoT!");
                 sharedIoTManager.tearDown(testInfo.getActualTest());

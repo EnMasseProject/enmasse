@@ -66,7 +66,7 @@ public class SharedResourceManager extends ResourceManager {
                 } catch (Exception ex) {
                     LOGGER.warn("Failed to delete shared address space (ignored)", ex);
                 } finally {
-                    spaceCountMap.compute(sharedAddressSpace.getSpec().getType().toLowerCase(), (k, count) -> count == null ? null : count + 1);
+                    spaceCountMap.compute(DEFAULT_ADD_SPACE_IDENTIFIER, (k, count) -> count == null ? null : count + 1);
                 }
             } else {
                 LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
@@ -102,7 +102,9 @@ public class SharedResourceManager extends ResourceManager {
 
     public void setupSharedEnvironment() throws Exception {
         LOGGER.info("Shared setup");
-        Map<String, Integer> spaceCountMap = new HashMap<>();
+        if (spaceCountMap == null) {
+            spaceCountMap = new HashMap<>();
+        }
         String defaultAddressSpaceIdent = DEFAULT_ADD_SPACE_IDENTIFIER;
         spaceCountMap.putIfAbsent(defaultAddressSpaceIdent, 0);
         sharedAddressSpace = new AddressSpaceBuilder()
