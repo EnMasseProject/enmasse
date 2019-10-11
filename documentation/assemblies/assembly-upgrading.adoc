@@ -16,7 +16,7 @@ Upgrading {ProductName} is accomplished by applying the YAML files for the new v
 ifeval::["{cmdcli}" == "oc"]
 include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
 include::../modules/proc-upgrading-enmasse-using-ansible.adoc[leveloffset=+1]
-// include::../modules/proc-upgrading-router-pods.adoc[leveloffset=+1]
+
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 include::../modules/proc-upgrading-enmasse-using-bundle.adoc[leveloffset=+1]
