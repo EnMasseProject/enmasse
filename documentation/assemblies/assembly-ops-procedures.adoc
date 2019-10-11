@@ -1,6 +1,7 @@
 // This assembly is included in the following assemblies:
 //
 // assembly-service-admin-guide.adoc
+// Installing master.adoc
 
 :parent-context: {context}
 [id='ops-procedures-{context}']

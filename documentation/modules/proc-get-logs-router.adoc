@@ -8,14 +8,14 @@
 
 .Procedure
 
-. List all router pods and choose the pod for the relevant address space:
+. List all router Pods and choose the Pod for the relevant address space:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} get pods -l name=qdrouterd -o go-template --template '{{range .items}}{{.metadata.name}}{{"\t"}}{{.metadata.annotations.addressSpace}}{{"\n"}}{{end}}'
 ----
 
-. Display the logs for the pod:
+. Display the logs for the Pod:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
