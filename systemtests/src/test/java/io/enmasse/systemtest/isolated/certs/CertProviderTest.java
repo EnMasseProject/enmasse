@@ -24,6 +24,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.CertProvider;
+import io.enmasse.systemtest.condition.AssumeCluster;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -63,7 +64,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
-@DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
 class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
     private static Logger log = CustomLogger.getLogger();
@@ -74,6 +74,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     private Address topic;
 
     @Test
+    @AssumeCluster(cluster = "oc")
     void testSelfSigned() throws Exception {
 
         CertSpec spec = new CertSpecBuilder()
@@ -90,6 +91,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @AssumeCluster(cluster = "oc")
     void testConsoleSelfSigned() throws Exception {
         CertSpec spec = new CertSpecBuilder()
                 .withProvider(CertProvider.selfsigned.name())
@@ -119,6 +121,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @AssumeCluster(cluster = "oc")
     void testCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String messagingHost = String.format("messaging.%s", domain);
@@ -147,6 +150,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @AssumeCluster(cluster = "oc")
     void testConsoleCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String consoleHost = String.format("space-console.%s", domain);
@@ -163,6 +167,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @AssumeCluster(cluster = "oc")
     void testOpenshiftCertProvider() throws Exception {
         createTestEnv(false,
                 new EndpointSpecBuilder()

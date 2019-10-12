@@ -11,10 +11,11 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.PrometheusApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.condition.AssumeCluster;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
@@ -24,7 +25,6 @@ import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -36,16 +36,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.enmasse.systemtest.Environment.USE_MINUKUBE_ENV;
-
-@DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "false")
-public class MonitoringTest extends TestBase implements ITestIsolatedStandard {
+class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
     private static Logger log = CustomLogger.getLogger();
-    private Path templatesDir = Paths.get(System.getProperty("user.dir"), "..", "templates", "build", String.format("enmasse-%s", environment.getTag()));
+    private Path templatesDir = Paths.get(environment.getTemplatesPath());
     private PrometheusApiClient prometheusApiClient;
 
     @BeforeEach
@@ -135,13 +132,14 @@ public class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd","podmonitors.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
         KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd"," servicemonitors.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
     }
 
     @Test
+    @AssumeCluster(cluster = "oc")
     void testAddressSpaceRules() throws Exception {
         Instant startTs = Instant.now();
         String testNamespace = "monitoring-test";

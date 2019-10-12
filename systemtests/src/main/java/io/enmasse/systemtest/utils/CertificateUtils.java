@@ -6,9 +6,10 @@ package io.enmasse.systemtest.utils;
 
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.certs.CertBundle;
-import io.enmasse.systemtest.executor.Executor;
+import io.enmasse.systemtest.executor.Exec;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -20,7 +21,7 @@ public class CertificateUtils {
     private static final String SUBJECT = "/O=enmasse-systemtests";
 
     private static void createSelfSignedCert(File cert, File key) throws Exception {
-        new Executor().execute(Arrays.asList("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
+        Exec.execute(Arrays.asList("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
                 "-out", cert.getAbsolutePath(), "-keyout", key.getAbsolutePath()));
     }
 
@@ -29,13 +30,13 @@ public class CertificateUtils {
         if (cn != null) {
             subject += "/CN=" + cn;
         }
-        new Executor().execute(Arrays.asList("openssl", "req", "-new", "-batch", "-nodes", "-keyout",
+        Exec.execute(Arrays.asList("openssl", "req", "-new", "-batch", "-nodes", "-keyout",
                 keyFile.getAbsolutePath(), "-subj", subject, "-out", csrFile.getAbsolutePath()));
     }
 
     public static File signCsr(File caKey, File caCert, File csrKey, File csrCsr) throws Exception {
         File crtFile = File.createTempFile(FilenameUtils.removeExtension(csrKey.getName()), "crt");
-        new Executor().execute(Arrays.asList("openssl", "x509", "-req", "-days", "11000", "-in",
+        Exec.execute(Arrays.asList("openssl", "x509", "-req", "-days", "11000", "-in",
                 csrCsr.getAbsolutePath(), "-CA", caCert.getAbsolutePath(), "-CAkey", caKey.getAbsolutePath(),
                 "-CAcreateserial", "-out", crtFile.getAbsolutePath()));
         return crtFile;
@@ -80,14 +81,12 @@ public class CertificateUtils {
 
             File p12Store = File.createTempFile("keystore", "p12");
             // create p12 keystore
-            new Executor()
-                    .execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
-                            "-in", brokerCrt.getAbsolutePath(), "-inkey", brokerKey.getAbsolutePath(), "-name", "broker", "-out", p12Store.getAbsolutePath()));
+            Exec.execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
+                    "-in", brokerCrt.getAbsolutePath(), "-inkey", brokerKey.getAbsolutePath(), "-name", "broker", "-out", p12Store.getAbsolutePath()));
 
             brokerKeystore.delete();
-            new Executor()
-                    .execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
-                            "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12"));
+            Exec.execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
+                    "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12"));
 
             // Generate truststore with client cert
             String client = UUID.randomUUID().toString();
@@ -101,14 +100,12 @@ public class CertificateUtils {
 
             File truststoreP12 = File.createTempFile("truststorestore", "p12");
             // create p12 keystore
-            new Executor()
-                    .execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
-                            "-in", clientCrt.getAbsolutePath(), "-inkey", clientKey.getAbsolutePath(), "-name", "client", "-out", truststoreP12.getAbsolutePath()));
+            Exec.execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
+                    "-in", clientCrt.getAbsolutePath(), "-inkey", clientKey.getAbsolutePath(), "-name", "client", "-out", truststoreP12.getAbsolutePath()));
 
             brokerTrustStore.delete();
-            new Executor()
-                    .execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
-                            "-deststorepass", "123456", "-destkeystore", brokerTrustStore.getAbsolutePath(), "-srckeystore", truststoreP12.getAbsolutePath(), "-srcstoretype", "PKCS12"));
+            Exec.execute(Arrays.asList("keytool", "-importkeystore", "-srcstorepass", "123456",
+                    "-deststorepass", "123456", "-destkeystore", brokerTrustStore.getAbsolutePath(), "-srckeystore", truststoreP12.getAbsolutePath(), "-srcstoretype", "PKCS12"));
 
             try {
                 //return ca.crt keystore and truststore

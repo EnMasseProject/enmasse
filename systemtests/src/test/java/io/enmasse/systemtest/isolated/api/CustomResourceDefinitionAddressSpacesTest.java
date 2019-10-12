@@ -13,12 +13,12 @@ import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.resources.CliOutputData;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -30,16 +30,14 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.Environment.OCP_VERSION_ENV;
-import static io.enmasse.systemtest.cmdclients.KubeCMDClient.createCR;
-import static io.enmasse.systemtest.cmdclients.KubeCMDClient.patchCR;
-import static io.enmasse.systemtest.cmdclients.KubeCMDClient.updateCR;
+import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
+import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
+import static io.enmasse.systemtest.platform.KubeCMDClient.updateCR;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -181,7 +179,6 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = OCP_VERSION_ENV, matches = "3.10")
     void testCliOutput() throws Exception {
         String namespace = "cli-output";
         UserCredentials user = new UserCredentials("pepan", "pepan");

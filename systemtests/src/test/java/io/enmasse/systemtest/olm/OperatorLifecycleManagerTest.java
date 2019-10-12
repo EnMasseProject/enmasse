@@ -8,7 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.cmdclients.CmdClient;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
@@ -37,11 +37,11 @@ class OperatorLifecycleManagerTest extends TestBase {
 
     @AfterAll
     void cleanRestOfResources() {
-        CmdClient.execute(Arrays.asList("oc", "delete", "all", "--selector", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "crd", "-l", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "apiservices", "-l", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "cm", "-l", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "secret", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "all", "--selector", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "crd", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "apiservices", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "cm", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "secret", "-l", "app=enmasse"), 120_000, false);
     }
 
     @Test

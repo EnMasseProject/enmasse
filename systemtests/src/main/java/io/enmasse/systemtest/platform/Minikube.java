@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.platform;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.executor.Executor;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
@@ -38,8 +38,8 @@ public class Minikube extends Kubernetes {
 
     private static String runCommand(String... cmd) {
         try {
-            Executor executor = new Executor(false);
-            int returnCode = executor.execute(Arrays.asList(cmd), 10000);
+            Exec executor = new Exec(false);
+            int returnCode = executor.exec(Arrays.asList(cmd), 10000);
             if (returnCode == 0) {
                 return executor.getStdOut();
             } else {

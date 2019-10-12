@@ -22,7 +22,8 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.condition.AssumeCluster;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -499,7 +500,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     @Tag(ACCEPTANCE)
-    @DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
+    @AssumeCluster(cluster = "oc")
     void testCreateAddressSpaceRoleTenantEdit() throws Exception {
 
         UserCredentials user = Credentials.userCredentials();

@@ -54,7 +54,7 @@ public class ArtemisManagement extends BrokerManagement {
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
         log.info("answer received: " + val.toString());
         String queues = val.getValue().toString();
-        queues = queues.replaceAll("\\[|]|\"", "");
+        queues = queues.replaceAll("[\\[\\]\"]", "");
 
 
         return Arrays.asList(queues.split(","));
@@ -83,8 +83,8 @@ public class ArtemisManagement extends BrokerManagement {
 
         AmqpValue val = (AmqpValue) received.get().get(0).getBody();
         log.info("answer received: " + val.toString());
-        String count = val.getValue().toString().replaceAll("\\[|]|\"", "");
+        String count = val.getValue().toString().replaceAll("[\\[\\]\"]", "");
 
-        return Integer.valueOf(count);
+        return Integer.parseInt(count);
     }
 }

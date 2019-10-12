@@ -8,11 +8,12 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.condition.AssumeCluster;
+import io.enmasse.systemtest.condition.AssumeOpenshiftVersion;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
@@ -31,7 +32,6 @@ import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
@@ -42,14 +42,14 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.Environment.USE_MINUKUBE_ENV;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SeleniumFirefox
-@DisabledIfEnvironmentVariable(named = Environment.OCP_VERSION_ENV, matches = Environment.IS_OCP4_REGEXP)
+@AssumeCluster(cluster = "oc")
+@AssumeOpenshiftVersion(version = 3)
 class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     SeleniumProvider selenium = SeleniumProvider.getInstance();
@@ -77,7 +77,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testProvisionAddressSpaceBrokered() throws Exception {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -100,7 +99,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testProvisionAddressSpaceStandard() throws Exception {
         AddressSpace standard = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -123,7 +121,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testCreateDeleteBindings() throws Exception {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -151,7 +148,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testCreateBindingCreateAddressSendReceive() throws Exception {
         AddressSpace brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -222,7 +218,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testSendMessageUsingBindingCert() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -272,7 +267,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     void testLoginWithOpensShiftCredentials() throws Exception {
         AddressSpace brokeredSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -300,7 +294,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @DisabledIfEnvironmentVariable(named = USE_MINUKUBE_ENV, matches = "true")
     @ExternalClients
     void testSendReceiveInsideCluster() throws Exception {
         AddressSpace addressSpace = new AddressSpaceBuilder()

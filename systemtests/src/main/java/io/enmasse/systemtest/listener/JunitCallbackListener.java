@@ -6,7 +6,7 @@ package io.enmasse.systemtest.listener;
 
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedIoTManager;

@@ -13,7 +13,8 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.condition.AssumeCluster;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +37,7 @@ import static java.time.Duration.ofMinutes;
 import static java.util.Collections.singletonMap;
 
 @Tag(SMOKE)
-@EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
+@AssumeCluster(cluster = "minikube")
 class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleK8sDeployTest.class);

@@ -62,11 +62,11 @@ public class TestInfo {
     }
 
     public boolean isSameClass(TestIdentifier test1, ExtensionContext test2) {
-        return test1.getUniqueId().contains(test2.getRequiredTestClass().getName());
+        return test1 != null && test2 != null && test1.getUniqueId().contains(test2.getRequiredTestClass().getName());
     }
 
     public boolean isSameTestMethod(TestIdentifier test1, ExtensionContext test2) {
-        return test1.getLegacyReportingName().replaceAll("\\(.*\\)", "").equals(test2.getRequiredTestMethod().getName());
+        return test1 != null && test2 != null && test1.getLegacyReportingName().replaceAll("\\(.*\\)", "").equals(test2.getRequiredTestMethod().getName());
     }
 
     public List<String> getTags(TestIdentifier test) {
@@ -83,6 +83,7 @@ public class TestInfo {
                 || (nextTestTags.contains(TestTag.SHARED_MQTT) && currentTestTags.contains(TestTag.SHARED_MQTT))
                 || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
     }
+
     public boolean isTestShared() {
         for (String tag : getTags(tests.get(getCurrentTestIndex()))) {
             if (TestTag.SHARED_TAGS.contains(tag)) {
@@ -146,14 +147,20 @@ public class TestInfo {
     }
 
     public int getCurrentTestIndex() {
-        TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
-                && isSameClass(testIdentifier, actualTest)).findFirst().get();
-        return tests.indexOf(test);
+        if (actualTest != null) {
+            TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
+                    && isSameClass(testIdentifier, actualTest)).findFirst().get();
+            return tests.indexOf(test);
+        }
+        return 0;
     }
 
     public int getCurrentClassIndex() {
-        TestIdentifier test = testClasses.stream().filter(testClass -> isSameClass(testClass, actualTest)).findFirst().get();
-        return testClasses.indexOf(test);
+        if (actualTestClass != null) {
+            TestIdentifier test = testClasses.stream().filter(testClass -> isSameClass(testClass, actualTestClass)).findFirst().get();
+            return testClasses.indexOf(test);
+        }
+        return 0;
     }
 
     public List<TestIdentifier> getTests() {
