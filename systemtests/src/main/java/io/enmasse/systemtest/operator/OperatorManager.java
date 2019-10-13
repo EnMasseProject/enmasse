@@ -152,6 +152,7 @@ public class OperatorManager {
     }
 
     public boolean isIoTOperatorDeployed() {
-        return kube.getCRD("iotprojects.iot.enmasse.io") != null;
+        return kube.getCRD("iotprojects.iot.enmasse.io") != null
+                && kube.getCRD("iotconfigs.iot.enmasse.io") != null;
     }
 }
