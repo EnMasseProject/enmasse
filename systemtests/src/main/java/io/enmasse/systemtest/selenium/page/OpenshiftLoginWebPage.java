@@ -69,7 +69,7 @@ public class OpenshiftLoginWebPage implements IWebPage {
 
     @Override
     public void checkReachableWebPage() {
-        if (Kubernetes.getInstance().getOcpVersion() == 40) {
+        if (Kubernetes.getInstance().getOcpVersion() == 4) {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlContains("oauth/authorize"));
         } else {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("inputPassword")));
