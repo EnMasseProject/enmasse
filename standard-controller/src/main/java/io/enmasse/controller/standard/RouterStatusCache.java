@@ -12,10 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -40,7 +44,8 @@ public class RouterStatusCache implements Runnable {
     private volatile boolean checkRouterLinks = false;
     private volatile List<RouterStatus> latestResult = Collections.emptyList();
 
-    RouterStatusCache(RouterManagement routerManagement, Kubernetes kubernetes, EventLogger eventLogger, String addressSpace, Duration checkInterval) {
+    RouterStatusCache(RouterManagement routerManagement, Kubernetes kubernetes, EventLogger eventLogger, String addressSpace, Duration checkInterval)
+    {
         this.routerManagement = routerManagement;
         this.kubernetes = kubernetes;
         this.eventLogger = eventLogger;
@@ -54,20 +59,35 @@ public class RouterStatusCache implements Runnable {
 
     void checkRouterStatus() {
         RouterStatusCollector routerStatusCollector = new RouterStatusCollector(routerManagement, checkRouterLinks);
-        List<RouterStatus> routerStatusList = new ArrayList<>();
         List<Pod> routers = kubernetes.listRouters().stream()
                 .filter(Readiness::isPodReady)
                 .collect(Collectors.toList());
 
         log.info("Collecting status from {} routers", routers.size());
+
+        Map<String, Future<RouterStatus>> futures = new HashMap<>();
         for (Pod router : routers) {
+            CompletableFuture<RouterStatus> result = new CompletableFuture<>();
+            futures.put(router.getMetadata().getName(), result);
+            CompletableFuture.runAsync(() -> {
+                try {
+                    result.complete(routerStatusCollector.collect(router));
+                } catch (Exception e) {
+                    result.completeExceptionally(e);
+                }
+            });
+        }
+
+        List<RouterStatus> routerStatusList = new ArrayList<>();
+        for (Map.Entry<String, Future<RouterStatus>> entry : futures.entrySet()) {
             try {
-                RouterStatus routerStatus = routerStatusCollector.collect(router);
-                if (routerStatus != null) {
-                    routerStatusList.add(routerStatus);
+                // Timeouts are already handled - but multiply that timeout by 10 to make sure we got a response
+                RouterStatus status = entry.getValue().get(routerManagement.getConnectTimeout().plus(routerManagement.getQueryTimeout()).multipliedBy(10).getSeconds(), TimeUnit.SECONDS);
+                if (status != null) {
+                    routerStatusList.add(status);
                 }
             } catch (Exception e) {
-                log.info("Error requesting router status from {}. Ignoring", router.getMetadata().getName(), e);
+                log.info("Error requesting router status from {}. Ignoring", entry.getKey(), e);
                 eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, addressSpace);
                 routerCheckFailures.incrementAndGet();
             }
@@ -78,7 +98,6 @@ public class RouterStatusCache implements Runnable {
     public void setCheckRouterLinks(boolean checkRouterLinks) {
         this.checkRouterLinks = checkRouterLinks;
     }
-
 
     public int getRouterCheckFailures() {
         return routerCheckFailures.get();
