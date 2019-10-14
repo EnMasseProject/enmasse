@@ -872,12 +872,12 @@ spec:
           displayName: Type
           path: type
           x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:label'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
         - description: The address space plan.
           displayName: Plan
           path: plan
           x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:label'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
       statusDescriptors:
         - description: Address space ready.
           displayName: Ready
@@ -897,12 +897,12 @@ spec:
           displayName: Type
           path: type
           x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:label'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
         - description: The address plan.
           displayName: Plan
           path: plan
           x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:label'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
       statusDescriptors:
         - description: Address ready.
           displayName: Ready
@@ -935,17 +935,17 @@ spec:
           displayName: Username
           path: username
           x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:label'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
         - description: The authentication type
           displayName: Authentication type
           path: authentication.type
           x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:label'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
         - description: The password
           displayName: Password
           path: authentication.password
           x-descriptors:
-            - 'urn:alm:descriptor:com.tectonic.ui:label'
+            - 'urn:alm:descriptor:com.tectonic.ui:text'
   customresourcedefinitions:
     owned:
       - group: admin.enmasse.io
@@ -964,37 +964,37 @@ spec:
             displayName: Link capacity
             path: router.linkCapacity
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The amount of memory to configure for AMQP router pods.
             displayName: Router Memory
             path: router.resources.memory
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The amount of memory to configure for message brokers.
             displayName: Broker Memory
             path: broker.resources.memory
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The amount of storage to configure for message brokers.
             displayName: Broker Storage
             path: broker.resources.storage
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The storage class name to use for message broker persistent volumes.
             displayName: Broker Storage Class
             path: broker.storageClassName
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The policy to apply when message queues are full.
             displayName: Broker Address Full Policy
             path: broker.addressFullPolicy
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The amount of memory to configure for the admin operator.
             displayName: Admin Memory
             path: admin.resources.memory
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
       - group: admin.enmasse.io
         version: v1beta1
         kind: BrokeredInfraConfig
@@ -1006,27 +1006,27 @@ spec:
             displayName: Broker Memory
             path: broker.resources.memory
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The amount of storage to configure for message brokers.
             displayName: Broker Storage
             path: broker.resources.storage
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The storage class name to use for message broker persistent volumes.
             displayName: Broker Storage Class
             path: broker.storageClassName
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The policy to apply when message queues are full.
             displayName: Broker Address Full Policy
             path: broker.addressFullPolicy
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The amount of memory to configure for the admin operator.
             displayName: Admin Memory
             path: admin.resources.memory
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
       - group: admin.enmasse.io
         version: v1beta2
         kind: AddressPlan
@@ -1038,22 +1038,22 @@ spec:
             displayName: Display Name
             path: displayName
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The description to be shown in the console UI.
             displayName: Short Description
             path: shortDescription
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The broker resource usage.
             displayName: Broker Usage
             path: resources.broker
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The router resource usage.
             displayName: Router Usage
             path: resources.router
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
       - group: admin.enmasse.io
         version: v1beta2
         kind: AddressSpacePlan
@@ -1065,32 +1065,32 @@ spec:
             displayName: Display Name
             path: displayName
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The reference to the infrastructure config used by this plan.
             displayName: InfraConfig Reference
             path: infraConfigRef
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The description to be shown in the console UI.
             displayName: Short Description
             path: shortDescription
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The quota for broker resources
             displayName: Broker Quota
             path: resourceLimits.broker
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The quota for router resources
             displayName: Router Quota
             path: resourceLimits.router
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: The aggregate quota for all resources
             displayName: Aggregate Quota
             path: resourceLimits.aggregate
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
       - group: admin.enmasse.io
         version: v1beta1
         kind: AuthenticationService
@@ -1102,7 +1102,7 @@ spec:
             displayName: Type
             path: type
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
       - group: admin.enmasse.io
         version: v1beta1
         kind: ConsoleService
@@ -1114,27 +1114,27 @@ spec:
             displayName: Discovery Metadata URL
             path: discoveryMetadataUrl
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: Console certificate secret name
             displayName: Console certificate secret name
             path: certificateSecret.name
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: OAUTH Client Secret Name
             displayName: OAUTH Client Secret Name
             path: oauthClientSecret.name
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: Scope
             displayName: Scope
             path: scope
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
           - description: Host to use for ingress
             displayName: Host
             path: host
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:label'
+              - 'urn:alm:descriptor:com.tectonic.ui:text'
 
       - group: iot.enmasse.io
         version: v1alpha1
