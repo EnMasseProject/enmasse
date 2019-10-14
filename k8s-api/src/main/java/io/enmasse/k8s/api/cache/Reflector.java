@@ -54,7 +54,7 @@ public class Reflector<T extends HasMetadata, LT extends KubernetesResourceList<
                 nextResync = Instant.now(clock).plus(resyncInterval);
             }
             long sleepTime = Math.max(1, nextResync.toEpochMilli() - now.toEpochMilli());
-            log.info("Waiting on event queue for {} ms unless notified", sleepTime);
+            log.debug("Waiting on event queue for {} ms unless notified", sleepTime);
             queue.pop(processor, sleepTime, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
