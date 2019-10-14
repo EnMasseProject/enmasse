@@ -3,7 +3,7 @@
 // assembly-configuration-sizing-guide.adoc
 //
 [id='operator-component-sizing-{context}']
-== Operator component sizing
+= Operator component sizing
 
 Operators are tasked with reading all address configuration and applying this to the routers and brokers. The operators should be sized proportionally to the number of addresses.
 
@@ -11,7 +11,7 @@ In the `standard` address space, the admin pod contains two processes, `agent` a
 
 NOTE: the operator processes are running either on a JVM or a Node.JS VM. The memory for these should be sized twice the amount of memory required for the address configuration itself.
 
-=== Example
+== Example
 
 Each address adds about 20kB overhead to the operator process. With 1500 addresses, an additional `1500 * 2kB = 30MB` is needed for the operator process.
 

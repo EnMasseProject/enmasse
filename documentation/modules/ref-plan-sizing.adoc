@@ -3,7 +3,7 @@
 // assembly-configuration-sizing-guide.adoc
 //
 [id='plan-sizing-{context}']
-== Plan sizing
+= Plan sizing
 
 Plans enable dynamic scaling in the `standard` address space, as shown in the broker and router sizing sections. At the cluster level, the combination of plans and infrastructure configs will determine the max number of pods that can be deployed on the cluster. At present, {ProductName} does not support limiting the number of address spaces that gets created, so some policy on who is allowed to create them should be applied. This can be handled through standard {KubePlatform} policies.
 

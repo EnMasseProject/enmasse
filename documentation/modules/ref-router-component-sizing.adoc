@@ -3,7 +3,7 @@
 // assembly-configuration-sizing-guide.adoc
 //
 [id='router-component-sizing-{context}']
-== Router component sizing
+= Router component sizing
 
 Routers are configured in the `StandardInfraConfig` resource. The router sizing must take the following into account:
 
@@ -19,7 +19,7 @@ The total number of links is then the number of queues/subscriptions + the numbe
 
 The router link capacity affects how many in-flight messages the router will handle per link. Setting this to a high value could improve performance, but at the cost of potentially more memory being used to hold in-flight messages. If you have low-volume client traffic, using the default link capacity should be sufficient.
 
-=== Example
+== Example
 
 Sizing should accomodate 500 anycast and 1000 queued addresses, with 10000 connected clients (1 link each), with a link capacity of 100 (max number of in-flight messages per link), and an average message size of 512 bytes.
 
@@ -64,11 +64,11 @@ spec:
   ...
 ----
 
-=== High Availability
+== High Availability
 
 Configuring routers for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage.
 
-=== Router scaling
+== Router scaling
 
 Routers are scaled dynamically on demand within the interval of `minReplicas` defined in the `StandardInfraConfig` resource and `resourceLimits.router` defined in the `AddressSpacePlan`. To restrict the number of routers to max four, but requiring a minimum amount of 2 routers for HA purposes, the following configuration is needed:
 
