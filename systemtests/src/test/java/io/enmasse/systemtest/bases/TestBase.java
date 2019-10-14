@@ -173,7 +173,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         if (kubernetes.getOcpVersion() == 4) {
             return String.format("https://console-openshift-console.%s", environment.kubernetesDomain());
         } else {
-            return String.format("%s/console", environment.getApiUrl());
+            return String.format("%sconsole", environment.getApiUrl());
         }
     }
 
