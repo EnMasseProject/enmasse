@@ -24,6 +24,7 @@ public class Environment {
     public static final String START_TEMPLATES_ENV = "START_TEMPLATES";
     public static final String TEMPLATES_PATH = "TEMPLATES";
     public static final String SKIP_CLEANUP_ENV = "SKIP_CLEANUP";
+    public static final String SKIP_UNNSTALL = "SKIP_UNINSTALL";
     public static final String DOWNSTREAM_ENV = "DOWNSTREAM";
     public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
     public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
@@ -58,7 +59,8 @@ public class Environment {
     /**
      * Skip removing address-spaces
      */
-    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv(SKIP_CLEANUP_ENV));
+    private final boolean skipCleanup = Boolean.parseBoolean(System.getenv().getOrDefault(SKIP_CLEANUP_ENV, "false"));
+    private final boolean skipUninstall = Boolean.parseBoolean(System.getenv().getOrDefault(SKIP_UNNSTALL, "false"));
     /**
      * Store screenshots every time
      */
@@ -118,6 +120,10 @@ public class Environment {
 
     public boolean skipCleanup() {
         return skipCleanup;
+    }
+
+    public boolean skipUninstall() {
+        return skipUninstall;
     }
 
     public boolean storeScreenshots() {
