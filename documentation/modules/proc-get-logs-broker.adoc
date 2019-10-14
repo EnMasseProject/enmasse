@@ -6,6 +6,8 @@
 [id='get-logs-router-{context}']
 = Viewing broker logs
 
+For the `brokered` or `standard` address space type, you can view the broker logs to troubleshoot issues with clients not connecting or issues with sending and receiving messages.
+
 .Procedure
 
 . List all broker Pods and choose the Pod for the relevant address space:

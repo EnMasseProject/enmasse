@@ -6,6 +6,8 @@
 [id='get-logs-broker-{context}']
 = Viewing router logs
 
+For the `standard` address space type, you can view the router logs to troubleshoot issues with clients not connecting or issues with sending and receiving messages.
+
 .Procedure
 
 . List all router Pods and choose the Pod for the relevant address space:
