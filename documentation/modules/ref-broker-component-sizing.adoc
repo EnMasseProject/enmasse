@@ -54,10 +54,10 @@ spec:
 
 === Example with paging
 
-When paging is enabled, the original formula can be modified to only account for a reference to the message as well as holding 10 in-flight messages in memory:
+When paging is enabled, the original formula can be modified to only account for a reference to the message as well as holding 1000 in-flight messages in memory:
 
 ``` 
-(10 * 1000 * 128) + (10 * 128 * 1024) = 2.5MB
+(1000 * 1000 * 128) + (10 * 128 * 1024) = 123.5MB
 ```
 
 The amount of memory configured for the broker can now be reduced:
@@ -71,8 +71,7 @@ metadata:
 spec:
   broker:
     addressFullPolicy: PAGE
-    globalMaxSize: 5Mb
-    linkCapacity: 10
+    globalMaxSize: 124Mb
     resources:
       memory: 512Mi
       storage: 2Gi
