@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SeleniumFirefox
-@AssumeCluster(cluster = "oc")
+@AssumeCluster(cluster = "openshift")
 @AssumeOpenshiftVersion(version = 3)
 class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();

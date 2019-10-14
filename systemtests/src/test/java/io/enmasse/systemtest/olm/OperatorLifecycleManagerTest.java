@@ -32,7 +32,7 @@ import static io.enmasse.systemtest.TestTag.OLM;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Tag(OLM)
-@AssumeCluster(cluster = "oc")
+@AssumeCluster(cluster = "openshift")
 @AssumeOpenshiftVersion(version = 4)
 class OperatorLifecycleManagerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();

@@ -139,7 +139,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "oc")
+    @AssumeCluster(cluster = "openshift")
     void testAddressSpaceRules() throws Exception {
         Instant startTs = Instant.now();
         String testNamespace = "monitoring-test";

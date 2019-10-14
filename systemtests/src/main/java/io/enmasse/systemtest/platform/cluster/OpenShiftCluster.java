@@ -10,16 +10,16 @@ import io.enmasse.systemtest.executor.ExecutionResultData;
 import java.util.Arrays;
 
 public class OpenShiftCluster implements KubeCluster {
-    private static final String IDENTIFIER = "oc";
+    private static final String IDENTIFIER = "openshift";
 
     @Override
     public boolean isAvailable() {
-        return Exec.isExecutableOnPath(IDENTIFIER);
+        return Exec.isExecutableOnPath(getKubeCmd());
     }
 
     @Override
     public boolean isClusterUp() {
-        ExecutionResultData data = Exec.execute(Arrays.asList(IDENTIFIER, "status"), false);
+        ExecutionResultData data = Exec.execute(Arrays.asList(getKubeCmd(), "status"), false);
         if (!data.getRetCode()) {
             return false;
         } else return !data.getStdErr().contains("refused");

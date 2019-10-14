@@ -74,7 +74,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     private Address topic;
 
     @Test
-    @AssumeCluster(cluster = "oc")
+    @AssumeCluster(cluster = "openshift")
     void testSelfSigned() throws Exception {
 
         CertSpec spec = new CertSpecBuilder()
@@ -91,7 +91,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "oc")
+    @AssumeCluster(cluster = "openshift")
     void testConsoleSelfSigned() throws Exception {
         CertSpec spec = new CertSpecBuilder()
                 .withProvider(CertProvider.selfsigned.name())
@@ -121,7 +121,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "oc")
+    @AssumeCluster(cluster = "openshift")
     void testCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String messagingHost = String.format("messaging.%s", domain);
@@ -150,7 +150,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "oc")
+    @AssumeCluster(cluster = "openshift")
     void testConsoleCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String consoleHost = String.format("space-console.%s", domain);
@@ -167,7 +167,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "oc")
+    @AssumeCluster(cluster = "openshift")
     void testOpenshiftCertProvider() throws Exception {
         createTestEnv(false,
                 new EndpointSpecBuilder()

@@ -500,7 +500,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     @Tag(ACCEPTANCE)
-    @AssumeCluster(cluster = "oc")
+    @AssumeCluster(cluster = "openshift")
     void testCreateAddressSpaceRoleTenantEdit() throws Exception {
 
         UserCredentials user = Credentials.userCredentials();
