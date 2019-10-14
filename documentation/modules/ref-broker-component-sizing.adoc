@@ -21,7 +21,7 @@ The broker will persist all messages to disk. When the `BLOCK`, `FAIL` or `DROP`
 Given 10 queues with a maximum of 1000 messages stored per queue, an average message size of 128kB, the amount of storage space required to store messages is:
 
 ```
-10 * 1000 * (128 * 1024) = 1.25 GB
+10 * 1000 * (128 + (128 * 1024)) = 1.25 GB
 ```
 
 In addition, the broker has a fixed storage footprint of about 50MB.
@@ -72,6 +72,7 @@ spec:
   broker:
     addressFullPolicy: PAGE
     globalMaxSize: 5Mb
+    linkCapacity: 10
     resources:
       memory: 512Mi
       storage: 2Gi
