@@ -58,10 +58,10 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
         if (!Environment.getInstance().skipCleanup()) {
-            if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
+            if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed() && !Environment.getInstance().skipUninstall()) {
                 operatorManager.removeIoTOperator();
             }
-            if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade()) {
+            if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade() && !Environment.getInstance().skipUninstall()) {
                 operatorManager.deleteEnmasseBundle();
             }
         } else {

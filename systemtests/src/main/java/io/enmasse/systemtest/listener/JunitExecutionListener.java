@@ -78,7 +78,7 @@ public class JunitExecutionListener implements TestExecutionListener {
             LOGGER.warn("Remove address spaces when test run finished - SKIPPED!");
         }
         TimeMeasuringSystem.printAndSaveResults();
-        if (!Environment.getInstance().skipCleanup()) {
+        if (!(Environment.getInstance().skipCleanup() || Environment.getInstance().skipUninstall())) {
             try {
                 OperatorManager.getInstance().deleteEnmasseBundle();
                 OperatorManager.getInstance().clean();
