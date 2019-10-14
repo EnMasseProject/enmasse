@@ -7,7 +7,6 @@ package io.enmasse.systemtest.bases.shared;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.bases.ITestBaseBrokered;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
-import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import org.junit.jupiter.api.Tag;
 
 import static io.enmasse.systemtest.TestTag.SHARED_BROKERED;

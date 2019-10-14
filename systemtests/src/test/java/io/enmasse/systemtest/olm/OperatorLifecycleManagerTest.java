@@ -11,7 +11,6 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.Openshift4WebPage;
@@ -88,7 +87,7 @@ class OperatorLifecycleManagerTest extends TestBase {
     void testBasicMessagingAfterOlmInstallation() throws Exception {
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(infraNamespace).withName("myspace").get();
         Address exampleAddress = kubernetes.getAddressClient(infraNamespace).withName("myspace.myqueue").get();
-        getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress), IsolatedResourcesManager.getInstance());
+        getClientUtils().assertCanConnect(exampleSpace, new UserCredentials("user", "enmasse"), Collections.singletonList(exampleAddress), resourcesManager);
     }
 
     @Test

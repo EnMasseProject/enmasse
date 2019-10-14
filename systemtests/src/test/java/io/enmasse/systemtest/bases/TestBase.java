@@ -21,10 +21,7 @@ import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
-import io.enmasse.systemtest.manager.SharedIoTManager;
-import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
@@ -102,22 +99,20 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     @BeforeEach
     public void initTest() throws Exception {
         LOGGER.info("Test init");
-        defaultCredentials = environment.getDefaultCredentials();
-        managementCredentials = environment.getManagementCredentials();
         resourcesManager = getResourceManager();
         if (TestInfo.getInstance().isTestShared()) {
-
-            ResourceManager.ADDRESS_SPACE_PLAN = getDefaultAddressSpacePlan();
-            ResourceManager.ADDRESS_SPACE_TYPE = getAddressSpaceType().toString();
-            ResourceManager.DEFAULT_ADD_SPACE_IDENTIFIER = getDefaultAddrSpaceIdentifier();
-
+            defaultCredentials = environment.getSharedDefaultCredentials();
+            managementCredentials = environment.getSharedManagementCredentials();
+            resourcesManager.setAddressSpacePlan(getDefaultAddressSpacePlan());
+            resourcesManager.setAddressSpaceType(getAddressSpaceType().toString());
+            resourcesManager.setDefaultAddSpaceIdentifier(getDefaultAddrSpaceIdentifier());
             if (resourcesManager.getSharedAddressSpace() == null) {
-                if (TestInfo.getInstance().isTestIoT()) {
-                    ((SharedIoTManager) resourcesManager).createSharedIoTEnv();
-                } else {
-                    ((SharedResourceManager) resourcesManager).setupSharedEnvironment();
-                }
+                resourcesManager.setup();
             }
+        } else {
+            defaultCredentials = environment.getDefaultCredentials();
+            managementCredentials = environment.getManagementCredentials();
+            resourcesManager.setup();
         }
     }
 
@@ -126,7 +121,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     //================================================================================================
 
     protected boolean userExist(AddressSpace addressSpace, String username) {
-        return IsolatedResourcesManager.getInstance().getUser(addressSpace, username) != null;
+        return resourcesManager.getUser(addressSpace, username) != null;
     }
 
     /**
@@ -577,7 +572,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 .done());
 
         for (User user : users) {
-            IsolatedResourcesManager.getInstance().createOrUpdateUser(addressSpace, user);
+            resourcesManager.createOrUpdateUser(addressSpace, user);
         }
         return users;
     }
@@ -672,7 +667,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
         LOGGER.info("addresses {} successfully deleted", d2.getSpec().getAddress());
 
-        IsolatedResourcesManager.getInstance().setAddresses(d1, d2);
+        resourcesManager.setAddresses(d1, d2);
         resourcesManager.deleteAddresses(d1, d2);
 
         listRes = AddressUtils.getAddresses(addressSpace);
@@ -895,7 +890,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         String sufix = new AddressSpaceUtils().isBrokered(resourcesManager.getSharedAddressSpace()) ? "#" : "*";
         users.forEach((user) -> {
             try {
-                IsolatedResourcesManager.getInstance().createOrUpdateUser(resourcesManager.getSharedAddressSpace(),
+                resourcesManager.createOrUpdateUser(resourcesManager.getSharedAddressSpace(),
                         UserUtils.createUserResource(user)
                                 .editSpec()
                                 .withAuthorization(Collections.singletonList(

@@ -44,6 +44,7 @@ public class IsolatedResourcesManager extends ResourceManager {
     private ArrayList<StandardInfraConfig> standardInfraConfigs;
     private ArrayList<BrokeredInfraConfig> brokeredInfraConfigs;
     private ArrayList<AuthenticationService> authServices;
+    private UserCredentials defaultCredentials = environment.getDefaultCredentials();
 
     private IsolatedResourcesManager() {
         LOGGER = CustomLogger.getLogger();
@@ -71,7 +72,6 @@ public class IsolatedResourcesManager extends ResourceManager {
     }
 
 
-    @Override
     public void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
@@ -85,12 +85,11 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     @Override
     public void setup() {
-        if (currentAddressSpaces.size() != 0) {
-            initFactories(currentAddressSpaces.get(0));
-        } else {
+        if (currentAddressSpaces.isEmpty()) {
             initFactories(null);
+        } else {
+            initFactories(currentAddressSpaces.get(0));
         }
-
     }
 
     @Override
@@ -145,20 +144,24 @@ public class IsolatedResourcesManager extends ResourceManager {
     // Address plans
     //------------------------------------------------------------------------------------------------
 
+    @Override
     public void createAddressPlan(AddressPlan addressPlan) throws Exception {
         addressPlans.add(addressPlan);
         super.createAddressPlan(addressPlan);
     }
 
+    @Override
     public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
         super.removeAddressPlan(addressPlan);
         addressPlans.removeIf(addressPlanIter -> addressPlanIter.getMetadata().getName().equals(addressPlan.getMetadata().getName()));
     }
 
+    @Override
     public void replaceAddressPlan(AddressPlan plan) throws InterruptedException {
         super.replaceAddressPlan(plan);
     }
 
+    @Override
     public AddressPlan getAddressPlan(String name) throws Exception {
         return super.getAddressPlan(name);
     }
@@ -167,16 +170,19 @@ public class IsolatedResourcesManager extends ResourceManager {
     // Address space plans
     //------------------------------------------------------------------------------------------------
 
+    @Override
     public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         addressSpacePlans.add(addressSpacePlan);
         super.createAddressSpacePlan(addressSpacePlan);
     }
 
+    @Override
     public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
         super.removeAddressSpacePlan(addressSpacePlan);
         addressSpacePlans.removeIf(spacePlanIter -> spacePlanIter.getMetadata().getName().equals(addressSpacePlan.getMetadata().getName()));
     }
 
+    @Override
     public AddressSpacePlan getAddressSpacePlan(String config) throws Exception {
         return super.getAddressSpacePlan(config);
     }
@@ -185,10 +191,12 @@ public class IsolatedResourcesManager extends ResourceManager {
     // Infra configs
     //------------------------------------------------------------------------------------------------
 
+    @Override
     public BrokeredInfraConfig getBrokeredInfraConfig(String name) throws Exception {
         return Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(name).get();
     }
 
+    @Override
     public StandardInfraConfig getStandardInfraConfig(String name) throws Exception {
         return Kubernetes.getInstance().getStandardInfraConfigClient().withName(name).get();
     }
@@ -217,10 +225,12 @@ public class IsolatedResourcesManager extends ResourceManager {
     // Authentication services
     //------------------------------------------------------------------------------------------------
 
+    @Override
     public AuthenticationService getAuthService(String name) throws Exception {
         return Kubernetes.getInstance().getAuthenticationServiceClient().withName(name).get();
     }
 
+    @Override
     public void replaceAuthService(AuthenticationService authService) throws Exception {
         replaceAuthService(authService, false);
     }
@@ -234,17 +244,20 @@ public class IsolatedResourcesManager extends ResourceManager {
         }
     }
 
+    @Override
     public void createAuthService(AuthenticationService authenticationService) throws Exception {
         authServices.add(authenticationService);
         super.createAuthService(authenticationService);
     }
 
 
+    @Override
     public void removeAuthService(AuthenticationService authService) throws Exception {
         super.removeAuthService(authService);
         authServices.removeIf(authserviceId -> authserviceId.getMetadata().getName().equals(authService.getMetadata().getName()));
     }
 
+    @Override
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             currentAddressSpaces.add(addressSpace);
@@ -309,6 +322,7 @@ public class IsolatedResourcesManager extends ResourceManager {
         TestUtils.deleteAddressSpaceCreatedBySC(kubernetes, addressSpace, logCollector);
     }
 
+    @Override
     public AmqpClientFactory getAmqpClientFactory() {
         return amqpClientFactory;
     }
@@ -318,6 +332,7 @@ public class IsolatedResourcesManager extends ResourceManager {
         this.amqpClientFactory = amqpClientFactory;
     }
 
+    @Override
     public MqttClientFactory getMqttClientFactory() {
         return mqttClientFactory;
     }

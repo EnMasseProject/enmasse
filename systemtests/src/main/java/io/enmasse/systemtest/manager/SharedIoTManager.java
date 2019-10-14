@@ -8,7 +8,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -94,34 +93,30 @@ public class SharedIoTManager extends ResourceManager {
         }
     }
 
-    @Override
-    void initFactories(AddressSpace addressSpace) {
-        amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), defaultCredentials);
-        mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), defaultCredentials);
+    void initFactories(AddressSpace addressSpace, UserCredentials credentials) {
+        amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), credentials);
+        mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), credentials);
     }
 
     @Override
-    public void setup() {
+    public void setup() throws Exception {
         if (!kubernetes.namespaceExists(IOT_PROJECT_NAMESPACE)) {
             LOGGER.info("Namespace {} doesn't exists and will be created.", IOT_PROJECT_NAMESPACE);
             kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
         }
-    }
 
-    public void createSharedIoTEnv() throws Exception {
-        Environment.getInstance().setDefaultCredentials(new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString()));
+        UserCredentials credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
 
         if (sharedIoTConfig == null) {
             createNewIoTConfig();
         }
 
         if (sharedIoTProject == null) {
-            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project",
-                    DEFAULT_ADD_SPACE_IDENTIFIER, IOT_PROJECT_NAMESPACE, ADDRESS_SPACE_PLAN);
+            sharedIoTProject = IoTUtils.getBasicIoTProjectObject("shared-iot-project", defaultAddSpaceIdentifier, IOT_PROJECT_NAMESPACE, addressSpacePlan);
             createIoTProject(sharedIoTProject);
         }
-        initFactories(getSharedAddressSpace());
-        createOrUpdateUser(getSharedAddressSpace(), defaultCredentials);
+        initFactories(getSharedAddressSpace(), credentials);
+        createOrUpdateUser(getSharedAddressSpace(), credentials);
         this.amqpClient = amqpClientFactory.createQueueClient();
     }
 
