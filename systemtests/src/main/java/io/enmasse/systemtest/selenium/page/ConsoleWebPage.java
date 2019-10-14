@@ -307,13 +307,13 @@ public class ConsoleWebPage implements IWebPage {
      * get specific address
      */
     public AddressWebItem getAddressItem(Address destination) {
-        AddressWebItem returnedElement = null;
         List<AddressWebItem> addressWebItems = getAddressItems();
         for (AddressWebItem item : addressWebItems) {
-            if (item.getName().equals(destination.getSpec().getAddress()))
-                returnedElement = item;
+            if (item.getName().equals(destination.getSpec().getAddress())) {
+                return item;
+            }
         }
-        return returnedElement;
+        return null;
     }
 
     /**
@@ -338,17 +338,17 @@ public class ConsoleWebPage implements IWebPage {
      */
     public List<ConnectionWebItem> getConnectionItems(int expectedCount) {
         List<ConnectionWebItem> connectionItems = new ArrayList<>();
-        int timeout = 60000;
+        int timeout = 120000;
         long endTime = System.currentTimeMillis() + timeout;
         while (connectionItems.size() != expectedCount && endTime > System.currentTimeMillis()) {
-            log.info("First iteration waiting for {} connections items", expectedCount);
+            log.info("Awaiting {}/{} active connections items", connectionItems.size(), expectedCount);
             WebElement content = getContentContainer();
             List<WebElement> elements = content.findElements(By.className("list-group-item"));
             connectionItems.clear();
             for (WebElement element : elements) {
                 if (!element.getAttribute("class").contains("disabled")) {
                     ConnectionWebItem item = new ConnectionWebItem(element);
-                    log.info(String.format("Got connection: %s", item.toString()));
+                    log.info("Got connection: {}", item);
                     connectionItems.add(item);
                 }
             }
@@ -690,7 +690,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(nextButton);
         selenium.clickOnItem(nextButton);
 
-        AddressWebItem items = selenium.waitUntilItemPresent(60, () -> getAddressItem(destination));
+        AddressWebItem items = selenium.waitUntilItemPresent(120, () -> getAddressItem(destination));
 
         assertNotNull(items, String.format("Console failed, does not contain created address item : %s", destination));
 
