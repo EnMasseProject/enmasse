@@ -414,7 +414,7 @@ public abstract class Kubernetes {
     }
 
     public List<Pod> listPods(Map<String, String> labelSelector) {
-        return client.pods().withLabels(labelSelector).list().getItems();
+        return client.pods().inNamespace(infraNamespace).withLabels(labelSelector).list().getItems();
     }
 
     public List<Pod> listPods(String namespace, Map<String, String> labelSelector) {
