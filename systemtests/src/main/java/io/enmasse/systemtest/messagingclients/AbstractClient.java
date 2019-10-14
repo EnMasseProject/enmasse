@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.messagingclients;
 
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.executor.Executor;
+import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.vertx.core.json.JsonArray;
@@ -33,7 +33,7 @@ public abstract class AbstractClient {
     private final int DEFAULT_ASYNC_TIMEOUT = 120000;
     private final int DEFAULT_SYNC_TIMEOUT = 60000;
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
-    private Executor executor;
+    private Exec executor;
     private ClientType clientType;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
@@ -181,8 +181,8 @@ public abstract class AbstractClient {
     private boolean runClient(int timeout, boolean logToOutput) {
         messages.clear();
         try {
-            executor = new Executor(logPath);
-            int ret = executor.execute(prepareCommand(), timeout);
+            executor = new Exec(logPath);
+            int ret = executor.exec(prepareCommand(), timeout);
             synchronized (lock) {
                 log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
                 if (logToOutput) {

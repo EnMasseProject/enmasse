@@ -54,19 +54,21 @@ public class TestInfo {
     }
 
     public boolean isAddressSpaceDeletable() {
-        int currentTestIndex = getCurrentTestIndex();
-        if (!(currentTestIndex == tests.size() - 1)) {
-            return !isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
+        if (tests.size() > 0) {
+            int currentTestIndex = getCurrentTestIndex();
+            if (!(currentTestIndex == tests.size() - 1)) {
+                return !isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
+            }
         }
         return true;
     }
 
     public boolean isSameClass(TestIdentifier test1, ExtensionContext test2) {
-        return test1.getUniqueId().contains(test2.getRequiredTestClass().getName());
+        return test1 != null && test2 != null && test1.getUniqueId().contains(test2.getRequiredTestClass().getName());
     }
 
     public boolean isSameTestMethod(TestIdentifier test1, ExtensionContext test2) {
-        return test1.getLegacyReportingName().replaceAll("\\(.*\\)", "").equals(test2.getRequiredTestMethod().getName());
+        return test1 != null && test2 != null && test1.getLegacyReportingName().replaceAll("\\(.*\\)", "").equals(test2.getRequiredTestMethod().getName());
     }
 
     public List<String> getTags(TestIdentifier test) {
@@ -83,19 +85,21 @@ public class TestInfo {
                 || (nextTestTags.contains(TestTag.SHARED_MQTT) && currentTestTags.contains(TestTag.SHARED_MQTT))
                 || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
     }
+
     public boolean isTestShared() {
-        for (String tag : getTags(tests.get(getCurrentTestIndex()))) {
+        for (String tag : actualTest.getTags()) {
             if (TestTag.SHARED_TAGS.contains(tag)) {
                 LOGGER.info("Test is shared");
                 return true;
             }
         }
+
         LOGGER.info("Test is not shared!");
         return false;
     }
 
     public boolean isTestIoT() {
-        for (String tag : getTags(tests.get(getCurrentTestIndex()))) {
+        for (String tag : actualTest.getTags()) {
             if (TestTag.IOT_TAGS.contains(tag)) {
                 LOGGER.info("Test is IoT");
                 return true;
@@ -115,7 +119,7 @@ public class TestInfo {
     }
 
     public boolean isEndOfIotTests() {
-        if (getCurrentTestIndex() + 1 < tests.size()) {
+        if (tests.size() > 0 && getCurrentTestIndex() + 1 < tests.size()) {
             for (String tag : getTags(tests.get(getCurrentTestIndex() + 1))) {
                 if (TestTag.IOT_TAGS.contains(tag)) {
                     return false;
@@ -135,7 +139,7 @@ public class TestInfo {
     }
 
     public boolean isNextTestUpgrade() {
-        if (getCurrentClassIndex() + 1 < testClasses.size()) {
+        if (testClasses.size() > 0 && getCurrentClassIndex() + 1 < testClasses.size()) {
             for (String tag : new ArrayList<>(getTags(testClasses.get(getCurrentClassIndex() + 1)))) {
                 if (tag.equals(TestTag.UPGRADE)) {
                     return true;
@@ -146,14 +150,20 @@ public class TestInfo {
     }
 
     public int getCurrentTestIndex() {
-        TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
-                && isSameClass(testIdentifier, actualTest)).findFirst().get();
-        return tests.indexOf(test);
+        if (actualTest != null && tests.size() > 0) {
+            TestIdentifier test = tests.stream().filter(testIdentifier -> isSameTestMethod(testIdentifier, actualTest)
+                    && isSameClass(testIdentifier, actualTest)).findFirst().get();
+            return tests.indexOf(test);
+        }
+        return 0;
     }
 
     public int getCurrentClassIndex() {
-        TestIdentifier test = testClasses.stream().filter(testClass -> isSameClass(testClass, actualTest)).findFirst().get();
-        return testClasses.indexOf(test);
+        if (actualTestClass != null && testClasses.size() > 0) {
+            TestIdentifier test = testClasses.stream().filter(testClass -> isSameClass(testClass, actualTestClass)).findFirst().get();
+            return testClasses.indexOf(test);
+        }
+        return 0;
     }
 
     public List<TestIdentifier> getTests() {

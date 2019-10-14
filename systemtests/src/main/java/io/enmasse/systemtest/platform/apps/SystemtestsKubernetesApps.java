@@ -13,7 +13,24 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
@@ -92,10 +109,11 @@ public class SystemtestsKubernetesApps {
     }
 
 
-    public static void deleteMessagingClientApp() {
+    public static void deleteMessagingClientApp() throws Exception {
         if (Kubernetes.getInstance().deploymentExists(MESSAGING_PROJECT, MESSAGING_CLIENTS)) {
             Kubernetes.getInstance().deleteDeployment(MESSAGING_PROJECT, MESSAGING_CLIENTS);
         }
+        Kubernetes.getInstance().deleteNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
     public static void deployOpenshiftCertValidator(String namespace, Kubernetes kubeClient) throws Exception {
@@ -108,12 +126,13 @@ public class SystemtestsKubernetesApps {
         Thread.sleep(5000);
     }
 
-    public static void deleteOpenshiftCertValidator(String namespace, Kubernetes kubeClient) {
+    public static void deleteOpenshiftCertValidator(String namespace, Kubernetes kubeClient) throws Exception {
         if (kubeClient.deploymentExists(namespace, OPENSHIFT_CERT_VALIDATOR)) {
             kubeClient.deleteDeployment(namespace, OPENSHIFT_CERT_VALIDATOR);
             kubeClient.deleteService(namespace, OPENSHIFT_CERT_VALIDATOR);
             kubeClient.deleteIngress(namespace, OPENSHIFT_CERT_VALIDATOR);
         }
+        kubeClient.deleteNamespace(namespace);
     }
 
     public static void deployFirefoxSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
@@ -301,10 +320,10 @@ public class SystemtestsKubernetesApps {
                 .build();
 
         Service service = getSystemtestsServiceResource(name, name, new ServicePortBuilder()
-                .withName("amqp")
-                .withPort(5672)
-                .withTargetPort(new IntOrString(5672))
-                .build(),
+                        .withName("amqp")
+                        .withPort(5672)
+                        .withTargetPort(new IntOrString(5672))
+                        .build(),
                 tlsPort,
                 mutualTlsPort);
 
@@ -313,10 +332,10 @@ public class SystemtestsKubernetesApps {
         kubeCli.createExternalEndpoint(name, namespace, service, tlsPort);
 
         kubeCli.getClient()
-            .apps().deployments()
-            .inNamespace(namespace)
-            .withName(name)
-            .waitUntilReady(5, TimeUnit.MINUTES);
+                .apps().deployments()
+                .inNamespace(namespace)
+                .withName(name)
+                .waitUntilReady(5, TimeUnit.MINUTES);
 
         Thread.sleep(5000);
     }
@@ -352,13 +371,13 @@ public class SystemtestsKubernetesApps {
         loadDirectories(streamManipulator, Deletable::delete, paths);
     }
 
-    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,Boolean>> consumer, final Path... paths) throws Exception {
-        for ( Path path : paths ) {
+    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
+        for (Path path : paths) {
             loadDirectory(streamManipulator, consumer, path);
         }
     }
 
-    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata,Boolean>> consumer, final Path path) throws Exception {
+    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator, Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -703,71 +722,71 @@ public class SystemtestsKubernetesApps {
                 .endMetadata()
                 .withNewSpec()
                 .addToInitContainers(new ContainerBuilder()
-                        .withName("artemis-init")
-                        .withImage("quay.io/enmasse/artemis-base:2.10.0")
-                        .withCommand("/bin/sh")
-                        .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user "+user+" --password "+password+" --role admin")
-                        .withVolumeMounts(new VolumeMountBuilder()
-                                .withName("data")
-                                .withMountPath("/var/run/artemis")
+                                .withName("artemis-init")
+                                .withImage("quay.io/enmasse/artemis-base:2.10.0")
+                                .withCommand("/bin/sh")
+                                .withArgs("-c", "/opt/apache-artemis/bin/artemis create /var/run/artemis --allow-anonymous --force --user " + user + " --password " + password + " --role admin")
+                                .withVolumeMounts(new VolumeMountBuilder()
+                                                .withName("data")
+                                                .withMountPath("/var/run/artemis")
+                                                .build(),
+                                        new VolumeMountBuilder()
+                                                .withName(name)
+                                                .withMountPath("/etc/amq-secret-volume")
+                                                .build())
                                 .build(),
-                                new VolumeMountBuilder()
-                                .withName(name)
-                                .withMountPath("/etc/amq-secret-volume")
-                                .build())
-                        .build(),
                         new ContainerBuilder()
-                        .withName("replace-broker-xml")
-                        .withImage("quay.io/enmasse/artemis-base:2.10.0")
-                        .withCommand("/bin/sh")
-                        .withArgs("-c", "cp /etc/amq-secret-volume/broker.xml /var/run/artemis/etc/broker.xml")
-                        .withVolumeMounts(new VolumeMountBuilder()
+                                .withName("replace-broker-xml")
+                                .withImage("quay.io/enmasse/artemis-base:2.10.0")
+                                .withCommand("/bin/sh")
+                                .withArgs("-c", "cp /etc/amq-secret-volume/broker.xml /var/run/artemis/etc/broker.xml")
+                                .withVolumeMounts(new VolumeMountBuilder()
+                                                .withName("data")
+                                                .withMountPath("/var/run/artemis")
+                                                .build(),
+                                        new VolumeMountBuilder()
+                                                .withName(name)
+                                                .withMountPath("/etc/amq-secret-volume")
+                                                .build())
+                                .build())
+                .addNewContainer()
+                .withName(name)
+                .withImage("quay.io/enmasse/artemis-base:2.10.0")
+                .withImagePullPolicy("IfNotPresent")
+                .withCommand("/bin/sh")
+                .withArgs("-c", "/var/run/artemis/bin/artemis run")
+                .addToPorts(new ContainerPortBuilder()
+                                .withContainerPort(5672)
+                                .withName("amqp")
+                                .build(),
+                        new ContainerPortBuilder()
+                                .withContainerPort(5671)
+                                .withName("amqps")
+                                .build(),
+                        new ContainerPortBuilder()
+                                .withContainerPort(55671)
+                                .withName("amqpsmutual")
+                                .build())
+                .withVolumeMounts(new VolumeMountBuilder()
                                 .withName("data")
                                 .withMountPath("/var/run/artemis")
                                 .build(),
-                                new VolumeMountBuilder()
+                        new VolumeMountBuilder()
                                 .withName(name)
                                 .withMountPath("/etc/amq-secret-volume")
                                 .build())
-                        .build())
-                .addNewContainer()
-                    .withName(name)
-                    .withImage("quay.io/enmasse/artemis-base:2.10.0")
-                    .withImagePullPolicy("IfNotPresent")
-                    .withCommand("/bin/sh")
-                    .withArgs("-c", "/var/run/artemis/bin/artemis run")
-                    .addToPorts(new ContainerPortBuilder()
-                            .withContainerPort(5672)
-                            .withName("amqp")
-                            .build(),
-                            new ContainerPortBuilder()
-                            .withContainerPort(5671)
-                            .withName("amqps")
-                            .build(),
-                            new ContainerPortBuilder()
-                            .withContainerPort(55671)
-                            .withName("amqpsmutual")
-                            .build())
-                    .withVolumeMounts(new VolumeMountBuilder()
-                            .withName("data")
-                            .withMountPath("/var/run/artemis")
-                            .build(),
-                            new VolumeMountBuilder()
-                            .withName(name)
-                            .withMountPath("/etc/amq-secret-volume")
-                            .build())
-                    .endContainer()
+                .endContainer()
                 .addToVolumes(new VolumeBuilder()
-                        .withName("data")
-                        .withNewEmptyDir()
-                        .endEmptyDir()
-                        .build(),
+                                .withName("data")
+                                .withNewEmptyDir()
+                                .endEmptyDir()
+                                .build(),
                         new VolumeBuilder()
-                        .withName(name)
-                        .withNewSecret()
-                        .withSecretName(name)
-                        .endSecret()
-                        .build())
+                                .withName(name)
+                                .withNewSecret()
+                                .withSecretName(name)
+                                .endSecret()
+                                .build())
                 .endSpec()
                 .endTemplate()
                 .endSpec()

@@ -44,6 +44,9 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.cluster.KubeCluster;
+import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
+import io.enmasse.systemtest.platform.cluster.NoClusterException;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.DoneableUser;
@@ -71,7 +74,6 @@ import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Version;
 import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
@@ -106,6 +108,7 @@ public abstract class Kubernetes {
     protected final Environment environment;
     protected final KubernetesClient client;
     protected final String infraNamespace;
+    protected static KubeCluster cluster;
 
     protected Kubernetes(String infraNamespace, Supplier<KubernetesClient> clientSupplier) {
         this.environment = Environment.getInstance();
@@ -126,11 +129,15 @@ public abstract class Kubernetes {
 
     public static Kubernetes getInstance() {
         if (instance == null) {
-            Environment env = Environment.getInstance();
-            if (env.useMinikube()) {
-                instance = new Minikube(env.namespace());
+            try {
+                cluster = KubeCluster.detect();
+            } catch (NoClusterException ex) {
+                log.error(ex.getMessage());
+            }
+            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
+                instance = new Minikube(Environment.getInstance().namespace());
             } else {
-                instance = new OpenShift(env, env.namespace());
+                instance = new OpenShift(Environment.getInstance(), Environment.getInstance().namespace());
             }
         }
         return instance;
@@ -151,6 +158,10 @@ public abstract class Kubernetes {
 
     public KubernetesClient getClient() {
         return client;
+    }
+
+    public KubeCluster getCluster() {
+        return cluster;
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -403,7 +414,7 @@ public abstract class Kubernetes {
     }
 
     public List<Pod> listPods(Map<String, String> labelSelector) {
-        return client.pods().withLabels(labelSelector).list().getItems();
+        return client.pods().inNamespace(infraNamespace).withLabels(labelSelector).list().getItems();
     }
 
     public List<Pod> listPods(String namespace, Map<String, String> labelSelector) {

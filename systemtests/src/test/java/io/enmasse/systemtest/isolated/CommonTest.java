@@ -12,7 +12,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;

@@ -18,11 +18,10 @@ import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -30,6 +29,7 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -38,9 +38,9 @@ import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -66,8 +66,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import io.vertx.core.json.JsonObject;
 
 class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
@@ -499,7 +497,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     @Tag(ACCEPTANCE)
-    @DisabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
+    @OpenShift
     void testCreateAddressSpaceRoleTenantEdit() throws Exception {
 
         UserCredentials user = Credentials.userCredentials();

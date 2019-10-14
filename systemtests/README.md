@@ -6,14 +6,22 @@ fallback to `kubectl`.
 
 ## Setting up test environment
 
-It is assumed that you have EnMasse running already. If not, have a look at
-the [documentation](http://enmasse.io/documentation/master/openshift/#quickstart-messaging-gs).
-
 *NOTE*: On OKD, make sure `oc` is logged in to your cluster with `cluster-admin` privileges. However you should not run the tests with `system:admin` user. You can give the privileges to a standard user :
 
     oc login -u system:admin https://localhost:8443
     oc adm policy add-cluster-role-to-user cluster-admin developer
     oc login -u developer -p developer https://localhost:8443
+
+Systemtests framework installs enmasse and iot operators, you only need to generate templates and store them into templates/build/enmasse-latest
+or you need to provide custom path to your install bundle via env variable TEMPLATES
+
+#### Generate templates
+
+    make templates
+
+#### Provide custom template path
+
+    export TEMPLATES="/path/to/your/install/bundle"
 
 ## Running all tests
 

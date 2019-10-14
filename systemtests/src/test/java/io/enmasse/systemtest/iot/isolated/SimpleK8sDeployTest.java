@@ -13,8 +13,8 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
-import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.condition.Kubernetes;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,13 +36,13 @@ import static java.time.Duration.ofMinutes;
 import static java.util.Collections.singletonMap;
 
 @Tag(SMOKE)
-@EnabledIfEnvironmentVariable(named = Environment.USE_MINUKUBE_ENV, matches = "true")
+@Kubernetes
 class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
 
     private static final Logger log = LoggerFactory.getLogger(SimpleK8sDeployTest.class);
     private static final String NAMESPACE = Environment.getInstance().namespace();
     private static IoTConfig config;
-    private Kubernetes client = Kubernetes.getInstance();
+    private io.enmasse.systemtest.platform.Kubernetes client = io.enmasse.systemtest.platform.Kubernetes.getInstance();
 
     @BeforeAll
     static void setup() throws Exception {

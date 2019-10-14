@@ -14,8 +14,8 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.cmdclients.CmdClient;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
@@ -174,21 +174,21 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         log.info("Creating addressspace {} in namespace {}", name, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_address_space.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + namespace + " " + name + " " + type + " " + plan + " " + authService + " " + apiVersion);
-        assertTrue(CmdClient.execute(cmd, 10_000, true).getRetCode(), "AddressSpace not created");
+        assertTrue(Exec.execute(cmd, 10_000, true).getRetCode(), "AddressSpace not created");
     }
 
     private void createUserCMD(String namespace, String userName, String password, String addressSpace, String apiVersion) {
         log.info("Creating user {} in namespace {}", userName, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_user.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + userName + " " + password + " " + namespace + " " + addressSpace + " " + apiVersion);
-        assertTrue(CmdClient.execute(cmd, 20_000, true).getRetCode(), "User not created");
+        assertTrue(Exec.execute(cmd, 20_000, true).getRetCode(), "User not created");
     }
 
     private void createAddressCMD(String namespace, String name, String address, String addressSpace, String type, String plan, String apiVersion) {
         log.info("Creating address {} in namespace {}", name, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_address.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + namespace + " " + addressSpace + " " + name + " " + address + " " + type + " " + plan + " " + apiVersion);
-        assertTrue(CmdClient.execute(cmd, 20_000, true).getRetCode(), "Address not created");
+        assertTrue(Exec.execute(cmd, 20_000, true).getRetCode(), "Address not created");
     }
 
     private void uninstallEnmasse(Path templateDir) {
@@ -197,7 +197,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path ansiblePlaybook = Paths.get(templateDir.toString(), "ansible", "playbooks", "openshift", "uninstall.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s", kubernetes.getInfraNamespace()));
-        assertTrue(CmdClient.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
+        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
     }
 
     private void installEnmasseBundle(Path templateDir, String version) throws Exception {
@@ -232,7 +232,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s authentication_services=[\"standard\"]", kubernetes.getInfraNamespace()));
 
-        assertTrue(CmdClient.execute(cmd, 300_000, true).getRetCode(), "Deployment of new version of enmasse failed");
+        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Deployment of new version of enmasse failed");
         log.info("Sleep after {}", upgrade ? "upgrade" : "install");
         Thread.sleep(60_000);
 
@@ -248,7 +248,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path makefileDir = Paths.get(System.getProperty("user.dir"), "..");
         Path imageEnvDir = Paths.get(makefileDir.toString(), "imageenv.txt");
 
-        CmdClient.execute(Arrays.asList("make", "-C", makefileDir.toString(), "TAG=" + version, "imageenv"), 10_000, false);
+        Exec.execute(Arrays.asList("make", "-C", makefileDir.toString(), "TAG=" + version, "imageenv"), 10_000, false);
         String images = Files.readString(imageEnvDir);
         log.info("Expected images: {}", images);
 

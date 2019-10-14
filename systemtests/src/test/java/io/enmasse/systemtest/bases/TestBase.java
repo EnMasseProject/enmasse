@@ -15,7 +15,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.broker.BrokerManagement;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageType;
@@ -170,10 +170,10 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     }
 
     protected String getOCConsoleRoute() {
-        if (environment.isOcp4()) {
+        if (kubernetes.getOcpVersion() == 4) {
             return String.format("https://console-openshift-console.%s", environment.kubernetesDomain());
         } else {
-            return String.format("%s/console", environment.getApiUrl());
+            return String.format("%sconsole", environment.getApiUrl());
         }
     }
 

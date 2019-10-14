@@ -53,6 +53,7 @@ public class SeleniumManagement {
     public static void removeFirefoxApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_SELENIUM_CONTAINER);
         SystemtestsKubernetesApps.deleteFirefoxSeleniumApp(SystemtestsKubernetesApps.SELENIUM_PROJECT, Kubernetes.getInstance());
+        Kubernetes.getInstance().deleteNamespace(SystemtestsKubernetesApps.SELENIUM_PROJECT);
         TimeMeasuringSystem.stopOperation(operationID);
     }
 

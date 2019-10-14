@@ -8,7 +8,8 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.cmdclients.CmdClient;
+import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
@@ -30,6 +31,7 @@ import static io.enmasse.systemtest.TestTag.OLM;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Tag(OLM)
+@OpenShift(version = 4)
 class OperatorLifecycleManagerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private final String marketplaceNamespace = "openshift-marketplace";
@@ -37,11 +39,11 @@ class OperatorLifecycleManagerTest extends TestBase {
 
     @AfterAll
     void cleanRestOfResources() {
-        CmdClient.execute(Arrays.asList("oc", "delete", "all", "--selector", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "crd", "-l", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "apiservices", "-l", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "cm", "-l", "app=enmasse"), 120_000, false);
-        CmdClient.execute(Arrays.asList("oc", "delete", "secret", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "all", "--selector", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "crd", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "apiservices", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "cm", "-l", "app=enmasse"), 120_000, false);
+        Exec.execute(Arrays.asList("oc", "delete", "secret", "-l", "app=enmasse"), 120_000, false);
     }
 
     @Test

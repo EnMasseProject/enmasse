@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.executor;
 
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import org.slf4j.Logger;
 
@@ -13,6 +14,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
@@ -21,11 +23,12 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 /**
  * Class provide execution of external command
  */
-public class Executor {
+public class Exec {
     private static Logger log = CustomLogger.getLogger();
     private Process process;
     private String stdOut;
@@ -34,17 +37,20 @@ public class Executor {
     private StreamGobbler stdErrReader;
     private Path logPath;
     private boolean appendLineSeparator;
+    private static final Pattern PATH_SPLITTER = Pattern.compile(System.getProperty("path.separator"));
+    protected static final Object lock = new Object();
+    protected static final Environment env = Environment.getInstance();
 
-    public Executor() {
+    public Exec() {
         this.appendLineSeparator = true;
     }
 
-    public Executor(Path logPath) {
+    public Exec(Path logPath) {
         this.appendLineSeparator = true;
         this.logPath = logPath;
     }
 
-    public Executor(boolean appendLineSeparator) {
+    public Exec(boolean appendLineSeparator) {
         this.appendLineSeparator = appendLineSeparator;
     }
 
@@ -87,8 +93,8 @@ public class Executor {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public int execute(List<String> commands) throws IOException, InterruptedException, ExecutionException {
-        return execute(commands, 0);
+    public int exec(List<String> commands) throws IOException, InterruptedException, ExecutionException {
+        return exec(commands, 0);
     }
 
     /**
@@ -101,7 +107,7 @@ public class Executor {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public int execute(List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
+    public int exec(List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
         log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);
@@ -180,6 +186,53 @@ public class Executor {
             } catch (Exception ex) {
                 log.warn("Cannot save output of execution", ex);
             }
+        }
+    }
+
+    public static boolean isExecutableOnPath(String cmd) {
+        for (String dir : PATH_SPLITTER.split(System.getenv("PATH"))) {
+            if (new File(dir, cmd).canExecute()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static ExecutionResultData execute(List<String> command) {
+        return execute(command, 60_000, true, true);
+    }
+
+    public static ExecutionResultData execute(List<String> command, boolean logToOutput) {
+        return execute(command, 60_000, logToOutput, true);
+    }
+
+    public static ExecutionResultData execute(int timeout, boolean logToOutput, String... cmd) {
+        return execute(Arrays.asList(cmd), timeout, logToOutput, true);
+    }
+
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput) {
+        return execute(command, timeout, logToOutput, true);
+    }
+
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator) {
+        try {
+            Exec executor = new Exec(appendLineSeparator);
+            int ret = executor.exec(command, timeout);
+            synchronized (lock) {
+                if (logToOutput) {
+                    log.info("Return code: {}", ret);
+                    if (!executor.getStdOut().equals("")) {
+                        log.info("stdout: \n{}", executor.getStdOut());
+                    }
+                    if (!executor.getStdErr().equals("")) {
+                        log.info("stderr: \n{}", executor.getStdErr());
+                    }
+                }
+            }
+            return new ExecutionResultData(ret, executor.getStdOut(), executor.getStdErr());
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return new ExecutionResultData(1, null, null);
         }
     }
 

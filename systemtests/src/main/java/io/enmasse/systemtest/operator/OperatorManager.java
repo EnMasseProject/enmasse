@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.operator;
 
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.cmdclients.KubeCMDClient;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -152,6 +152,7 @@ public class OperatorManager {
     }
 
     public boolean isIoTOperatorDeployed() {
-        return kube.getCRD("iotprojects.iot.enmasse.io") != null;
+        return kube.getCRD("iotprojects.iot.enmasse.io") != null
+                && kube.getCRD("iotconfigs.iot.enmasse.io") != null;
     }
 }

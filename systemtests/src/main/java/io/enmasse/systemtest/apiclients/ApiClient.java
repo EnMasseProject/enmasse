@@ -127,9 +127,7 @@ public abstract class ApiClient implements AutoCloseable {
 
     protected <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Supplier<Endpoint>> endpointFn, Optional<Runnable> reconnect) throws Exception {
         return TestUtils.doRequestNTimes(retry, () -> {
-            if (endpointFn.isPresent()) {
-                endpoint = endpointFn.get().get();
-            }
+            endpointFn.ifPresent(supplier -> endpoint = supplier.get());
             return fn.call();
         }, reconnect);
     }
