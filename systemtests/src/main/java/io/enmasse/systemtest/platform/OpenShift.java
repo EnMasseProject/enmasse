@@ -24,6 +24,7 @@ import okhttp3.Protocol;
 import org.slf4j.Logger;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles interaction with openshift cluster
@@ -42,7 +43,14 @@ public class OpenShift extends Kubernetes {
 
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
-            httpClient = httpClient.newBuilder().protocols(Collections.singletonList(Protocol.HTTP_1_1)).build();
+            httpClient = httpClient.newBuilder()
+                    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                    .connectTimeout(60, TimeUnit.SECONDS)
+                    .writeTimeout(60, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
+                    .build();
+
+            log.info("KWDEBUG retryOnConnectionFailure", httpClient.retryOnConnectionFailure());
             return new DefaultOpenShiftClient(httpClient, new OpenShiftConfig(config));
         });
     }
