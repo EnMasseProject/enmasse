@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(AssumeOpenshiftVersionCondition.class)
-public @interface AssumeOpenshiftVersion {
-    int version();
+@ExtendWith(AssumeOpenshiftCondition.class)
+public @interface OpenShift {
+    int version() default 0;
 }

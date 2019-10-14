@@ -15,7 +15,6 @@ import io.enmasse.address.model.EndpointSpecBuilder;
 import io.enmasse.address.model.ExposeType;
 import io.enmasse.address.model.TlsTermination;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.VertxFactory;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -24,7 +23,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.CertProvider;
-import io.enmasse.systemtest.condition.AssumeCluster;
+import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -44,7 +43,6 @@ import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.slf4j.Logger;
 
 import javax.net.ssl.SSLContext;
@@ -74,7 +72,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     private Address topic;
 
     @Test
-    @AssumeCluster(cluster = "openshift")
+    @OpenShift
     void testSelfSigned() throws Exception {
 
         CertSpec spec = new CertSpecBuilder()
@@ -91,7 +89,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "openshift")
+    @OpenShift
     void testConsoleSelfSigned() throws Exception {
         CertSpec spec = new CertSpecBuilder()
                 .withProvider(CertProvider.selfsigned.name())
@@ -121,7 +119,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "openshift")
+    @OpenShift
     void testCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String messagingHost = String.format("messaging.%s", domain);
@@ -131,17 +129,17 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
         createTestEnv(
                 createEndpoint("messaging", new CertSpecBuilder()
-                        .withProvider(CertProvider.certBundle.name())
-                        .withTlsKey(messagingCert.getKeyB64())
-                        .withTlsCert(messagingCert.getCertB64())
-                        .build(),
+                                .withProvider(CertProvider.certBundle.name())
+                                .withTlsKey(messagingCert.getKeyB64())
+                                .withTlsCert(messagingCert.getCertB64())
+                                .build(),
                         messagingHost,
                         "amqps"),
                 createEndpoint("mqtt", new CertSpecBuilder()
-                        .withProvider(CertProvider.certBundle.name())
-                        .withTlsKey(mqttCert.getKeyB64())
-                        .withTlsCert(mqttCert.getCertB64())
-                        .build(),
+                                .withProvider(CertProvider.certBundle.name())
+                                .withTlsKey(mqttCert.getKeyB64())
+                                .withTlsCert(mqttCert.getCertB64())
+                                .build(),
                         mqttHost,
                         "secure-mqtt"));
 
@@ -150,7 +148,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "openshift")
+    @OpenShift
     void testConsoleCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String consoleHost = String.format("space-console.%s", domain);
@@ -167,7 +165,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "openshift")
+    @OpenShift
     void testOpenshiftCertProvider() throws Exception {
         createTestEnv(false,
                 new EndpointSpecBuilder()
@@ -251,11 +249,11 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         }
     }
 
-    private void createTestEnv(EndpointSpec ... endpoints) throws Exception {
+    private void createTestEnv(EndpointSpec... endpoints) throws Exception {
         createTestEnv(true, endpoints);
     }
 
-    private void createTestEnv(boolean createAddresses, EndpointSpec ... endpoints) throws Exception {
+    private void createTestEnv(boolean createAddresses, EndpointSpec... endpoints) throws Exception {
         addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("test-cert-provider-space")

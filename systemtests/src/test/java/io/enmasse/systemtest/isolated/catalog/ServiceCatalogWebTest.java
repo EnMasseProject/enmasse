@@ -12,8 +12,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.condition.AssumeCluster;
-import io.enmasse.systemtest.condition.AssumeOpenshiftVersion;
+import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
@@ -48,8 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SeleniumFirefox
-@AssumeCluster(cluster = "openshift")
-@AssumeOpenshiftVersion(version = 3)
+@OpenShift(version = 3)
 class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     SeleniumProvider selenium = SeleniumProvider.getInstance();

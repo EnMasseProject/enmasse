@@ -11,7 +11,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.PrometheusApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.condition.AssumeCluster;
+import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -139,7 +139,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @AssumeCluster(cluster = "openshift")
+    @OpenShift
     void testAddressSpaceRules() throws Exception {
         Instant startTs = Instant.now();
         String testNamespace = "monitoring-test";

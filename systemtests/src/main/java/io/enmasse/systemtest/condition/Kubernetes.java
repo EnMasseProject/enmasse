@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.condition;
 
+import io.enmasse.systemtest.platform.cluster.ClusterType;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.annotation.ElementType;
@@ -13,7 +14,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(AssumeClusterCondition.class)
-public @interface AssumeCluster {
-    String cluster();
+@ExtendWith(AssumeKubernetesCondition.class)
+public @interface Kubernetes {
+    ClusterType type() default ClusterType.MINIKUBE;
 }

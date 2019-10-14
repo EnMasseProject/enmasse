@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.condition;
 
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.cluster.ClusterType;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -13,16 +14,17 @@ import java.util.Optional;
 
 import static org.junit.platform.commons.support.AnnotationSupport.findAnnotation;
 
-public class AssumeClusterCondition implements ExecutionCondition {
+public class AssumeOpenshiftCondition implements ExecutionCondition {
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-        Optional<AssumeCluster> annotation = findAnnotation(context.getElement(), AssumeCluster.class);
+        Optional<OpenShift> annotation = findAnnotation(context.getElement(), OpenShift.class);
         if (annotation.isPresent()) {
-            String cluster = annotation.get().cluster();
-            if (!Kubernetes.getInstance().getCluster().toString().equals(cluster)) {
-                return ConditionEvaluationResult.disabled("Test is not supported on current cluster");
-            } else {
+            int version = annotation.get().version();
+            if (Kubernetes.getInstance().getCluster().toString().equals(ClusterType.OPENSHIFT.toString().toLowerCase()) &&
+                    (version == 0 || version == Kubernetes.getInstance().getOcpVersion())) {
                 return ConditionEvaluationResult.enabled("Test is supported on current cluster");
+            } else {
+                return ConditionEvaluationResult.disabled("Test is not supported on current cluster");
             }
         }
         return ConditionEvaluationResult.enabled("No rule set, test is enabled");
