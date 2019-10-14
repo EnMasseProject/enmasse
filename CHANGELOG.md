@@ -5,7 +5,7 @@
 * Deploy IoT operator automatically when the IoTConfig is created
 * Drop IoT garbage collector deployment in favor of using finalizers to clean up
 * Implement device registry authentication based on Kubernetes user
-* Upgrade to Apache ActiveMQ Artemis 2.10.0
+* Upgrade to Apache ActiveMQ Artemis 2.10.1
 * Upgrade to Apache Qpid Dispatch Router 1.9.0
 * Add support for connecting address spaces to external AMQP endpoints (standard address space)
 * Add support for forwarding messages between external endpoints and local queues (standard address space)
