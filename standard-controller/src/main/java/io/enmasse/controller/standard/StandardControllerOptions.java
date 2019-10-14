@@ -18,6 +18,7 @@ public class StandardControllerOptions {
     private String infraUuid;
     private Duration resyncInterval;
     private Duration recheckInterval;
+    private Duration statusCheckInterval;
     private String version;
     private boolean enableEventLogger;
     private String authenticationServiceHost;
@@ -162,6 +163,10 @@ public class StandardControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
 
+        options.setStatusCheckInterval(getEnv(env, "STATUS_CHECK_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
         options.setVersion(getEnvOrThrow(env, "VERSION"));
         options.setEnableEventLogger(getEnv(env, "ENABLE_EVENT_LOGGER").map(Boolean::parseBoolean).orElse(false));
 
@@ -241,5 +246,13 @@ public class StandardControllerOptions {
 
     public void setManagementConnectTimeout(Duration managementConnectTimeout) {
         this.managementConnectTimeout = managementConnectTimeout;
+    }
+
+    public Duration getStatusCheckInterval() {
+        return statusCheckInterval;
+    }
+
+    public void setStatusCheckInterval(Duration statusCheckInterval) {
+        this.statusCheckInterval = statusCheckInterval;
     }
 }

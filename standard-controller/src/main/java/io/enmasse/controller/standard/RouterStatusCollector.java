@@ -59,7 +59,7 @@ class RouterStatusCollector {
 
     private RouterStatus doCollectStatus(Pod router, int port) throws Exception {
         String host = router.getStatus().getPodIP();
-        log.debug("Checking router status of router : {}", router.getMetadata().getName());
+        log.debug("Collecting router status of router : {}", router.getMetadata().getName());
 
         Map<RouterEntity, List<List>> results = routerManagement.query(host, port, entities);
 
