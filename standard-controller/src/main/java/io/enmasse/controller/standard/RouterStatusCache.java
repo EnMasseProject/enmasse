@@ -87,6 +87,8 @@ public class RouterStatusCache implements Runnable {
     public void start() {
         running = true;
         thread = new Thread(this);
+        thread.setName("router-status-collector");
+        thread.setDaemon(true);
         thread.start();
     }
 

@@ -29,6 +29,8 @@ public class ResourceChecker<T> implements CacheWatcher<T>, Runnable {
     public void start() {
         running = true;
         thread = new Thread(this);
+        thread.setName("resource-checker");
+        thread.setDaemon(true);
         thread.start();
 
     }
