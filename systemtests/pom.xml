@@ -194,19 +194,12 @@
             </properties>
         </profile>
         <profile>
-            <id>shared-pr</id>
+            <id>pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !nonPR &amp; !smoke &amp; !marathon
-                    &amp; !shared-iot &amp; !isolated &amp; !olm &amp; !upgrade
+                <groups>(shared-standard | shared-brokered | shared-mqtt | isolated) &amp; !nonPR &amp; !smoke &amp; !marathon
+                    &amp; !shared-iot &amp; !olm &amp; !upgrade
                 </groups>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated-pr</id>
-            <properties>
-                <skip.tests>false</skip.tests>
-                <groups>isolated &amp; !nonPR &amp; !smoke &amp; !marathon &amp; !shared-iot &amp; !olm &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
@@ -255,22 +248,6 @@
             <id>upgrade</id>
             <properties>
                 <groups>upgrade &amp; !marathon &amp; !olm</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>shared-release</id>
-            <properties>
-                <groups>(shared-brokered | shared-standard | shared-mqtt) &amp; !noneAuth &amp; !smoke &amp; !marathon
-                    &amp; !shared-iot &amp; !isolated &amp; !olm &amp; !upgrade
-                </groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated-release</id>
-            <properties>
-                <groups>isolated &amp; !noneAuth &amp; !smoke &amp; !marathon &amp; !olm &amp; !upgrade</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
