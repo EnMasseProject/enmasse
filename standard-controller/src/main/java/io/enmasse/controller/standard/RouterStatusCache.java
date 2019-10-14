@@ -14,12 +14,9 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -65,29 +62,19 @@ public class RouterStatusCache implements Runnable {
 
         log.info("Collecting status from {} routers", routers.size());
 
-        Map<String, Future<RouterStatus>> futures = new HashMap<>();
+        ExecutorCompletionService<RouterStatus> service = new ExecutorCompletionService<>(ForkJoinPool.commonPool());
         for (Pod router : routers) {
-            CompletableFuture<RouterStatus> result = new CompletableFuture<>();
-            futures.put(router.getMetadata().getName(), result);
-            CompletableFuture.runAsync(() -> {
-                try {
-                    result.complete(routerStatusCollector.collect(router));
-                } catch (Exception e) {
-                    result.completeExceptionally(e);
-                }
-            });
+            service.submit(() -> routerStatusCollector.collect(router));
         }
-
-        List<RouterStatus> routerStatusList = new ArrayList<>();
-        for (Map.Entry<String, Future<RouterStatus>> entry : futures.entrySet()) {
+        List<RouterStatus> routerStatusList = new ArrayList<>(routers.size());
+        for (int i = 0; i < routers.size(); i++) {
             try {
-                // Timeouts are already handled - but multiply that timeout by 10 to make sure we got a response
-                RouterStatus status = entry.getValue().get(routerManagement.getConnectTimeout().plus(routerManagement.getQueryTimeout()).multipliedBy(10).getSeconds(), TimeUnit.SECONDS);
+                RouterStatus status = service.take().get();
                 if (status != null) {
                     routerStatusList.add(status);
                 }
             } catch (Exception e) {
-                log.info("Error requesting router status from {}. Ignoring", entry.getKey(), e);
+                log.info("Error requesting router status. Ignoring", e);
                 eventLogger.log(RouterCheckFailed, e.getMessage(), Warning, AddressSpace, addressSpace);
                 routerCheckFailures.incrementAndGet();
             }
