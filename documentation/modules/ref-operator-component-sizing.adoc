@@ -1,0 +1,31 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-configuration-sizing-guide.adoc
+//
+[id='operator-component-sizing-{context}']
+== Operator component sizing
+
+Operators are tasked with reading all address configuration and applying this to the routers and brokers. The operators should be sized proportionally to the number of addresses.
+
+In the `standard` address space, the admin pod contains two processes, `agent` and `standard-controller`. These cannot be sized individually, but memory usage of both are proportional to the number of addresses. In the `brokered` space, there is only a single `agent` process.
+
+NOTE: the operator processes are running either on a JVM or a Node.JS VM. The memory for these should be sized twice the amount of memory required for the address configuration itself.
+
+=== Example
+
+Each address adds about 20kB overhead to the operator process. With 1500 addresses, an additional `1500 * 2kB = 30MB` is needed for the operator process.
+
+In addition, there is a base memory requirement of 256MB for these processes, making the total operator memory `256 + 30 = 286 MB`. This can be configured in both the `StandardInfraConfig` and `BrokeredInfraConfig` resources:
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  admin:
+    resources:
+      memory: 300Mi 
+  ...
+----
+

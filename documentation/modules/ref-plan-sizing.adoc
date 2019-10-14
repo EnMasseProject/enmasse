@@ -1,0 +1,53 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-configuration-sizing-guide.adoc
+//
+[id='plan-sizing-{context}']
+== Plan sizing
+
+Plans enable dynamic scaling in the `standard` address space, as shown in the broker and router sizing sections. At the cluster level, the combination of plans and infrastructure configs will determine the max number of pods that can be deployed on the cluster. At present, {ProductName} does not support limiting the number of address spaces that gets created, so some policy on who is allowed to create them should be applied. This can be handled through standard {KubePlatform} policies.
+
+From a capacity planning perspective, it is useful to understand what the maximum number of pods and memory can be consumed for a given address space.
+
+.Procedure
+
+. Save the following script as `check-memory.sh`
++
+NOTE: Memory is assumed to be defined using the 'Mi' unit, while storage is assumed to be defined using the 'Gi' unit. All of `admin`, `router` and `broker` must have limits set in order for the script to work as expected.
++
+[source,shell,options="nowrap",subs="+quotes,attributes"]
+----
+#!/usr/bin/env bash
+PLAN=$1
+
+total_pods=0
+total_memory_mb=0
+total_storage_gb=0
+
+routers=$(oc get addressspaceplan $PLAN -o jsonpath='{.spec.resourceLimits.router}')
+brokers=$(oc get addressspaceplan $PLAN -o jsonpath='{.spec.resourceLimits.broker}')
+infra=$(oc get addressspaceplan $PLAN -o jsonpath='{.spec.infraConfigRef}')
+
+operator_memory=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.admin.resources.memory}')
+broker_memory=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.broker.resources.memory}')
+broker_storage=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.broker.resources.storage}')
+router_memory=$(oc get standardinfraconfig $infra -o jsonpath='{.spec.router.resources.memory}')
+
+total_pods=$((routers + brokers + 1))
+total_memory_mb=$(( (routers * ${router_memory%Mi}) + (brokers * ${broker_memory%Mi}) + ${operator_memory%Mi}))
+total_storage_gb=$(( brokers * ${broker_storage%Gi}))
+
+echo "Pods: ${total_pods}. Memory: ${total_memory_mb} MB. Storage: ${total_storage_gb} GB"
+----
+
+. Run it as follows:
++
+----
+bash calculate-memory.sh _standard-small_
+----
+
+. If all components have limits defined in the assumed units, it will output the total resource limits for address spaces using this plan:
++
+----
+Pods: 3. Memory: 1280 MB. Storage: 2 GB
+----

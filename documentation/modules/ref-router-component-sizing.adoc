@@ -1,0 +1,115 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-configuration-sizing-guide.adoc
+//
+[id='router-component-sizing-{context}']
+== Router component sizing
+
+Routers are configured in the `StandardInfraConfig` resource. The router sizing must take the following into account:
+
+* The number of addresses
+* The number of connections and links
+* Link capacity
+
+The router does not persist any state and therefore does not require persistent storage.
+
+Address configuration itself does not require significant amount of router memory. However, queues and subscriptions require an additional 2 links between the router and broker per address.
+
+The total number of links is then the number of queues/subscriptions + the number of client links. Each link requires metadata and buffers in the router to deal with routing messages for that link.
+
+The router link capacity affects how many in-flight messages the router will handle per link. Setting this to a high value could improve performance, but at the cost of potentially more memory being used to hold in-flight messages. If you have low-volume client traffic, using the default link capacity should be sufficient.
+
+=== Example
+
+Sizing should accomodate 500 anycast and 1000 queued addresses, with 10000 connected clients (1 link each), with a link capacity of 100 (max number of in-flight messages per link), and an average message size of 512 bytes.
+
+Based on measurements, an estimated 20kB overhead per anycast address is realistic:
+[options="nowrap",subs="+quotes,attributes"]
+----
+500 * 20kB = 10MB
+----
+
+Memory usage of queues and topics is slightly higher than for anycast addresses, with a 40kB overhead per address. In addition, each link may have up to `linkCapacity` messages in flight:
+[options="nowrap",subs="+quotes,attributes"]
+----
+(1000 * 40kB) + (2000 * 100 * 512) = 135MB
+----
+
+Memory usage of client connections/links:
+[options="nowrap",subs="+quotes,attributes"]
+----
+10000 * 100 * 512 = 488MB
+----
+
+The total amount of router memory required for this configuration (including a constant base memory of 50MB) is `10 + 135 + 488 + 50 = 683MB`. 
+
+In order to ensure max connections and links is not exceeded, a router policy can be applied as well. The router config looks at follows:
+
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  router:
+    resources:
+      memory: 700Mi
+    linkCapacity: 100
+    policy:
+      maxConnections: 10000
+      maxSessionsPerConnection: 1
+      maxSendersPerConnection: 1
+      maxReciversPerConnection: 1
+  ...
+----
+
+=== High Availability
+
+Configuring routers for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage.
+
+=== Router scaling
+
+Routers are scaled dynamically on demand within the interval of `minReplicas` defined in the `StandardInfraConfig` resource and `resourceLimits.router` defined in the `AddressSpacePlan`. To restrict the number of routers to max four, but requiring a minimum amount of 2 routers for HA purposes, the following configuration is needed:
+
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: StandardInfraConfig 
+metadata:
+  name: cfg1
+spec:
+  router:
+    minReplicas: 2
+  ...
+---
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressSpacePlan
+metadata:
+  name: plan1
+spec:
+  infraConfigRef: cfg1
+  resourceLimits:
+    router: 4
+  ...
+----
+
+In terms of capacity, the memory requirements for the router should be multiplied by the resource limit. The router will scale up to the resource limits defined in the `AddressSpacePlan` for the address space.
+
+The number of router replicas are scaled dynamically between the min and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes the fraction of a router is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired router replicas. 
+
+Example `AddressPlan`:
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: plan1
+spec:
+  ...
+  resources:
+    router: 0.01
+----
+
+If you create 110 addresses with `plan1` as the plan, the number of router replicas will be `ceil(110 * 0.01) = 2 replicas`. 
+
+If the amount of replicas go above the address space plan limit, the addresses exceeding the max will remain in the `Pending` state and an error message describing the issue will be set in the `Address` status section.
+
