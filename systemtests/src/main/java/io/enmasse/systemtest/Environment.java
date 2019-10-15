@@ -30,7 +30,6 @@ public class Environment {
     public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
     public static final String TAG_ENV = "TAG";
     public static final String APP_NAME_ENV = "APP_NAME";
-    private static final String DEFAULT_DEVICE_REGISTRY = "DEFAULT_DEVICE_REGISTRY";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
     private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
     private static Logger log = CustomLogger.getLogger();
@@ -51,11 +50,12 @@ public class Environment {
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
     private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
-    protected UserCredentials managementCredentials = new UserCredentials(null, null);
-    protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
-
+    protected UserCredentials managementCredentials = new UserCredentials(null, null);
+    protected UserCredentials defaultCredentials = new UserCredentials(null, null);
+    protected UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
+    protected UserCredentials sharedDefaultCredentials = new UserCredentials("test", "test");
     /**
      * Skip removing address-spaces
      */
@@ -162,21 +162,20 @@ public class Environment {
         return appName;
     }
 
-
     public UserCredentials getManagementCredentials() {
         return managementCredentials;
-    }
-
-    public void setManagementCredentials(UserCredentials managementCredentials) {
-        this.managementCredentials = managementCredentials;
     }
 
     public UserCredentials getDefaultCredentials() {
         return defaultCredentials;
     }
 
-    public void setDefaultCredentials(UserCredentials defaultCredentials) {
-        this.defaultCredentials = defaultCredentials;
+    public UserCredentials getSharedManagementCredentials() {
+        return sharedManagementCredentials;
+    }
+
+    public UserCredentials getSharedDefaultCredentials() {
+        return sharedDefaultCredentials;
     }
 
     public boolean isSkipSaveState() {

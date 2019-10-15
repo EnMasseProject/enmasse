@@ -4,8 +4,6 @@
  */
 package io.enmasse.systemtest.bases.iot;
 
-import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-
 public interface ITestIoTBase {
      String IOT_ADDRESS_EVENT = "event";
      String IOT_ADDRESS_TELEMETRY = "telemetry";

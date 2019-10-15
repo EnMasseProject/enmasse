@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.listener;
 
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -21,7 +20,6 @@ import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
@@ -35,7 +33,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class JunitCallbackListener implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
-        BeforeTestExecutionCallback, AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
+        AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private TestInfo testInfo = TestInfo.getInstance();
     private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
@@ -72,28 +70,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setActualTest(context);
-        if (testInfo.isTestShared()) {
-            Environment.getInstance().getDefaultCredentials().setUsername("test").setPassword("test");
-            Environment.getInstance().setManagementCredentials(new UserCredentials("artemis-admin", "artemis-admin"));
-        }
-        if (SharedIoTManager.getInstance().getAmqpClientFactory() == null) {
-            sharedIoTManager.setup();
-        }
-    }
-
-    @Override
-    public void beforeTestExecution(ExtensionContext context) throws Exception {
-        if (testInfo.isTestShared()) {
-            if (sharedResourcesManager.getAmqpClientFactory() == null) {
-                sharedResourcesManager.setup();
-            }
-        } else {
-            if (testInfo.isTestIoT()) {
-                isolatedIoTManager.setup();
-            } else {
-                isolatedResourcesManager.setup();
-            }
-        }
     }
 
     @Override

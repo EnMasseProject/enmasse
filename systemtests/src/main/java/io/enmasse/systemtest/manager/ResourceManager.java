@@ -49,14 +49,24 @@ public abstract class ResourceManager {
     protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes,
             new File(environment.testLogDir()));
     private static Logger LOGGER = CustomLogger.getLogger();
-    protected UserCredentials defaultCredentials = Environment.getInstance().getDefaultCredentials();
-    public static String DEFAULT_ADD_SPACE_IDENTIFIER;
-    public static String ADDRESS_SPACE_TYPE;
-    public static String ADDRESS_SPACE_PLAN;
 
-    abstract void initFactories(AddressSpace addressSpace);
+    protected String defaultAddSpaceIdentifier;
+    protected String addressSpaceType;
+    protected String addressSpacePlan;
 
-    abstract void setup() throws Exception;
+    public void setDefaultAddSpaceIdentifier(String defaultAddSpaceIdentifier) {
+        this.defaultAddSpaceIdentifier = defaultAddSpaceIdentifier;
+    }
+
+    public void setAddressSpaceType(String addressSpaceType) {
+        this.addressSpaceType = addressSpaceType;
+    }
+
+    public void setAddressSpacePlan(String addressSpacePlan) {
+        this.addressSpacePlan = addressSpacePlan;
+    }
+
+    public abstract void setup() throws Exception;
 
     abstract void tearDown(ExtensionContext context) throws Exception;
 

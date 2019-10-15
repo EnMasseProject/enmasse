@@ -4,9 +4,6 @@
  */
 package io.enmasse.systemtest.bases.iot;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ITestBase;

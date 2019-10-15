@@ -168,12 +168,12 @@ public abstract class GlobalConsoleTest extends TestBase {
         globalConsolePage.createAddressSpace(addressSpace);
         waitUntilAddressSpaceActive(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_MEDIUM,
-                IsolatedResourcesManager.getInstance().getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
         globalConsolePage.switchAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
         AddressSpaceUtils.waitForAddressSpacePlanApplied(addressSpace);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
-                IsolatedResourcesManager.getInstance().getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
     }
 
     private void waitUntilAddressSpaceActive(AddressSpace addressSpace) throws Exception {

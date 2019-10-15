@@ -10,7 +10,6 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ITestBase;
-import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;

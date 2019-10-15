@@ -15,7 +15,6 @@ import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
@@ -199,8 +198,8 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         consolePage.createAddressWebConsole(queue, false);
         consolePage.createAddressWebConsole(topic, true);
 
-        getClientUtils().assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), IsolatedResourcesManager.getInstance());
-        getClientUtils().assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic), IsolatedResourcesManager.getInstance());
+        getClientUtils().assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
+        getClientUtils().assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
 
         log.info("Remove binding and check if client cannot connect");
         ocPage.removeBinding(brokered, bindingID);
@@ -212,7 +211,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
             log.info("Still awaiting user {} to be removed.", username);
         }
 
-        getClientUtils().assertCannotConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), IsolatedResourcesManager.getInstance());
+        getClientUtils().assertCannotConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
     }
 
     @Test

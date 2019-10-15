@@ -22,7 +22,6 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -126,7 +125,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
         resourcesManager.createAddressSpace(exampleAddressSpace);
 
-        IsolatedResourcesManager.getInstance().setAddresses(new AddressBuilder()
+        resourcesManager.setAddresses(new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))

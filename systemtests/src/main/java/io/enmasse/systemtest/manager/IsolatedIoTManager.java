@@ -7,6 +7,7 @@ package io.enmasse.systemtest.manager;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
@@ -28,6 +29,7 @@ public class IsolatedIoTManager extends ResourceManager {
     protected List<IoTProject> ioTProjects;
     protected List<IoTConfig> ioTConfigs;
     private static IsolatedIoTManager instance = null;
+    private UserCredentials defaultCredentials = environment.getDefaultCredentials();
 
     private IsolatedIoTManager() {
         ioTProjects = new ArrayList<>();
@@ -41,7 +43,6 @@ public class IsolatedIoTManager extends ResourceManager {
         return instance;
     }
 
-    @Override
     public void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
@@ -62,7 +63,9 @@ public class IsolatedIoTManager extends ResourceManager {
 
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
-        if (!environment.skipCleanup()) {
+        if (environment.skipCleanup()) {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
+        } else {
             try {
                 tearDownProjects();
                 tearDownConfigs();
@@ -72,8 +75,6 @@ public class IsolatedIoTManager extends ResourceManager {
                 LOGGER.error("Error tearing down iot test: {}", e.getMessage());
                 throw e;
             }
-        } else {
-            LOGGER.info("Skip cleanup is set, no cleanup process");
         }
     }
 

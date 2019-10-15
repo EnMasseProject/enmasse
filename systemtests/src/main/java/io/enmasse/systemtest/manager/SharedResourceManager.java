@@ -31,6 +31,8 @@ public class SharedResourceManager extends ResourceManager {
     protected MqttClientFactory mqttClientFactory = null;
     private AddressSpace sharedAddressSpace = null;
     private static final String DEFAULT_ADDRESS_TEMPLATE = "-shared-";
+    private UserCredentials defaultCredentials = environment.getSharedDefaultCredentials();
+    private UserCredentials managementCredentials = environment.getSharedManagementCredentials();
 
     public static synchronized SharedResourceManager getInstance() {
         if (instance == null) {
@@ -66,7 +68,7 @@ public class SharedResourceManager extends ResourceManager {
                 } catch (Exception ex) {
                     LOGGER.warn("Failed to delete shared address space (ignored)", ex);
                 } finally {
-                    spaceCountMap.compute(DEFAULT_ADD_SPACE_IDENTIFIER, (k, count) -> count == null ? null : count + 1);
+                    spaceCountMap.compute(defaultAddSpaceIdentifier, (k, count) -> count == null ? null : count + 1);
                 }
             } else {
                 LOGGER.warn("No address space is deleted, SKIP_CLEANUP is set");
@@ -89,40 +91,35 @@ public class SharedResourceManager extends ResourceManager {
         sharedAddressSpace = null;
     }
 
-    @Override
     void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, defaultCredentials);
         mqttClientFactory = new MqttClientFactory(sharedAddressSpace, defaultCredentials);
     }
 
     @Override
-    public void setup() {
-        initFactories(sharedAddressSpace);
-    }
-
-    public void setupSharedEnvironment() throws Exception {
+    public void setup() throws Exception {
         LOGGER.info("Shared setup");
         if (spaceCountMap == null) {
             spaceCountMap = new HashMap<>();
         }
-        String defaultAddressSpaceIdent = DEFAULT_ADD_SPACE_IDENTIFIER;
-        spaceCountMap.putIfAbsent(defaultAddressSpaceIdent, 0);
+        spaceCountMap.putIfAbsent(defaultAddSpaceIdentifier, 0);
         sharedAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
-                .withName(defaultAddressSpaceIdent + getDefaultAddressTemplate() + spaceCountMap.get(defaultAddressSpaceIdent))
+                .withName(defaultAddSpaceIdentifier + DEFAULT_ADDRESS_TEMPLATE + spaceCountMap.get(defaultAddSpaceIdentifier))
                 .withNamespace(Kubernetes.getInstance().getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(ADDRESS_SPACE_TYPE)
-                .withPlan(ADDRESS_SPACE_PLAN)
+                .withType(addressSpaceType)
+                .withPlan(addressSpacePlan)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
                 .endSpec()
                 .build();
         createSharedAddressSpace(sharedAddressSpace);
-        createOrUpdateUser(sharedAddressSpace, Environment.getInstance().getManagementCredentials());
-        createOrUpdateUser(sharedAddressSpace, Environment.getInstance().getDefaultCredentials());
+        createOrUpdateUser(sharedAddressSpace, managementCredentials);
+        createOrUpdateUser(sharedAddressSpace, defaultCredentials);
+        initFactories(sharedAddressSpace);
     }
 
     public void createSharedAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -130,6 +127,7 @@ public class SharedResourceManager extends ResourceManager {
         sharedAddressSpace = addressSpace;
     }
 
+    @Override
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         super.createAddressSpace(addressSpace);
     }
@@ -157,6 +155,7 @@ public class SharedResourceManager extends ResourceManager {
         }
     }
 
+    @Override
     public AmqpClientFactory getAmqpClientFactory() {
         return amqpClientFactory;
     }
@@ -166,6 +165,7 @@ public class SharedResourceManager extends ResourceManager {
         this.amqpClientFactory = amqpClientFactory;
     }
 
+    @Override
     public MqttClientFactory getMqttClientFactory() {
         return mqttClientFactory;
     }
@@ -175,7 +175,4 @@ public class SharedResourceManager extends ResourceManager {
         this.mqttClientFactory = mqttClientFactory;
     }
 
-    public static String getDefaultAddressTemplate() {
-        return DEFAULT_ADDRESS_TEMPLATE;
-    }
 }
