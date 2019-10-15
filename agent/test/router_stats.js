@@ -100,7 +100,7 @@ function MockRouter (name) {
     this.name = name || router_names.next();
     events.EventEmitter.call(this);
     this.objects = {};
-    this.create_object('listener', 'default', {name:'default', addr:name, port:55672, role:'inter-router'});
+    this.create_object('listener', 'default', {name:'default', address:name, port:55672, role:'inter-router'});
     this.container = rhea.create_container({id:this.name});
     this.container.on('message', this.on_message.bind(this));
     var self = this;
