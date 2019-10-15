@@ -128,6 +128,29 @@ public class CredentialsRegistryClient extends HonoApiClient {
         }
     }
 
+    static PasswordSecret createPlainPasswordSecret(final String authId, final String password, final Instant notAfter) {
+
+        final PasswordSecret secret = new PasswordSecret();
+        secret.setPasswordPlain(password);
+        secret.setNotAfter(notAfter);
+
+        return secret;
+    }
+
+    static PasswordCredential createPlainPasswordCredentialsObject(final String authId, final String password, final Instant notAfter) {
+
+        var secret = createPlainPasswordSecret(authId, password, notAfter);
+
+        // create credentials
+
+        var credentials = new PasswordCredential();
+        credentials.setAuthId(authId);
+        credentials.setSecrets(Collections.singletonList(secret));
+
+        return credentials;
+
+    }
+
     static PasswordCredential createCredentialsObject(final String authId, final String password, final Instant notAfter) {
 
         var secret = createPasswordSecret(authId, password, notAfter);
@@ -142,8 +165,16 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
     }
 
+    public void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId, final String password) throws Exception {
+        addPlainPasswordCredentials(tenantId, deviceId, authId, password, null);
+    }
+
     public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password) throws Exception {
         addCredentials(tenantId, deviceId, authId, password, null);
+    }
+
+    public void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter) throws Exception {
+        addCredentials(tenantId, deviceId, Collections.singletonList(createPlainPasswordCredentialsObject(authId, password, notAfter)));
     }
 
     public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter) throws Exception {
