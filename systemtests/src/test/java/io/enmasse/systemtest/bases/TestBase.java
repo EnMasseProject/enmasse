@@ -166,9 +166,9 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected String getOCConsoleRoute() {
         if (kubernetes.getOcpVersion() == 4) {
-            return String.format("https://console-openshift-console.%s", environment.kubernetesDomain());
+            return String.format("https://console-openshift-console.%s", environment.kubernetesDomain()).replaceAll("(?<!(http:|https:))[//]+", "/");
         } else {
-            return String.format("%s/console", environment.getApiUrl());
+            return String.format("%s/console", environment.getApiUrl()).replaceAll("(?<!(http:|https:))[//]+", "/");
         }
     }
 
