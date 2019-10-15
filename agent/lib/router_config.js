@@ -100,7 +100,8 @@ const entities = [
         equality:same_address_definition,
         describe:address_describe,
         type:'org.apache.qpid.dispatch.router.config.address',
-        singular:'address'
+        singular:'address',
+        filter: matches_qualifier
     },
     {
         name:'autolinks',
@@ -108,7 +109,8 @@ const entities = [
         equality:same_autolink_definition,
         describe:autolink_describe,
         type:'org.apache.qpid.dispatch.router.config.autoLink',
-        singular:'autolink'
+        singular:'autolink',
+        filter: matches_qualifier
     },
     {
         name:'linkroutes',
@@ -116,7 +118,8 @@ const entities = [
         equality:same_linkroute_definition,
         describe:linkroute_describe,
         type:'org.apache.qpid.dispatch.router.config.linkRoute',
-        singular:'linkroute'
+        singular:'linkroute',
+        filter: matches_qualifier
     },
     {
         name:'listeners',
@@ -124,7 +127,8 @@ const entities = [
         equality:same_listener_definition,
         describe:listener_describe,
         type:'org.apache.qpid.dispatch.listener',
-        singular:'listener'
+        singular:'listener',
+        filter: matches_qualifier
     }
 ];
 
@@ -216,6 +220,9 @@ function retrieve_elements(entity, router) {
     return router.query(entity.type).then(function (results) {
         if (Array.isArray(results)) {
             log.debug('retrieved %s from %s', entity.name, router_id);
+            if (entity.filter) {
+                results = results.filter(r => entity.filter(r));
+            }
             results.sort(entity.comparator);
             return results;
         } else {
@@ -265,7 +272,7 @@ function ensure_elements(entity, desired, router, collected) {
         var delta = myutils.changes(actual, desired, entity.comparator, entity.equality);
         if (delta) {
             log.debug('on %s, have %j, want %j => %s', router_id, actual, desired, delta.description);
-            let stale = delta.removed.filter(matches_qualifier).concat(delta.modified);
+            let stale = delta.removed.concat(delta.modified);
             let missing = delta.added.concat(delta.modified);
 
             if (stale.length || missing.length) {
