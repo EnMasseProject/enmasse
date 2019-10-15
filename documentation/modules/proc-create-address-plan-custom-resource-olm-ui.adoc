@@ -1,0 +1,45 @@
+// Module included in the following assemblies:
+//
+// assembly-configuring-olm.adoc
+// rhassemblies/assembly-configuring-olm-rh.adoc
+
+[id="proc-create-address-plan-custom-resource-olm-ui-{context}"]
+= Creating an address plan custom resource using the {PlatformName} console
+
+You must create an address plan custom resource to use {ProductName}. This procedure uses the example data that is provided when using the {PlatformName} console.
+
+.Procedure
+
+. From the dropdown menu, select the `openshift-operators` project.
+
+. Click *Catalog > Installed Operators*.
+
+. Click *Add > Import YAML*. The Import YAML window opens.
+. Copy the following code:
++
+[source,yaml,options="nowrap",subs="attributes"]
+----
+apiVersion: admin.enmasse.io/v1beta2
+kind: AddressPlan
+metadata:
+  name: standard-small-queue
+spec:
+  addressType: queue
+  resources:
+    router: 0.01
+    broker: 0.1
+----
+
+. In the Import YAML window, paste the copied code and click *Create*. The AddressPlan Overview page is displayed.
+
+. Click *Workloads > Pods*. In the *Readiness* column, the Pod status is `Ready` when the custom resource has been deployed.
+
+.Next steps
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[Create an address space]
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-cli-messaging[Create an address]
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-creating-users-cli-messaging[Create a messaging user]
+
+

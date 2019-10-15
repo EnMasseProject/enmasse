@@ -22,19 +22,19 @@ include::../common/proc-download-procedure.adoc[leveloffset=+1]
 include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
 
 ifdef::OperatorSource[]
-include::../modules/proc-installing-using-olm.adoc[leveloffset=+1]
+include::../modules/proc-installing-using-custom-operator-source.adoc[leveloffset=+1]
 endif::OperatorSource[]
 
 endif::[]
 ifeval::["{cmdcli}" == "oc"]
 
 ifdef::OperatorSource[]
-{ProductName} can be installed by applying the YAML files using the OpenShift Container Platform command-line interface, by using
+{ProductName} can be installed by applying the YAML files using the {PlatformName} command-line interface, by using
 the Operator Marketplace, or by running the link:https://www.ansible.com/[Ansible^] playbook.
 endif::OperatorSource[]
 
 ifndef::OperatorSource[]
-{ProductName} can be installed by applying the YAML files using the OpenShift Container Platform command-line interface, or by running the link:https://www.ansible.com/[Ansible^] playbook.
+{ProductName} can be installed by applying the YAML files using the {PlatformName} command-line interface, or by running the link:https://www.ansible.com/[Ansible^] playbook.
 endif::OperatorSource[]
 
 include::../common/snip-prerequisites-openshift.adoc[]
@@ -44,9 +44,11 @@ include::../common/proc-download-procedure.adoc[leveloffset=+1]
 include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
 
 ifdef::OperatorSource[]
-include::../modules/proc-installing-using-olm.adoc[leveloffset=+1]
+include::../modules/proc-installing-using-custom-operator-source.adoc[leveloffset=+1]
 endif::OperatorSource[]
 
 include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
+
+include::../assemblies/assembly-installing-configuring-olm.adoc[leveloffset=+1]
 
 endif::[]

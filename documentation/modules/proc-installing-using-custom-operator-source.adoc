@@ -2,7 +2,7 @@
 //
 // assembly-installing.adoc
 
-[id='installing-using-olm-{context}']
+[id='installing-using-custom-operator-source-{context}']
 = Installing {ProductName} using Operator Marketplace
 
 If the version of {ProductName} you want to install is not available in the link:https://www.operatorhub.io[Operator

@@ -1,0 +1,39 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-installing-configuring-olm.adoc
+// assembly-installing-configuring-olm-rh.adoc
+
+:parent-context: {context}
+
+[id='assembly-configuring-olm-{context}']
+= Configuring {ProductName} using the {PlatformName} console
+
+After installing {ProductName} from the OperatorHub using the {PlatformName} console, create a new instance of a custom resource for the following items within the `openshift-operators` project:
+
+* service infrastructure configuration for an address space type (the example uses the standard address space type)
+* an authentication service
+* an address space plan
+* an address plan
+
+After creating the new instances of the custom resources, next:
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[create an address space]
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-cli-messaging[create an address]
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-creating-users-cli-messaging[create a messaging user]
+
+
+The following procedures use the example data that is provided when using the {PlatformName} console.
+
+include::../modules/proc-create-infraconfig-custom-resource-olm-ui.adoc[leveloffset=+1]
+
+include::../modules/proc-create-auth-service-custom-resource-olm-ui.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-space-plan-custom-resource-olm-ui.adoc[leveloffset=+1]
+
+include::../modules/proc-create-address-plan-custom-resource-olm-ui.adoc[leveloffset=+1]
+
+:context: {parent-context}
+
+

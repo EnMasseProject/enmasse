@@ -1,0 +1,25 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-installing.adoc
+// Installing master.adoc
+// Evaluating master.adoc
+
+:parent-context: {context}
+
+[id='assembly-installing-configuring-olm-{context}']
+= Installing and configuring {ProductName} using the Operator Lifecycle Manager
+
+You can use the Operator Lifecycle Manager to install and configure an instance of {ProductName}.
+
+In OpenShift Container Platform 4.1, the Operator Lifecycle Manager (OLM) helps users install, update, and  manage the life cycle of all Operators and their associated services running across their clusters. It is part of the Operator Framework, an open source toolkit designed to manage Kubernetes native applications (Operators) in an effective, automated, and scalable way.
+
+The OLM runs by default in OpenShift Container Platform 4.1, which aids cluster administrators in installing, upgrading, and granting access to Operators running on their cluster. The OpenShift Container Platform console provides management screens for cluster administrators to install Operators, as well as grant specific projects access to use the catalog of Operators available on the cluster.
+
+OperatorHub is the graphical interface that OpenShift cluster administrators use to discover, install, and upgrade Operators. With one click, these Operators can be pulled from OperatorHub, installed on the cluster, and managed by the OLM, ready for engineering teams to self-service manage the software in development, test, and production environments.
+
+include::../modules/proc-olm-installing-from-operatorhub-using-console.adoc[leveloffset=+1]
+
+include::../assemblies/assembly-configuring-olm.adoc[leveloffset=+1]
+
+:context: {parent-context}
+
