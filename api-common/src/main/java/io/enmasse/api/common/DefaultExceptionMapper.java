@@ -19,6 +19,8 @@ import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.SocketTimeoutException;
+
 @Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
     protected static final Logger log = LoggerFactory.getLogger(DefaultExceptionMapper.class.getName());
@@ -29,7 +31,15 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         if (exception instanceof WebApplicationException) {
             statusCode = ((WebApplicationException) exception).getResponse().getStatus();
         } else if (exception instanceof KubernetesClientException) {
-            statusCode = ((KubernetesClientException) exception).getStatus().getCode();
+            KubernetesClientException kce = (KubernetesClientException) exception;
+            if (kce.getStatus() != null) {
+                statusCode = kce.getStatus().getCode();
+            } else if (kce.getCause() instanceof SocketTimeoutException) {
+                statusCode = Response.Status.SERVICE_UNAVAILABLE.getStatusCode();
+            } else {
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+            }
+
         } else if (exception instanceof UnresolvedAddressException || exception instanceof JsonProcessingException || exception instanceof UnresolvedAddressSpaceException || exception instanceof ValidationException || exception instanceof UserValidationFailedException) {
             statusCode = Response.Status.BAD_REQUEST.getStatusCode();
         } else if (exception instanceof KeycloakUnavailableException) {
