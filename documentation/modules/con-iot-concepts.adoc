@@ -1,0 +1,21 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-guide.adoc
+
+[id='con-iot-connectivity-{context}']
+= IoT connectivity concepts
+
+The Internet of Things (IoT) connectivity feature enables {ProductName} to be used for managing and connecting devices with back-end applications. In a typical IoT application, devices have different requirements than ordinary messaging applications. Instead of using arbitrary addresses and security
+configurations that are typically available, developers can use the IoT services to handle device identities and security configurations explicitly, support multiple protocols often used in the IoT space, and provide
+uniform support for expected device communication patterns.
+
+
+image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design/overview/enmasse_iot_view.png[IoT connectivity]
+
+One of the key concepts is a _device registry_, which developers use to register devices and provide their credentials. With these credentials, devices can then connect to _protocol adapters_
+using one of the supported protocols: HTTP, MQTT, LoRaWAN, and SigFox. Once connected, devices can send and receive messages from back-end applications using one of the following messaging semantics:
+
+* Telemetry: Allows devices to send non-durable data to back-end applications, so messages are sent using the `multicast` address type. This option is best for sending non-critical sensor readings.
+* Events:  Allows devices to send durable data to the back-end applications, so messages are sent using the `queue` address type. This option is best for sending more important device data such as alerts and notifications.
+
+Back-end applications can also send *Command* messages to devices. Commands can be used to trigger actions on devices. Examples include updating a configuration property, installing a software component, or switching the state of an actuator.

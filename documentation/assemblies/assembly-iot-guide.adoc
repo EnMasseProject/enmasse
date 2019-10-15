@@ -9,6 +9,8 @@
 
 The IoT guide provides resources on how to set up and manage {ProductName} IoT features.
 
+include::../modules/con-iot-concepts.adoc[leveloffset=+1]
+
 include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
 
 include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
