@@ -49,7 +49,7 @@ Messaging routers are only deployed in the `standard` address space type. The sc
 
 == Restarting brokers
 
-For the `brokered` address space type, restarting the broker causes temporary downtime to messaging clients while the broker is restarted. For the `standard` address space type, messaging clients are not disconnected from the messaging routers, but are not able to consume messages stored on the restarting broker.
+For the `brokered` address space type, restarting the broker causes downtime temporarily to messaging clients while the broker is restarted. For the `standard` address space type, messaging clients are not disconnected from the messaging routers, but clients are not able to consume messages stored on the restarting broker.
 
 .Procedure
 
@@ -59,3 +59,4 @@ For the `brokered` address space type, restarting the broker causes temporary do
 ----
 ./scripts/restart-brokers.sh {ProductNamespace}
 ----
+
