@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import java.net.SocketTimeoutException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -46,6 +48,38 @@ public class DefaultExceptionMapperTest {
         assertTrue(response.getEntity() instanceof Status);
         Status responseEntity = (Status) response.getEntity();
         assertEquals("Unprocessable Entity", responseEntity.getReason());
+        assertEquals(message, responseEntity.getMessage());
+    }
+
+    @Test
+    public void testToResponseStatus500() {
+        int code = 500;
+        Response.Status status = Response.Status.fromStatusCode(code);
+        String message = "Some error message";
+        KubernetesClientException kubernetesClientException = new KubernetesClientException(message, new NullPointerException("something's gone bad!"));
+
+        Response response = new DefaultExceptionMapper().toResponse(kubernetesClientException);
+        assertEquals(code, response.getStatus());
+        assertEquals(status.getReasonPhrase(), response.getStatusInfo().getReasonPhrase());
+        assertTrue(response.getEntity() instanceof Status);
+        Status responseEntity = (Status) response.getEntity();
+        assertEquals("Internal Server Error", responseEntity.getReason());
+        assertEquals(message, responseEntity.getMessage());
+    }
+
+    @Test
+    public void testToResponseStatus503() {
+        int code = 503;
+        Response.Status status = Response.Status.fromStatusCode(code);
+        String message = "Some error message";
+        KubernetesClientException kubernetesClientException = new KubernetesClientException(message, new SocketTimeoutException());
+
+        Response response = new DefaultExceptionMapper().toResponse(kubernetesClientException);
+        assertEquals(code, response.getStatus());
+        assertEquals(status.getReasonPhrase(), response.getStatusInfo().getReasonPhrase());
+        assertTrue(response.getEntity() instanceof Status);
+        Status responseEntity = (Status) response.getEntity();
+        assertEquals("Service Unavailable", responseEntity.getReason());
         assertEquals(message, responseEntity.getMessage());
     }
 
