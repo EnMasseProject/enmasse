@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressStatus;
@@ -15,6 +16,7 @@ import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -177,7 +179,12 @@ public class AddressUtils {
         }
     }
 
-    public static void waitForDestinationsReady(TimeoutBudget budget, Address... destinations) {
+    public static void waitForDestinationsReady(Address... destinations) throws Exception {
+        TimeoutBudget budget = new TimeoutBudget(10, TimeUnit.MINUTES);
+        waitForDestinationsReady(budget, destinations);
+    }
+
+    public static void waitForDestinationsReady(TimeoutBudget budget, Address... destinations) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
@@ -261,5 +268,107 @@ public class AddressUtils {
 
     interface AddressListMatcher {
         Map<String, Address> matchAddresses(List<Address> addressList);
+    }
+
+    public static List<Address> getAllStandardAddresses(AddressSpace addressspace) {
+        return Arrays.asList(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-queue-sharded"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue-sharded")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-topic-sharded"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic-sharded")
+                        .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-anycast"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("anycast")
+                        .withAddress("test-anycast")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-multicast"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("multicast")
+                        .withAddress("test-multicast")
+                        .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
+                        .endSpec()
+                        .build());
+    }
+
+    public static List<Address> getAllBrokeredAddresses(AddressSpace addressspace) {
+        return Arrays.asList(
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-queue"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue")
+                        .withPlan(DestinationPlan.BROKERED_QUEUE)
+                        .endSpec()
+                        .build(),
+
+                new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(addressspace.getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressspace, "test-topic"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("topic")
+                        .withAddress("test-topic")
+                        .withPlan(DestinationPlan.BROKERED_TOPIC)
+                        .endSpec()
+                        .build());
     }
 }

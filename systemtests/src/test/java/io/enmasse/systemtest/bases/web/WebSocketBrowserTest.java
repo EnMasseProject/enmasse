@@ -29,20 +29,6 @@ public abstract class WebSocketBrowserTest extends TestBase implements ITestBase
         resourcesManager.deleteAddresses(getSharedAddressSpace());
     }
 
-    @Override
-    protected Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
-        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
-            Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, "messaging-wss");
-            if (TestUtils.resolvable(messagingEndpoint)) {
-                return messagingEndpoint;
-            } else {
-                return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "https");
-            }
-        } else {
-            return super.getMessagingRoute(addressSpace);
-        }
-    }
-
     //============================================================================================
     //============================ do test methods ===============================================
     //============================================================================================
@@ -51,7 +37,7 @@ public abstract class WebSocketBrowserTest extends TestBase implements ITestBase
         resourcesManager.setAddresses(destination);
         int count = 10;
 
-        rheaWebPage.sendReceiveMessages(getMessagingRoute(getSharedAddressSpace()).toString(), destination.getSpec().getAddress(),
+        rheaWebPage.sendReceiveMessages(kubernetes.getMessagingRouteWS(getSharedAddressSpace()).toString(), destination.getSpec().getAddress(),
                 count, defaultCredentials, AddressSpaceType.valueOf(getSharedAddressSpace().getSpec().getType().toUpperCase()));
         assertTrue(rheaWebPage.checkCountMessage(count * 2), "Browser client didn't sent and received all messages");
     }

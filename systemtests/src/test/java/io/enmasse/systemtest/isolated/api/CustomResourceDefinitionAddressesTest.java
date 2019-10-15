@@ -86,13 +86,13 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 .endSpec()
                 .build();
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), brokered, clusterUser);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(brokered), brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.createAddressWebConsole(dest1, false);
 
         resourcesManager.appendAddresses(false, dest2);
-        waitForDestinationsReady(dest1, dest2);
+        AddressUtils.waitForDestinationsReady(dest1, dest2);
 
         Address addressFromConsole = kubernetes.getAddressClient(brokered.getMetadata().getNamespace()).list().getItems()
                 .stream().filter(address -> address.getSpec().getAddress().equals(dest1.getSpec().getAddress())).findFirst().orElse(null);
@@ -160,7 +160,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 String.format("Unexpected response on create custom resource '%s': %s", address2, output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address2));
 
-        waitForDestinationsReady(dest1, dest2);
+        AddressUtils.waitForDestinationsReady(dest1, dest2);
 
         result = KubeCMDClient.getAddress(environment.namespace(), "-a");
         output = result.getStdOut().trim();
@@ -172,7 +172,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 String.format("Get all addresses should contains '%s'; but contains only: %s",
                         dest2.getMetadata().getName(), output));
 
-        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, getConsoleRoute(brokered), brokered, clusterUser);
+        ConsoleWebPage consoleWeb = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(brokered), brokered, clusterUser);
         consoleWeb.openWebConsolePage();
         consoleWeb.openAddressesPageWebConsole();
         consoleWeb.deleteAddressWebConsole(dest1);

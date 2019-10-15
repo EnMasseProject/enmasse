@@ -96,7 +96,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
         resourcesManager.createAddressSpacePlan(addressSpacePlan);
 
-        AddressSpaceSchemaList schemaData = getSchema();
+        AddressSpaceSchemaList schemaData = kubernetes.getSchemaClient().list();
         log.info("Check if schema object is not null");
         assertThat(schemaData.getItems().size(), not(0));
 

@@ -140,8 +140,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             }
         });
 
-        waitForDestinationsReady(AddressUtils.getAddresses(brokered).toArray(new Address[0]));
-        waitForDestinationsReady(AddressUtils.getAddresses(standard).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(brokered).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(standard).toArray(new Address[0]));
 
         List<User> items = kubernetes.getUserClient().list().getItems();
         log.info("After upgrade {} user(s)", items.size());

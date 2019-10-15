@@ -16,6 +16,7 @@ import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered {
+    private MessagingUtils clientUtils = getClientUtils();
 
     @Test
     void testReplaceAddressSpacePlanBrokered() throws Exception {

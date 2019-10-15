@@ -24,6 +24,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressStatus;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -61,6 +62,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     SeleniumProvider selenium = SeleniumProvider.getInstance();
+    private MessagingUtils clientUtils = getClientUtils();
 
     @Test
     void testCreateAddressSpacePlan() throws Exception {
@@ -569,21 +571,21 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.appendAddresses(address);
         waitForBrokerReplicas(partitioned, address, 1);
-        getClientUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
+        new MessagingUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
 
         // Increase number of partitions and expect broker to be created
         address.getSpec().setPlan(partitionedQueue.getMetadata().getName());
         resourcesManager.replaceAddress(address);
 
         waitForBrokerReplicas(partitioned, address, 1);
-        getClientUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
+        new MessagingUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
 
 
         // Decrease number of partitions and expect broker to disappear
         address.getSpec().setPlan(simpleQueue.getMetadata().getName());
         resourcesManager.replaceAddress(address);
         waitForBrokerReplicas(partitioned, address, 1);
-        getClientUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
+        new MessagingUtils().assertCanConnect(partitioned, cred, Collections.singletonList(address), resourcesManager);
 
         // Increase to too many partitions
         address.getSpec().setPlan(manyPartitionedQueue.getMetadata().getName());
@@ -659,14 +661,14 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
-        getClientUtils().assertCanConnect(manyAddressesSpace, cred, dest, resourcesManager);
+        new MessagingUtils().assertCanConnect(manyAddressesSpace, cred, dest, resourcesManager);
 
         resourcesManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (Address destination : dest.subList(toDeleteCount, destCount)) {
             waitForBrokerReplicas(manyAddressesSpace, destination, 1);
         }
 
-        getClientUtils().assertCanConnect(manyAddressesSpace, cred, dest.subList(toDeleteCount, destCount), resourcesManager);
+        new MessagingUtils().assertCanConnect(manyAddressesSpace, cred, dest.subList(toDeleteCount, destCount), resourcesManager);
     }
 
     @Test
@@ -800,8 +802,10 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 addresses.size(), is(2));
 
         //receive messages from remaining addresses
-        getClientUtils().receiveMessages(queueClient, queue3.getSpec().getAddress(), msgs.size());
-        getClientUtils().receiveMessages(queueClient, queue4.getSpec().getAddress(), msgs.size());
+        Future<List<Message>> recvResult3 = queueClient.recvMessages(queue3.getSpec().getAddress(), msgs.size());
+        Future<List<Message>> recvResult4 = queueClient.recvMessages(queue4.getSpec().getAddress(), msgs.size());
+        assertThat("Incorrect count of messages received", recvResult3.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        assertThat("Incorrect count of messages received", recvResult4.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
     }
 
     @Test
@@ -928,7 +932,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .build();
         isolatedResourcesManager.appendAddresses(afterQueue);
 
-        getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic), resourcesManager);
+        new MessagingUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue, topic), resourcesManager);
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(pooledAddressSpacePlan.getMetadata().getName()).endSpec().done();
         isolatedResourcesManager.replaceAddressSpace(addressSpace);
@@ -947,7 +951,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.appendAddresses(pooledQueue);
 
-        getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic, afterQueue, pooledQueue), resourcesManager);
+        new MessagingUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic, afterQueue, pooledQueue), resourcesManager);
     }
 
     @Test
@@ -1029,7 +1033,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
 
 
         resourcesManager.setAddresses(queues.toArray(new Address[0]));
-        getClientUtils().assertCanConnect(addressSpace, user, queues, resourcesManager);
+        new MessagingUtils().assertCanConnect(addressSpace, user, queues, resourcesManager);
 
         AddressSpace replaced = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -1156,7 +1160,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             assertEquals(Phase.Active, address.getStatus().getPhase(), assertMessage);
         }
 
-        getClientUtils().assertCanConnect(addressSpace, credentials, allowedDest, resourcesManager);
+        new MessagingUtils().assertCanConnect(addressSpace, credentials, allowedDest, resourcesManager);
 
         getAddresses.clear();
         if (notAllowedDest.size() > 0) {
@@ -1180,7 +1184,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
             }
         }
 
-        ConsoleWebPage page = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
+        ConsoleWebPage page = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(addressSpace), addressSpace, clusterUser);
         page.openWebConsolePage();
         page.openAddressesPageWebConsole();
 

@@ -16,6 +16,7 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.DescribedType;
@@ -138,7 +139,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         resourcesManager.setAddresses(t2);
 
         resourcesManager.appendAddresses(t1);
-        waitForDestinationsReady(t2);
+        AddressUtils.waitForDestinationsReady(t2);
 
         AmqpClient topicClient = getAmqpClientFactory().createTopicClient();
         runTopicTest(topicClient, t1, 2048);
@@ -171,7 +172,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), t1, t2);
+        TestUtils.runRestApiTest(resourcesManager, getSharedAddressSpace(), t1, t2);
     }
 
     @Test
@@ -374,7 +375,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         log.info("Sending first batch");
         assertThat("Wrong count of messages sent: batch1",
                 client.sendMessages(topic.getSpec().getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
-        assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
+        assertThat("Wrong messages received: batch1", MessagingUtils.extractBodyAsString(recvResults), is(batch1));
 
         log.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
@@ -383,7 +384,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
 
         log.info("Receiving second batch");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), batch2.size());
-        assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
+        assertThat("Wrong messages received: batch2", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
     }
 
     @Test
@@ -434,7 +435,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         log.info("Sending first batch");
         assertThat("Wrong count of messages sent: batch1",
                 client.sendMessages(topic.getSpec().getAddress(), batch1).get(1, TimeUnit.MINUTES), is(batch1.size()));
-        assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
+        assertThat("Wrong messages received: batch1", MessagingUtils.extractBodyAsString(recvResults), is(batch1));
 
         log.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
@@ -443,14 +444,14 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
 
         log.info("Receiving second batch");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription1), batch2.size());
-        assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
+        assertThat("Wrong messages received: batch2", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
 
         log.info("Receiving messages from second subscription");
         List<String> allmessages = new ArrayList<>(batch1);
         allmessages.addAll(batch2);
         AmqpClient client2 = getAmqpClientFactory().createTopicClient();
         recvResults = client2.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription2), allmessages.size());
-        assertThat("Wrong messages received for second subscription", extractBodyAsString(recvResults), is(allmessages));
+        assertThat("Wrong messages received for second subscription", MessagingUtils.extractBodyAsString(recvResults), is(allmessages));
     }
 
     @Test
@@ -489,7 +490,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
 
         log.info("Receiving first batch");
         Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription1), batch1.size());
-        assertThat("Wrong messages received: batch1", extractBodyAsString(recvResults), is(batch1));
+        assertThat("Wrong messages received: batch1", MessagingUtils.extractBodyAsString(recvResults), is(batch1));
 
         log.info("Creating second subscription");
         Address subscription2 = new AddressBuilder()
@@ -513,12 +514,12 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 client.sendMessages(topic.getSpec().getAddress(), batch2).get(1, TimeUnit.MINUTES), is(batch2.size()));
         log.info("Receiving second batch");
         recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription1), batch2.size());
-        assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
+        assertThat("Wrong messages received: batch2", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
 
         log.info("Receiving messages from second subscription");
         AmqpClient client2 = getAmqpClientFactory().createTopicClient();
         recvResults = client2.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription2), batch2.size());
-        assertThat("Wrong messages received for second subscription", extractBodyAsString(recvResults), is(batch2));
+        assertThat("Wrong messages received for second subscription", MessagingUtils.extractBodyAsString(recvResults), is(batch2));
     }
 
     @Test

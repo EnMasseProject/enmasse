@@ -224,7 +224,7 @@ public abstract class GlobalConsoleTest extends TestBase {
 
         ConsoleWebPage console = new ConsoleWebPage(
                 selenium,
-                getConsoleRoute(addressSpace),
+                kubernetes.getConsoleRoute(addressSpace),
                 addressSpace,
                 clusterUser);
         console.openWebConsolePage();

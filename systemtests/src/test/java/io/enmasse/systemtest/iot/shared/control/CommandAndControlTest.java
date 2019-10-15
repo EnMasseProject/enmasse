@@ -12,6 +12,7 @@ import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -116,7 +117,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         var f1 = setupMessagingReceiver(sentFuture, null);
 
-        waitForFirstSuccessOnTelemetry(httpClient);
+        IoTUtils.waitForFirstSuccessOnTelemetry(httpClient);
 
         var response = sendTelemetryWithTtd();
 
@@ -144,7 +145,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             commandMessage.setReplyTo(replyToAddress);
         });
 
-        waitForFirstSuccessOnTelemetry(httpClient);
+        IoTUtils.waitForFirstSuccessOnTelemetry(httpClient);
 
         var response = sendTelemetryWithTtd();
 

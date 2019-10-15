@@ -21,6 +21,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.junit.jupiter.api.Test;
 
@@ -108,7 +109,7 @@ public class PublishTest extends TestBase implements ITestIsolatedStandard {
         IMqttClient mqttClient = mqttFactory.create();
         try {
             mqttClient.connect();
-            simpleMQTTSendReceive(topic, mqttClient);
+            MessagingUtils.simpleMQTTSendReceive(topic, mqttClient, 3);
             mqttClient.disconnect();
         } finally {
             mqttFactory.close();

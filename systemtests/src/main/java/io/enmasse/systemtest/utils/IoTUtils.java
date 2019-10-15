@@ -333,4 +333,8 @@ public class IoTUtils {
 
         }
     }
+
+    public static void waitForFirstSuccessOnTelemetry(HttpAdapterClient adapterClient) throws Exception {
+        waitForFirstSuccess(adapterClient, MessageType.TELEMETRY);
+    }
 }

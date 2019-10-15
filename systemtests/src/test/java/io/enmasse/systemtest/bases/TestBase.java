@@ -29,8 +29,7 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.model.addressplan.DestinationPlan;
-import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
@@ -255,7 +254,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         try {
             SeleniumManagement.deployFirefoxApp();
             selenium = getFirefoxSeleniumProvider();
-            ConsoleWebPage console = new ConsoleWebPage(selenium, getConsoleRoute(addressSpace), addressSpace, clusterUser);
+            ConsoleWebPage console = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(addressSpace), addressSpace, clusterUser);
             console.openWebConsolePage();
             console.openAddressesPageWebConsole();
 
@@ -364,7 +363,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected void waitForPodsToTerminate(List<String> uids) throws Exception {
         LOGGER.info("Waiting for following pods to be deleted {}", uids);
-        assertWaitForValue(true, () -> (kubernetes.listPods(kubernetes.getInfraNamespace()).stream()
+        TestUtils.assertWaitForValue(true, () -> (kubernetes.listPods(kubernetes.getInfraNamespace()).stream()
                 .noneMatch(pod -> uids.contains(pod.getMetadata().getUid()))), new TimeoutBudget(2, TimeUnit.MINUTES));
     }
 

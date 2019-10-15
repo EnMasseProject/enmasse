@@ -44,10 +44,12 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.platform.cluster.NoClusterException;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
@@ -314,6 +316,56 @@ public abstract class Kubernetes {
     public abstract Endpoint getRestEndpoint();
 
     public abstract Endpoint getKeycloakEndpoint();
+
+    public Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {
+        Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "messaging");
+        if (messagingEndpoint == null) {
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            messagingEndpoint = getExternalEndpoint(externalEndpointName);
+        }
+        if (TestUtils.resolvable(messagingEndpoint)) {
+            return messagingEndpoint;
+        } else {
+            return getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "amqps");
+        }
+    }
+
+    public Endpoint getMessagingRouteWS(AddressSpace addressSpace) throws Exception {
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, "messaging-wss");
+            if (TestUtils.resolvable(messagingEndpoint)) {
+                return messagingEndpoint;
+            } else {
+                return getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "https");
+            }
+        } else {
+            return getMessagingRoute(addressSpace);
+        }
+    }
+
+    public String getOCConsoleRoute() {
+        if (getOcpVersion() == 4) {
+            return String.format("https://console-openshift-console.%s", environment.kubernetesDomain()).replaceAll("(?<!(http:|https:))[//]+", "/");
+        } else {
+            return String.format("%s/console", environment.getApiUrl()).replaceAll("(?<!(http:|https:))[//]+", "/");
+        }
+    }
+
+    public String getConsoleRoute(AddressSpace addressSpace) {
+        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
+        String consoleRoute = String.format("https://%s", consoleEndpoint.toString());
+        log.info(consoleRoute);
+        return consoleRoute;
+    }
+
+    public Endpoint getConsoleEndpoint(AddressSpace addressSpace) {
+        Endpoint consoleEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "console");
+        if (consoleEndpoint == null) {
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "console");
+            consoleEndpoint = getExternalEndpoint(externalEndpointName);
+        }
+        return consoleEndpoint;
+    }
 
     /**
      * Assumes infra namespace

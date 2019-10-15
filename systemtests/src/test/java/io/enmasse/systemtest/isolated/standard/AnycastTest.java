@@ -17,6 +17,7 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -128,7 +129,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(addressSpace, a1, a2);
+        TestUtils.runRestApiTest(resourcesManager, addressSpace, a1, a2);
     }
 
     @Test

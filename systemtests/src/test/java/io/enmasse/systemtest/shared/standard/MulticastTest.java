@@ -10,6 +10,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Test;
 
 class MulticastTest extends TestBase implements ITestSharedStandard {
@@ -39,6 +40,6 @@ class MulticastTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), m1, m2);
+        TestUtils.runRestApiTest(resourcesManager, getSharedAddressSpace(), m1, m2);
     }
 }

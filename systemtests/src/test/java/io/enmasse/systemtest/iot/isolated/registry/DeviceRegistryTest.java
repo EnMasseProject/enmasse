@@ -18,6 +18,7 @@ import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.utils.IoTUtils;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.eclipse.hono.service.management.device.Device;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,7 +107,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
         final Device result = client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
         assertNotNull(result);
-        assertDefaultEnabled(result.getEnabled());
+        TestUtils.assertDefaultEnabled(result.getEnabled());
 
         client.deleteDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
         client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);

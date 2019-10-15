@@ -14,6 +14,8 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
+import io.enmasse.systemtest.utils.MessagingUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Matchers;
@@ -138,7 +140,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), q1, q2);
+        TestUtils.runRestApiTest(resourcesManager, getSharedAddressSpace(), q1, q2);
     }
 
     @Test
@@ -156,7 +158,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -235,7 +237,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -287,7 +289,7 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
 

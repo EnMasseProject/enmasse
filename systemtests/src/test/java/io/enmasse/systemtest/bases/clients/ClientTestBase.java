@@ -21,7 +21,6 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -81,14 +80,9 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket) throws Exception {
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) && websocket) {
-            Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByName(addressSpace, "messaging-wss");
-            if (TestUtils.resolvable(messagingEndpoint)) {
-                return messagingEndpoint;
-            } else {
-                return kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getNamespace(), "https");
-            }
+            return kubernetes.getMessagingRouteWS(addressSpace);
         } else {
-            return getMessagingRoute(addressSpace);
+            return kubernetes.getMessagingRoute(addressSpace);
         }
     }
 
@@ -156,7 +150,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
+        arguments.put(ClientArgument.BROKER, kubernetes.getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount / 2));
         arguments.put(ClientArgument.TIMEOUT, "100");
@@ -211,7 +205,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
+        arguments.put(ClientArgument.BROKER, kubernetes.getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
@@ -262,7 +256,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(dest);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
+        arguments.put(ClientArgument.BROKER, kubernetes.getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
@@ -306,7 +300,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
+        arguments.put(ClientArgument.BROKER, kubernetes.getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.ADDRESS, dest.getSpec().getAddress());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.MSG_CONTENT, "msg no. %d");
@@ -344,7 +338,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(queue);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
+        arguments.put(ClientArgument.BROKER, kubernetes.getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.ADDRESS, queue.getSpec().getAddress());
         arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");
@@ -417,7 +411,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .build();
         resourcesManager.setAddresses(topic);
 
-        arguments.put(ClientArgument.BROKER, getMessagingRoute(getSharedAddressSpace()).toString());
+        arguments.put(ClientArgument.BROKER, kubernetes.getMessagingRoute(getSharedAddressSpace()).toString());
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
         arguments.put(ClientArgument.ADDRESS, AddressUtils.getTopicPrefix(hasTopicPrefix) + topic.getSpec().getAddress());
         arguments.put(ClientArgument.MSG_PROPERTY, "colour~red");

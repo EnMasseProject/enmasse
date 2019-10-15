@@ -11,7 +11,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
-import io.enmasse.systemtest.clients.ClientUtils;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -173,7 +173,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         kubernetes.getAddressClient().create(q2);
 
         resourcesManager.appendAddresses(q1);
-        waitForDestinationsReady(q2);
+        AddressUtils.waitForDestinationsReady(q2);
 
         AmqpClient client = getAmqpClientFactory().createQueueClient();
         runQueueTest(client, q1);
@@ -206,7 +206,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        runRestApiTest(getSharedAddressSpace(), q1, q2);
+        TestUtils.runRestApiTest(resourcesManager, getSharedAddressSpace(), q1, q2);
     }
 
     @Test
@@ -443,7 +443,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 try {
                     int messageCount = 43;
                     resourcesManager.appendAddresses(false, destinations);
-                    doMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
+                    MessagingUtils.doMessaging(resourcesManager, Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fail(e.getMessage());
@@ -473,7 +473,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         resourcesManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(kubernetes.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
 

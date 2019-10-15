@@ -96,7 +96,7 @@ public abstract class WebConsolePlansTest extends TestBase implements ITestIsola
         isolatedResourcesManager.createOrUpdateUser(consoleAddrSpace, user);
 
         //create addresses
-        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
+        consoleWebPage = new ConsoleWebPage(selenium, kubernetes.getConsoleRoute(consoleAddrSpace), consoleAddrSpace, clusterUser);
         consoleWebPage.openWebConsolePage();
         Address q1 = new AddressBuilder()
                 .withNewMetadata()

@@ -50,7 +50,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @SeleniumFirefox
     @Order(1)
     void installOperator() throws Exception {
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), kubernetes.getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
         page.installFromCatalog(environment.getAppName());
         Thread.sleep(30_000);
@@ -61,7 +61,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @SeleniumFirefox
     @Order(2)
     void testCreateExampleResources() throws Exception {
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), kubernetes.getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
         page.openInstalledOperators();
         page.selectNamespaceFromBar(infraNamespace);
@@ -96,7 +96,7 @@ class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStan
     @Order(4)
     void uninstallOperator() throws Exception {
         TestUtils.cleanAllEnmasseResourcesFromNamespace(infraNamespace);
-        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), getOCConsoleRoute(), clusterUser);
+        Openshift4WebPage page = new Openshift4WebPage(SeleniumProvider.getInstance(), kubernetes.getOCConsoleRoute(), clusterUser);
         page.openOpenshiftPage();
         page.uninstallFromCatalog(environment.getAppName());
         kubernetes.getConsoleServiceClient(infraNamespace).withPropagationPolicy("Background").delete();

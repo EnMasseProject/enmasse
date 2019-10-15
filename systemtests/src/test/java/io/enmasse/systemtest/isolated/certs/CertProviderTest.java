@@ -34,6 +34,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.CertificateUtils;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.net.PemTrustOptions;
@@ -328,7 +329,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                         .addCertValue(Buffer.buffer(endpointCert)))
                 .setVerifyHost(true));
 
-        Endpoint consoleEndpoint = getConsoleEndpoint(addressSpace);
+        Endpoint consoleEndpoint = kubernetes.getConsoleEndpoint(addressSpace);
         CompletableFuture<Optional<Throwable>> promise = new CompletableFuture<>();
         webClient.get(consoleEndpoint.getPort(), consoleEndpoint.getHost(), "").ssl(true).send(ar -> {
             log.info("get console " + ar.toString());

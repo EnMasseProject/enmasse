@@ -465,4 +465,8 @@ public abstract class ResourceManager {
         return null;
     }
 
+    public boolean userExist(AddressSpace addressSpace, String username) {
+        return getUser(addressSpace, username) != null;
+    }
+
 }

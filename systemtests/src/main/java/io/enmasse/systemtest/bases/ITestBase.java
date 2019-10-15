@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.bases;
 
-import io.enmasse.systemtest.clients.ClientUtils;
+import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -13,10 +13,10 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import org.slf4j.Logger;
 
 public interface ITestBase {
-    ClientUtils clientUtils = new ClientUtils();
+    MessagingUtils clientUtils = new MessagingUtils();
     Logger LOGGER = CustomLogger.getLogger();
     Kubernetes kubernetes = Kubernetes.getInstance();
-    default ClientUtils getClientUtils() {
+    default MessagingUtils getClientUtils() {
         return clientUtils;
     }
 

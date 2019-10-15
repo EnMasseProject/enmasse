@@ -14,6 +14,7 @@ import io.enmasse.systemtest.bases.soak.SoakTestBase;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.junit.jupiter.api.AfterEach;
@@ -81,8 +82,8 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
-        List<Address> brokeredAddresses = getAllBrokeredAddresses(brokered);
-        List<Address> standardAddresses = getAllStandardAddresses(standard);
+        List<Address> brokeredAddresses = AddressUtils.getAllBrokeredAddresses(brokered);
+        List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
 
         resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
         resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
@@ -105,6 +106,50 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
 
         runTestInLoop(60, () ->
                 assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses));
+    }
+
+    @Test
+    @Disabled("Due to issue #2127")
+    public void testHAqdrouter() throws Exception {
+
+        UserCredentials user = new UserCredentials("test-user", "passsswooooord");
+        AddressSpace standard = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-ha-routers")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        isolatedResourcesManager.createAddressSpaceList(standard);
+        resourcesManager.createOrUpdateUser(standard, user);
+
+        List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
+
+        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
+
+        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+
+        //set up restart scheduler
+        deleteService.scheduleAtFixedRate(() -> {
+            log.info("............................................................");
+            log.info("............................................................");
+            log.info("...........Scheduler will delete one of qdrouter............");
+            List<Pod> qdrouters = kubernetes.listPods().stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList());
+            Pod qdrouter = qdrouters.get(new Random(System.currentTimeMillis()).nextInt(qdrouters.size()) % qdrouters.size());
+            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
+            log.info("............................................................");
+            log.info("............................................................");
+            log.info("............................................................");
+        }, 5, 75, TimeUnit.SECONDS);
+
+        runTestInLoop(30, () ->
+                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager));
     }
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
