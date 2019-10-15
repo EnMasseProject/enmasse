@@ -16,12 +16,16 @@ import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.utils.IoTUtils;
+import org.eclipse.hono.service.management.credentials.CommonCredential;
+import org.eclipse.hono.service.management.credentials.PasswordCredential;
 import org.eclipse.hono.service.management.device.Device;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import static io.enmasse.systemtest.TestTag.SMOKE;
@@ -125,7 +129,6 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);
     }
 
-
     protected void doTestDeviceCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
@@ -136,6 +139,52 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
             credentialsClient.addCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password);
 
             IoTUtils.checkCredentials(authId, password, false, httpAdapterEndpoint, amqpClient, iotProject);
+
+            credentialsClient.deleteAllCredentials(isolatedIoTManager.getTenantId(), randomDeviceId);
+
+            client.deleteDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
+            client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);
+
+        }
+    }
+
+    protected void doTestDeviceCredentialsPlainPassword() throws Exception {
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+
+            client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
+
+            String authId = "sensor-" + UUID.randomUUID().toString();
+            String password = "password1234";
+            credentialsClient.addPlainPasswordCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password);
+
+            IoTUtils.checkCredentials(authId, password, false, httpAdapterEndpoint, amqpClient, iotProject);
+
+            credentialsClient.deleteAllCredentials(isolatedIoTManager.getTenantId(), randomDeviceId);
+
+            client.deleteDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
+            client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);
+
+        }
+    }
+
+    protected void doTestDeviceCredentialsDoesNotContainsPasswordDetails() throws Exception {
+        try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
+
+            client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
+
+            String authId = "sensor-" + UUID.randomUUID().toString();
+            String password = "password1234";
+            credentialsClient.addPlainPasswordCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password);
+
+            List<CommonCredential> credentials = credentialsClient.getCredentials(isolatedIoTManager.getTenantId(), randomDeviceId);
+
+            assertEquals(1, credentials.size());
+            PasswordCredential passwordCredential = ((PasswordCredential) credentials.get(0));
+            assertEquals(1, passwordCredential.getSecrets().size());
+            assertNull(passwordCredential.getSecrets().get(0).getHashFunction());
+            assertNull(passwordCredential.getSecrets().get(0).getPasswordHash());
+            assertNull(passwordCredential.getSecrets().get(0).getPasswordPlain());
+            assertNull(passwordCredential.getSecrets().get(0).getSalt());
 
             credentialsClient.deleteAllCredentials(isolatedIoTManager.getTenantId(), randomDeviceId);
 

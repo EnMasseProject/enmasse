@@ -5,6 +5,8 @@
 
 package io.enmasse.iot.registry.infinispan.config;
 
+import org.eclipse.hono.auth.HonoPasswordEncoder;
+import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
 import org.eclipse.hono.service.credentials.CredentialsAmqpEndpoint;
 import org.eclipse.hono.service.management.credentials.CredentialsManagementHttpEndpoint;
 import org.eclipse.hono.service.management.credentials.CredentialsManagementService;
@@ -80,4 +82,15 @@ public class DeviceServiceConfiguration {
         return new DeviceRegistryTokenAuthHandler(new DeviceRegistryTokenAuthProvider());
     }
 
+    /**
+     * Exposes a password encoder to use for encoding clear text passwords
+     * and for matching password hashes.
+     *
+     * @return The encoder.
+     */
+    @Bean
+    @Autowired
+    public HonoPasswordEncoder passwordEncoder(DeviceServiceProperties deviceServiceProperties) {
+        return new SpringBasedHonoPasswordEncoder(deviceServiceProperties.getMaxBcryptIterations());
+    }
 }

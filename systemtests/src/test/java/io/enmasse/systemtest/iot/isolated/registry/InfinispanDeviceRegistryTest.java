@@ -48,6 +48,17 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
     }
 
     @Test
+    void testDeviceCredentialsPlainPassword() throws Exception {
+        super.doTestDeviceCredentialsPlainPassword();
+    }
+
+    @Test
+    @Disabled("Fixed in hono/pull/1565")
+    void testDeviceCredentialsDoesNotContainsPasswordDetails() throws Exception {
+        super.doTestDeviceCredentialsDoesNotContainsPasswordDetails();
+    }
+
+    @Test
     @Disabled("Caches expire a bit unpredictably")
     void testCacheExpiryForCredentials() throws Exception {
         super.doTestCacheExpiryForCredentials();

@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.iot.isolated.registry;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newFileBased;
@@ -46,6 +47,16 @@ class FileDeviceRegistryTest extends DeviceRegistryTest {
         super.doTestDeviceCredentials();
     }
 
+    @Test
+    void testDeviceCredentialsPlainPassword() throws Exception {
+        super.doTestDeviceCredentialsPlainPassword();
+    }
+
+    @Test
+    @Disabled("Fixed in hono/pull/1565")
+    void testDeviceCredentialsDoesNotContainsPasswordDetails() throws Exception {
+        super.doTestDeviceCredentialsDoesNotContainsPasswordDetails();
+    }
     @Test
     void testSetExpiryForCredentials() throws Exception {
         super.doTestSetExpiryForCredentials();

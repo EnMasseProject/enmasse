@@ -18,9 +18,13 @@ public class DeviceServiceProperties {
 
     private static final int DEFAULT_TASK_EXECUTOR_QUEUE_SIZE = 1024;
     private static final Duration DEFAULT_CREDENTIALS_TTL = Duration.ofMinutes(1);
+    private static final int DEFAULT_MAX_BCRYPT_ITERATIONS = 10;
 
     private int taskExecutorQueueSize = DEFAULT_TASK_EXECUTOR_QUEUE_SIZE;
     private Duration credentialsTtl = DEFAULT_CREDENTIALS_TTL;
+
+    private int maxBcryptIterations = DEFAULT_MAX_BCRYPT_ITERATIONS;
+
 
     public int getTaskExecutorQueueSize() {
         return this.taskExecutorQueueSize;
@@ -41,4 +45,32 @@ public class DeviceServiceProperties {
         this.credentialsTtl = credentialsTtl;
     }
 
+    /**
+     * Gets the maximum number of iterations to use for bcrypt
+     * password hashes.
+     * <p>
+     * The default value of this property is 10.
+     *
+     * @return The maximum number.
+     */
+    public int getMaxBcryptIterations() {
+        return maxBcryptIterations;
+    }
+
+    /**
+     * Sets the maximum number of iterations to use for bcrypt
+     * password hashes.
+     * <p>
+     * The default value of this property is 10.
+     *
+     * @param iterations The maximum number.
+     * @throws IllegalArgumentException if iterations is &lt; 4 or &gt; 31.
+     */
+    public void setMaxBcryptIterations(final int iterations) {
+        if (iterations < 4 || iterations > 31) {
+            throw new IllegalArgumentException("iterations must be > 3 and < 32");
+        } else {
+            maxBcryptIterations = iterations;
+        }
+    }
 }
