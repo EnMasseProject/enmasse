@@ -1,0 +1,23 @@
+// Module included in the following assemblies:
+//
+// assembly-.adoc
+
+[id='proc-purging-queues-{context}']
+= Purging queues and subscriptions
+
+You can purge a `queue` or `subscription` address type that contains stored messages using the {ConsoleName}.
+
+.Prerequisites
+
+* You must have a queue or subscription that contains stored messages.
+
+.Procedure
+
+. Log in to the {ConsoleName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
+
+. Navigate to the Addresses page.
+
+. Select the check box next to the queue or subscription that you want to purge.
+
+. At the top of the page, right-click the vertical ellipsis icon and select *Purge*. The queue or subscription is purged, and the Stored message count drops to zero for the selected queue or subscription.
+
