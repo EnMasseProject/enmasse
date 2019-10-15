@@ -140,4 +140,13 @@ public class RouterManagement {
         }
         return results;
     }
+
+    public Duration getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public Duration getQueryTimeout() {
+        return queryTimeout;
+    }
+
 }
