@@ -74,7 +74,6 @@ public class SharedIoTManager extends ResourceManager {
             }
             tearDownSharedIoTConfig();
             SystemtestsKubernetesApps.deleteInfinispanServer(kubernetes.getInfraNamespace());
-            kubernetes.deleteNamespace(IOT_PROJECT_NAMESPACE);
         } else {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         }
