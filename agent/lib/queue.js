@@ -96,17 +96,25 @@ function purge_brokered_queue(queueName) {
                 return pod_watcher.get_pod_definition(pod);
             });
 
-            var brokers = create_brokers(podDefs, 'brokered');
-            var results = brokers.map(function (broker) {
-                return broker.purgeQueue(queueName);
-            });
+            var broker_cons = create_brokers(podDefs, 'brokered');
+            var purgedQueues = broker_cons.map(broker => broker.purgeQueue(queueName));
 
             //for the brokered address space, there will never be more then 1 broker.
-            if (results.length > 0) {
-                return results[0];
-            }
+            return Promise.all(purgedQueues)
+                .then(sum_total_purged)
+                .finally(() => {
+                    Promise.all(broker_cons.map(c => c.close()))
+                        .catch((e) => log.warn("Failed to close purge connection", e));
+                });
         });
 };
+
+function sum_total_purged(results) {
+    var totalPurged = 0;
+    results.forEach((c) => totalPurged += c);
+    log.debug("Purged %d message(s) from %d shard(s)", totalPurged, results.length);
+    return totalPurged;
+}
 
 Queue.prototype.purge = function () {
     var queueName = this.name;
@@ -128,19 +136,16 @@ Queue.prototype.purge = function () {
                var purgedQueues = broker_cons.map(broker => broker.purgeQueue(queueName));
 
                return Promise.all(purgedQueues)
-                   .then(results => {
-                       var total = 0;
-                       results.forEach((c) => total += c);
-                       log.debug("Purged %d message(s) from %d shard(s)", total, purgedQueues.length);
-                       return total;
-                   })
+                   .then(sum_total_purged)
                    .finally(() => {
                        Promise.all(broker_cons.map(c => c.close()))
                            .catch((e) => log.warn("Failed to close purge connection", e));
                    });
+
            });
     }
 };
+
 
 module.exports = function (name) {
     return new Queue(name);
