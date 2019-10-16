@@ -163,9 +163,10 @@ angular.module('patternfly.toolbars').controller('ViewCtrl', ['$scope', '$timeou
           if (params[0] !== 'address') {
             return
           }
-          if (params[1] === 'added' || params[1] === 'deleted') {
+          if (['added', 'deleted', 'purged'].includes(params[1])) {
             applyFilters();
             $scope.items.sort(compareFn);
+            $scope.handleSelectionChange();
           }
           $scope.admin_disabled = address_service.admin_disabled;
           $scope.setUser(address_service.user);
