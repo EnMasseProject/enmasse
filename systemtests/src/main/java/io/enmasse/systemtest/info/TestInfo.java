@@ -54,9 +54,23 @@ public class TestInfo {
     }
 
     public boolean isAddressSpaceDeletable() {
+        LOGGER.info("TESTS***************************************************************************");
+        LOGGER.info(tests.toString());
+        LOGGER.info("TEST CLASSES********************************************************************");
+        LOGGER.info(testClasses.toString());
+        LOGGER.info("ACTUAL TEST*********************************************************************");
+        LOGGER.info(actualTest.getDisplayName().toString());
+        LOGGER.info("ACTUAL TEST CLASS***************************************************************");
+        LOGGER.info(actualTestClass.getDisplayName().toString());
+        LOGGER.info("********************************************************************************");
+
         if (tests.size() > 0) {
             int currentTestIndex = getCurrentTestIndex();
+            LOGGER.info("currentTestIndex "+currentTestIndex);
             if (!(currentTestIndex == tests.size() - 1)) {
+                boolean isSameTag = isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
+                LOGGER.info("isSameTag "+isSameTag);
+                LOGGER.info("isDeletable "+ !isSameTag);
                 return !isSameSharedTag(tests.get(currentTestIndex + 1), actualTest);
             }
         }
