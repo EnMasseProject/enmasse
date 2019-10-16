@@ -15,35 +15,49 @@ The router does not persist any state and therefore does not require persistent 
 
 Address configuration itself does not require significant amount of router memory. However, queues and subscriptions require an additional 2 links between the router and broker per address.
 
-The total number of links is then the number of queues/subscriptions + the number of client links. Each link requires metadata and buffers in the router to deal with routing messages for that link.
+The total number of links is then 2 times the queues/subscriptions + the number of client links. Each link requires metadata and buffers in the router to deal with routing messages for that link. 
 
-The router link capacity affects how many in-flight messages the router will handle per link. Setting this to a high value could improve performance, but at the cost of potentially more memory being used to hold in-flight messages. If you have low-volume client traffic, using the default link capacity should be sufficient.
+The router link capacity affects how many messages the router can handle per link. Setting this to a high value could improve performance, but at the cost of potentially more memory being used to hold in-flight messages if senders are filling the links. If you have many connections and links, consider setting a low value to balance the memory usage.
+
+In addition, the router has to parsing of message headers, managing dispositions and settlements of messages and other per-link activities. The per-link cost can be derived using a constant factor of the link capacity and message size. This factor varies for different message sizes. The following factors provide an approximation of this factor for different ranges of message size:
+
+.Link multiplication factor
+[cols="33%a,33%a,33%a",options="header"]
+|===
+|Message size (bytes)|Factor
+|20-1000| 18000
+|1000-4000| 22000
+|4000-10000|30000
+| > 10000 | 50000
+|===
 
 == Example
 
-Sizing should accomodate 500 anycast and 1000 queued addresses, with 10000 connected clients (1 link each), with a link capacity of 100 (max number of in-flight messages per link), and an average message size of 512 bytes.
+Sizing should accomodate 500 anycast and 1000 queued addresses, with 10000 connected clients (1 link each), with a link capacity of 10, and an average message size of 512 bytes.
 
-Based on measurements, an estimated 20kB overhead per anycast address is realistic:
+Based on measurements, an estimated 7kB overhead per anycast address is realistic:
 [options="nowrap",subs="+quotes,attributes"]
 ----
-500 * 20kB = 10MB
+500 * 7kB = 3.5MB
 ----
 
-Memory usage of queues and topics is slightly higher than for anycast addresses, with a 40kB overhead per address. In addition, each link may have up to `linkCapacity` messages in flight:
+Memory usage of queues and topics is slightly higher than for anycast addresses, with a 32kB overhead per address. In addition, each router-broker link may have up to `linkCapacity` messages deliveries to keep track of, and we need to multiply the link capacity with the multiplication factor to account for the worst case scenario:
 [options="nowrap",subs="+quotes,attributes"]
 ----
-(1000 * 40kB) + (2000 * 100 * 512) = 135MB
+(1000 * 32768) + (2000 * 18000 * 100) = 374 MB
 ----
 
 Memory usage of client connections/links:
 [options="nowrap",subs="+quotes,attributes"]
 ----
-10000 * 100 * 512 = 488MB
+10000 * 10 * 18000 = 1717 MB
 ----
 
-The total amount of router memory required for this configuration (including a constant base memory of 50MB) is `10 + 135 + 488 + 50 = 683MB`. 
+NOTE: The memory usage of client connections/links can be divided by the number of router instances.
 
-In order to ensure max connections and links is not exceeded, a router policy can be applied as well. The router config looks at follows:
+If you have N routers, the total amount of router memory required for this configuration (including a constant base memory of 50MB) is `50 + 3.5 + (374 + 1717)/N MB`. 
+
+In order to ensure max connections and links is not exceeded, a router policy can be applied as well. The router config with 2 routers would looks at follows:
 
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
@@ -54,10 +68,10 @@ metadata:
 spec:
   router:
     resources:
-      memory: 700Mi
-    linkCapacity: 100
+      memory: 1100Mi
+    linkCapacity: 10
     policy:
-      maxConnections: 10000
+      maxConnections: 5000
       maxSessionsPerConnection: 1
       maxSendersPerConnection: 1
       maxReciversPerConnection: 1
@@ -66,7 +80,7 @@ spec:
 
 == High Availability
 
-Configuring routers for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage.
+Configuring routers for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage. Although all connections and links will be distributed over all routers, if that router goes down, you must plan for those connections and links to be redistributed over the remaining routers. 
 
 == Router scaling
 
