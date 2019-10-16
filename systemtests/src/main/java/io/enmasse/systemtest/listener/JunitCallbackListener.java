@@ -44,7 +44,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        testInfo.setActualTestClass(context);
+        testInfo.setCurrentTestClass(context);
         if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
             operatorManager.installEnmasseBundle();
         }
@@ -69,7 +69,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        testInfo.setActualTest(context);
+        testInfo.setCurrentTest(context);
     }
 
     @Override
