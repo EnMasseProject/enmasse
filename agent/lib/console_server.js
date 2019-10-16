@@ -103,17 +103,21 @@ function ConsoleServer (address_ctrl, env, openshift) {
             reject(e);
         };
         var access_token = self.authz.get_access_token(context.connection);
+        var user = self.authz.get_user(context.connection);
         if (!self.authz.is_admin(context.connection)) {
             reject(context, 'amqp:unauthorized-access', 'not authorized');
         } else if (context.message.subject === 'create_address') {
-            log.info('creating address definition ' + JSON.stringify(context.message.body));
+            log.info('[%s] creating address definition %s', user, JSON.stringify(context.message.body));
             self.address_ctrl.create_address(context.message.body, access_token).then(accept).catch(handleServerResponse);
         } else if (context.message.subject === 'delete_address') {
-            log.info('deleting address definition ' + context.message.body.address);
+            log.info('[%s] deleting address definition %s', user, context.message.body.address);
             self.address_ctrl.delete_address(context.message.body, access_token).then(accept).catch(handleServerResponse);
         } else if (context.message.subject === 'purge_address') {
-            log.info('purging queue definition ' + context.message.body.address);
-            queue(context.message.body).purge().then(accept).catch(handleServerResponse);
+            log.info('[%s] purging address %s', user, context.message.body.address);
+            queue(context.message.body).purge().then(purged => {
+                log.info("[%s] Purged %d message(s) from address %s", user, purged, context.message.body.address);
+                accept();
+            }).catch(handleServerResponse);
         } else {
             reject('ignoring message: ' + context.message);
         }

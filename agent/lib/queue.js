@@ -63,7 +63,7 @@ function create_brokers(podDefs, address_space) {
     return podDefs.map(function (podDef){
 
         var options;
-        if (address_space=='brokered') {
+        if (address_space === 'brokered') {
             options = {
                 username: 'console',
                 id:     podDef.name,
@@ -124,20 +124,19 @@ Queue.prototype.purge = function () {
                    return pod_watcher.get_pod_definition(pod);
                });
 
-               var brokers = create_brokers(podDefs, 'standard');
-               var purgedQueues = brokers.map(function (broker) {
-                   return (new function () {
-                       return broker.purgeQueue(queueName);
-                   });
-               });
+               var broker_cons = create_brokers(podDefs, 'standard');
+               var purgedQueues = broker_cons.map(broker => broker.purgeQueue(queueName));
 
-               Promise.all(purgedQueues)
-                   .then(function (results) {
-                       if (results.length > 0) {
-                           return results[0];
-                       } else {
-                           return false;
-                       }
+               return Promise.all(purgedQueues)
+                   .then(results => {
+                       var total = 0;
+                       results.forEach((c) => total += c);
+                       log.debug("Purged %d message(s) from %d shard(s)", total, purgedQueues.length);
+                       return total;
+                   })
+                   .finally(() => {
+                       Promise.all(broker_cons.map(c => c.close()))
+                           .catch((e) => log.warn("Failed to close purge connection", e));
                    });
            });
     }
@@ -145,4 +144,4 @@ Queue.prototype.purge = function () {
 
 module.exports = function (name) {
     return new Queue(name);
-}
+};
