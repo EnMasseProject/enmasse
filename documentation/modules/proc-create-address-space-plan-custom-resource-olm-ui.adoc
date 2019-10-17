@@ -4,9 +4,9 @@
 // rhassemblies/assembly-configuring-olm-rh.adoc
 
 [id="proc-create-address-space-plan-custom-resource-olm-ui-{context}"]
-= Creating an address space plan custom resource using the {PlatformName} console
+= Creating an address space plan custom resource using the {KubePlatform} console
 
-You must create an address space plan custom resource to use {ProductName}. This procedure uses the example data that is provided when using the {PlatformName} console.
+You must create an address space plan custom resource to use {ProductName}. This procedure uses the example data that is provided when using the {KubePlatform} console.
 
 .Procedure
 
@@ -41,5 +41,5 @@ spec:
 
 .Next steps
 
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-plan-custom-resource-olm-ui-messaging[Create an address plan custom resource using the {PlatformName} console]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-plan-custom-resource-olm-ui-messaging[Create an address plan custom resource using the {KubePlatform} console]
 

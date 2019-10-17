@@ -43,11 +43,11 @@ include::../common/proc-download-procedure.adoc[leveloffset=+1]
 
 include::../modules/proc-installing-using-bundle.adoc[leveloffset=+1]
 
+include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
+
 ifdef::OperatorSource[]
 include::../modules/proc-installing-using-custom-operator-source.adoc[leveloffset=+1]
 endif::OperatorSource[]
-
-include::../modules/proc-installing-using-ansible.adoc[leveloffset=+1]
 
 include::../assemblies/assembly-installing-configuring-olm.adoc[leveloffset=+1]
 

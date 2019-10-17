@@ -4,9 +4,9 @@
 // rhassemblies/assembly-configuring-olm-rh.adoc
 
 [id="proc-create-address-plan-custom-resource-olm-ui-{context}"]
-= Creating an address plan custom resource using the {PlatformName} console
+= Creating an address plan custom resource using the {KubePlatform} console
 
-You must create an address plan custom resource to use {ProductName}. This procedure uses the example data that is provided when using the {PlatformName} console.
+You must create an address plan custom resource to use {ProductName}. This procedure uses the example data that is provided when using the {KubePlatform} console.
 
 .Procedure
 
