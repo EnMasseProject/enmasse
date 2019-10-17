@@ -459,14 +459,10 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
 
-        var stopRecv = new CompletableFuture<Object>();
         var stopSend = new CompletableFuture<Object>();
 
-        var recvFut = client.recvMessages(addr.getSpec().getAddress(), msg -> {
+        var recvFut = client.recvMessagesWithStatus(addr.getSpec().getAddress(), msg -> {
             log.info("Message received");
-            if (stopRecv.isDone()) {
-                return true;
-            }
             return false;
         });
 
@@ -499,9 +495,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         } catch (InterruptedException e) {
             log.error("Error waiting between stop sender and receiver", e);
         }
-        stopRecv.complete(new Object());
+        recvFut.closeGracefully();
 
-        int received = recvFut.get(10, TimeUnit.SECONDS).size();
+        int received = recvFut.getResult().get(10, TimeUnit.SECONDS).size();
         int sent = sendFut.get(10, TimeUnit.SECONDS);
         assertEquals(sent, received, "Missmatch between messages sent and received");
     }
