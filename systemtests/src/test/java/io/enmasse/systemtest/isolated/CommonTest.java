@@ -453,18 +453,16 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
     }
 
     private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace space, Address addr) throws Exception {
+        long sleepMillis = 500;
         log.info("Starting messaging");
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
         AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
 
-        var restart = new CompletableFuture<Object>();
+        var stopSend = new CompletableFuture<Object>();
 
-        var recvFut = client.recvMessages(addr.getSpec().getAddress(), msg -> {
+        var recvFut = client.recvMessagesWithStatus(addr.getSpec().getAddress(), msg -> {
             log.info("Message received");
-            if (restart.isDone()) {
-                return true;
-            }
             return false;
         });
 
@@ -472,14 +470,14 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         var sendFut = client.sendMessages(addr.getSpec().getAddress(),
                 Stream.generate(() -> UUID.randomUUID().toString()).limit(1000).collect(Collectors.toList()),
                 msg -> {
-                    if (restart.isDone()) {
+                    if (stopSend.isDone()) {
                         return true;
                     }
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(sleepMillis);
                     } catch (InterruptedException e) {
                         log.error("Error waiting between sends", e);
-                        restart.completeExceptionally(e);
+                        stopSend.completeExceptionally(e);
                         return true;
                     }
                     return false;
@@ -488,12 +486,18 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         log.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        if (restart.isCompletedExceptionally()) {
-            restart.get();
+        if (stopSend.isCompletedExceptionally()) {
+            stopSend.get();
         }
-        restart.complete(new Object());
+        stopSend.complete(new Object());
+        try {
+            Thread.sleep(sleepMillis);
+        } catch (InterruptedException e) {
+            log.error("Error waiting between stop sender and receiver", e);
+        }
+        recvFut.closeGracefully();
 
-        int received = recvFut.get(10, TimeUnit.SECONDS).size();
+        int received = recvFut.getResult().get(10, TimeUnit.SECONDS).size();
         int sent = sendFut.get(10, TimeUnit.SECONDS);
         assertEquals(sent, received, "Missmatch between messages sent and received");
     }

@@ -149,6 +149,11 @@ public class AmqpClient implements AutoCloseable {
                 clients.remove(vertx);
                 closeVertxAndWait(Arrays.asList(vertx));
             }
+
+            @Override
+            public void closeGracefully() {
+                receiver.closeGracefully();
+            }
         };
     }
 
