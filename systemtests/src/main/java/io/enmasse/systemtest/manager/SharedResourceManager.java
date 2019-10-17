@@ -133,7 +133,7 @@ public class SharedResourceManager extends ResourceManager {
     }
 
     public void deleteSharedAddressSpace() {
-        if (sharedAddressSpace != null && TestInfo.getInstance().isAddressSpaceDeletable()) {
+        if (sharedAddressSpace != null && TestInfo.getInstance().isAddressSpaceDeleteable()) {
             LOGGER.info("Shared address {} space will be removed", sharedAddressSpace.getMetadata().getName());
             Environment env = Environment.getInstance();
             if (!env.skipCleanup()) {

@@ -14,11 +14,11 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.TestInstances;
 
-public class FakeExtensionContext implements ExtensionContext{
+public class MethodBasedExtensionContext implements ExtensionContext{
 
     private Optional<Method> method;
 
-    public FakeExtensionContext(Optional<Method> method) throws ClassNotFoundException {
+    public MethodBasedExtensionContext(Optional<Method> method) throws ClassNotFoundException {
         this.method = method;
     }
 

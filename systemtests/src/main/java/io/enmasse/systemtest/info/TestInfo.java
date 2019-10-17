@@ -56,7 +56,7 @@ public class TestInfo {
                     MethodSource testSource = (MethodSource) test.getSource().get();
                     try {
                         Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
-                        FakeExtensionContext fakeExtensionContext = new FakeExtensionContext(testMethod);
+                        MethodBasedExtensionContext fakeExtensionContext = new MethodBasedExtensionContext(testMethod);
                         if (testMethod.isPresent()) {
                             Optional<Disabled> disabled = AnnotationSupport.findAnnotation(testMethod.get(), Disabled.class);
                             ConditionEvaluationResult kubernetesDisabled = new AssumeKubernetesCondition().evaluateExecutionCondition(fakeExtensionContext);
@@ -89,12 +89,14 @@ public class TestInfo {
         }
     }
 
-    public boolean isAddressSpaceDeletable() {
+    public boolean isAddressSpaceDeleteable() {
+        boolean isDeleteable = true;
         int currentTestIndex = getCurrentTestIndex();
         if (currentTestIndex + 1 < tests.size()) {
-            return !isSameSharedTag(tests.get(currentTestIndex + 1), currentTest);
+            isDeleteable = !isSameSharedTag(tests.get(currentTestIndex + 1), currentTest);
         }
-        return true;
+        LOGGER.info("AddressSpace isDeleteable: {}", isDeleteable);
+        return isDeleteable;
     }
 
     public ExtensionContext getActualTest() {
