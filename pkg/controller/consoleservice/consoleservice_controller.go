@@ -644,7 +644,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 						"-c",
 						"curl --fail --show-error --silent " +
 							"--header \"X-Forwarded-Access-Token: $(< /var/run/secrets/kubernetes.io/serviceaccount/token)\" " +
-							"http://localhost:8080/apis/user.openshift.io/v1/users/~"},
+							"http://127.0.0.1:8080/apis/user.openshift.io/v1/users/~"},
 				},
 			}
 			container.LivenessProbe = &corev1.Probe{
