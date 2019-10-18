@@ -5,7 +5,7 @@
 [id='proc-purging-queues-{context}']
 = Purging queues and subscriptions
 
-You can purge--that is, clear all messages from--a `queue` or `subscription` address type that contains stored messages by using the {ConsoleName}.
+You can purge--that is, clear all messages from--a `queue` or `subscription` address type of its stored messages by using the {ConsoleName}.
 
 .Prerequisites
 
