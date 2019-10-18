@@ -44,7 +44,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        testInfo.setActualTestClass(context);
+        testInfo.setCurrentTestClass(context);
         if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
             operatorManager.installEnmasseBundle();
         }
@@ -69,7 +69,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
-        testInfo.setActualTest(context);
+        testInfo.setCurrentTest(context);
     }
 
     @Override
@@ -94,7 +94,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     }
 
     private void tearDownSharedResources() throws Exception {
-        if (testInfo.isAddressSpaceDeletable() || testInfo.getActualTest().getExecutionException().isPresent()) {
+        if (testInfo.isAddressSpaceDeleteable() || testInfo.getActualTest().getExecutionException().isPresent()) {
             if (testInfo.isTestIoT()) {
                 LOGGER.info("Teardown shared IoT!");
                 sharedIoTManager.tearDown(testInfo.getActualTest());

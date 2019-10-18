@@ -378,14 +378,6 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.className("pficon-close")));
     }
 
-    private WebElement getNextButton() {
-        return getModalWindow().findElement(By.id("nextButton"));
-    }
-
-    private WebElement getModalWindow() {
-        return selenium.getDriver().findElement(By.className("modal-content"));
-    }
-
     /**
      * get the radio button for the destination
      */
@@ -449,7 +441,8 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public void next() throws Exception {
-        selenium.clickOnItem(getNextButton());
+        WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
+        selenium.clickOnItem(nextButton);
     }
 
     public void clickOnAddressModalPageByNumber(Integer pageNumber) throws Exception {
