@@ -33,6 +33,10 @@ var finalizers = []finalizer.Finalizer{
 		Name:        "iot.enmasse.io/resources",
 		Deconstruct: deconstructResources,
 	},
+	{
+		Name: 		 "iot.enmasse.io/deviceRegistryCleanup",
+		Deconstruct: cleanupDeviceRegistry,
+	},
 }
 
 func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
@@ -138,4 +142,19 @@ func cleanupResource(ctx context.Context, c client.Client, project *iotv1alpha1.
 
 	return reconcile.Result{}, err
 
+}
+
+func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
+
+	project, ok := ctx.Object.(*iotv1alpha1.IoTProject)
+
+	if !ok {
+		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTProject")
+	}
+
+	job := createIotTenantCleanerJob(project.Name)
+
+	result1, err1 := jobsClient.Create(job)
+
+	return reconcile.Result{}, nil
 }
