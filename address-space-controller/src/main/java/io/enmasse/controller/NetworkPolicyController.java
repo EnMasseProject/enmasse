@@ -9,25 +9,20 @@ import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.NetworkPolicy;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
-import io.enmasse.k8s.api.SchemaProvider;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.networking.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
 import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class NetworkPolicyController implements Controller {
     private final KubernetesClient kubernetesClient;
-    private final SchemaProvider schemaProvider;
 
-    public NetworkPolicyController(KubernetesClient kubernetesClient, SchemaProvider schemaProvider) {
+    public NetworkPolicyController(KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
-        this.schemaProvider = schemaProvider;
     }
 
     @Override
@@ -86,61 +81,18 @@ public class NetworkPolicyController implements Controller {
         if (networkPolicy.getIngress() != null) {
             builder.editOrNewSpec()
                     .addToPolicyTypes("Ingress")
-                    .addAllToIngress(networkPolicy.getIngress().stream()
-                            .map(ingressRule -> {
-                                if (ingressRule.getPorts() == null || ingressRule.getPorts().isEmpty()) {
-                                    return new NetworkPolicyIngressRuleBuilder(ingressRule)
-                                            .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
-                                            .build();
-                                } else {
-                                    return ingressRule;
-                                }
-                            }).collect(Collectors.toList()))
+                    .addAllToIngress(networkPolicy.getIngress())
                     .endSpec();
         }
 
         if (networkPolicy.getEgress() != null) {
             builder.editOrNewSpec()
                     .addToPolicyTypes("Egress")
-                    .addAllToEgress(networkPolicy.getEgress().stream()
-                            .map(egressRule -> {
-                                if (egressRule.getPorts() == null || egressRule.getPorts().isEmpty()) {
-                                    return new NetworkPolicyEgressRuleBuilder(egressRule)
-                                            .addAllToPorts(getPortsForAddressSpace(addressSpace, items))
-                                            .build();
-                                } else {
-                                    return egressRule;
-                                }
-                            }).collect(Collectors.toList()))
+                    .addAllToEgress(networkPolicy.getEgress())
                     .endSpec();
         }
 
         return builder.build();
-    }
-
-    private List<NetworkPolicyPort> getPortsForAddressSpace(AddressSpace addressSpace, List<Service> items) {
-        List<NetworkPolicyPort> networkPolicyPorts = new ArrayList<>();
-        for (EndpointSpec endpointSpec : addressSpace.getSpec().getEndpoints()) {
-            Service service = findService(items, KubeUtil.getAddressSpaceServiceName(endpointSpec.getService(), addressSpace));
-            if (service != null) {
-                for (int port : ServiceHelper.getServicePorts(service).values()) {
-                    networkPolicyPorts.add(new NetworkPolicyPortBuilder()
-                            .withProtocol("TCP")
-                            .withNewPort(port)
-                            .build());
-                }
-            }
-        }
-        return networkPolicyPorts;
-    }
-
-    private Service findService(List<Service> items, String serviceName) {
-        for (Service item : items) {
-            if (serviceName.equals(item.getMetadata().getName())) {
-                return item;
-            }
-        }
-        return null;
     }
 
     @Override

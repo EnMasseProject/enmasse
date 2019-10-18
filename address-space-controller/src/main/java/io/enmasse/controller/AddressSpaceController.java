@@ -90,7 +90,7 @@ public class AddressSpaceController {
         controllerChain.addController(new CreateController(kubernetes, schemaProvider, infraResourceFactory, eventLogger, authController.getDefaultCertProvider(), options.getVersion(), addressSpaceApi));
         controllerChain.addController(new RouterConfigController(controllerClient, controllerClient.getNamespace(), authenticationServiceResolver));
         controllerChain.addController(new RealmController(keycloakUserApi, authenticationServiceRegistry));
-        controllerChain.addController(new NetworkPolicyController(controllerClient, schemaProvider));
+        controllerChain.addController(new NetworkPolicyController(controllerClient));
         controllerChain.addController(new StatusController(kubernetes, schemaProvider, infraResourceFactory, authenticationServiceRegistry, userApi));
         controllerChain.addController(new RouterStatusController(controllerClient, controllerClient.getNamespace(), options));
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
