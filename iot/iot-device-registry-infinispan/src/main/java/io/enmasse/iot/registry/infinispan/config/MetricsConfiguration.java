@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.spring.autoconfigure.MeterRegistryCustomizer;
+import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 
 @Configuration
 public class MetricsConfiguration {

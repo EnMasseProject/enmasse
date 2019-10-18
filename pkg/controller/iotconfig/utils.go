@@ -23,11 +23,8 @@ import (
 func SetHonoProbes(container *corev1.Container) {
 
 	container.ReadinessProbe = install.ApplyHttpProbe(container.ReadinessProbe, 10, "/readiness", 8088)
+	container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 10, "/liveness", 8088)
 
-	// FIXME: For the moment we are mapping the liveness probe to the readiness endpoint.
-	// This must be reverted once eclipse/hono#1471 is fixed.
-	container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 10, "/readiness", 8088)
-	// container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 10, "/liveness", 8088)
 }
 
 func FullHostNameForEnvVar(serviceName string) string {
