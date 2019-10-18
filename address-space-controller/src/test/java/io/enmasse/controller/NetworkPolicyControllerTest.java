@@ -63,7 +63,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(createTestPolicy("my", "label"));
         AddressSpace addressSpace = createTestSpace(infraConfig, null);
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
+        NetworkPolicyController controller = new NetworkPolicyController(client);
         controller.reconcile(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
@@ -80,7 +80,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(null);
         AddressSpace addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "label"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
+        NetworkPolicyController controller = new NetworkPolicyController(client);
         controller.reconcile(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
@@ -97,7 +97,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(createTestPolicy("my", "label"));
         AddressSpace addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "overridden"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
+        NetworkPolicyController controller = new NetworkPolicyController(client);
         controller.reconcile(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
@@ -116,7 +116,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         AddressSpace addressSpace = createTestSpace(infraConfig,
                 createTestPolicy("my", "label1"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
+        NetworkPolicyController controller = new NetworkPolicyController(client);
         controller.reconcile(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
@@ -149,7 +149,7 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         InfraConfig infraConfig = createTestInfra(null);
         AddressSpace addressSpace = createTestSpace(infraConfig, createTestPolicy("my", "label"));
 
-        NetworkPolicyController controller = new NetworkPolicyController(client, new TestSchemaProvider());
+        NetworkPolicyController controller = new NetworkPolicyController(client);
         controller.reconcile(addressSpace);
 
         assertEquals(1, client.network().networkPolicies().list().getItems().size());
