@@ -1,0 +1,77 @@
+{
+  "name": "my-usepatternfly",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@apollo/react-hooks": "^3.1.2",
+    "@patternfly/react-core": "^3.77.2",
+    "@patternfly/react-icons": "^3.10.15",
+    "@patternfly/react-styles": "^3.5.7",
+    "@patternfly/react-table": "^2.22.19",
+    "@rescripts/cli": "^0.0.12",
+    "@types/jest": "24.0.18",
+    "@types/node": "12.7.12",
+    "@types/react": "16.9.5",
+    "@types/react-dom": "16.9.1",
+    "@types/react-router": "^5.1.2",
+    "@types/react-router-dom": "^5.1.0",
+    "apollo-boost": "^0.4.4",
+    "date-fns": "^2.4.1",
+    "graphql": "^14.5.8",
+    "react": "^16.10.2",
+    "react-async": "^9.0.0",
+    "react-dom": "^16.10.2",
+    "react-router": "^5.1.2",
+    "react-router-dom": "^5.1.2",
+    "react-router-last-location": "^2.0.1",
+    "react-scripts": "3.2.0",
+    "typescript": "3.6.4",
+    "use-patternfly": "^0.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "lint": "tsdx lint",
+    "storybook": "start-storybook -p 9009",
+    "build-storybook": "build-storybook"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "peerDependencies": {
+    "@patternfly/react-core": "^3.77.2",
+    "@patternfly/react-icons": "^3.10.15",
+    "@patternfly/react-styles": "^3.5.7",
+    "date-fns": "^2.4.1",
+    "react": ">=16",
+    "react-router": "^5.1.2",
+    "react-router-dom": "^5.1.2",
+    "react-router-last-location": "^2.0.1"
+  },
+  "devDependencies": {
+    "@storybook/addon-actions": "^5.2.4",
+    "@storybook/addon-links": "^5.2.4",
+    "@storybook/addons": "^5.2.4",
+    "@storybook/react": "^5.2.4",
+    "@storybook/addon-knobs": "^5.2.4",
+    "@storybook/addon-info": "^5.2.4",
+    "babel-loader": "^8.0.6",
+    "ts-loader": "^6.2.0",
+    "react-docgen-typescript-loader": "^3.3.0",
+    "tsconfig-paths-webpack-plugin": "^3.2.0"
+  }
+}
