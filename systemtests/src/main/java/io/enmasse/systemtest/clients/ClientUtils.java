@@ -39,7 +39,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 public class ClientUtils {
     private static Logger LOGGER = CustomLogger.getLogger();
-    private AddressSpaceUtils addressSpaceUtils = new AddressSpaceUtils();
+
+    /**
+     * Estimation of max milliseconds it could take, in worst case, to send or receive one message
+     */
+    public static final long ESTIMATE_MAX_MS_PER_MESSAGE = 200;
 
     public void sendDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace, Address destination,
                                     UserCredentials credentials, int count) throws Exception {
@@ -85,7 +89,7 @@ public class ClientUtils {
 
     private boolean canConnectWithAmqpAddress(ResourceManager resourceManager, AddressSpace addressSpace, UserCredentials credentials, AddressType addressType, String address, boolean defaultValue) throws Exception {
         Set<AddressType> brokeredAddressTypes = new HashSet<>(Arrays.asList(AddressType.QUEUE, AddressType.TOPIC));
-        if (addressSpaceUtils.isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
+        if (AddressSpaceUtils.isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
             return defaultValue;
         }
         try (AmqpClient client = resourceManager.getAmqpClientFactory().createAddressClient(addressSpace, addressType)) {
@@ -132,5 +136,13 @@ public class ClientUtils {
             AddressType addressType = AddressType.getEnum(destination.getSpec().getType());
             Assertions.assertFalse(canConnectWithAmqpAddress(resourceManager, addressSpace, credentials, addressType, destination.getSpec().getAddress(), false), message);
         }
+    }
+
+    public void receiveMessages(AmqpClient amqpClient, String address, int count) throws Exception {
+        long timeoutMs = count * ESTIMATE_MAX_MS_PER_MESSAGE;
+        LOGGER.info("Start receiving with " + timeoutMs + " ms timeout");
+        ReceiverStatus receiverStatus = amqpClient.recvMessagesWithStatus(address, count);
+        assertThat("Incorrect count of messages received from " + address + ". Got " + receiverStatus.getNumReceived(),
+                receiverStatus.getResult().get(timeoutMs, TimeUnit.MILLISECONDS).size(), is(count));
     }
 }

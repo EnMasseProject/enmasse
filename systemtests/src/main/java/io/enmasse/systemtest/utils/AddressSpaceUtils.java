@@ -36,6 +36,10 @@ import java.util.stream.Stream;
 public class AddressSpaceUtils {
     private static Logger log = CustomLogger.getLogger();
 
+    private AddressSpaceUtils() {
+        //utility class no need to instantiate it
+    }
+
     public static void syncAddressSpaceObject(AddressSpace addressSpace) {
         AddressSpace data = Kubernetes.getInstance().getAddressSpaceClient(addressSpace.getMetadata().getNamespace())
                 .withName(addressSpace.getMetadata().getName()).get();
@@ -231,7 +235,7 @@ public class AddressSpaceUtils {
         return endpoints.stream().filter(endpointStatus -> endpointStatus.getServiceHost().startsWith(serviceName)).findAny().get();
     }
 
-    public boolean isBrokered(AddressSpace addressSpace) {
+    public static boolean isBrokered(AddressSpace addressSpace) {
         return addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString());
     }
 

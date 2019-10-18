@@ -11,7 +11,6 @@ import io.enmasse.systemtest.SysytemTestsErrorCollector;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.selenium.SeleniumManagement;
@@ -219,8 +218,8 @@ public abstract class MarathonTestBase extends TestBase {
 
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
-            new ClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic), resourcesManager);
-            new ClientUtils().assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic), resourcesManager);
+            getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic), resourcesManager);
+            getClientUtils().assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic), resourcesManager);
         });
         log.info("testAuthSendReceiveLong finished");
     }

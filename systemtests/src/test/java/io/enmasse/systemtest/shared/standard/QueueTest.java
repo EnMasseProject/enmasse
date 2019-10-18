@@ -11,6 +11,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
+import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -66,7 +67,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     public static void runQueueTest(AmqpClient client, Address dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
-        long timeoutMs = countMessages * 200; //estimate in worst case it takes at most 200ms to send one message
+        long timeoutMs = countMessages * ClientUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
         log.info("Start sending with " + timeoutMs + " ms timeout");
         Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
 
