@@ -10,6 +10,8 @@ import io.fabric8.kubernetes.client.Config;
 import org.slf4j.Logger;
 
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.Optional;
 
 public class Environment {
     public static final String KEYCLOAK_ADMIN_PASSWORD_ENV = "KEYCLOAK_ADMIN_PASSWORD";
@@ -20,6 +22,9 @@ public class Environment {
     public static final String K8S_API_TOKEN_ENV = "KUBERNETES_API_TOKEN";
     public static final String ENMASSE_VERSION_SYSTEM_PROPERTY = "enmasse.version";
     public static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
+    public static final String K8S_API_CONNECT_TIMEOUT = "KUBERNETES_API_CONNECT_TIMEOUT";
+    public static final String K8S_API_READ_TIMEOUT = "KUBERNETES_API_READ_TIMEOUT";
+    public static final String K8S_API_WRITE_TIMEOUT = "KUBERNETES_API_WRITE_TIMEOUT";
     public static final String UPGRADE_TEPLATES_ENV = "UPGRADE_TEMPLATES";
     public static final String START_TEMPLATES_ENV = "START_TEMPLATES";
     public static final String TEMPLATES_PATH = "TEMPLATES";
@@ -50,6 +55,10 @@ public class Environment {
     private final String appName = System.getenv().getOrDefault(APP_NAME_ENV, "enmasse");
     private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
     private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
+    private final Duration kubernetesApiConnectTimeout = Optional.ofNullable(System.getenv().get(K8S_API_CONNECT_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
+    private final Duration kubernetesApiReadTimeout = Optional.ofNullable(System.getenv().get(K8S_API_READ_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
+    private final Duration kubernetesApiWriteTimeout = Optional.ofNullable(System.getenv().get(K8S_API_WRITE_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
+
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
@@ -188,5 +197,17 @@ public class Environment {
 
     public String getTemplatesPath() {
         return templatesPath;
+    }
+
+    public Duration getKubernetesApiConnectTimeout() {
+        return kubernetesApiConnectTimeout;
+    }
+
+    public Duration getKubernetesApiReadTimeout() {
+        return kubernetesApiReadTimeout;
+    }
+
+    public Duration getKubernetesApiWriteTimeout() {
+        return kubernetesApiWriteTimeout;
     }
 }

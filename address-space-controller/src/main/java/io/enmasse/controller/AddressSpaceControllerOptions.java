@@ -35,6 +35,10 @@ public final class AddressSpaceControllerOptions {
     private Duration managementQueryTimeout;
     private Duration managementConnectTimeout;
 
+    private Duration kubernetesApiConnectTimeout;
+    private Duration kubernetesApiReadTimeout;
+    private Duration kubernetesApiWriteTimeout;
+
     public File getTemplateDir() {
         return templateDir;
     }
@@ -108,6 +112,19 @@ public final class AddressSpaceControllerOptions {
         options.setManagementConnectTimeout(getEnv(env, "MANAGEMENT_CONNECT_TIMEOUT")
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiConnectTimeout(getEnv(env, "KUBERNETES_API_CONNECT_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiReadTimeout(getEnv(env, "KUBERNETES_API_READ_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
+        options.setKubernetesApiWriteTimeout(getEnv(env, "KUBERNETES_API_WRITE_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
 
         options.setVersion(getEnvOrThrow(env, "VERSION"));
         return options;
@@ -210,6 +227,9 @@ public final class AddressSpaceControllerOptions {
                 ", standardAuthserviceCertSecretName='" + standardAuthserviceCertSecretName + '\'' +
                 ", managementQueryTimeout='" + managementQueryTimeout + '\'' +
                 ", managementConnectTimeout='" + managementConnectTimeout + '\'' +
+                ", kubernetesApiConnectTimeout='" + kubernetesApiConnectTimeout + '\'' +
+                ", kubernetesApiReadTimeout='" + kubernetesApiReadTimeout + '\'' +
+                ", kubernetesApiWriteTimeout='" + kubernetesApiWriteTimeout + '\'' +
                 '}';
     }
 
@@ -236,4 +256,29 @@ public final class AddressSpaceControllerOptions {
     public void setManagementConnectTimeout(Duration managementConnectTimeout) {
         this.managementConnectTimeout = managementConnectTimeout;
     }
+
+    public Duration getKubernetesApiConnectTimeout() {
+        return kubernetesApiConnectTimeout;
+    }
+
+    public void setKubernetesApiConnectTimeout(Duration kubernetesApiConnectTimeout) {
+        this.kubernetesApiConnectTimeout = kubernetesApiConnectTimeout;
+    }
+
+    public Duration getKubernetesApiReadTimeout() {
+        return kubernetesApiReadTimeout;
+    }
+
+    public void setKubernetesApiReadTimeout(Duration kubernetesApiReadTimeout) {
+        this.kubernetesApiReadTimeout = kubernetesApiReadTimeout;
+    }
+
+    public Duration getKubernetesApiWriteTimeout() {
+        return kubernetesApiWriteTimeout;
+    }
+
+    public void setKubernetesApiWriteTimeout(Duration kubernetesApiWriteTimeout) {
+        this.kubernetesApiWriteTimeout = kubernetesApiWriteTimeout;
+    }
+
 }

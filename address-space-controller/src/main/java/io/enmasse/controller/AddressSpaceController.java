@@ -21,8 +21,12 @@ import io.enmasse.user.keycloak.KeycloakFactory;
 import io.enmasse.user.keycloak.KeycloakUserApi;
 import io.enmasse.user.keycloak.KubeKeycloakFactory;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
+import io.fabric8.kubernetes.client.utils.HttpClientUtils;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +53,14 @@ public class AddressSpaceController {
     private ControllerChain controllerChain;
 
     private AddressSpaceController(AddressSpaceControllerOptions options) {
-        this.controllerClient = new DefaultKubernetesClient();
+        Config config = new ConfigBuilder().build();
+        OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
+        httpClient = httpClient.newBuilder()
+                .connectTimeout(options.getKubernetesApiConnectTimeout())
+                .writeTimeout(options.getKubernetesApiWriteTimeout())
+                .readTimeout(options.getKubernetesApiReadTimeout())
+                .build();
+        this.controllerClient = new DefaultKubernetesClient(httpClient, config);
         this.options = options;
     }
 
@@ -165,7 +176,9 @@ public class AddressSpaceController {
     public static void main(String args[]) {
         AddressSpaceController controller = null;
         try {
-            controller = new AddressSpaceController(AddressSpaceControllerOptions.fromEnv(System.getenv()));
+            final AddressSpaceControllerOptions options = AddressSpaceControllerOptions.fromEnv(System.getenv());
+            log.info("AddressSpaceController starting with options: {}", options);
+            controller = new AddressSpaceController(options);
             controller.start();
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
