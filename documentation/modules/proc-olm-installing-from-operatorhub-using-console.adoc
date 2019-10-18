@@ -1,0 +1,56 @@
+// Module included in the following assemblies:
+//
+// rhassemblies/assembly-installing-olm-rh.adoc
+
+[id="proc-olm-installing-from-operatorhub-using-console-{context}"]
+= Installing {ProductName} from the OperatorHub using the {KubePlatform} console
+
+You can install the {ProductName} Operator on an {KubePlatform} 4.x cluster by using OperatorHub in the {KubePlatform} console.
+
+[NOTE]
+====
+You must install and deploy the {ProductName} Operator in the `openshift-operator` project.
+====
+
+.Prerequisites
+
+* Access to an {KubePlatform} 4.x cluster using an account with `cluster-admin` permissions.
+
+.Procedure
+
+. In the {KubePlatform} console, log in using an account with `cluster-admin` privileges.
+
+. Click *Catalog > OperatorHub*.
+
+. In the *Filter by keyword* box, type `{ProductName}` to find the {ProductName} Operator.
+
+. Click the {ProductName} Operator.  Information about the Operator is displayed.
+
+. Read the information about the Operator and click *Install*. The Create Operator Subscription page opens.
+
+. On the *Create Operator Subscription* page, accept all of the default selections and click *Subscribe*.
++
+[NOTE]
+====
+*All namespaces on the cluster (default)* installs the Operator in the default
+*openshift-operators* project and makes the Operator available to all projects
+in the cluster.
+====
++
+The *{ProductBundleName}* page is displayed, where you can monitor the installation progress of the {ProductName} Operator subscription.
+
+. After the subscription upgrade status is shown as *Up to date*, click *Catalog > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *openshift-operators* project.
++
+[NOTE]
+====
+For the *All namespaces...* installation mode, the status resolves to
+*InstallSucceeded* in the *openshift-operators* project, but the status is
+*Copied* if you view other projects.
+====
++
+For troubleshooting information, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html/applications/operators#olm-installing-operators-from-operatorhub_olm-adding-operators-to-a-cluster[{KubePlatform} documentation].
+
+.Next steps
+
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#assembly-configuring-olm-messaging[Configure {ProductName} using the {KubePlatform} console]
+
