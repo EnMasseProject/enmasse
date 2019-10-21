@@ -19,13 +19,13 @@ public class RequestLogger implements ContainerRequestFilter, ContainerResponseF
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext) {
-        containerRequestContext.setProperty(PROP_NAME, System.nanoTime());
+        containerRequestContext.setProperty(PROP_NAME, System.currentTimeMillis());
     }
 
     @Override
     public void filter(ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) {
         long start = (long) containerRequestContext.getProperty(PROP_NAME);
-        long end = System.nanoTime();
-        log.info("{} {} (status: {}) (response time: {} ms)", containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), containerResponseContext.getStatus(), TimeUnit.NANOSECONDS.toMillis(end - start));
+        long end = System.currentTimeMillis();
+        log.info("{} {} {} ({} ms)", containerRequestContext.getMethod(), containerRequestContext.getUriInfo().getPath(), containerResponseContext.getStatus(), end - start);
     }
 }
