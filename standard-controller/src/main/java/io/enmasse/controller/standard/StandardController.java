@@ -13,6 +13,10 @@ import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.*;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.utils.HttpClientUtils;
+import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,7 +71,14 @@ public class StandardController {
     private HTTPServer httpServer;
 
     public StandardController(StandardControllerOptions options) {
-        this.kubeClient = new DefaultKubernetesClient();
+        Config config = new ConfigBuilder().build();
+        OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
+        httpClient = httpClient.newBuilder()
+                .connectTimeout(options.getKubernetesApiConnectTimeout())
+                .writeTimeout(options.getKubernetesApiWriteTimeout())
+                .readTimeout(options.getKubernetesApiReadTimeout())
+                .build();
+        this.kubeClient = new DefaultKubernetesClient(httpClient, config);
         this.options = options;
     }
 
