@@ -243,9 +243,9 @@ public class KubeCMDClient {
         return Exec.execute(runCmd, DEFAULT_SYNC_TIMEOUT, false);
     }
 
-    public static ExecutionResultData runQDstat(String podName, String... args) {
+    public static ExecutionResultData runQDstat(String namespace, String podName, String... args) {
         List<String> runCmd = new ArrayList<>();
-        String[] base = new String[]{CMD, "exec", podName, "--", "qdstat", "-t 20"};
+        String[] base = new String[]{CMD, "exec", podName, "-n", namespace, "--", "qdstat", "-t 20"};
         Collections.addAll(runCmd, base);
         Collections.addAll(runCmd, args);
         return Exec.execute(runCmd, ONE_MINUTE_TIMEOUT, true);

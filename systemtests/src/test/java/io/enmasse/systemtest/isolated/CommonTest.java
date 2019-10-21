@@ -8,6 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.CoreCrd;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -183,28 +184,31 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
         log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        try {
+            for (Label label : labels) {
+                log.info("Restarting {}", label.labelValue);
+                KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+                TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+                assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+            }
 
-        for (Label label : labels) {
-            log.info("Restarting {}", label.labelValue);
-            KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
-            Thread.sleep(30_000);
+            log.info("Restarting whole enmasse");
+            KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
             TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
+            AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
+                    standardAddresses.toArray(new Address[0]));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+
+            //TODO: Uncomment when #2127 will be fixedy
+
+//            Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
+//            kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
+//            assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
+        } finally {
+            // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
+            // the test otherwise test clean-up will fail.
+            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
-
-        log.info("Restarting whole enmasse");
-        KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
-        Thread.sleep(180_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
-        AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
-                standardAddresses.toArray(new Address[0]));
-        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
-
-        //TODO: Uncomment when #2127 will be fixedy
-
-//        Pod qdrouter = pods.stream().filter(pod -> pod.getMetadata().getName().contains("qdrouter")).collect(Collectors.toList()).get(0);
-//        kubernetes.deletePod(environment.namespace(), qdrouter.getMetadata().getName());
-//        assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
     }
 
     //https://github.com/EnMasseProject/enmasse/issues/3098
@@ -349,9 +353,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
                 .collect(Collectors.toList()).get(0).getMetadata().getName();
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
     }
 
     @Test
@@ -432,7 +436,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         } finally {
             // Ensure that EnMasse's API services are finished re-registering (after api-server restart) before ending
             // the test otherwise test clean-up will fail.
-            assertWaitForValue(true, () -> KubeCMDClient.getApiServices("v1beta1.enmasse.io").getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
+            assertWaitForValue(true, () -> KubeCMDClient.getApiServices(String.format("%s.%s", CoreCrd.VERSION, CoreCrd.GROUP)).getRetCode(), new TimeoutBudget(90, TimeUnit.SECONDS));
         }
 
     }
