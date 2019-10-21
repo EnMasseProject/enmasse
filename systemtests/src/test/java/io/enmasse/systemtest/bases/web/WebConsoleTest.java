@@ -28,6 +28,7 @@ import io.enmasse.systemtest.selenium.resources.SortType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriverException;
@@ -38,7 +39,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -50,6 +53,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -937,6 +941,27 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         waitForDestinationsReady(destTopic);
 
         new ClientUtils().assertCanConnect(getSharedAddressSpace(), defaultCredentials, Collections.singletonList(destTopic), resourcesManager);
+    }
+
+    protected void doTestPurgeMessages(Address address) throws Exception {
+        List<String> msgs = IntStream.range(0, 1000).mapToObj(i -> "msgs:" + i).collect(Collectors.toList());
+        consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
+                getSharedAddressSpace(), clusterUser);
+        consoleWebPage.openWebConsolePage();
+        consoleWebPage.createAddressesWebConsole(address);
+        AmqpClient client = getAmqpClientFactory().createQueueClient();
+
+        Future<Integer> sendResult = client.sendMessages(address.getSpec().getAddress(), msgs);
+        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
+
+        Future<List<Message>> recvResult = client.recvMessages(address.getSpec().getAddress(), msgs.size() / 2);
+        assertThat("Wrong count of messages receiver", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size() / 2));
+
+        consoleWebPage.openAddressesPageWebConsole();
+        consoleWebPage.purgeAddress(address);
+
+        Future<List<Message>> recvResult2 = client.recvMessages(address.getSpec().getAddress(), msgs.size() / 2);
+        assertThrows(TimeoutException.class, () -> recvResult2.get(20, TimeUnit.SECONDS), "Purge does not work, address contains messages");
     }
 
     //============================================================================================

@@ -76,6 +76,21 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestShared
     }
 
     @Test
+    void testPurgeAddress() throws Exception {
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
+    }
+
+    @Test
     void testCreateDeleteDurableSubscription() throws Exception {
         doTestCreateDeleteDurableSubscription(
                 new AddressBuilder()
