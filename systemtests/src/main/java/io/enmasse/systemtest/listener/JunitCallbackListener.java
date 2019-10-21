@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.listener;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -44,23 +45,20 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        try {
-            testInfo.setCurrentTestClass(context);
+        testInfo.setCurrentTestClass(context);
+        handleCallBackError(context, () -> {
             if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
                 operatorManager.installEnmasseBundle();
             }
             if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed() && !testInfo.isUpgradeTest()) {
                 operatorManager.installIoTOperator();
             }
-        } catch (Exception e) {
-            LOGGER.info("Exception during beforeAll", e);
-            saveKubernetesStateEx(context, e);
-        }
+        });
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
-        try {
+        handleCallBackError(extensionContext, () -> {
             if (!Environment.getInstance().skipCleanup()) {
                 if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed() && !Environment.getInstance().skipUninstall()) {
                     operatorManager.removeIoTOperator();
@@ -71,10 +69,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             } else {
                 LOGGER.info("Skip cleanup is set, enmasse and iot operators won't be deleted");
             }
-        } catch (Exception e) {
-            LOGGER.info("Exception during afterAll", e);
-            saveKubernetesStateEx(extensionContext, e);
-        }
+        });
     }
 
     @Override
@@ -84,7 +79,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
-        try {
+        handleCallBackError(extensionContext, () -> {
             LOGGER.info("Teardown section: ");
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();
@@ -95,10 +90,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     tearDownCommonResources();
                 }
             }
-        } catch (Exception e) {
-            LOGGER.info("Exception during afterEach", e);
-            saveKubernetesStateEx(extensionContext, e);
-        }
+        });
     }
 
     private void tearDownCommonResources() throws Exception {
@@ -148,11 +140,15 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         saveKubernetesState(context, throwable);
     }
 
-    private void saveKubernetesStateEx(ExtensionContext extensionContext, Exception exception) throws Exception {
+    private void handleCallBackError(ExtensionContext context, ThrowableRunner runnable) throws Exception {
         try {
-            saveKubernetesState(extensionContext, exception);
-        } catch ( Throwable e ) {
-            throw exception;
+            runnable.run();
+        } catch (Exception ex) {
+            try {
+                saveKubernetesState(context, ex);
+            } catch (Throwable ignored) {
+            }
+            throw ex;
         }
     }
 
