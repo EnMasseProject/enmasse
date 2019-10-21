@@ -11,7 +11,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestBaseShared;
-import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientConnector;
@@ -936,7 +935,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
         waitForDestinationsReady(destTopic);
 
-        new ClientUtils().assertCanConnect(getSharedAddressSpace(), defaultCredentials, Collections.singletonList(destTopic), resourcesManager);
+        getClientUtils().assertCanConnect(getSharedAddressSpace(), defaultCredentials, Collections.singletonList(destTopic), resourcesManager);
     }
 
     //============================================================================================

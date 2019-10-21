@@ -887,7 +887,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
      */
     protected void doMessaging(List<Address> dest, List<UserCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
         ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
-        String sufix = new AddressSpaceUtils().isBrokered(resourcesManager.getSharedAddressSpace()) ? "#" : "*";
+        String sufix = AddressSpaceUtils.isBrokered(resourcesManager.getSharedAddressSpace()) ? "#" : "*";
         users.forEach((user) -> {
             try {
                 resourcesManager.createOrUpdateUser(resourcesManager.getSharedAddressSpace(),

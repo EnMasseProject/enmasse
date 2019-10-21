@@ -10,6 +10,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
+import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -51,7 +52,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
             throws InterruptedException, IOException, TimeoutException, ExecutionException {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getSpec().getAddress(), msgCount);
-        long timeoutMs = msgCount * 150; //estimate in worst case it takes at most 150ms to send one message
+        long timeoutMs = msgCount * ClientUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
         log.info("Start sending with " + timeoutMs + " ms timeout");
         assertThat("Wrong count of messages sent",
                 client.sendMessages(dest.getSpec().getAddress(), msgs).get(timeoutMs, TimeUnit.MILLISECONDS), is(msgs.size()));
