@@ -353,9 +353,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
                 .collect(Collectors.toList()).get(0).getMetadata().getName();
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
-        assertTrue(KubeCMDClient.runQDstat(qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-c", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-a", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
+        assertTrue(KubeCMDClient.runQDstat(kubernetes.getInfraNamespace(), qdRouterName, "-l", "--sasl-username=jenda", "--sasl-password=cenda").getRetCode());
     }
 
     @Test
