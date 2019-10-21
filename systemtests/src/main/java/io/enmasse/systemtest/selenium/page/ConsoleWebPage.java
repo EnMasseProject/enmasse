@@ -107,6 +107,14 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(ByAngular.buttonText("Delete")));
     }
 
+    public WebElement getKekabButton() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("_kebab")));
+    }
+
+    public WebElement getPurgeButton() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.xpath("//a[contains(text(), 'Purge')]")));
+    }
+
     public void assertDialogPresent(String id) {
         int timeout = 30;
         try {
@@ -440,6 +448,15 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getRemoveButton());
     }
 
+    public void clickOnPurgeButton() throws Exception {
+        selenium.clickOnItem(getKekabButton(), "Kebab menu button");
+        selenium.clickOnItem(getPurgeButton());
+    }
+
+    public void confirmPurge() throws Exception {
+        selenium.clickOnItem(selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("purge-confirmation-modal")).findElement(ByAngular.buttonText("Purge"))));
+    }
+
     public void next() throws Exception {
         WebElement nextButton = selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("nextButton")));
         selenium.clickOnItem(nextButton);
@@ -726,6 +743,13 @@ public class ConsoleWebPage implements IWebPage {
 
         //check if address deleted
         assertNull(getAddressItem(destination), "Console failed, still contains deleted address item ");
+    }
+
+    public void purgeAddress(Address address) throws Exception {
+        AddressWebItem addressWebItem = selenium.waitUntilItemPresent(10, () -> getAddressItem(address));
+        selenium.clickOnItem(addressWebItem.getCheckBox(), "Selecting address " + addressWebItem.getName());
+        clickOnPurgeButton();
+        confirmPurge();
     }
 
     public boolean login() throws Exception {

@@ -55,6 +55,22 @@ class ChromeWebConsoleTest extends WebConsoleTest implements ITestSharedBrokered
     }
 
     @Test
+    @Disabled("Only few chrome tests are enabled, rest functionality is covered by firefox")
+    void testPurgeAddress() throws Exception {
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
+    }
+
+    @Test
     void testFilterAddressesByType() throws Exception {
         doTestFilterAddressesByType();
     }

@@ -51,6 +51,21 @@ class FirefoxWebConsoleTest extends WebConsoleTest implements ITestSharedBrokere
     }
 
     @Test
+    void testPurgeAddress() throws Exception {
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build());
+    }
+
+    @Test
     void testFilterAddressesByType() throws Exception {
         doTestFilterAddressesByType();
     }
