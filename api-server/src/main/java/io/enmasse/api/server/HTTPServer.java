@@ -129,7 +129,9 @@ public class HTTPServer extends AbstractVerticle {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
 
+        RequestLogger latencyTracker = new RequestLogger();
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
+        deployment.getProviderFactory().registerProviderInstance(latencyTracker);
 
         if (isRbacEnabled) {
             log.info("Enabling RBAC for REST API");
@@ -141,6 +143,7 @@ public class HTTPServer extends AbstractVerticle {
             log.info("Disabling authentication and authorization for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
         }
+
 
         deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
         deployment.getRegistry().addSingletonResource(new HttpOpenApiService());
@@ -156,12 +159,8 @@ public class HTTPServer extends AbstractVerticle {
         deployment.getRegistry().addSingletonResource(new HttpApiRootService());
 
         VertxRequestHandler vertxRequestHandler = new VertxRequestHandler(vertx, deployment);
-        Handler<HttpServerRequest> requestHandler = event -> {
-            log.info("Request {} {}", event.method(), event.path());
-            vertxRequestHandler.handle(event);
-        };
 
-        createSecureServer(requestHandler, startPromise);
+        createSecureServer(vertxRequestHandler, startPromise);
     }
 
     @Override
