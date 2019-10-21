@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.listener;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -139,7 +140,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         saveKubernetesState(context, throwable);
     }
 
-    private void handleCallBackError(ExtensionContext context, MyRunnable runnable) throws Exception {
+    private void handleCallBackError(ExtensionContext context, ThrowableRunner runnable) throws Exception {
         try {
             runnable.run();
         } catch (Exception ex) {
@@ -149,11 +150,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             }
             throw ex;
         }
-    }
-
-    private interface MyRunnable
-    {
-        void run() throws Exception;
     }
 
     private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
