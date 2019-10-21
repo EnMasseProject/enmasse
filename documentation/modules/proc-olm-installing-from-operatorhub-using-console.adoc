@@ -9,16 +9,16 @@ You can install the {ProductName} Operator on an {KubePlatform} 4.x cluster by u
 
 [NOTE]
 ====
-You must install and deploy the {ProductName} Operator in the `openshift-operator` project.
+For {KubePlatform} 4.1 only, you must install and deploy the {ProductName} Operator in the `{OperatorNamespace}` project.
 ====
 
 .Prerequisites
 
-* Access to an {KubePlatform} 4.x cluster using an account with `cluster-admin` permissions.
+* Access to an {KubePlatform} 4.x cluster and an account with `cluster-admin` permissions.
 
 .Procedure
 
-. In the {KubePlatform} console, log in using an account with `cluster-admin` privileges.
+. In the {KubePlatform} 4.x console, log in using an account with `cluster-admin` privileges.
 
 . Click *Catalog > OperatorHub*.
 
@@ -28,23 +28,26 @@ You must install and deploy the {ProductName} Operator in the `openshift-operato
 
 . Read the information about the Operator and click *Install*. The Create Operator Subscription page opens.
 
-. On the *Create Operator Subscription* page, accept all of the default selections and click *Subscribe*.
+. ({KubePlatform} 4.1 only) On the *Create Operator Subscription* page, accept all of the default selections and click *Subscribe*.
 +
-[NOTE]
-====
-*All namespaces on the cluster (default)* installs the Operator in the default
-*openshift-operators* project and makes the Operator available to all projects
+NOTE:
+{KubePlatform} 4.1 only: *All namespaces on the cluster (default)* installs the Operator in the default *{OperatorNamespace}* project and makes the Operator available to all projects
 in the cluster.
-====
++
+({KubePlatform} 4.2 only) On the *Create Operator Subscription* page, select *A specific namespace on the cluster*, select the *{ProductNamespace}* project, and then click *Subscribe*.
++
+NOTE:
+{KubePlatform} 4.2 only: By choosing *A specific namespace on the cluster* you can install the  Operator into a specific, single project. The Operator only watches and is made available for use in this project.
+
 +
 The *{ProductBundleName}* page is displayed, where you can monitor the installation progress of the {ProductName} Operator subscription.
 
-. After the subscription upgrade status is shown as *Up to date*, click *Catalog > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *openshift-operators* project.
+. After the subscription upgrade status is shown as *Up to date*, click *Catalog > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *{OperatorNamespace}* or *{ProductNamespace}* project.
 +
 [NOTE]
 ====
 For the *All namespaces...* installation mode, the status resolves to
-*InstallSucceeded* in the *openshift-operators* project, but the status is
+*InstallSucceeded* in the *{OperatorNamespace}* project, but the status is
 *Copied* if you view other projects.
 ====
 +
