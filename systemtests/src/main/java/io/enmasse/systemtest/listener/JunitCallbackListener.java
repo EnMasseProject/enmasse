@@ -44,26 +44,36 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
-        testInfo.setCurrentTestClass(context);
-        if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
-            operatorManager.installEnmasseBundle();
-        }
-        if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed() && !testInfo.isUpgradeTest()) {
-            operatorManager.installIoTOperator();
+        try {
+            testInfo.setCurrentTestClass(context);
+            if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
+                operatorManager.installEnmasseBundle();
+            }
+            if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed() && !testInfo.isUpgradeTest()) {
+                operatorManager.installIoTOperator();
+            }
+        } catch (Exception e) {
+            LOGGER.info("Exception during beforeAll", e);
+            saveKubernetesStateEx(context, e);
         }
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
-        if (!Environment.getInstance().skipCleanup()) {
-            if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed() && !Environment.getInstance().skipUninstall()) {
-                operatorManager.removeIoTOperator();
+        try {
+            if (!Environment.getInstance().skipCleanup()) {
+                if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed() && !Environment.getInstance().skipUninstall()) {
+                    operatorManager.removeIoTOperator();
+                }
+                if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade() && !Environment.getInstance().skipUninstall()) {
+                    operatorManager.deleteEnmasseBundle();
+                }
+            } else {
+                LOGGER.info("Skip cleanup is set, enmasse and iot operators won't be deleted");
             }
-            if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade() && !Environment.getInstance().skipUninstall()) {
-                operatorManager.deleteEnmasseBundle();
-            }
-        } else {
-            LOGGER.info("Skip cleanup is set, enmasse and iot operators won't be deleted");
+        } catch (Exception e) {
+            LOGGER.info("Exception during afterAll", e);
+            saveKubernetesStateEx(extensionContext, e);
         }
     }
 
@@ -74,15 +84,20 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void afterEach(ExtensionContext extensionContext) throws Exception {
-        LOGGER.info("Teardown section: ");
-        if (testInfo.isTestShared()) {
-            tearDownSharedResources();
-        } else {
-            if (testInfo.isTestIoT()) {
-                isolatedIoTManager.tearDown(testInfo.getActualTest());
+        try {
+            LOGGER.info("Teardown section: ");
+            if (testInfo.isTestShared()) {
+                tearDownSharedResources();
             } else {
-                tearDownCommonResources();
+                if (testInfo.isTestIoT()) {
+                    isolatedIoTManager.tearDown(testInfo.getActualTest());
+                } else {
+                    tearDownCommonResources();
+                }
             }
+        } catch (Exception e) {
+            LOGGER.info("Exception during afterEach", e);
+            saveKubernetesStateEx(extensionContext, e);
         }
     }
 
@@ -131,6 +146,14 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void handleAfterAllMethodExecutionException(ExtensionContext context, Throwable throwable) throws Throwable {
         saveKubernetesState(context, throwable);
+    }
+
+    private void saveKubernetesStateEx(ExtensionContext extensionContext, Exception exception) throws Exception {
+        try {
+            saveKubernetesState(extensionContext, exception);
+        } catch ( Throwable e ) {
+            throw exception;
+        }
     }
 
     private void saveKubernetesState(ExtensionContext extensionContext, Throwable throwable) throws Throwable {
