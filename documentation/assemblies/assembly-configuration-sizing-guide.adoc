@@ -12,7 +12,7 @@ The sizing guide provides guidelines on how to size {ProductName} installations 
 * Operator(s)
 * Plans
 
-Each address space type have some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address spaces].
+Each address space type has some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address spaces].
 
 NOTE: Sizing {ProductName} components also requires that your {KubePlatform} cluster has sufficient capacity to handle the requested resources. If the {KubePlatform} nodes are configured with 4GB of memory, you cannot configure brokers and routers with memory sizes larger. Also, as each address space creates a dedicated piece of infrastructure, you need to ensure that cluster capacity can meet demand as the number of address spaces increases. Finally, the use of affinity and tolerations may also restrict the nodes available for the messaging infrastructure to use.
 

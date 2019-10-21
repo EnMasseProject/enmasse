@@ -19,7 +19,7 @@ The total number of links is then 2 times the queues/subscriptions + the number 
 
 The router link capacity affects how many messages the router can handle per link. Setting this to a high value could improve performance, but at the cost of potentially more memory being used to hold in-flight messages if senders are filling the links. If you have many connections and links, consider setting a low value to balance the memory usage.
 
-In addition, the router has to parsing of message headers, managing dispositions and settlements of messages and other per-link activities. The per-link cost can be derived using a constant factor of the link capacity and message size. This factor varies for different message sizes. The following factors provide an approximation of this factor for different ranges of message size:
+In addition, the router has to parse the message headers, manage dispositions and settlements of messages and other per-link activities. The per-link cost can be derived using a constant factor of the link capacity and message size. This factor varies for different message sizes. The following factors provide an approximation of this factor for different ranges of message size:
 
 .Link multiplication factor
 [cols="33%a,33%a,33%a",options="header"]
@@ -125,5 +125,5 @@ spec:
 
 If you create 110 addresses with `plan1` as the plan, the number of router replicas will be `ceil(110 * 0.01) = 2 replicas`. 
 
-If the amount of replicas go above the address space plan limit, the addresses exceeding the max will remain in the `Pending` state and an error message describing the issue will be set in the `Address` status section.
+If the number of replicas goes above the address space plan limit, the addresses exceeding the max will remain in the `Pending` state and an error message describing the issue will be set in the `Address` status section.
 
