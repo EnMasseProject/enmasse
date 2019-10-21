@@ -88,6 +88,17 @@ public class FirefoxWebConsoleTest extends WebConsoleTest implements ITestShared
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build());
+        doTestPurgeMessages(new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "purge-queue-sharded"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("purge-queue-sharded")
+                .withPlan(DestinationPlan.STANDARD_XLARGE_QUEUE)
+                .endSpec()
+                .build());
     }
 
     @Test
