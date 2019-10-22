@@ -29,7 +29,7 @@ You can install the {ProductName} Operator on an {KubePlatform} 4.x cluster by u
 +
 The *{ProductBundleName}* page is displayed, where you can monitor the installation progress of the {ProductName} Operator subscription.
 
-. After the subscription upgrade status is shown as *Up to date*, click *Catalog > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *{OperatorNamespace}* or *{ProductNamespace}* project.
+. After the subscription upgrade status is shown as *Up to date*, click *Catalog > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *{ProductNamespace}* namespace.
 +
 For troubleshooting information, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html/applications/operators#olm-installing-operators-from-operatorhub_olm-adding-operators-to-a-cluster[{KubePlatform} documentation].
 
