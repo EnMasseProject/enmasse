@@ -13,7 +13,7 @@ You can use forwarders to:
 
 To use an address forwarder, you must first configure a connector to the remote AMQP server for the address space. For more information about address space connectors, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-space-example-connectors-messaging[Address space connector examples].
 
-Address forwarding is only supported in the `standard` address space type, and only for the `queue` and `subscription` address types. With the `queue` address type, messages can be forwarded to a remote AMQP server or messages can be forwarded from a remote AMQP server to a local queue. With the `subscription` address type, you can create a forwarder to a remote AMQP address, but you cannot create a forwarder that copies messages to the subscription. That is, the `subscription` address type only supports forwarding in the `out` direction, as shown in the example.
+Address forwarding is supported only in the `standard` address space type, and only for the `queue` and `subscription` address types. With the `queue` address type, you can forward messages to a remote AMQP server or from a remote AMQP server to a local queue. With the `subscription` address type, you can create a forwarder to a remote AMQP address, but you cannot create a forwarder that copies messages to the subscription. That is, the `subscription` address type supports forwarding in the `out` direction only, as shown in the example.
 
 In the following examples, it is assumed that a connector, `remote1`, has been configured for the address space.
 
@@ -42,7 +42,7 @@ spec:
 
 == Forwarding messages from a remote AMQP server to a local queue
 
-In this example, the remote AMQP server has an address `prices/milk` that we can receive messages from, and then move to `myqueue`.
+In this example, you receive messages from an an address `prices/milk` on a remote AMQP server.  The messages are then moved to a local queue, `myqueue`.
 
 [source,yaml,options="nowrap"]
 ----

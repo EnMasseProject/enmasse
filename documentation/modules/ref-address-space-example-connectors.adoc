@@ -7,15 +7,15 @@
 
 You can federate a `standard` address space type with another AMQP server. Two methods of operation are supported: _remote address connection_ and _message store-and-forward_.
 
-Remote address connection involves mapping addresses on a remote AMQP endpoint into an address space. For example, an AMQP server is running on the host `messaging.example.com` that you want to access by connecting using the {ProductName} endpoints. To enable remote address connection, you need to create an address space connector.
+Remote address connection involves mapping addresses on a remote AMQP endpoint into an address space. For example, suppose an AMQP server is running on the host `messaging.example.com` that you want to access by connecting using the {ProductName} endpoints. To enable remote address connection, you need to create an address space connector.
 
-Message store-and-forward involves enabling address forwarding. So, first you need to create an address space connector, and then you need to create an address forwarder for each address. For more information about address forwarding, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-example-forwarders-messaging[Address forwarding examples].
+Message store-and-forward involves enabling address forwarding. First you need to create an address space connector. Then, you need to create an address forwarder for each address. For more information about address forwarding, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-address-example-forwarders-messaging[Address forwarding examples].
 
-The following address space connector examples show how you can configure an address space connector.
+The following examples show how you can configure an address space connector.
 
 == Address space connector using SASL PLAIN
 
-SASL PLAIN can be used when you do not want to use mutual TLS for authentication. Not enabling TLS is not recommended, since any user names and passwords are then sent as plain text.
+You can use SASL PLAIN when you do not want to use mutual TLS for authentication. Not enabling TLS is not recommended, since any user names and passwords are then sent as plain text.
 
 [source,yaml,options="nowrap"]
 ----
