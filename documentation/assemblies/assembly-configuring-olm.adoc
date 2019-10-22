@@ -8,7 +8,7 @@
 [id='assembly-configuring-olm-{context}']
 = Configuring {ProductName} using the {KubePlatform} console
 
-After installing {ProductName} from the OperatorHub using the {KubePlatform} console, create a new instance of a custom resource for the following items within the `openshift-operators` project:
+After installing {ProductName} from the OperatorHub using the {KubePlatform} console, create a new instance of a custom resource for the following items within the `{ProductNamespace}` project:
 
 * an authentication service
 * infrastructure configuration for an address space type (the example uses the standard address space type)

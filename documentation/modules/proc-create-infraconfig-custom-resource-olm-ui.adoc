@@ -10,7 +10,7 @@ You must create an infrastructure configuration custom resource to use {ProductN
 
 .Procedure
 
-. From the dropdown menu, select the `openshift-operators` project.
+. From the dropdown menu, select the `{ProductNamespace}` project.
 
 . Click *Catalog > Installed Operators*.
 

@@ -10,7 +10,7 @@ You must create a custom resource for an authentication service to use {ProductN
 
 .Procedure
 
-. From the dropdown menu, select the `openshift-operators` project.
+. From the dropdown menu, select the `{ProductNamespace}` project.
 
 . Click *Catalog > Installed Operators*.
 
