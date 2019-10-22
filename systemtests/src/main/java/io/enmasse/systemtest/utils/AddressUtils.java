@@ -178,11 +178,10 @@ public class AddressUtils {
 
     private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
         List<String> namespaces = Stream.of(destinations)
-                .map(Address::getMetadata)
-                .map(ObjectMeta::getNamespace)
+                .map(address -> address.getMetadata().getNamespace())
                 .distinct()
                 .collect(Collectors.toList());
-        if (namespaces.size() != 1) {
+        if (namespaces.size() > 1) {
             return Kubernetes.getInstance().getAddressClient().inAnyNamespace();
         } else {
             return Kubernetes.getInstance().getAddressClient(namespaces.get(0));
@@ -239,7 +238,7 @@ public class AddressUtils {
         Map<String, Address> notMatchingAddresses = new HashMap<>();
         for (Address destination : destinations) {
             Optional<Address> lookupAddressResult = addressList.stream()
-                    .filter(addr -> addr.getSpec().getAddress().equals(destination.getSpec().getAddress()))
+                    .filter(addr -> addr.getMetadata().getName().equals(destination.getMetadata().getName()))
                     .findFirst();
             if (lookupAddressResult.isEmpty()) {
                 notMatchingAddresses.put(destination.getSpec().getAddress(), null);

@@ -2,7 +2,7 @@
  * Copyright 2018, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.marathon;
+package io.enmasse.systemtest.soak;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
@@ -15,7 +15,7 @@ import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
-import io.enmasse.systemtest.bases.marathon.MarathonTestBase;
+import io.enmasse.systemtest.bases.soak.SoakTestBase;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.shared.standard.QueueTest;
@@ -29,7 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-class PlansMarathonTest extends MarathonTestBase implements ITestIsolatedStandard {
+class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
 
     @AfterEach
     void tearDown() throws Exception {
