@@ -5,36 +5,36 @@
 [id='broker-component-sizing-{context}']
 = Broker component sizing
 
-Brokers are configured in the `BrokeredInfraConfig` and `StandardInfraConfig` resources. When sizing a broker, the following must be taken into consideration:
+Brokers are configured using the `BrokeredInfraConfig` and `StandardInfraConfig` resources, depending on the type of address space. When sizing a broker, consider:
 
 * The average message size
 * The number of messages stored
-* The number of queues and/or topics
+* The number of queues and topics
 * The address full policy
 
-NOTE: In {ProductName} it is only possible to restrict the total amount of memory allocated for a broker, and not restrict memory used by individual addresses.
+NOTE: In {ProductName}, you can only restrict the total amount of memory allocated for a broker. You cannot restrict the amount of memory used by individual addresses.
 
-The broker will persist all messages to disk. When the `BLOCK`, `FAIL` or `DROP` address full policy is used, the number of messages that can be persisted is limited to the amount of memory in the broker. Enabling the `PAGE` policy will allow you to store more messages than can fit in memory, at the expense of a potential performance hit from reading data from disk. Therefore, paging is mainly of interest when you have large messages or expect a long backlog of messages in your system.
+The broker persists all messages to disk. When the `BLOCK`, `FAIL`, or `DROP` address full policy is specified, the number of messages that can be persisted is limited to the amount of memory in the broker. By using the `PAGE` address full policy, more messages can be stored than can be held in memory, at the expense of a potential performance degradation from reading data from disk. Therefore, paging is useful in the case of large messages or a large backlog of messages in your system.
 
-== Example
+== Example use case for a broker component configuration
 
-Given 10 queues with a maximum of 1000 messages stored per queue, an average message size of 128kB, the amount of storage space required to store messages is:
+Given 10 queues with a maximum of 1000 messages stored per queue and an average message size of 128 kB, the amount of storage space required to store messages is:
 
 ```
-10 * 1000 * (128 + (128 * 1024)) = 1.25 GB
+10 queues * 1000 messages * (128 + (128 kB * 1024)) = 1.25 GB
 ```
 
-In addition, the broker has a fixed storage footprint of about 50MB.
+In addition, the broker has a fixed storage footprint of about 50 MB.
 
-The amount of memory required for the broker depends on which address full policy is being used. If the PAGE policy is used, the memory requirements can be reduced by having messages stored separately from the journal (which always needs to fit in memory). If the FAIL, BLOCK or DROP policies are being used, all messages must also be held in memory (even if they are persisted).
+The amount of memory required for the broker depends on which address full policy is specified. If the `PAGE` policy is used, the memory requirements can be reduced  since the messages are stored separately from the journal (which always needs to fit in memory). If the `FAIL`, `BLOCK`, or `DROP` policies are specified, all messages must also be held in memory, even if they are persisted.
 
 There is also constant memory cost associated with running the broker as well as the JVM. The memory available to store message is automatically derived from the memory set in the broker configuration and is set to be half the JVM memory, which in turn is set to half of the system memory.
 
-NOTE: In the `standard` address space types, multiple broker instances may get created. The sizing of these also depend on the address plan configuration and how many addresses you expect each broker to be able to handle before another broker is spawned.
+NOTE: In the `standard` address space type, multiple broker instances might be created. The sizing of these broker instances also depends on the address plan configuration and how many addresses you expect each broker to be able to handle before another broker is spawned.
 
-=== Example without paging
+=== Example broker component configuration without paging
 
-For non-PAGE policies, an additional 5% bookkeeping overhead per address should be taken into account (`1.05 * 1.25 = 1.35 GB`):
+For broker configurations not using a `PAGE` policy, take into consideration an additional 5 percent bookkeeping overhead per address should be taken into account (`1.05 * 1.25 = 1.35 GB`):
 
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
@@ -52,15 +52,15 @@ spec:
   ...
 ----
 
-=== Example with paging
+=== Example broker component configuration with paging
 
 When paging is enabled, the original formula can be modified to only account for a reference to the message as well as holding 1000 in-flight messages in memory:
 
 ``` 
-(1000 * 1000 * 128) + (10 * 128 * 1024) = 123.5MB
+(1000 messages * 1000 * 128 kB) + (10 queues * 128 kB * 1024) = 123.5 MB
 ```
 
-The amount of memory configured for the broker can now be reduced:
+So, the amount of memory specified for the broker can now be reduced, as seen in this configuration example:
 
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
@@ -80,7 +80,7 @@ spec:
 
 == Broker scaling (standard address space only)
 
-Brokers are deployed on-demand, i.e. when addresses of type queue or topic are created. The number of brokers is restricted by the resource limits specified in the `AddressSpacePlan`. The following example sets a limit of 4 brokers in total per address space:
+Brokers are deployed on demand, that is, when addresses of type `queue` or `topic` are created. The number of brokers deployed is restricted by the resource limits specified in the `AddressSpacePlan` configuration. The following `AddressSpacePlan` configuration example specifies a limit of 4 brokers in total per address space:
 
 ----
 apiVersion: admin.enmasse.io/v1beta2
