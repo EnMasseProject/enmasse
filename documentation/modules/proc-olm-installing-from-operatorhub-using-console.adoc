@@ -7,11 +7,6 @@
 
 You can install the {ProductName} Operator on an {KubePlatform} 4.x cluster by using OperatorHub in the {KubePlatform} console.
 
-[NOTE]
-====
-For {KubePlatform} 4.1 only, you must install and deploy the {ProductName} Operator in the `{OperatorNamespace}` project.
-====
-
 .Prerequisites
 
 * Access to an {KubePlatform} 4.x cluster and an account with `cluster-admin` permissions.
@@ -28,28 +23,13 @@ For {KubePlatform} 4.1 only, you must install and deploy the {ProductName} Opera
 
 . Read the information about the Operator and click *Install*. The Create Operator Subscription page opens.
 
-. ({KubePlatform} 4.1 only) On the *Create Operator Subscription* page, accept all of the default selections and click *Subscribe*.
-+
-NOTE:
-{KubePlatform} 4.1 only: *All namespaces on the cluster (default)* installs the Operator in the default *{OperatorNamespace}* project and makes the Operator available to all projects
-in the cluster.
-+
-({KubePlatform} 4.2 only) On the *Create Operator Subscription* page, select *A specific namespace on the cluster*, select the *{ProductNamespace}* project, and then click *Subscribe*.
-+
-NOTE:
-{KubePlatform} 4.2 only: By choosing *A specific namespace on the cluster* you can install the  Operator into a specific, single project. The Operator only watches and is made available for use in this project.
+. On the *Create Operator Subscription* page, for *Installation Mode*, click *A specific namespace on the cluster*, and then select the *{ProductNamespace}* namespace from the drop-down list.
 
+. Accept all of the remaining default selections and click *Subscribe*.
 +
 The *{ProductBundleName}* page is displayed, where you can monitor the installation progress of the {ProductName} Operator subscription.
 
 . After the subscription upgrade status is shown as *Up to date*, click *Catalog > Installed Operators* to verify that the *{ProductName}* ClusterServiceVersion (CSV) is displayed and its *Status* ultimately resolves to *InstallSucceeded* in the *{OperatorNamespace}* or *{ProductNamespace}* project.
-+
-[NOTE]
-====
-For the *All namespaces...* installation mode, the status resolves to
-*InstallSucceeded* in the *{OperatorNamespace}* project, but the status is
-*Copied* if you view other projects.
-====
 +
 For troubleshooting information, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html/applications/operators#olm-installing-operators-from-operatorhub_olm-adding-operators-to-a-cluster[{KubePlatform} documentation].
 
