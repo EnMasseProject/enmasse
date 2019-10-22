@@ -5,17 +5,17 @@
 [id='operator-component-sizing-{context}']
 = Operator component sizing
 
-Operators are tasked with reading all address configuration and applying this to the routers and brokers. The operators should be sized proportionally to the number of addresses.
+The operator component is tasked with reading all address configuration and applying these configurations to the routers and brokers. It is important to size the operator component proportionally to the number of addresses.
 
-In the `standard` address space, the admin pod contains two processes, `agent` and `standard-controller`. These cannot be sized individually, but memory usage of both are proportional to the number of addresses. In the `brokered` space, there is only a single `agent` process.
+In the `standard` address space, the `admin` Pod contains two processes, `agent` and `standard-controller`. These processes cannot be sized individually, but the memory usage of both is proportional to the number of addresses. In the `brokered` address space, only a single `agent` process exists.
 
-NOTE: the operator processes are running either on a JVM or a Node.JS VM. The memory for these should be sized twice the amount of memory required for the address configuration itself.
+NOTE: The operator processes are running on either a JVM or a Node.JS VM. Sizing the amount of memory for these processes at twice the amount of memory required for the address configuration itself is recommended.
 
-== Example
+== Operator component configuration example
 
-Each address adds about 20kB overhead to the operator process. With 1500 addresses, an additional `1500 * 2kB = 30MB` is needed for the operator process.
+Each address adds about 20 kB overhead to the operator process. With 1500 addresses, an additional `1500 * 2 kB = 30 MB` is needed for the operator process.
 
-In addition, there is a base memory requirement of 256MB for these processes, making the total operator memory `256 + 30 = 286 MB`. This can be configured in both the `StandardInfraConfig` and `BrokeredInfraConfig` resources:
+In addition, these processes have a base memory requirement of 256 MB.  So, the total operator memory needed is `256 MB + 30 MB = 286 MB`. This value can be configured in both the `StandardInfraConfig` and `BrokeredInfraConfig` resources:
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
 apiVersion: admin.enmasse.io/v1beta1
