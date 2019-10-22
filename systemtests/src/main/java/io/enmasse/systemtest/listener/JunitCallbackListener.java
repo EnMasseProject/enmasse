@@ -110,8 +110,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 sharedResourcesManager.tearDown(testInfo.getActualTest());
             }
         } else if (sharedResourcesManager.getSharedAddressSpace() != null) {
-            LOGGER.info("Deleting addresses");
-            sharedResourcesManager.deleteAddresses(sharedResourcesManager.getSharedAddressSpace());
+            sharedResourcesManager.tearDownShared();
         }
     }
 
