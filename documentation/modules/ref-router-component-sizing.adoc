@@ -5,7 +5,7 @@
 [id='router-component-sizing-{context}']
 = Router component sizing
 
-Routers are configured in the `StandardInfraConfig` resource. The router sizing must take the following into account:
+Routers are configured in the `StandardInfraConfig` resource. In determining router sizing, consider:
 
 * The number of addresses
 * The number of connections and links
@@ -13,16 +13,16 @@ Routers are configured in the `StandardInfraConfig` resource. The router sizing 
 
 The router does not persist any state and therefore does not require persistent storage.
 
-Address configuration itself does not require significant amount of router memory. However, queues and subscriptions require an additional 2 links between the router and broker per address.
+Address configuration itself does not require a significant amount of router memory. However, queues and subscriptions require an additional two links between the router and broker per address.
 
-The total number of links is then 2 times the queues/subscriptions + the number of client links. Each link requires metadata and buffers in the router to deal with routing messages for that link. 
+The total number of links is then two times the number of queues/subscriptions plus the number of client links. Each link requires metadata and buffers in the router to handle routing messages for that link. 
 
-The router link capacity affects how many messages the router can handle per link. Setting this to a high value could improve performance, but at the cost of potentially more memory being used to hold in-flight messages if senders are filling the links. If you have many connections and links, consider setting a low value to balance the memory usage.
+The router link capacity affects how many messages the router can handle per link. Setting the link capacity to a higher value might improve performance, but at the cost of potentially more memory being used to hold in-flight messages if senders are filling the links. If you have many connections and links, consider specifying a lower value to balance the memory usage.
 
-In addition, the router has to parse the message headers, manage dispositions and settlements of messages and other per-link activities. The per-link cost can be derived using a constant factor of the link capacity and message size. This factor varies for different message sizes. The following factors provide an approximation of this factor for different ranges of message size:
+In addition, the router has to parse the message headers, manage dispositions and settlements of messages, and other per-link activities. The per-link cost can be derived using a constant factor of the link capacity and message size. This factor varies depending on the message size. The following table provide an approximation of this factor for different message size ranges:
 
 .Link multiplication factor
-[cols="33%a,33%a,33%a",options="header"]
+[cols="50%a,50%a,options="header"]
 |===
 |Message size (bytes)|Factor
 |20-1000| 18000
@@ -31,33 +31,37 @@ In addition, the router has to parse the message headers, manage dispositions an
 | > 10000 | 50000
 |===
 
-== Example
+== Example use case for router component sizing
 
-Sizing should accomodate 500 anycast and 1000 queued addresses, with 10000 connected clients (1 link each), with a link capacity of 10, and an average message size of 512 bytes.
+Consider the following example use case:
+* 500 anycast and 1000 queued addresses
+* 10,000 connected clients (one link per client) 
+* Link capacity of 10
+* An average message size of 512 bytes
 
-Based on measurements, an estimated 7kB overhead per anycast address is realistic:
+Based on measurements, an estimated 7 kB overhead per anycast address is realistic, so:
 [options="nowrap",subs="+quotes,attributes"]
 ----
-500 * 7kB = 3.5MB
+500 anycast addresses * 7kB overhead per address = 3.5 MB
 ----
 
-Memory usage of queues and topics is slightly higher than for anycast addresses, with a 32kB overhead per address. In addition, each router-broker link may have up to `linkCapacity` messages deliveries to keep track of, and we need to multiply the link capacity with the multiplication factor to account for the worst case scenario:
+Memory usage of queues and topics is slightly higher than that of anycast addresses, with an estimated 32 kB overhead per address. In addition, each router-broker link can have up to `linkCapacity` message deliveries to keep track of.  Also, we need to multiply the link capacity with the multiplication factor to account for the worst-case scenario:
 [options="nowrap",subs="+quotes,attributes"]
 ----
-(1000 * 32768) + (2000 * 18000 * 100) = 374 MB
+(1000 queued addresses * 32768) + (2000 * 18000 link multiplication factor * 100 links) = 374 MB
 ----
 
 Memory usage of client connections/links:
 [options="nowrap",subs="+quotes,attributes"]
 ----
-10000 * 10 * 18000 = 1717 MB
+10000 clients * 10 link capacity * 18000 link multiplication factor = 1717 MB
 ----
 
 NOTE: The memory usage of client connections/links can be divided by the number of router instances.
++
+If you have N routers, the total amount of router memory required for this configuration, including a constant base memory of 50 MB, is `50 + 3.5 + (374 + 1717)/N MB`. 
 
-If you have N routers, the total amount of router memory required for this configuration (including a constant base memory of 50MB) is `50 + 3.5 + (374 + 1717)/N MB`. 
-
-In order to ensure max connections and links is not exceeded, a router policy can be applied as well. The router config with 2 routers would looks at follows:
+To ensure the maximum number of connections and links is not exceeded, a router policy can be applied as well. The following configuration example shows two routers with a router policy specified:
 
 [source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
@@ -78,13 +82,13 @@ spec:
   ...
 ----
 
-== High Availability
+== High availability (HA)
 
-Configuring routers for HA (High Availability) means you need to multiply the minimum required router replicas by the memory per router to get the expected memory usage. Although all connections and links will be distributed over all routers, if that router goes down, you must plan for those connections and links to be redistributed over the remaining routers. 
+To configure routers for high availability (HA), multiply the minimum number of required router replicas by the amount of memory per router to calculate the amount of expected memory usage. Although all connections and links are distributed across all routers, if one router fails, you must plan for those connections and links to be redistributed across the remaining routers. 
 
 == Router scaling
 
-Routers are scaled dynamically on demand within the interval of `minReplicas` defined in the `StandardInfraConfig` resource and `resourceLimits.router` defined in the `AddressSpacePlan`. To restrict the number of routers to max four, but requiring a minimum amount of 2 routers for HA purposes, the following configuration is needed:
+Routers are scaled dynamically on demand within the limits specified for  `minReplicas` in the `StandardInfraConfig` resource and the `resourceLimits.router` specified in the `AddressSpacePlan`. To restrict the number of routers to a maximum number of four, but require a minimum amount of two routers for HA purposes, the following configuration is needed:
 
 ----
 apiVersion: admin.enmasse.io/v1beta1
@@ -107,11 +111,11 @@ spec:
   ...
 ----
 
-In terms of capacity, the memory requirements for the router should be multiplied by the resource limit. The router will scale up to the resource limits defined in the `AddressSpacePlan` for the address space.
+In terms of capacity, multiply the memory requirements for the router by the resource limit. The router will then scale up to the resource limits specified in the `AddressSpacePlan` for the address space.
 
-The number of router replicas are scaled dynamically between the min and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes the fraction of a router is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired router replicas. 
+The number of router replicas is scaled dynamically between the minimum and maximum limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes the fraction of a router that is required by an address. The fraction defined in the plan is multiplied by the number of addresses referencing this plan, and then rounded up to produce the number of desired router replicas. 
 
-Example `AddressPlan`:
+.`AddressPlan` configuration example:
 ----
 apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
@@ -123,7 +127,7 @@ spec:
     router: 0.01
 ----
 
-If you create 110 addresses with `plan1` as the plan, the number of router replicas will be `ceil(110 * 0.01) = 2 replicas`. 
+If you create 110 addresses with `plan1` as the address plan, the number of router replicas is `ceil(110 addresses * 0.01 router) = 2 replicas`. 
 
-If the number of replicas goes above the address space plan limit, the addresses exceeding the max will remain in the `Pending` state and an error message describing the issue will be set in the `Address` status section.
+If the number of replicas exceeds the address space plan limit, the addresses exceeding the maximum number remain in the `Pending` state and an error message describing the issue is displayed in the `Address` status section.
 

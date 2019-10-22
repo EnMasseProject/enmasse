@@ -93,11 +93,11 @@ spec:
   ...
 ----
 
-In terms of capacity, the memory requirements for the broker should be multiplied by the limit.
+In terms of capacity, multiply the memory requirements for the broker by the limit.
 
-The number of broker instances are scaled dynamically between 1 and max limits based on the `AddressPlan` used for the different addresses. An `AddressPlan` describes the fraction of a broker is required by an address. The fraction defined in the plan is multiplied with the number of addresses referencing this plan and rounded upwards to produce the number of desired broker replicas. 
+The number of broker instances are scaled dynamically between 1 and maximum limit specified based on the `AddressPlan` used for the different addresses. An `AddressPlan` specifies the fraction of a broker that is required by an address. The fraction specified in the plan is multiplied by the number of addresses referencing this plan, and then rounded up to produce the number of desired broker replicas. 
 
-Example `AddressPlan`:
+.`AddressPlan` configuration example
 ----
 apiVersion: admin.enmasse.io/v1beta2
 kind: AddressPlan
@@ -109,6 +109,6 @@ spec:
     broker: 0.01
 ----
 
-If you create 110 addresses with `plan1` as the plan, the number of broker replicas will be `ceil(110 * 0.01) = 2 replicas`. 
+If you create 110 addresses with `plan1` as the address plan, the number of broker replicas is `ceil(110 addresses * 0.01 broker) = 2 replicas`. 
 
-The total number of brokers will capped by the address space plan resource limits.
+The total number of brokers is capped by the address space plan resource limits.
