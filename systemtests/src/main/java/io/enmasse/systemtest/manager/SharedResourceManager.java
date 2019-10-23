@@ -65,7 +65,9 @@ public class SharedResourceManager extends ResourceManager {
                         context.getTestMethod().get().getName()));
                 LOGGER.info("shared address space '{}' will be removed", sharedAddressSpace);
                 try {
-                    super.deleteAddressSpace(sharedAddressSpace);
+                    if (sharedAddressSpace != null) {
+                        super.deleteAddressSpace(sharedAddressSpace);
+                    }
                 } catch (Exception ex) {
                     LOGGER.warn("Failed to delete shared address space (ignored)", ex);
                 } finally {

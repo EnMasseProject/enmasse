@@ -294,7 +294,7 @@ public class SeleniumProvider {
     }
 
     private <T extends WebItem> T waitUntilItem(int timeInSeconds, Supplier<T> item, boolean present) throws Exception {
-        log.info("Waiting for element be present");
+        log.info( "Waiting for element {} present", present ? "to be" : "not to be");
         int attempts = 0;
         T result = null;
         while (attempts++ < timeInSeconds) {
