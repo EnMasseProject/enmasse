@@ -188,12 +188,14 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             for (Label label : labels) {
                 log.info("Restarting {}", label.labelValue);
                 KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+                Thread.sleep(30_000);
                 TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
                 assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
             }
 
             log.info("Restarting whole enmasse");
             KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
+            Thread.sleep(180_000);
             TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             AddressUtils.waitForDestinationsReady(new TimeoutBudget(10, TimeUnit.MINUTES),
                     standardAddresses.toArray(new Address[0]));
@@ -489,6 +491,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
         log.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
+        Thread.sleep(30_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
         if (stopSend.isCompletedExceptionally()) {
             stopSend.get();
