@@ -9,8 +9,13 @@ The Internet of Things (IoT) connectivity feature enables {ProductName} to be us
 configurations that are typically available, developers can use the IoT services to handle device identities and security configurations explicitly, support multiple protocols often used in the IoT space, and provide
 uniform support for expected device communication patterns.
 
+ifdef::Asciidoctor[]
+image::enmasse_iot_view.png[IoT connectivity]
+endif::Asciidoctor[]
 
-image::https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/design/overview/enmasse_iot_view.png[IoT connectivity]
+ifndef::Asciidoctor[]
+image::{imagesdir}/enmasse_iot_view.png[IoT connectivity]
+endif::Asciidoctor[]
 
 One of the key concepts is a _device registry_, which developers use to register devices and provide their credentials. With these credentials, devices can then connect to _protocol adapters_
 using one of the supported protocols: HTTP, MQTT, LoRaWAN, and SigFox. Once connected, devices can send and receive messages from back-end applications using one of the following messaging semantics:
