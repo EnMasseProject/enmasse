@@ -1,14 +1,23 @@
-import * as React from 'react';
-import { storiesOf } from '@storybook/react';
-import { withKnobs, boolean } from '@storybook/addon-knobs';
-import { action } from '@storybook/addon-actions';
-import { AppLayout } from 'use-patternfly';
-import { Avatar, Brand, Text, TextVariants, Dropdown, DropdownToggle, DropdownPosition, DropdownItem } from '@patternfly/react-core';
-import { CogIcon } from '@patternfly/react-icons';
-import avatarImg from '../src/logo.svg';
-import brandImg from '../src/brand_logo.svg';
+import * as React from "react";
+import { storiesOf } from "@storybook/react";
+import { withKnobs, boolean } from "@storybook/addon-knobs";
+import { action } from "@storybook/addon-actions";
+import { AppLayout } from "use-patternfly";
+import {
+  Avatar,
+  Brand,
+  Text,
+  TextVariants,
+  Dropdown,
+  DropdownToggle,
+  DropdownPosition,
+  DropdownItem
+} from "@patternfly/react-core";
+import { CogIcon } from "@patternfly/react-icons";
+import avatarImg from "../src/logo.svg";
+import brandImg from "../src/brand_logo.svg";
 
-const stories = storiesOf('Utils', module);
+const stories = storiesOf("Console", module);
 stories.addDecorator(withKnobs);
 
 const avatar = (
@@ -33,13 +42,13 @@ const NavToolBar = (
     isPlain
     dropdownItems={dropdownItems}
   />
-)
+);
 const logo = <Brand src={brandImg} alt="Console Logo" />;
 
-stories.add('Page Header', () => (
+stories.add("Page Header", () => (
   <AppLayout
     logoProps={{
-      onClick: action('Logo clicked'),
+      onClick: action("Logo clicked")
     }}
     logo={logo}
     avatar={avatar}

@@ -6,12 +6,13 @@ import {
   TableBody,
   IRowData
 } from "@patternfly/react-table";
-import { IAddresses, IConnections } from "../Types/ResourceType";
 import { Link } from "react-router-dom";
+import Messages from "./Messages";
 
 export interface IAddress {
   name: string;
-  typePlan: string;
+  type: string;
+  plan: string;
   messagesIn: number;
   messagesOut: number;
   storedMessages: number;
@@ -21,33 +22,21 @@ export interface IAddress {
   status: "creating" | "deleting" | "running";
 }
 
-//Types to be defined later
-interface IResourceListProps {
+interface IAddressListProps {
   rows: IAddress[];
   onEdit: (rowData: IAddress) => void;
   onDelete: (rowData: IAddress) => void;
 }
 
-const columns = [
-  "Name",
-  "Type/Plan",
-  "Messages In",
-  "Messages Out",
-  "Stored Messages",
-  "Senders",
-  "Receivers",
-  "Shards"
-];
-
-const ResourceList: React.FunctionComponent<IResourceListProps> = ({
+//TODO: Separate modal to a different component
+//TODO: Change columns and its cells to include two columns within
+//TODO: Add loading icon based on status
+const AddressList: React.FunctionComponent<IAddressListProps> = ({
   rows,
   onEdit,
   onDelete
 }) => {
   const actionResolver = (rowData: IRowData) => {
-    // TODO: change actions based on the address object state (eg. is
-    // being created, so we can't delete or edit it)
-    // TODO: figure out a better way to get access to the original data
     const originalData = rowData.originalData as IAddress;
     const status = originalData.status;
     switch (status) {
@@ -67,13 +56,31 @@ const ResourceList: React.FunctionComponent<IResourceListProps> = ({
         ];
     }
   };
+
   const toTableCells = (row: IAddress) => {
     const tableRow: IRowData = {
       cells: [
         { title: <Link to="#">{row.name}</Link> },
-        row.typePlan,
-        row.messagesIn,
-        row.messagesOut,
+        row.type,
+        row.plan,
+        {
+          title: (
+            <Messages
+              count={row.messagesIn}
+              column="MessagesIn"
+              status={row.status}
+            />
+          )
+        },
+        {
+          title: (
+            <Messages
+              count={row.messagesOut}
+              column="MessagesOut"
+              status={row.status}
+            />
+          )
+        },
         row.storedMessages,
         row.senders,
         row.receivers,
@@ -84,10 +91,22 @@ const ResourceList: React.FunctionComponent<IResourceListProps> = ({
     return tableRow;
   };
   const tableRows = rows.map(toTableCells);
+  const tableColumns = [
+    "Name",
+    "Type",
+    "Plan",
+    "Messages In",
+    "Messages Out",
+    "Stored Messages",
+    "Senders",
+    "Receivers",
+    "Shards"
+  ];
+
   return (
     <Table
       variant={TableVariant.compact}
-      cells={columns}
+      cells={tableColumns}
       rows={tableRows}
       actionResolver={actionResolver}
     >
@@ -97,4 +116,4 @@ const ResourceList: React.FunctionComponent<IResourceListProps> = ({
   );
 };
 
-export default ResourceList;
+export default AddressList;

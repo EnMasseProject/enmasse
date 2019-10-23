@@ -17,7 +17,7 @@ import { storiesOf } from "@storybook/react";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
 import { SearchIcon } from "@patternfly/react-icons";
-const stories = storiesOf("Utils", module);
+const stories = storiesOf("Console", module);
 
 stories.add("Address Space Pagination Header", () => {
   return (
