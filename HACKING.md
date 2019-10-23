@@ -98,6 +98,8 @@ oc apply -f templates/build/enmasse-latest/install/components/example-authservic
 
 ### Running full systemtest suite
 
+By default the test suite tears down the EnMasse deployment and namespace after the test run.  To suppress this behaviour set environment variable `SKIP_UNINSTALL`.  This is important if relying on local built images pushed into the in-built registry.
+
 #### Running the systemtests
 
     make systemtests
