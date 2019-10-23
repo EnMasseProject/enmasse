@@ -6,7 +6,7 @@
     <groupId>io.enmasse</groupId>
     <artifactId>enmasse</artifactId>
     <packaging>pom</packaging>
-    <version>0.30.0-rc3</version>
+    <version>0.30.0-rc4</version>
 
     <name>EnMasse</name>
     <url>http://enmasse.io/</url>
