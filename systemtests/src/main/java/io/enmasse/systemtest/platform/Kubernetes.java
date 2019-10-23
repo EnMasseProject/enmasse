@@ -832,6 +832,10 @@ public abstract class Kubernetes {
         }
     }
 
+    public ServiceAccount getServiceAccount(String namespace, String name) {
+        return client.serviceAccounts().inNamespace(namespace).withName(name).get();
+    }
+
     /**
      * Creates service account
      *

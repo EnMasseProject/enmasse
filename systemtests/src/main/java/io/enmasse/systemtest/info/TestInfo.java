@@ -140,7 +140,7 @@ public class TestInfo {
     public boolean isEndOfIotTests() {
         int currentTestIndex = getCurrentTestIndex();
         if (currentTestIndex + 1 < tests.size()) {
-            return getTags(tests.get(currentTestIndex + 1)).stream().anyMatch(tag -> TestTag.IOT_TAGS.contains(tag));
+            return getTags(tests.get(currentTestIndex + 1)).stream().noneMatch(tag -> TestTag.IOT_TAGS.contains(tag));
         }
         return true;
     }

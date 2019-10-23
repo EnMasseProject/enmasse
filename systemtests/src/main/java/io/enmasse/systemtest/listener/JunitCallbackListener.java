@@ -147,6 +147,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 saveKubernetesState(context, ex);
             } catch (Throwable ignored) {
             }
+            LOGGER.error("Exception captured in Junit callback", ex);
             throw ex;
         }
     }
