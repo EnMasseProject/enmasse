@@ -51,6 +51,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
         waitForMonitoringResources();
         KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-deployment"));
+        Thread.sleep(30_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
 
         Kubernetes.getInstance().getClient().namespaces()
