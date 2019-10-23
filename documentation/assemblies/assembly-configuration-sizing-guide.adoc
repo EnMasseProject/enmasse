@@ -1,0 +1,29 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-service-admin-guide.adoc
+//
+[id='sizing-guide-{context}']
+= {ProductName} configuration sizing guidelines
+
+The sizing guide provides guidelines on how to size {ProductName} installations. More specifically, these guidelines offer specific configuration recommendations for components and plans based on use cases, and the trade-offs involved when adjusting the configuration settings. Sizing {ProductName} involves configuration of:
+
+* Brokers 
+* Routers (standard address space only)
+* Operator(s)
+* Plans
+
+Each address space type has some distinct features that should be taken into account when creating the address plans. For more information about address space types and their semantics, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[address spaces].
+
+NOTE: Properly sizing {ProductName} components also requires taking into consideration the following points regarding your {KubePlatform} cluster:
+
+* The {KubePlatform} cluster must have sufficient capacity to handle the requested resources. If the {KubePlatform} nodes are configured with 4 GB of memory, you cannot configure brokers and routers with memory sizes larger than 4 GB. 
+* Since each address space creates a dedicated piece of infrastructure, you need to ensure that cluster capacity can meet demand as the number of address spaces increases. 
+* The use of affinity and tolerations might also restrict the nodes available for the messaging infrastructure to use.
+
+include::../modules/ref-broker-component-sizing.adoc[leveloffset=+1]
+
+include::../modules/ref-router-component-sizing.adoc[leveloffset=+1]
+
+include::../modules/ref-operator-component-sizing.adoc[leveloffset=+1]
+
+include::../modules/ref-plan-sizing.adoc[leveloffset=+1]
