@@ -47,4 +47,4 @@ else
 fi
 
 echo "Running systemtests"
-time ./systemtests/scripts/run_test_kubernetes.sh templates/build/enmasse-${TAG} ${SYSTEMTEST_PROFILE} ${SYSTEMTEST_ARGS}
+time ./systemtests/scripts/run_test_kubernetes.sh ${PWD}/templates/build/enmasse-${TAG} ${SYSTEMTEST_PROFILE} ${SYSTEMTEST_ARGS}
