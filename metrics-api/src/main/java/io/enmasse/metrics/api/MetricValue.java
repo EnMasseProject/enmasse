@@ -4,24 +4,23 @@
  */
 package io.enmasse.metrics.api;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class MetricValue {
-
     private Number value;
-    private final long timestamp;
-    private final List<MetricLabel> labels = new ArrayList<>();
+    private final List<MetricLabel> labels;
 
-    public MetricValue(Number value, long timestamp, MetricLabel ... labels) {
-        this(value, timestamp,Arrays.asList(labels));
+    public MetricValue(Number value, MetricLabel ... labels) {
+        this(value, List.of(labels));
     }
 
-    public MetricValue(Number value, long timestamp, List<MetricLabel> labels) {
-        this.value = value;
-        this.timestamp = timestamp;
-        this.labels.addAll(labels);
+    public MetricValue(Number value, List<MetricLabel> labels) {
+        if (value == null) {
+            this.value = Float.NaN;
+        } else {
+            this.value = value;
+        }
+        this.labels = labels;
     }
 
     public List<MetricLabel> getLabels() {
@@ -30,9 +29,5 @@ public class MetricValue {
 
     public Number getValue() {
         return value;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
     }
 }

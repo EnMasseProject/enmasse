@@ -13,20 +13,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
+import java.util.Collections;
 
 public class HTTPHealthServer extends AbstractVerticle {
     public static final int PORT = 8080;
     private static final Logger log = LoggerFactory.getLogger(HTTPHealthServer.class);
-    private final String version;
     private final Metrics metrics;
     private final int port;
     private HttpServer httpServer;
     private final MetricsFormatter formatter = new PrometheusMetricsFormatter();
 
     public HTTPHealthServer(String version, Metrics metrics) {
-        this.version = version;
         this.metrics = metrics;
         this.port = PORT;
+        metrics.registerMetric(new ScalarMetric(
+                "version",
+                "The version of the api-server",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(0, new MetricLabel("name", "api-server"), new MetricLabel("version", version)))));
     }
 
     @Override
@@ -58,13 +62,7 @@ public class HTTPHealthServer extends AbstractVerticle {
     }
 
     private void handleMetrics(HttpServerRequest request) {
-        long now = System.currentTimeMillis();
-        metrics.reportMetric(new Metric(
-                "version",
-                "The version of the api-server",
-                MetricType.gauge,
-                new MetricValue(0, now, new MetricLabel("name", "api-server"), new MetricLabel("version", version))));
-        String data = formatter.format(metrics.snapshot());
+        String data = formatter.format(metrics.getMetrics(), System.currentTimeMillis());
         request.response().setStatusCode(200).putHeader("Content-Type", MediaType.TEXT_HTML).end(data);
     }
 }

@@ -7,5 +7,6 @@ package io.enmasse.metrics.api;
 public enum MetricType {
     up,
     gauge,
-    counter
+    counter,
+    histogram
 }

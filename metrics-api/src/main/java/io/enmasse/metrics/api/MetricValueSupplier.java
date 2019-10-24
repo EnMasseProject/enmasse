@@ -5,10 +5,7 @@
 package io.enmasse.metrics.api;
 
 import java.util.List;
+import java.util.function.Supplier;
 
-public interface Metric {
-    String getName();
-    String getDescription();
-    MetricType getType();
-    MetricSnapshot getSnapshot();
+public interface MetricValueSupplier extends Supplier<List<MetricValue>> {
 }

@@ -58,8 +58,7 @@ public class HTTPServer {
 
         @Override
         public void handle(HttpExchange t) throws IOException {
-            List<Metric> metricsSnapshot = metrics.snapshot();
-            byte [] response = metricsFormatter.format(metricsSnapshot).getBytes(StandardCharsets.UTF_8);
+            byte [] response = metricsFormatter.format(metrics.getMetrics(), System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8);
             t.getResponseHeaders().add("Content-Type", "text/html");
             t.sendResponseHeaders(200, response.length);
             OutputStream os = t.getResponseBody();

@@ -107,7 +107,7 @@ public class ApiServer extends AbstractVerticle {
         Metrics metrics = new Metrics();
 
         HTTPHealthServer httpHealthServer = new HTTPHealthServer(options.getVersion(), metrics);
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry, apiHeaderConfig);
+        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry, apiHeaderConfig, metrics);
 
         vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
             if (result.succeeded()) {
