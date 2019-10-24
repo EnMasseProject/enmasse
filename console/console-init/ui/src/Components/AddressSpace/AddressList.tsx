@@ -7,7 +7,7 @@ import {
   IRowData
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
-import { Messages } from "./Messages";
+import { Messages } from "../Messages";
 
 export interface IAddress {
   name: string;
