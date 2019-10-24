@@ -7,6 +7,7 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.metrics.api.Metric;
+import io.enmasse.metrics.api.MetricSnapshot;
 import io.enmasse.metrics.api.Metrics;
 import org.junit.jupiter.api.Test;
 
@@ -28,26 +29,26 @@ public class MetricsReporterTest {
                 createAddressSpace("s2", true),
                 createAddressSpace("s3", false)));
 
-        List<Metric> metricList = metrics.snapshot();
+        List<Metric> metricList = metrics.getMetrics();
         assertEquals(7, metricList.size());
-        Metric numReady = findMetric("address_space_status_ready", metricList);
+        MetricSnapshot numReady = createSnapshot("address_space_status_ready", metricList);
         assertNotNull(numReady);
         assertEquals(3, numReady.getValues().size());
 
-        Metric numNotReady = findMetric("address_space_status_not_ready", metricList);
+        MetricSnapshot numNotReady = createSnapshot("address_space_status_not_ready", metricList);
         assertNotNull(numNotReady);
         assertEquals(3, numNotReady.getValues().size());
 
-        Metric total = findMetric("address_spaces_total", metricList);
+        MetricSnapshot total = createSnapshot("address_spaces_total", metricList);
         assertNotNull(total);
         assertEquals(3, total.getValues().iterator().next().getValue());
 
     }
 
-    private Metric findMetric(String name, List<Metric> metricList) {
+    private MetricSnapshot createSnapshot(String name, List<Metric> metricList) {
         for (Metric metric : metricList) {
             if (name.equals(metric.getName())) {
-                return metric;
+                return metric.getSnapshot();
             }
         }
         return null;

@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.enmasse.metrics.api.Metric;
+import io.enmasse.metrics.api.ScalarMetric;
 import io.enmasse.metrics.api.Metrics;
 import io.enmasse.metrics.api.MetricsFormatter;
 import io.enmasse.metrics.api.PrometheusMetricsFormatter;
@@ -58,8 +59,7 @@ public class HTTPServer {
 
         @Override
         public void handle(HttpExchange t) throws IOException {
-            List<Metric> metricsSnapshot = metrics.snapshot();
-            byte [] response = metricsFormatter.format(metricsSnapshot).getBytes(StandardCharsets.UTF_8);
+            byte [] response = metricsFormatter.format(metrics.getMetrics(), System.currentTimeMillis()).getBytes(StandardCharsets.UTF_8);
             t.getResponseHeaders().add("Content-Type", "text/html");
             t.sendResponseHeaders(200, response.length);
             OutputStream os = t.getResponseBody();

@@ -4,31 +4,23 @@
  */
 package io.enmasse.metrics.api;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class Metrics {
     private final Map<String, Metric> metrics = new LinkedHashMap<>();
 
-    public synchronized List<Metric> snapshot() {
-        List<Metric> snapshot = new ArrayList<>();
-        for (Metric metric : metrics.values()) {
-            List<MetricValue> values = new ArrayList<>();
-            for (MetricValue value : metric.getValues()) {
-                values.add(new MetricValue(value.getValue(), value.getTimestamp(), value.getLabels()));
-            }
-            Metric copy = new Metric(metric.getName(), metric.getDescription(), metric.getType(), values);
-            snapshot.add(copy);
-        }
-        return snapshot;
+    public synchronized List<Metric> getMetrics() {
+        return new ArrayList<>(metrics.values());
     }
 
-    public synchronized void reportMetric(Metric metric) {
+    public synchronized void registerMetric(Metric metric) {
         Metric existing = metrics.get(metric.getName());
-        if (existing == null) {
-            metrics.put(metric.getName(), metric);
-            return;
+        if (existing != null) {
+            throw new IllegalArgumentException("Metric " + metric.getName() + " already registered");
         }
-
-        existing.update(metric);
+        metrics.put(metric.getName(), metric);
     }
 }

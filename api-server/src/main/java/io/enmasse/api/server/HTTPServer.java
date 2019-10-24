@@ -5,21 +5,6 @@
 
 package io.enmasse.api.server;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.time.Clock;
-import java.util.Deque;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-
-import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
-import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.enmasse.api.auth.AllowAllAuthInterceptor;
 import io.enmasse.api.auth.ApiHeaderConfig;
 import io.enmasse.api.auth.AuthApi;
@@ -31,8 +16,6 @@ import io.enmasse.api.v1.http.HttpApiRootService;
 import io.enmasse.api.v1.http.HttpClusterAddressService;
 import io.enmasse.api.v1.http.HttpClusterAddressSpaceService;
 import io.enmasse.api.v1.http.HttpClusterUserService;
-import io.enmasse.api.v1.http.HttpHealthService;
-import io.enmasse.api.v1.http.HttpMetricsService;
 import io.enmasse.api.v1.http.HttpNestedAddressService;
 import io.enmasse.api.v1.http.HttpOpenApiService;
 import io.enmasse.api.v1.http.HttpRootService;
@@ -42,6 +25,7 @@ import io.enmasse.api.v1.http.SwaggerSpecEndpoint;
 import io.enmasse.k8s.api.AddressSpaceApi;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.SchemaProvider;
+import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -53,6 +37,20 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemTrustOptions;
+import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
+import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.time.Clock;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  * HTTP server for deploying address config
@@ -73,6 +71,7 @@ public class HTTPServer extends AbstractVerticle {
     private final AuthenticationServiceRegistry authenticationServiceRegistry;
     private final int port;
     private final ApiHeaderConfig apiHeaderConfig;
+    private final Metrics metrics;
 
     private HttpServer httpServer;
 
@@ -85,7 +84,8 @@ public class HTTPServer extends AbstractVerticle {
                       String requestHeaderClientCa,
                       Clock clock,
                       AuthenticationServiceRegistry authenticationServiceRegistry,
-                      ApiHeaderConfig apiHeaderConfig) {
+                      ApiHeaderConfig apiHeaderConfig,
+                      Metrics metrics) {
         this(addressSpaceApi,
                 schemaProvider,
                 authApi,
@@ -96,7 +96,8 @@ public class HTTPServer extends AbstractVerticle {
                 clock,
                 authenticationServiceRegistry,
                 SECURE_PORT,
-                apiHeaderConfig);
+                apiHeaderConfig,
+                metrics);
     }
 
     public HTTPServer(AddressSpaceApi addressSpaceApi,
@@ -109,7 +110,8 @@ public class HTTPServer extends AbstractVerticle {
             Clock clock,
             AuthenticationServiceRegistry authenticationServiceRegistry,
             int port,
-            ApiHeaderConfig apiHeaderConfig) {
+            ApiHeaderConfig apiHeaderConfig,
+            Metrics metrics) {
         this.addressSpaceApi = addressSpaceApi;
         this.schemaProvider = schemaProvider;
         this.certDir = options.getCertDir();
@@ -122,6 +124,7 @@ public class HTTPServer extends AbstractVerticle {
         this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.port = port;
         this.apiHeaderConfig = apiHeaderConfig;
+        this.metrics = metrics;
     }
 
     @Override
@@ -129,16 +132,13 @@ public class HTTPServer extends AbstractVerticle {
         VertxResteasyDeployment deployment = new VertxResteasyDeployment();
         deployment.start();
 
-        RequestLogger latencyTracker = new RequestLogger();
+        RequestLogger requestLogger = new RequestLogger(metrics);
         deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
-        deployment.getProviderFactory().registerProviderInstance(latencyTracker);
+        deployment.getProviderFactory().registerProviderInstance(requestLogger);
 
         if (isRbacEnabled) {
             log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, apiHeaderConfig, path ->
-                    path.equals(HttpHealthService.BASE_URI) ||
-                            path.equals(HttpMetricsService.BASE_URI) ||
-                            path.equals("/swagger.json")));
+            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, apiHeaderConfig, path -> path.equals("/swagger.json")));
         } else {
             log.info("Disabling authentication and authorization for REST API");
             deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
