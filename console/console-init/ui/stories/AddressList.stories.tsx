@@ -1,7 +1,7 @@
 import * as React from "react";
 import { MemoryRouter } from "react-router";
 import { storiesOf } from "@storybook/react";
-import AddressList, { IAddress } from "../src/Components/AddressList";
+import { AddressList, IAddress } from "../src/Components/AddressList";
 import { action } from "@storybook/addon-actions";
 
 const stories = storiesOf("Console", module);

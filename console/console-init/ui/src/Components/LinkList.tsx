@@ -24,7 +24,7 @@ export interface ILink {
   status: "creating" | "deleting" | "running";
 }
 
-const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
+export const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
   const toTableCells = (row: ILink) => {
     const tableRow: IRowData = {
       cells: [
@@ -62,5 +62,3 @@ const LinkList: React.FunctionComponent<ILinkListProps> = ({ rows }) => {
     </Table>
   );
 };
-
-export default LinkList;

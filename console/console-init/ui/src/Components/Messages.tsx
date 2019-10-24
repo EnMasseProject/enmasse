@@ -10,20 +10,19 @@ interface IMessagesProps {
   status: string;
 }
 
-const Messages: React.FunctionComponent<IMessagesProps> = message => {
+export const Messages: React.FunctionComponent<IMessagesProps> = message => {
+  //TBD: color and icons to be set when designs are finalized.
+  const iconColor = message.status === "running" ? "blue" : "grey";
   const icon =
     message.column == "MessagesIn" ? (
-      <ArrowAltCircleRightIcon key="icon" />
+      <ArrowAltCircleRightIcon color={iconColor} key="icon" />
     ) : (
-      <ArrowAltCircleLeftIcon key="icon" />
+      <ArrowAltCircleLeftIcon color={iconColor} key="icon" />
     );
 
-  //TODO: Change color of icon based on status
   return (
     <React.Fragment>
       {icon} {message.count}
     </React.Fragment>
   );
 };
-
-export default Messages;

@@ -23,7 +23,7 @@ export interface IConnection {
   status: "creating" | "deleting" | "running";
 }
 
-const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
+export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   rows
 }) => {
   const toTableCells = (row: IConnection) => {
@@ -59,5 +59,3 @@ const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     </Table>
   );
 };
-
-export default ConnectionList;

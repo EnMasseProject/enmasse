@@ -7,7 +7,7 @@ import {
   IRowData
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
-import Messages from "./Messages";
+import { Messages } from "./Messages";
 
 export interface IAddress {
   name: string;
@@ -28,14 +28,14 @@ interface IAddressListProps {
   onDelete: (rowData: IAddress) => void;
 }
 
-//TODO: Separate modal to a different component
-//TODO: Change columns and its cells to include two columns within
-//TODO: Add loading icon based on status
-const AddressList: React.FunctionComponent<IAddressListProps> = ({
+export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   rows,
   onEdit,
   onDelete
 }) => {
+  //TODO: Separate modal to a different component
+  //TODO: Change columns and its cells to include two columns within
+  //TODO: Add loading icon based on status
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IAddress;
     const status = originalData.status;
@@ -115,5 +115,3 @@ const AddressList: React.FunctionComponent<IAddressListProps> = ({
     </Table>
   );
 };
-
-export default AddressList;
