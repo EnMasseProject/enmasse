@@ -16,6 +16,7 @@ import io.enmasse.api.auth.SubjectAccessReview;
 import io.enmasse.api.auth.TokenReview;
 import io.enmasse.k8s.api.AuthenticationServiceRegistry;
 import io.enmasse.k8s.api.TestAddressSpaceApi;
+import io.enmasse.metrics.api.Metrics;
 import io.enmasse.user.api.UserApi;
 import io.enmasse.user.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -119,7 +120,7 @@ public class HTTPServerTest {
         when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
         when(authenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
 
-        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, options, null, null, Clock.systemUTC(), authenticationServiceRegistry, 0, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG);
+        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, options, null, null, Clock.systemUTC(), authenticationServiceRegistry, 0, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG, new Metrics());
         vertx.deployVerticle(this.server, context.succeeding(arg -> context.completeNow()));
     }
 

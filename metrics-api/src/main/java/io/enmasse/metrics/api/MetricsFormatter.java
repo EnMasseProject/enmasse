@@ -4,8 +4,8 @@
  */
 package io.enmasse.metrics.api;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface MetricsFormatter {
-    String format(List<Metric> metricList);
+    String format(Collection<Metric> metricList, long timestamp);
 }

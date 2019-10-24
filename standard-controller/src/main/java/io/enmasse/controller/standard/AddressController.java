@@ -5,7 +5,19 @@
 package io.enmasse.controller.standard;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.address.model.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressResolver;
+import io.enmasse.address.model.AddressSpaceResolver;
+import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.AddressSpecForwarder;
+import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.AddressStatusForwarder;
+import io.enmasse.address.model.AddressStatusForwarderBuilder;
+import io.enmasse.address.model.AddressType;
+import io.enmasse.address.model.BrokerState;
+import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.Phase;
+import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
@@ -13,8 +25,17 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.amqp.RouterManagement;
 import io.enmasse.config.AnnotationKeys;
-import io.enmasse.k8s.api.*;
-import io.enmasse.metrics.api.*;
+import io.enmasse.k8s.api.AddressApi;
+import io.enmasse.k8s.api.EventLogger;
+import io.enmasse.k8s.api.ResourceChecker;
+import io.enmasse.k8s.api.SchemaProvider;
+import io.enmasse.k8s.api.Watch;
+import io.enmasse.k8s.api.Watcher;
+import io.enmasse.metrics.api.MetricLabel;
+import io.enmasse.metrics.api.MetricType;
+import io.enmasse.metrics.api.MetricValue;
+import io.enmasse.metrics.api.Metrics;
+import io.enmasse.metrics.api.ScalarMetric;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
@@ -28,11 +49,24 @@ import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static io.enmasse.address.model.Phase.*;
+import static io.enmasse.address.model.Phase.Active;
+import static io.enmasse.address.model.Phase.Configuring;
+import static io.enmasse.address.model.Phase.Failed;
+import static io.enmasse.address.model.Phase.Pending;
+import static io.enmasse.address.model.Phase.Terminating;
 import static io.enmasse.controller.standard.ControllerKind.Broker;
 import static io.enmasse.controller.standard.ControllerReason.BrokerUpgraded;
 import static io.enmasse.k8s.api.EventLogger.Type.Normal;
@@ -50,11 +84,20 @@ public class AddressController implements Watcher<Address> {
     private final EventLogger eventLogger;
     private final SchemaProvider schemaProvider;
     private final Vertx vertx;
-    private final Metrics metrics;
     private final BrokerIdGenerator brokerIdGenerator;
     private final BrokerClientFactory brokerClientFactory;
     private final RouterStatusCache statusCollector;
     private final ResourceChecker<Address> reconciler;
+
+    // Metrics
+    private volatile Long readyAddressCount;
+    private volatile Long notReadyAddressCount;
+    private volatile Long readyForwarders;
+    private volatile Long notReadyForwarders;
+    private volatile Long numAddresses;
+    private volatile Long numForwarders;
+    private volatile Long totalTime;
+    private volatile Map<Phase, Long> countByPhase = new HashMap<>();
 
     public AddressController(StandardControllerOptions options, AddressApi addressApi, Kubernetes kubernetes, BrokerSetGenerator clusterGenerator, EventLogger eventLogger, SchemaProvider schemaProvider, Vertx vertx, Metrics metrics, BrokerIdGenerator brokerIdGenerator, BrokerClientFactory brokerClientFactory) {
         this.options = options;
@@ -64,13 +107,100 @@ public class AddressController implements Watcher<Address> {
         this.eventLogger = eventLogger;
         this.schemaProvider = schemaProvider;
         this.vertx = vertx;
-        this.metrics = metrics;
         this.brokerIdGenerator = brokerIdGenerator;
         this.brokerClientFactory = brokerClientFactory;
         RouterManagement routerManagement = RouterManagement.withCertsInDir(vertx, "standard-controller", options.getManagementConnectTimeout(), options.getManagementQueryTimeout(), options.getCertDir());
         this.statusCollector = new RouterStatusCache(routerManagement, kubernetes, eventLogger, options.getAddressSpace(), options.getStatusCheckInterval());
         reconciler = new ResourceChecker<>(this, options.getRecheckInterval());
+        registerMetrics(metrics);
+    }
 
+    private void registerMetrics(Metrics metrics) {
+        String componentName = "standard-controller-" + options.getInfraUuid();
+        metrics.registerMetric(new ScalarMetric(
+                "version",
+                "The version of the standard-controller",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(0, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion())))));
+
+        MetricLabel[] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_ready_total",
+                "Total number of addresses in ready state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(readyAddressCount, metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_not_ready_total",
+                "Total number of address in a not ready state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(notReadyAddressCount, metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_total",
+                "Total number of addresses",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(numAddresses, metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_pending_total",
+                "Total number of addresses in Pending state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Pending), metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_failed_total",
+                "Total number of addresses in Failed state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Failed), metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_terminating_total",
+                "Total number of addresses in Terminating state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Terminating), metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_configuring_total",
+                "Total number of addresses in Configuring state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Configuring), metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_active_total",
+                "Total number of addresses in Active state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(countByPhase.get(Active), metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_forwarders_total",
+                "Total number of forwarders",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(numForwarders, metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_forwarders_ready_total",
+                "Total number of forwarders in ready state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(readyForwarders, metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "addresses_forwarders_not_ready_total",
+                "Total number of forwarders in not ready state",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue(notReadyForwarders, metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "standard_controller_loop_duration_seconds",
+                "Time spent in controller loop",
+                MetricType.gauge,
+                () -> Collections.singletonList(new MetricValue((double) totalTime / 1_000_000_000.0, metricLabels))));
+
+        metrics.registerMetric(new ScalarMetric(
+                "standard_controller_router_check_failures_total",
+                "Number of RouterCheckFailures",
+                MetricType.counter,
+                () -> Collections.singletonList(new MetricValue(statusCollector.getRouterCheckFailures(), metricLabels))));
     }
 
     public void start() throws Exception {
@@ -108,7 +238,7 @@ public class AddressController implements Watcher<Address> {
 
         final Map<String, ProvisionState> previousStatus = addressList.stream()
                 .collect(Collectors.toMap(a -> a.getMetadata().getName(),
-                                          a -> new ProvisionState(a.getStatus(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
+                        a -> new ProvisionState(a.getStatus(), a.getAnnotation(AnnotationKeys.APPLIED_PLAN))));
 
         AddressSpacePlan addressSpacePlan = addressSpaceType.findAddressSpacePlan(options.getAddressSpacePlanName()).orElseThrow(() -> new RuntimeException("Unable to handle updates: address space plan " + options.getAddressSpacePlanName() + " not found!"));
         InfraConfig infraConfig = addressSpaceResolver.getInfraConfig("standard", addressSpacePlan.getMetadata().getName());
@@ -167,7 +297,7 @@ public class AddressController implements Watcher<Address> {
 
         long calculatedUsage = System.nanoTime();
         Set<Address> pendingAddresses = filterBy(addressSet, address -> address.getStatus().getPhase().equals(Pending) ||
-                    AddressProvisioner.hasPlansChanged(addressResolver, address));
+                AddressProvisioner.hasPlansChanged(addressResolver, address));
 
         Map<String, Map<String, UsageInfo>> neededMap = provisioner.checkQuota(usageMap, pendingAddresses, addressSet);
 
@@ -252,49 +382,28 @@ public class AddressController implements Watcher<Address> {
         garbageCollectTerminating(filterByPhases(addressSet, EnumSet.of(Terminating)), addressResolver, routerStatusList, subserveTopics, withMqtt);
         long gcTerminating = System.nanoTime();
 
-        log.info("Time spent: Total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan,  checkedQuota  - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
+        log.info("Time spent: Total: {} ns, resolvedPlan: {} ns, calculatedUsage: {} ns, checkedQuota: {} ns, listClusters: {} ns, provisionResources: {} ns, checkStatuses: {} ns, deprovisionUnused: {} ns, upgradeClusters: {} ns, replaceAddresses: {} ns, gcTerminating: {} ns", gcTerminating - start, resolvedPlan - start, calculatedUsage - resolvedPlan, checkedQuota - calculatedUsage, listClusters - checkedQuota, provisionResources - listClusters, checkStatuses - provisionResources, deprovisionUnused - checkStatuses, upgradeClusters - deprovisionUnused, replaceAddresses - upgradeClusters, gcTerminating - replaceAddresses);
 
-        float ready = 0;
-        for (Address address : addressList) {
-            ready += address.getStatus().isReady() ? 1 : 0;
-        }
-        float notReady = addressList.size() - ready;
-
-        long now = System.currentTimeMillis();
-
-        String componentName = "standard-controller-" + options.getInfraUuid();
-        metrics.reportMetric(new Metric("version", "The version of the standard-controller", MetricType.gauge, new MetricValue(0, now, new MetricLabel("name", componentName), new MetricLabel("version", options.getVersion()))));
-
-        MetricLabel [] metricLabels = new MetricLabel[]{new MetricLabel("addressspace", options.getAddressSpace()), new MetricLabel("namespace", options.getAddressSpaceNamespace())};
         if (routerStatusList.isEmpty()) {
-            ready = Float.NaN;
-            notReady = Float.NaN;
+            readyAddressCount = null;
+            notReadyAddressCount = null;
+            notReadyForwarders = null;
+            readyForwarders = null;
+        } else {
+            readyAddressCount = addressList.stream()
+                    .filter(a -> a.getStatus().isReady())
+                    .count();
+            notReadyAddressCount = addressList.size() - readyAddressCount;
 
+            Set<Address> addressesWithForwarders = filterBy(addressSet, address -> (address.getStatus().getForwarders() != null && !address.getStatus().getForwarders().isEmpty()));
+            readyForwarders = countForwardersReady(addressesWithForwarders, true);
+            notReadyForwarders = countForwardersReady(addressesWithForwarders, false);
+            numForwarders = readyForwarders + notReadyForwarders;
         }
 
-        Set<Address> addressesWithForwarders = filterBy(addressSet, address -> (address.getStatus().getForwarders() != null && !address.getStatus().getForwarders().isEmpty()));
-        long readyForwarders = countForwardersReady(addressesWithForwarders, true);
-        long notReadyForwarders = countForwardersReady(addressesWithForwarders, false);
-
-        metrics.reportMetric(new Metric("addresses_ready_total", "Total number of addresses in ready state", MetricType.gauge, new MetricValue(ready, now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_not_ready_total", "Total number of address in a not ready state", MetricType.gauge, new MetricValue(notReady, now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_total", "Total number of addresses", MetricType.gauge, new MetricValue(addressList.size(), now, metricLabels)));
-
-        metrics.reportMetric(new Metric("addresses_pending_total", "Total number of addresses in Pending state", MetricType.gauge, new MetricValue(countByPhase.get(Pending), now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_failed_total", "Total number of addresses in Failed state", MetricType.gauge, new MetricValue(countByPhase.get(Failed), now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_terminating_total", "Total number of addresses in Terminating state", MetricType.gauge, new MetricValue(countByPhase.get(Terminating), now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_configuring_total", "Total number of addresses in Configuring state", MetricType.gauge, new MetricValue(countByPhase.get(Configuring), now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_active_total", "Total number of addresses in Active state", MetricType.gauge, new MetricValue(countByPhase.get(Active), now, metricLabels)));
-
-        metrics.reportMetric(new Metric("addresses_forwarders_total", "Total number of forwarders", MetricType.gauge, new MetricValue(readyForwarders + notReadyForwarders, now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_forwarders_ready_total", "Total number of forwarders in ready state", MetricType.gauge, new MetricValue(readyForwarders, now, metricLabels)));
-        metrics.reportMetric(new Metric("addresses_forwarders_not_ready_total", "Total number of forwarders in not ready state", MetricType.gauge, new MetricValue(notReadyForwarders, now, metricLabels)));
-
-        long totalTime = gcTerminating - start;
-        metrics.reportMetric(new Metric("standard_controller_loop_duration_seconds", "Time spent in controller loop", MetricType.gauge, new MetricValue((double) totalTime / 1_000_000_000.0, now, metricLabels)));
-
-        metrics.reportMetric(new Metric("standard_controller_router_check_failures_total", "Number of RouterCheckFailures", MetricType.counter, new MetricValue(statusCollector.getRouterCheckFailures(), now, metricLabels)));
-
+        numAddresses = (long) addressList.size();
+        totalTime = gcTerminating - start;
+        this.countByPhase = countByPhase;
     }
 
     private long countForwardersReady(Set<Address> addressesWithForwarders, boolean desired) {
