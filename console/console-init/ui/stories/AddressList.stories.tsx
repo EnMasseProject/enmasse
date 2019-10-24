@@ -1,16 +1,16 @@
 import * as React from "react";
 import { MemoryRouter } from "react-router";
 import { storiesOf } from "@storybook/react";
-import { Link } from "react-router-dom";
-import ResourceList, { IAddress } from "../src/Components/ResourceList";
+import { AddressList, IAddress } from "../src/Components/AddressList";
 import { action } from "@storybook/addon-actions";
 
-const stories = storiesOf("Utils", module);
+const stories = storiesOf("Console", module);
 
 const rows: IAddress[] = [
   {
     name: "foo",
-    typePlan: "small",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -21,7 +21,8 @@ const rows: IAddress[] = [
   },
   {
     name: "foo",
-    typePlan: "small",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -32,7 +33,8 @@ const rows: IAddress[] = [
   },
   {
     name: "foo",
-    typePlan: "small",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -43,9 +45,9 @@ const rows: IAddress[] = [
   }
 ];
 
-stories.add("Addresses ResourceList", () => (
+stories.add("Address List", () => (
   <MemoryRouter>
-    <ResourceList
+    <AddressList
       rows={rows}
       onEdit={action("onEdit")}
       onDelete={action("onDelete")}

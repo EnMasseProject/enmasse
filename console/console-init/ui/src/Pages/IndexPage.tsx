@@ -1,12 +1,14 @@
 import React from "react";
 import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
 import { PageSection, Button, Modal } from "@patternfly/react-core";
-import ResourceList, { IAddress } from "src/Components/ResourceList";
+import { AddressList, IAddress } from "src/Components/AddressList";
+import { ConnectionList, IConnection } from "src/Components/ConnectionList";
 
-const rows: IAddress[] = [
+const addressRows: IAddress[] = [
   {
     name: "foo",
-    typePlan: "small",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -17,7 +19,8 @@ const rows: IAddress[] = [
   },
   {
     name: "foo",
-    typePlan: "small",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -28,7 +31,8 @@ const rows: IAddress[] = [
   },
   {
     name: "foo",
-    typePlan: "small",
+    type: "Queue",
+    plan: "small",
     messagesIn: 123,
     messagesOut: 123,
     storedMessages: 123,
@@ -70,8 +74,11 @@ const IndexPage: React.FC = ({ children }) => {
   return (
     <React.Fragment>
       <PageSection>
-        <h1>Index page</h1>
-        <ResourceList rows={rows} onEdit={handleEdit} onDelete={handleDelete} />
+        <AddressList
+          rows={addressRows}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
       </PageSection>
       {addressBeingEdited && (
         <Modal
