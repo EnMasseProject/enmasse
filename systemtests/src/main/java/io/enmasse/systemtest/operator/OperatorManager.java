@@ -4,14 +4,20 @@
  */
 package io.enmasse.systemtest.operator;
 
+import io.enmasse.admin.model.v1.ConsoleService;
+import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.OpenShift;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.slf4j.Logger;
 
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
 public class OperatorManager {
     private static Logger LOGGER = CustomLogger.getLogger();
@@ -144,6 +150,36 @@ public class OperatorManager {
     public void waithUntilOperatorReady() throws Exception {
         Thread.sleep(5000);
         TestUtils.waitUntilDeployed(Environment.getInstance().namespace());
+
+        if (kube instanceof OpenShift) {
+            // Kubernetes does not make a console service available by default.
+            awaitConsoleReadiness();
+        }
+    }
+
+    private void awaitConsoleReadiness() throws Exception {
+        final String serviceName = "console";
+
+        TestUtils.waitUntilCondition("global console readiness", waitPhase -> {
+            try {
+                final ConsoleService console = kube.getConsoleServiceClient().withName("console").get();
+                if (console == null) {
+                    LOGGER.info("ConsoleService {} not yet available", serviceName);
+                    return false;
+                }
+
+                final ConsoleServiceSpec spec = console.getSpec();
+                final boolean ready = spec != null && spec.getOauthClientSecret() != null && spec.getSsoCookieSecret() != null;
+                if (!ready) {
+                    LOGGER.info("ConsoleService {} not yet fully ready: {}", serviceName, spec);
+                }
+                return ready;
+            } catch (KubernetesClientException e) {
+                LOGGER.warn("Failed to get console service record : {}", serviceName, e);
+            }
+
+            return false;
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
     }
 
     public boolean isEnmasseBundleDeployed() {
