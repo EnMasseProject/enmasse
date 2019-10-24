@@ -572,7 +572,7 @@ public class TestUtils {
                     throw new IllegalStateException("Failed to wait for: " + forWhat);
                 });
 
-        log.info("Successfully wait for: {}, it took {} ms", forWhat, budget.timeSpent());
+        log.info("Successfully waited for: {}, it took {} ms", forWhat, budget.timeSpent());
 
     }
 
