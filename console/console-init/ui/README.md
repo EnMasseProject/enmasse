@@ -4,6 +4,14 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
+## Docker commands
+
+To run in dev :
+    
+    sudo docker  build -t console/dev . # build
+    sudo docker  run -it -p 3000:3000 --rm --name console-dev-1 console/dev #run
+
+
 ### `yarn start`
 
 Runs the app in the development mode.<br />
