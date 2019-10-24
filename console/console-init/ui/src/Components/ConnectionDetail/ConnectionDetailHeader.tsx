@@ -8,7 +8,7 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { LockIcon, LockOpenIcon } from "@patternfly/react-icons";
-import '../AddressSpace/AddressSpaceHeader.css'
+import "../AddressSpace/AddressSpaceHeader.css";
 export interface ConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;

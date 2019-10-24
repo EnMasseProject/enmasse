@@ -1,5 +1,6 @@
 import * as React from "react";
-import DropdownComponent, {
+import {
+  DropdownComponent,
   IDropdownOption
 } from "../Common/DropdownComponent";
 import {
@@ -20,12 +21,12 @@ export interface IAddressListFilterProps {
   onTypeSelect: (item: any) => void;
   typeValue: string;
   setTypeOpen: () => void;
-  isStatusDropdownOpen: boolean
+  isStatusDropdownOpen: boolean;
   onStatusSelect: (item: any) => void;
   statusValue: string;
   setStatusOpen: () => void;
 }
-const filterOptions: IDropdownOption[] = [
+export const filterOptions: IDropdownOption[] = [
     { value: "name", label: "Name" },
     { value: "type", label: "Type" },
     { value: "status", label: "Status" }
@@ -43,7 +44,9 @@ const filterOptions: IDropdownOption[] = [
     { value: "failed", label: "Failed" }
   ];
 
-const AddressListFilter: React.FunctionComponent<IAddressListFilterProps> = ({
+export const AddressListFilter: React.FunctionComponent<
+  IAddressListFilterProps
+> = ({
   onSearch,
   isFilterDropdownOpen,
   onFilterSelect,
@@ -115,5 +118,3 @@ const AddressListFilter: React.FunctionComponent<IAddressListFilterProps> = ({
     </InputGroup>
   );
 };
-
-export default AddressListFilter;

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { storiesOf } from "@storybook/react";
-import { withKnobs, boolean, text, number, select } from "@storybook/addon-knobs";
+import { withKnobs, text, select } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
 import { AddressSpaceHeader } from "src/Components/AddressSpace/AddressSpaceHeader";
 import { action } from "@storybook/addon-actions";
