@@ -248,7 +248,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Path makefileDir = Paths.get(System.getProperty("user.dir"), "..");
         Path imageEnvDir = Paths.get(makefileDir.toString(), "imageenv.txt");
 
-        Exec.execute(Arrays.asList("make", "-C", makefileDir.toString(), "TAG=" + version, "imageenv"), 10_000, false);
         String images = Files.readString(imageEnvDir);
         log.info("Expected images: {}", images);
 
