@@ -13,10 +13,8 @@ import { SearchIcon } from "@patternfly/react-icons";
 
 export interface IAddressListFilterProps {
   onSearch: () => void;
-  isFilterDropdownOpen: boolean;
   onFilterSelect: (item: any) => void;
   filterValue: string;
-  setFilterOpen: () => void;
   isTypeDropdownOpen: boolean;
   onTypeSelect: (item: any) => void;
   typeValue: string;
