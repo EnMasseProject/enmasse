@@ -204,7 +204,7 @@ public class RouterStatusController implements Controller {
                 continue;
             }
             List<String> neighbours = filterOnAttribute(String.class, 0, routerResponse);
-            log.info("Router {} has neighbours: {}", routerId, neighbours);
+            log.debug("Router {} has neighbours: {}", routerId, neighbours);
             if (!neighbours.containsAll(routerIds)) {
                 Set<String> missing = new HashSet<>(routerIds);
                 missing.removeAll(neighbours);
