@@ -79,7 +79,7 @@ export const AddressSpaceHeader: React.FunctionComponent<AddressSpace> = ({
               position={DropdownPosition.right}
               toggle={<KebabToggle onToggle={onToggle} />}
               isOpen={isOpen}
-              isPlain
+              isPlain={true}
               dropdownItems={dropdownItems}
             />
         </SplitItem>

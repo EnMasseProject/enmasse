@@ -15,7 +15,7 @@ export interface IDropdown {
   onSelect: (item: any) => void;
 }
 
-export const DropdownComponent: React.FunctionComponent<IDropdown> = ({
+export const DropdownMenu: React.FunctionComponent<IDropdown> = ({
   isOpen,
   setIsOpen,
   value,

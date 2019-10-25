@@ -1,6 +1,6 @@
 import * as React from "react";
 import {
-  DropdownComponent,
+  DropdownMenu,
   IDropdownOption
 } from "../Common/DropdownComponent";
 import {
@@ -48,10 +48,8 @@ export const AddressListFilter: React.FunctionComponent<
   IAddressListFilterProps
 > = ({
   onSearch,
-  isFilterDropdownOpen,
   onFilterSelect,
   filterValue,
-  setFilterOpen,
   isTypeDropdownOpen,
   onTypeSelect,
   typeValue,
@@ -61,60 +59,51 @@ export const AddressListFilter: React.FunctionComponent<
   statusValue,
   setStatusOpen
 }) => {
-  const DataToRender = () => {
-    switch (filterValue) {
-      case "Name":
-        return (
-          <InputGroup>
-            <TextInput
-              name="search name"
-              id="searchName"
-              type="search"
-              placeholder="Filter by name..."
-              aria-label="search input name"
-            />
-            <Button
-              variant={ButtonVariant.control}
-              aria-label="search button for search input"
-              onClick={onSearch}>
-              <SearchIcon />
-            </Button>
-          </InputGroup>
-        );
-      case "Type":
-        return (
-          <DropdownComponent
-            isOpen={isTypeDropdownOpen}
-            value={typeValue}
-            onSelect={onTypeSelect}
-            setIsOpen={setTypeOpen}
-            options={typeOptions}
-          />
-        );
-      case "Status":
-        return (
-          <DropdownComponent
-            isOpen={isStatusDropdownOpen}
-            value={statusValue}
-            onSelect={onStatusSelect}
-            setIsOpen={setStatusOpen}
-            options={statusOptions}
-          />
-        );
-      default:
-        return "";
-    }
-  };
+  const [isFilterDropdownOpen, setIsFilterDropdwonOpen] = React.useState(false);
   return (
     <InputGroup>
-      <DropdownComponent
+      <DropdownMenu
         isOpen={isFilterDropdownOpen}
         value={filterValue}
-        onSelect={onFilterSelect}
-        setIsOpen={setFilterOpen}
+        onSelect={onFilterSelect && setIsFilterDropdwonOpen}
+        setIsOpen={() => setIsFilterDropdwonOpen(!isFilterDropdownOpen)}
         options={filterOptions}
       />
-      {DataToRender()}
+      {filterValue==="Name" && 
+        <InputGroup>
+        <TextInput
+          name="search name"
+          id="searchName"
+          type="search"
+          placeholder="Filter by name..."
+          aria-label="search input name"
+        />
+        <Button
+          variant={ButtonVariant.control}
+          aria-label="search button for search input"
+          onClick={onSearch}>
+          <SearchIcon />
+        </Button>
+        </InputGroup>
+      }
+      {filterValue === "Type" && 
+        <DropdownMenu
+          isOpen={isTypeDropdownOpen}
+          value={typeValue}
+          onSelect={onTypeSelect}
+          setIsOpen={setTypeOpen}
+          options={typeOptions}
+        />
+      }
+      {filterValue === "Status" && (
+        <DropdownMenu
+          isOpen={isStatusDropdownOpen}
+          value={statusValue}
+          onSelect={onStatusSelect}
+          setIsOpen={setStatusOpen}
+          options={statusOptions}
+        />
+      )}
     </InputGroup>
   );
 };

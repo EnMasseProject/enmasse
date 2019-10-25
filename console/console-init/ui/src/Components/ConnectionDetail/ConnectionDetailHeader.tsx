@@ -7,16 +7,37 @@ import {
   GridItem,
   Grid
 } from "@patternfly/react-core";
-import { LockIcon, LockOpenIcon } from "@patternfly/react-icons";
-import "../AddressSpace/AddressSpaceHeader.css";
+import {
+  LockIcon,
+  LockOpenIcon,
+  AngleDownIcon,
+  AngleUpIcon
+} from "@patternfly/react-icons";
+import "./ConnectionDetail.css";
 export interface ConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
   protocol: string;
+  product: string;
+  version: string;
+  platform: string;
+  os: string;
+  messagesIn: number;
+  messagesOut: number;
 }
 export const ConnectionDetailHeader: React.FunctionComponent<
   ConnectionHeaderDetailProps
-> = ({ hostname, containerId, protocol }) => {
+> = ({
+  hostname,
+  containerId,
+  protocol,
+  product,
+  version,
+  platform,
+  os,
+  messagesIn,
+  messagesOut
+}) => {
   const generateIcons = () => {
     switch (protocol) {
       case "AMQP":
@@ -25,23 +46,80 @@ export const ConnectionDetailHeader: React.FunctionComponent<
         return <LockOpenIcon />;
     }
   };
+  const [isHidden, setIsHidden] = React.useState(true);
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
         <GridItem rowSpan={12} className="l_split_m_height">
           {hostname}
         </GridItem>
-        <GridItem>
+        <GridItem rowSpan={12}>
           <Split>
-            <SplitItem className="l_split_m_gutter_MarginRight">
+            <SplitItem className="l_split_m_MarginRight">
               in container <b>{containerId}</b>
             </SplitItem>
-            <SplitItem className="l_split_m_gutter_MarginRight"> | </SplitItem>
-            <SplitItem className="l_split_m_gutter_MarginRight">
+            <SplitItem className="l_split_m_gutter_MarginRight"></SplitItem>
+            <SplitItem className="l_split_m_MarginRight">
               {protocol} {generateIcons()}
+            </SplitItem>
+            <SplitItem
+              className="l_split_m_dropdown"
+              onClick={() => setIsHidden(!isHidden)}>
+              {isHidden ? (
+                <>
+                  See more details <AngleDownIcon color="black" />
+                </>
+              ) : (
+                <>
+                  Hide Details <AngleUpIcon color="black" />
+                </>
+              )}
             </SplitItem>
           </Split>
         </GridItem>
+        {isHidden ? (
+          ""
+        ) : (
+          <>
+            <Split>
+              <SplitItem>
+                <Grid>
+                  <GridItem rowSpan={12}>
+                    <Split>
+                      <SplitItem className="l_split_m_MarginRight">
+                        <b>Product</b> {product}
+                      </SplitItem>
+                      <SplitItem className="l_split_m_MarginRight">
+                        <b>Version</b> {version}
+                      </SplitItem>
+                    </Split>
+                  </GridItem>
+                  <GridItem rowSpan={12}>
+                    <Split>
+                      <SplitItem className="l_split_m_MarginRight">
+                        <b>Platform JVM : </b> {platform}
+                      </SplitItem>
+                      <SplitItem className="l_split_m_MarginRight">
+                        <b>OS:</b> {os}
+                      </SplitItem>
+                    </Split>
+                  </GridItem>
+                </Grid>
+              </SplitItem>
+              <SplitItem className="l_split_m_large_gutter_MarginRight"></SplitItem>
+              <SplitItem className="l_split_m_MeassageItem">
+              {messagesIn || messagesIn==0 ? messagesIn :'-'}
+                <br />
+                Messages in
+              </SplitItem>
+              <SplitItem className="l_split_m_MeassageItem">
+                {messagesOut || messagesOut==0 ? messagesOut :'-'}
+                <br />
+                Messages out
+              </SplitItem>
+            </Split>
+          </>
+        )}
       </Grid>
     </PageSection>
   );
