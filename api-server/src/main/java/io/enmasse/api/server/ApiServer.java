@@ -107,9 +107,12 @@ public class ApiServer extends AbstractVerticle {
         Metrics metrics = new Metrics();
 
         HTTPHealthServer httpHealthServer = new HTTPHealthServer(options.getVersion(), metrics);
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry, apiHeaderConfig, metrics);
 
-        vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
+        ResteasyDeploymentFactory resteasyDeploymentFactory = new ResteasyDeploymentFactory(addressSpaceApi, schemaProvider, authApi, userApi, clock, authenticationServiceRegistry, apiHeaderConfig, metrics, options.isEnableRbac());
+        String finalRequestHeaderClientCa = requestHeaderClientCa;
+        String finalClientCa = clientCa;
+        vertx.deployVerticle(() -> new HTTPServer(options, resteasyDeploymentFactory, finalClientCa, finalRequestHeaderClientCa),
+                new DeploymentOptions().setWorker(true).setInstances(options.getNumWorkerThreads()), result -> {
             if (result.succeeded()) {
                 vertx.deployVerticle(httpHealthServer, ar -> {
                     if (ar.succeeded()) {
@@ -166,8 +169,8 @@ public class ApiServer extends AbstractVerticle {
 
     public static void main(String args[]) {
         try {
-            Vertx vertx = Vertx.vertx();
             final ApiServerOptions options = ApiServerOptions.fromEnv(System.getenv());
+            Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(options.getNumWorkerThreads()));
             log.info("ApiServer starting with options: {}", options);
             vertx.deployVerticle(new ApiServer(options));
         } catch (IllegalArgumentException e) {
