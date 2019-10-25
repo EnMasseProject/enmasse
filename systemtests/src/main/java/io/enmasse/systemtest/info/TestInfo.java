@@ -149,10 +149,22 @@ public class TestInfo {
         return currentTestClass.getTags().stream().anyMatch(TestTag.UPGRADE::equals);
     }
 
+    public boolean isOLMTest() {
+        return currentTestClass.getTags().stream().anyMatch(TestTag.OLM::equals);
+    }
+
     public boolean isNextTestUpgrade() {
         int currentClassIndex = getCurrentClassIndex();
         if (currentClassIndex + 1 < testClasses.size()) {
             return getTags(testClasses.get(currentClassIndex + 1)).stream().anyMatch(TestTag.UPGRADE::equals);
+        }
+        return false;
+    }
+
+    public boolean isNextTestOLM() {
+        int currentClassIndex = getCurrentClassIndex();
+        if (currentClassIndex + 1 < testClasses.size()) {
+            return getTags(testClasses.get(currentClassIndex + 1)).stream().anyMatch(TestTag.OLM::equals);
         }
         return false;
     }

@@ -47,11 +47,15 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
         handleCallBackError(context, () -> {
-            if (!operatorManager.isEnmasseBundleDeployed() && !testInfo.isUpgradeTest()) {
-                operatorManager.installEnmasseBundle();
-            }
-            if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed() && !testInfo.isUpgradeTest()) {
-                operatorManager.installIoTOperator();
+            if (testInfo.isUpgradeTest() || testInfo.isOLMTest()) {
+                LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
+            } else {
+                if (!operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.installEnmasseBundle();
+                }
+                if (testInfo.isClassIoT() && !operatorManager.isIoTOperatorDeployed()) {
+                    operatorManager.installIoTOperator();
+                }
             }
         });
     }
@@ -59,15 +63,15 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
         handleCallBackError(extensionContext, () -> {
-            if (!Environment.getInstance().skipCleanup()) {
-                if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed() && !Environment.getInstance().skipUninstall()) {
+            if (Environment.getInstance().skipCleanup() || Environment.getInstance().skipUninstall()) {
+                LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
+            } else {
+                if (testInfo.isEndOfIotTests() && operatorManager.isIoTOperatorDeployed()) {
                     operatorManager.removeIoTOperator();
                 }
-                if (operatorManager.isEnmasseBundleDeployed() && testInfo.isNextTestUpgrade() && !Environment.getInstance().skipUninstall()) {
+                if (operatorManager.isEnmasseBundleDeployed() && (testInfo.isNextTestUpgrade() || testInfo.isNextTestOLM())) {
                     operatorManager.deleteEnmasseBundle();
                 }
-            } else {
-                LOGGER.info("Skip cleanup is set, enmasse and iot operators won't be deleted");
             }
         });
     }
