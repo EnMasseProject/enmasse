@@ -8,6 +8,7 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -31,7 +32,7 @@ import static io.enmasse.systemtest.TestTag.OLM;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @Tag(OLM)
 @OpenShift(version = 4)
-class OperatorLifecycleManagerTest extends TestBase {
+class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
     private final String marketplaceNamespace = "openshift-marketplace";
     private final String infraNamespace = "openshift-operators";
