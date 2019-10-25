@@ -41,7 +41,7 @@ endif
 
 all: build_java build_go templates
 
-templates:
+templates: imageenv
 	$(MAKE) -C templates
 
 deploy: build_go
