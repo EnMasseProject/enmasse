@@ -203,12 +203,12 @@ public class Openshift4WebPage implements IWebPage {
     }
 
     public void openInstalledOperators() {
-        selenium.clickOnItem(getNavItem("Catalog"), "Catalog");
+        selenium.clickOnItem(getNavItem("Operators"), "Operators");
         selenium.clickOnItem(getNavItem("Installed Operators"), "Installed Operators");
     }
 
     public void openOperatorHub() {
-        selenium.clickOnItem(getNavItem("Catalog"), "Catalog");
+        selenium.clickOnItem(getNavItem("Operators"), "Operators");
         selenium.clickOnItem(getNavItem("OperatorHub"), "OperatorHub");
     }
 
