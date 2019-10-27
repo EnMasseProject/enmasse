@@ -24,6 +24,7 @@ public class ApiServerOptions {
     private Duration kubernetesApiConnectTimeout;
     private Duration kubernetesApiReadTimeout;
     private Duration kubernetesApiWriteTimeout;
+    private int numWorkerThreads;
     private String version;
 
     public static ApiServerOptions fromEnv(Map<String, String> env) {
@@ -55,6 +56,9 @@ public class ApiServerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
 
+        options.setNumWorkerThreads(getEnv(env, "NUM_WORKER_THREADS")
+                .map(Integer::parseInt)
+                .orElse(Runtime.getRuntime().availableProcessors() * 4));
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
 
         options.setApiserverClientCaConfigName(getEnv(env, "APISERVER_CLIENT_CA_CONFIG_NAME").orElse(null));
@@ -178,6 +182,7 @@ public class ApiServerOptions {
                 ", certDir='" + certDir + '\'' +
                 ", resyncInterval=" + resyncInterval +
                 ", enableRbac=" + enableRbac +
+                ", numWorkerThreads=" + numWorkerThreads +
                 ", apiserverClientCaConfigName='" + apiserverClientCaConfigName + '\'' +
                 ", apiserverClientCaConfigNamespace='" + apiserverClientCaConfigNamespace + '\'' +
                 ", userApiTimeout=" + userApiTimeout +
@@ -186,5 +191,13 @@ public class ApiServerOptions {
                 ", kubernetesApiWriteTimeout=" + kubernetesApiWriteTimeout +
                 ", version='" + version + '\'' +
                 '}';
+    }
+
+    public int getNumWorkerThreads() {
+        return numWorkerThreads;
+    }
+
+    public void setNumWorkerThreads(int numWorkerThreads) {
+        this.numWorkerThreads = numWorkerThreads;
     }
 }
