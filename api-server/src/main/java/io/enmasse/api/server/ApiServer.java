@@ -29,6 +29,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,9 +100,12 @@ public class ApiServer extends AbstractVerticle {
         Metrics metrics = new Metrics();
 
         HTTPHealthServer httpHealthServer = new HTTPHealthServer(options.getVersion(), metrics);
-        HTTPServer httpServer = new HTTPServer(addressSpaceApi, schemaProvider, authApi, userApi, options, clientCa, requestHeaderClientCa, clock, authenticationServiceRegistry, apiHeaderConfig);
 
-        vertx.deployVerticle(httpServer, new DeploymentOptions().setWorker(true), result -> {
+        ResteasyDeploymentFactory resteasyDeploymentFactory = new ResteasyDeploymentFactory(addressSpaceApi, schemaProvider, authApi, userApi, clock, authenticationServiceRegistry, apiHeaderConfig, options.isEnableRbac());
+        String finalRequestHeaderClientCa = requestHeaderClientCa;
+        String finalClientCa = clientCa;
+        vertx.deployVerticle(() -> new HTTPServer(options, resteasyDeploymentFactory, finalClientCa, finalRequestHeaderClientCa),
+                new DeploymentOptions().setWorker(true).setInstances(options.getNumWorkerThreads()), result -> {
             if (result.succeeded()) {
                 vertx.deployVerticle(httpHealthServer, ar -> {
                     if (ar.succeeded()) {
@@ -158,8 +162,10 @@ public class ApiServer extends AbstractVerticle {
 
     public static void main(String args[]) {
         try {
-            Vertx vertx = Vertx.vertx();
-            vertx.deployVerticle(new ApiServer(ApiServerOptions.fromEnv(System.getenv())));
+            final ApiServerOptions options = ApiServerOptions.fromEnv(System.getenv());
+            Vertx vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(options.getNumWorkerThreads()));
+            log.info("ApiServer starting with options: {}", options);
+            vertx.deployVerticle(new ApiServer(options));
         } catch (IllegalArgumentException e) {
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);

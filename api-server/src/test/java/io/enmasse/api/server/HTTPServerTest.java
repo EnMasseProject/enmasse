@@ -119,7 +119,8 @@ public class HTTPServerTest {
         when(authenticationServiceRegistry.resolveDefaultAuthenticationService()).thenReturn(Optional.of(authenticationService));
         when(authenticationServiceRegistry.listAuthenticationServices()).thenReturn(Collections.singletonList(authenticationService));
 
-        this.server = new HTTPServer(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, options, null, null, Clock.systemUTC(), authenticationServiceRegistry, 0, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG);
+        ResteasyDeploymentFactory resteasyDeploymentFactory = new ResteasyDeploymentFactory(addressSpaceApi, new TestSchemaProvider(), authApi, userApi, Clock.systemUTC(), authenticationServiceRegistry, ApiHeaderConfig.DEFAULT_HEADERS_CONFIG, false);
+        this.server = new HTTPServer(options, resteasyDeploymentFactory, null, null, 0);
         vertx.deployVerticle(this.server, context.succeeding(arg -> context.completeNow()));
     }
 

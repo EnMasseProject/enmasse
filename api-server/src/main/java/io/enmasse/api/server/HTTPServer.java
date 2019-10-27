@@ -5,44 +5,6 @@
 
 package io.enmasse.api.server;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.time.Clock;
-import java.util.Deque;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-
-import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
-import org.jboss.resteasy.plugins.server.vertx.VertxResteasyDeployment;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.enmasse.api.auth.AllowAllAuthInterceptor;
-import io.enmasse.api.auth.ApiHeaderConfig;
-import io.enmasse.api.auth.AuthApi;
-import io.enmasse.api.auth.AuthInterceptor;
-import io.enmasse.api.common.DefaultExceptionMapper;
-import io.enmasse.api.v1.http.HttpAddressService;
-import io.enmasse.api.v1.http.HttpAddressSpaceService;
-import io.enmasse.api.v1.http.HttpApiRootService;
-import io.enmasse.api.v1.http.HttpClusterAddressService;
-import io.enmasse.api.v1.http.HttpClusterAddressSpaceService;
-import io.enmasse.api.v1.http.HttpClusterUserService;
-import io.enmasse.api.v1.http.HttpHealthService;
-import io.enmasse.api.v1.http.HttpMetricsService;
-import io.enmasse.api.v1.http.HttpNestedAddressService;
-import io.enmasse.api.v1.http.HttpOpenApiService;
-import io.enmasse.api.v1.http.HttpRootService;
-import io.enmasse.api.v1.http.HttpSchemaService;
-import io.enmasse.api.v1.http.HttpUserService;
-import io.enmasse.api.v1.http.SwaggerSpecEndpoint;
-import io.enmasse.k8s.api.AddressSpaceApi;
-import io.enmasse.k8s.api.AuthenticationServiceRegistry;
-import io.enmasse.k8s.api.SchemaProvider;
-import io.enmasse.user.api.UserApi;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -53,6 +15,18 @@ import io.vertx.core.http.HttpServerOptions;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.net.JksOptions;
 import io.vertx.core.net.PemTrustOptions;
+import org.jboss.resteasy.plugins.server.vertx.VertxRequestHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 /**
  * HTTP server for deploying address config
@@ -61,104 +35,38 @@ public class HTTPServer extends AbstractVerticle {
     public static final int SECURE_PORT = 8443;
     private static final int PROCESS_LINE_BUFFER_SIZE = 10;
     private static final Logger log = LoggerFactory.getLogger(HTTPServer.class.getName());
-    private final AddressSpaceApi addressSpaceApi;
-    private final SchemaProvider schemaProvider;
     private final String certDir;
     private final String clientCa;
     private final String requestHeaderClientCa;
-    private final AuthApi authApi;
-    private final UserApi userApi;
-    private final boolean isRbacEnabled;
-    private final Clock clock;
-    private final AuthenticationServiceRegistry authenticationServiceRegistry;
+    private final ResteasyDeploymentFactory resteasyDeploymentFactory;
+
     private final int port;
-    private final ApiHeaderConfig apiHeaderConfig;
 
     private HttpServer httpServer;
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi,
-                      SchemaProvider schemaProvider,
-                      AuthApi authApi,
-                      UserApi userApi,
-                      ApiServerOptions options,
+    public HTTPServer(ApiServerOptions options,
+                      ResteasyDeploymentFactory resteasyDeploymentFactory,
                       String clientCa,
-                      String requestHeaderClientCa,
-                      Clock clock,
-                      AuthenticationServiceRegistry authenticationServiceRegistry,
-                      ApiHeaderConfig apiHeaderConfig) {
-        this(addressSpaceApi,
-                schemaProvider,
-                authApi,
-                userApi,
-                options,
-                clientCa,
-                requestHeaderClientCa,
-                clock,
-                authenticationServiceRegistry,
-                SECURE_PORT,
-                apiHeaderConfig);
+                      String requestHeaderClientCa) {
+        this(options, resteasyDeploymentFactory, clientCa, requestHeaderClientCa, SECURE_PORT);
     }
 
-    public HTTPServer(AddressSpaceApi addressSpaceApi,
-            SchemaProvider schemaProvider,
-            AuthApi authApi,
-            UserApi userApi,
-            ApiServerOptions options,
+    public HTTPServer(ApiServerOptions options,
+            ResteasyDeploymentFactory resteasyDeploymentFactory,
             String clientCa,
             String requestHeaderClientCa,
-            Clock clock,
-            AuthenticationServiceRegistry authenticationServiceRegistry,
-            int port,
-            ApiHeaderConfig apiHeaderConfig) {
-        this.addressSpaceApi = addressSpaceApi;
-        this.schemaProvider = schemaProvider;
+            int port) {
         this.certDir = options.getCertDir();
         this.clientCa = clientCa;
         this.requestHeaderClientCa = requestHeaderClientCa;
-        this.authApi = authApi;
-        this.userApi = userApi;
-        this.isRbacEnabled = options.isEnableRbac();
-        this.clock = clock;
-        this.authenticationServiceRegistry = authenticationServiceRegistry;
         this.port = port;
-        this.apiHeaderConfig = apiHeaderConfig;
+        this.resteasyDeploymentFactory = resteasyDeploymentFactory;
     }
 
     @Override
     public void start(Future<Void> startPromise) {
-        VertxResteasyDeployment deployment = new VertxResteasyDeployment();
-        deployment.start();
 
-        RequestLogger latencyTracker = new RequestLogger();
-        deployment.getProviderFactory().registerProvider(DefaultExceptionMapper.class);
-        deployment.getProviderFactory().registerProviderInstance(latencyTracker);
-
-        if (isRbacEnabled) {
-            log.info("Enabling RBAC for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AuthInterceptor(authApi, apiHeaderConfig, path ->
-                    path.equals(HttpHealthService.BASE_URI) ||
-                            path.equals(HttpMetricsService.BASE_URI) ||
-                            path.equals("/swagger.json")));
-        } else {
-            log.info("Disabling authentication and authorization for REST API");
-            deployment.getProviderFactory().registerProviderInstance(new AllowAllAuthInterceptor());
-        }
-
-
-        deployment.getRegistry().addSingletonResource(new SwaggerSpecEndpoint());
-        deployment.getRegistry().addSingletonResource(new HttpOpenApiService());
-        deployment.getRegistry().addSingletonResource(new HttpNestedAddressService(addressSpaceApi, schemaProvider, clock));
-        deployment.getRegistry().addSingletonResource(new HttpAddressService(addressSpaceApi, schemaProvider, clock));
-        deployment.getRegistry().addSingletonResource(new HttpClusterAddressService(addressSpaceApi, schemaProvider, clock));
-        deployment.getRegistry().addSingletonResource(new HttpSchemaService(schemaProvider));
-        deployment.getRegistry().addSingletonResource(new HttpAddressSpaceService(addressSpaceApi, schemaProvider, clock, authenticationServiceRegistry));
-        deployment.getRegistry().addSingletonResource(new HttpClusterAddressSpaceService(addressSpaceApi, clock));
-        deployment.getRegistry().addSingletonResource(new HttpUserService(addressSpaceApi, userApi, authenticationServiceRegistry, clock));
-        deployment.getRegistry().addSingletonResource(new HttpClusterUserService(userApi, authenticationServiceRegistry, clock));
-        deployment.getRegistry().addSingletonResource(new HttpRootService());
-        deployment.getRegistry().addSingletonResource(new HttpApiRootService());
-
-        VertxRequestHandler vertxRequestHandler = new VertxRequestHandler(vertx, deployment);
+        VertxRequestHandler vertxRequestHandler = new VertxRequestHandler(vertx, resteasyDeploymentFactory.getInstance());
 
         createSecureServer(vertxRequestHandler, startPromise);
     }

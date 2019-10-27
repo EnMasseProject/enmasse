@@ -25,6 +25,7 @@ public class ApiServerOptions {
     private String apiserverClientCaConfigNamespace;
     private String restapiRouteName;
     private Duration userApiTimeout;
+    private int numWorkerThreads;
     private String version;
 
     public static ApiServerOptions fromEnv(Map<String, String> env) {
@@ -44,6 +45,9 @@ public class ApiServerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(10)));
 
+        options.setNumWorkerThreads(getEnv(env, "NUM_WORKER_THREADS")
+                .map(Integer::parseInt)
+                .orElse(Runtime.getRuntime().availableProcessors() * 4));
         options.setEnableRbac(Boolean.parseBoolean(getEnv(env, "ENABLE_RBAC").orElse("false")));
 
         options.setStandardAuthserviceConfigName(getEnvOrThrow(env, "STANDARD_AUTHSERVICE_CONFIG_NAME"));
@@ -171,5 +175,28 @@ public class ApiServerOptions {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    @Override
+    public String toString() {
+        return "ApiServerOptions{" +
+                "namespace='" + namespace + '\'' +
+                ", certDir='" + certDir + '\'' +
+                ", resyncInterval=" + resyncInterval +
+                ", enableRbac=" + enableRbac +
+                ", numWorkerThreads=" + numWorkerThreads +
+                ", apiserverClientCaConfigName='" + apiserverClientCaConfigName + '\'' +
+                ", apiserverClientCaConfigNamespace='" + apiserverClientCaConfigNamespace + '\'' +
+                ", userApiTimeout=" + userApiTimeout +
+                ", version='" + version + '\'' +
+                '}';
+    }
+
+    public int getNumWorkerThreads() {
+        return numWorkerThreads;
+    }
+
+    public void setNumWorkerThreads(int numWorkerThreads) {
+        this.numWorkerThreads = numWorkerThreads;
     }
 }
