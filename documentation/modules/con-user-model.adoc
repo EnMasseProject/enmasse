@@ -46,7 +46,7 @@ bXktcGFzc3dvcmQ=
 
 === Serviceaccount authentication type
 
-For the `serviceaccount` type, the `username` field must contain the {KubePlatform} serviceaccount name that will be used to authenticate. When connecting with the messaging client, use the string `@@serviceaccount@@` as the username, and the service account token as the password.  The AMQP client used by the applictaion must be configured to use the SASL mechanism type `PLAIN`.
+For the `serviceaccount` type, the `username` field must contain the {KubePlatform} serviceaccount name that will be used to authenticate. When connecting with the messaging client, use the string `@@serviceaccount@@` as the username, and the service account token as the password.  The AMQP client used by the application must be configured to use the SASL mechanism type `PLAIN`.
 
 == Authorization
 
