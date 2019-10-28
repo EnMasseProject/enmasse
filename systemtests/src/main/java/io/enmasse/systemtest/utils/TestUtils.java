@@ -227,19 +227,31 @@ public class TestUtils {
      * @throws InterruptedException
      */
     public static void waitForExpectedReadyPods(Kubernetes client, String namespace, int numExpected, TimeoutBudget budget) throws InterruptedException {
-        log.info("Waiting for expected ready pods: {}", numExpected);
-        List<Pod> pods = listReadyPods(client, namespace);
-        while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
-            Thread.sleep(2000);
-            pods = listReadyPods(client, namespace);
-            log.info("Got {} pods, expected: {}", pods.size(), numExpected);
-        }
-        if (pods.size() != numExpected) {
-            throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
-        }
-        for (Pod pod : pods) {
-            client.waitUntilPodIsReady(pod);
-        }
+        boolean shouldRetry;
+        do {
+            log.info("Waiting for expected ready pods: {}", numExpected);
+            shouldRetry = false;
+            List<Pod> pods = listReadyPods(client, namespace);
+            while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
+                Thread.sleep(2000);
+                pods = listReadyPods(client, namespace);
+                log.info("Got {} pods, expected: {}", pods.size(), numExpected);
+            }
+            if (pods.size() != numExpected) {
+                throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
+            }
+            for (Pod pod : pods) {
+                try {
+                    client.waitUntilPodIsReady(pod);
+                } catch (NullPointerException | IllegalArgumentException e) {
+                    // TODO: remove NPE guard once upgrade to Fabric8 kubernetes-client 4.6.0 or beyond is complete.
+                    // (kubernetes-client 450b94745b68403293a55956be2aa7ec483c0a6c)
+                    log.warn("Failed to await pod %s", e);
+                    shouldRetry = true;
+                    break;
+                }
+            }
+        } while(shouldRetry);
     }
 
     /**
