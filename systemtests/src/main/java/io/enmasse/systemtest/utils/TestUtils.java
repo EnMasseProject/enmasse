@@ -246,7 +246,7 @@ public class TestUtils {
                 } catch (NullPointerException | IllegalArgumentException e) {
                     // TODO: remove NPE guard once upgrade to Fabric8 kubernetes-client 4.6.0 or beyond is complete.
                     // (kubernetes-client 450b94745b68403293a55956be2aa7ec483c0a6c)
-                    log.warn("Failed to await pod %s", e);
+                    log.warn("Failed to await pod %s", pod, e);
                     shouldRetry = true;
                     break;
                 }
