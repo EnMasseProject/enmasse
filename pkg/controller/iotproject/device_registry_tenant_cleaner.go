@@ -7,14 +7,29 @@ package iotproject
 
 import (
 	"github.com/enmasseproject/enmasse/pkg/controller/iotconfig"
+	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
 
-func createIotTenantCleanerJob(name string, iotconfig iotconfig) batchv1.Job {
+// maybe use a configmap ?
+func createIotTenantCleanerJob(ctx finalizer.DeconstructorContext,  project *iotv1alpha1.IoTProject) batchv1.Job {
+
+	name := project.Name
+	registryName := name+project.CreationTimestamp.String()
+
+	client.ObjectKey{
+		Namespace: project.Namespace,
+		Name:      ,
+	}
+
+	client := ctx.Client
+	infinispanAddess := client.Get()
 
 	job := batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{Name: "iot-registry-tenant-cleaner"},
@@ -29,7 +44,7 @@ func createIotTenantCleanerJob(name string, iotconfig iotconfig) batchv1.Job {
 							Env: []v1.EnvVar{
 								{
 									Name: "iotProject",
-									Value: name,
+									Value: registryName,
 								},
 								{
 									Name: "host",

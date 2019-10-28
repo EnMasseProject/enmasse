@@ -152,8 +152,10 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTProject")
 	}
 
-	job := createIotTenantCleanerJob(project.Name)
+	job := createIotTenantCleanerJob(ctx, project)
 
+	// get jobsClient from context client
+	jobsClient := ctx.Client
 	result1, err1 := jobsClient.Create(job)
 
 	return reconcile.Result{}, nil
