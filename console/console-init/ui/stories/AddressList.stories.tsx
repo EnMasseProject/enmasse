@@ -3,7 +3,7 @@ import { MemoryRouter } from "react-router";
 import { storiesOf } from "@storybook/react";
 import { AddressList, IAddress } from "../src/Components/AddressSpace/AddressList";
 import { action } from "@storybook/addon-actions";
-import { boolean, select, withKnobs } from "@storybook/addon-knobs";
+import { select, withKnobs } from "@storybook/addon-knobs";
 import {AddressListFilter} from "../src/Components/AddressSpace/AddressListFilter";
 
 const stories = storiesOf("Console", module);
@@ -78,14 +78,10 @@ stories.add("Address List Filter Component", () => {
             | "Type"
             | "Status"
         }
-        isTypeDropdownOpen={boolean("isTypeDropdownOpen", false)}
         onTypeSelect={action("onTypeSelect")}
         typeValue={typeValue}
-        setTypeOpen={action("setTypeOpen")}
-        isStatusDropdownOpen={boolean("isStatusDropdownOpen", false)}
         onStatusSelect={action("onStatusSelect")}
         statusValue={statusValue}
-        setStatusOpen={action("setStatusOpen")}
       />
     </MemoryRouter>
   );

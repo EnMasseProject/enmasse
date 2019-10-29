@@ -50,20 +50,20 @@ export const ConnectionDetailHeader: React.FunctionComponent<
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
-        <GridItem rowSpan={12} className="l_split_m_height">
+        <GridItem rowSpan={12} className="connection_detail_split_m_height">
           {hostname}
         </GridItem>
         <GridItem rowSpan={12}>
           <Split>
-            <SplitItem className="l_split_m_MarginRight">
+            <SplitItem className="connection_detail_split_m_MarginRight">
               in container <b>{containerId}</b>
             </SplitItem>
-            <SplitItem className="l_split_m_gutter_MarginRight"></SplitItem>
-            <SplitItem className="l_split_m_MarginRight">
+            <SplitItem className="connection_detail_split_m_gutter_MarginRight"></SplitItem>
+            <SplitItem className="connection_detail_split_m_MarginRight">
               {protocol} {generateIcons()}
             </SplitItem>
             <SplitItem
-              className="l_split_m_dropdown"
+              className="connection_detail_split_m_dropdown"
               onClick={() => setIsHidden(!isHidden)}>
               {isHidden ? (
                 <>
@@ -82,41 +82,47 @@ export const ConnectionDetailHeader: React.FunctionComponent<
         ) : (
           <>
             <Split>
-              <SplitItem>
-                <Grid>
-                  <GridItem rowSpan={12}>
-                    <Split>
-                      <SplitItem className="l_split_m_MarginRight">
-                        <b>Product</b> {product}
-                      </SplitItem>
-                      <SplitItem className="l_split_m_MarginRight">
-                        <b>Version</b> {version}
-                      </SplitItem>
-                    </Split>
-                  </GridItem>
-                  <GridItem rowSpan={12}>
-                    <Split>
-                      <SplitItem className="l_split_m_MarginRight">
-                        <b>Platform JVM : </b> {platform}
-                      </SplitItem>
-                      <SplitItem className="l_split_m_MarginRight">
-                        <b>OS:</b> {os}
-                      </SplitItem>
-                    </Split>
-                  </GridItem>
-                </Grid>
-              </SplitItem>
-              <SplitItem className="l_split_m_large_gutter_MarginRight"></SplitItem>
-              <SplitItem className="l_split_m_MeassageItem">
-              {messagesIn || messagesIn==0 ? messagesIn :'-'}
-                <br />
-                Messages in
-              </SplitItem>
-              <SplitItem className="l_split_m_MeassageItem">
-                {messagesOut || messagesOut==0 ? messagesOut :'-'}
-                <br />
-                Messages out
-              </SplitItem>
+              {/* <Grid> */}
+                {/* <GridItem rowSpan={8}> */}
+                  <SplitItem>
+                    <Grid>
+                      <GridItem rowSpan={12}>
+                        <Split>
+                          <SplitItem className="connection_detail_split_m_MarginRight">
+                            <b>Product</b> {product}
+                          </SplitItem>
+                          <SplitItem className="connection_detail_split_m_MarginRight">
+                            <b>Version</b> {version}
+                          </SplitItem>
+                        </Split>
+                      </GridItem>
+                      <GridItem rowSpan={12}>
+                        <Split>
+                          <SplitItem className="connection_detail_split_m_MarginRight">
+                            <b>Platform JVM : </b> {platform}
+                          </SplitItem>
+                          <SplitItem className="connection_detail_split_m_MarginRight">
+                            <b>OS:</b> {os}
+                          </SplitItem>
+                        </Split>
+                      </GridItem>
+                    </Grid>
+                  </SplitItem>
+                {/* </GridItem> */}
+                <SplitItem className="connection_detail_split_m_large_gutter_MarginRight"></SplitItem>
+                {/* <GridItem rowSpan={3}> */}
+                <SplitItem className="connection_detail_split_m_MeassageItem">
+                  {messagesIn || messagesIn === 0 ? messagesIn : "-"}
+                  <br />
+                  Messages in
+                </SplitItem>
+                <SplitItem className="connection_detail_split_m_MeassageItem">
+                  {messagesOut || messagesOut === 0 ? messagesOut : "-"}
+                  <br />
+                  Messages out
+                </SplitItem>
+                {/* </GridItem> */}
+              {/* </Grid> */}
             </Split>
           </>
         )}

@@ -1,8 +1,8 @@
 import * as React from "react";
 import {
-  DropdownMenu,
+  FilterDropdown,
   IDropdownOption
-} from "../Common/DropdownComponent";
+} from "../Common/FilterDropdown";
 import {
   InputGroup,
   Button,
@@ -15,14 +15,10 @@ export interface IAddressListFilterProps {
   onSearch: () => void;
   onFilterSelect: (item: any) => void;
   filterValue: string;
-  isTypeDropdownOpen: boolean;
   onTypeSelect: (item: any) => void;
   typeValue: string;
-  setTypeOpen: () => void;
-  isStatusDropdownOpen: boolean;
   onStatusSelect: (item: any) => void;
   statusValue: string;
-  setStatusOpen: () => void;
 }
 export const filterOptions: IDropdownOption[] = [
     { value: "name", label: "Name" },
@@ -48,23 +44,16 @@ export const AddressListFilter: React.FunctionComponent<
   onSearch,
   onFilterSelect,
   filterValue,
-  isTypeDropdownOpen,
   onTypeSelect,
   typeValue,
-  setTypeOpen,
-  isStatusDropdownOpen,
   onStatusSelect,
   statusValue,
-  setStatusOpen
 }) => {
-  const [isFilterDropdownOpen, setIsFilterDropdwonOpen] = React.useState(false);
   return (
     <InputGroup>
-      <DropdownMenu
-        isOpen={isFilterDropdownOpen}
+      <FilterDropdown
         value={filterValue}
-        onSelect={onFilterSelect && setIsFilterDropdwonOpen}
-        setIsOpen={() => setIsFilterDropdwonOpen(!isFilterDropdownOpen)}
+        onSelect={onFilterSelect}
         options={filterOptions}
       />
       {filterValue==="Name" && 
@@ -85,20 +74,16 @@ export const AddressListFilter: React.FunctionComponent<
         </InputGroup>
       }
       {filterValue === "Type" && 
-        <DropdownMenu
-          isOpen={isTypeDropdownOpen}
+        <FilterDropdown
           value={typeValue}
           onSelect={onTypeSelect}
-          setIsOpen={setTypeOpen}
           options={typeOptions}
         />
       }
       {filterValue === "Status" && (
-        <DropdownMenu
-          isOpen={isStatusDropdownOpen}
+        <FilterDropdown
           value={statusValue}
           onSelect={onStatusSelect}
-          setIsOpen={setStatusOpen}
           options={statusOptions}
         />
       )}

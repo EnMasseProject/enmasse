@@ -1,34 +1,30 @@
-.l_split_m_gutter_MarginRight {
+.connection_detail_split_m_gutter_MarginRight {
   font-size: 1em;
   border-right: 2px solid lightgrey;
   /* margin-left: 10px; */
   margin-right: 20px;
 }
-.l_split_m_MarginRight {
+.connection_detail_split_m_MarginRight {
   font-size: 1em;
   padding-top: 10px;
   padding-bottom: 10px;
   padding-right: 10px;
 }
-.l_split_m_dropdown {
+.connection_detail_split_m_dropdown {
   padding-top: 10px;
   padding-bottom: 10px;
   margin-left: 20px;
   font-size: 1em;
   color: rgb(0, 102, 204);
 }
-.l_split_m_height {
+.connection_detail_split_m_height {
   font-size: 2em;
 }
-.pf-c-dropdown__menu-item {
-  width: 200px;
-  padding: 10px 10px 10px 50px !important;
-}
 
-.l_split_m_padding {
+.connection_detail_split_m_padding {
   padding: 15px;
 }
-.l_split_m_large_gutter_MarginRight{
+.connection_detail_split_m_large_gutter_MarginRight{
   font-size: 1em;
   border-right: 2px solid lightgrey;
   /* margin-left: 10px; */
@@ -36,7 +32,7 @@
   margin-left:10px;
 }
 
-.l_split_m_MeassageItem{
+.connection_detail_split_m_MeassageItem{
     font-size: 1.5em;
     text-align: center;
     padding-top: 10px;

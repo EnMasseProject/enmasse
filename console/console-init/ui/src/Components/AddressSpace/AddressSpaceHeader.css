@@ -1,12 +1,12 @@
-.l_split_m_gutter_MarginRight {
+.address_space_split_m_gutter_MarginRight {
   margin-right: 10px;
   font-size:1.5rem;
 }
 
-.l_split_m_height {
-  font-size: 2.5rem;
+.address_space_split_m_height {
+  font-size: 2em;
 }
 
-.l_split_m_padding {
+.address_space_split_m_padding {
   padding: 15px;
 }

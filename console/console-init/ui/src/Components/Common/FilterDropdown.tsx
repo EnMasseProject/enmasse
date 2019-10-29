@@ -9,19 +9,16 @@ export interface IDropdownOption {
 
 export interface IDropdown {
   options: IDropdownOption[];
-  isOpen: boolean;
-  setIsOpen: () => void;
   value: string;
   onSelect: (item: any) => void;
 }
 
-export const DropdownMenu: React.FunctionComponent<IDropdown> = ({
-  isOpen,
-  setIsOpen,
+export const FilterDropdown: React.FunctionComponent<IDropdown> = ({
   value,
   onSelect,
   options
 }) => {
+  const [isOpen,setIsOpen] = React.useState(false);
   return (
     <Dropdown
       position="left"

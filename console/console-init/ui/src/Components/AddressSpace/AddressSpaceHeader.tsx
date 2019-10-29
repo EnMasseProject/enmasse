@@ -52,28 +52,28 @@ export const AddressSpaceHeader: React.FunctionComponent<AddressSpace> = ({
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Split>
-        <SplitItem className="l_split_m_padding">
+        <SplitItem className="address_space_split_m_padding">
           <AwardIcon size="lg" />
         </SplitItem>
-        <SplitItem className="l_split_m_height">
+        <SplitItem className="address_space_split_m_height">
           {name}
           <br />
           <Split>
-            <SplitItem className="l_split_m_gutter_MarginRight">
+            <SplitItem className="address_space_split_m_gutter_MarginRight">
               in namespace <b>{namespace}</b>
             </SplitItem>
-            <SplitItem className="l_split_m_gutter_MarginRight"> | </SplitItem>
-            <SplitItem className="l_split_m_gutter_MarginRight">
+            <SplitItem className="address_space_split_m_gutter_MarginRight"> | </SplitItem>
+            <SplitItem className="address_space_split_m_gutter_MarginRight">
               <b> {type} </b>
             </SplitItem>
-            <SplitItem className="l_split_m_gutter_MarginRight"> | </SplitItem>
-            <SplitItem className="l_split_m_gutter_MarginRight">
+            <SplitItem className="address_space_split_m_gutter_MarginRight"> | </SplitItem>
+            <SplitItem className="address_space_split_m_gutter_MarginRight">
               Created <b>{createdOn} </b>
             </SplitItem>
           </Split>
         </SplitItem>
         <SplitItem isFilled></SplitItem>
-        <SplitItem className="l_split_m_gutter_MarginRight">
+        <SplitItem className="address_space_split_m_gutter_MarginRight">
             <Dropdown
               onSelect={onSelect}
               position={DropdownPosition.right}
