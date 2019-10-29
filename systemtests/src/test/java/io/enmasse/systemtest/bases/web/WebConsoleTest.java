@@ -939,7 +939,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
                 selenium.waitUntilItemPresent(60, () -> consoleWebPage.getAddressItem(destTopic)).getType(),
                 "Console failed, expected TOPIC type");
 
-        AddressUtils.waitForDestinationsReady(destTopic);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), destTopic);
 
         new MessagingUtils().assertCanConnect(getSharedAddressSpace(), defaultCredentials, Collections.singletonList(destTopic), resourcesManager);
     }

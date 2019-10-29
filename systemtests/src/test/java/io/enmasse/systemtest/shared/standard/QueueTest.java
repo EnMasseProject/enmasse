@@ -173,7 +173,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         kubernetes.getAddressClient().create(q2);
 
         resourcesManager.appendAddresses(q1);
-        AddressUtils.waitForDestinationsReady(q2);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), q2);
 
         AmqpClient client = getAmqpClientFactory().createQueueClient();
         runQueueTest(client, q1);

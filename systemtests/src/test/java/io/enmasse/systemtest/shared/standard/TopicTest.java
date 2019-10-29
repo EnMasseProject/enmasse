@@ -10,11 +10,11 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
-import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.MessagingUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
@@ -139,7 +139,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         resourcesManager.setAddresses(t2);
 
         resourcesManager.appendAddresses(t1);
-        AddressUtils.waitForDestinationsReady(t2);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), t2);
 
         AmqpClient topicClient = getAmqpClientFactory().createTopicClient();
         runTopicTest(topicClient, t1, 2048);

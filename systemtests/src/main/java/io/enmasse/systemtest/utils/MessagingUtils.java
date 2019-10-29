@@ -23,6 +23,7 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -111,7 +112,7 @@ public class MessagingUtils {
 
     private boolean canConnectWithAmqpAddress(ResourceManager resourceManager, AddressSpace addressSpace, UserCredentials credentials, AddressType addressType, String address, boolean defaultValue) throws Exception {
         Set<AddressType> brokeredAddressTypes = new HashSet<>(Arrays.asList(AddressType.QUEUE, AddressType.TOPIC));
-        if (addressSpaceUtils.isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
+        if (AddressSpaceUtils.isBrokered(addressSpace) && !brokeredAddressTypes.contains(addressType)) {
             return defaultValue;
         }
         try (AmqpClient client = resourceManager.getAmqpClientFactory().createAddressClient(addressSpace, addressType)) {
@@ -182,7 +183,7 @@ public class MessagingUtils {
             }
         });
 
-        AddressUtils.waitForDestinationsReady(dest.toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), dest.toArray(new Address[0]));
         //start sending messages
         int everyN = 3;
         for (AmqpClient client : clients) {
