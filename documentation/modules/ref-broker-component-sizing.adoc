@@ -80,7 +80,7 @@ spec:
 
 == Broker scaling (standard address space only)
 
-Brokers are deployed on demand, that is, when addresses of type `queue` or `topic` are created. The number of brokers deployed is restricted by the resource limits specified in the `AddressSpacePlan` configuration. The following `AddressSpacePlan` configuration example specifies a limit of 4 brokers in total per address space:
+Brokers are deployed on demand, that is, when addresses of type `queue` or `topic` are created. The number of brokers deployed is restricted by the resource limits specified in the `AddressSpacePlan` configuration. The following `AddressSpacePlan` configuration example specifies a limit of four brokers in total per address space:
 
 ----
 apiVersion: admin.enmasse.io/v1beta2
@@ -95,7 +95,7 @@ spec:
 
 In terms of capacity, multiply the memory requirements for the broker by the limit.
 
-The number of broker instances are scaled dynamically between 1 and maximum limit specified based on the `AddressPlan` used for the different addresses. An `AddressPlan` specifies the fraction of a broker that is required by an address. The fraction specified in the plan is multiplied by the number of addresses referencing this plan, and then rounded up to produce the number of desired broker replicas. 
+The number of broker instances are scaled dynamically between one and the maximum limit specified based on the `AddressPlan` used for the different addresses. An `AddressPlan` specifies the fraction of a broker that is required by an address. The fraction specified in the plan is multiplied by the number of addresses referencing this plan, and then rounded up to produce the number of desired broker replicas.
 
 .`AddressPlan` configuration example
 ----
@@ -109,6 +109,6 @@ spec:
     broker: 0.01
 ----
 
-If you create 110 addresses with `plan1` as the address plan, the number of broker replicas is `ceil(110 addresses * 0.01 broker) = 2 replicas`. 
+If you create 110 addresses with `plan1` as the address plan, the number of broker replicas is `ceil(110 addresses * 0.01 broker) = 2 replicas`.
 
 The total number of brokers is capped by the address space plan resource limits.
