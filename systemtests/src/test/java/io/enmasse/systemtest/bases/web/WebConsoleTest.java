@@ -147,7 +147,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressesByType() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -181,7 +181,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -276,7 +276,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterAddressWithRegexSymbols() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -320,7 +320,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
     protected void doTestRegexAlertBehavesConsistently() throws Exception {
         String subText = "*";
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -347,7 +347,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortAddressesByName() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -355,7 +355,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
 
         consoleWebPage.sortItems(SortType.NAME, true);
-        assertSorted("Console failed, items are not sorted by name asc", consoleWebPage.getAddressItems());
+        assertSorted(consoleWebPage.getAddressItems());
 
         consoleWebPage.sortItems(SortType.NAME, false);
         assertSorted("Console failed, items are not sorted by name desc", consoleWebPage.getAddressItems(), true);
@@ -363,7 +363,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortAddressesByClients() throws Exception {
         int addressCount = 4;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -371,7 +371,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.createAddressesWebConsole(addresses.toArray(new Address[0]));
         consoleWebPage.openAddressesPageWebConsole();
 
-        List<AbstractClient> receivers = attachReceivers(getSharedAddressSpace(), addresses, -1, defaultCredentials);
+        List<AbstractClient> receivers = attachReceivers(getSharedAddressSpace(), addresses, defaultCredentials);
         try {
             Thread.sleep(15000);
 
@@ -386,7 +386,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
             stopClients(receivers);
         }
 
-        List<AbstractClient> senders = attachSenders(getSharedAddressSpace(), addresses, 360, defaultCredentials);
+        List<AbstractClient> senders = attachSenders(getSharedAddressSpace(), addresses, defaultCredentials);
         try {
 
             Thread.sleep(15000);
@@ -405,7 +405,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsBySenders() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -443,7 +443,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsByReceivers() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
 
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
@@ -482,7 +482,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.openConnectionsPageWebConsole();
 
         int receiverCount = 5;
-        clientsList = attachReceivers(getSharedAddressSpace(), queue, receiverCount, -1, defaultCredentials);
+        clientsList = attachReceivers(getSharedAddressSpace(), queue, receiverCount, defaultCredentials);
 
         consoleWebPage.addConnectionsFilter(FilterType.ENCRYPTED, "encrypted");
         List<ConnectionWebItem> items = consoleWebPage.getConnectionItems(receiverCount);
@@ -525,8 +525,8 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         try {
             int receiversBatch1 = 5;
             int receiversBatch2 = 10;
-            receiversPavel = attachReceivers(getSharedAddressSpace(), queue, receiversBatch1, -1, pavel);
-            receiversTest = attachReceivers(getSharedAddressSpace(), queue, receiversBatch2, -1, defaultCredentials);
+            receiversPavel = attachReceivers(getSharedAddressSpace(), queue, receiversBatch1, pavel);
+            receiversTest = attachReceivers(getSharedAddressSpace(), queue, receiversBatch2, defaultCredentials);
             assertThat(String.format("Console failed, does not contain %d connections", receiversBatch1 + receiversBatch2),
                     consoleWebPage.getConnectionItems(receiversBatch1 + receiversBatch2).size(), is(receiversBatch1 + receiversBatch2));
 
@@ -563,7 +563,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestFilterConnectionsByHostname() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
         consoleWebPage.openWebConsolePage();
@@ -586,7 +586,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
     protected void doTestSortConnectionsByHostname() throws Exception {
         int addressCount = 2;
-        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), "via-web", IntStream.range(0, addressCount));
+        ArrayList<Address> addresses = generateQueueTopicList(getSharedAddressSpace(), IntStream.range(0, addressCount));
         consoleWebPage = new ConsoleWebPage(selenium, getConsoleRoute(getSharedAddressSpace()),
                 getSharedAddressSpace(), clusterUser);
         consoleWebPage.openWebConsolePage();
@@ -625,7 +625,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.openConnectionsPageWebConsole();
 
         clientsList = new ArrayList<>();
-        clientsList.add(attachConnector(getSharedAddressSpace(), dest, connectionCount, 1, 1, defaultCredentials, 360));
+        clientsList.add(attachConnector(getSharedAddressSpace(), dest, connectionCount, 1, 1, defaultCredentials));
         selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
 
         String containerID = consoleWebPage.getConnectionItems(connectionCount).get(0).getContainerID();
@@ -660,7 +660,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
         consoleWebPage.openConnectionsPageWebConsole();
 
         clientsList = new ArrayList<>();
-        clientsList.add(attachConnector(getSharedAddressSpace(), dest, connectionCount, 1, 1, defaultCredentials, 360));
+        clientsList.add(attachConnector(getSharedAddressSpace(), dest, connectionCount, 1, 1, defaultCredentials));
 
         selenium.waitUntilPropertyPresent(60, connectionCount, () -> consoleWebPage.getConnectionItems().size());
 
@@ -733,7 +733,7 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
 
         AbstractClient client = new RheaClientConnector();
         try {
-            client = attachConnector(getSharedAddressSpace(), dest, 1, senderCount, receiverCount, defaultCredentials, 360);
+            client = attachConnector(getSharedAddressSpace(), dest, 1, senderCount, receiverCount, defaultCredentials);
             selenium.waitUntilPropertyPresent(60, senderCount, () -> consoleWebPage.getAddressItem(dest).getSendersCount());
 
             assertAll(
@@ -971,9 +971,9 @@ public abstract class WebConsoleTest extends TestBase implements ITestBaseShared
     private List<AbstractClient> attachClients(List<Address> destinations) throws Exception {
         List<AbstractClient> clients = new ArrayList<>();
         for (Address destination : destinations) {
-            clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 6, 1, defaultCredentials, 360));
-            clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 4, 4, defaultCredentials, 360));
-            clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 1, 6, defaultCredentials, 360));
+            clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 6, 1, defaultCredentials));
+            clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 4, 4, defaultCredentials));
+            clients.add(attachConnector(getSharedAddressSpace(), destination, 1, 1, 6, defaultCredentials));
         }
 
         Thread.sleep(5000);

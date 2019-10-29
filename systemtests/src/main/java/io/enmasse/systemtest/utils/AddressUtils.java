@@ -40,18 +40,18 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class AddressUtils {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     public static List<Address> getAddresses(AddressSpace addressSpace) {
         return getAddresses(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName());
     }
 
-    public static List<Address> getAddresses(String namespace, String addressSpace) {
+    private static List<Address> getAddresses(String namespace, String addressSpace) {
         return Kubernetes.getInstance().getAddressClient(namespace).list().getItems().stream()
                 .filter(address -> getAddressSpaceNameFromAddress(address).equals(addressSpace)).collect(Collectors.toList());
     }
 
-    public static String getAddressSpaceNameFromAddress(Address address) {
+    private static String getAddressSpaceNameFromAddress(Address address) {
         return address.getMetadata().getName().split("\\.")[0];
     }
 
@@ -72,17 +72,17 @@ public class AddressUtils {
         return address.getSpec().getTopic() == null ? address.getSpec().getAddress() : address.getSpec().getTopic() + "::" + address.getSpec().getAddress();
     }
 
-    public static String sanitizeAddress(String address) {
-        return address != null ? address.toLowerCase().replaceAll("[^a-z0-9.\\-]", "") : address;
+    private static String sanitizeAddress(String address) {
+        return address != null ? address.toLowerCase().replaceAll("[^a-z0-9.\\-]", "") : null;
     }
 
-    public static void delete(Address... destinations) throws Exception {
+    public static void delete(Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
         Arrays.stream(destinations).forEach(address -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete());
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void delete(AddressSpace addressSpace) throws Exception {
+    public static void delete(AddressSpace addressSpace) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
         var client = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace());
         for (Address address : client.list().getItems()) {
@@ -93,29 +93,22 @@ public class AddressUtils {
     }
 
     public static void setAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be created", new Object[]{addresses});
+        LOGGER.info("Addresses {} will be created", new Object[]{addresses});
         String operationID = TimeMeasuringSystem.startOperation(addresses.length > 0 ? SystemtestsOperation.CREATE_ADDRESS : SystemtestsOperation.DELETE_ADDRESS);
-        log.info("Remove addresses in every addresses's address space");
-        for (Address address : addresses) {
-            Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete();
-        }
-        for (Address address : addresses) {
-            address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
-            log.info("Address {} created", address.getMetadata().getName());
-        }
-        if (wait) {
-            waitForDestinationsReady(budget, addresses);
-        }
-
-        TimeMeasuringSystem.stopOperation(operationID);
+        LOGGER.info("Remove addresses in every addresses's address space");
+        waitForAddresses(operationID, budget, wait, addresses);
     }
 
     public static void appendAddresses(TimeoutBudget budget, boolean wait, Address... addresses) throws Exception {
-        log.info("Addresses {} will be appended", new Object[]{addresses});
+        LOGGER.info("Addresses {} will be appended", new Object[]{addresses});
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
+        waitForAddresses(operationID, budget, wait, addresses);
+    }
+
+    private static void waitForAddresses(String operationID, TimeoutBudget budget, Boolean wait, Address... addresses) throws Exception {
         for (Address address : addresses) {
             address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
-            log.info("Address {} created", address.getMetadata().getName());
+            LOGGER.info("Address {} created", address.getMetadata().getName());
         }
         if (wait) {
             waitForDestinationsReady(budget, addresses);
@@ -123,9 +116,8 @@ public class AddressUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-
     public static void replaceAddress(Address destination, boolean wait, TimeoutBudget timeoutBudget) throws Exception {
-        log.info("Address {} will be replaced", destination);
+        LOGGER.info("Address {} will be replaced", destination);
         var client = Kubernetes.getInstance().getAddressClient(destination.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS);
         client.createOrReplace(destination);
@@ -138,11 +130,11 @@ public class AddressUtils {
     }
 
 
-    public static boolean isAddressReady(Address address) {
+    private static boolean isAddressReady(Address address) {
         return address.getStatus().isReady();
     }
 
-    public static boolean isPlanSynced(Address address) {
+    private static boolean isPlanSynced(Address address) {
         boolean isReady = false;
         Map<String, String> annotations = address.getMetadata().getAnnotations();
         if (annotations != null) {
@@ -153,7 +145,7 @@ public class AddressUtils {
         return isReady;
     }
 
-    public static boolean areBrokersDrained(Address address) {
+    private static boolean areBrokersDrained(Address address) {
         boolean isReady = true;
         List<BrokerStatus> brokerStatuses = address.getStatus().getBrokerStatuses();
         for (BrokerStatus status : brokerStatuses) {
@@ -165,15 +157,12 @@ public class AddressUtils {
         return isReady;
     }
 
-    public static boolean areForwardersReady(Address address) {
+    private static boolean areForwardersReady(Address address) {
         return Optional.ofNullable(address)
                 .map(Address::getStatus)
-                .map(AddressStatus::getForwarders)
-                .map(Stream::of)
-                .orElseGet(Stream::empty)
+                .map(AddressStatus::getForwarders).stream()
                 .flatMap(Collection::stream)
-                .map(AddressStatusForwarder::isReady)
-                .allMatch(ready -> ready == true);
+                .allMatch(AddressStatusForwarder::isReady);
     }
 
     private static FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> getAddressClient(Address... destinations) {
@@ -188,46 +177,46 @@ public class AddressUtils {
         }
     }
 
-    public static void waitForDestinationsReady(TimeoutBudget budget, Address... destinations) throws Exception {
+    public static void waitForDestinationsReady(TimeoutBudget budget, Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_READY);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::isAddressReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForDestinationPlanApplied(TimeoutBudget budget, Address... destinations) throws Exception {
+    private static void waitForDestinationPlanApplied(TimeoutBudget budget, Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_PLAN_CHANGE);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::isPlanSynced, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForBrokersDrained(TimeoutBudget budget, Address... destinations) throws Exception {
+    public static void waitForBrokersDrained(TimeoutBudget budget, Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_BROKER_DRAINED);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::areBrokersDrained, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void waitForForwardersReady(TimeoutBudget budget, Address... destinations) throws Exception {
+    public static void waitForForwardersReady(TimeoutBudget budget, Address... destinations) {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.ADDRESS_WAIT_FORWARDERS);
         waitForAddressesMatched(budget, destinations.length, getAddressClient(destinations), addressList -> checkAddressesMatching(addressList, AddressUtils::areForwardersReady, destinations));
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void waitForAddressesMatched(TimeoutBudget timeoutBudget, int totalDestinations, FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> addressClient, AddressListMatcher addressListMatcher) throws Exception {
+    private static void waitForAddressesMatched(TimeoutBudget timeoutBudget, int totalDestinations, FilterWatchListMultiDeletable<Address, AddressList, Boolean, Watch, Watcher<Address>> addressClient, AddressListMatcher addressListMatcher) {
         TestUtils.waitUntilCondition(totalDestinations + " match", phase -> {
             try {
                 List<Address> addressList = addressClient.list().getItems();
                 Map<String, Address> notMatched = addressListMatcher.matchAddresses(addressList);
                 notMatched.values().forEach(address ->
-                        log.info("Waiting until address {} ready, message {}", address.getMetadata().getName(), address.getStatus().getMessages()));
+                        LOGGER.info("Waiting until address {} ready, message {}", address.getMetadata().getName(), address.getStatus().getMessages()));
                 if (!notMatched.isEmpty() && phase == WaitPhase.LAST_TRY) {
-                    log.info(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
+                    LOGGER.info(notMatched.size() + " out of " + totalDestinations + " addresses are not matched: " + notMatched.values());
                 }
                 return notMatched.isEmpty();
             } catch (KubernetesClientException e) {
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.error("Client can't read address resources", e);
+                    LOGGER.error("Client can't read address resources", e);
                 } else {
-                    log.warn("Client can't read address resources");
+                    LOGGER.warn("Client can't read address resources");
                 }
                 return false;
             }
@@ -249,7 +238,7 @@ public class AddressUtils {
         return notMatchingAddresses;
     }
 
-    public static void waitForAddressDeleted(Address address, TimeoutBudget timeoutBudget) throws Exception {
+    public static void waitForAddressDeleted(Address address, TimeoutBudget timeoutBudget) {
         Kubernetes kubernetes = Kubernetes.getInstance();
 
         TestUtils.waitUntilCondition(address + " match", phase -> {
@@ -258,12 +247,9 @@ public class AddressUtils {
                 List<Address> addressesInSameAddrSpace = addressList.getItems().stream()
                         .filter(address1 -> Address.extractAddressSpace(address1)
                                 .equals(Address.extractAddressSpace(address))).collect(Collectors.toList());
-                if (!addressesInSameAddrSpace.contains(address)) {
-                    return true;
-                }
-                return false;
+                return !addressesInSameAddrSpace.contains(address);
             } catch (KubernetesClientException e) {
-                log.warn("Client can't read address resources");
+                LOGGER.warn("Client can't read address resources");
                 return false;
             }
         }, timeoutBudget);

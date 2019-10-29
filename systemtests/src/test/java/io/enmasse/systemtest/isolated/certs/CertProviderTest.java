@@ -315,7 +315,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
         QueueTest.runQueueTest(amqpClient, queue, 5);
         mqttClient.connect();
-        simpleMQTTSendReceive(topic, mqttClient, 3);
+        simpleMQTTSendReceive(topic, mqttClient);
         mqttClient.disconnect();
     }
 

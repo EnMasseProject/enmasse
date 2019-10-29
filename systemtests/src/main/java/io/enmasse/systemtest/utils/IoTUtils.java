@@ -88,11 +88,11 @@ public class IoTUtils {
         log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
         kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName()).cascading(true).delete();
-        waitForIoTConfigDeleted(kubernetes);
+        waitForIoTConfigDeleted();
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static void waitForIoTConfigDeleted(Kubernetes kubernetes) throws Exception {
+    private static void waitForIoTConfigDeleted() throws Exception {
         TestUtils.waitForNReplicas(0, false, IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
     }
 
@@ -177,14 +177,14 @@ public class IoTUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    public static void syncIoTProject(Kubernetes kubernetes, IoTProject project) throws Exception {
+    private static void syncIoTProject(Kubernetes kubernetes, IoTProject project) {
         IoTProject result = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace()).withName(project.getMetadata().getName()).get();
         project.setMetadata(result.getMetadata());
         project.setSpec(result.getSpec());
         project.setStatus(result.getStatus());
     }
 
-    public static void syncIoTConfig(Kubernetes kubernetes, IoTConfig config) throws Exception {
+    private static void syncIoTConfig(Kubernetes kubernetes, IoTConfig config)  {
         IoTConfig result = kubernetes.getIoTConfigClient().withName(config.getMetadata().getName()).get();
         config.setMetadata(result.getMetadata());
         config.setSpec(result.getSpec());
@@ -256,7 +256,7 @@ public class IoTUtils {
         return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
     }
 
-    public static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) throws Exception {
+    public static void waitForFirstSuccess(HttpAdapterClient adapterClient, MessageType type) {
         JsonObject json = new JsonObject(Map.of("a", "b"));
         String message = "First successful " + type.name().toLowerCase() + " message";
         TestUtils.waitUntilCondition(message, (phase) -> {

@@ -60,12 +60,12 @@ public class JmsProvider {
             identification = "topic.";
         }
 
-        return new HashMap<String, String>() {{
+        return new HashMap<>() {{
             put(identification + destination.getSpec().getAddress(), destination.getSpec().getAddress());
         }};
     }
 
-    public Context createContext(String route, UserCredentials credentials, String cliID, Address address) throws Exception {
+    private Context createContext(String route, UserCredentials credentials, String cliID, Address address) throws Exception {
         Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(), cliID,
                 createAddressMap(address));
         context = new InitialContext(env);
@@ -93,21 +93,19 @@ public class JmsProvider {
     }
 
 
-    public Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
+    private Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
         return setUpEnv(url, username, password, "", prop);
     }
 
-    public Hashtable<Object, Object> setUpEnv(String url, String username, String password, String clientID, Map<String, String> prop) {
+    private Hashtable<Object, Object> setUpEnv(String url, String username, String password, String clientID, Map<String, String> prop) {
         Hashtable<Object, Object> env = new Hashtable<>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
-        StringBuilder urlParam = new StringBuilder();
-        urlParam.append("?transport.trustAll=true")
-                .append("&jms.password=").append(username)
-                .append("&jms.username=").append(password)
-                .append("&transport.verifyHost=false")
-                .append("&amqp.saslMechanisms=PLAIN");
-        urlParam.append(clientID.isEmpty() ? clientID : "&jms.clientID=" + clientID);
-
+        String urlParam = "?transport.trustAll=true" +
+                "&jms.password=" + username +
+                "&jms.username=" + password +
+                "&transport.verifyHost=false" +
+                "&amqp.saslMechanisms=PLAIN" +
+                (clientID.isEmpty() ? clientID : "&jms.clientID=" + clientID);
         env.put("connectionfactory.qpidConnectionFactory", url + urlParam);
         for (Map.Entry<String, String> entry : prop.entrySet()) {
             env.put(entry.getKey(), entry.getValue());
@@ -133,7 +131,7 @@ public class JmsProvider {
         return messages;
     }
 
-    public List<Message> generateMessages(Session session, int count, int sizeInBytes) throws Exception {
+    public List<Message> generateMessages(Session session, int count, int sizeInBytes) {
         List<Message> messages = new LinkedList<>();
         IntStream.range(0, count).forEach(i -> {
             try {
@@ -181,20 +179,6 @@ public class JmsProvider {
             consumer[i].setMessageListener(myListener);
         }
         return resultsList;
-    }
-
-    public CompletableFuture<List<Message>> receiveMessagesAsync(MessageConsumer consumer, AtomicInteger totalCount) throws JMSException {
-        CompletableFuture<List<Message>> received = new CompletableFuture<>();
-        List<Message> recvd = new LinkedList<>();
-        MessageListener myListener = message -> {
-            log.info("Mesages received" + message + " count: " + totalCount.get());
-            recvd.add(message);
-            if (totalCount.decrementAndGet() == 0) {
-                received.complete(recvd);
-            }
-        };
-        consumer.setMessageListener(myListener);
-        return received;
     }
 
     public List<Message> receiveMessages(MessageConsumer consumer, int count) {

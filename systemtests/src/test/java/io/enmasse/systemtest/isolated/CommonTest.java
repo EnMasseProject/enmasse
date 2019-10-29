@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -250,7 +251,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         resourcesManager.createOrUpdateUser(brokered, user);
         resourcesManager.createOrUpdateUser(standard, user);
 
-        List<Address> brokeredAddresses = Arrays.asList(
+        List<Address> brokeredAddresses = Collections.singletonList(
                 new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(brokered.getMetadata().getNamespace())

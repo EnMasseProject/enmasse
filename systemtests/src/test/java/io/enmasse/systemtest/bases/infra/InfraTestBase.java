@@ -142,15 +142,14 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
         }
     }
 
-    protected PersistentVolumeClaim getBrokerPVCData(Pod broker) {
+    private PersistentVolumeClaim getBrokerPVCData(Pod broker) {
         String brokerVolumeClaimName = broker.getSpec().getVolumes().stream()
                 .filter(volume -> volume.getName().equals("data"))
                 .findFirst().get()
                 .getPersistentVolumeClaim().getClaimName();
-        PersistentVolumeClaim brokerVolumeClaim = TestUtils.listPersistentVolumeClaims(kubernetes, exampleAddressSpace).stream()
+        return TestUtils.listPersistentVolumeClaims(kubernetes, exampleAddressSpace).stream()
                 .filter(pvc -> pvc.getMetadata().getName().equals(brokerVolumeClaimName))
                 .findFirst().get();
-        return brokerVolumeClaim;
     }
 
     protected Boolean volumeResizingSupported() throws Exception {

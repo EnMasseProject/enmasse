@@ -20,12 +20,12 @@ public class CertificateUtils {
 
     private static final String SUBJECT = "/O=enmasse-systemtests";
 
-    private static void createSelfSignedCert(File cert, File key) throws Exception {
+    private static void createSelfSignedCert(File cert, File key)  {
         Exec.execute(Arrays.asList("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
                 "-out", cert.getAbsolutePath(), "-keyout", key.getAbsolutePath()));
     }
 
-    public static void createCsr(File keyFile, File csrFile, String cn) throws Exception {
+    private static void createCsr(File keyFile, File csrFile, String cn) {
         String subject = SUBJECT;
         if (cn != null) {
             subject += "/CN=" + cn;
@@ -34,7 +34,7 @@ public class CertificateUtils {
                 keyFile.getAbsolutePath(), "-subj", subject, "-out", csrFile.getAbsolutePath()));
     }
 
-    public static File signCsr(File caKey, File caCert, File csrKey, File csrCsr) throws Exception {
+    private static File signCsr(File caKey, File caCert, File csrKey, File csrCsr) throws Exception {
         File crtFile = File.createTempFile(FilenameUtils.removeExtension(csrKey.getName()), "crt");
         Exec.execute(Arrays.asList("openssl", "x509", "-req", "-days", "11000", "-in",
                 csrCsr.getAbsolutePath(), "-CA", caCert.getAbsolutePath(), "-CAkey", caKey.getAbsolutePath(),

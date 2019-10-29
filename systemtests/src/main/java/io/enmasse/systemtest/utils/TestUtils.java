@@ -23,13 +23,11 @@ import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.vertx.core.VertxException;
-import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -53,7 +51,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
@@ -61,39 +58,53 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
+import static java.lang.String.format;
+
+/**
+ * The type Test utils.
+ */
 public class TestUtils {
 
+    /**
+     * The interface Timeout handler.
+     *
+     * @param <X> the type parameter
+     */
     public interface TimeoutHandler<X extends Throwable> {
+        /**
+         * Timeout.
+         *
+         * @throws X the x
+         */
         void timeout() throws X;
     }
 
     private static final Random R = new Random();
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     /**
-     * scale up/down specific pod (type: Deployment) in address space
+     * Wait for n replicas.
+     *
+     * @param expectedReplicas the expected replicas
+     * @param labelSelector    the label selector
+     * @param budget           the budget
+     * @throws InterruptedException the interrupted exception
      */
-    public static void setReplicas(Kubernetes kubernetes, String infraUuid, String deployment, int numReplicas, TimeoutBudget budget) throws InterruptedException {
-        kubernetes.setDeploymentReplicas(kubernetes.getInfraNamespace(), deployment, numReplicas);
-        Map<String, String> labels = new HashMap<>();
-        labels.put("name", deployment);
-        if (infraUuid != null) {
-            labels.put("infraUuid", infraUuid);
-        }
-        waitForNReplicas(
-                numReplicas,
-                labels,
-                budget);
-    }
-
     public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
         waitForNReplicas(expectedReplicas, labelSelector, Collections.emptyMap(), budget);
     }
 
     /**
      * wait for expected count of Destination replicas in address space
+     *
+     * @param addressSpace     the address space
+     * @param expectedReplicas the expected replicas
+     * @param readyRequired    the ready required
+     * @param destination      the destination
+     * @param budget           the budget
+     * @param checkInterval    the check interval
+     * @throws Exception the exception
      */
     public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
                                               Address destination, TimeoutBudget budget, long checkInterval) throws Exception {
@@ -115,6 +126,15 @@ public class TestUtils {
         }
     }
 
+    /**
+     * Wait for n broker replicas.
+     *
+     * @param addressSpace     the address space
+     * @param expectedReplicas the expected replicas
+     * @param destination      the destination
+     * @param budget           the budget
+     * @throws Exception the exception
+     */
     public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, Address destination, TimeoutBudget budget) throws Exception {
         waitForNBrokerReplicas(addressSpace, expectedReplicas, true, destination, budget, 5000);
     }
@@ -124,10 +144,12 @@ public class TestUtils {
      * Wait for expected count of replicas
      *
      * @param expectedReplicas   count of expected replicas
+     * @param readyRequired      the ready required
      * @param labelSelector      labels on scaled pod
      * @param annotationSelector annotations on sclaed pod
      * @param budget             timeout budget - throws Exception when timeout is reached
-     * @throws InterruptedException
+     * @param checkInterval      the check interval
+     * @throws InterruptedException the interrupted exception
      */
     public static void waitForNReplicas(int expectedReplicas, boolean readyRequired,
                                         Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
@@ -144,11 +166,11 @@ public class TestUtils {
             } else {
                 actualReplicas = numReady(pods);
             }
-            log.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}", actualReplicas, pods.size(), expectedReplicas, readyRequired);
+            LOGGER.info("Have {} out of {} replicas. Expecting={}, ReadyRequired={}", actualReplicas, pods.size(), expectedReplicas, readyRequired);
 
             if (budget.timeoutExpired()) {
                 // our time budged expired ... throw exception
-                String message = String.format("Only '%s' out of '%s' in state 'Running' before timeout %s", actualReplicas, expectedReplicas,
+                String message = format("Only '%s' out of '%s' in state 'Running' before timeout %s", actualReplicas, expectedReplicas,
                         pods.stream().map(pod -> pod.getMetadata().getName()).collect(Collectors.joining(",")));
                 throw new RuntimeException(message);
             }
@@ -158,29 +180,33 @@ public class TestUtils {
         // finished successfully
     }
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, true, labelSelector, annotationSelector, budget, checkInterval);
-    }
+    private static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+        waitForNReplicas(expectedReplicas, true, labelSelector, annotationSelector, budget, 5000);
 
-    public static void waitForNReplicas(int expectedReplicas, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
-        waitForNReplicas(expectedReplicas, labelSelector, annotationSelector, budget, 5000);
     }
 
     /**
      * Check ready status of all pods in list
      *
      * @param pods list of pods
-     * @return
+     * @return pod count
      */
     private static int numReady(List<Pod> pods) {
         return (int) pods.stream().filter(pod -> isPodReady(pod, true)).count();
     }
 
+    /**
+     * Is pod ready boolean.
+     *
+     * @param pod   the pod
+     * @param doLog the do log
+     * @return the boolean
+     */
     public static boolean isPodReady(final Pod pod, final boolean doLog) {
 
         if (!"Running".equals(pod.getStatus().getPhase())) {
             if (doLog) {
-                log.info("POD {} in status : {}", pod.getMetadata().getName(), pod.getStatus().getPhase());
+                LOGGER.info("POD {} in status : {}", pod.getMetadata().getName(), pod.getStatus().getPhase());
             }
             return false;
         }
@@ -192,7 +218,7 @@ public class TestUtils {
 
         if (!nonReadyContainers.isEmpty()) {
             if (doLog) {
-                log.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
+                LOGGER.info("POD {} non-ready containers: [{}]", pod.getMetadata().getName(), String.join(", ", nonReadyContainers));
             }
             return false;
         }
@@ -203,42 +229,22 @@ public class TestUtils {
     /**
      * Wait for expected count of pods within AddressSpace
      *
-     * @param client       client for manipulation with kubernetes cluster
-     * @param addressSpace
-     * @param numExpected  count of expected pods
-     * @param budget       timeout budget - this method throws Exception when timeout is reached
-     * @throws InterruptedException
-     */
-    public static void waitForExpectedReadyPods(Kubernetes client, AddressSpace addressSpace, int numExpected, TimeoutBudget budget) throws Exception {
-        List<Pod> pods = listRunningPods(client, addressSpace);
-        while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
-            Thread.sleep(2000);
-            pods = listRunningPods(client, addressSpace);
-            log.info("Got {} pods, expected: {}", pods.size(), numExpected);
-        }
-        if (pods.size() != numExpected) {
-            throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
-        }
-    }
-
-    /**
-     * Wait for expected count of pods within AddressSpace
-     *
      * @param client      client for manipulation with kubernetes cluster
+     * @param namespace   the namespace
      * @param numExpected count of expected pods
      * @param budget      timeout budget - this method throws Exception when timeout is reached
-     * @throws InterruptedException
+     * @throws InterruptedException the interrupted exception
      */
     public static void waitForExpectedReadyPods(Kubernetes client, String namespace, int numExpected, TimeoutBudget budget) throws InterruptedException {
         boolean shouldRetry;
         do {
-            log.info("Waiting for expected ready pods: {}", numExpected);
+            LOGGER.info("Waiting for expected ready pods: {}", numExpected);
             shouldRetry = false;
             List<Pod> pods = listReadyPods(client, namespace);
             while (budget.timeLeft() >= 0 && pods.size() != numExpected) {
                 Thread.sleep(2000);
                 pods = listReadyPods(client, namespace);
-                log.info("Got {} pods, expected: {}", pods.size(), numExpected);
+                LOGGER.info("Got {} pods, expected: {}", pods.size(), numExpected);
             }
             if (pods.size() != numExpected) {
                 throw new IllegalStateException("Unable to find " + numExpected + " pods. Found : " + printPods(pods));
@@ -249,21 +255,21 @@ public class TestUtils {
                 } catch (NullPointerException | IllegalArgumentException e) {
                     // TODO: remove NPE guard once upgrade to Fabric8 kubernetes-client 4.6.0 or beyond is complete.
                     // (kubernetes-client 450b94745b68403293a55956be2aa7ec483c0a6c)
-                    log.warn("Failed to await pod %s", pod, e);
+                    LOGGER.warn("Failed to await pod {} {}", pod, e);
                     shouldRetry = true;
                     break;
                 }
             }
-        } while(shouldRetry);
+        } while (shouldRetry);
     }
 
     /**
      * Print name of all pods in list
      *
      * @param pods list of pods that should be printed
-     * @return
+     * @return Formatted string of pods
      */
-    public static String printPods(List<Pod> pods) {
+    private static String printPods(List<Pod> pods) {
         return pods.stream()
                 .map(pod -> "{" + pod.getMetadata().getName() + ", " + pod.getStatus().getPhase() + "}")
                 .collect(Collectors.joining(","));
@@ -273,23 +279,11 @@ public class TestUtils {
      * Get list of all running pods from specific AddressSpace
      *
      * @param kubernetes   client for manipulation with kubernetes cluster
-     * @param addressSpace
-     * @return
+     * @param addressSpace the address space
+     * @return list
      */
-    public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
+    public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace){
         return kubernetes.listPods(Collections.singletonMap("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace))).stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Get list of all running pods from specific AddressSpace
-     *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @return
-     */
-    public static List<Pod> listRunningPods(Kubernetes kubernetes) {
-        return kubernetes.listPods().stream()
                 .filter(pod -> pod.getStatus().getPhase().equals("Running"))
                 .collect(Collectors.toList());
     }
@@ -298,7 +292,7 @@ public class TestUtils {
      * Get list of all ready pods
      *
      * @param kubernetes client for manipulation with kubernetes cluster
-     * @return
+     * @return list
      */
     public static List<Pod> listReadyPods(Kubernetes kubernetes) {
         return kubernetes.listPods().stream()
@@ -310,7 +304,8 @@ public class TestUtils {
      * Get list of all ready pods
      *
      * @param kubernetes client for manipulation with kubernetes cluster
-     * @return
+     * @param namespace  the namespace
+     * @return list
      */
     public static List<Pod> listReadyPods(Kubernetes kubernetes, String namespace) {
         return kubernetes.listPods(namespace).stream()
@@ -319,20 +314,12 @@ public class TestUtils {
     }
 
     /**
-     * Get list of all non-ready pods
+     * List broker pods list.
      *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @return
+     * @param kubernetes   the kubernetes
+     * @param addressSpace the address space
+     * @return the list
      */
-    public static Stream<Pod> streamNonReadyPods(Kubernetes kubernetes, String namespace) {
-        return kubernetes.listPods(namespace).stream()
-                .filter(pod -> !isPodReady(pod, false));
-    }
-
-    public static List<Pod> listBrokerPods(Kubernetes kubernetes) {
-        return kubernetes.listPods(Collections.singletonMap("role", "broker"));
-    }
-
     public static List<Pod> listBrokerPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("role", "broker");
@@ -340,6 +327,13 @@ public class TestUtils {
         return kubernetes.listPods(labels);
     }
 
+    /**
+     * List router pods list.
+     *
+     * @param kubernetes   the kubernetes
+     * @param addressSpace the address space
+     * @return the list
+     */
     public static List<Pod> listRouterPods(Kubernetes kubernetes, AddressSpace addressSpace) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("capability", "router");
@@ -347,6 +341,13 @@ public class TestUtils {
         return kubernetes.listPods(labels);
     }
 
+    /**
+     * List admin console pods list.
+     *
+     * @param kubernetes   the kubernetes
+     * @param addressSpace the address space
+     * @return the list
+     */
     public static List<Pod> listAdminConsolePods(Kubernetes kubernetes, AddressSpace addressSpace) {
         Map<String, String> labels = new LinkedHashMap<>();
         if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
@@ -358,6 +359,13 @@ public class TestUtils {
         return kubernetes.listPods(labels);
     }
 
+    /**
+     * List persistent volume claims list.
+     *
+     * @param kubernetes   the kubernetes
+     * @param addressSpace the address space
+     * @return the list
+     */
     public static List<PersistentVolumeClaim> listPersistentVolumeClaims(Kubernetes kubernetes, AddressSpace addressSpace) {
         Map<String, String> labels = new LinkedHashMap<>();
         labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
@@ -366,6 +374,10 @@ public class TestUtils {
 
     /**
      * Generate message body with prefix
+     *
+     * @param prefix      the prefix
+     * @param numMessages the num messages
+     * @return the list
      */
     public static List<String> generateMessages(String prefix, int numMessages) {
         return IntStream.range(0, numMessages).mapToObj(i -> prefix + i).collect(Collectors.toList());
@@ -373,6 +385,9 @@ public class TestUtils {
 
     /**
      * Generate message body with "testmessage" content and without prefix
+     *
+     * @param numMessages the num messages
+     * @return the list
      */
     public static List<String> generateMessages(int numMessages) {
         return generateMessages("testmessage", numMessages);
@@ -380,6 +395,9 @@ public class TestUtils {
 
     /**
      * Check if endpoint is accessible
+     *
+     * @param endpoint the endpoint
+     * @return the boolean
      */
     public static boolean resolvable(Endpoint endpoint) {
         return waitUntilCondition(() -> {
@@ -397,6 +415,7 @@ public class TestUtils {
      *
      * @param kubernetes client for manipulation with kubernetes cluster
      * @param namespace  project/namespace to remove
+     * @throws Exception the exception
      */
     public static void waitForNamespaceDeleted(Kubernetes kubernetes, String namespace) throws Exception {
         waitUntilCondition(
@@ -410,9 +429,12 @@ public class TestUtils {
     /**
      * Repeat request n-times in a row
      *
-     * @param retry count of remaining retries
-     * @param fn    request function
-     * @return
+     * @param <T>       the type parameter
+     * @param retry     count of remaining retries
+     * @param fn        request function
+     * @param reconnect the reconnect
+     * @return t
+     * @throws Exception the exception
      */
     public static <T> T doRequestNTimes(int retry, Callable<T> fn, Optional<Runnable> reconnect) throws Exception {
         try {
@@ -420,17 +442,13 @@ public class TestUtils {
         } catch (Exception ex) {
             if (ex.getCause() instanceof VertxException && ex.getCause().getMessage().contains("Connection was closed")) {
                 if (reconnect.isPresent()) {
-                    log.warn("connection was closed, trying to reconnect...");
+                    LOGGER.warn("connection was closed, trying to reconnect...");
                     reconnect.get().run();
                 }
             }
             if (ex.getCause() instanceof UnknownHostException && retry > 0) {
-                try {
-                    log.info("{} remaining iterations", retry);
-                    return doRequestNTimes(retry - 1, fn, reconnect);
-                } catch (Exception ex2) {
-                    throw ex2;
-                }
+                LOGGER.info("{} remaining iterations", retry);
+                return doRequestNTimes(retry - 1, fn, reconnect);
             } else {
                 if (ex.getCause() != null) {
                     ex.getCause().printStackTrace();
@@ -445,21 +463,23 @@ public class TestUtils {
     /**
      * Repeat command n-times
      *
+     * @param <T>   the type parameter
      * @param retry count of remaining retries
      * @param fn    request function
      * @return The value from the first successful call to the callable
+     * @throws InterruptedException the interrupted exception
      */
     public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
         for (int i = 0; i < retry; i++) {
             try {
-                log.info("Running command, attempt: {}", i);
+                LOGGER.info("Running command, attempt: {}", i);
                 return fn.call();
             } catch (Exception ex) {
-                log.info("Command failed", ex);
+                LOGGER.info("Command failed", ex);
             }
             Thread.sleep(1000);
         }
-        throw new IllegalStateException(String.format("Command wasn't pass in %s attempts", retry));
+        throw new IllegalStateException(format("Command wasn't pass in %s attempts", retry));
     }
 
     /**
@@ -467,6 +487,7 @@ public class TestUtils {
      *
      * @param retries  Number of retries.
      * @param callable Code to execute.
+     * @throws InterruptedException the interrupted exception
      */
     public static void runUntilPass(int retries, ThrowingCallable callable) throws InterruptedException {
         runUntilPass(retries, () -> {
@@ -476,28 +497,13 @@ public class TestUtils {
     }
 
     /**
-     * Replace address plan in ConfigMap of already existing address
+     * Delete address space created by sc.
      *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @param addrSpace  address space which contains ConfigMap
-     * @param dest       destination which will be modified
-     * @param plan       definition of AddressPlan
+     * @param kubernetes   the kubernetes
+     * @param addressSpace the address space
+     * @param logCollector the log collector
+     * @throws Exception the exception
      */
-    public static void replaceAddressConfig(Kubernetes kubernetes, AddressSpace addrSpace, Address dest, AddressPlan plan) {
-        String mapKey = "config.json";
-        ConfigMap destConfigMap = kubernetes.getConfigMap(addrSpace.getMetadata().getNamespace(), dest.getSpec().getAddress());
-
-        JsonObject data = new JsonObject(destConfigMap.getData().get(mapKey));
-        log.info(data.toString());
-        data.getJsonObject("spec").remove("plan");
-        data.getJsonObject("spec").put("plan", plan.getMetadata().getName());
-
-        Map<String, String> modifiedData = new LinkedHashMap<>();
-        modifiedData.put(mapKey, data.toString());
-        destConfigMap.setData(modifiedData);
-        kubernetes.replaceConfigMap(addrSpace.getMetadata().getNamespace(), destConfigMap);
-    }
-
     public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
@@ -511,6 +517,12 @@ public class TestUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
+    /**
+     * Gets firefox driver.
+     *
+     * @return the firefox driver
+     * @throws Exception the exception
+     */
     public static RemoteWebDriver getFirefoxDriver() throws Exception {
         Endpoint endpoint = SystemtestsKubernetesApps.getFirefoxSeleniumAppEndpoint(Kubernetes.getInstance());
         FirefoxOptions options = new FirefoxOptions();
@@ -521,6 +533,12 @@ public class TestUtils {
         return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), options);
     }
 
+    /**
+     * Gets chrome driver.
+     *
+     * @return the chrome driver
+     * @throws Exception the exception
+     */
     public static RemoteWebDriver getChromeDriver() throws Exception {
         Endpoint endpoint = SystemtestsKubernetesApps.getChromeSeleniumAppEndpoint(Kubernetes.getInstance());
         return getRemoteDriver(endpoint.getHost(), endpoint.getPort(), new ChromeOptions());
@@ -528,7 +546,7 @@ public class TestUtils {
 
     private static RemoteWebDriver getRemoteDriver(String host, int port, Capabilities options) throws Exception {
         int attempts = 60;
-        URL hubUrl = new URL(String.format("http://%s:%s/wd/hub", host, port));
+        URL hubUrl = new URL(format("http://%s:%s/wd/hub", host, port));
         for (int i = 0; i < attempts; i++) {
             if (isReachable(hubUrl)) {
                 return new RemoteWebDriver(hubUrl, options);
@@ -538,39 +556,54 @@ public class TestUtils {
         throw new IllegalStateException("Selenium webdriver cannot connect to selenium container");
     }
 
-    public static boolean isReachable(URL url) {
-        log.info("Trying to connect to {}", url.toString());
+    private static boolean isReachable(URL url) {
+        LOGGER.info("Trying to connect to {}", url.toString());
         try {
             url.openConnection();
             url.getContent();
-            log.info("Client is able to connect to the selenium hub");
+            LOGGER.info("Client is able to connect to the selenium hub");
             return true;
         } catch (Exception ex) {
-            log.warn("Cannot connect to hub: {}", ex.getMessage());
+            LOGGER.warn("Cannot connect to hub: {}", ex.getMessage());
             return false;
         }
     }
 
+    /**
+     * Wait until condition.
+     *
+     * @param fn       the fn
+     * @param expected the expected
+     * @param budget   the budget
+     * @throws Exception the exception
+     */
     public static void waitUntilCondition(Callable<String> fn, String expected, TimeoutBudget budget) throws Exception {
         String actual = "Too small time out budget!!";
         while (!budget.timeoutExpired()) {
             actual = fn.call();
-            log.debug(actual);
+            LOGGER.debug(actual);
             if (actual.contains(expected)) {
                 return;
             }
-            log.debug("next iteration, remaining time: {}", budget.timeLeft());
+            LOGGER.debug("next iteration, remaining time: {}", budget.timeLeft());
             Thread.sleep(2000);
         }
-        throw new IllegalStateException(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
+        throw new IllegalStateException(format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
-    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) throws Exception {
+    /**
+     * Wait until condition.
+     *
+     * @param forWhat   the for what
+     * @param condition the condition
+     * @param budget    the budget
+     */
+    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) {
 
         Objects.requireNonNull(condition);
         Objects.requireNonNull(budget);
 
-        log.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
+        LOGGER.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
 
         waitUntilCondition(
 
@@ -580,14 +613,14 @@ public class TestUtils {
                 () -> {
                     // try once more
                     if (condition.test(WaitPhase.LAST_TRY)) {
-                        log.info("Successfully wait for: {} , it passed on last try", forWhat);
+                        LOGGER.info("Successfully wait for: {} , it passed on last try", forWhat);
                         return;
                     }
 
                     throw new IllegalStateException("Failed to wait for: " + forWhat);
                 });
 
-        log.info("Successfully waited for: {}, it took {} ms", forWhat, budget.timeSpent());
+        LOGGER.info("Successfully waited for: {}, it took {} ms", forWhat, budget.timeSpent());
 
     }
 
@@ -595,6 +628,7 @@ public class TestUtils {
      * Wait for a condition, fail otherwise.
      *
      * @param condition              The condition to check, returning {@code true} means success.
+     * @param timeout                the timeout
      * @param delay                  The delay between checks.
      * @param timeoutMessageSupplier The supplier of a timeout message.
      * @throws AssertionFailedError In case the timeout expired
@@ -610,12 +644,15 @@ public class TestUtils {
     /**
      * Wait for a condition, throw exception otherwise.
      *
+     * @param <X>               the type parameter
      * @param condition         The condition to check, returning {@code true} means success.
+     * @param timeout           the timeout
      * @param delay             The delay between checks.
      * @param exceptionSupplier The supplier of the exception to throw.
-     * @throws AssertionFailedError In case the timeout expired
+     * @throws X x
      */
-    public static <X extends Throwable> void waitUntilConditionOrThrow(final BooleanSupplier condition, final Duration timeout, final Duration delay, final Supplier<X> exceptionSupplier) throws X {
+    private static <X extends Throwable> void waitUntilConditionOrThrow(final BooleanSupplier condition, final Duration timeout,
+                                                                        final Duration delay, final Supplier<X> exceptionSupplier) throws X {
 
         Objects.requireNonNull(exceptionSupplier);
 
@@ -629,11 +666,12 @@ public class TestUtils {
     /**
      * Wait for a condition, call handler otherwise.
      *
+     * @param <X>            The type of exception thrown by the timeout handler.
      * @param condition      The condition to check, returning {@code true} means success.
+     * @param timeout        the timeout
      * @param delay          The delay between checks.
      * @param timeoutHandler The handler to call in case of the timeout.
-     * @param <X>            The type of exception thrown by the timeout handler.
-     * @throws AssertionFailedError In case the timeout expired
+     * @throws X the x
      */
     public static <X extends Throwable> void waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay, final TimeoutHandler<X> timeoutHandler) throws X {
 
@@ -651,6 +689,7 @@ public class TestUtils {
      * This will check will put a priority on checking the condition, and only wait, when there is remaining time budget left.
      *
      * @param condition The condition to check, returning {@code true} means success.
+     * @param timeout   the timeout
      * @param delay     The delay between checks.
      * @return {@code true} if the condition was met, {@code false otherwise}.
      */
@@ -679,7 +718,7 @@ public class TestUtils {
 
             // otherwise sleep
 
-            log.debug("next iteration, remaining time: {}", remaining);
+            LOGGER.debug("next iteration, remaining time: {}", remaining);
             try {
                 Thread.sleep(delay.toMillis());
             } catch (InterruptedException e) {
@@ -690,12 +729,19 @@ public class TestUtils {
 
     }
 
-    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String namespace, final String name, final String currentResourceVersion) throws Exception {
+    /**
+     * Wait for changed resource version.
+     *
+     * @param budget                 the budget
+     * @param namespace              the namespace
+     * @param name                   the name
+     * @param currentResourceVersion the current resource version
+     */
+    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String namespace, final String name, final String currentResourceVersion) {
         waitForChangedResourceVersion(budget, currentResourceVersion, () -> Kubernetes.getInstance().getAddressSpaceClient(namespace).withName(name).get().getMetadata().getResourceVersion());
     }
 
-    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
-            throws Exception {
+    private static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion) {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
 
         waitUntilCondition("Resource version to change away from: " + currentResourceVersion, phase -> {
@@ -710,19 +756,13 @@ public class TestUtils {
         }, budget);
     }
 
-    public static String getGlobalConsoleRoute() throws Exception {
+    /**
+     * Gets global console route.
+     *
+     * @return the global console route
+     */
+    public static String getGlobalConsoleRoute() {
         return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
-    }
-
-    public static CompletableFuture<Void> runAsync(ThrowingCallable callable) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                callable.call();
-            } catch (Exception e) {
-                log.error("Error running async test", e);
-                throw new RuntimeException(e);
-            }
-        }, e -> new Thread(e).start());
     }
 
     /**
@@ -737,27 +777,32 @@ public class TestUtils {
         return BaseEncoding.base16().encode(b).substring(length % 2);
     }
 
-    public static void waitUntilDeployed(String namespace) throws Exception {
+    /**
+     * Wait until deployed.
+     *
+     * @param namespace the namespace
+     */
+    public static void waitUntilDeployed(String namespace) {
         TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
             List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
             if (pods.size() > 0) {
-                log.info("-------------------------------------------------------------");
+                LOGGER.info("-------------------------------------------------------------");
                 for (Pod pod : pods) {
                     List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
                     for (ContainerStatus s : initContainers) {
                         if (!s.getReady()) {
-                            log.info("Pod {} is in ready state, init container is not in ready state", pod.getMetadata().getName());
+                            LOGGER.info("Pod {} is in ready state, init container is not in ready state", pod.getMetadata().getName());
                             return false;
                         }
                     }
                     List<ContainerStatus> containers = pod.getStatus().getContainerStatuses();
                     for (ContainerStatus s : containers) {
                         if (!s.getReady()) {
-                            log.info("Pod {} is in ready state, container {} is not in ready state", pod.getMetadata().getName(), s.getName());
+                            LOGGER.info("Pod {} is in ready state, container {} is not in ready state", pod.getMetadata().getName(), s.getName());
                             return false;
                         }
                     }
-                    log.info("Pod {} is in ready state", pod.getMetadata().getName());
+                    LOGGER.info("Pod {} is in ready state", pod.getMetadata().getName());
                 }
                 return true;
             }
@@ -765,7 +810,12 @@ public class TestUtils {
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
-    public static void waitForConsoleRollingUpdate(String namespace) throws Exception {
+    /**
+     * Wait for console rolling update.
+     *
+     * @param namespace the namespace
+     */
+    public static void waitForConsoleRollingUpdate(String namespace) {
         TestUtils.waitUntilCondition("Wait for console rolling update to complete", waitPhase -> {
             List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
             pods.removeIf(pod -> !pod.getSpec().getContainers().get(0).getName().equals("console-proxy"));
@@ -773,6 +823,11 @@ public class TestUtils {
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
+    /**
+     * Clean all enmasse resources from namespace.
+     *
+     * @param namespace the namespace
+     */
     public static void cleanAllEnmasseResourcesFromNamespace(String namespace) {
         Kubernetes kube = Kubernetes.getInstance();
         var brInfraConfigClient = kube.getBrokeredInfraConfigClient(namespace);
@@ -794,8 +849,14 @@ public class TestUtils {
         consoleClient.list().getItems().forEach(cr -> consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
     }
 
-    public static void waitForPodReady(String name, String namespace) throws Exception {
-        TestUtils.waitUntilCondition(String.format("Pod is ready %s", name), waitPhase -> {
+    /**
+     * Wait for pod ready.
+     *
+     * @param name      the name
+     * @param namespace the namespace
+     */
+    public static void waitForPodReady(String name, String namespace) {
+        TestUtils.waitUntilCondition(format("Pod is ready %s", name), waitPhase -> {
             try {
                 Pod pod = Kubernetes.getInstance().listPods(namespace).stream().filter(p -> p.getMetadata().getName().contains(name)).findFirst().get();
                 return TestUtils.isPodReady(pod, true);
@@ -814,7 +875,12 @@ public class TestUtils {
     }
 
     @FunctionalInterface
-    public static interface ThrowingCallable {
+    public interface ThrowingCallable {
+        /**
+         * Call.
+         *
+         * @throws Exception the exception
+         */
         void call() throws Exception;
     }
 }

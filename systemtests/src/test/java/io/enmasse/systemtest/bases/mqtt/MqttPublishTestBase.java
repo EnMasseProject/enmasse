@@ -107,7 +107,6 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
     }
 
     private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
-
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())

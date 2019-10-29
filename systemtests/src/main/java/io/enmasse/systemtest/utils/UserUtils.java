@@ -36,20 +36,11 @@ public class UserUtils {
                 .endMetadata()
                 .done()));
     }
-
-    public static JsonObject userToJson(String addressspace, String metaUserName, User user) throws Exception {
-        return new JsonObject(new ObjectMapper().writeValueAsString(new DoneableUser(user)
-                .editMetadata()
-                .withName(String.format("%s.%s", addressspace, Pattern.compile(".*:").matcher(metaUserName).replaceAll("")))
-                .endMetadata()
-                .done()));
-    }
-
     public static String passwordToBase64(String password) {
         return Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8));
     }
 
-    public static String base64ToPassword(String password) {
+    private static String base64ToPassword(String password) {
         return new String(Base64.getDecoder().decode(password), StandardCharsets.UTF_8);
     }
 

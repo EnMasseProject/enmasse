@@ -169,9 +169,9 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> rec2Result = receiver2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
+            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress());
         } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
+            waitForSubscribersConsole(getSharedAddressSpace(), dest);
         }
 
         arguments.put(ClientArgument.COUNT, Integer.toString(expectedMsgCount));
@@ -226,9 +226,9 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult2 = subscriber2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress(), 2);
+            waitForSubscribers(artemisManagement, getSharedAddressSpace(), dest.getSpec().getAddress());
         } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), dest, 2);
+            waitForSubscribersConsole(getSharedAddressSpace(), dest);
         }
 
         assertAll(
@@ -451,9 +451,9 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> result2 = subscriber2.runAsync();
 
         if (AddressSpaceUtils.isBrokered(getSharedAddressSpace())) {
-            waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress(), 2);
+            waitForSubscribers(artemisManagement, getSharedAddressSpace(), topic.getSpec().getAddress());
         } else {
-            waitForSubscribersConsole(getSharedAddressSpace(), topic, 2);
+            waitForSubscribersConsole(getSharedAddressSpace(), topic);
         }
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");
