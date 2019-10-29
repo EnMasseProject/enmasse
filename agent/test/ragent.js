@@ -93,12 +93,12 @@ function verify_queue(name, all_addresses, all_autolinks, allocated_to) {
     assert.equal(addresses[0].distribution, 'balanced');
     assert.equal(addresses[0].waypoint, true);
 
-    var autolinks = remove(all_autolinks, function (o) { return o.addr === name; });
+    var autolinks = remove(all_autolinks, function (o) { return o.address === name; });
     if (allocated_to !== undefined) {
         if (allocated_to[0].state === 'Active') {
             assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
-            assert.equal(autolinks[0].addr, name);
-            assert.equal(autolinks[1].addr, name);
+            assert.equal(autolinks[0].address, name);
+            assert.equal(autolinks[1].address, name);
             if (autolinks[0].direction === 'in') {
                 assert.equal(autolinks[1].direction, 'out');
                 assert.equal(autolinks[0].containerId, util.format('%s-in', allocated_to[0].containerId));
@@ -116,8 +116,8 @@ function verify_queue(name, all_addresses, all_autolinks, allocated_to) {
         }
     } else {
         assert.equal(autolinks.length, 2, 'did not find required autolinks for queue ' + name);
-        assert.equal(autolinks[0].addr, name);
-        assert.equal(autolinks[1].addr, name);
+        assert.equal(autolinks[0].address, name);
+        assert.equal(autolinks[1].address, name);
         if (autolinks[0].direction === 'in') {
             assert.equal(autolinks[1].direction, 'out');
             assert.equal(autolinks[0].containerId, util.format('%s-in', name));
@@ -407,14 +407,14 @@ describe('basic router configuration', function() {
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-foo', {prefix:'foo', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-bar', {prefix:'bar', direction:'in'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out', containerId: 'baz'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {address:'baz', direction:'out', containerId: 'baz'});
        }));
     it('removes or updates address config', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}], undefined,
        function (router) {
            router.create_object('org.apache.qpid.dispatch.router.config.address', 'ragent-a', {prefix:'a', distribution:'closest', 'waypoint':false});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-in', {prefix:'b', direction:'in'});
            router.create_object('org.apache.qpid.dispatch.router.config.linkRoute', 'ragent-b-out', {prefix:'b', direction:'out'});
-           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {addr:'baz', direction:'out', containerId: 'baz'});
+           router.create_object('org.apache.qpid.dispatch.router.config.autoLink', 'ragent-baz', {address:'baz', direction:'out', containerId: 'baz'});
        }));
     it('configures addresses on multiple routers', multi_router_address_test(3, [{address:'a',type:'topic'}, {address:'b',type:'queue'}, {address:'c',type:'anycast'}, {address:'d',type:'multicast'}]));
     it('configures multiple routers into a full mesh', multi_router_address_test(6, [], function (routers) {
