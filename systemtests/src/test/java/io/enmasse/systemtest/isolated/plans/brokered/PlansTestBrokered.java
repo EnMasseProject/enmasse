@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 
-public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered {
+class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered {
     private MessagingUtils clientUtils = getClientUtils();
 
     @Test

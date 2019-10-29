@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertNotNull;
 
-public class CredentialsTest {
+class CredentialsTest {
 
     @Test
     void testCreateSecret() {

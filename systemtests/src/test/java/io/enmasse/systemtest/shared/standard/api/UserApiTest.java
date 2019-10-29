@@ -45,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserApiTest extends TestBase implements ITestSharedStandard {
+class UserApiTest extends TestBase implements ITestSharedStandard {
 
     private Map<AddressSpace, User> users = new HashMap<>();
     private Logger LOGGER = CustomLogger.getLogger();

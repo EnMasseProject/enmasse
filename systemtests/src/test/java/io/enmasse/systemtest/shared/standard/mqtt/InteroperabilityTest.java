@@ -55,7 +55,7 @@ class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
         resourcesManager.setAddresses(mqttTopic);
 
         String payloadPrefix = "send mqtt, receive amqp";
-        List<MqttMessage> messages = mqttMessageGenerator(20, 0, payloadPrefix);
+        List<MqttMessage> messages = mqttMessageGenerator(payloadPrefix);
 
         IMqttClient mqttClient = getMqttClientFactory().create();
         mqttClient.connect();
@@ -95,7 +95,7 @@ class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
         resourcesManager.setAddresses(mqttTopic);
 
         String payloadPrefix = "send amqp, receive mqtt :)";
-        List<Message> messages = amqpMessageGenerator(mqttTopic.getSpec().getAddress(), 20, payloadPrefix);
+        List<Message> messages = amqpMessageGenerator(mqttTopic.getSpec().getAddress(), payloadPrefix);
 
         IMqttClient mqttClient = getMqttClientFactory().create();
         mqttClient.connect();
@@ -104,7 +104,7 @@ class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
 
         AmqpClient amqpClient = getAmqpClientFactory().createTopicClient();
 
-        Future<Integer> sendResultAmqp = amqpClient.sendMessages(mqttTopic.getSpec().getAddress(), messages.toArray(new Message[messages.size()]));
+        Future<Integer> sendResultAmqp = amqpClient.sendMessages(mqttTopic.getSpec().getAddress(), messages.toArray(new Message[0]));
 
         assertThat("Incorrect count of messages sent",
                 sendResultAmqp.get(1, TimeUnit.MINUTES), is(messages.size()));
@@ -122,21 +122,21 @@ class InteroperabilityTest extends TestBase implements ITestSharedWithMqtt {
         mqttClient.disconnect();
     }
 
-    private List<MqttMessage> mqttMessageGenerator(int count, int qos, String payloadPrefix) {
+    private List<MqttMessage> mqttMessageGenerator(String payloadPrefix) {
         List<MqttMessage> mqttMessages = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < 20; i++) {
             MqttMessage message = new MqttMessage();
             message.setId(i);
             message.setPayload((String.format("%s-%s", payloadPrefix, i).getBytes()));
-            message.setQos(qos);
+            message.setQos(0);
             mqttMessages.add(message);
         }
         return mqttMessages;
     }
 
-    private List<Message> amqpMessageGenerator(String address, int count, String payloadPrefix) {
+    private List<Message> amqpMessageGenerator(String address, String payloadPrefix) {
         List<Message> mqttMessages = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < 20; i++) {
             Message message = Message.Factory.create();
             message.setMessageId(new AmqpValue(i));
             message.setAddress(address);

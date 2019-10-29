@@ -27,11 +27,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,17 +54,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(JmsProviderParameterResolver.class)
 public class QueueTest extends TestBase implements ITestSharedStandard {
-    private static Logger log = CustomLogger.getLogger();
     private Connection connection;
 
-    public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
+    public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException {
         runQueueTest(client, dest, 512);
     }
 
-    public static void runQueueTest(AmqpClient client, Address dest, int countMessages) throws InterruptedException, TimeoutException, ExecutionException, IOException {
+    public static void runQueueTest(AmqpClient client, Address dest, int countMessages) throws InterruptedException, ExecutionException {
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
-        long timeoutMs = countMessages * ClientUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
+        long timeoutMs = countMessages * MessagingUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
         log.info("Start sending with " + timeoutMs + " ms timeout");
         Future<Integer> numSent = client.sendMessages(dest.getSpec().getAddress(), msgs, predicate);
 
@@ -404,7 +401,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     }
 
     @Test
-    public void testConcurrentOperations() throws Exception {
+    void testConcurrentOperations() throws Exception {
         HashMap<CompletableFuture<Void>, List<UserCredentials>> company = new HashMap<>();
         int customersCount = 10;
         int usersCount = 5;
@@ -454,7 +451,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         //once one of the doMessaging method is finished  then remove appropriate users
         for (Map.Entry<CompletableFuture<Void>, List<UserCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
-            customer.getValue().stream().forEach(user -> resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername()));
+            customer.getValue().forEach(user -> resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername()));
         }
     }
 

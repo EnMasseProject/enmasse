@@ -43,7 +43,6 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
     private final String devicePassword = UUID.randomUUID().toString();
     private final String businessApplicationUsername = UUID.randomUUID().toString();
     private final String businessApplicationPassword = UUID.randomUUID().toString();
-    private Endpoint deviceRegistryEndpoint;
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
     private AmqpClient businessApplicationClient;
@@ -51,7 +50,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
 
     @BeforeEach
     void initEnv() throws Exception {
-        deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+        Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
         registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
@@ -135,7 +134,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
      * when the consumer attaches.
      */
     @Test
-    public void testEventSingle() throws Exception {
+    void testEventSingle() throws Exception {
         new MessageSendTester()
                 .type(MessageSendTester.Type.EVENT)
                 .delay(Duration.ofSeconds(1))

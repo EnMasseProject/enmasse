@@ -38,7 +38,7 @@ public class SessionTest extends TestBase implements ITestSharedWithMqtt {
      * new one.
      */
     @Test
-    public void previousPersistentSessionDiscarded() throws Exception {
+    void previousPersistentSessionDiscarded() throws Exception {
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())

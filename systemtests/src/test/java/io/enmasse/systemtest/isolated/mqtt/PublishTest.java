@@ -25,7 +25,7 @@ import io.enmasse.systemtest.utils.MessagingUtils;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.junit.jupiter.api.Test;
 
-public class PublishTest extends TestBase implements ITestIsolatedStandard {
+class PublishTest extends TestBase implements ITestIsolatedStandard {
 
     @Test
     void testCustomMessagingRoutes() throws Exception {

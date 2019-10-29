@@ -51,16 +51,16 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     private static Logger log = CustomLogger.getLogger();
 
     private static void runTopicTest(AmqpClient client, Address dest)
-            throws InterruptedException, ExecutionException, TimeoutException, IOException {
+            throws InterruptedException, ExecutionException, TimeoutException {
         runTopicTest(client, dest, 512);
     }
 
     public static void runTopicTest(AmqpClient client, Address dest, int msgCount)
-            throws InterruptedException, IOException, TimeoutException, ExecutionException {
+            throws InterruptedException, TimeoutException, ExecutionException {
         List<String> msgs = TestUtils.generateMessages(msgCount);
         Future<List<Message>> recvMessages = client.recvMessages(dest.getSpec().getAddress(), msgCount);
-        long timeoutMs = msgCount * ClientUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
-        log.info("Start  sending with " + timeoutMs + " ms timeout");
+        long timeoutMs = msgCount * MessagingUtils.ESTIMATE_MAX_MS_PER_MESSAGE;
+        log.info("Start sending with " + timeoutMs + " ms timeout");
         assertThat("Wrong count of messages sent",
                 client.sendMessages(dest.getSpec().getAddress(), msgs).get(timeoutMs, TimeUnit.MILLISECONDS), is(msgs.size()));
         log.info("Start receiving with " + timeoutMs + " ms timeout");

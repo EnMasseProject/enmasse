@@ -60,16 +60,9 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     private static Logger log = CustomLogger.getLogger();
 
-    private Endpoint deviceRegistryEndpoint;
     private Endpoint httpAdapterEndpoint;
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
-
-    private String deviceId;
-
-    private String authId;
-
-    private String password;
 
     private HttpAdapterClient httpClient;
     private String commandPayload;
@@ -77,24 +70,24 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
     @BeforeEach
     void initClient() {
-        this.deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+        Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
-        this.registryClient = new DeviceRegistryClient(kubernetes, this.deviceRegistryEndpoint);
-        this.credentialsClient = new CredentialsRegistryClient(kubernetes, this.deviceRegistryEndpoint);
+        this.registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
+        this.credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
     }
 
     @BeforeEach
     void initDevice() throws Exception {
 
         // setup device information
-        this.deviceId = UUID.randomUUID().toString();
-        this.authId = UUID.randomUUID().toString();
-        this.password = UUID.randomUUID().toString();
-        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantId(), this.password);
+        String deviceId = UUID.randomUUID().toString();
+        String authId = UUID.randomUUID().toString();
+        String password = UUID.randomUUID().toString();
+        this.httpClient = new HttpAdapterClient(kubernetes, this.httpAdapterEndpoint, authId, sharedIoTResourceManager.getTenantId(), password);
         
         // set up new random device
-        this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), this.deviceId);
-        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), this.deviceId, this.authId, this.password);
+        this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
+        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, authId, password);
 
         // setup payload
         this.commandPayload = UUID.randomUUID().toString();
@@ -159,9 +152,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         // send the reply to the command
 
         TestUtils.runUntilPass(5, () -> {
-            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("data", "command-response"), is(HTTP_ACCEPTED), request -> {
-                request.putHeader("hono-cmd-status", "202" /* accepted */);
-            }, Duration.ofSeconds(5));
+            this.httpClient.send(COMMAND_RESPONSE, "/" + responseId, new JsonObject().put("data", "command-response"), is(HTTP_ACCEPTED), request -> request.putHeader("hono-cmd-status", "202" /* accepted */), Duration.ofSeconds(5));
         });
 
         assertCloudTelemetryMessage(f1);
@@ -185,12 +176,10 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         log.info("Send telemetry with TTD - ttd: {}", this.ttd);
 
-        var response = TestUtils.runUntilPass(5, () -> {
-            return this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
-                // set "time to disconnect"
-                request.putHeader("hono-ttd", Integer.toString(this.ttd));
-            }, Duration.ofSeconds(this.ttd + 5));
-        });
+        var response = TestUtils.runUntilPass(5, () -> this.httpClient.send(TELEMETRY, null, is(HTTP_OK /* OK for command responses */), request -> {
+            // set "time to disconnect"
+            request.putHeader("hono-ttd", Integer.toString(this.ttd));
+        }, Duration.ofSeconds(this.ttd + 5)));
 
         log.info("Telemetry response: {}: {}", response.statusCode(), response.bodyAsString());
 
@@ -202,7 +191,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         // setup telemetry consumer
 
-        var f1 = sharedIoTResourceManager.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantId()), msg -> {
+        return sharedIoTResourceManager.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantId()), msg -> {
 
             log.info("Received message: {}", msg);
 
@@ -248,7 +237,6 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             return true;
 
         }, Optional.empty()).getResult();
-        return f1;
 
     }
 

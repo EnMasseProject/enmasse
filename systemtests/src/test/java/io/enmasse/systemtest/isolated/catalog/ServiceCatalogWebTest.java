@@ -49,7 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @OpenShift(version = 3)
 class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
+    private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AddressSpace> provisionedServices = new ArrayList<>();
     private UserCredentials ocTestUser = Credentials.userCredentials();
 

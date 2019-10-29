@@ -466,7 +466,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
 
-        var stopSend = new CompletableFuture<Object>();
+        var stopSend = new CompletableFuture<>();
 
         var recvFut = client.recvMessagesWithStatus(addr.getSpec().getAddress(), msg -> {
             log.info("Message received");
@@ -510,7 +510,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         assertEquals(sent, received, "Missmatch between messages sent and received");
     }
 
-    private class Label {
+    private static class Label {
         String labelName;
         String labelValue;
 

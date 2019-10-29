@@ -61,7 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
+    private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private MessagingUtils clientUtils = getClientUtils();
 
     @Test
@@ -591,7 +591,7 @@ class PlansTestStandard extends TestBase implements ITestIsolatedStandard {
         address.getSpec().setPlan(manyPartitionedQueue.getMetadata().getName());
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
         AddressUtils.replaceAddress(address, false, budget);
-        Address replaced = null;
+        Address replaced;
         while (!budget.timeoutExpired()) {
             replaced = kubernetes.getAddressClient(partitioned.getMetadata().getNamespace()).withName(address.getMetadata().getName()).get();
             if (replaced.getStatus().getMessages().contains("Quota exceeded")) {

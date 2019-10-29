@@ -45,15 +45,10 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
 
     private String randomDeviceId;
-    private IoTConfig iotConfig;
     private IoTProject iotProject;
     private Endpoint deviceRegistryEndpoint;
     private Endpoint httpAdapterEndpoint;
     private DeviceRegistryClient client;
-
-    private UserCredentials credentials;
-
-    private AmqpClientFactory iotAmqpClientFactory;
 
     private AmqpClient amqpClient;
 
@@ -62,7 +57,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     @BeforeEach
     public void setAttributes() throws Exception {
         var iotConfigBuilder = provideIoTConfig();
-        iotConfig = iotConfigBuilder
+        IoTConfig iotConfig = iotConfigBuilder
                 .withNewMetadata()
                 .withName("default")
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -96,14 +91,14 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
         this.randomDeviceId = UUID.randomUUID().toString();
 
-        this.credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        isolatedIoTManager.createOrUpdateUser(isolatedIoTManager.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
-        this.iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), this.credentials);
+        UserCredentials credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        isolatedIoTManager.createOrUpdateUser(isolatedIoTManager.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), credentials);
+        AmqpClientFactory iotAmqpClientFactory = new AmqpClientFactory(resourcesManager.getAddressSpace(IOT_PROJECT_NAMESPACE, DEVICE_REGISTRY_TEST_ADDRESSSPACE), credentials);
         this.amqpClient = iotAmqpClientFactory.createQueueClient();
 
     }
 
-    protected void doTestRegisterDevice() throws Exception {
+    void doTestRegisterDevice() throws Exception {
         client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
         final Device result = client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
         assertNotNull(result);
@@ -113,7 +108,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);
     }
 
-    protected void doTestDisableDevice() throws Exception {
+    void doTestDisableDevice() throws Exception {
         client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
 
         final Device payload = new Device();
@@ -130,7 +125,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);
     }
 
-    protected void doTestDeviceCredentials() throws Exception {
+    void doTestDeviceCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
@@ -149,7 +144,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         }
     }
 
-    protected void doTestDeviceCredentialsPlainPassword() throws Exception {
+    void doTestDeviceCredentialsPlainPassword() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
@@ -168,7 +163,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         }
     }
 
-    protected void doTestDeviceCredentialsDoesNotContainsPasswordDetails() throws Exception {
+    void doTestDeviceCredentialsDoesNotContainsPasswordDetails() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
@@ -196,7 +191,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     }
 
 
-    protected void doTestCacheExpiryForCredentials() throws Exception {
+    void doTestCacheExpiryForCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
 
             final Duration cacheExpiration = Duration.ofMinutes(3);
@@ -236,7 +231,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     }
 
 
-    protected void doTestSetExpiryForCredentials() throws Exception {
+    void doTestSetExpiryForCredentials() throws Exception {
         try (var credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint)) {
             client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
 
@@ -266,12 +261,12 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     }
 
 
-    protected void doTestCreateForNonExistingTenantFails() throws Exception {
+    void doTestCreateForNonExistingTenantFails() throws Exception {
         var response = client.registerDeviceWithResponse("invalid-" + isolatedIoTManager.getTenantId(), randomDeviceId);
         assertEquals(HTTP_NOT_FOUND, response.statusCode());
     }
 
-    protected void doCreateDuplicateDeviceFails() throws Exception {
+    void doCreateDuplicateDeviceFails() throws Exception {
         var tenantId = isolatedIoTManager.getTenantId();
         var deviceId = UUID.randomUUID().toString();
 

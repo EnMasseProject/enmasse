@@ -33,8 +33,6 @@ import static io.enmasse.systemtest.TestTag.OLM;
 @Tag(OLM)
 @OpenShift(version = 4)
 class OperatorLifecycleManagerTest extends TestBase implements ITestIsolatedStandard {
-    private static Logger log = CustomLogger.getLogger();
-    private final String marketplaceNamespace = "openshift-marketplace";
     private final String infraNamespace = "openshift-operators";
 
     @AfterAll

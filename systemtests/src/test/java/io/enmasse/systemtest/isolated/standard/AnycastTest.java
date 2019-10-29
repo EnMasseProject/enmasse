@@ -22,7 +22,6 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -39,7 +38,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
     private UserCredentials userCredentials = new UserCredentials("test", "test");
 
 
-    public static void runAnycastTest(Address dest, AmqpClient... clients) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+    public static void runAnycastTest(Address dest, AmqpClient... clients) throws InterruptedException, TimeoutException, ExecutionException {
         if (clients.length == 0) {
             throw new IllegalStateException("Clients are required for this test");
         }
@@ -60,7 +59,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @BeforeEach
-    public void createTestEnv() throws Exception {
+    void createTestEnv() throws Exception {
         addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("anycast-space-standard")

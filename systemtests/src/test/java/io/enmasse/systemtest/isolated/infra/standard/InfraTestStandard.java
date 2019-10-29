@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -98,13 +99,11 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(testInfra.getMetadata().getName())
-                .withResourceLimits(Arrays.asList(
+                .withResourceLimits(Stream.of(
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
-                        new ResourceAllowance("aggregate", 5.0))
-                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
-                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
-                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                        new ResourceAllowance("aggregate", 5.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
@@ -187,13 +186,11 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withAddressSpaceType(AddressSpaceType.STANDARD.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(infra.getMetadata().getName())
-                .withResourceLimits(Arrays.asList(
+                .withResourceLimits(Stream.of(
                         new ResourceAllowance("broker", 3.0),
                         new ResourceAllowance("router", 3.0),
-                        new ResourceAllowance("aggregate", 5.0))
-                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
-                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
-                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                        new ResourceAllowance("aggregate", 5.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);

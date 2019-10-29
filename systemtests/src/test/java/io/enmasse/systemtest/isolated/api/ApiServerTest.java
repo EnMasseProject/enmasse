@@ -101,7 +101,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         assertThat(schemaData.getItems().size(), not(0));
 
         log.info("Check if the 'standard' address space type is found");
-        AddressSpaceSchema standardSchema = findTypeWithName(schemaData, "standard");
+        AddressSpaceSchema standardSchema = findTypeWithName(schemaData);
         assertNotNull(standardSchema);
 
         log.info("Check if the 'standard' address space has plans");
@@ -126,9 +126,9 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .contains("test-schema-rest-api-addr-plan"));
     }
 
-    private AddressSpaceSchema findTypeWithName(AddressSpaceSchemaList schemaData, String name) {
+    private AddressSpaceSchema findTypeWithName(AddressSpaceSchemaList schemaData) {
         for (AddressSpaceSchema schema : schemaData.getItems()) {
-            if (schema.getMetadata().getName().equals(name)) {
+            if (schema.getMetadata().getName().equals("standard")) {
                 return schema;
             }
         }

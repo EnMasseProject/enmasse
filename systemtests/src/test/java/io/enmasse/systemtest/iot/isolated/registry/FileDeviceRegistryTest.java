@@ -14,7 +14,7 @@ import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 class FileDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
-    protected IoTConfigBuilder provideIoTConfig() throws Exception {
+    protected IoTConfigBuilder provideIoTConfig() {
         return new IoTConfigBuilder()
                 .withNewSpec()
                 .withNewServices()

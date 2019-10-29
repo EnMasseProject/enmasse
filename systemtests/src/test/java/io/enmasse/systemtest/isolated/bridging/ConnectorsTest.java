@@ -93,9 +93,7 @@ class ConnectorsTest extends BridgingBase {
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpace(space);
-        Assertions.assertThrows(IllegalStateException.class, () -> {
-            AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space, new TimeoutBudget(1, TimeUnit.MINUTES));
-        });
+        Assertions.assertThrows(IllegalStateException.class, () -> AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space, new TimeoutBudget(1, TimeUnit.MINUTES)));
     }
 
     @Test
@@ -202,7 +200,7 @@ class ConnectorsTest extends BridgingBase {
 
     @Test
     @Tag(ACCEPTANCE)
-    public void testConnectorTLS() throws Exception {
+    void testConnectorTLS() throws Exception {
         AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, defaultTls(), defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
@@ -216,7 +214,7 @@ class ConnectorsTest extends BridgingBase {
     }
 
     @Test
-    public void testConnectorMutualTLS() throws Exception {
+    void testConnectorMutualTLS() throws Exception {
         AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, defaultMutualTls(), null);
 
         UserCredentials localUser = new UserCredentials("test", "test");
@@ -229,7 +227,7 @@ class ConnectorsTest extends BridgingBase {
         sendToBrokerReceiveInConnector(space, localUser, remoteQueues, messagesBatch);
     }
 
-    private void doTestSendThroughConnector(String addressRule, String[] remoteQueues) throws Exception, InterruptedException, ExecutionException, TimeoutException {
+    private void doTestSendThroughConnector(String addressRule, String[] remoteQueues) throws Exception {
         AddressSpace space = createAddressSpace("send-to-connector", addressRule, null, defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");

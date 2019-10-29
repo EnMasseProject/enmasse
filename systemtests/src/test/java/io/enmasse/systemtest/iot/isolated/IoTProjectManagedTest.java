@@ -95,7 +95,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
         assertEquals(plan, address.getSpec().getPlan());
     }
 
-    private void assertManaged(IoTProject project) throws Exception {
+    private void assertManaged(IoTProject project) {
         //address space s
         AddressSpace addressSpace = isolatedIoTManager.getAddressSpace(IOT_PROJECT_NAMESPACE, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
@@ -183,11 +183,9 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         return Arrays
                 .stream(baseAddresses)
-                .flatMap(address -> {
-                    return Stream.of(
-                            address + addressSuffix,
-                            address + addressSuffix + "/*");
-                })
+                .flatMap(address -> Stream.of(
+                        address + addressSuffix,
+                        address + addressSuffix + "/*"))
 
                 .collect(Collectors.toSet());
 

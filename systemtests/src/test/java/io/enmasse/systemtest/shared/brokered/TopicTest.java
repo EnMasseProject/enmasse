@@ -59,10 +59,10 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
 
     @Test
     void testTopicPubSubWildcards() throws Exception {
-        doTopicWildcardTest(DestinationPlan.BROKERED_TOPIC);
+        doTopicWildcardTest();
     }
 
-    private void doTopicWildcardTest(String plan) throws Exception {
+    private void doTopicWildcardTest() throws Exception {
         Address t0 = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
@@ -71,7 +71,7 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("topic")
-                .withPlan(plan)
+                .withPlan(DestinationPlan.BROKERED_TOPIC)
                 .endSpec()
                 .build();
         resourcesManager.setAddresses(t0);

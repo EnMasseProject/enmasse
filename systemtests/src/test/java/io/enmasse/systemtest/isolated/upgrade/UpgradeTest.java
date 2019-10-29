@@ -56,7 +56,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     private static String startVersion;
 
     @BeforeAll
-    void prepareUpgradeEnv() throws Exception {
+    void prepareUpgradeEnv() {
         isolatedResourcesManager.setReuseAddressSpace();
         productName = Environment.getInstance().isDownstream() ? "amq-online" : "enmasse";
         startVersion = getVersionFromTemplateDir(Paths.get(Environment.getInstance().getStartTemplates()));
@@ -103,8 +103,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Thread.sleep(30_000);
         resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("standard"));
 
-        createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", getApiVersion());
-        createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", getApiVersion());
+        createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "brokered", getApiVersion());
+        createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "standard", getApiVersion());
         Thread.sleep(30_000);
 
         createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion());
@@ -154,10 +154,10 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             assertTrue(receiveMessages("standard", new RheaClientReceiver(), new UserCredentials("test-standard", "test"), "standard-queue-xlarge", MESSAGE_COUNT, true));
         } else {
             if (!KubeCMDClient.getUser(kubernetes.getInfraNamespace(), "brokered", "test-brokered").getRetCode()) {
-                createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", "v1alpha1");
+                createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "brokered", "v1alpha1");
             }
             if (!KubeCMDClient.getUser(kubernetes.getInfraNamespace(), "standard", "test-standard").getRetCode()) {
-                createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", "v1alpha1");
+                createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "standard", "v1alpha1");
             }
             Thread.sleep(30_000);
 
@@ -178,10 +178,10 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         assertTrue(Exec.execute(cmd, 10_000, true).getRetCode(), "AddressSpace not created");
     }
 
-    private void createUserCMD(String namespace, String userName, String password, String addressSpace, String apiVersion) {
+    private void createUserCMD(String namespace, String userName, String addressSpace, String apiVersion) {
         log.info("Creating user {} in namespace {}", userName, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_user.sh");
-        List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + userName + " " + password + " " + namespace + " " + addressSpace + " " + apiVersion);
+        List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + userName + " " + "test" + " " + namespace + " " + addressSpace + " " + apiVersion);
         assertTrue(Exec.execute(cmd, 20_000, true).getRetCode(), "User not created");
     }
 
@@ -245,7 +245,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         }
     }
 
-    private void checkImagesUpdated(String version) throws Exception {
+    private void checkImagesUpdated(String startVersion) throws Exception {
         Path makefileDir = Paths.get(System.getProperty("user.dir"), "..");
         Path imageEnvDir = Paths.get(makefileDir.toString(), "imageenv.txt");
 
@@ -287,36 +287,36 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
     }
 
-    protected boolean sendMessage(String addressSpace, AbstractClient client, UserCredentials
-            credentials, String address, String content, int count, boolean logToOutput) throws Exception {
+    boolean sendMessage(String addressSpace, AbstractClient client, UserCredentials
+            credentials, String address) {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
         arguments.put(ClientArgument.CONN_SSL, "true");
-        arguments.put(ClientArgument.MSG_CONTENT, content);
+        arguments.put(ClientArgument.MSG_CONTENT, "pepa");
         arguments.put(ClientArgument.BROKER, KubeCMDClient.getMessagingEndpoint(kubernetes.getInfraNamespace(), addressSpace) + ":443");
         arguments.put(ClientArgument.ADDRESS, address);
-        arguments.put(ClientArgument.COUNT, Integer.toString(count));
+        arguments.put(ClientArgument.COUNT, Integer.toString(UpgradeTest.MESSAGE_COUNT));
         arguments.put(ClientArgument.MSG_DURABLE, "true");
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
         client.setArguments(arguments);
 
-        return client.run(logToOutput);
+        return client.run(true);
     }
 
-    protected boolean receiveMessages(String addressSpace, AbstractClient client, UserCredentials
-            credentials, String address, int count, boolean logToOutput) throws Exception {
+    boolean receiveMessages(String addressSpace, AbstractClient client, UserCredentials
+            credentials, String address) {
         ClientArgumentMap arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.USERNAME, credentials.getUsername());
         arguments.put(ClientArgument.PASSWORD, credentials.getPassword());
         arguments.put(ClientArgument.CONN_SSL, "true");
         arguments.put(ClientArgument.BROKER, KubeCMDClient.getMessagingEndpoint(kubernetes.getInfraNamespace(), addressSpace) + ":443");
         arguments.put(ClientArgument.ADDRESS, address);
-        arguments.put(ClientArgument.COUNT, Integer.toString(count));
+        arguments.put(ClientArgument.COUNT, Integer.toString(UpgradeTest.MESSAGE_COUNT));
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
         client.setArguments(arguments);
 
-        return client.run(logToOutput);
+        return client.run(true);
     }
 
     private void ensurePersistentAuthService(String authServiceName) throws Exception {

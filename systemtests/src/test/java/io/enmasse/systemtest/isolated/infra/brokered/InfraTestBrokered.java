@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -77,10 +78,8 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(testInfra.getMetadata().getName())
-                .withResourceLimits(Collections.singletonList(new ResourceAllowance("broker", 3.0))
-                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
-                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
-                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);
@@ -163,10 +162,8 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .withAddressSpaceType(AddressSpaceType.BROKERED.toString())
                 .withShortDescription("Custom systemtests defined address space plan")
                 .withInfraConfigRef(infra.getMetadata().getName())
-                .withResourceLimits(Collections.singletonList(new ResourceAllowance("broker", 3.0))
-                        .stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
-                .withAddressPlans(Collections.singletonList(exampleAddressPlan)
-                        .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
+                .withResourceLimits(Stream.of(new ResourceAllowance("broker", 3.0)).collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)))
+                .withAddressPlans(Stream.of(exampleAddressPlan).map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpacePlan(exampleSpacePlan);

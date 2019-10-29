@@ -36,10 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SeleniumFirefox
-public class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIsolatedStandard {
-    SeleniumProvider selenium = SeleniumProvider.getInstance();
+class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIsolatedStandard {
+    private SeleniumProvider selenium = SeleniumProvider.getInstance();
     private AddressSpace brokered;
-    private UserCredentials userCredentials;
 
     @BeforeEach
     void setUpSelenium() throws Exception {
@@ -57,7 +56,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpace(brokered);
-        userCredentials = new UserCredentials("test", "test");
+        UserCredentials userCredentials = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(brokered, userCredentials);
     }
 
@@ -92,7 +91,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         consoleWeb.createAddressWebConsole(dest1, false);
 
         resourcesManager.appendAddresses(false, dest2);
-        AddressUtils.waitForDestinationsReady(dest1, dest2);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), dest1, dest2);
 
         Address addressFromConsole = kubernetes.getAddressClient(brokered.getMetadata().getNamespace()).list().getItems()
                 .stream().filter(address -> address.getSpec().getAddress().equals(dest1.getSpec().getAddress())).findFirst().orElse(null);
@@ -160,7 +159,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 String.format("Unexpected response on create custom resource '%s': %s", address2, output));
         assertTrue(result.getRetCode(), String.format("Expected return code 0 on create custom resource '%s'", address2));
 
-        AddressUtils.waitForDestinationsReady(dest1, dest2);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), dest1, dest2);
 
         result = KubeCMDClient.getAddress(environment.namespace(), "-a");
         output = result.getStdOut().trim();

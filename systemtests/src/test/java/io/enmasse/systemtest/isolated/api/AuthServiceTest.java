@@ -42,7 +42,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
 
     @AfterEach
-    void tearDown() throws Exception {
+    void tearDown() {
         SystemtestsKubernetesApps.deletePostgresDB(kubernetes.getInfraNamespace());
     }
 

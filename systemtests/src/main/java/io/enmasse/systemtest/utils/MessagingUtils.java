@@ -67,6 +67,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MessagingUtils {
     private static Logger LOGGER = CustomLogger.getLogger();
     private AddressSpaceUtils addressSpaceUtils = new AddressSpaceUtils();
+    public static final long ESTIMATE_MAX_MS_PER_MESSAGE = 200;
 
     public void sendDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace, Address destination,
                                     UserCredentials credentials, int count) throws Exception {

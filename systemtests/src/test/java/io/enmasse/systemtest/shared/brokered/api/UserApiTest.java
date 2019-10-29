@@ -31,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class UserApiTest extends TestBase implements ITestSharedBrokered {
+class UserApiTest extends TestBase implements ITestSharedBrokered {
 
     private Map<AddressSpace, User> users = new HashMap<>();
     private static final Logger LOGGER = CustomLogger.getLogger();
@@ -155,7 +155,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
-    void testUserWithSimilarNamesAndAlreadyExistingUser() throws Exception {
+    void testUserWithSimilarNamesAndAlreadyExistingUser() {
         UserCredentials cred = new UserCredentials("user2", "user2");
         User testUser = resourcesManager.createOrUpdateUser(getSharedAddressSpace(), cred);
 
@@ -170,7 +170,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
-    void testCreateUserUppercaseUsername() throws Exception {
+    void testCreateUserUppercaseUsername() {
         UserCredentials cred = new UserCredentials("UserPepinator", "ff^%fh16");
         User testUser = UserUtils.createUserResource(cred)
                 .editMetadata()
@@ -188,7 +188,7 @@ public class UserApiTest extends TestBase implements ITestSharedBrokered {
     }
 
     @Test
-    void testCreateUsersWithSymbolsInVariousPlaces() throws Exception {
+    void testCreateUsersWithSymbolsInVariousPlaces() {
         //valid user is created (response HTTP:201)
         UserCredentials cred = new UserCredentials("normalusername", "password");
         User testUser = UserUtils.createUserResource(cred)

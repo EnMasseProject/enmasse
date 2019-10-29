@@ -61,7 +61,6 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
 
-    private int numberOfProjects = 2;
     private List<IoTProjectTestContext> projects = new ArrayList<>();
 
     @BeforeEach
@@ -98,6 +97,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         registryClient = new DeviceRegistryClient(kubernetes, deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(kubernetes, deviceRegistryEndpoint);
 
+        int numberOfProjects = 2;
         for (int i = 1; i <= numberOfProjects; i++) {
             String projectName = String.format("project-%s", i);
 

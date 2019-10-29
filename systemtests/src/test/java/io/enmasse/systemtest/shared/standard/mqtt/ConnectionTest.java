@@ -23,7 +23,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class ConnectionTest extends TestBase implements ITestSharedWithMqtt {
+class ConnectionTest extends TestBase implements ITestSharedWithMqtt {
     private static final String CLIENT_ID = "my_client_id";
     private static final String MQTT_TOPIC = "mytopic";
     private static final String MQTT_MESSAGE = "Hello MQTT on EnMasse";
@@ -33,7 +33,7 @@ public class ConnectionTest extends TestBase implements ITestSharedWithMqtt {
      * disconnect the existing Client [].
      */
     @Test
-    public void newSessionDisconnectsExisting() throws Exception {
+    void newSessionDisconnectsExisting() throws Exception {
         Address dest = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
@@ -62,8 +62,8 @@ public class ConnectionTest extends TestBase implements ITestSharedWithMqtt {
         IMqttClient client2 = getMqttClientFactory().build().clientId(CLIENT_ID).mqttConnectionOptions(options).create();
         client2.connect();
 
-        get("Client1 should have signalled disconnection",
-                30, TimeUnit.SECONDS, client1Disconnected);
+        get(
+                client1Disconnected);
         assertFalse(client1.isConnected(), "Client1 should have been disconnected.");
         client1.close();
 
@@ -82,11 +82,11 @@ public class ConnectionTest extends TestBase implements ITestSharedWithMqtt {
         future.get();
     }
 
-    private void get(String message, int timeout, TimeUnit minutes, CompletableFuture<Void> future) throws Exception {
+    private void get(CompletableFuture<Void> future) throws Exception {
         try {
-            future.get(timeout, minutes);
+            future.get(30, TimeUnit.SECONDS);
         } catch (TimeoutException e) {
-            TimeoutException timeoutException = new TimeoutException(message);
+            TimeoutException timeoutException = new TimeoutException("Client1 should have signalled disconnection");
             timeoutException.initCause(e);
             throw timeoutException;
         }
