@@ -134,7 +134,7 @@ public abstract class SoakTestBase extends TestBase {
         UserCredentials credentials = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(addressSpace, credentials);
 
-        runTestInLoop(10, () -> {
+        runTestInLoop(30, () -> {
             //create client
             AmqpClient client = resourcesManager.getAmqpClientFactory().createQueueClient(addressSpace);
             client.getConnectOptions().setCredentials(credentials);
@@ -316,7 +316,7 @@ public abstract class SoakTestBase extends TestBase {
 
     protected void doTestLoad(AddressSpaceType type, String addressSpacePlans, String addressPlan) throws Exception {
 
-        runTestInLoop(5, () -> {
+        runTestInLoop(120, () -> {
             int count = 5;
             AmqpClient queueClient;
             Map<Address, AmqpClient> pairs = new HashMap<Address, AmqpClient>();
